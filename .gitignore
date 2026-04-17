@@ -1,0 +1,122 @@
+# ============================================================
+# AnyNote .gitignore — Only source code goes to remote
+# ============================================================
+
+# ── Version Control ───────────────────────────────────────────
+.git/
+
+# ── Claude Code (local only) ─────────────────────────────────
+CLAUDE.md
+.claude/
+
+# ── IDE / Editor ──────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.code-workspace
+.project
+.classpath
+.settings/
+
+# ── OS generated ──────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.Trash-*
+
+# ── Environment & Secrets ─────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secret*.json
+
+# ── Backend: Go ───────────────────────────────────────────────
+# Binaries
+backend/bin/
+backend/tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Dependency cache
+backend/vendor/
+
+# Config (contains secrets, local paths)
+backend/config.yaml
+backend/config.*.yaml
+
+# sqlc generated code
+backend/db/sqlc/
+
+# Test artifacts
+*.test
+*.out
+coverage.txt
+
+# ── Backend: Docker ───────────────────────────────────────────
+docker-compose.override.yml
+docker-compose.*.yml
+!docker-compose.yml
+
+# ── Frontend: Flutter / Dart ──────────────────────────────────
+# Build output
+frontend/build/
+
+# Tooling
+frontend/.dart_tool/
+frontend/.packages
+frontend/.pub-cache/
+frontend/.pub/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.flutter-plugins-dependencies
+frontend/pubspec.lock
+
+# Generated code (Drift, freezed, json_serializable, etc.)
+frontend/lib/**/*.g.dart
+frontend/lib/**/*.freezed.dart
+frontend/lib/**/*.gr.dart
+frontend/**/*.mocks.dart
+
+# Native build
+frontend/android/
+frontend/ios/
+frontend/windows/
+frontend/linux/
+frontend/macos/
+frontend/web/
+
+# Assets cache
+frontend/.dart_tool/package_config.json
+
+# ── Database files (local only) ───────────────────────────────
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── MinIO / Object storage data ───────────────────────────────
+minio_data/
+
+# ── Documentation (local only) ────────────────────────────────
+doc/
+*.md
+!README.md
+
+# ── Deploy configs (contain server-specific values) ───────────
+deploy/
