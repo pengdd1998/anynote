@@ -4,6 +4,7 @@
 ///   1. [ImportedNote] - A parsed markdown file with extracted metadata.
 ///   2. [ImportProgress] - Streaming progress updates during parsing/import.
 ///   3. [ImportResult] - Final summary of what was imported, skipped, or failed.
+library;
 
 /// A single markdown file parsed into a structured note representation.
 ///

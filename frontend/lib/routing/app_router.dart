@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/theme/page_transitions.dart';
 import '../core/widgets/adaptive_scaffold.dart';
 import '../core/widgets/offline_banner.dart';
+import '../l10n/app_localizations.dart';
 import '../main.dart';
 import '../features/auth/presentation/onboarding_screen.dart';
 import '../features/notes/presentation/notes_list_screen.dart';
@@ -46,6 +48,8 @@ final appRouter = GoRouter(
     final isDiscoverRoute = state.matchedLocation == '/discover';
 
     // Share route is always accessible (no auth required).
+    // Includes both the public shared note viewer and the share
+    // extension receiver (anynote://share/received).
     if (isShareRoute) return null;
 
     // Discover route is always accessible (no auth required).
@@ -93,6 +97,18 @@ final appRouter = GoRouter(
     ),
 
     // Shared note viewer (public, no auth required)
+    // Note: /share/received must come before /share/:id to avoid the
+    // dynamic segment matching "received" as a share ID.
+    GoRoute(
+      path: '/share/received',
+      redirect: (context, state) {
+        // Intermediary route: the share extension deep link lands here.
+        // The actual content is consumed by ReceiveShareService which
+        // navigates to the note editor via the stream listener in main.dart.
+        // Redirect to the notes list; the stream listener will push the editor.
+        return '/notes';
+      },
+    ),
     GoRoute(
       path: '/share/:id',
       pageBuilder: (context, state) => slideTransition(
@@ -153,8 +169,12 @@ final appRouter = GoRouter(
               pageBuilder: (context, state) {
                 final templateContent =
                     state.uri.queryParameters['templateContent'];
+                final shareContent =
+                    state.uri.queryParameters['shareContent'];
                 return slideTransition(
-                  NoteEditorScreen(initialContent: templateContent),
+                  NoteEditorScreen(
+                    initialContent: shareContent ?? templateContent,
+                  ),
                 );
               },
             ),
@@ -330,13 +350,14 @@ class _PhoneShell extends StatelessWidget {
 }
 
 /// Desktop/tablet layout: NavigationRail on the left side.
-class _DesktopShell extends StatelessWidget {
+class _DesktopShell extends ConsumerWidget {
   final Widget child;
   const _DesktopShell({required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _selectedIndex(context);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: Row(
         children: [
@@ -354,26 +375,70 @@ class _DesktopShell extends StatelessWidget {
                     ),
               ),
             ),
-            destinations: const [
+            destinations: [
               NavigationRailDestination(
-                icon: Icon(Icons.note_outlined),
-                selectedIcon: Icon(Icons.note),
-                label: Text('Notes'),
+                icon: const Tooltip(
+                  message: 'Notes',
+                  preferBelow: false,
+                  child: Icon(Icons.note_outlined),
+                ),
+                selectedIcon: const Tooltip(
+                  message: 'Notes',
+                  preferBelow: false,
+                  child: Icon(Icons.note),
+                ),
+                label: Semantics(
+                  label: l10n?.notesTabLabel ?? 'Notes',
+                  child: const Text('Notes'),
+                ),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.auto_awesome_outlined),
-                selectedIcon: Icon(Icons.auto_awesome),
-                label: Text('Compose'),
+                icon: const Tooltip(
+                  message: 'Compose',
+                  preferBelow: false,
+                  child: Icon(Icons.auto_awesome_outlined),
+                ),
+                selectedIcon: const Tooltip(
+                  message: 'Compose',
+                  preferBelow: false,
+                  child: Icon(Icons.auto_awesome),
+                ),
+                label: Semantics(
+                  label: l10n?.composeTabLabel ?? 'Compose',
+                  child: const Text('Compose'),
+                ),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.publish_outlined),
-                selectedIcon: Icon(Icons.publish),
-                label: Text('Publish'),
+                icon: const Tooltip(
+                  message: 'Publish',
+                  preferBelow: false,
+                  child: Icon(Icons.publish_outlined),
+                ),
+                selectedIcon: const Tooltip(
+                  message: 'Publish',
+                  preferBelow: false,
+                  child: Icon(Icons.publish),
+                ),
+                label: Semantics(
+                  label: l10n?.publishTabLabel ?? 'Publish',
+                  child: const Text('Publish'),
+                ),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: Text('Settings'),
+                icon: const Tooltip(
+                  message: 'Settings',
+                  preferBelow: false,
+                  child: Icon(Icons.settings_outlined),
+                ),
+                selectedIcon: const Tooltip(
+                  message: 'Settings',
+                  preferBelow: false,
+                  child: Icon(Icons.settings),
+                ),
+                label: Semantics(
+                  label: l10n?.settingsTabLabel ?? 'Settings',
+                  child: const Text('Settings'),
+                ),
               ),
             ],
           ),

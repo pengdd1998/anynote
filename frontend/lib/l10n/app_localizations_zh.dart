@@ -1544,4 +1544,129 @@ class AppLocalizationsZh extends AppLocalizations {
   String monthsAgo(int count) {
     return '$count个月前';
   }
+
+  @override
+  String get menuFile => '文件';
+
+  @override
+  String get menuNewNote => '新建笔记';
+
+  @override
+  String get menuSave => '保存';
+
+  @override
+  String get menuImport => '导入...';
+
+  @override
+  String get menuExport => '导出...';
+
+  @override
+  String get menuCloseTab => '关闭标签页';
+
+  @override
+  String get menuEdit => '编辑';
+
+  @override
+  String get menuUndo => '撤销';
+
+  @override
+  String get menuRedo => '重做';
+
+  @override
+  String get menuCut => '剪切';
+
+  @override
+  String get menuCopy => '复制';
+
+  @override
+  String get menuPaste => '粘贴';
+
+  @override
+  String get menuSelectAll => '全选';
+
+  @override
+  String get menuFind => '查找...';
+
+  @override
+  String get menuView => '视图';
+
+  @override
+  String get menuToggleSidebar => '切换侧边栏';
+
+  @override
+  String get menuTogglePreview => '切换预览';
+
+  @override
+  String get menuZenMode => '专注模式';
+
+  @override
+  String get menuFullScreen => '进入全屏';
+
+  @override
+  String get menuExitFullScreen => '退出全屏';
+
+  @override
+  String get menuHelp => '帮助';
+
+  @override
+  String get menuAbout => '关于 AnyNote';
+
+  @override
+  String get menuKeyboardShortcuts => '键盘快捷键';
+
+  @override
+  String get aboutDialogTitle => '关于 AnyNote';
+
+  @override
+  String get aboutDescription => '本地优先、隐私优先的端到端加密笔记应用。';
+
+  @override
+  String aboutVersion(String version) {
+    return '版本 $version';
+  }
+
+  @override
+  String get shortcutsDialogTitle => '键盘快捷键';
+
+  @override
+  String get shortcutNewNote => '新建笔记';
+
+  @override
+  String get shortcutSave => '保存';
+
+  @override
+  String get shortcutSearch => '搜索';
+
+  @override
+  String get shortcutToggleSidebar => '切换侧边栏';
+
+  @override
+  String get shortcutExportPdf => '导出为 PDF';
+
+  @override
+  String get shortcutSettings => '打开设置';
+
+  @override
+  String get shortcutCloseNote => '关闭笔记';
+
+  @override
+  String get shortcutNextNote => '下一条笔记';
+
+  @override
+  String get shortcutFullScreen => '切换全屏';
+
+  @override
+  String get shortcutExitZen => '退出专注模式 / 关闭对话框';
+
+  @override
+  String get notesTabLabel => '笔记';
+
+  @override
+  String get composeTabLabel => '创作';
+
+  @override
+  String get publishTabLabel => '发布';
+
+  @override
+  String get settingsTabLabel => '设置';
 }

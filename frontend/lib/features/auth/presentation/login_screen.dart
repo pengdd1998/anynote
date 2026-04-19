@@ -58,7 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await api.login(LoginRequest(
         email: _emailController.text.trim(),
         authKeyHash: authKeyHash,
-      ));
+      ),);
 
       // Step 6: On success, store master key and derived keys locally.
       await MasterKeyManager.storeMasterKey(masterKey);

@@ -269,7 +269,7 @@ void main() {
       // We verify against a known subset -- every word must be lowercase alphabetic.
       for (final word in words) {
         expect(RegExp(r'^[a-z]+$').hasMatch(word), isTrue,
-            reason: 'Word "$word" is not valid BIP-39 format');
+            reason: 'Word "$word" is not valid BIP-39 format',);
       }
     });
 

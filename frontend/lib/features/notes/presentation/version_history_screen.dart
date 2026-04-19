@@ -72,7 +72,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
           encryptedContent: v.encryptedContent,
           encryptedTitle: v.encryptedTitle,
           createdAt: v.createdAt,
-        ));
+        ),);
       }
 
       if (mounted) {
@@ -163,8 +163,8 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         final count = await db.noteVersionsDao.getVersionCount(noteId);
         final newVersionId = const Object().hashCode.toString();
 
-        String? versionPlainTitle = currentNote.plainTitle;
-        String? versionPlainContent = currentNote.plainContent;
+        final String? versionPlainTitle = currentNote.plainTitle;
+        final String? versionPlainContent = currentNote.plainContent;
 
         // Re-encrypt to store in the version snapshot.
         // The encryptedContent on the note is already encrypted with the noteId,
@@ -340,7 +340,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
               trailing: isCurrent
                   ? Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                          horizontal: 8, vertical: 4,),
                       decoration: BoxDecoration(
                         color: Theme.of(context)
                             .colorScheme

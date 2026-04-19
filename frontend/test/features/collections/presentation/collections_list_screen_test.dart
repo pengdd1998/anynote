@@ -37,7 +37,7 @@ void main() {
 
       expect(find.text('No collections yet'), findsOneWidget);
       expect(
-          find.text('Group your notes into collections'), findsOneWidget);
+          find.text('Group your notes into collections'), findsOneWidget,);
       await handle.dispose();
     });
 

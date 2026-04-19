@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- AnyNote App Icon - Placeholder -->
+  <!-- Replace with production icon before generating launcher icons -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A1A2E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213E;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect x="48" y="48" width="928" height="928" rx="192" ry="192" fill="url(#bg)" />
+
+  <!-- Note sheet shape -->
+  <path d="M 280 200 L 680 200 Q 740 200 740 260 L 740 764 Q 740 824 680 824 L 344 824 Q 284 824 284 764 L 284 260 Q 284 200 280 200 Z"
+        fill="#E8E8F0" stroke="none" />
+
+  <!-- Folded corner -->
+  <path d="M 680 200 L 680 260 Q 680 280 700 280 L 740 260 Z" fill="#C8C8D8" />
+
+  <!-- Lines representing text -->
+  <rect x="340" y="340" width="300" height="16" rx="8" fill="#A0A0B8" />
+  <rect x="340" y="400" width="260" height="16" rx="8" fill="#A0A0B8" />
+  <rect x="340" y="460" width="320" height="16" rx="8" fill="#A0A0B8" />
+  <rect x="340" y="520" width="200" height="16" rx="8" fill="#A0A0B8" />
+  <rect x="340" y="580" width="280" height="16" rx="8" fill="#A0A0B8" />
+
+  <!-- Letter A accent -->
+  <text x="512" y="780" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="180" fill="#4A6CF7" opacity="0.9">A</text>
+</svg>

@@ -93,7 +93,7 @@ class _TestSyncEngine {
           break;
         case 'collection':
           await _applyCollectionBlob(
-              itemId, encryptedDataBase64, version);
+              itemId, encryptedDataBase64, version,);
           break;
         // Unknown types are silently skipped (counted but not applied)
       }
@@ -159,7 +159,7 @@ class _TestSyncEngine {
   // ── Blob application helpers ────────────────────────
 
   Future<void> _applyNoteBlob(
-      String itemId, String encryptedDataBase64, int version) async {
+      String itemId, String encryptedDataBase64, int version,) async {
     final existing = await _notesDao.getNoteById(itemId);
 
     // Mock decryption: base64 decode and treat as JSON envelope
@@ -196,7 +196,7 @@ class _TestSyncEngine {
   }
 
   Future<void> _applyTagBlob(
-      String itemId, String encryptedDataBase64, int version) async {
+      String itemId, String encryptedDataBase64, int version,) async {
     String? plainName;
     if (cryptoUnlocked) {
       try {
@@ -222,7 +222,7 @@ class _TestSyncEngine {
   }
 
   Future<void> _applyCollectionBlob(
-      String itemId, String encryptedDataBase64, int version) async {
+      String itemId, String encryptedDataBase64, int version,) async {
     String? plainTitle;
     if (cryptoUnlocked) {
       try {
@@ -292,7 +292,7 @@ void main() {
           'encrypted_data': encryptedData,
           'version': 3,
         },
-      ], latestVersion: 3));
+      ], latestVersion: 3,),);
 
       final count = await syncEngine.pull();
       expect(count, 1);
@@ -304,7 +304,7 @@ void main() {
     });
 
     test('pull creates new tags from server blobs', () async {
-      final tagPayload = 'work-tag';
+      const tagPayload = 'work-tag';
       final encryptedData = base64Encode(utf8.encode(tagPayload));
 
       syncEngine.setupPull(_MockPullResponse(blobs: [
@@ -314,7 +314,7 @@ void main() {
           'encrypted_data': encryptedData,
           'version': 1,
         },
-      ], latestVersion: 1));
+      ], latestVersion: 1,),);
 
       final count = await syncEngine.pull();
       expect(count, 1);
@@ -326,7 +326,7 @@ void main() {
     });
 
     test('pull creates new collections from server blobs', () async {
-      final colPayload = 'My Collection';
+      const colPayload = 'My Collection';
       final encryptedData = base64Encode(utf8.encode(colPayload));
 
       syncEngine.setupPull(_MockPullResponse(blobs: [
@@ -336,7 +336,7 @@ void main() {
           'encrypted_data': encryptedData,
           'version': 2,
         },
-      ], latestVersion: 2));
+      ], latestVersion: 2,),);
 
       final count = await syncEngine.pull();
       expect(count, 1);
@@ -372,8 +372,8 @@ void main() {
 
     test('pull with multiple blobs of different types', () async {
       final notePayload = jsonEncode({'content': 'note content'});
-      final tagPayload = 'tag-name';
-      final colPayload = 'collection-title';
+      const tagPayload = 'tag-name';
+      const colPayload = 'collection-title';
 
       syncEngine.setupPull(_MockPullResponse(blobs: [
         {
@@ -394,7 +394,7 @@ void main() {
           'encrypted_data': base64Encode(utf8.encode(colPayload)),
           'version': 1,
         },
-      ], latestVersion: 3));
+      ], latestVersion: 3,),);
 
       final count = await syncEngine.pull();
       expect(count, 3);
@@ -417,7 +417,7 @@ void main() {
           'encrypted_data': encryptedData,
           'version': 1,
         },
-      ], latestVersion: 1));
+      ], latestVersion: 1,),);
 
       final count = await syncEngine.pull();
       expect(count, 1);
@@ -452,7 +452,7 @@ void main() {
           'encrypted_data': encryptedData,
           'version': 5,
         },
-      ], latestVersion: 5));
+      ], latestVersion: 5,),);
 
       await syncEngine.pull();
 
@@ -469,7 +469,7 @@ void main() {
         plainName: 'local name',
       );
 
-      final serverPayload = 'server name';
+      const serverPayload = 'server name';
       final encryptedData = base64Encode(utf8.encode(serverPayload));
 
       syncEngine.setupPull(_MockPullResponse(blobs: [
@@ -479,7 +479,7 @@ void main() {
           'encrypted_data': encryptedData,
           'version': 2,
         },
-      ], latestVersion: 2));
+      ], latestVersion: 2,),);
 
       await syncEngine.pull();
 
@@ -496,7 +496,7 @@ void main() {
           'encrypted_data': base64Encode(utf8.encode('data')),
           'version': 1,
         },
-      ], latestVersion: 1));
+      ], latestVersion: 1,),);
 
       // Should not crash; the unknown blob is counted but not applied
       final count = await syncEngine.pull();
@@ -531,7 +531,7 @@ void main() {
       syncEngine.setupPush(_MockPushResponse(
         accepted: ['note-push'],
         conflicts: [],
-      ));
+      ),);
 
       final result = await syncEngine.push();
       expect(result.accepted, ['note-push']);
@@ -551,7 +551,7 @@ void main() {
       syncEngine.setupPush(_MockPushResponse(
         accepted: ['tag-push'],
         conflicts: [],
-      ));
+      ),);
 
       final result = await syncEngine.push();
       expect(result.accepted, ['tag-push']);
@@ -571,7 +571,7 @@ void main() {
       syncEngine.setupPush(_MockPushResponse(
         accepted: ['col-push'],
         conflicts: [],
-      ));
+      ),);
 
       final result = await syncEngine.push();
       expect(result.accepted, ['col-push']);
@@ -592,7 +592,7 @@ void main() {
         conflicts: [
           _MockConflict(itemId: 'note-conflict', serverVersion: 5),
         ],
-      ));
+      ),);
 
       final result = await syncEngine.push();
       expect(result.accepted, isEmpty);
@@ -635,7 +635,7 @@ void main() {
       syncEngine.setupPush(_MockPushResponse(
         accepted: ['note-accept'],
         conflicts: [],
-      ));
+      ),);
 
       final result = await syncEngine.push();
       expect(result.accepted, ['note-accept']);
@@ -657,7 +657,7 @@ void main() {
       syncEngine.setupPush(_MockPushResponse(
         accepted: [],
         conflicts: [],
-      ));
+      ),);
 
       final result = await syncEngine.sync();
       expect(result.pulled, 0);
@@ -680,7 +680,7 @@ void main() {
         conflicts: [
           _MockConflict(itemId: 'note-sync-conf', serverVersion: 10),
         ],
-      ));
+      ),);
 
       final result = await syncEngine.sync();
       expect(result.conflicts.length, 1);
@@ -703,12 +703,12 @@ void main() {
           'encrypted_data': base64Encode(utf8.encode(notePayload)),
           'version': 1,
         },
-      ], latestVersion: 5));
+      ], latestVersion: 5,),);
 
       syncEngine.setupPush(_MockPushResponse(
         accepted: ['note-cycle'],
         conflicts: [],
-      ));
+      ),);
 
       final result = await syncEngine.sync();
       expect(result.pulled, 1);
@@ -770,7 +770,7 @@ void main() {
       expect(await db.syncMetaDao.getLastSyncedVersion('notes'), 5);
       expect(await db.syncMetaDao.getLastSyncedVersion('tags'), 3);
       expect(
-          await db.syncMetaDao.getLastSyncedVersion('collections'), 7);
+          await db.syncMetaDao.getLastSyncedVersion('collections'), 7,);
     });
 
     test('getAll returns all sync metadata entries', () async {

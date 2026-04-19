@@ -1555,4 +1555,129 @@ class AppLocalizationsJa extends AppLocalizations {
   String monthsAgo(int count) {
     return '${count}mo ago';
   }
+
+  @override
+  String get menuFile => 'ファイル';
+
+  @override
+  String get menuNewNote => '新規メモ';
+
+  @override
+  String get menuSave => '保存';
+
+  @override
+  String get menuImport => 'インポート...';
+
+  @override
+  String get menuExport => 'エクスポート...';
+
+  @override
+  String get menuCloseTab => 'タブを閉じる';
+
+  @override
+  String get menuEdit => '編集';
+
+  @override
+  String get menuUndo => '元に戻す';
+
+  @override
+  String get menuRedo => 'やり直す';
+
+  @override
+  String get menuCut => 'カット';
+
+  @override
+  String get menuCopy => 'コピー';
+
+  @override
+  String get menuPaste => 'ペースト';
+
+  @override
+  String get menuSelectAll => 'すべて選択';
+
+  @override
+  String get menuFind => '検索...';
+
+  @override
+  String get menuView => '表示';
+
+  @override
+  String get menuToggleSidebar => 'サイドバーの切り替え';
+
+  @override
+  String get menuTogglePreview => 'プレビューの切り替え';
+
+  @override
+  String get menuZenMode => '集中モード';
+
+  @override
+  String get menuFullScreen => 'フルスクリーン';
+
+  @override
+  String get menuExitFullScreen => 'フルスクリーンを終了';
+
+  @override
+  String get menuHelp => 'ヘルプ';
+
+  @override
+  String get menuAbout => 'AnyNoteについて';
+
+  @override
+  String get menuKeyboardShortcuts => 'キーボードショートカット';
+
+  @override
+  String get aboutDialogTitle => 'AnyNoteについて';
+
+  @override
+  String get aboutDescription => 'ローカルファースト、プライバシーファーストのエンドツーエンド暗号化メモアプリ。';
+
+  @override
+  String aboutVersion(String version) {
+    return 'バージョン $version';
+  }
+
+  @override
+  String get shortcutsDialogTitle => 'キーボードショートカット';
+
+  @override
+  String get shortcutNewNote => '新規メモ';
+
+  @override
+  String get shortcutSave => '保存';
+
+  @override
+  String get shortcutSearch => '検索';
+
+  @override
+  String get shortcutToggleSidebar => 'サイドバーの切り替え';
+
+  @override
+  String get shortcutExportPdf => 'PDFにエクスポート';
+
+  @override
+  String get shortcutSettings => '設定を開く';
+
+  @override
+  String get shortcutCloseNote => 'メモを閉じる';
+
+  @override
+  String get shortcutNextNote => '次のメモ';
+
+  @override
+  String get shortcutFullScreen => 'フルスクリーンの切り替え';
+
+  @override
+  String get shortcutExitZen => '集中モードを終了 / ダイアログを閉じる';
+
+  @override
+  String get notesTabLabel => 'メモ';
+
+  @override
+  String get composeTabLabel => '作成';
+
+  @override
+  String get publishTabLabel => '公開';
+
+  @override
+  String get settingsTabLabel => '設定';
 }

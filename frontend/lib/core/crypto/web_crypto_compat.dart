@@ -2,18 +2,15 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Web crypto compatibility layer.
 ///
-/// The app uses `sodium_libs` for native crypto (XChaCha20-Poly1305, Argon2id,
-/// BLAKE2b) which does not work on web. This class provides a runtime check
-/// for whether native crypto is available and a stub initialization path for web.
+/// Provides runtime checks for crypto platform availability and
+/// an initialization entry point for the appropriate crypto backend.
 ///
-/// Limitations on web:
-/// - sodium_libs (libsodium) is not available on web
-/// - Argon2id key derivation must be replaced with a WebCrypto equivalent
-/// - XChaCha20-Poly1305 must be replaced with AES-256-GCM (WebCrypto native)
-/// - BLAKE2b hashing must be replaced with SHA-256/SHA-384 (WebCrypto native)
+/// On native: sodium_libs is used (initialized lazily).
+/// On web: WebCrypto is available natively in the browser.
 ///
-/// These limitations mean that **web clients cannot decrypt data encrypted by
-/// native clients** and vice versa. The web platform is a secondary target.
+/// The actual platform-specific implementations are in:
+/// - Native: master_key_native_compat.dart, encryptor_native.dart
+/// - Web: master_key_web_compat.dart, encryptor_web.dart
 class CryptoCompat {
   /// Whether the current platform supports native crypto via sodium_libs.
   static bool get supportsNativeCrypto => !kIsWeb;
@@ -26,8 +23,6 @@ class CryptoCompat {
     if (kIsWeb) {
       // WebCrypto is available natively in modern browsers via
       // window.crypto.subtle. No additional initialization needed.
-      // Actual crypto operations on web would use the web_crypto package
-      // or dart:html/dart:js_interop for SubtleCrypto API access.
     } else {
       // Native path: sodium_libs is initialized lazily in Encryptor
       // and MasterKeyManager via SodiumSumoInit.init().
@@ -35,7 +30,5 @@ class CryptoCompat {
   }
 
   /// Check if full E2E encryption is supported on this platform.
-  ///
-  /// Returns false on web because the crypto primitives differ from native.
-  static bool get isFullEncryptionSupported => !kIsWeb;
+  static bool get isFullEncryptionSupported => true;
 }

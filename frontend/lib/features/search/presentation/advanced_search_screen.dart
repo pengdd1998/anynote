@@ -204,7 +204,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
             label: _formatDateRange(filters.dateRange!),
             onRemove: () =>
                 ref.read(searchFiltersProvider.notifier).clearDateRange(),
-          ));
+          ),);
         }
 
         // Tag chips.
@@ -216,7 +216,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                 label: tag.plainName ?? '...',
                 onRemove: () =>
                     ref.read(searchFiltersProvider.notifier).removeTag(tagId),
-              ));
+              ),);
             }
           }
         });
@@ -231,7 +231,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                 onRemove: () => ref
                     .read(searchFiltersProvider.notifier)
                     .removeCollection(colId),
-              ));
+              ),);
             }
           }
         });
@@ -453,7 +453,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
         spans.add(TextSpan(
           text: text.substring(start),
           style: TextStyle(fontWeight: fontWeight),
-        ));
+        ),);
         break;
       }
 
@@ -461,16 +461,16 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
         spans.add(TextSpan(
           text: text.substring(start, index),
           style: TextStyle(fontWeight: fontWeight),
-        ));
+        ),);
       }
 
       spans.add(TextSpan(
         text: text.substring(index, index + query.length),
-        style: TextStyle(
+        style: const TextStyle(
           backgroundColor: Colors.yellow,
           fontWeight: FontWeight.bold,
         ),
-      ));
+      ),);
 
       start = index + query.length;
     }

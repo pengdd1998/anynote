@@ -171,7 +171,7 @@ final searchResultsProvider =
       note: note,
       tags: tags,
       contentPreview: preview,
-    ));
+    ),);
   }
 
   return results;

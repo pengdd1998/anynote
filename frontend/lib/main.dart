@@ -4,7 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:window_manager/window_manager.dart';
 
+import 'core/crypto/web_crypto_compat.dart';
 import 'core/database/app_database.dart';
 import 'core/deep_link/deep_link_handler.dart';
 import 'core/locale/locale_provider.dart';
@@ -12,9 +16,13 @@ import 'core/monitoring/error_reporter.dart';
 import 'l10n/app_localizations.dart';
 import 'core/network/api_client.dart';
 import 'core/notifications/push_service.dart';
+import 'core/platform/platform_utils.dart';
+import 'core/share/receive_share_service.dart';
+import 'core/storage/window_state.dart';
 import 'core/sync/sync_lifecycle.dart';
 import 'core/error/connectivity_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/app_menu_bar.dart';
 import 'core/widgets/keyboard_shortcuts.dart';
 import 'routing/app_router.dart';
 
@@ -22,11 +30,33 @@ import 'routing/app_router.dart';
 /// (e.g. GoRouter redirect) can read providers.
 late final ProviderContainer globalContainer;
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize error reporting before anything else.
   ErrorReporter().init();
+
+  // Initialize crypto backend (no-op on web where WebCrypto is available;
+  // on native, sodium_libs is initialized lazily by Encryptor/MasterKeyManager).
+  await CryptoCompat.init();
+
+  // Initialize window_manager on desktop and restore saved bounds.
+  if (PlatformUtils.isDesktop) {
+    await windowManager.ensureInitialized();
+    final savedBounds = await WindowStateService.load();
+    if (savedBounds != null) {
+      await windowManager.setSize(Size(savedBounds.width, savedBounds.height));
+      await windowManager.setPosition(Offset(savedBounds.x, savedBounds.y));
+      if (savedBounds.isMaximized) {
+        await windowManager.maximize();
+      }
+    } else {
+      const defaults = WindowBounds.defaults;
+      await windowManager.setSize(Size(defaults.width, defaults.height));
+      await windowManager.setPosition(Offset(defaults.x, defaults.y));
+    }
+    await windowManager.show();
+  }
 
   // Initialize database
   final db = AppDatabase();
@@ -35,7 +65,7 @@ void main() {
   final apiClient = ApiClient(baseUrl: const String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'http://localhost:8080',
-  ));
+  ),);
 
   // Load any previously-stored tokens so the auth interceptor has them
   // available on the very first request.
@@ -48,7 +78,7 @@ void main() {
         apiClientProvider.overrideWithValue(apiClient),
       ],
       child: const AnyNoteApp(),
-    ));
+    ),);
   }, (error, stackTrace) {
     ErrorReporter().reportError(error, stackTrace, context: 'unhandled');
   });
@@ -62,11 +92,16 @@ class AnyNoteApp extends ConsumerStatefulWidget {
 }
 
 class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, WindowListener {
+  StreamSubscription<SharedContent>? _shareSubscription;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (PlatformUtils.isDesktop) {
+      windowManager.addListener(this);
+    }
     // Store the container globally so the router redirect can access it.
     // We use Future.microtask to ensure the ProviderScope is fully built.
     Future.microtask(() {
@@ -89,24 +124,47 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
         if (globalContainer.read(authStateProvider)) {
           globalContainer.read(pushNotificationServiceProvider).init();
         }
+        // Initialize share extension receiver so that shared content
+        // arriving during cold start is detected.
+        final shareService = globalContainer.read(receiveShareServiceProvider);
+        shareService.init();
+
+        // Listen for incoming shares and navigate to the note editor.
+        _shareSubscription = shareService.onShareReceived.listen((content) {
+          final navContext = rootNavigatorKey.currentContext;
+          if (navContext != null && navContext.mounted) {
+            final encoded = Uri.encodeComponent(content.toNoteContent());
+            navContext.push('/notes/new?shareContent=$encoded');
+            shareService.markConsumed();
+          }
+        });
       }
     });
   }
 
   @override
   void dispose() {
+    _shareSubscription?.cancel();
+    if (PlatformUtils.isDesktop) {
+      windowManager.removeListener(this);
+    }
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // No-op placeholder for lifecycle changes.
+    // When the app resumes from background, check for any pending share
+    // data that may have arrived from the share extension while the app
+    // was suspended (especially relevant on iOS).
+    if (state == AppLifecycleState.resumed) {
+      globalContainer.read(receiveShareServiceProvider).checkPendingShare();
+    }
   }
 
   @override
   Future<bool> didPushRouteInformation(
-      RouteInformation routeInformation) async {
+      RouteInformation routeInformation,) async {
     final uri = routeInformation.uri;
     if (uri.scheme == 'anynote') {
       final context = rootNavigatorKey.currentContext;
@@ -118,22 +176,58 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
     return super.didPushRouteInformation(routeInformation);
   }
 
+  // ── WindowListener callbacks (desktop only) ─────────
+
+  @override
+  void onWindowMoved() => _saveWindowBounds();
+
+  @override
+  void onWindowResized() => _saveWindowBounds();
+
+  @override
+  void onWindowClose() async {
+    // Persist window bounds before closing.
+    await _saveWindowBounds();
+    await windowManager.destroy();
+  }
+
+  /// Persist current window position and size.
+  Future<void> _saveWindowBounds() async {
+    if (!PlatformUtils.isDesktop) return;
+    try {
+      final size = await windowManager.getSize();
+      final pos = await windowManager.getPosition();
+      final isMaximized = await windowManager.isMaximized();
+      await WindowStateService.save(
+        x: pos.dx,
+        y: pos.dy,
+        width: size.width,
+        height: size.height,
+        isMaximized: isMaximized,
+      );
+    } catch (_) {
+      // Failed to save window bounds -- non-critical.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
 
     return AppShortcuts(
-      child: MaterialApp.router(
-        title: 'AnyNote',
-        debugShowCheckedModeBanner: false,
-        showSemanticsDebugger: kDebugMode,
-        theme: AppTheme.lightTheme(),
-        darkTheme: AppTheme.darkTheme(),
-        themeMode: ThemeMode.system,
-        routerConfig: appRouter,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: locale,
+      child: AppMenuBar(
+        child: MaterialApp.router(
+          title: 'AnyNote',
+          debugShowCheckedModeBanner: false,
+          showSemanticsDebugger: kDebugMode,
+          theme: AppTheme.lightTheme(),
+          darkTheme: AppTheme.darkTheme(),
+          themeMode: ThemeMode.system,
+          routerConfig: appRouter,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: locale,
+        ),
       ),
     );
   }
@@ -161,6 +255,10 @@ final authStateProvider = StateProvider<bool>((ref) => false);
 /// StateProvider so that the GoRouter redirect (which must be synchronous)
 /// can read it without waiting for the future to complete.
 final _hasSeenOnboardingFutureProvider = FutureProvider<bool>((ref) async {
+  if (kIsWeb) {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('has_seen_onboarding') ?? false;
+  }
   const storage = FlutterSecureStorage();
   return (await storage.read(key: 'has_seen_onboarding')) == 'true';
 });

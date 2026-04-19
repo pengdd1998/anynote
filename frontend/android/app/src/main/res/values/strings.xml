@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">AnyNote</string>
     <string name="widget_quick_note_desc">Create a new note with one tap</string>
+    <string name="share_label">Share to AnyNote</string>
 </resources>

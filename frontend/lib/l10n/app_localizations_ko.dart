@@ -1555,4 +1555,129 @@ class AppLocalizationsKo extends AppLocalizations {
   String monthsAgo(int count) {
     return '${count}mo ago';
   }
+
+  @override
+  String get menuFile => '파일';
+
+  @override
+  String get menuNewNote => '새 메모';
+
+  @override
+  String get menuSave => '저장';
+
+  @override
+  String get menuImport => '가져오기...';
+
+  @override
+  String get menuExport => '내보내기...';
+
+  @override
+  String get menuCloseTab => '탭 닫기';
+
+  @override
+  String get menuEdit => '편집';
+
+  @override
+  String get menuUndo => '실행 취소';
+
+  @override
+  String get menuRedo => '다시 실행';
+
+  @override
+  String get menuCut => '잘라내기';
+
+  @override
+  String get menuCopy => '복사';
+
+  @override
+  String get menuPaste => '붙여넣기';
+
+  @override
+  String get menuSelectAll => '모두 선택';
+
+  @override
+  String get menuFind => '찾기...';
+
+  @override
+  String get menuView => '보기';
+
+  @override
+  String get menuToggleSidebar => '사이드바 전환';
+
+  @override
+  String get menuTogglePreview => '미리보기 전환';
+
+  @override
+  String get menuZenMode => '집중 모드';
+
+  @override
+  String get menuFullScreen => '전체 화면';
+
+  @override
+  String get menuExitFullScreen => '전체 화면 종료';
+
+  @override
+  String get menuHelp => '도움말';
+
+  @override
+  String get menuAbout => 'AnyNote 정보';
+
+  @override
+  String get menuKeyboardShortcuts => '키보드 단축키';
+
+  @override
+  String get aboutDialogTitle => 'AnyNote 정보';
+
+  @override
+  String get aboutDescription => '로컬 우선, 개인정보 우선의 종단간 암호화 메모 앱.';
+
+  @override
+  String aboutVersion(String version) {
+    return '버전 $version';
+  }
+
+  @override
+  String get shortcutsDialogTitle => '키보드 단축키';
+
+  @override
+  String get shortcutNewNote => '새 메모';
+
+  @override
+  String get shortcutSave => '저장';
+
+  @override
+  String get shortcutSearch => '검색';
+
+  @override
+  String get shortcutToggleSidebar => '사이드바 전환';
+
+  @override
+  String get shortcutExportPdf => 'PDF로 내보내기';
+
+  @override
+  String get shortcutSettings => '설정 열기';
+
+  @override
+  String get shortcutCloseNote => '메모 닫기';
+
+  @override
+  String get shortcutNextNote => '다음 메모';
+
+  @override
+  String get shortcutFullScreen => '전체 화면 전환';
+
+  @override
+  String get shortcutExitZen => '집중 모드 종료 / 대화상자 닫기';
+
+  @override
+  String get notesTabLabel => '메모';
+
+  @override
+  String get composeTabLabel => '작성';
+
+  @override
+  String get publishTabLabel => '게시';
+
+  @override
+  String get settingsTabLabel => '설정';
 }

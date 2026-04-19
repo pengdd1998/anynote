@@ -59,6 +59,10 @@ dependencies:
   image_picker: ^1.0.0
   crypto: ^3.0.3
   shared_preferences: ^2.2.3
+  web: ^1.1.0
+
+  # Desktop
+  window_manager: ^0.4.3
 
   # Push Notifications
   # Note: These require Firebase project setup (google-services.json / GoogleService-Info.plist).
@@ -76,6 +80,11 @@ dev_dependencies:
   json_serializable: ^6.8.0
   riverpod_generator: ^2.4.0
 
+  # App Store assets
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.3
+
+  sqlite3: any
 flutter:
   generate: true
   uses-material-design: true

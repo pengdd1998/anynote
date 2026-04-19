@@ -354,3 +354,361 @@ func TestWSWriteJSON_Marshal(t *testing.T) {
 		t.Errorf("Type = %q, want %q", decoded.Type, "pong")
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Tests: clientRateLimiter
+// ---------------------------------------------------------------------------
+
+func TestClientRateLimiter_AllowsUnderLimit(t *testing.T) {
+	limiter := newClientRateLimiter(3, 1*time.Second)
+
+	for i := 0; i < 3; i++ {
+		if !limiter.Allow() {
+			t.Fatalf("Allow() should return true for call %d under limit", i+1)
+		}
+	}
+}
+
+func TestClientRateLimiter_BlocksOverLimit(t *testing.T) {
+	limiter := newClientRateLimiter(2, 1*time.Second)
+
+	if !limiter.Allow() {
+		t.Fatal("first Allow() should succeed")
+	}
+	if !limiter.Allow() {
+		t.Fatal("second Allow() should succeed")
+	}
+	if limiter.Allow() {
+		t.Fatal("third Allow() should be rate limited")
+	}
+}
+
+func TestClientRateLimiter_WindowExpires(t *testing.T) {
+	limiter := newClientRateLimiter(1, 50*time.Millisecond)
+
+	if !limiter.Allow() {
+		t.Fatal("first Allow() should succeed")
+	}
+	if limiter.Allow() {
+		t.Fatal("second Allow() should be rate limited")
+	}
+
+	// Wait for the window to expire.
+	time.Sleep(60 * time.Millisecond)
+
+	if !limiter.Allow() {
+		t.Fatal("Allow() should succeed after window expires")
+	}
+}
+
+func TestClientRateLimiter_SingleRequest(t *testing.T) {
+	limiter := newClientRateLimiter(1, 1*time.Second)
+
+	if !limiter.Allow() {
+		t.Fatal("single request should be allowed")
+	}
+	if limiter.Allow() {
+		t.Fatal("second request should be blocked")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: handleEdit
+// ---------------------------------------------------------------------------
+
+func TestWSHandler_HandleEdit_Broadcasts(t *testing.T) {
+	var capturedRoom string
+	var capturedMsg service.WSMessage
+
+	presenceSvc := &mockPresenceService{
+		broadcastFn: func(ctx context.Context, room string, msg service.WSMessage) error {
+			capturedRoom = room
+			capturedMsg = msg
+			return nil
+		},
+	}
+
+	h := &WSHandler{presenceSvc: presenceSvc, jwtSecret: testJWTSecret}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	editData := json.RawMessage(`{"ops":[{"type":"insert","pos":0,"text":"hello"}],"version":1}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	// handleEdit requires a conn, but for this test we only care about broadcast.
+	// We pass nil for conn since the rate limit should not be hit.
+	h.handleEdit(context.Background(), "note-uuid-1", "user-42", msg, limiter, nil)
+
+	if capturedRoom != "note-uuid-1" {
+		t.Errorf("room = %q, want %q", capturedRoom, "note-uuid-1")
+	}
+	if capturedMsg.Type != "edit" {
+		t.Errorf("msg type = %q, want %q", capturedMsg.Type, "edit")
+	}
+	if capturedMsg.Sender != "user-42" {
+		t.Errorf("msg sender = %q, want %q", capturedMsg.Sender, "user-42")
+	}
+	if capturedMsg.RoomID != "note-uuid-1" {
+		t.Errorf("msg room_id = %q, want %q", capturedMsg.RoomID, "note-uuid-1")
+	}
+	// Verify payload is relayed as-is (zero-knowledge).
+	var payload map[string]interface{}
+	if err := json.Unmarshal(capturedMsg.Data, &payload); err != nil {
+		t.Fatalf("unmarshal payload: %v", err)
+	}
+	if payload["version"].(float64) != 1 {
+		t.Errorf("payload version = %v, want 1", payload["version"])
+	}
+}
+
+func TestWSHandler_HandleEdit_RateLimited(t *testing.T) {
+	broadcastCalled := false
+	presenceSvc := &mockPresenceService{
+		broadcastFn: func(ctx context.Context, room string, msg service.WSMessage) error {
+			broadcastCalled = true
+			return nil
+		},
+	}
+
+	h := &WSHandler{presenceSvc: presenceSvc, jwtSecret: testJWTSecret}
+	// Create a limiter with capacity 1 to trigger rate limiting quickly.
+	limiter := newClientRateLimiter(1, rateLimitWindow)
+
+	editData := json.RawMessage(`{"ops":[],"version":1}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	// First call should succeed and broadcast.
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+	if !broadcastCalled {
+		t.Fatal("first edit should have broadcast")
+	}
+
+	// Reset flag for second call.
+	broadcastCalled = false
+
+	// Second call should be rate limited. conn is nil, so the error message
+	// write will fail, but the important thing is broadcast is not called.
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+	if broadcastCalled {
+		t.Fatal("rate-limited edit should not have broadcast")
+	}
+}
+
+func TestWSHandler_HandleEdit_PreservesPayload(t *testing.T) {
+	var capturedData json.RawMessage
+	presenceSvc := &mockPresenceService{
+		broadcastFn: func(ctx context.Context, room string, msg service.WSMessage) error {
+			capturedData = msg.Data
+			return nil
+		},
+	}
+
+	h := &WSHandler{presenceSvc: presenceSvc, jwtSecret: testJWTSecret}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	// Arbitrary encrypted payload that the server should never modify.
+	originalData := json.RawMessage(`{"encrypted":"dGhpcyBpcyBlbmNyeXB0ZWQ=","iv":"abcdef"}`)
+	msg := service.WSMessage{Type: "edit", Data: originalData}
+
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+
+	if string(capturedData) != string(originalData) {
+		t.Errorf("payload was modified: got %q, want %q", string(capturedData), string(originalData))
+	}
+}
+
+func TestWSHandler_HandleEdit_ServiceError(t *testing.T) {
+	presenceSvc := &mockPresenceService{
+		broadcastFn: func(ctx context.Context, room string, msg service.WSMessage) error {
+			return errors.New("redis connection lost")
+		},
+	}
+
+	h := &WSHandler{presenceSvc: presenceSvc, jwtSecret: testJWTSecret}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	editData := json.RawMessage(`{"ops":[],"version":1}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	// Should not panic when broadcast fails.
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+}
+
+// ---------------------------------------------------------------------------
+// Tests: handleCursor
+// ---------------------------------------------------------------------------
+
+func TestWSHandler_HandleCursor_Broadcasts(t *testing.T) {
+	var capturedRoom string
+	var capturedMsg service.WSMessage
+
+	presenceSvc := &mockPresenceService{
+		broadcastFn: func(ctx context.Context, room string, msg service.WSMessage) error {
+			capturedRoom = room
+			capturedMsg = msg
+			return nil
+		},
+	}
+
+	h := &WSHandler{presenceSvc: presenceSvc, jwtSecret: testJWTSecret}
+	limiter := newClientRateLimiter(MaxCursorRate, rateLimitWindow)
+
+	cursorData := json.RawMessage(`{"position":42,"selection_end":50}`)
+	msg := service.WSMessage{Type: "cursor", Data: cursorData}
+
+	h.handleCursor(context.Background(), "note-uuid-1", "user-42", msg, limiter, nil)
+
+	if capturedRoom != "note-uuid-1" {
+		t.Errorf("room = %q, want %q", capturedRoom, "note-uuid-1")
+	}
+	if capturedMsg.Type != "cursor" {
+		t.Errorf("msg type = %q, want %q", capturedMsg.Type, "cursor")
+	}
+	if capturedMsg.Sender != "user-42" {
+		t.Errorf("msg sender = %q, want %q", capturedMsg.Sender, "user-42")
+	}
+	if capturedMsg.RoomID != "note-uuid-1" {
+		t.Errorf("msg room_id = %q, want %q", capturedMsg.RoomID, "note-uuid-1")
+	}
+}
+
+func TestWSHandler_HandleCursor_RateLimited(t *testing.T) {
+	broadcastCalled := false
+	presenceSvc := &mockPresenceService{
+		broadcastFn: func(ctx context.Context, room string, msg service.WSMessage) error {
+			broadcastCalled = true
+			return nil
+		},
+	}
+
+	h := &WSHandler{presenceSvc: presenceSvc, jwtSecret: testJWTSecret}
+	limiter := newClientRateLimiter(1, rateLimitWindow)
+
+	cursorData := json.RawMessage(`{"position":1}`)
+	msg := service.WSMessage{Type: "cursor", Data: cursorData}
+
+	// First call should succeed.
+	h.handleCursor(context.Background(), "room-1", "user-1", msg, limiter, nil)
+	if !broadcastCalled {
+		t.Fatal("first cursor should have broadcast")
+	}
+
+	broadcastCalled = false
+
+	// Second call should be rate limited.
+	h.handleCursor(context.Background(), "room-1", "user-1", msg, limiter, nil)
+	if broadcastCalled {
+		t.Fatal("rate-limited cursor should not have broadcast")
+	}
+}
+
+func TestWSHandler_HandleCursor_PreservesPayload(t *testing.T) {
+	var capturedData json.RawMessage
+	presenceSvc := &mockPresenceService{
+		broadcastFn: func(ctx context.Context, room string, msg service.WSMessage) error {
+			capturedData = msg.Data
+			return nil
+		},
+	}
+
+	h := &WSHandler{presenceSvc: presenceSvc, jwtSecret: testJWTSecret}
+	limiter := newClientRateLimiter(MaxCursorRate, rateLimitWindow)
+
+	originalData := json.RawMessage(`{"position":100,"selection_end":150}`)
+	msg := service.WSMessage{Type: "cursor", Data: originalData}
+
+	h.handleCursor(context.Background(), "room-1", "user-1", msg, limiter, nil)
+
+	if string(capturedData) != string(originalData) {
+		t.Errorf("payload was modified: got %q, want %q", string(capturedData), string(originalData))
+	}
+}
+
+func TestWSHandler_HandleCursor_ServiceError(t *testing.T) {
+	presenceSvc := &mockPresenceService{
+		broadcastFn: func(ctx context.Context, room string, msg service.WSMessage) error {
+			return errors.New("redis connection lost")
+		},
+	}
+
+	h := &WSHandler{presenceSvc: presenceSvc, jwtSecret: testJWTSecret}
+	limiter := newClientRateLimiter(MaxCursorRate, rateLimitWindow)
+
+	cursorData := json.RawMessage(`{"position":1}`)
+	msg := service.WSMessage{Type: "cursor", Data: cursorData}
+
+	// Should not panic when broadcast fails.
+	h.handleCursor(context.Background(), "room-1", "user-1", msg, limiter, nil)
+}
+
+// ---------------------------------------------------------------------------
+// Tests: WSMessage with Sender and RoomID fields
+// ---------------------------------------------------------------------------
+
+func TestWSMessage_SenderRoomID(t *testing.T) {
+	msg := service.WSMessage{
+		Type:   "edit",
+		Data:   json.RawMessage(`{"ops":[],"version":1}`),
+		Sender: "user-42",
+		RoomID: "note-uuid-1",
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal WSMessage: %v", err)
+	}
+
+	var decoded service.WSMessage
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal WSMessage: %v", err)
+	}
+	if decoded.Sender != "user-42" {
+		t.Errorf("Sender = %q, want %q", decoded.Sender, "user-42")
+	}
+	if decoded.RoomID != "note-uuid-1" {
+		t.Errorf("RoomID = %q, want %q", decoded.RoomID, "note-uuid-1")
+	}
+}
+
+func TestWSMessage_SenderRoomID_Omitempty(t *testing.T) {
+	msg := service.WSMessage{
+		Type: "ping",
+		Data: json.RawMessage(`{}`),
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal WSMessage: %v", err)
+	}
+
+	// Verify sender and room_id are omitted when empty.
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("unmarshal to raw map: %v", err)
+	}
+	if _, exists := raw["sender"]; exists {
+		t.Error("sender should be omitted when empty")
+	}
+	if _, exists := raw["room_id"]; exists {
+		t.Error("room_id should be omitted when empty")
+	}
+}
+
+func TestWSMessage_AllTypes(t *testing.T) {
+	types := []string{"join", "leave", "presence", "typing", "comment", "edit", "cursor", "ping", "pong", "error"}
+	for _, typ := range types {
+		msg := service.WSMessage{Type: typ, Data: json.RawMessage(`{}`)}
+		data, err := json.Marshal(msg)
+		if err != nil {
+			t.Errorf("Marshal type %q: %v", typ, err)
+			continue
+		}
+		var decoded service.WSMessage
+		if err := json.Unmarshal(data, &decoded); err != nil {
+			t.Errorf("Unmarshal type %q: %v", typ, err)
+			continue
+		}
+		if decoded.Type != typ {
+			t.Errorf("Type = %q, want %q", decoded.Type, typ)
+		}
+	}
+}

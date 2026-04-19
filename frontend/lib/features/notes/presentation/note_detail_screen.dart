@@ -161,7 +161,7 @@ class NoteDetailScreen extends ConsumerWidget {
                       const SizedBox(width: 4),
                       Text(l10n.notSynced,
                           style:
-                              TextStyle(fontSize: 12, color: Colors.orange.shade300)),
+                              TextStyle(fontSize: 12, color: Colors.orange.shade300),),
                     ],
                   ],
                   ),
@@ -315,7 +315,7 @@ class NoteDetailScreen extends ConsumerWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel)),
+              child: Text(l10n.cancel),),
           FilledButton(
             onPressed: () async {
               await db.notesDao.softDeleteNote(noteId);

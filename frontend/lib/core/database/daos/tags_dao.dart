@@ -28,7 +28,7 @@ class TagsDao extends DatabaseAccessor<AppDatabase> with _$TagsDaoMixin {
       id: id,
       encryptedName: encryptedName,
       plainName: Value(plainName),
-    ));
+    ),);
     return id;
   }
 
@@ -42,7 +42,7 @@ class TagsDao extends DatabaseAccessor<AppDatabase> with _$TagsDaoMixin {
       encryptedName: encryptedName != null ? Value(encryptedName) : const Value.absent(),
       plainName: Value(plainName),
       isSynced: const Value(false),
-    ));
+    ),);
   }
 
   /// Delete a tag and all its note associations.

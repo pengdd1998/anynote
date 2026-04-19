@@ -135,7 +135,7 @@ class AppleNotesImporter {
     // Links: <a href="url">text</a> -> [text](url)
     body = body.replaceAllMapped(
       RegExp(r'<a\s+[^>]*href=["\x27]([^"\x27]*)["\x27][^>]*>([\s\S]*?)</a>',
-          dotAll: true),
+          dotAll: true,),
       (m) => '[${_stripHtmlTags(m.group(2)!).trim()}](${m.group(1)!})',
     );
 

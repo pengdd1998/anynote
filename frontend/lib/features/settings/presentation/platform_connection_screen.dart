@@ -42,7 +42,7 @@ class _PlatformConnectionScreenState
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.share_outlined,
-                      size: 48, color: Theme.of(context).disabledColor),
+                      size: 48, color: Theme.of(context).disabledColor,),
                   const SizedBox(height: 12),
                   Text(l10n.noPlatformsAvailable),
                   const SizedBox(height: 8),
@@ -101,13 +101,13 @@ class _PlatformConnectionScreenState
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.error_outline,
-                    size: 48, color: Theme.of(context).colorScheme.error),
+                    size: 48, color: Theme.of(context).colorScheme.error,),
                 const SizedBox(height: 12),
                 Text(l10n.failedToLoadPlatforms),
                 const SizedBox(height: 8),
                 Text('$error',
                     style: TextStyle(
-                        fontSize: 12, color: Theme.of(context).disabledColor)),
+                        fontSize: 12, color: Theme.of(context).disabledColor,),),
                 const SizedBox(height: 16),
                 FilledButton.tonal(
                   onPressed: () =>
@@ -150,7 +150,7 @@ class _PlatformConnectionScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
-                  l10n.failedToConnect(e.message ?? 'Unknown error'))),
+                  l10n.failedToConnect(e.message ?? 'Unknown error'),),),
         );
       }
     } finally {
@@ -178,7 +178,7 @@ class _PlatformConnectionScreenState
           SnackBar(
             content: Text(valid
                 ? l10n.connectionVerified
-                : l10n.connectionInvalid(result['error']?.toString() ?? 'please reconnect')),
+                : l10n.connectionInvalid(result['error']?.toString() ?? 'please reconnect'),),
             backgroundColor: valid ? Colors.green : Colors.red,
           ),
         );
@@ -190,7 +190,7 @@ class _PlatformConnectionScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content:
-                  Text(l10n.verificationFailedError(e.message ?? 'Network error'))),
+                  Text(l10n.verificationFailedError(e.message ?? 'Network error')),),
         );
       }
     }
@@ -221,7 +221,7 @@ class _PlatformConnectionScreenState
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content:
-                            Text(l10n.disconnectedFrom(displayName))),
+                            Text(l10n.disconnectedFrom(displayName)),),
                   );
                 }
               } on DioException catch (e) {
@@ -230,7 +230,7 @@ class _PlatformConnectionScreenState
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content: Text(
-                            l10n.failedToDisconnect(e.message ?? 'Unknown error'))),
+                            l10n.failedToDisconnect(e.message ?? 'Unknown error'),),),
                   );
                 }
               }
@@ -264,7 +264,7 @@ class _PlatformConnectionScreenState
               // Display a placeholder icon. In production, decode qrCodeData
               // into an actual QR image using a QR rendering package.
               child: const Center(
-                  child: Icon(Icons.qr_code_2, size: 120)),
+                  child: Icon(Icons.qr_code_2, size: 120),),
             ),
             const SizedBox(height: 16),
             Text(
@@ -340,7 +340,7 @@ class _PlatformCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.check_circle,
-              color: colorScheme.primary, size: 20),
+              color: colorScheme.primary, size: 20,),
           const SizedBox(width: 4),
           TextButton(
             onPressed: onVerify,

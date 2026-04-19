@@ -24,7 +24,7 @@ void main() {
 
   // ── Helper ──────────────────────────────────────────────
 
-  Future<String> _createCollection({
+  Future<String> createCollection({
     String id = 'col-1',
     String encryptedTitle = 'ZW5jLXRpdGxl',
     String? plainTitle,
@@ -36,7 +36,7 @@ void main() {
     );
   }
 
-  Future<void> _createNote({String id = 'note-1'}) {
+  Future<void> createNote({String id = 'note-1'}) {
     return notesDao.createNote(
       id: id,
       encryptedContent: 'enc-content',
@@ -48,7 +48,7 @@ void main() {
 
   group('create and read', () {
     test('createCollection inserts a collection and returns its ID', () async {
-      final id = await _createCollection(plainTitle: 'Work Notes');
+      final id = await createCollection(plainTitle: 'Work Notes');
       expect(id, 'col-1');
 
       final all = await collectionsDao.getAllCollections();
@@ -58,7 +58,7 @@ void main() {
     });
 
     test('createCollection without plainTitle stores null', () async {
-      await _createCollection();
+      await createCollection();
 
       final all = await collectionsDao.getAllCollections();
       expect(all[0].plainTitle, isNull);
@@ -66,7 +66,7 @@ void main() {
 
     test('createCollection sets default version to 0 and isSynced to false',
         () async {
-      await _createCollection();
+      await createCollection();
 
       final all = await collectionsDao.getAllCollections();
       expect(all[0].version, 0);
@@ -75,9 +75,9 @@ void main() {
 
     test('getAllCollections returns collections ordered by plainTitle asc',
         () async {
-      await _createCollection(id: 'col-c', plainTitle: 'zebra notes');
-      await _createCollection(id: 'col-a', plainTitle: 'alpha notes');
-      await _createCollection(id: 'col-b', plainTitle: 'beta notes');
+      await createCollection(id: 'col-c', plainTitle: 'zebra notes');
+      await createCollection(id: 'col-a', plainTitle: 'alpha notes');
+      await createCollection(id: 'col-b', plainTitle: 'beta notes');
 
       final all = await collectionsDao.getAllCollections();
       expect(all.length, 3);
@@ -91,7 +91,7 @@ void main() {
 
   group('update', () {
     test('updateCollection changes encryptedTitle and plainTitle', () async {
-      await _createCollection(id: 'col-upd', plainTitle: 'old title');
+      await createCollection(id: 'col-upd', plainTitle: 'old title');
 
       await collectionsDao.updateCollection(
         id: 'col-upd',
@@ -106,7 +106,7 @@ void main() {
     });
 
     test('updateCollection sets isSynced to false', () async {
-      await _createCollection(id: 'col-sync');
+      await createCollection(id: 'col-sync');
       await collectionsDao.markSynced('col-sync');
       expect((await collectionsDao.getUnsyncedCollections()), isEmpty);
 
@@ -116,7 +116,7 @@ void main() {
 
     test('updateCollection without encryptedTitle keeps existing value',
         () async {
-      await _createCollection(
+      await createCollection(
         id: 'col-keep',
         encryptedTitle: 'original-enc',
       );
@@ -147,7 +147,7 @@ void main() {
 
   group('delete', () {
     test('deleteCollection removes the collection', () async {
-      await _createCollection(id: 'col-del', plainTitle: 'to delete');
+      await createCollection(id: 'col-del', plainTitle: 'to delete');
       expect((await collectionsDao.getAllCollections()).length, 1);
 
       await collectionsDao.deleteCollection('col-del');
@@ -156,15 +156,15 @@ void main() {
 
     test('deleteCollection also removes collection-note associations',
         () async {
-      await _createNote(id: 'note-col-del');
-      await _createCollection(id: 'col-del-assoc');
+      await createNote(id: 'note-col-del');
+      await createCollection(id: 'col-del-assoc');
       await collectionsDao.addNoteToCollection(
         collectionId: 'col-del-assoc',
         noteId: 'note-col-del',
       );
 
       // Verify the association exists
-      var colNotes =
+      final colNotes =
           await collectionsDao.getCollectionNotes('col-del-assoc');
       expect(colNotes.length, 1);
 
@@ -188,9 +188,9 @@ void main() {
 
   group('collection notes', () {
     test('addNoteToCollection and getCollectionNotes', () async {
-      await _createNote(id: 'note-cn1');
-      await _createNote(id: 'note-cn2');
-      await _createCollection(id: 'col-cn');
+      await createNote(id: 'note-cn1');
+      await createNote(id: 'note-cn2');
+      await createCollection(id: 'col-cn');
 
       await collectionsDao.addNoteToCollection(
         collectionId: 'col-cn',
@@ -212,15 +212,15 @@ void main() {
     });
 
     test('getCollectionNotes returns empty for empty collection', () async {
-      await _createCollection(id: 'col-empty');
+      await createCollection(id: 'col-empty');
 
       final colNotes = await collectionsDao.getCollectionNotes('col-empty');
       expect(colNotes, isEmpty);
     });
 
     test('removeNoteFromCollection removes the association', () async {
-      await _createNote(id: 'note-rm');
-      await _createCollection(id: 'col-rm');
+      await createNote(id: 'note-rm');
+      await createCollection(id: 'col-rm');
       await collectionsDao.addNoteToCollection(
         collectionId: 'col-rm',
         noteId: 'note-rm',
@@ -241,16 +241,16 @@ void main() {
 
     test('removeNoteFromCollection for non-existent association does nothing',
         () async {
-      await _createCollection(id: 'col-rm-na');
+      await createCollection(id: 'col-rm-na');
       // Should not throw
       await collectionsDao.removeNoteFromCollection('col-rm-na', 'nonexistent');
     });
 
     test('notes ordered by sortOrder', () async {
-      await _createNote(id: 'note-so-a');
-      await _createNote(id: 'note-so-b');
-      await _createNote(id: 'note-so-c');
-      await _createCollection(id: 'col-so');
+      await createNote(id: 'note-so-a');
+      await createNote(id: 'note-so-b');
+      await createNote(id: 'note-so-c');
+      await createCollection(id: 'col-so');
 
       // Add in non-sorted order
       await collectionsDao.addNoteToCollection(
@@ -276,9 +276,9 @@ void main() {
     });
 
     test('same note can belong to multiple collections', () async {
-      await _createNote(id: 'note-multi-col');
-      await _createCollection(id: 'col-multi-1');
-      await _createCollection(id: 'col-multi-2');
+      await createNote(id: 'note-multi-col');
+      await createCollection(id: 'col-multi-1');
+      await createCollection(id: 'col-multi-2');
 
       await collectionsDao.addNoteToCollection(
         collectionId: 'col-multi-1',
@@ -304,8 +304,8 @@ void main() {
 
   group('sync status', () {
     test('getUnsyncedCollections returns only unsynced', () async {
-      await _createCollection(id: 'col-synced', plainTitle: 'synced');
-      await _createCollection(id: 'col-unsynced', plainTitle: 'unsynced');
+      await createCollection(id: 'col-synced', plainTitle: 'synced');
+      await createCollection(id: 'col-unsynced', plainTitle: 'unsynced');
 
       await collectionsDao.markSynced('col-synced');
 
@@ -315,7 +315,7 @@ void main() {
     });
 
     test('markSynced sets isSynced to true', () async {
-      await _createCollection(id: 'col-ms');
+      await createCollection(id: 'col-ms');
       var all = await collectionsDao.getAllCollections();
       expect(all[0].isSynced, false);
 
@@ -326,7 +326,7 @@ void main() {
     });
 
     test('getUnsyncedCollections returns empty when all synced', () async {
-      await _createCollection(id: 'col-s1');
+      await createCollection(id: 'col-s1');
       await collectionsDao.markSynced('col-s1');
 
       final unsynced = await collectionsDao.getUnsyncedCollections();

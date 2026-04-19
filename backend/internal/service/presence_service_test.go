@@ -143,7 +143,7 @@ func TestWSMessage_JSON(t *testing.T) {
 }
 
 func TestWSMessage_Types(t *testing.T) {
-	types := []string{"join", "leave", "presence", "typing", "comment", "ping", "pong"}
+	types := []string{"join", "leave", "presence", "typing", "comment", "edit", "cursor", "ping", "pong", "error"}
 	for _, typ := range types {
 		msg := WSMessage{Type: typ, Data: json.RawMessage(`{}`)}
 		data, err := json.Marshal(msg)
@@ -159,5 +159,53 @@ func TestWSMessage_Types(t *testing.T) {
 		if decoded.Type != typ {
 			t.Errorf("Type = %q, want %q", decoded.Type, typ)
 		}
+	}
+}
+
+func TestWSMessage_SenderRoomID(t *testing.T) {
+	msg := WSMessage{
+		Type:   "edit",
+		Data:   json.RawMessage(`{"ops":[],"version":1}`),
+		Sender: "user-99",
+		RoomID: "room-abc",
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal WSMessage: %v", err)
+	}
+
+	var decoded WSMessage
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal WSMessage: %v", err)
+	}
+	if decoded.Sender != "user-99" {
+		t.Errorf("Sender = %q, want %q", decoded.Sender, "user-99")
+	}
+	if decoded.RoomID != "room-abc" {
+		t.Errorf("RoomID = %q, want %q", decoded.RoomID, "room-abc")
+	}
+}
+
+func TestWSMessage_SenderRoomID_Omitempty(t *testing.T) {
+	msg := WSMessage{
+		Type: "ping",
+		Data: json.RawMessage(`{}`),
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal WSMessage: %v", err)
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("unmarshal to raw map: %v", err)
+	}
+	if _, exists := raw["sender"]; exists {
+		t.Error("sender should be omitted when empty")
+	}
+	if _, exists := raw["room_id"]; exists {
+		t.Error("room_id should be omitted when empty")
 	}
 }

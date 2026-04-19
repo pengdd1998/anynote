@@ -1696,5 +1696,133 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+
+  "menuFile": "File",
+  "@menuFile": { "description": "File menu label" },
+
+  "menuNewNote": "New Note",
+  "@menuNewNote": { "description": "Menu item: create a new note" },
+
+  "menuSave": "Save",
+  "@menuSave": { "description": "Menu item: save current note" },
+
+  "menuImport": "Import...",
+  "@menuImport": { "description": "Menu item: import notes" },
+
+  "menuExport": "Export...",
+  "@menuExport": { "description": "Menu item: export notes" },
+
+  "menuCloseTab": "Close Tab",
+  "@menuCloseTab": { "description": "Menu item: close current tab/view" },
+
+  "menuEdit": "Edit",
+  "@menuEdit": { "description": "Edit menu label" },
+
+  "menuUndo": "Undo",
+  "@menuUndo": { "description": "Menu item: undo" },
+
+  "menuRedo": "Redo",
+  "@menuRedo": { "description": "Menu item: redo" },
+
+  "menuCut": "Cut",
+  "@menuCut": { "description": "Menu item: cut" },
+
+  "menuCopy": "Copy",
+  "@menuCopy": { "description": "Menu item: copy" },
+
+  "menuPaste": "Paste",
+  "@menuPaste": { "description": "Menu item: paste" },
+
+  "menuSelectAll": "Select All",
+  "@menuSelectAll": { "description": "Menu item: select all" },
+
+  "menuFind": "Find...",
+  "@menuFind": { "description": "Menu item: find/search" },
+
+  "menuView": "View",
+  "@menuView": { "description": "View menu label" },
+
+  "menuToggleSidebar": "Toggle Sidebar",
+  "@menuToggleSidebar": { "description": "Menu item: toggle sidebar" },
+
+  "menuTogglePreview": "Toggle Preview",
+  "@menuTogglePreview": { "description": "Menu item: toggle markdown preview" },
+
+  "menuZenMode": "Zen Mode",
+  "@menuZenMode": { "description": "Menu item: toggle distraction-free zen mode" },
+
+  "menuFullScreen": "Enter Full Screen",
+  "@menuFullScreen": { "description": "Menu item: enter full screen" },
+
+  "menuExitFullScreen": "Exit Full Screen",
+  "@menuExitFullScreen": { "description": "Menu item: exit full screen" },
+
+  "menuHelp": "Help",
+  "@menuHelp": { "description": "Help menu label" },
+
+  "menuAbout": "About AnyNote",
+  "@menuAbout": { "description": "Menu item: show about dialog" },
+
+  "menuKeyboardShortcuts": "Keyboard Shortcuts",
+  "@menuKeyboardShortcuts": { "description": "Menu item: show keyboard shortcuts" },
+
+  "aboutDialogTitle": "About AnyNote",
+  "@aboutDialogTitle": { "description": "Title of the about dialog" },
+
+  "aboutDescription": "Local-first, privacy-first note-taking with end-to-end encryption.",
+  "@aboutDescription": { "description": "App description in the about dialog" },
+
+  "aboutVersion": "Version {version}",
+  "@aboutVersion": {
+    "description": "Version display in about dialog",
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+
+  "shortcutsDialogTitle": "Keyboard Shortcuts",
+  "@shortcutsDialogTitle": { "description": "Title of the keyboard shortcuts dialog" },
+
+  "shortcutNewNote": "New Note",
+  "@shortcutNewNote": { "description": "Shortcut description for creating a new note" },
+
+  "shortcutSave": "Save",
+  "@shortcutSave": { "description": "Shortcut description for saving" },
+
+  "shortcutSearch": "Search",
+  "@shortcutSearch": { "description": "Shortcut description for search" },
+
+  "shortcutToggleSidebar": "Toggle Sidebar",
+  "@shortcutToggleSidebar": { "description": "Shortcut description for toggling sidebar" },
+
+  "shortcutExportPdf": "Export to PDF",
+  "@shortcutExportPdf": { "description": "Shortcut description for export to PDF" },
+
+  "shortcutSettings": "Open Settings",
+  "@shortcutSettings": { "description": "Shortcut description for opening settings" },
+
+  "shortcutCloseNote": "Close Note",
+  "@shortcutCloseNote": { "description": "Shortcut description for closing current note" },
+
+  "shortcutNextNote": "Next Note",
+  "@shortcutNextNote": { "description": "Shortcut description for cycling to next note" },
+
+  "shortcutFullScreen": "Toggle Full Screen",
+  "@shortcutFullScreen": { "description": "Shortcut description for toggling full screen" },
+
+  "shortcutExitZen": "Exit Zen Mode / Close Dialog",
+  "@shortcutExitZen": { "description": "Shortcut description for exiting zen mode or closing dialog" },
+
+  "notesTabLabel": "Notes",
+  "@notesTabLabel": { "description": "Accessibility label for the Notes navigation tab" },
+
+  "composeTabLabel": "Compose",
+  "@composeTabLabel": { "description": "Accessibility label for the Compose navigation tab" },
+
+  "publishTabLabel": "Publish",
+  "@publishTabLabel": { "description": "Accessibility label for the Publish navigation tab" },
+
+  "settingsTabLabel": "Settings",
+  "@settingsTabLabel": { "description": "Accessibility label for the Settings navigation tab" }
 }

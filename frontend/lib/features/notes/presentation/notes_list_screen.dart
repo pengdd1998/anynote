@@ -21,6 +21,7 @@ import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/master_detail_layout.dart';
 import '../../../core/widgets/offline_banner.dart';
+import '../../../core/widgets/sidebar_provider.dart';
 import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/widgets/sync_status_badge.dart';
 import '../../../core/widgets/sync_status_widget.dart';
@@ -461,6 +462,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     onSelectionChanged: (id) {
                       setState(() => _selectedNoteId = id);
                     },
+                    sidebarVisible:
+                        ref.watch(sidebarVisibleProvider),
                     masterPane: _isSearching && _searchQuery.isNotEmpty
                         ? _buildSearchBody(db)
                         : _buildNotesBody(db),
@@ -565,7 +568,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   }
 
   Widget _buildNotesList(
-      List<Note> notes, AppDatabase db, {required bool isSearchMode}) {
+      List<Note> notes, AppDatabase db, {required bool isSearchMode,}) {
     final showLoader =
         (isSearchMode && (_hasMoreSearchResults || _isLoadingMoreSearch)) ||
             (!isSearchMode && (_hasMore || _isLoadingPage));
@@ -611,7 +614,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   }
 
   Widget _buildNotesGrid(
-      List<Note> notes, AppDatabase db, {required bool isSearchMode}) {
+      List<Note> notes, AppDatabase db, {required bool isSearchMode,}) {
     final showLoader =
         (isSearchMode && (_hasMoreSearchResults || _isLoadingMoreSearch)) ||
             (!isSearchMode && (_hasMore || _isLoadingPage));
@@ -778,7 +781,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                       .write(const NotesCompanion(
                     deletedAt: Value(null),
                     isSynced: Value(false),
-                  ));
+                  ),);
                 },
               ),
             ),
@@ -1069,7 +1072,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                               .write(const NotesCompanion(
                             deletedAt: Value(null),
                             isSynced: Value(false),
-                          ));
+                          ),);
                         },
                       ),
                     ),
@@ -1556,7 +1559,7 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
                     }
                     return Image.network(uri.toString(),
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 48));
+                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 48),);
                   },
                   styleSheet: MarkdownStyleSheet(
                     p: const TextStyle(fontSize: 14, height: 1.6),

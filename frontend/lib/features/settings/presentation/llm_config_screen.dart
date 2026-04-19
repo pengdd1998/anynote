@@ -85,7 +85,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 Text(l10n.failedToLoadConfigs),
                 const SizedBox(height: 8),
                 Text(ErrorDisplay.userMessage(appError),
-                    style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor)),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),),
                 const SizedBox(height: 16),
                 FilledButton.tonal(
                   onPressed: () =>
@@ -138,14 +138,14 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: selectedProvider,
+                  initialValue: selectedProvider,
                   decoration:
                       InputDecoration(labelText: l10n.provider),
                   items: _presets
                       .map((p) => DropdownMenuItem(
                             value: p['name'],
                             child: Text(p['name']!),
-                          ))
+                          ),)
                       .toList(),
                   onChanged: (v) {
                     setDialogState(() => selectedProvider = v!);
@@ -314,7 +314,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
           SnackBar(
             content: Text(success
                 ? l10n.connectionSuccessful
-                : l10n.connectionFailed(result['error']?.toString() ?? 'Unknown error')),
+                : l10n.connectionFailed(result['error']?.toString() ?? 'Unknown error'),),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
@@ -403,13 +403,13 @@ class _LLMConfigCard extends StatelessWidget {
               if (cfg['is_default'] == true)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 2),
+                      horizontal: 8, vertical: 2,),
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(l10n.defaultLabel,
-                      style: TextStyle(fontSize: 11, color: colorScheme.onPrimaryContainer)),
+                      style: TextStyle(fontSize: 11, color: colorScheme.onPrimaryContainer),),
                 ),
               IconButton(
                 icon: const Icon(Icons.wifi_tethering_outlined, size: 20),

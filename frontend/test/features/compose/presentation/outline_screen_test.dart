@@ -55,7 +55,7 @@ class _FakeOutlineSessionNotifier extends ComposeSessionNotifier {
   _FakeOutlineSessionNotifier(String sessionId) : super(_FakeRef(), sessionId);
 
   @override
-  ComposeSessionState get state => ComposeSessionState(
+  ComposeSessionState get state => const ComposeSessionState(
         sessionId: 'test-session',
       );
 }

@@ -99,7 +99,7 @@ class SyncOperationsDao extends DatabaseAccessor<AppDatabase>
     final now = DateTime.now();
     return (select(syncOperations)
           ..where((s) =>
-              s.status.equals('failed') & s.nextRetryAt.isSmallerOrEqualValue(now)))
+              s.status.equals('failed') & s.nextRetryAt.isSmallerOrEqualValue(now),))
         .get();
   }
 

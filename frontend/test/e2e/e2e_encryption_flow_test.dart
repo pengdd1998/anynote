@@ -44,7 +44,7 @@ void main() {
     test('encrypt/decrypt round-trip preserves content', () async {
       final key =
           await Encryptor.derivePerItemKey(Uint8List(32), 'test-note-1');
-      final content = '# My First Note\n\nHello from AnyNote! E2E encrypted.';
+      const content = '# My First Note\n\nHello from AnyNote! E2E encrypted.';
 
       final encrypted = await Encryptor.encrypt(content, key);
       expect(encrypted, isNotEmpty);
@@ -71,7 +71,7 @@ void main() {
     test('encrypted data is base64 and server-compatible', () async {
       final key =
           await Encryptor.derivePerItemKey(Uint8List(32), 'server-test');
-      final content = 'Content for server sync';
+      const content = 'Content for server sync';
 
       final encrypted = await Encryptor.encrypt(content, key);
 
@@ -90,10 +90,10 @@ void main() {
 
     test('sync push payload structure matches server API', () async {
       final key = await Encryptor.derivePerItemKey(Uint8List(32), 'sync-test');
-      final noteContent = '# Sync Test\nThis note will be pushed to server';
+      const noteContent = '# Sync Test\nThis note will be pushed to server';
 
       final encrypted = await Encryptor.encrypt(noteContent, key);
-      final noteId = '550e8400-e29b-41d4-a716-446655440000';
+      const noteId = '550e8400-e29b-41d4-a716-446655440000';
 
       final payload = {
         'blobs': [
@@ -124,7 +124,7 @@ void main() {
           await Encryptor.derivePerItemKey(Uint8List(32), 'note-uuid');
       final shareKey =
           await Encryptor.derivePerItemKey(Uint8List(32), 'share-uuid');
-      final content = 'Shared note content';
+      const content = 'Shared note content';
 
       final noteEncrypted = await Encryptor.encrypt(content, noteKey);
       final shareEncrypted = await Encryptor.encrypt(content, shareKey);
@@ -135,7 +135,7 @@ void main() {
       // Each decrypts with its own key
       expect(await Encryptor.decrypt(noteEncrypted, noteKey), equals(content));
       expect(
-          await Encryptor.decrypt(shareEncrypted, shareKey), equals(content));
+          await Encryptor.decrypt(shareEncrypted, shareKey), equals(content),);
     });
 
     test('per-item key derivation is deterministic', () async {
@@ -197,7 +197,7 @@ void main() {
     test('Chinese text encrypts and decrypts correctly', () async {
       final key =
           await Encryptor.derivePerItemKey(Uint8List(32), 'chinese-test');
-      final content = '# 中文笔记\n\n这是一条端到端加密的中文笔记。加密算法使用 XChaCha20-Poly1305。';
+      const content = '# 中文笔记\n\n这是一条端到端加密的中文笔记。加密算法使用 XChaCha20-Poly1305。';
 
       final encrypted = await Encryptor.encrypt(content, key);
       final decrypted = await Encryptor.decrypt(encrypted, key);

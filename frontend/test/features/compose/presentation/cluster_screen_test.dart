@@ -55,7 +55,7 @@ class _FakeComposeSessionNotifier extends ComposeSessionNotifier {
   _FakeComposeSessionNotifier(String sessionId) : super(_FakeRef(), sessionId);
 
   @override
-  ComposeSessionState get state => ComposeSessionState(
+  ComposeSessionState get state => const ComposeSessionState(
         sessionId: 'test-session',
         selectedNoteIds: ['note-1'],
         noteContents: {'note-1': 'Some content'},

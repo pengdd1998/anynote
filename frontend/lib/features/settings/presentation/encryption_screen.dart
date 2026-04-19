@@ -138,7 +138,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                           if (_showRecoveryKey)
                             _RecoveryKeyDisplay(onHidden: () {
                               setState(() => _showRecoveryKey = false);
-                            })
+                            },)
                           else
                             FilledButton.tonal(
                               onPressed: _verifyAndShowRecoveryKey,
@@ -233,7 +233,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text(l10n.incorrectPassword)),
+                          content: Text(l10n.incorrectPassword),),
                     );
                   }
                 }
@@ -242,7 +242,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(l10n.verificationFailed)),
+                        content: Text(l10n.verificationFailed),),
                   );
                 }
               }
@@ -271,7 +271,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
             TextField(
               controller: currentCtrl,
               decoration: InputDecoration(
-                  labelText: l10n.currentPassword),
+                  labelText: l10n.currentPassword,),
               obscureText: true,
             ),
             const SizedBox(height: 12),
@@ -285,7 +285,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
             TextField(
               controller: confirmCtrl,
               decoration: InputDecoration(
-                  labelText: l10n.confirmNewPassword),
+                  labelText: l10n.confirmNewPassword,),
               obscureText: true,
             ),
             const SizedBox(height: 8),
@@ -308,7 +308,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
               if (newCtrl.text != confirmCtrl.text) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(l10n.passwordsDoNotMatch)),
+                      content: Text(l10n.passwordsDoNotMatch),),
                 );
                 return;
               }
@@ -316,7 +316,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                       content: Text(
-                          l10n.passwordMinLength)),
+                          l10n.passwordMinLength,),),
                 );
                 return;
               }
@@ -336,7 +336,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                           content:
-                              Text(l10n.currentPasswordIncorrect)),
+                              Text(l10n.currentPasswordIncorrect),),
                     );
                   }
                   return;
@@ -354,7 +354,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content:
-                            Text(l10n.passwordChangedSuccessfully)),
+                            Text(l10n.passwordChangedSuccessfully),),
                   );
                 }
               } catch (e) {
@@ -363,7 +363,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content:
-                            Text(l10n.failedToChangePassword(e.toString()))),
+                            Text(l10n.failedToChangePassword(e.toString())),),
                   );
                 }
               } finally {
@@ -460,7 +460,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 await db
                     .customStatement('DELETE FROM collections');
                 await db.customStatement(
-                    'DELETE FROM collection_notes');
+                    'DELETE FROM collection_notes',);
                 await db
                     .customStatement('DELETE FROM generated_contents');
                 await db
@@ -476,7 +476,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content:
-                            Text(l10n.allLocalDataDeleted)),
+                            Text(l10n.allLocalDataDeleted),),
                   );
                 }
               } catch (e) {
@@ -485,7 +485,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content: Text(
-                            l10n.failedToDeleteData(e.toString()))),
+                            l10n.failedToDeleteData(e.toString()),),),
                   );
                 }
               } finally {
@@ -804,7 +804,7 @@ class _RecoveryKeyDisplay extends ConsumerWidget {
               child: SelectableText(
                 recoveryKey,
                 style: const TextStyle(
-                    fontFamily: 'monospace', fontSize: 12),
+                    fontFamily: 'monospace', fontSize: 12,),
               ),
             ),
             const SizedBox(height: 8),
@@ -813,11 +813,11 @@ class _RecoveryKeyDisplay extends ConsumerWidget {
                 OutlinedButton.icon(
                   onPressed: () {
                     Clipboard.setData(
-                        ClipboardData(text: recoveryKey));
+                        ClipboardData(text: recoveryKey),);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                           content: Text(
-                              l10n.recoveryKeyCopied)),
+                              l10n.recoveryKeyCopied,),),
                     );
                   },
                   icon: const Icon(Icons.copy, size: 16),

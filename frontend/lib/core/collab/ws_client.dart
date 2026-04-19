@@ -7,7 +7,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../main.dart';
 
 /// WS message types matching the backend handler.
-enum WSMessageType { join, leave, presence, typing, comment, ping, pong }
+enum WSMessageType { join, leave, presence, typing, comment, edit, cursor, ping, pong }
 
 /// A typed WebSocket message with a [type] and arbitrary [data] payload.
 class WSMessage {
@@ -119,6 +119,19 @@ class WSClient {
   /// Broadcast a typing indicator for the given note room.
   void sendTyping(String noteId) {
     send(WSMessage(WSMessageType.typing, {'room': noteId}));
+  }
+
+  /// Send a CRDT edit operation to the room.
+  void sendEdit(String noteId, Map<String, dynamic> editPayload) {
+    send(WSMessage(WSMessageType.edit, {'room': noteId, ...editPayload}));
+  }
+
+  /// Send a cursor position update to the room.
+  void sendCursor(String noteId, int position) {
+    send(WSMessage(WSMessageType.cursor, {
+      'room': noteId,
+      'position': position,
+    }),);
   }
 
   /// Send a typed message over the WebSocket. Silently drops the message

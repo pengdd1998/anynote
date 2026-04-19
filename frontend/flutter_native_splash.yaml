@@ -1,0 +1,31 @@
+# flutter_native_splash configuration
+# Generate splash screens with: dart run flutter_native_splash:create
+# Remove splash screens with: dart run flutter_native_splash:remove
+#
+# Prerequisites:
+#   1. Add flutter_native_splash to dev_dependencies in pubspec.yaml
+#   2. Place splash logo images in assets/icons/
+#   3. Run: dart run flutter_native_splash:create
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#1A1A2E"
+
+  image: assets/icons/splash_logo.png
+  image_dark: assets/icons/splash_logo_dark.png
+
+  android: true
+  ios: true
+  web: true
+
+  android_gravity: center
+  ios_content_mode: center
+  web_image_mode: center
+
+  android_12:
+    image: assets/icons/splash_logo.png
+    image_dark: assets/icons/splash_logo_dark.png
+    color: "#FFFFFF"
+    color_dark: "#1A1A2E"
+    icon_background_color: "#FFFFFF"
+    icon_background_color_dark: "#1A1A2E"

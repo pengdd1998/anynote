@@ -125,7 +125,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
           child: Row(
             children: [
               Text(AppLocalizations.of(context)!.fromTemplate,
-                  style: Theme.of(context).textTheme.titleLarge),
+                  style: Theme.of(context).textTheme.titleLarge,),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close),
@@ -166,7 +166,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
   }
 
   Widget _buildTemplateGrid(List<NoteTemplate> templates,
-      {required bool canDelete}) {
+      {required bool canDelete,}) {
     if (templates.isEmpty) {
       return Center(
         child: Text(

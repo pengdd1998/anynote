@@ -216,7 +216,7 @@ class EncryptionStatusNotifier extends StateNotifier<EncryptionStatus> {
       : super(const EncryptionStatus(
           isInitialized: false,
           isUnlocked: false,
-        )) {
+        ),) {
     _loadStatus();
   }
 

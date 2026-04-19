@@ -244,7 +244,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                             Expanded(child: Text(point, style: const TextStyle(fontSize: 13))),
                           ],
                         ),
-                      )),
+                      ),),
                     ],
                     if (section.sourceCluster != null) ...[
                       const SizedBox(height: 8),

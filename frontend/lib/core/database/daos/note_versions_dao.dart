@@ -29,7 +29,7 @@ class NoteVersionsDao extends DatabaseAccessor<AppDatabase>
       encryptedContent: encryptedContent,
       plainContent: Value(plainContent),
       versionNumber: versionNumber,
-    ));
+    ),);
     return id;
   }
 
@@ -72,7 +72,7 @@ class NoteVersionsDao extends DatabaseAccessor<AppDatabase>
 
     await (delete(noteVersions)
           ..where((v) =>
-              v.noteId.equals(noteId) & v.versionNumber.isSmallerThanValue(cutoffVersion)))
+              v.noteId.equals(noteId) & v.versionNumber.isSmallerThanValue(cutoffVersion),))
         .go();
   }
 

@@ -1,4 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Key used for persisting the master pane width.
+const _kMasterWidthKey = 'master_detail_divider_width';
 
 /// A two-pane master-detail layout that adapts to screen size.
 ///
@@ -10,7 +16,12 @@ import 'package:flutter/material.dart';
 /// should navigate to a separate detail screen.
 ///
 /// The layout includes a draggable divider between the panes on desktop that
-/// lets the user resize the master pane width.
+/// lets the user resize the master pane width. The divider position is
+/// persisted across sessions via SharedPreferences.
+///
+/// The sidebar can be collapsed/expanded with smooth animation. This is
+/// controlled by the [sidebarVisible] parameter, typically wired to the
+/// [sidebarVisibleProvider].
 ///
 /// Usage:
 /// ```dart
@@ -53,6 +64,10 @@ class MasterDetailLayout extends StatefulWidget {
   /// Below this threshold only the master pane is shown. Defaults to 600.
   final double sideBySideThreshold;
 
+  /// Whether the sidebar (master pane) is currently visible.
+  /// When false, the master pane collapses with an animation.
+  final bool sidebarVisible;
+
   const MasterDetailLayout({
     super.key,
     required this.masterPane,
@@ -64,6 +79,7 @@ class MasterDetailLayout extends StatefulWidget {
     this.masterPaneMinWidth = 250,
     this.masterPaneMaxWidth = 500,
     this.sideBySideThreshold = 600,
+    this.sidebarVisible = true,
   });
 
   @override
@@ -72,11 +88,13 @@ class MasterDetailLayout extends StatefulWidget {
 
 class _MasterDetailLayoutState extends State<MasterDetailLayout> {
   late double _masterWidth;
+  Timer? _persistTimer;
 
   @override
   void initState() {
     super.initState();
     _masterWidth = widget.masterPaneWidth;
+    _loadPersistedWidth();
   }
 
   @override
@@ -85,6 +103,34 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
     if (oldWidget.masterPaneWidth != widget.masterPaneWidth) {
       _masterWidth = widget.masterPaneWidth;
     }
+  }
+
+  @override
+  void dispose() {
+    _persistTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Load previously saved divider position from SharedPreferences.
+  Future<void> _loadPersistedWidth() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getDouble(_kMasterWidthKey);
+    if (saved != null &&
+        saved >= widget.masterPaneMinWidth &&
+        saved <= widget.masterPaneMaxWidth) {
+      if (mounted) {
+        setState(() => _masterWidth = saved);
+      }
+    }
+  }
+
+  /// Persist the divider position with a debounce to avoid excessive writes.
+  void _schedulePersist() {
+    _persistTimer?.cancel();
+    _persistTimer = Timer(const Duration(milliseconds: 500), () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_kMasterWidthKey, _masterWidth);
+    });
   }
 
   @override
@@ -97,24 +143,33 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
       return widget.masterPane;
     }
 
-    // Desktop/tablet layout: side-by-side with draggable divider.
+    // Desktop/tablet layout: side-by-side with animated sidebar.
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Master pane
-        SizedBox(
-          width: _masterWidth,
-          child: widget.masterPane,
+        // Animated master pane
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          width: widget.sidebarVisible ? _masterWidth : 0,
+          clipBehavior: Clip.hardEdge,
+          child: widget.sidebarVisible
+              ? widget.masterPane
+              : const SizedBox.shrink(),
         ),
-        // Draggable divider
-        _DraggableDivider(
-          onDrag: (delta) {
-            setState(() {
-              _masterWidth = (_masterWidth + delta)
-                  .clamp(widget.masterPaneMinWidth, widget.masterPaneMaxWidth);
-            });
-          },
-        ),
+        // Draggable divider (only visible when sidebar is expanded)
+        if (widget.sidebarVisible)
+          _DraggableDivider(
+            onDrag: (delta) {
+              setState(() {
+                _masterWidth = (_masterWidth + delta).clamp(
+                  widget.masterPaneMinWidth,
+                  widget.masterPaneMaxWidth,
+                );
+              });
+              _schedulePersist();
+            },
+          ),
         // Detail pane
         Expanded(
           child: widget.selectedId != null
@@ -174,8 +229,12 @@ class _DraggableDividerState extends State<_DraggableDivider> {
       child: MouseRegion(
         cursor: SystemMouseCursors.resizeColumn,
         child: Container(
-          width: 1,
-          color: Theme.of(context).dividerColor,
+          width: 6,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: Theme.of(context).dividerColor,
+            borderRadius: BorderRadius.circular(3),
+          ),
         ),
       ),
     );

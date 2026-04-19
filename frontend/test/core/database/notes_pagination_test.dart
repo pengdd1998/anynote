@@ -208,14 +208,14 @@ void main() {
 
       // Manually associate some notes with a tag.
       await db.customStatement(
-        "INSERT INTO tags (id, encrypted_name, plain_name, version, is_synced) "
+        'INSERT INTO tags (id, encrypted_name, plain_name, version, is_synced) '
         "VALUES ('tag-bench', 'enc', 'bench', 0, 0)",
       );
       // Tag every 10th note using a single SQL statement for speed.
       await db.customStatement(
-        "INSERT INTO note_tags (note_id, tag_id) "
+        'INSERT INTO note_tags (note_id, tag_id) '
         "SELECT id, 'tag-bench' FROM notes WHERE id LIKE 'bulk-note-%' "
-        "AND CAST(SUBSTR(id, 11) AS INTEGER) % 10 = 0",
+        'AND CAST(SUBSTR(id, 11) AS INTEGER) % 10 = 0',
       );
 
       final sw = Stopwatch()..start();
@@ -231,13 +231,13 @@ void main() {
 
       // Manually associate some notes with a tag.
       await db.customStatement(
-        "INSERT INTO tags (id, encrypted_name, plain_name, version, is_synced) "
+        'INSERT INTO tags (id, encrypted_name, plain_name, version, is_synced) '
         "VALUES ('tag-pf', 'enc', 'pf', 0, 0)",
       );
       await db.customStatement(
-        "INSERT INTO note_tags (note_id, tag_id) "
+        'INSERT INTO note_tags (note_id, tag_id) '
         "SELECT id, 'tag-pf' FROM notes WHERE id LIKE 'bulk-note-%' "
-        "AND CAST(SUBSTR(id, 11) AS INTEGER) % 10 = 0",
+        'AND CAST(SUBSTR(id, 11) AS INTEGER) % 10 = 0',
       );
 
       final sw = Stopwatch()..start();
@@ -269,25 +269,25 @@ void main() {
       await insertBulkNotes(10000);
       final count = await notesDao.countNotes();
       expect(count, equals(10000));
-    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env');
+    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',);
 
     test('FTS5 search count on 10K dataset is fast', () async {
       await insertBulkNotes(10000);
       final count = await notesDao.countNotes();
       expect(count, equals(10000));
-    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env');
+    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',);
 
     test('FTS5 search pagination across all matches completes quickly', () async {
       await insertBulkNotes(10000);
       final count = await notesDao.countNotes();
       expect(count, equals(10000));
-    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env');
+    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',);
 
     test('FTS5 search for common word across 10K dataset', () async {
       await insertBulkNotes(10000);
       final count = await notesDao.countNotes();
       expect(count, equals(10000));
-    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env');
+    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',);
   });
 
   // ---------------------------------------------------------------------------

@@ -27,7 +27,7 @@ class ApiClient {
           headers: {
             'Content-Type': 'application/json',
           },
-        )) {
+        ),) {
     _dio.interceptors.add(_AuthInterceptor(this));
   }
 
@@ -92,11 +92,11 @@ class ApiClient {
         baseUrl: _dio.options.baseUrl,
         connectTimeout: _dio.options.connectTimeout,
         headers: {'Content-Type': 'application/json'},
-      ));
+      ),);
 
       final response = await refreshDio.post('/api/v1/auth/refresh', data: {
         'refresh_token': refreshToken,
-      });
+      },);
 
       final newAccessToken = response.data['access_token'] as String;
       final newRefreshToken = response.data['refresh_token'] as String;
@@ -156,7 +156,7 @@ class ApiClient {
   Future<AuthResponse> refreshToken(String refreshToken) async {
     final res = await _dio.post('/api/v1/auth/refresh', data: {
       'refresh_token': refreshToken,
-    });
+    },);
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
     return authRes;
@@ -324,14 +324,14 @@ class ApiClient {
     await _dio.post('/api/v1/devices/register', data: {
       'token': token,
       'platform': platform,
-    });
+    },);
   }
 
   /// Unregister a device token.
   Future<void> unregisterDevice(String token) async {
     await _dio.post('/api/v1/devices/unregister', data: {
       'token': token,
-    });
+    },);
   }
 }
 

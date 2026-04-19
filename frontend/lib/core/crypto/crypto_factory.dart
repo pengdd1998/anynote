@@ -1,14 +1,18 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'crypto_factory_native.dart' if (dart.library.html) 'crypto_factory_web.dart';
+import 'crypto_factory_native.dart'
+    if (dart.library.js) 'crypto_factory_web.dart';
 
 /// Factory for obtaining platform-appropriate crypto primitives.
 ///
 /// On native platforms (Android, iOS, macOS, Windows), this delegates to
 /// sodium_libs (libsodium) for XChaCha20-Poly1305, Argon2id, and BLAKE2b.
 ///
-/// On web, this provides stub implementations that throw UnsupportedError
-/// until a WebCrypto-based backend is implemented.
+/// On web, this uses WebCrypto API for AES-256-GCM, PBKDF2, and HMAC-SHA256.
+///
+/// **IMPORTANT**: Web and native ciphertexts are INCOMPATIBLE. Data encrypted
+/// on native cannot be decrypted on web and vice versa. This is an accepted
+/// limitation due to the different algorithm suites.
 ///
 /// Usage:
 ///   final factory = CryptoFactory.instance;
@@ -24,7 +28,7 @@ class CryptoFactory {
   /// Encrypt plaintext with the given key.
   ///
   /// On native: uses XChaCha20-Poly1305 via sodium_libs.
-  /// On web: throws UnsupportedError until WebCrypto backend is implemented.
+  /// On web: uses AES-256-GCM via WebCrypto.
   Future<String> encrypt(String plaintext, List<int> itemKey) {
     return encryptImpl(plaintext, itemKey);
   }
@@ -32,7 +36,7 @@ class CryptoFactory {
   /// Decrypt ciphertext with the given key.
   ///
   /// On native: uses XChaCha20-Poly1305 via sodium_libs.
-  /// On web: throws UnsupportedError until WebCrypto backend is implemented.
+  /// On web: uses AES-256-GCM via WebCrypto.
   Future<String> decrypt(String encryptedBase64, List<int> itemKey) {
     return decryptImpl(encryptedBase64, itemKey);
   }
@@ -40,7 +44,7 @@ class CryptoFactory {
   /// Derive a per-item key from the encrypt key and item ID.
   ///
   /// On native: uses BLAKE2b keyed hash via sodium_libs.
-  /// On web: throws UnsupportedError until WebCrypto backend is implemented.
+  /// On web: uses HMAC-SHA256 via WebCrypto.
   Future<List<int>> deriveItemKey(List<int> encryptKey, String itemId) {
     return deriveItemKeyImpl(encryptKey, itemId);
   }

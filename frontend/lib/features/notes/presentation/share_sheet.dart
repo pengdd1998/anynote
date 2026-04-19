@@ -261,7 +261,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
         _buildSectionLabel(theme, l10n.expiresAfter),
         const SizedBox(height: 4),
         DropdownButtonFormField<int>(
-          value: _expiresHours,
+          initialValue: _expiresHours,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             isDense: true,
@@ -271,7 +271,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
               .map((opt) => DropdownMenuItem(
                     value: opt.value,
                     child: Text(opt.label),
-                  ))
+                  ),)
               .toList(),
           onChanged: (v) {
             if (v != null) setState(() => _expiresHours = v);

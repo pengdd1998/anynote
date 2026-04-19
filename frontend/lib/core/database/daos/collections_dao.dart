@@ -31,7 +31,7 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
       id: id,
       encryptedTitle: encryptedTitle,
       plainTitle: Value(plainTitle),
-    ));
+    ),);
     return id;
   }
 
@@ -46,7 +46,7 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
       encryptedTitle: encryptedTitle != null ? Value(encryptedTitle) : const Value.absent(),
       plainTitle: Value(plainTitle),
       isSynced: const Value(false),
-    ));
+    ),);
   }
 
   /// Delete a collection and its note associations.
@@ -65,14 +65,14 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
       collectionId: collectionId,
       noteId: noteId,
       sortOrder: Value(sortOrder),
-    ));
+    ),);
   }
 
   /// Remove a note from a collection.
   Future<void> removeNoteFromCollection(String collectionId, String noteId) async {
     await (delete(collectionNotes)
           ..where((cn) =>
-              cn.collectionId.equals(collectionId) & cn.noteId.equals(noteId)))
+              cn.collectionId.equals(collectionId) & cn.noteId.equals(noteId),))
         .go();
   }
 

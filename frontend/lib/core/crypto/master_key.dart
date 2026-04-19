@@ -1,22 +1,36 @@
 import 'dart:convert';
-import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Master key management using Argon2id key derivation via libsodium.
+// Platform-specific implementations for key derivation, hashing, and recovery.
+// On native (dart.library.io), uses sodium_libs (Argon2id, BLAKE2b).
+// On web (dart.library.js), uses WebCrypto (PBKDF2, HMAC-SHA256, SHA-256).
+import 'master_key_native_compat.dart'
+    if (dart.library.js) 'master_key_web_compat.dart';
+
+/// Master key management for E2E encryption.
 ///
 /// Key hierarchy:
 ///   User Password
 ///       |
 ///       v
-///   Argon2id(password, salt) -> Master Key (never leaves device)
+///   Native: Argon2id(password, salt) -> Master Key
+///   Web:    PBKDF2-SHA256(password, salt, 600k iter) -> Master Key
 ///       |
-///       +---> BLAKE2b(master_key, "anynote-auth-key")    -> Auth Key
-///       +---> BLAKE2b(master_key, "anynote-encrypt-key") -> Encrypt Key
+///       +---> Native: BLAKE2b(master_key, "anynote-auth-key")    -> Auth Key
+///       +---> Web:    HMAC-SHA256(master_key, "anynote-auth-key") -> Auth Key
+///       |
+///       +---> Native: BLAKE2b(master_key, "anynote-encrypt-key") -> Encrypt Key
+///       +---> Web:    HMAC-SHA256(master_key, "anynote-encrypt-key") -> Encrypt Key
 ///                 |
-///                 +---> BLAKE2b(encrypt_key, item_id) -> Per-Item Key
+///                 +---> Native: BLAKE2b(encrypt_key, item_id) -> Per-Item Key
+///                 +---> Web:    HMAC-SHA256(encrypt_key, item_id) -> Per-Item Key
+///
+/// **IMPORTANT**: Web and native derived keys are INCOMPATIBLE even with the
+/// same password and salt, because the KDF algorithms differ (PBKDF2 vs Argon2id).
 class MasterKeyManager {
   static const _masterKeyKey = 'anynote_master_key';
   static const _saltKey = 'anynote_salt';
@@ -26,124 +40,140 @@ class MasterKeyManager {
     iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
-  static SodiumSumo? _sodiumInstance;
-
-  /// Get or initialize the SodiumSumo singleton.
-  static Future<SodiumSumo> get _sodium async {
-    return _sodiumInstance ??= await SodiumSumoInit.init();
-  }
-
   /// Generate a new 32-byte salt for key derivation.
   static Uint8List generateSalt() {
-    final random = Random.secure();
-    final salt = Uint8List(32);
-    for (var i = 0; i < 32; i++) {
-      salt[i] = random.nextInt(256);
-    }
-    return salt;
+    // Delegates to platform-specific implementation.
+    return generateSaltImpl();
   }
 
-  /// Derive master key from password using Argon2id (libsodium crypto_pwhash).
+  /// Derive master key from password.
   ///
-  /// Parameters:
-  /// - Memory: 64MB (memory-hard, resists GPU attacks)
-  /// - Iterations: 3 (opsLimit)
-  /// - Algorithm: Argon2id 1.3
-  /// - Output: 256-bit (32 bytes)
-  ///
-  /// Accepts any salt length >= 16 bytes. If the salt is longer than
-  /// crypto_pwhash_SALTBYTES (16), it is hashed down to 16 bytes using
-  /// BLAKE2b to fit the pwhash requirement while preserving entropy.
+  /// On native: uses Argon2id via sodium_libs (crypto_pwhash).
+  /// On web: uses PBKDF2-SHA256 with 600,000 iterations via WebCrypto.
   static Future<Uint8List> deriveMasterKey(
     String password,
     Uint8List salt,
-  ) async {
-    final sodium = await _sodium;
-
-    // crypto_pwhash requires exactly SALTBYTES (16) bytes. If a longer
-    // salt is provided (e.g. 32 bytes for higher entropy), hash it down.
-    final Uint8List pwhashSalt;
-    if (salt.length == sodium.crypto.pwhash.saltBytes) {
-      pwhashSalt = salt;
-    } else {
-      pwhashSalt = sodium.crypto.genericHash.call(
-        message: salt,
-        outLen: sodium.crypto.pwhash.saltBytes,
-      );
-    }
-
-    final passwordBytes = Int8List.fromList(utf8.encode(password));
-    final key = sodium.crypto.pwhash.call(
-      password: passwordBytes,
-      salt: pwhashSalt,
-      outLen: 32,
-      opsLimit: sodium.crypto.pwhash.opsLimitModerate,
-      memLimit: sodium.crypto.pwhash.memLimitInteractive,
-      alg: CryptoPwhashAlgorithm.argon2id13,
-    );
-
-    final result = key.extractBytes();
-    key.dispose();
-    return result;
+  ) {
+    return deriveMasterKeyImpl(password, salt);
   }
 
-  /// Derive Auth Key from master key: BLAKE2b(master_key, "anynote-auth-key").
+  /// Derive Auth Key from master key.
   /// Used for server authentication (hashed before sending).
-  static Future<Uint8List> deriveAuthKey(Uint8List masterKey) async {
-    return _blake2bKeyed(masterKey, 'anynote-auth-key');
+  static Future<Uint8List> deriveAuthKey(Uint8List masterKey) {
+    return deriveAuthKeyImpl(masterKey);
   }
 
-  /// Derive Encrypt Key from master key: BLAKE2b(master_key, "anynote-encrypt-key").
+  /// Derive Encrypt Key from master key.
   /// Root key for all data encryption.
-  static Future<Uint8List> deriveEncryptKey(Uint8List masterKey) async {
-    return _blake2bKeyed(masterKey, 'anynote-encrypt-key');
+  static Future<Uint8List> deriveEncryptKey(Uint8List masterKey) {
+    return deriveEncryptKeyImpl(masterKey);
   }
 
-  /// Derive per-item key: BLAKE2b(encrypt_key, item_id).
+  /// Derive per-item key.
   /// Each note/tag/collection gets its own unique 32-byte key.
   static Future<Uint8List> deriveItemKey(
     Uint8List encryptKey,
     String itemId,
-  ) async {
-    return _blake2bKeyed(encryptKey, itemId);
+  ) {
+    return deriveItemKeyImpl(encryptKey, itemId);
   }
 
   /// One-way hash of the auth key for sending to the server.
   /// Returns hex-encoded string.
-  static Future<String> hashAuthKey(Uint8List authKey) async {
-    final sodium = await _sodium;
-    final key = SecureKey.fromList(sodium, authKey);
-
-    final hash = sodium.crypto.genericHash.call(
-      message: Uint8List(0),
-      key: key,
-      outLen: 32,
-    );
-
-    key.dispose();
-    return hash.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  static Future<String> hashAuthKey(Uint8List authKey) {
+    return hashAuthKeyImpl(authKey);
   }
 
   /// Generate a 12-word recovery key (BIP-39 mnemonic encoding 128-bit entropy).
   /// Used to recover the master key if the password is lost.
-  static Future<String> generateRecoveryKey() async {
-    final sodium = await _sodium;
+  static Future<String> generateRecoveryKey() {
+    return generateRecoveryKeyImpl();
+  }
 
-    // 128 bits of cryptographically secure random entropy
-    final entropy = sodium.randombytes.buf(16);
+  /// Convert a 12-word recovery key back to the 128-bit entropy.
+  /// Throws if the checksum is invalid.
+  static Future<Uint8List> entropyFromRecoveryKey(String recoveryKey) {
+    return entropyFromRecoveryKeyImpl(recoveryKey);
+  }
 
-    // BLAKE2b checksum (first 4 bits of 32-byte hash)
-    final checksumHash = sodium.crypto.genericHash.call(
-      message: entropy,
-      outLen: 32,
-    );
-    final checksum = checksumHash[0] >> 4;
+  /// Recover the master key from a BIP-39 mnemonic.
+  static Future<Uint8List> recoverMasterKeyFromMnemonic(
+    String mnemonic,
+  ) async {
+    final entropy = await entropyFromRecoveryKey(mnemonic);
+    final entropyHex = entropy
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
 
-    // Combine entropy (128 bits) + checksum (4 bits) = 132 bits = 12 * 11-bit words
-    final combined = Uint8List(17);
-    combined.setRange(0, 16, entropy);
-    combined[16] = (checksum << 4);
+    // Derive a deterministic salt from the entropy.
+    final recoverySalt = await hashForRecoverySaltImpl(entropy);
+    return deriveMasterKey(entropyHex, recoverySalt);
+  }
 
+  /// Store master key securely.
+  static Future<void> storeMasterKey(Uint8List masterKey) async {
+    final encoded = base64Encode(masterKey);
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_masterKeyKey, encoded);
+    } else {
+      await _secureStorage.write(key: _masterKeyKey, value: encoded);
+    }
+  }
+
+  /// Retrieve stored master key.
+  static Future<Uint8List?> getStoredMasterKey() async {
+    String? encoded;
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      encoded = prefs.getString(_masterKeyKey);
+    } else {
+      encoded = await _secureStorage.read(key: _masterKeyKey);
+    }
+    if (encoded == null) return null;
+    return base64Decode(encoded);
+  }
+
+  /// Store salt (needed for re-derivation on login).
+  static Future<void> storeSalt(Uint8List salt) async {
+    final encoded = base64Encode(salt);
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_saltKey, encoded);
+    } else {
+      await _secureStorage.write(key: _saltKey, value: encoded);
+    }
+  }
+
+  /// Retrieve stored salt.
+  static Future<Uint8List?> getStoredSalt() async {
+    String? encoded;
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      encoded = prefs.getString(_saltKey);
+    } else {
+      encoded = await _secureStorage.read(key: _saltKey);
+    }
+    if (encoded == null) return null;
+    return base64Decode(encoded);
+  }
+
+  /// Clear all stored keys (logout / account deletion).
+  static Future<void> clearAll() async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_masterKeyKey);
+      await prefs.remove(_saltKey);
+    } else {
+      await _secureStorage.delete(key: _masterKeyKey);
+      await _secureStorage.delete(key: _saltKey);
+    }
+  }
+
+  // ── Shared helpers ─────────────────────────────────────────────────
+
+  /// Encode 132 bits (17 bytes) as 12 BIP-39 words.
+  static String encodeMnemonic(Uint8List combined) {
     final words = <String>[];
     int bitIndex = 0;
     for (int i = 0; i < 12; i++) {
@@ -157,33 +187,29 @@ class MasterKeyManager {
       words.add(_bip39Wordlist[index]);
       bitIndex += 11;
     }
-
     return words.join(' ');
   }
 
-  /// Convert a 12-word recovery key back to the 128-bit entropy.
-  /// Throws if the checksum is invalid.
-  static Future<Uint8List> entropyFromRecoveryKey(String recoveryKey) async {
-    final sodium = await _sodium;
-
+  /// Extract indices from a 12-word mnemonic.
+  static List<int> mnemonicToIndices(String recoveryKey) {
     final words = recoveryKey.split(' ');
     if (words.length != 12) {
       throw ArgumentError(
         'Recovery key must have 12 words, got ${words.length}',
       );
     }
-
-    // Convert words back to indices
-    final indices = words.map((w) {
+    return words.map((w) {
       final idx = _bip39Wordlist.indexOf(w.toLowerCase().trim());
       if (idx < 0) {
         throw ArgumentError('Unknown word in recovery key: "$w"');
       }
       return idx;
     }).toList();
+  }
 
-    // Reconstruct 132 bits from 12 * 11-bit indices
-    final bits = Uint8List(17); // 17 bytes = 136 bits, we use first 132
+  /// Reconstruct 132-bit combined array from 11-bit indices.
+  static Uint8List indicesToBits(List<int> indices) {
+    final bits = Uint8List(17);
     int bitIndex = 0;
     for (final index in indices) {
       for (int j = 10; j >= 0; j--) {
@@ -194,101 +220,7 @@ class MasterKeyManager {
         bitIndex++;
       }
     }
-
-    // First 128 bits = entropy (16 bytes)
-    final entropy = Uint8List.fromList(bits.sublist(0, 16));
-
-    // Verify checksum using BLAKE2b
-    final checksumHash = sodium.crypto.genericHash.call(
-      message: entropy,
-      outLen: 32,
-    );
-    final expectedChecksum = checksumHash[0] >> 4;
-    final actualChecksum = (bits[16] >> 4) & 0x0F;
-
-    if (actualChecksum != expectedChecksum) {
-      throw ArgumentError('Invalid recovery key: checksum mismatch');
-    }
-
-    return entropy;
-  }
-
-  /// Recover the master key from a BIP-39 mnemonic.
-  ///
-  /// The mnemonic encodes 128-bit entropy. This entropy is converted to a
-  /// hex string and used as the "password" input to Argon2id with a
-  /// deterministic salt derived from the entropy itself. This produces the
-  /// same master key that was stored during registration when the recovery
-  /// key was generated.
-  static Future<Uint8List> recoverMasterKeyFromMnemonic(
-    String mnemonic,
-  ) async {
-    final entropy = await entropyFromRecoveryKey(mnemonic);
-    final entropyHex = entropy
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
-        .join();
-
-    // Use the entropy itself to derive a deterministic salt for recovery.
-    final sodium = await _sodium;
-    final recoverySalt = sodium.crypto.genericHash.call(
-      message: entropy,
-      key: null,
-      outLen: 32,
-    );
-
-    return deriveMasterKey(entropyHex, recoverySalt);
-  }
-
-  /// Store master key securely using platform keychain/keystore.
-  static Future<void> storeMasterKey(Uint8List masterKey) async {
-    final encoded = base64Encode(masterKey);
-    await _secureStorage.write(key: _masterKeyKey, value: encoded);
-  }
-
-  /// Retrieve stored master key.
-  static Future<Uint8List?> getStoredMasterKey() async {
-    final encoded = await _secureStorage.read(key: _masterKeyKey);
-    if (encoded == null) return null;
-    return base64Decode(encoded);
-  }
-
-  /// Store salt (needed for re-derivation on login).
-  static Future<void> storeSalt(Uint8List salt) async {
-    final encoded = base64Encode(salt);
-    await _secureStorage.write(key: _saltKey, value: encoded);
-  }
-
-  /// Retrieve stored salt.
-  static Future<Uint8List?> getStoredSalt() async {
-    final encoded = await _secureStorage.read(key: _saltKey);
-    if (encoded == null) return null;
-    return base64Decode(encoded);
-  }
-
-  /// Clear all stored keys (logout / account deletion).
-  static Future<void> clearAll() async {
-    await _secureStorage.delete(key: _masterKeyKey);
-    await _secureStorage.delete(key: _saltKey);
-  }
-
-  /// BLAKE2b keyed hash for key derivation.
-  /// Uses sodium's crypto_generichash with key=inputKey, message=info (UTF-8).
-  static Future<Uint8List> _blake2bKeyed(
-    Uint8List inputKey,
-    String info,
-  ) async {
-    final sodium = await _sodium;
-    final key = SecureKey.fromList(sodium, inputKey);
-    final message = Uint8List.fromList(utf8.encode(info));
-
-    final result = sodium.crypto.genericHash.call(
-      message: message,
-      key: key,
-      outLen: 32,
-    );
-
-    key.dispose();
-    return result;
+    return bits;
   }
 }
 

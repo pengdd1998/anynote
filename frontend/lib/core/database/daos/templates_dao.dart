@@ -25,7 +25,7 @@ class TemplatesDao extends DatabaseAccessor<AppDatabase>
       plainContent: Value(plainContent),
       category: Value(category),
       isBuiltIn: Value(isBuiltIn),
-    ));
+    ),);
     return id;
   }
 
@@ -74,7 +74,7 @@ class TemplatesDao extends DatabaseAccessor<AppDatabase>
           ? Value(encryptedContent)
           : const Value.absent(),
       plainContent: Value(plainContent),
-    ));
+    ),);
   }
 
   /// Count total templates.

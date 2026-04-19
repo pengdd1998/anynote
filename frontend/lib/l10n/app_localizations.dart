@@ -2945,6 +2945,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count}mo ago'**
   String monthsAgo(int count);
+
+  /// File menu label
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get menuFile;
+
+  /// Menu item: create a new note
+  ///
+  /// In en, this message translates to:
+  /// **'New Note'**
+  String get menuNewNote;
+
+  /// Menu item: save current note
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get menuSave;
+
+  /// Menu item: import notes
+  ///
+  /// In en, this message translates to:
+  /// **'Import...'**
+  String get menuImport;
+
+  /// Menu item: export notes
+  ///
+  /// In en, this message translates to:
+  /// **'Export...'**
+  String get menuExport;
+
+  /// Menu item: close current tab/view
+  ///
+  /// In en, this message translates to:
+  /// **'Close Tab'**
+  String get menuCloseTab;
+
+  /// Edit menu label
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get menuEdit;
+
+  /// Menu item: undo
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get menuUndo;
+
+  /// Menu item: redo
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get menuRedo;
+
+  /// Menu item: cut
+  ///
+  /// In en, this message translates to:
+  /// **'Cut'**
+  String get menuCut;
+
+  /// Menu item: copy
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get menuCopy;
+
+  /// Menu item: paste
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get menuPaste;
+
+  /// Menu item: select all
+  ///
+  /// In en, this message translates to:
+  /// **'Select All'**
+  String get menuSelectAll;
+
+  /// Menu item: find/search
+  ///
+  /// In en, this message translates to:
+  /// **'Find...'**
+  String get menuFind;
+
+  /// View menu label
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get menuView;
+
+  /// Menu item: toggle sidebar
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle Sidebar'**
+  String get menuToggleSidebar;
+
+  /// Menu item: toggle markdown preview
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle Preview'**
+  String get menuTogglePreview;
+
+  /// Menu item: toggle distraction-free zen mode
+  ///
+  /// In en, this message translates to:
+  /// **'Zen Mode'**
+  String get menuZenMode;
+
+  /// Menu item: enter full screen
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Full Screen'**
+  String get menuFullScreen;
+
+  /// Menu item: exit full screen
+  ///
+  /// In en, this message translates to:
+  /// **'Exit Full Screen'**
+  String get menuExitFullScreen;
+
+  /// Help menu label
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get menuHelp;
+
+  /// Menu item: show about dialog
+  ///
+  /// In en, this message translates to:
+  /// **'About AnyNote'**
+  String get menuAbout;
+
+  /// Menu item: show keyboard shortcuts
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard Shortcuts'**
+  String get menuKeyboardShortcuts;
+
+  /// Title of the about dialog
+  ///
+  /// In en, this message translates to:
+  /// **'About AnyNote'**
+  String get aboutDialogTitle;
+
+  /// App description in the about dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Local-first, privacy-first note-taking with end-to-end encryption.'**
+  String get aboutDescription;
+
+  /// Version display in about dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String aboutVersion(String version);
+
+  /// Title of the keyboard shortcuts dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard Shortcuts'**
+  String get shortcutsDialogTitle;
+
+  /// Shortcut description for creating a new note
+  ///
+  /// In en, this message translates to:
+  /// **'New Note'**
+  String get shortcutNewNote;
+
+  /// Shortcut description for saving
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get shortcutSave;
+
+  /// Shortcut description for search
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get shortcutSearch;
+
+  /// Shortcut description for toggling sidebar
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle Sidebar'**
+  String get shortcutToggleSidebar;
+
+  /// Shortcut description for export to PDF
+  ///
+  /// In en, this message translates to:
+  /// **'Export to PDF'**
+  String get shortcutExportPdf;
+
+  /// Shortcut description for opening settings
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get shortcutSettings;
+
+  /// Shortcut description for closing current note
+  ///
+  /// In en, this message translates to:
+  /// **'Close Note'**
+  String get shortcutCloseNote;
+
+  /// Shortcut description for cycling to next note
+  ///
+  /// In en, this message translates to:
+  /// **'Next Note'**
+  String get shortcutNextNote;
+
+  /// Shortcut description for toggling full screen
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle Full Screen'**
+  String get shortcutFullScreen;
+
+  /// Shortcut description for exiting zen mode or closing dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Exit Zen Mode / Close Dialog'**
+  String get shortcutExitZen;
+
+  /// Accessibility label for the Notes navigation tab
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notesTabLabel;
+
+  /// Accessibility label for the Compose navigation tab
+  ///
+  /// In en, this message translates to:
+  /// **'Compose'**
+  String get composeTabLabel;
+
+  /// Accessibility label for the Publish navigation tab
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get publishTabLabel;
+
+  /// Accessibility label for the Settings navigation tab
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTabLabel;
 }
 
 class _AppLocalizationsDelegate

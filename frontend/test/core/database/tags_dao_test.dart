@@ -24,7 +24,7 @@ void main() {
 
   // ── Helper ──────────────────────────────────────────────
 
-  Future<String> _createTag({
+  Future<String> createTag({
     String id = 'tag-1',
     String encryptedName = 'ZW5jLXRhZw==',
     String? plainName,
@@ -40,7 +40,7 @@ void main() {
 
   group('create and read', () {
     test('createTag inserts a tag and returns its ID', () async {
-      final id = await _createTag(plainName: 'work');
+      final id = await createTag(plainName: 'work');
       expect(id, 'tag-1');
 
       final allTags = await tagsDao.getAllTags();
@@ -51,7 +51,7 @@ void main() {
     });
 
     test('createTag without plainName stores null', () async {
-      await _createTag();
+      await createTag();
 
       final allTags = await tagsDao.getAllTags();
       expect(allTags.length, 1);
@@ -60,7 +60,7 @@ void main() {
 
     test('createTag sets default version to 0 and isSynced to false',
         () async {
-      await _createTag();
+      await createTag();
 
       final allTags = await tagsDao.getAllTags();
       expect(allTags[0].version, 0);
@@ -68,9 +68,9 @@ void main() {
     });
 
     test('getAllTags returns tags ordered by plainName ascending', () async {
-      await _createTag(id: 'tag-c', plainName: 'zebra');
-      await _createTag(id: 'tag-a', plainName: 'alpha');
-      await _createTag(id: 'tag-b', plainName: 'beta');
+      await createTag(id: 'tag-c', plainName: 'zebra');
+      await createTag(id: 'tag-a', plainName: 'alpha');
+      await createTag(id: 'tag-b', plainName: 'beta');
 
       final allTags = await tagsDao.getAllTags();
       expect(allTags.length, 3);
@@ -80,8 +80,8 @@ void main() {
     });
 
     test('getAllTags with null plainName -- nulls sort first', () async {
-      await _createTag(id: 'tag-null');
-      await _createTag(id: 'tag-named', plainName: 'named');
+      await createTag(id: 'tag-null');
+      await createTag(id: 'tag-named', plainName: 'named');
 
       final allTags = await tagsDao.getAllTags();
       // SQLite sorts nulls first in ascending order
@@ -94,7 +94,7 @@ void main() {
 
   group('update', () {
     test('updateTag changes encryptedName and plainName', () async {
-      await _createTag(id: 'tag-upd', plainName: 'old name');
+      await createTag(id: 'tag-upd', plainName: 'old name');
 
       await tagsDao.updateTag(
         id: 'tag-upd',
@@ -109,7 +109,7 @@ void main() {
     });
 
     test('updateTag sets isSynced to false', () async {
-      await _createTag(id: 'tag-sync');
+      await createTag(id: 'tag-sync');
       await tagsDao.markSynced('tag-sync');
 
       // Verify synced
@@ -124,7 +124,7 @@ void main() {
     });
 
     test('updateTag without encryptedName keeps existing value', () async {
-      await _createTag(id: 'tag-keep', encryptedName: 'original-enc');
+      await createTag(id: 'tag-keep', encryptedName: 'original-enc');
 
       await tagsDao.updateTag(id: 'tag-keep', plainName: 'updated name');
 
@@ -145,7 +145,7 @@ void main() {
 
   group('delete', () {
     test('deleteTag removes the tag', () async {
-      await _createTag(id: 'tag-del', plainName: 'to delete');
+      await createTag(id: 'tag-del', plainName: 'to delete');
       expect((await tagsDao.getAllTags()).length, 1);
 
       await tagsDao.deleteTag('tag-del');
@@ -159,7 +159,7 @@ void main() {
         encryptedContent: 'enc',
         plainContent: 'content',
       );
-      await _createTag(id: 'tag-del-assoc');
+      await createTag(id: 'tag-del-assoc');
       await notesDao.addTagToNote('note-del-tag', 'tag-del-assoc');
 
       // Verify the link exists
@@ -188,8 +188,8 @@ void main() {
         id: 'note-tn',
         encryptedContent: 'enc',
       );
-      await _createTag(id: 'tag-tn-1', plainName: 'work');
-      await _createTag(id: 'tag-tn-2', plainName: 'personal');
+      await createTag(id: 'tag-tn-1', plainName: 'work');
+      await createTag(id: 'tag-tn-2', plainName: 'personal');
       await notesDao.addTagToNote('note-tn', 'tag-tn-1');
       await notesDao.addTagToNote('note-tn', 'tag-tn-2');
 
@@ -219,8 +219,8 @@ void main() {
 
   group('sync status', () {
     test('getUnsyncedTags returns only unsynced tags', () async {
-      await _createTag(id: 'tag-synced', plainName: 'synced');
-      await _createTag(id: 'tag-unsynced', plainName: 'unsynced');
+      await createTag(id: 'tag-synced', plainName: 'synced');
+      await createTag(id: 'tag-unsynced', plainName: 'unsynced');
 
       await tagsDao.markSynced('tag-synced');
 
@@ -230,7 +230,7 @@ void main() {
     });
 
     test('markSynced sets isSynced to true', () async {
-      await _createTag(id: 'tag-ms');
+      await createTag(id: 'tag-ms');
       var allTags = await tagsDao.getAllTags();
       expect(allTags[0].isSynced, false);
 
@@ -241,7 +241,7 @@ void main() {
     });
 
     test('getUnsyncedTags returns empty when all synced', () async {
-      await _createTag(id: 'tag-s1');
+      await createTag(id: 'tag-s1');
       await tagsDao.markSynced('tag-s1');
 
       final unsynced = await tagsDao.getUnsyncedTags();

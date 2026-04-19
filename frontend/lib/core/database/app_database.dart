@@ -10,6 +10,7 @@ import 'daos/sync_meta_dao.dart';
 import 'daos/note_versions_dao.dart';
 import 'daos/templates_dao.dart';
 import 'daos/sync_operations_dao.dart';
+import 'daos/collab_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -26,6 +27,7 @@ part 'app_database.g.dart';
     NoteTemplates,
     SyncMeta,
     SyncOperations,
+    CollabStates,
   ],
   daos: [
     NotesDao,
@@ -36,6 +38,7 @@ part 'app_database.g.dart';
     TemplatesDao,
     SyncMetaDao,
     SyncOperationsDao,
+    CollabDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -44,7 +47,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration {
@@ -126,6 +129,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 7) {
           // v6 -> v7: Add sync_operations table for offline-first sync queue.
           await m.createTable(syncOperations);
+        }
+        if (from < 8) {
+          // v7 -> v8: Add collab_states table for CRDT persistence.
+          await m.createTable(collabStates);
         }
       },
     );

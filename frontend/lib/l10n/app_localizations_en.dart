@@ -1596,4 +1596,130 @@ class AppLocalizationsEn extends AppLocalizations {
   String monthsAgo(int count) {
     return '${count}mo ago';
   }
+
+  @override
+  String get menuFile => 'File';
+
+  @override
+  String get menuNewNote => 'New Note';
+
+  @override
+  String get menuSave => 'Save';
+
+  @override
+  String get menuImport => 'Import...';
+
+  @override
+  String get menuExport => 'Export...';
+
+  @override
+  String get menuCloseTab => 'Close Tab';
+
+  @override
+  String get menuEdit => 'Edit';
+
+  @override
+  String get menuUndo => 'Undo';
+
+  @override
+  String get menuRedo => 'Redo';
+
+  @override
+  String get menuCut => 'Cut';
+
+  @override
+  String get menuCopy => 'Copy';
+
+  @override
+  String get menuPaste => 'Paste';
+
+  @override
+  String get menuSelectAll => 'Select All';
+
+  @override
+  String get menuFind => 'Find...';
+
+  @override
+  String get menuView => 'View';
+
+  @override
+  String get menuToggleSidebar => 'Toggle Sidebar';
+
+  @override
+  String get menuTogglePreview => 'Toggle Preview';
+
+  @override
+  String get menuZenMode => 'Zen Mode';
+
+  @override
+  String get menuFullScreen => 'Enter Full Screen';
+
+  @override
+  String get menuExitFullScreen => 'Exit Full Screen';
+
+  @override
+  String get menuHelp => 'Help';
+
+  @override
+  String get menuAbout => 'About AnyNote';
+
+  @override
+  String get menuKeyboardShortcuts => 'Keyboard Shortcuts';
+
+  @override
+  String get aboutDialogTitle => 'About AnyNote';
+
+  @override
+  String get aboutDescription =>
+      'Local-first, privacy-first note-taking with end-to-end encryption.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get shortcutsDialogTitle => 'Keyboard Shortcuts';
+
+  @override
+  String get shortcutNewNote => 'New Note';
+
+  @override
+  String get shortcutSave => 'Save';
+
+  @override
+  String get shortcutSearch => 'Search';
+
+  @override
+  String get shortcutToggleSidebar => 'Toggle Sidebar';
+
+  @override
+  String get shortcutExportPdf => 'Export to PDF';
+
+  @override
+  String get shortcutSettings => 'Open Settings';
+
+  @override
+  String get shortcutCloseNote => 'Close Note';
+
+  @override
+  String get shortcutNextNote => 'Next Note';
+
+  @override
+  String get shortcutFullScreen => 'Toggle Full Screen';
+
+  @override
+  String get shortcutExitZen => 'Exit Zen Mode / Close Dialog';
+
+  @override
+  String get notesTabLabel => 'Notes';
+
+  @override
+  String get composeTabLabel => 'Compose';
+
+  @override
+  String get publishTabLabel => 'Publish';
+
+  @override
+  String get settingsTabLabel => 'Settings';
 }

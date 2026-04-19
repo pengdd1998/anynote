@@ -160,7 +160,7 @@ class ComposeScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(ErrorDisplay.errorIcon(appError),
-                            size: 36, color: Colors.grey.shade400),
+                            size: 36, color: Colors.grey.shade400,),
                         const SizedBox(height: 8),
                         Text(
                           ErrorDisplay.userMessage(appError),
@@ -314,7 +314,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: DropdownButtonFormField<String>(
-                value: _platformStyle,
+                initialValue: _platformStyle,
                 decoration: InputDecoration(
                   labelText: l10n.targetPlatform,
                   prefixIcon: const Icon(Icons.share_outlined),
@@ -400,7 +400,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(ErrorDisplay.errorIcon(appError),
-                            size: 36, color: Colors.grey.shade400),
+                            size: 36, color: Colors.grey.shade400,),
                         const SizedBox(height: 8),
                         Text(
                           ErrorDisplay.userMessage(appError),

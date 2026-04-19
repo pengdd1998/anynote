@@ -26,8 +26,10 @@ type RoomMember struct {
 
 // WSMessage is the envelope for all WebSocket messages.
 type WSMessage struct {
-	Type string          `json:"type"` // "join", "leave", "presence", "typing", "comment", "ping", "pong"
-	Data json.RawMessage `json:"data"`
+	Type   string          `json:"type"`             // "join", "leave", "presence", "typing", "comment", "edit", "cursor", "ping", "pong", "error"
+	Data   json.RawMessage `json:"data"`             // Opaque payload (encrypted for edit/cursor)
+	Sender string          `json:"sender,omitempty"` // user_id of the message sender (set for relayed messages)
+	RoomID string          `json:"room_id,omitempty"`
 }
 
 // PresenceService manages real-time room presence via Redis.

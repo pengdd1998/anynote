@@ -1,0 +1,27 @@
+# flutter_launcher_icons configuration
+# Generate icons with: dart run flutter_launcher_icons
+#
+# Prerequisites:
+#   1. Add flutter_launcher_icons to dev_dependencies in pubspec.yaml
+#   2. Place a 1024x1024 PNG icon at assets/icons/app_icon.png
+#   3. Place a 1024x1024 PNG foreground at assets/icons/app_icon_foreground.png
+#   4. Run: dart run flutter_launcher_icons
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  macOS: true
+  windows: true
+  web: true
+
+  image_path: "assets/icons/app_icon.png"
+
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+
+  ios_settings:
+    remove_alpha: true
+
+  web_settings:
+    background_color: "#FFFFFF"
+    theme_color: "#1A1A2E"

@@ -65,7 +65,7 @@ void main() {
       expect(find.text('Search your notes'), findsOneWidget);
       expect(
           find.text('Enter a query or use filters to find notes'),
-          findsOneWidget);
+          findsOneWidget,);
       await handle.dispose();
     });
 

@@ -64,7 +64,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         authKeyHash: authKeyHash,
         salt: base64Encode(salt),
         recoveryKey: _recoveryKey!,
-      ));
+      ),);
 
       // Step 7: On success, store keys locally.
       await MasterKeyManager.storeMasterKey(masterKey);
@@ -112,7 +112,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l10n.recoveryKeyInstructions,
-                style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w500)),
+                style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w500),),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -242,7 +242,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(l10n.encryptionNotice,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),),
                   ),
                   FilledButton(
                     onPressed: _isLoading ? null : _submit,

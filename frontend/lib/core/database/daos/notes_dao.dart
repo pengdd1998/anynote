@@ -195,7 +195,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       updatedAt: now,
       version: const Value(0),
       isSynced: const Value(false),
-    ));
+    ),);
 
     // Update FTS5 index if we have plaintext
     if (plainContent != null) {
@@ -224,7 +224,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       updatedAt: Value(DateTime.now()),
       version: Value(note.version + 1),
       isSynced: const Value(false),
-    ));
+    ),);
 
     // Update FTS5 if plaintext changed
     if (plainContent != null) {
@@ -238,7 +238,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       deletedAt: Value(DateTime.now()),
       updatedAt: Value(DateTime.now()),
       isSynced: const Value(false),
-    ));
+    ),);
 
     // Remove from FTS5
     await customStatement('DELETE FROM notes_fts WHERE note_id = ?', [id]);
@@ -513,7 +513,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     await into(noteTags).insert(NoteTagsCompanion.insert(
       noteId: noteId,
       tagId: tagId,
-    ));
+    ),);
   }
 
   /// Remove a tag from a note.

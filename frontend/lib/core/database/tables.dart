@@ -235,3 +235,23 @@ class SyncOperations extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// Collaboration state persistence - stores serialized CRDT document state
+/// per note so that offline edits are preserved and can be resumed.
+@TableIndex(name: 'idx_collab_states_note_id', columns: {#noteId})
+class CollabStates extends Table {
+  /// Auto-incrementing primary key.
+  IntColumn get id => integer().autoIncrement()();
+
+  /// Reference to the note this collab state belongs to.
+  TextColumn get noteId => text().references(Notes, #id)();
+
+  /// Serialized CRDT document state (JSON).
+  TextColumn get documentState => text()();
+
+  /// Last known Lamport clock value for incremental sync.
+  IntColumn get lastVersion => integer().withDefault(const Constant(0))();
+
+  /// When this state was last updated.
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}

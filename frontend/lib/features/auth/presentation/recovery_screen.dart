@@ -59,7 +59,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
       await api.login(LoginRequest(
         email: email,
         authKeyHash: authKeyHash,
-      ));
+      ),);
 
       // Step 5: Store the master key and derived keys locally via KeyStorage.
       await MasterKeyManager.storeMasterKey(masterKey);
@@ -114,23 +114,23 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
                 children: [
                   Icon(Icons.key_outlined,
                       size: 64,
-                      color: Theme.of(context).colorScheme.primary),
+                      color: Theme.of(context).colorScheme.primary,),
                   const SizedBox(height: 16),
                   Text(l10n.recoverAccount,
                       style: Theme.of(context).textTheme.headlineMedium,
-                      textAlign: TextAlign.center),
+                      textAlign: TextAlign.center,),
                   const SizedBox(height: 8),
                   Text(
                       l10n.recoverAccountInstructions,
                       style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center),
+                      textAlign: TextAlign.center,),
                   const SizedBox(height: 32),
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(_error!,
                           style: TextStyle(
-                              color: Theme.of(context).colorScheme.error)),
+                              color: Theme.of(context).colorScheme.error,),),
                     ),
                   TextFormField(
                     controller: _emailController,

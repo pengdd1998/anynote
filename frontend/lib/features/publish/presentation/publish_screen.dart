@@ -69,7 +69,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                       child: Column(
                         children: [
                           Icon(Icons.share_outlined,
-                              size: 36, color: Colors.grey.shade400),
+                              size: 36, color: Colors.grey.shade400,),
                           const SizedBox(height: 8),
                           Text(l10n.noPlatformsConnected),
                           const SizedBox(height: 8),
@@ -138,13 +138,13 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                     child: Column(
                       children: [
                         Icon(ErrorDisplay.errorIcon(appError),
-                            size: 36, color: Colors.red),
+                            size: 36, color: Colors.red,),
                         const SizedBox(height: 8),
                         const Text('Failed to load platforms'),
                         const SizedBox(height: 4),
                         Text(ErrorDisplay.userMessage(appError),
                             style: const TextStyle(
-                                fontSize: 12, color: Colors.grey)),
+                                fontSize: 12, color: Colors.grey,),),
                         const SizedBox(height: 8),
                         FilledButton.tonal(
                           onPressed: () =>
@@ -179,11 +179,11 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                       child: Column(
                         children: [
                           Icon(Icons.publish_outlined,
-                              size: 48, color: Colors.grey.shade400),
+                              size: 48, color: Colors.grey.shade400,),
                           const SizedBox(height: 8),
                           Text(l10n.noPublicationsYet,
                               style:
-                                  TextStyle(color: Colors.grey.shade500)),
+                                  TextStyle(color: Colors.grey.shade500),),
                         ],
                       ),
                     ),
@@ -201,7 +201,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           onPressed: () =>
                               context.push('/publish/history'),
                           child: Text(
-                              l10n.viewAll(history.length)),
+                              l10n.viewAll(history.length),),
                         ),
                       ),
                   ],
@@ -221,7 +221,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                     child: Column(
                       children: [
                         Icon(ErrorDisplay.errorIcon(appError),
-                            size: 36, color: Colors.red),
+                            size: 36, color: Colors.red,),
                         const SizedBox(height: 8),
                         Text(ErrorDisplay.userMessage(appError)),
                         const SizedBox(height: 8),
@@ -309,7 +309,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                 child: Row(
                   children: [
                     const Icon(Icons.check_circle,
-                        color: Colors.green, size: 16),
+                        color: Colors.green, size: 16,),
                     const SizedBox(width: 4),
                     Text(
                       l10n.publishedStatus(state.result?['status'] ?? 'pending'),

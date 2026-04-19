@@ -100,7 +100,7 @@ class SyncEngine {
         version: note.version,
         encryptedData: encryptedData,
         blobSize: encryptedData.length,
-      ));
+      ),);
     }
 
     // Gather and encrypt unsynced tags
@@ -115,7 +115,7 @@ class SyncEngine {
         version: tag.version,
         encryptedData: encryptedData,
         blobSize: encryptedData.length,
-      ));
+      ),);
     }
 
     // Gather and encrypt unsynced collections
@@ -130,7 +130,7 @@ class SyncEngine {
         version: collection.version,
         encryptedData: encryptedData,
         blobSize: encryptedData.length,
-      ));
+      ),);
     }
 
     // Gather and encrypt unsynced generated contents
@@ -145,7 +145,7 @@ class SyncEngine {
         version: content.version,
         encryptedData: encryptedData,
         blobSize: encryptedData.length,
-      ));
+      ),);
     }
 
     if (items.isEmpty) {
@@ -413,7 +413,7 @@ class SyncEngine {
           .map((e) => SyncConflict(
                 itemId: (e as Map<String, dynamic>)['item_id'] as String,
                 serverVersion: e['server_version'] as int,
-              ))
+              ),)
           .toList(),
     );
   }

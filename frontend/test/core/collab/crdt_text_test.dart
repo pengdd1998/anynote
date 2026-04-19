@@ -529,7 +529,7 @@ void main() {
     });
 
     test('many concurrent inserts at position 0 converge', () {
-      final sites = List.generate(5, (i) => CRDTText('site-${i}'));
+      final sites = List.generate(5, (i) => CRDTText('site-$i'));
 
       // Each site inserts a single letter at position 0, concurrently.
       final allOps = <RGANode>[];

@@ -46,7 +46,7 @@ class GeneratedContentsDao extends DatabaseAccessor<AppDatabase>
       aiModelUsed: Value(aiModelUsed),
       createdAt: now,
       updatedAt: now,
-    ));
+    ),);
     return id;
   }
 
@@ -62,7 +62,7 @@ class GeneratedContentsDao extends DatabaseAccessor<AppDatabase>
       plainBody: Value(plainBody),
       updatedAt: Value(DateTime.now()),
       isSynced: const Value(false),
-    ));
+    ),);
   }
 
   /// Delete generated content.

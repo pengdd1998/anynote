@@ -56,7 +56,7 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.filter_list_off,
-                            size: 48, color: Colors.grey.shade400),
+                            size: 48, color: Colors.grey.shade400,),
                         const SizedBox(height: 12),
                         Text(
                           l10n.noPublicationsWithStatus(_statusFilter ?? ''),
@@ -101,7 +101,7 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
               const SizedBox(height: 8),
               Text('$error',
                   style:
-                      const TextStyle(fontSize: 12, color: Colors.grey)),
+                      const TextStyle(fontSize: 12, color: Colors.grey),),
               const SizedBox(height: 16),
               FilledButton.tonal(
                 onPressed: () =>
@@ -298,13 +298,13 @@ class _PublishDetailSheet extends ConsumerWidget {
           _detailRow(context, l10n.created, detail['created_at']?.toString()),
           if (detail['published_at'] != null)
             _detailRow(
-                context, l10n.publishedDate, detail['published_at']?.toString()),
+                context, l10n.publishedDate, detail['published_at']?.toString(),),
           if (detail['platform_url'] != null)
             _detailRow(context, l10n.url, detail['platform_url']?.toString()),
           if (detail['error_message'] != null &&
               detail['error_message'].toString().isNotEmpty)
             _detailRow(
-                context, l10n.error, detail['error_message']?.toString()),
+                context, l10n.error, detail['error_message']?.toString(),),
           const SizedBox(height: 16),
           Text(
             l10n.contentLabel,

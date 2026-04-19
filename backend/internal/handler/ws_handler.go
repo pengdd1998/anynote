@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,6 +15,57 @@ import (
 
 	"github.com/anynote/backend/internal/service"
 )
+
+// Rate limiting constants for WS message relay.
+const (
+	// MaxEditRate is the maximum number of edit messages per second per client.
+	MaxEditRate = 30
+	// MaxCursorRate is the maximum number of cursor messages per second per client.
+	MaxCursorRate = 5
+	// rateLimitWindow is the sliding window duration for per-client rate limiting.
+	rateLimitWindow = 1 * time.Second
+)
+
+// clientRateLimiter provides per-client rate limiting using a sliding window.
+type clientRateLimiter struct {
+	mu         sync.Mutex
+	timestamps []time.Time
+	limit      int
+	window     time.Duration
+}
+
+// newClientRateLimiter creates a new per-client rate limiter.
+func newClientRateLimiter(limit int, window time.Duration) *clientRateLimiter {
+	return &clientRateLimiter{
+		limit:  limit,
+		window: window,
+	}
+}
+
+// Allow checks if a message is allowed under the rate limit.
+func (r *clientRateLimiter) Allow() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now := time.Now()
+	windowStart := now.Add(-r.window)
+
+	// Remove expired entries.
+	valid := r.timestamps[:0]
+	for _, t := range r.timestamps {
+		if t.After(windowStart) {
+			valid = append(valid, t)
+		}
+	}
+	r.timestamps = valid
+
+	if len(r.timestamps) >= r.limit {
+		return false
+	}
+
+	r.timestamps = append(r.timestamps, now)
+	return true
+}
 
 // WSHandler handles WebSocket connections for real-time collaboration.
 type WSHandler struct {
@@ -99,7 +151,9 @@ func (h *WSHandler) HandleConnection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// --- Read pump: read client messages and dispatch ---
-	h.readPump(ctx, conn, room, userID)
+	editLimiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+	cursorLimiter := newClientRateLimiter(MaxCursorRate, rateLimitWindow)
+	h.readPump(ctx, conn, room, userID, editLimiter, cursorLimiter)
 }
 
 // validateToken parses and validates a JWT string, returning the user_id claim.
@@ -147,7 +201,8 @@ func (h *WSHandler) sendPresenceList(ctx context.Context, conn *websocket.Conn, 
 }
 
 // readPump reads messages from the WebSocket connection and dispatches them.
-func (h *WSHandler) readPump(ctx context.Context, conn *websocket.Conn, room, userID string) {
+// editLimiter and cursorLimiter enforce per-client rate limits for relay messages.
+func (h *WSHandler) readPump(ctx context.Context, conn *websocket.Conn, room, userID string, editLimiter, cursorLimiter *clientRateLimiter) {
 	for {
 		_, raw, err := conn.Read(ctx)
 		if err != nil {
@@ -179,6 +234,12 @@ func (h *WSHandler) readPump(ctx context.Context, conn *websocket.Conn, room, us
 				slog.Warn("ws: broadcast comment failed", "error", broadcastErr)
 			}
 
+		case "edit":
+			h.handleEdit(ctx, room, userID, msg, editLimiter, conn)
+
+		case "cursor":
+			h.handleCursor(ctx, room, userID, msg, cursorLimiter, conn)
+
 		case "join":
 			// Client may send an updated username in the join data.
 			var data struct {
@@ -208,6 +269,53 @@ func (h *WSHandler) handleTyping(ctx context.Context, room, userID string, data 
 	if err := h.presenceSvc.SetTyping(ctx, room, userID, td.IsTyping); err != nil {
 		slog.Warn("ws: set typing failed", "error", err)
 	}
+}
+
+// handleEdit relays CRDT edit operations to all other clients in the room.
+// The server is zero-knowledge: it never inspects or modifies the ops payload.
+// Rate limited to MaxEditRate messages per second per client.
+func (h *WSHandler) handleEdit(ctx context.Context, room, userID string, msg service.WSMessage, limiter *clientRateLimiter, conn *websocket.Conn) {
+	if !limiter.Allow() {
+		sendRateLimitError(ctx, conn, "edit_rate_limited", "Edit rate limit exceeded")
+		return
+	}
+
+	// Attach sender and room_id, then relay as-is (zero-knowledge).
+	msg.Sender = userID
+	msg.RoomID = room
+	// Privacy note: edit payload is end-to-end encrypted, never logged or inspected.
+	if broadcastErr := h.presenceSvc.BroadcastToRoom(ctx, room, msg); broadcastErr != nil {
+		slog.Warn("ws: broadcast edit failed", "error", broadcastErr)
+	}
+}
+
+// handleCursor relays cursor position updates to all other clients in the room.
+// Rate limited to MaxCursorRate messages per second per client.
+func (h *WSHandler) handleCursor(ctx context.Context, room, userID string, msg service.WSMessage, limiter *clientRateLimiter, conn *websocket.Conn) {
+	if !limiter.Allow() {
+		sendRateLimitError(ctx, conn, "cursor_rate_limited", "Cursor rate limit exceeded")
+		return
+	}
+
+	// Attach sender and room_id, then relay as-is.
+	msg.Sender = userID
+	msg.RoomID = room
+	if broadcastErr := h.presenceSvc.BroadcastToRoom(ctx, room, msg); broadcastErr != nil {
+		slog.Warn("ws: broadcast cursor failed", "error", broadcastErr)
+	}
+}
+
+// sendRateLimitError writes a rate limit error message to the WebSocket connection.
+// If the connection is nil or the write fails, the error is silently dropped.
+func sendRateLimitError(ctx context.Context, conn *websocket.Conn, code, message string) {
+	if conn == nil {
+		return
+	}
+	errMsg := service.WSMessage{
+		Type: "error",
+		Data: json.RawMessage(fmt.Sprintf(`{"code":"%s","message":"%s"}`, code, message)),
+	}
+	_ = wsWriteJSON(ctx, conn, errMsg)
 }
 
 // writePump reads from the room subscription channel and writes messages to the
