@@ -53,7 +53,7 @@ class _RichNoteEditorState extends State<RichNoteEditor> {
       ),
       iconButtonUnselectedData: quill.IconButtonData(
         color: isDark
-            ? const Color(0xFF9B8E82) // warm medium grey (dark theme)
+            ? const Color(0xFFA3988E) // warm medium grey (WCAG AA on dark theme)
             : const Color(0xFF6B5E54), // warm brown-grey (light theme)
       ),
     );

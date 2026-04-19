@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
+import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/collab/presence_indicator.dart';
 import '../../../core/collab/ws_client.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -139,7 +140,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Send a typing indicator to the presence room.
   void _notifyPresenceTyping() {
     if (_noteId != null) {
-      ref.read(presenceProvider(_noteId!).notifier).notifyTyping();
+      ref.read(presenceProvider.notifier).sendTyping(_noteId!);
     }
   }
 
@@ -319,7 +320,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyScrollController.dispose();
     _zenChromeAnimController?.dispose();
     // Leave presence room.
-    ref.read(presenceProvider(_noteId ?? '').notifier).leave();
+    ref.read(presenceProvider.notifier).leaveRoom();
     // Restore system UI when leaving the editor.
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
@@ -393,7 +394,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               actions: [
                 // Presence avatars showing active collaborators.
                 if (_noteId != null)
-                  PresenceAvatarStack(noteId: _noteId!),
+                  PresenceAvatarStack(
+                    users: ref.watch(presenceProvider).values.toList(),
+                  ),
                 if (_isSaving)
                   Semantics(
                     label: l10n.savingNote,
@@ -553,7 +556,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
         // Typing indicator for collaborators.
         if (_noteId != null)
-          TypingIndicatorText(noteId: _noteId!),
+          TypingIndicatorText(
+            typingUsers: ref.watch(presenceProvider).values
+                .where((u) => u.isTyping)
+                .toList(),
+          ),
 
         // Animated word / character count bar.
         _buildCountBar(context, l10n, colorScheme),
@@ -612,7 +619,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Use warm secondary color for the caption text.
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final captionColor = isDark
-        ? const Color(0xFF9B8E82) // warm medium grey
+        ? const Color(0xFFA3988E) // warm medium grey (WCAG AA on dark surface)
         : const Color(0xFF6B5E54); // warm brown-grey
 
     return SafeArea(
@@ -625,19 +632,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           children: [
             // Zen mode toggle button (visible when not in zen mode).
             if (!_isZenMode)
-              IconButton(
-                icon: Icon(
-                  Icons.fullscreen,
-                  size: 18,
-                  color: captionColor,
+              A11yUtils.ensureTouchTarget(
+                child: Semantics(
+                  button: true,
+                  label: l10n.enterZenMode,
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.fullscreen,
+                      size: 18,
+                      color: captionColor,
+                    ),
+                    tooltip: l10n.enterZenMode,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 24,
+                    ),
+                    onPressed: _toggleZenMode,
+                  ),
                 ),
-                tooltip: l10n.enterZenMode,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 32,
-                  minHeight: 24,
-                ),
-                onPressed: _toggleZenMode,
               ),
             const Spacer(),
             // Animated word count.

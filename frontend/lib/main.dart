@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -125,6 +126,7 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
       child: MaterialApp.router(
         title: 'AnyNote',
         debugShowCheckedModeBanner: false,
+        showSemanticsDebugger: kDebugMode,
         theme: AppTheme.lightTheme(),
         darkTheme: AppTheme.darkTheme(),
         themeMode: ThemeMode.system,

@@ -61,10 +61,14 @@ class ComposeScreen extends ConsumerWidget {
                     const SizedBox(height: 20),
                     PressableScale(
                       onPressed: () => _showNoteSelector(context, ref, notesAsync),
-                      child: FilledButton.icon(
-                        onPressed: () => _showNoteSelector(context, ref, notesAsync),
-                        icon: const Icon(Icons.add),
-                        label: Text(l10n.startComposing),
+                      child: Semantics(
+                        button: true,
+                        label: l10n.startComposing,
+                        child: FilledButton.icon(
+                          onPressed: () => _showNoteSelector(context, ref, notesAsync),
+                          icon: const Icon(Icons.add),
+                          label: Text(l10n.startComposing),
+                        ),
                       ),
                     ),
                   ],
@@ -111,7 +115,10 @@ class ComposeScreen extends ConsumerWidget {
                       final platform = item.platformStyle;
 
                       return Card(
-                        child: ListTile(
+                        child: Semantics(
+                          button: true,
+                          label: 'Composition: $title. $time${platform != 'generic' ? '. Platform: $platform' : ''}',
+                          child: ListTile(
                           leading: Icon(
                             Icons.auto_awesome,
                             color: Theme.of(context).colorScheme.primary,
@@ -135,6 +142,7 @@ class ComposeScreen extends ConsumerWidget {
                             ],
                           ),
                           onTap: () => _showContentPreview(context, ref, item),
+                          ),
                         ),
                       );
                     },

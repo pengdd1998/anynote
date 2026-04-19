@@ -997,7 +997,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       spacing: 4,
       runSpacing: 2,
       children: displayTags.map((tag) {
-        return Chip(
+        return Semantics(
+          label: A11yUtils.semanticLabelForTag(name: tag.plainName ?? '...'),
+          child: Chip(
           label: Text(
             tag.plainName ?? '...',
             style: theme.textTheme.labelSmall?.copyWith(
@@ -1013,6 +1015,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             width: 0.5,
           ),
           backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(80),
+        ),
         );
       }).toList(),
     );

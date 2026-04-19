@@ -17,6 +17,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	r := chi.NewRouter()
 
 	// Middleware
+	r.Use(SecurityHeaders)
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(chiMiddleware.Recoverer)

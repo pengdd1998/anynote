@@ -1,0 +1,306 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/anynote/backend/internal/domain"
+)
+
+// ---------------------------------------------------------------------------
+// Mock CommentRepository
+// ---------------------------------------------------------------------------
+
+type mockCommentRepo struct {
+	createFn            func(ctx context.Context, sharedNoteID string, userID uuid.UUID, req domain.CreateCommentRequest) (*domain.Comment, error)
+	listBySharedNoteFn  func(ctx context.Context, sharedNoteID string, limit, offset int) ([]domain.Comment, error)
+	countBySharedNoteFn func(ctx context.Context, sharedNoteID string) (int, error)
+	deleteFn            func(ctx context.Context, commentID uuid.UUID, userID uuid.UUID) (int64, error)
+}
+
+func (m *mockCommentRepo) Create(ctx context.Context, sharedNoteID string, userID uuid.UUID, req domain.CreateCommentRequest) (*domain.Comment, error) {
+	if m.createFn != nil {
+		return m.createFn(ctx, sharedNoteID, userID, req)
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (m *mockCommentRepo) ListBySharedNote(ctx context.Context, sharedNoteID string, limit, offset int) ([]domain.Comment, error) {
+	if m.listBySharedNoteFn != nil {
+		return m.listBySharedNoteFn(ctx, sharedNoteID, limit, offset)
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (m *mockCommentRepo) CountBySharedNote(ctx context.Context, sharedNoteID string) (int, error) {
+	if m.countBySharedNoteFn != nil {
+		return m.countBySharedNoteFn(ctx, sharedNoteID)
+	}
+	return 0, errors.New("not implemented")
+}
+
+func (m *mockCommentRepo) Delete(ctx context.Context, commentID uuid.UUID, userID uuid.UUID) (int64, error) {
+	if m.deleteFn != nil {
+		return m.deleteFn(ctx, commentID, userID)
+	}
+	return 0, errors.New("not implemented")
+}
+
+// ---------------------------------------------------------------------------
+// Tests: CreateComment
+// ---------------------------------------------------------------------------
+
+func TestCommentService_CreateComment_Success(t *testing.T) {
+	userID := uuid.New()
+	commentID := uuid.New()
+
+	repo := &mockCommentRepo{
+		createFn: func(ctx context.Context, sharedNoteID string, uid uuid.UUID, req domain.CreateCommentRequest) (*domain.Comment, error) {
+			if sharedNoteID != "share-abc" {
+				t.Errorf("sharedNoteID = %q, want %q", sharedNoteID, "share-abc")
+			}
+			if uid != userID {
+				t.Errorf("userID = %v, want %v", uid, userID)
+			}
+			if req.EncryptedContent != "enc-comment-data" {
+				t.Errorf("EncryptedContent = %q, want %q", req.EncryptedContent, "enc-comment-data")
+			}
+			return &domain.Comment{
+				ID:               commentID,
+				SharedNoteID:     sharedNoteID,
+				UserID:           uid,
+				EncryptedContent: req.EncryptedContent,
+			}, nil
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	comment, err := svc.CreateComment(context.Background(), "share-abc", userID, domain.CreateCommentRequest{
+		EncryptedContent: "enc-comment-data",
+	})
+	if err != nil {
+		t.Fatalf("CreateComment: %v", err)
+	}
+	if comment.ID != commentID {
+		t.Errorf("ID = %v, want %v", comment.ID, commentID)
+	}
+	if comment.SharedNoteID != "share-abc" {
+		t.Errorf("SharedNoteID = %q, want %q", comment.SharedNoteID, "share-abc")
+	}
+}
+
+func TestCommentService_CreateComment_RepoError(t *testing.T) {
+	repo := &mockCommentRepo{
+		createFn: func(ctx context.Context, sharedNoteID string, uid uuid.UUID, req domain.CreateCommentRequest) (*domain.Comment, error) {
+			return nil, errors.New("db insert failed")
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	_, err := svc.CreateComment(context.Background(), "share-abc", uuid.New(), domain.CreateCommentRequest{
+		EncryptedContent: "enc-data",
+	})
+	if err == nil {
+		t.Error("expected error when repo fails")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: ListComments
+// ---------------------------------------------------------------------------
+
+func TestCommentService_ListComments_Success(t *testing.T) {
+	now := time.Now()
+	repo := &mockCommentRepo{
+		listBySharedNoteFn: func(ctx context.Context, sharedNoteID string, limit, offset int) ([]domain.Comment, error) {
+			if sharedNoteID != "share-abc" {
+				t.Errorf("sharedNoteID = %q, want %q", sharedNoteID, "share-abc")
+			}
+			if limit != 50 {
+				t.Errorf("limit = %d, want 50", limit)
+			}
+			if offset != 0 {
+				t.Errorf("offset = %d, want 0", offset)
+			}
+			return []domain.Comment{
+				{ID: uuid.New(), SharedNoteID: sharedNoteID, EncryptedContent: "c1", CreatedAt: now},
+				{ID: uuid.New(), SharedNoteID: sharedNoteID, EncryptedContent: "c2", CreatedAt: now},
+			}, nil
+		},
+		countBySharedNoteFn: func(ctx context.Context, sharedNoteID string) (int, error) {
+			return 2, nil
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	resp, err := svc.ListComments(context.Background(), "share-abc", 50, 0)
+	if err != nil {
+		t.Fatalf("ListComments: %v", err)
+	}
+	if resp.Total != 2 {
+		t.Errorf("Total = %d, want 2", resp.Total)
+	}
+	if len(resp.Comments) != 2 {
+		t.Errorf("Comments count = %d, want 2", len(resp.Comments))
+	}
+}
+
+func TestCommentService_ListComments_EmptyResult(t *testing.T) {
+	repo := &mockCommentRepo{
+		listBySharedNoteFn: func(ctx context.Context, sharedNoteID string, limit, offset int) ([]domain.Comment, error) {
+			return nil, nil
+		},
+		countBySharedNoteFn: func(ctx context.Context, sharedNoteID string) (int, error) {
+			return 0, nil
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	resp, err := svc.ListComments(context.Background(), "share-abc", 50, 0)
+	if err != nil {
+		t.Fatalf("ListComments: %v", err)
+	}
+	if resp.Total != 0 {
+		t.Errorf("Total = %d, want 0", resp.Total)
+	}
+	// Service ensures nil slice is replaced with empty slice.
+	if resp.Comments == nil {
+		t.Error("Comments should not be nil (should be empty slice)")
+	}
+	if len(resp.Comments) != 0 {
+		t.Errorf("Comments count = %d, want 0", len(resp.Comments))
+	}
+}
+
+func TestCommentService_ListComments_ListError(t *testing.T) {
+	repo := &mockCommentRepo{
+		listBySharedNoteFn: func(ctx context.Context, sharedNoteID string, limit, offset int) ([]domain.Comment, error) {
+			return nil, errors.New("db error")
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	_, err := svc.ListComments(context.Background(), "share-abc", 50, 0)
+	if err == nil {
+		t.Error("expected error when list fails")
+	}
+}
+
+func TestCommentService_ListComments_CountError(t *testing.T) {
+	repo := &mockCommentRepo{
+		listBySharedNoteFn: func(ctx context.Context, sharedNoteID string, limit, offset int) ([]domain.Comment, error) {
+			return []domain.Comment{}, nil
+		},
+		countBySharedNoteFn: func(ctx context.Context, sharedNoteID string) (int, error) {
+			return 0, errors.New("count error")
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	_, err := svc.ListComments(context.Background(), "share-abc", 50, 0)
+	if err == nil {
+		t.Error("expected error when count fails")
+	}
+}
+
+func TestCommentService_ListComments_WithPagination(t *testing.T) {
+	var capturedLimit, capturedOffset int
+	repo := &mockCommentRepo{
+		listBySharedNoteFn: func(ctx context.Context, sharedNoteID string, limit, offset int) ([]domain.Comment, error) {
+			capturedLimit = limit
+			capturedOffset = offset
+			return []domain.Comment{}, nil
+		},
+		countBySharedNoteFn: func(ctx context.Context, sharedNoteID string) (int, error) {
+			return 100, nil
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	resp, err := svc.ListComments(context.Background(), "share-abc", 10, 20)
+	if err != nil {
+		t.Fatalf("ListComments: %v", err)
+	}
+	if capturedLimit != 10 {
+		t.Errorf("limit = %d, want 10", capturedLimit)
+	}
+	if capturedOffset != 20 {
+		t.Errorf("offset = %d, want 20", capturedOffset)
+	}
+	if resp.Total != 100 {
+		t.Errorf("Total = %d, want 100", resp.Total)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: DeleteComment
+// ---------------------------------------------------------------------------
+
+func TestCommentService_DeleteComment_Success(t *testing.T) {
+	commentID := uuid.New()
+	userID := uuid.New()
+
+	repo := &mockCommentRepo{
+		deleteFn: func(ctx context.Context, cid uuid.UUID, uid uuid.UUID) (int64, error) {
+			if cid != commentID {
+				t.Errorf("commentID = %v, want %v", cid, commentID)
+			}
+			if uid != userID {
+				t.Errorf("userID = %v, want %v", uid, userID)
+			}
+			return 1, nil
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	err := svc.DeleteComment(context.Background(), commentID, userID)
+	if err != nil {
+		t.Fatalf("DeleteComment: %v", err)
+	}
+}
+
+func TestCommentService_DeleteComment_NotAuthor(t *testing.T) {
+	commentID := uuid.New()
+	userID := uuid.New()
+
+	repo := &mockCommentRepo{
+		deleteFn: func(ctx context.Context, cid uuid.UUID, uid uuid.UUID) (int64, error) {
+			// Simulate: comment exists but belongs to a different user.
+			return 0, nil
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	err := svc.DeleteComment(context.Background(), commentID, userID)
+	if err != ErrNotCommentAuthor {
+		t.Errorf("error = %v, want ErrNotCommentAuthor", err)
+	}
+}
+
+func TestCommentService_DeleteComment_RepoError(t *testing.T) {
+	repo := &mockCommentRepo{
+		deleteFn: func(ctx context.Context, cid uuid.UUID, uid uuid.UUID) (int64, error) {
+			return 0, errors.New("db error")
+		},
+	}
+
+	svc := NewCommentService(repo)
+
+	err := svc.DeleteComment(context.Background(), uuid.New(), uuid.New())
+	if err == nil {
+		t.Error("expected error when repo fails")
+	}
+}

@@ -157,7 +157,7 @@ class MarkdownPreview extends StatelessWidget {
         codeblockAlign: WrapAlignment.start,
         blockquote: TextStyle(
           color: isDark
-              ? const Color(0xFF9B8E82)
+              ? const Color(0xFFA3988E)
               : const Color(0xFF6B5E54),
           fontStyle: FontStyle.italic,
         ),
@@ -169,7 +169,7 @@ class MarkdownPreview extends StatelessWidget {
         ),
         listBullet: TextStyle(
           color: isDark
-              ? const Color(0xFF9B8E82)
+              ? const Color(0xFFA3988E)
               : const Color(0xFF6B5E54),
         ),
         tableBody: TextStyle(
@@ -253,7 +253,7 @@ class _CodeBlockBuilder extends MarkdownElementBuilder {
                       fontSize: 12,
                       fontFamily: 'monospace',
                       color: isDark
-                          ? const Color(0xFF9B8E82)
+                          ? const Color(0xFFA3988E)
                           : const Color(0xFF6B5E54),
                     ),
                   ),
@@ -454,7 +454,7 @@ class _CopyButtonState extends State<_CopyButton> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final iconColor =
-        isDark ? const Color(0xFF9B8E82) : const Color(0xFF6B5E54);
+        isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54);
 
     return IconButton(
       icon: Icon(

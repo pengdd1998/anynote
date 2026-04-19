@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../../../core/accessibility/a11y_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -119,15 +120,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: SelectableText(_recoveryKey ?? '', style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),
               ),
               const SizedBox(height: 8),
-              IconButton(
-                icon: const Icon(Icons.copy),
-                tooltip: l10n.copyRecoveryKey,
-                onPressed: () {
+              A11yUtils.ensureTouchTarget(
+                child: IconButton(
+                  icon: const Icon(Icons.copy),
+                  tooltip: l10n.copyRecoveryKey,
+                  onPressed: () {
                   Clipboard.setData(ClipboardData(text: _recoveryKey ?? ''));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(l10n.recoveryKeyCopied)),
                   );
                 },
+              ),
               ),
             ],
           ),

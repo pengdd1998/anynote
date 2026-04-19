@@ -23,7 +23,7 @@ class AppTheme {
   static const lightCardBg = Color(0xFFFFFDFB); // Warm white
   static const _lightTextPrimary = Color(0xFF2C2520); // Warm near-black
   static const _lightTextSecondary = Color(0xFF6B5E54); // Warm brown-grey
-  static const _lightTextTertiary = Color(0xFF9B8E82); // Warm muted grey
+  static const _lightTextTertiary = Color(0xFF7A6E62); // Warm muted grey (WCAG AA 4.5:1 on _lightSurface)
   static const lightInputFill = Color(0xFFF5F0EB); // Warm beige
   static const lightBorder = Color(0xFFE8DFD5); // Warm border
   static const lightDivider = Color(0xFFF0E8DF); // Warm divider
@@ -35,8 +35,8 @@ class AppTheme {
   static const _darkSurface = Color(0xFF1A1614); // Deep warm charcoal
   static const darkCardBg = Color(0xFF252220); // Warm dark grey
   static const _darkTextPrimary = Color(0xFFF5F0EB); // Warm white
-  static const _darkTextSecondary = Color(0xFF9B8E82); // Warm medium grey
-  static const _darkTextTertiary = Color(0xFF6B5E54); // Warm dark muted
+  static const _darkTextSecondary = Color(0xFFA3988E); // Warm medium grey (WCAG AA 4.5:1 on _darkSurface)
+  static const _darkTextTertiary = Color(0xFF9E9288); // Warm dark muted (WCAG AA 4.5:1 on _darkSurface)
   static const darkInputFill = Color(0xFF2C2826); // Warm dark fill
   static const darkBorder = Color(0xFF3D3835); // Warm dark border
   static const _darkDivider = Color(0xFF332E2B); // Warm dark divider
@@ -179,7 +179,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
-          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2.0),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
@@ -187,7 +187,7 @@ class AppTheme {
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
-          borderSide: BorderSide(color: colorScheme.error, width: 1.5),
+          borderSide: BorderSide(color: colorScheme.error, width: 2.0),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -500,7 +500,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
-          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2.0),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
@@ -508,7 +508,7 @@ class AppTheme {
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
-          borderSide: BorderSide(color: colorScheme.error, width: 1.5),
+          borderSide: BorderSide(color: colorScheme.error, width: 2.0),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

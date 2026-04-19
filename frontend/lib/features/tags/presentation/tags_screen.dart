@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/accessibility/a11y_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -67,10 +68,13 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: tags.map((tag) {
-                  return Chip(
-                    label: Text(tag.plainName ?? l10n.encrypted),
-                    deleteIcon: const Icon(Icons.close, size: 18),
-                    onDeleted: () => _deleteTag(db, tag),
+                  return Semantics(
+                    label: A11yUtils.semanticLabelForTag(name: tag.plainName ?? l10n.encrypted),
+                    child: Chip(
+                      label: Text(tag.plainName ?? l10n.encrypted),
+                      deleteIcon: const Icon(Icons.close, size: 18),
+                      onDeleted: () => _deleteTag(db, tag),
+                    ),
                   );
                 }).toList(),
               ),

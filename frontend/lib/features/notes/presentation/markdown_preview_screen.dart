@@ -252,7 +252,7 @@ class _MarkdownScrollView extends StatelessWidget {
       codeblockAlign: WrapAlignment.start,
       blockquote: TextStyle(
         color: isDark
-            ? const Color(0xFF9B8E82)
+            ? const Color(0xFFA3988E)
             : const Color(0xFF6B5E54),
         fontStyle: FontStyle.italic,
       ),
@@ -262,7 +262,7 @@ class _MarkdownScrollView extends StatelessWidget {
       ),
       listBullet: TextStyle(
         color: isDark
-            ? const Color(0xFF9B8E82)
+            ? const Color(0xFFA3988E)
             : const Color(0xFF6B5E54),
       ),
       tableBody: TextStyle(

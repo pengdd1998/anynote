@@ -216,6 +216,42 @@ class A11yUtils {
   }
 
   // ---------------------------------------------------------------------------
+  // Focus indicator helpers
+  // ---------------------------------------------------------------------------
+
+  /// Returns an [InputDecoration] with a visible focus ring for text fields.
+  ///
+  /// Uses a 2px-wide colored outline border when the field has focus, making
+  /// the focus state clearly visible for keyboard and accessibility users.
+  /// Intended to be applied via the theme's [InputDecorationTheme] or
+  /// directly on individual [TextFormField] / [TextField] widgets.
+  static InputDecoration focusBorderDecoration({
+    String? labelText,
+    String? hintText,
+    Widget? prefixIcon,
+    Color? focusColor,
+    double borderRadius = 12.0,
+  }) {
+    final effectiveFocusColor = focusColor ?? const Color(0xFFC4956A);
+    return InputDecoration(
+      labelText: labelText,
+      hintText: hintText,
+      prefixIcon: prefixIcon,
+      filled: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(borderRadius),
+        borderSide: BorderSide(color: effectiveFocusColor, width: 2.0),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // Color contrast utilities
   // ---------------------------------------------------------------------------
 

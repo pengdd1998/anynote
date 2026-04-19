@@ -101,7 +101,10 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                               .primaryContainer
                               .withAlpha(80)
                           : null,
-                      child: ListTile(
+                      child: Semantics(
+                        button: true,
+                        label: 'Platform: $name${subtitle.isNotEmpty ? '. $subtitle' : ''}${isSelected ? '. Selected' : ''}',
+                        child: ListTile(
                         leading: CircleAvatar(
                           child: Icon(icon, size: 20),
                         ),
@@ -115,6 +118,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                             _selectedPlatform = platformKey;
                           });
                         },
+                        ),
                       ),
                     );
                   }).toList(),
@@ -363,7 +367,10 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
     };
 
     return Card(
-      child: ListTile(
+      child: Semantics(
+        button: platformURL.isNotEmpty,
+        label: 'Published: $title. Platform: $platform. Status: $status${createdAt.isNotEmpty ? '. $createdAt' : ''}',
+        child: ListTile(
         leading: Icon(statusIcon, color: statusColor),
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(
@@ -372,22 +379,30 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         trailing: platformURL.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.open_in_new, size: 18),
-                onPressed: () async {
-                  final uri = Uri.parse(platformURL);
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
-                },
-              )
-            : Chip(
-                label: Text(
-                  status,
-                  style: const TextStyle(fontSize: 11),
+            ? Semantics(
+                button: true,
+                label: 'Open published article in browser',
+                child: IconButton(
+                  icon: const Icon(Icons.open_in_new, size: 18),
+                  onPressed: () async {
+                    final uri = Uri.parse(platformURL);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
                 ),
-                visualDensity: VisualDensity.compact,
+              )
+            : Semantics(
+                label: 'Status: $status',
+                child: Chip(
+                  label: Text(
+                    status,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
+        ),
       ),
     );
   }
