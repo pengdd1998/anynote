@@ -565,3 +565,56 @@ func TestCommentHandler_DeleteComment_InternalError(t *testing.T) {
 		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Direct handler invocation tests for edge cases
+// ---------------------------------------------------------------------------
+
+func TestCommentHandler_CreateComment_MissingSharedNoteID(t *testing.T) {
+	svc := &mockCommentService{}
+	h := &CommentHandler{commentService: svc}
+
+	userID := uuid.New()
+	ctx := context.WithValue(context.Background(), userIDKey, userID.String())
+	body, _ := json.Marshal(domain.CreateCommentRequest{EncryptedContent: "data"})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/share//comments", bytes.NewReader(body)).
+		WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	h.CreateComment(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
+func TestCommentHandler_ListComments_MissingSharedNoteID(t *testing.T) {
+	svc := &mockCommentService{}
+	h := &CommentHandler{commentService: svc}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/share//comments", nil)
+	rec := httptest.NewRecorder()
+
+	h.ListComments(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
+func TestCommentHandler_DeleteComment_MissingID(t *testing.T) {
+	svc := &mockCommentService{}
+	h := &CommentHandler{commentService: svc}
+
+	userID := uuid.New()
+	ctx := context.WithValue(context.Background(), userIDKey, userID.String())
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/comments/", nil).
+		WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	h.DeleteComment(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}

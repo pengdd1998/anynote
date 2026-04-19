@@ -522,6 +522,26 @@ func TestLLMConfigHandler_TestConnection_Success(t *testing.T) {
 	}
 }
 
+func TestLLMConfigHandler_Delete_EmptyID(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockLLMConfigService{}
+
+	h := &LLMConfigHandler{llmService: svc}
+
+	// Invoke handler directly with an authenticated context but no chi route context,
+	// so chi.URLParam returns "".
+	ctx := context.WithValue(context.Background(), userIDKey, userID.String())
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/llm/configs/", nil).
+		WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	h.Delete(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
 func TestLLMConfigHandler_TestConnection_Failure(t *testing.T) {
 	userID := uuid.New()
 	cfgID := uuid.New()
@@ -552,6 +572,44 @@ func TestLLMConfigHandler_TestConnection_Failure(t *testing.T) {
 	}
 	if _, ok := resp["error"]; !ok {
 		t.Error("response should contain error field")
+	}
+}
+
+func TestLLMConfigHandler_TestConnection_EmptyID(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockLLMConfigService{}
+
+	h := &LLMConfigHandler{llmService: svc}
+
+	ctx := context.WithValue(context.Background(), userIDKey, userID.String())
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/llm/configs//test", nil).
+		WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	h.TestConnection(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
+func TestLLMConfigHandler_Update_EmptyID(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockLLMConfigService{}
+
+	h := &LLMConfigHandler{llmService: svc}
+
+	ctx := context.WithValue(context.Background(), userIDKey, userID.String())
+	body, _ := json.Marshal(domain.LLMConfig{Name: "Test"})
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/llm/configs/", bytes.NewReader(body)).
+		WithContext(ctx)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Update(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
 	}
 }
 

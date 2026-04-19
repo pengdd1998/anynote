@@ -526,3 +526,107 @@ func TestPlatformService_CheckStatus_Success(t *testing.T) {
 		t.Errorf("status = %q, want %q", status, "live")
 	}
 }
+
+func TestPlatformService_CheckStatus_NotConnected(t *testing.T) {
+	repo := newMockPlatformConnRepo()
+	registry := platform.NewRegistry()
+	registry.Register("xiaohongshu", &mockPlatformAdapter{})
+
+	svc := NewPlatformService(repo, registry)
+
+	status, err := svc.CheckStatus(context.Background(), uuid.New(), "xiaohongshu", "note-123", []byte("key"))
+	if err == nil {
+		t.Error("expected error when platform not connected")
+	}
+	if status != "unknown" {
+		t.Errorf("status = %q, want %q", status, "unknown")
+	}
+}
+
+func TestPlatformService_PollAuth_CreatesNewConnection(t *testing.T) {
+	repo := newMockPlatformConnRepo()
+	registry := platform.NewRegistry()
+	adapter := &mockPlatformAdapter{
+		startAuthFn: func(ctx context.Context, masterKey []byte) (*platform.AuthSession, []byte, error) {
+			return &platform.AuthSession{AuthRef: "new-conn-session"}, []byte("qr"), nil
+		},
+		pollAuthFn: func(ctx context.Context, session *platform.AuthSession, masterKey []byte) ([]byte, error) {
+			return []byte("new-encrypted-auth"), nil
+		},
+	}
+	registry.Register("xiaohongshu", adapter)
+
+	svc := NewPlatformService(repo, registry)
+	userID := uuid.New()
+
+	authRef, _, err := svc.StartAuth(context.Background(), userID, "xiaohongshu", []byte("master-key"))
+	if err != nil {
+		t.Fatalf("StartAuth: %v", err)
+	}
+
+	encryptedAuth, err := svc.PollAuth(context.Background(), userID, "xiaohongshu", authRef, []byte("master-key"))
+	if err != nil {
+		t.Fatalf("PollAuth: %v", err)
+	}
+	if string(encryptedAuth) != "new-encrypted-auth" {
+		t.Errorf("encryptedAuth = %q, want %q", string(encryptedAuth), "new-encrypted-auth")
+	}
+
+	// Verify a new connection was created (no existing connection existed).
+	conn, connErr := repo.GetByPlatform(context.Background(), userID, "xiaohongshu")
+	if connErr != nil {
+		t.Fatalf("GetByPlatform: %v", connErr)
+	}
+	if conn.Status != "active" {
+		t.Errorf("Status = %q, want %q", conn.Status, "active")
+	}
+	if string(conn.EncryptedAuth) != "new-encrypted-auth" {
+		t.Errorf("EncryptedAuth = %q, want %q", string(conn.EncryptedAuth), "new-encrypted-auth")
+	}
+}
+
+func TestPlatformService_PollAuth_CreateConnectionError(t *testing.T) {
+	repo := newMockPlatformConnRepo()
+	repo.createFn = func(conn *domain.PlatformConnection) error {
+		return errors.New("db create failed")
+	}
+
+	registry := platform.NewRegistry()
+	adapter := &mockPlatformAdapter{
+		startAuthFn: func(ctx context.Context, masterKey []byte) (*platform.AuthSession, []byte, error) {
+			return &platform.AuthSession{AuthRef: "create-err-session"}, []byte("qr"), nil
+		},
+		pollAuthFn: func(ctx context.Context, session *platform.AuthSession, masterKey []byte) ([]byte, error) {
+			return []byte("auth-data"), nil
+		},
+	}
+	registry.Register("xiaohongshu", adapter)
+
+	svc := NewPlatformService(repo, registry)
+	userID := uuid.New()
+
+	authRef, _, err := svc.StartAuth(context.Background(), userID, "xiaohongshu", []byte("master-key"))
+	if err != nil {
+		t.Fatalf("StartAuth: %v", err)
+	}
+
+	_, err = svc.PollAuth(context.Background(), userID, "xiaohongshu", authRef, []byte("master-key"))
+	if err == nil {
+		t.Error("expected error when connection creation fails")
+	}
+}
+
+func TestPlatformService_CheckStatus_UnsupportedPlatform(t *testing.T) {
+	repo := newMockPlatformConnRepo()
+	registry := platform.NewRegistry()
+
+	svc := NewPlatformService(repo, registry)
+
+	status, err := svc.CheckStatus(context.Background(), uuid.New(), "nonexistent", "note-123", []byte("key"))
+	if err == nil {
+		t.Error("expected error for unsupported platform")
+	}
+	if status != "unknown" {
+		t.Errorf("status = %q, want %q", status, "unknown")
+	}
+}

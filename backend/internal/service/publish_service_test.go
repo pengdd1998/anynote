@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -335,4 +337,79 @@ func TestPublishService_Publish_PayloadContents(t *testing.T) {
 	if payload["title"] != "Payload Test" {
 		t.Errorf("payload title = %v, want %q", payload["title"], "Payload Test")
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: WithPublishPushService option
+// ---------------------------------------------------------------------------
+
+func TestWithPublishPushService(t *testing.T) {
+	logRepo := newMockPublishLogRepo()
+	pushSvc := &mockPushServiceForPublish{}
+	opt := WithPublishPushService(pushSvc)
+
+	svc := NewPublishService(logRepo, nil)
+	opt(svc.(*publishService))
+
+	if svc.(*publishService).pushSvc == nil {
+		t.Error("pushSvc should be set after WithPublishPushService")
+	}
+}
+
+func TestPublishService_Publish_WithPushNotification(t *testing.T) {
+	logRepo := newMockPublishLogRepo()
+	queue := &mockQueueEnqueuer{}
+	pushSvc := &mockPushServiceForPublish{}
+
+	svc := NewPublishService(logRepo, queue, WithPublishPushService(pushSvc))
+
+	userID := uuid.New()
+	log, err := svc.Publish(context.Background(), userID, PublishRequest{
+		Platform: "xiaohongshu",
+		Title:    "Push Test",
+		Content:  "Content",
+	})
+	if err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+	if log.Status != "pending" {
+		t.Errorf("Status = %q, want %q", log.Status, "pending")
+	}
+
+	// Wait for the goroutine to fire the push notification.
+	time.Sleep(150 * time.Millisecond)
+
+	if !pushSvc.wasCalled() {
+		t.Error("expected SendPush to be called when pushSvc is configured")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Mock PushService for publish tests
+// ---------------------------------------------------------------------------
+
+type mockPushServiceForPublish struct {
+	sendPushCalled bool
+	mu             sync.Mutex
+}
+
+func (m *mockPushServiceForPublish) RegisterDevice(ctx context.Context, userID string, token string, platform string) error {
+	return nil
+}
+
+func (m *mockPushServiceForPublish) UnregisterDevice(ctx context.Context, token string) error {
+	return nil
+}
+
+func (m *mockPushServiceForPublish) SendPush(ctx context.Context, userID string, payload PushPayload) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.sendPushCalled = true
+	return nil
+}
+
+func (m *mockPushServiceForPublish) wasCalled() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.sendPushCalled
 }

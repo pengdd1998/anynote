@@ -291,3 +291,76 @@ func TestAdapter_RevokeAuth(t *testing.T) {
 		t.Errorf("RevokeAuth should be a no-op, got error: %v", err)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Publish — expired token with refresh token (tests the error path since
+// the refresh endpoint is unreachable in unit tests)
+// ---------------------------------------------------------------------------
+
+func TestAdapter_Publish_ExpiredToken_WithRefresh(t *testing.T) {
+	a := NewAdapter("cid", "csecret", "https://redirect")
+	key := newTestKey()
+
+	authData := mediumAuthData{
+		AccessToken:  "expired-token",
+		RefreshToken: "some-refresh-token",
+		ExpiresAt:    1, // Expired (Unix timestamp 1 = Jan 1 1970).
+		TokenType:    "Bearer",
+		UserID:       "user-123",
+	}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	// This attempts to refresh the token, which hits the real Medium API.
+	// The refresh will fail because the API is unreachable in unit tests.
+	ctx, cancel := context.WithTimeout(context.Background(), 1)
+	defer cancel()
+
+	_, err := a.Publish(ctx, encrypted, key, platform.PublishParams{
+		Title:   "Test",
+		Content: "Content",
+		Tags:    []string{"go", "test"},
+	})
+	if err == nil {
+		t.Error("expected error when token refresh fails (unreachable API)")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Publish — invalid auth data JSON
+// ---------------------------------------------------------------------------
+
+func TestAdapter_Publish_InvalidAuthJSON(t *testing.T) {
+	a := NewAdapter("cid", "csecret", "https://redirect")
+	key := newTestKey()
+
+	// Encrypt something that is not valid mediumAuthData JSON.
+	encrypted, _ := llm.EncryptAPIKey("this is not json", key)
+
+	_, err := a.Publish(context.Background(), encrypted, key, platform.PublishParams{
+		Title:   "Test",
+		Content: "Content",
+	})
+	if err == nil {
+		t.Error("expected error when auth data is not valid JSON")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// CheckStatus — invalid auth JSON
+// ---------------------------------------------------------------------------
+
+func TestAdapter_CheckStatus_InvalidAuthJSON(t *testing.T) {
+	a := NewAdapter("cid", "csecret", "https://redirect")
+	key := newTestKey()
+
+	encrypted, _ := llm.EncryptAPIKey("not-json", key)
+
+	status, err := a.CheckStatus(context.Background(), encrypted, key, "post-123")
+	if err == nil {
+		t.Error("expected error for invalid auth JSON")
+	}
+	if status != "unknown" {
+		t.Errorf("status = %q, want %q on error", status, "unknown")
+	}
+}

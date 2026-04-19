@@ -669,6 +669,46 @@ func TestShareHandler_ToggleReaction_InternalError(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// ToggleReaction — missing share ID (direct handler invocation)
+// ---------------------------------------------------------------------------
+
+func TestShareHandler_ToggleReaction_MissingShareID(t *testing.T) {
+	svc := &mockShareService{}
+	h := &ShareHandler{shareService: svc}
+
+	userID := uuid.New()
+	ctx := context.WithValue(context.Background(), userIDKey, userID.String())
+	body, _ := json.Marshal(domain.ReactRequest{ReactionType: "heart"})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/share//react", bytes.NewReader(body)).
+		WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	h.ToggleReaction(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// GetShare — missing share ID (direct handler invocation)
+// ---------------------------------------------------------------------------
+
+func TestShareHandler_GetShare_MissingID(t *testing.T) {
+	svc := &mockShareService{}
+	h := &ShareHandler{shareService: svc}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/share/", nil)
+	rec := httptest.NewRecorder()
+
+	h.GetShare(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Confirm testJWTSecret and generateTestToken are available.
 // These are defined in auth_handler_test.go in the same package.
 // ---------------------------------------------------------------------------

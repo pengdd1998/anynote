@@ -549,6 +549,179 @@ func TestAuthHandler_Me_UserNotFound(t *testing.T) {
 // Tests: JWT token structure in responses
 // ---------------------------------------------------------------------------
 
+func TestAuthHandler_Register_InternalError(t *testing.T) {
+	svc := &mockAuthService{
+		registerFn: func(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error) {
+			return nil, errors.New("unexpected database failure")
+		},
+	}
+
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(domain.RegisterRequest{
+		Email:       "alice@example.com",
+		Username:    "alice",
+		AuthKeyHash: []byte("hash"),
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp.Error != "internal_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error, "internal_error")
+	}
+}
+
+func TestAuthHandler_Login_InternalError(t *testing.T) {
+	svc := &mockAuthService{
+		loginFn: func(ctx context.Context, req domain.LoginRequest) (*domain.AuthResponse, error) {
+			return nil, errors.New("unexpected database failure")
+		},
+	}
+
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(domain.LoginRequest{
+		Email:       "alice@example.com",
+		AuthKeyHash: []byte("hash"),
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp.Error != "internal_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error, "internal_error")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Register — missing auth_key_hash
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_Register_MissingAuthKeyHash(t *testing.T) {
+	svc := &mockAuthService{}
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(domain.RegisterRequest{
+		Email:       "alice@example.com",
+		Username:    "alice",
+		AuthKeyHash: nil, // empty
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp.Error != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Login — missing auth_key_hash
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_Login_MissingAuthKeyHash(t *testing.T) {
+	svc := &mockAuthService{}
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(domain.LoginRequest{
+		Email:       "alice@example.com",
+		AuthKeyHash: nil, // empty
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp.Error != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Register — invalid email format
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_Register_InvalidEmail(t *testing.T) {
+	svc := &mockAuthService{}
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(domain.RegisterRequest{
+		Email:       "not-an-email",
+		Username:    "alice",
+		AuthKeyHash: []byte("hash"),
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusUnprocessableEntity, rec.Body.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Login — invalid email format
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_Login_InvalidEmail(t *testing.T) {
+	svc := &mockAuthService{}
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(domain.LoginRequest{
+		Email:       "not-an-email",
+		AuthKeyHash: []byte("hash"),
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusUnprocessableEntity, rec.Body.String())
+	}
+}
+
 func TestAuthHandler_Register_ResponseStructure(t *testing.T) {
 	userID := uuid.New()
 	svc := &mockAuthService{

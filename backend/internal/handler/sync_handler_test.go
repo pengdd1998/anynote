@@ -449,3 +449,125 @@ func TestSyncHandler_Status_Unauthorized(t *testing.T) {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
 	}
 }
+
+func TestSyncHandler_Status_ServiceError(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockSyncService{
+		getStatusFn: func(ctx context.Context, uid uuid.UUID) (*domain.SyncStatusResponse, error) {
+			return nil, errors.New("database error")
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/status", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Pull edge cases
+// ---------------------------------------------------------------------------
+
+func TestSyncHandler_Pull_NegativeSince(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockSyncService{}
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/pull?since=-5", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
+func TestSyncHandler_Pull_InvalidSince(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockSyncService{
+		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+			if sinceVersion != 0 {
+				t.Errorf("sinceVersion = %d, want 0 (invalid param should default to 0)", sinceVersion)
+			}
+			return &domain.SyncPullResponse{LatestVersion: 1}, nil
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/pull?since=notanumber", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+}
+
+func TestSyncHandler_Pull_DefaultSince(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockSyncService{
+		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+			if sinceVersion != 0 {
+				t.Errorf("sinceVersion = %d, want 0 (no param should default to 0)", sinceVersion)
+			}
+			return &domain.SyncPullResponse{LatestVersion: 1}, nil
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/pull", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestSyncHandler_Push_ServiceError(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockSyncService{
+		pushFn: func(ctx context.Context, uid uuid.UUID, req domain.SyncPushRequest) (*domain.SyncPushResponse, error) {
+			return nil, errors.New("database unavailable")
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	pushReq := domain.SyncPushRequest{
+		Blobs: []domain.SyncPushItem{
+			{ItemID: uuid.New(), Version: 1},
+		},
+	}
+	body, _ := json.Marshal(pushReq)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/sync/push", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+}

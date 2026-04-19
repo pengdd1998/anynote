@@ -347,3 +347,113 @@ func (m *customUpsertRepo) CountItems(ctx context.Context, userID uuid.UUID) (in
 func (m *customUpsertRepo) GetLastUpdated(ctx context.Context, userID uuid.UUID) (time.Time, error) {
 	return m.lastUpdated, nil
 }
+
+// ---------------------------------------------------------------------------
+// Tests: WithPushService option
+// ---------------------------------------------------------------------------
+
+func TestWithPushService(t *testing.T) {
+	repo := &mockSyncBlobRepo{}
+	pushSvc := &mockPushServiceForSync{}
+	opt := WithPushService(pushSvc)
+
+	svc := NewSyncService(repo)
+	opt(svc.(*syncService))
+
+	if svc.(*syncService).pushSvc == nil {
+		t.Error("pushSvc should be set after WithPushService")
+	}
+}
+
+func TestSyncService_Push_ConflictsTriggerPushNotification(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		upsertResult: false, // all items conflict
+	}
+
+	pushCalled := false
+	pushSvc := &mockPushServiceForSync{
+		sendPushFn: func(ctx context.Context, userIDStr string, payload PushPayload) error {
+			pushCalled = true
+			if userIDStr != userID.String() {
+				t.Errorf("sendPush userID = %q, want %q", userIDStr, userID.String())
+			}
+			if payload.Title != "Sync Conflict Detected" {
+				t.Errorf("payload.Title = %q, want %q", payload.Title, "Sync Conflict Detected")
+			}
+			return nil
+		},
+	}
+
+	svc := NewSyncService(repo, WithPushService(pushSvc))
+	resp, err := svc.Push(context.Background(), userID, domain.SyncPushRequest{
+		Blobs: []domain.SyncPushItem{
+			{ItemID: uuid.New(), ItemType: "note", Version: 1, EncryptedData: []byte("enc1"), BlobSize: 100},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Push: %v", err)
+	}
+	if len(resp.Conflicts) != 1 {
+		t.Fatalf("len(Conflicts) = %d, want 1", len(resp.Conflicts))
+	}
+
+	// Wait for the goroutine to complete.
+	// The push is sent in a goroutine, so we need a brief wait.
+	time.Sleep(50 * time.Millisecond)
+	if !pushCalled {
+		t.Error("expected SendPush to be called when conflicts occur")
+	}
+}
+
+func TestSyncService_Push_NoConflicts_NoPushNotification(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		upsertResult: true, // all accepted, no conflicts
+	}
+
+	pushSvc := &mockPushServiceForSync{
+		sendPushFn: func(ctx context.Context, userIDStr string, payload PushPayload) error {
+			t.Error("SendPush should not be called when there are no conflicts")
+			return nil
+		},
+	}
+
+	svc := NewSyncService(repo, WithPushService(pushSvc))
+	_, err := svc.Push(context.Background(), userID, domain.SyncPushRequest{
+		Blobs: []domain.SyncPushItem{
+			{ItemID: uuid.New(), ItemType: "note", Version: 1, EncryptedData: []byte("enc1"), BlobSize: 100},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Push: %v", err)
+	}
+
+	// Brief wait to ensure goroutine (if any) has time to fire.
+	time.Sleep(50 * time.Millisecond)
+}
+
+// ---------------------------------------------------------------------------
+// Mock PushService for sync tests
+// ---------------------------------------------------------------------------
+
+type mockPushServiceForSync struct {
+	sendPushFn func(ctx context.Context, userID string, payload PushPayload) error
+}
+
+func (m *mockPushServiceForSync) RegisterDevice(ctx context.Context, userID string, token string, platform string) error {
+	return nil
+}
+
+func (m *mockPushServiceForSync) UnregisterDevice(ctx context.Context, token string) error {
+	return nil
+}
+
+func (m *mockPushServiceForSync) SendPush(ctx context.Context, userID string, payload PushPayload) error {
+	if m.sendPushFn != nil {
+		return m.sendPushFn(ctx, userID, payload)
+	}
+	return nil
+}

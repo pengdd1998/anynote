@@ -482,3 +482,310 @@ func TestAdapter_RevokeAuth_CorruptedData(t *testing.T) {
 		t.Error("expected error when decrypting corrupted auth data")
 	}
 }
+
+func TestAdapter_RevokeAuth_Success_WithAnyNotePasswords(t *testing.T) {
+	var listCalled, deleteCalled bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.Contains(r.URL.Path, "/application-passwords") && r.Method == http.MethodGet:
+			listCalled = true
+			// Verify Basic Auth is set.
+			username, _, ok := r.BasicAuth()
+			if !ok {
+				t.Error("expected Basic Auth header")
+			}
+			if username != "admin" {
+				t.Errorf("username = %q, want %q", username, "admin")
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode([]map[string]string{
+				{"uuid": "uuid-1", "name": "AnyNote App"},
+				{"uuid": "uuid-2", "name": "Other App"},
+			})
+
+		case strings.Contains(r.URL.Path, "/application-passwords/uuid-1") && r.Method == http.MethodDelete:
+			deleteCalled = true
+			username, _, ok := r.BasicAuth()
+			if !ok {
+				t.Error("expected Basic Auth header on delete")
+			}
+			if username != "admin" {
+				t.Errorf("username = %q, want %q", username, "admin")
+			}
+			w.WriteHeader(http.StatusNoContent)
+
+		default:
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{
+		SiteURL:     server.URL,
+		Username:    "admin",
+		AppPassword: "app-pass",
+	}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	err := a.RevokeAuth(context.Background(), encrypted, key)
+	if err != nil {
+		t.Fatalf("RevokeAuth: %v", err)
+	}
+	if !listCalled {
+		t.Error("expected list application-passwords endpoint to be called")
+	}
+	if !deleteCalled {
+		t.Error("expected delete endpoint to be called for AnyNote password")
+	}
+}
+
+func TestAdapter_RevokeAuth_NonOKStatus(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{
+		SiteURL:     server.URL,
+		Username:    "admin",
+		AppPassword: "app-pass",
+	}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	// Non-OK status should return nil (graceful degradation).
+	err := a.RevokeAuth(context.Background(), encrypted, key)
+	if err != nil {
+		t.Errorf("RevokeAuth should return nil on non-OK status, got: %v", err)
+	}
+}
+
+func TestAdapter_RevokeAuth_MalformedJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("not-valid-json"))
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{
+		SiteURL:     server.URL,
+		Username:    "admin",
+		AppPassword: "app-pass",
+	}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	// Malformed JSON response should return nil (graceful degradation).
+	err := a.RevokeAuth(context.Background(), encrypted, key)
+	if err != nil {
+		t.Errorf("RevokeAuth should return nil on malformed JSON, got: %v", err)
+	}
+}
+
+func TestAdapter_RevokeAuth_NoMatchingPasswords(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]map[string]string{
+			{"uuid": "uuid-1", "name": "Some Other App"},
+			{"uuid": "uuid-2", "name": "WordPress Mobile"},
+		})
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{
+		SiteURL:     server.URL,
+		Username:    "admin",
+		AppPassword: "app-pass",
+	}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	err := a.RevokeAuth(context.Background(), encrypted, key)
+	if err != nil {
+		t.Fatalf("RevokeAuth: %v", err)
+	}
+}
+
+func TestAdapter_RevokeAuth_ConnectionError(t *testing.T) {
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{
+		SiteURL:     "http://127.0.0.1:1", // Unreachable port.
+		Username:    "admin",
+		AppPassword: "app-pass",
+	}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	// Connection error should return nil (graceful degradation).
+	err := a.RevokeAuth(context.Background(), encrypted, key)
+	if err != nil {
+		t.Errorf("RevokeAuth should return nil on connection error, got: %v", err)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// CheckStatus: additional branches
+// ---------------------------------------------------------------------------
+
+func TestAdapter_CheckStatus_Draft(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "draft"})
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{SiteURL: server.URL, Username: "admin", AppPassword: "pass"}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	status, err := a.CheckStatus(context.Background(), encrypted, key, "42")
+	if err != nil {
+		t.Fatalf("CheckStatus: %v", err)
+	}
+	if status != "live" {
+		t.Errorf("status = %q, want %q for draft", status, "live")
+	}
+}
+
+func TestAdapter_CheckStatus_Pending(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "pending"})
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{SiteURL: server.URL, Username: "admin", AppPassword: "pass"}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	status, err := a.CheckStatus(context.Background(), encrypted, key, "42")
+	if err != nil {
+		t.Fatalf("CheckStatus: %v", err)
+	}
+	if status != "live" {
+		t.Errorf("status = %q, want %q for pending", status, "live")
+	}
+}
+
+func TestAdapter_CheckStatus_UnknownStatus(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "future"})
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{SiteURL: server.URL, Username: "admin", AppPassword: "pass"}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	status, err := a.CheckStatus(context.Background(), encrypted, key, "42")
+	if err != nil {
+		t.Fatalf("CheckStatus: %v", err)
+	}
+	if status != "unknown" {
+		t.Errorf("status = %q, want %q for unknown post status", status, "unknown")
+	}
+}
+
+func TestAdapter_CheckStatus_OtherHTTPStatus(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{SiteURL: server.URL, Username: "admin", AppPassword: "pass"}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	status, err := a.CheckStatus(context.Background(), encrypted, key, "42")
+	if err != nil {
+		t.Fatalf("CheckStatus: %v", err)
+	}
+	if status != "unknown" {
+		t.Errorf("status = %q, want %q for server error", status, "unknown")
+	}
+}
+
+func TestAdapter_CheckStatus_ConnectionError(t *testing.T) {
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{SiteURL: "http://127.0.0.1:1", Username: "admin", AppPassword: "pass"}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	status, _ := a.CheckStatus(context.Background(), encrypted, key, "42")
+	if status != "unknown" {
+		t.Errorf("status = %q, want %q on connection error", status, "unknown")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Publish: no tags branch
+// ---------------------------------------------------------------------------
+
+func TestAdapter_Publish_NoTags(t *testing.T) {
+	var receivedBody map[string]interface{}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&receivedBody)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"id":     99,
+			"link":   "https://example.com/?p=99",
+			"status": "publish",
+		})
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := wpAuthData{SiteURL: server.URL, Username: "admin", AppPassword: "pass"}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	result, err := a.Publish(context.Background(), encrypted, key, platform.PublishParams{
+		Title:   "No Tags Post",
+		Content: "Content without tags",
+	})
+	if err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+	if result.PlatformID != "99" {
+		t.Errorf("PlatformID = %q, want %q", result.PlatformID, "99")
+	}
+	// Verify tags was NOT sent in the body.
+	if _, hasTags := receivedBody["tags"]; hasTags {
+		t.Error("tags should not be present when no tags provided")
+	}
+}

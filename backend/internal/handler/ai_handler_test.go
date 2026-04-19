@@ -460,3 +460,95 @@ func TestAIHandler_GetQuota_ServiceError(t *testing.T) {
 		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Tests: stream ending without Done marker
+// ---------------------------------------------------------------------------
+
+func TestAIHandler_Proxy_StreamEndsWithoutDone(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockAIProxyService{
+		proxyFn: func(ctx context.Context, uid string, req domain.AIProxyRequest) (<-chan domain.StreamChunk, error) {
+			// Channel closes without ever sending a chunk with Done=true.
+			ch := make(chan domain.StreamChunk, 1)
+			ch <- domain.StreamChunk{Content: "partial"}
+			close(ch)
+			return ch, nil
+		},
+	}
+
+	router := setupAIRouter(svc, &mockQuotaSvcForHandler{})
+
+	body, _ := json.Marshal(domain.AIProxyRequest{
+		Messages: []domain.ChatMessage{{Role: "user", Content: "Hi"}},
+		Stream:   true,
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/ai/proxy", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := &flushableRecorder{httptest.NewRecorder()}
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	respBody := rec.Body.String()
+
+	// Should contain the partial chunk data and the final done=true marker.
+	if !strings.Contains(respBody, "partial") {
+		t.Error("response should contain partial content")
+	}
+	if !strings.Contains(respBody, `"done":true`) {
+		t.Error("response should contain final done:true marker when stream ends without Done")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: non-stream error chunk
+// ---------------------------------------------------------------------------
+
+func TestAIHandler_Proxy_NonStream_ErrorChunk(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockAIProxyService{
+		proxyFn: func(ctx context.Context, uid string, req domain.AIProxyRequest) (<-chan domain.StreamChunk, error) {
+			ch := make(chan domain.StreamChunk, 1)
+			ch <- domain.StreamChunk{Error: "model overloaded"}
+			close(ch)
+			return ch, nil
+		},
+	}
+
+	router := setupAIRouter(svc, &mockQuotaSvcForHandler{})
+
+	body, _ := json.Marshal(domain.AIProxyRequest{
+		Messages: []domain.ChatMessage{{Role: "user", Content: "Hi"}},
+		Stream:   false,
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/ai/proxy", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	if err := json.NewDecoder(rec.Body).Decode(&errResp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if errResp.Error != "ai_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error, "ai_error")
+	}
+	if errResp.Message != "model overloaded" {
+		t.Errorf("error message = %q, want %q", errResp.Message, "model overloaded")
+	}
+}

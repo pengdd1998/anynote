@@ -225,6 +225,63 @@ func TestAdapter_PollAuth_EndpointReturnsError(t *testing.T) {
 	}
 }
 
+func TestAdapter_PollAuth_SecretHeaderSent(t *testing.T) {
+	var receivedSecret string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedSecret = r.Header.Get("X-Webhook-Secret")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	session := &platform.AuthSession{
+		AuthRef: "test-ref",
+		CDPContext: map[string]string{
+			"url":    server.URL,
+			"secret": "test-secret-value",
+		},
+	}
+
+	_, err := a.PollAuth(context.Background(), session, key)
+	if err != nil {
+		t.Fatalf("PollAuth: %v", err)
+	}
+	if receivedSecret != "test-secret-value" {
+		t.Errorf("X-Webhook-Secret = %q, want %q", receivedSecret, "test-secret-value")
+	}
+}
+
+func TestAdapter_PollAuth_NoSecretSent(t *testing.T) {
+	var receivedSecret string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedSecret = r.Header.Get("X-Webhook-Secret")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	session := &platform.AuthSession{
+		AuthRef: "test-ref",
+		CDPContext: map[string]string{
+			"url": server.URL,
+		},
+	}
+
+	_, err := a.PollAuth(context.Background(), session, key)
+	if err != nil {
+		t.Fatalf("PollAuth: %v", err)
+	}
+	if receivedSecret != "" {
+		t.Errorf("X-Webhook-Secret should be empty when no secret provided, got %q", receivedSecret)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Publish
 // ---------------------------------------------------------------------------
@@ -282,6 +339,53 @@ func TestAdapter_Publish(t *testing.T) {
 	}
 }
 
+func TestAdapter_Publish_CustomHeaders(t *testing.T) {
+	var receivedHeaders = map[string]string{}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedHeaders["X-Webhook-Secret"] = r.Header.Get("X-Webhook-Secret")
+		receivedHeaders["X-Custom-Auth"] = r.Header.Get("X-Custom-Auth")
+		receivedHeaders["Authorization"] = r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := webhookAuthData{
+		URL:    server.URL,
+		Secret: "my-secret",
+		Headers: map[string]string{
+			"X-Custom-Auth": "token-123",
+			"Authorization": "Bearer abc",
+		},
+	}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	result, err := a.Publish(context.Background(), encrypted, key, platform.PublishParams{
+		Title:   "Custom Headers Test",
+		Content: "Content",
+		Tags:    []string{"test"},
+	})
+	if err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+	if result.PlatformURL != server.URL {
+		t.Errorf("PlatformURL = %q, want %q", result.PlatformURL, server.URL)
+	}
+	if receivedHeaders["X-Webhook-Secret"] != "my-secret" {
+		t.Errorf("X-Webhook-Secret = %q, want %q", receivedHeaders["X-Webhook-Secret"], "my-secret")
+	}
+	if receivedHeaders["X-Custom-Auth"] != "token-123" {
+		t.Errorf("X-Custom-Auth = %q, want %q", receivedHeaders["X-Custom-Auth"], "token-123")
+	}
+	if receivedHeaders["Authorization"] != "Bearer abc" {
+		t.Errorf("Authorization = %q, want %q", receivedHeaders["Authorization"], "Bearer abc")
+	}
+}
+
 func TestAdapter_Publish_BadAuthData(t *testing.T) {
 	a := NewAdapter()
 	key := newTestKey()
@@ -314,6 +418,39 @@ func TestAdapter_Publish_EndpointError(t *testing.T) {
 	})
 	if err == nil {
 		t.Error("expected error when endpoint returns non-2xx")
+	}
+}
+
+func TestAdapter_Publish_UnreachableEndpoint(t *testing.T) {
+	a := NewAdapter()
+	key := newTestKey()
+
+	authData := webhookAuthData{URL: "http://127.0.0.1:1/impossible-endpoint"}
+	authJSON, _ := json.Marshal(authData)
+	encrypted, _ := llm.EncryptAPIKey(string(authJSON), key)
+
+	_, err := a.Publish(context.Background(), encrypted, key, platform.PublishParams{
+		Title:   "Test",
+		Content: "Content",
+	})
+	if err == nil {
+		t.Error("expected error when endpoint is unreachable")
+	}
+}
+
+func TestAdapter_Publish_InvalidAuthJSON(t *testing.T) {
+	a := NewAdapter()
+	key := newTestKey()
+
+	// Encrypt something that is not valid webhookAuthData JSON.
+	encrypted, _ := llm.EncryptAPIKey("this is not json", key)
+
+	_, err := a.Publish(context.Background(), encrypted, key, platform.PublishParams{
+		Title:   "Test",
+		Content: "Content",
+	})
+	if err == nil {
+		t.Error("expected error when auth data is not valid JSON")
 	}
 }
 

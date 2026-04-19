@@ -431,3 +431,23 @@ func TestPublishHandler_GetByID_Unauthorized(t *testing.T) {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
 	}
 }
+
+func TestPublishHandler_GetByID_EmptyID(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockPublishService{}
+
+	h := &PublishHandler{publishService: svc}
+
+	// Invoke handler directly with authenticated context but no chi route
+	// context, so chi.URLParam returns "" for "id".
+	ctx := context.WithValue(context.Background(), userIDKey, userID.String())
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/publish/", nil).
+		WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	h.GetByID(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}

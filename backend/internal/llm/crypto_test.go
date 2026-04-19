@@ -105,3 +105,44 @@ func TestDecryptTamperedCiphertext(t *testing.T) {
 		t.Error("decryption of tampered ciphertext should fail (AEAD integrity)")
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Error path tests
+// ---------------------------------------------------------------------------
+
+func TestEncryptAPIKey_InvalidKeySize(t *testing.T) {
+	_, err := EncryptAPIKey("test", []byte("short-key"))
+	if err == nil {
+		t.Error("expected error for key shorter than 32 bytes")
+	}
+}
+
+func TestDecryptAPIKey_InvalidKeySize(t *testing.T) {
+	_, err := DecryptAPIKey([]byte("some-data-here"), []byte("short"))
+	if err == nil {
+		t.Error("expected error for key shorter than 32 bytes")
+	}
+}
+
+func TestDecryptAPIKey_CiphertextTooShort(t *testing.T) {
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	// Less than nonce size (12 bytes)
+	_, err := DecryptAPIKey([]byte("short"), key)
+	if err == nil {
+		t.Error("expected error for ciphertext shorter than nonce size")
+	}
+}
+
+func TestDecryptAPIKey_ExactlyNonceSize(t *testing.T) {
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	// Exactly 12 bytes (nonce) but no actual encrypted data + tag
+	ciphertext := make([]byte, 12)
+	_, err := DecryptAPIKey(ciphertext, key)
+	if err == nil {
+		t.Error("expected error for ciphertext with only nonce and no encrypted data")
+	}
+}
