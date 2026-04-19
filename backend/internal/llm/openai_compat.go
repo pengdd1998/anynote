@@ -7,9 +7,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/anynote/backend/internal/domain"
 )
 
 // OpenAICompatProvider implements Provider for OpenAI-compatible APIs.
@@ -18,9 +22,11 @@ type OpenAICompatProvider struct{}
 
 func (p *OpenAICompatProvider) Name() string { return "openai_compat" }
 
-func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL string, req ChatRequest) (<-chan StreamChunk, error) {
+func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL string, req ChatRequest) (<-chan domain.StreamChunk, error) {
 	req.Stream = true
 
+	// Streaming connections are never retried -- doing so would duplicate
+	// output the client has already started consuming.
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("marshal request: %w", err)
@@ -47,7 +53,7 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 		return nil, fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	ch := make(chan StreamChunk, 64)
+	ch := make(chan domain.StreamChunk, 64)
 
 	go func() {
 		defer close(ch)
@@ -65,7 +71,7 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 
 			data := strings.TrimPrefix(line, "data: ")
 			if data == "[DONE]" {
-				ch <- StreamChunk{Done: true}
+				ch <- domain.StreamChunk{Done: true}
 				return
 			}
 
@@ -77,17 +83,17 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 			if len(sseResp.Choices) > 0 {
 				content := sseResp.Choices[0].Delta.Content
 				if content != "" {
-					ch <- StreamChunk{Content: content}
+					ch <- domain.StreamChunk{Content: content}
 				}
 				if sseResp.Choices[0].FinishReason == "stop" {
-					ch <- StreamChunk{Done: true}
+					ch <- domain.StreamChunk{Done: true}
 					return
 				}
 			}
 		}
 
 		if err := scanner.Err(); err != nil {
-			ch <- StreamChunk{Error: err.Error()}
+			ch <- domain.StreamChunk{Error: err.Error()}
 		}
 	}()
 
@@ -103,43 +109,144 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 	}
 
 	url := strings.TrimRight(baseURL, "/") + "/chat/completions"
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+
+	maxRetries := req.MaxRetries
+	retryBaseDelay := req.RetryBaseDelay
+
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			delay := retryBackoff(attempt, retryBaseDelay)
+			slog.Info("retrying LLM request", "attempt", attempt, "delay", delay)
+
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(delay):
+			}
+		}
+
+		// Re-create the request body reader for each attempt since the
+		// previous response consumed it.
+		httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+		if err != nil {
+			return nil, fmt.Errorf("create request: %w", err)
+		}
+
+		httpReq.Header.Set("Content-Type", "application/json")
+		httpReq.Header.Set("Authorization", "Bearer "+apiKey)
+
+		client := &http.Client{Timeout: 120 * time.Second}
+		resp, err := client.Do(httpReq)
+		if err != nil {
+			lastErr = fmt.Errorf("send request: %w", err)
+			// Network errors are retriable
+			slog.Warn("LLM request network error", "attempt", attempt, "error", err)
+			continue
+		}
+
+		respBody, readErr := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if readErr != nil {
+			lastErr = fmt.Errorf("read response: %w", readErr)
+			continue
+		}
+
+		// Non-retriable client errors
+		if resp.StatusCode == http.StatusBadRequest ||
+			resp.StatusCode == http.StatusUnauthorized ||
+			resp.StatusCode == http.StatusForbidden {
+			return nil, fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
+		}
+
+		// Retriable server/rate-limit errors
+		if isRetriable(resp.StatusCode) {
+			lastErr = fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
+
+			// Respect Retry-After header for 429 responses
+			if resp.StatusCode == http.StatusTooManyRequests {
+				if after := parseRetryAfter(resp.Header.Get("Retry-After")); after > 0 {
+					retryBaseDelay = after
+				}
+			}
+
+			slog.Warn("LLM returned retriable status",
+				"status", resp.StatusCode,
+				"attempt", attempt,
+				"max_retries", maxRetries,
+			)
+			continue
+		}
+
+		// Any other non-OK status is not retried
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
+		}
+
+		// Success path
+		var chatResp openaiChatResponse
+		if err := json.Unmarshal(respBody, &chatResp); err != nil {
+			return nil, fmt.Errorf("parse response: %w", err)
+		}
+
+		if len(chatResp.Choices) == 0 {
+			return nil, fmt.Errorf("no choices in response")
+		}
+
+		return &ChatResponse{
+			Content: chatResp.Choices[0].Message.Content,
+			Model:   chatResp.Model,
+		}, nil
 	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+apiKey)
+	return nil, fmt.Errorf("LLM request failed after %d retries: %w", maxRetries, lastErr)
+}
 
-	client := &http.Client{Timeout: 120 * time.Second}
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("send request: %w", err)
+// ── Retry helpers ──────────────────────────────────
+
+// isRetriable returns true for HTTP status codes that warrant a retry.
+func isRetriable(statusCode int) bool {
+	switch statusCode {
+	case http.StatusTooManyRequests, // 429
+		http.StatusBadGateway,        // 502
+		http.StatusServiceUnavailable, // 503
+		http.StatusGatewayTimeout:    // 504
+		return true
+	default:
+		return false
 	}
-	defer resp.Body.Close()
+}
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read response: %w", err)
+// retryBackoff computes exponential backoff duration for the given attempt
+// number (1-based). Delay = baseDelay * 2^(attempt-1), yielding 1s, 2s, 4s
+// with a default base of 1s.
+func retryBackoff(attempt int, baseDelay time.Duration) time.Duration {
+	if baseDelay <= 0 {
+		baseDelay = 1 * time.Second
 	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
+	shift := uint(attempt - 1)
+	if shift > 10 {
+		shift = 10 // cap to avoid overflow
 	}
+	return baseDelay * time.Duration(1<<shift)
+}
 
-	var chatResp openaiChatResponse
-	if err := json.Unmarshal(respBody, &chatResp); err != nil {
-		return nil, fmt.Errorf("parse response: %w", err)
+// parseRetryAfter parses the Retry-After header value. It supports both
+// integer seconds and HTTP-date formats (for the latter it falls back to a
+// reasonable default).
+func parseRetryAfter(value string) time.Duration {
+	if value == "" {
+		return 0
 	}
-
-	if len(chatResp.Choices) == 0 {
-		return nil, fmt.Errorf("no choices in response")
+	// Try integer seconds first
+	if seconds, err := strconv.Atoi(value); err == nil && seconds > 0 {
+		return time.Duration(seconds) * time.Second
 	}
-
-	return &ChatResponse{
-		Content: chatResp.Choices[0].Message.Content,
-		Model:   chatResp.Model,
-	}, nil
+	// Try HTTP-date parsing (rarely used; treat as 5s default)
+	if _, err := http.ParseTime(value); err == nil {
+		return 5 * time.Second
+	}
+	return 0
 }
 
 // ── OpenAI API response types ──────────────────────
@@ -147,9 +254,9 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 type openaiStreamResponse struct {
 	ID      string `json:"id"`
 	Choices []struct {
-		Index        int                `json:"index"`
-		Delta        openaiStreamDelta  `json:"delta"`
-		FinishReason string             `json:"finish_reason"`
+		Index        int               `json:"index"`
+		Delta        openaiStreamDelta `json:"delta"`
+		FinishReason string            `json:"finish_reason"`
 	} `json:"choices"`
 }
 
@@ -162,9 +269,9 @@ type openaiChatResponse struct {
 	ID      string `json:"id"`
 	Model   string `json:"model"`
 	Choices []struct {
-		Index   int              `json:"index"`
-		Message openaiMessage    `json:"message"`
-		FinishReason string      `json:"finish_reason"`
+		Index        int           `json:"index"`
+		Message      openaiMessage `json:"message"`
+		FinishReason string        `json:"finish_reason"`
 	} `json:"choices"`
 	Usage struct {
 		PromptTokens     int `json:"prompt_tokens"`

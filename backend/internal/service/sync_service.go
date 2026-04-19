@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,11 +26,24 @@ type SyncBlobRepository interface {
 }
 
 type syncService struct {
-	blobRepo SyncBlobRepository
+	blobRepo   SyncBlobRepository
+	pushSvc    PushService // optional; nil means no push notifications
 }
 
-func NewSyncService(blobRepo SyncBlobRepository) SyncService {
-	return &syncService{blobRepo: blobRepo}
+func NewSyncService(blobRepo SyncBlobRepository, opts ...SyncServiceOption) SyncService {
+	svc := &syncService{blobRepo: blobRepo}
+	for _, opt := range opts {
+		opt(svc)
+	}
+	return svc
+}
+
+// SyncServiceOption configures a syncService during construction.
+type SyncServiceOption func(*syncService)
+
+// WithPushService sets the push notification service for sync events.
+func WithPushService(pushSvc PushService) SyncServiceOption {
+	return func(s *syncService) { s.pushSvc = pushSvc }
 }
 
 func (s *syncService) Pull(ctx context.Context, userID uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
@@ -73,6 +88,25 @@ func (s *syncService) Push(ctx context.Context, userID uuid.UUID, req domain.Syn
 				ServerVersion: blob.Version,
 			})
 		}
+	}
+
+	// Trigger push notification if there are sync conflicts.
+	// The user's other devices should be alerted to re-sync.
+	if len(conflicts) > 0 && s.pushSvc != nil {
+		go func() {
+			payload := PushPayload{
+				Title:    "Sync Conflict Detected",
+				Body:     fmt.Sprintf("%d item(s) had conflicts during sync", len(conflicts)),
+				Priority: "high",
+				Data: map[string]interface{}{
+					"type":        "sync_conflict",
+					"conflict_count": len(conflicts),
+				},
+			}
+			if err := s.pushSvc.SendPush(context.Background(), userID.String(), payload); err != nil {
+				slog.Error("failed to send sync conflict push", "user_id", userID.String(), "error", err)
+			}
+		}()
 	}
 
 	return &domain.SyncPushResponse{

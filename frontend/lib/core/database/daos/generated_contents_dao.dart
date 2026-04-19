@@ -51,14 +51,14 @@ class GeneratedContentsDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Update generated content.
-  Future<void> update({
+  Future<void> updateContent({
     required String id,
     String? encryptedBody,
     String? plainBody,
   }) async {
     await (update(generatedContents)..where((gc) => gc.id.equals(id)))
         .write(GeneratedContentsCompanion(
-      encryptedBody: Value(encryptedBody),
+      encryptedBody: encryptedBody != null ? Value(encryptedBody) : const Value.absent(),
       plainBody: Value(plainBody),
       updatedAt: Value(DateTime.now()),
       isSynced: const Value(false),
@@ -66,7 +66,7 @@ class GeneratedContentsDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Delete generated content.
-  Future<void> delete(String id) async {
+  Future<void> deleteContent(String id) async {
     await (delete(generatedContents)..where((gc) => gc.id.equals(id))).go();
   }
 

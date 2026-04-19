@@ -28,6 +28,11 @@ func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if since < 0 {
+		writeError(w, http.StatusBadRequest, "validation_error", "since must be non-negative")
+		return
+	}
+
 	resp, err := h.syncService.Pull(r.Context(), parseUUID(userID), since)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "sync_error", "Pull failed")

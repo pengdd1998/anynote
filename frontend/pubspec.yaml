@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # State management
   flutter_riverpod: ^2.5.1
@@ -20,14 +22,15 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.24
 
   # E2E Encryption
-  cryptography: ^2.7.0
+  sodium: ^3.4.6
+  sodium_libs: ^3.4.6
   secure_store: ^0.1.0
   flutter_secure_storage: ^9.2.2
 
   # Networking
   dio: ^5.4.3+1
-  retrofit: ^4.1.0
   json_annotation: ^4.9.0
+  web_socket_channel: ^3.0.1
 
   # Routing
   go_router: ^14.2.1
@@ -36,18 +39,32 @@ dependencies:
   flutter_hooks: ^0.20.5
   hooks_riverpod: ^2.5.1
   flutter_animate: ^4.5.0
+  flutter_markdown: ^0.7.4+1
+  flutter_math_fork: ^0.7.0
+  markdown: ^7.1.1
+  file_picker: ^8.0.0
+  flutter_quill: ^11.0.0
 
   # Utils
   uuid: ^4.4.0
-  intl: ^0.19.0
-  freezed_annotation: ^2.4.3
+  intl: ^0.20.2
+  freezed_annotation: ^3.1.0
   path_provider: ^2.1.3
   path: ^1.9.0
   collection: ^1.18.0
   rxdart: ^0.28.0
-  share_plus: ^9.0.0
+  share_plus: ^10.0.0
   url_launcher: ^6.3.0
   cached_network_image: ^3.3.1
+  image_picker: ^1.0.0
+  crypto: ^3.0.3
+  shared_preferences: ^2.2.3
+
+  # Push Notifications
+  # Note: These require Firebase project setup (google-services.json / GoogleService-Info.plist).
+  # See frontend/firebase/README.md for setup instructions.
+  firebase_core: ^3.0.0
+  firebase_messaging: ^15.0.0
 
 dev_dependencies:
   flutter_test:
@@ -55,13 +72,12 @@ dev_dependencies:
   flutter_lints: ^4.0.0
   build_runner: ^2.4.9
   drift_dev: ^2.16.0
-  freezed: ^2.5.2
+  freezed: ^3.1.0
   json_serializable: ^6.8.0
-  retrofit_generator: ^8.1.0
   riverpod_generator: ^2.4.0
-  mockito: ^5.4.4
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/

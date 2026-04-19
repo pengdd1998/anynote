@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 /// Version vector for sync conflict resolution.
 ///
 /// Each device maintains a version counter per item type.
@@ -7,7 +5,10 @@ import 'dart:typed_data';
 /// Conflicts are resolved using Last-Write-Wins (LWW) based on timestamps.
 class VersionVector {
   /// Map of item_id → version number
-  final Map<String, int> _versions = {};
+  final Map<String, int> _versions;
+
+  /// Creates an empty version vector.
+  VersionVector() : _versions = {};
 
   /// Get the version for an item.
   int get(String itemId) => _versions[itemId] ?? 0;

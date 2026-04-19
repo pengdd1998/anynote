@@ -1,10 +1,15 @@
 package domain
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+// ── Sentinels ─────────────────────────────────────
+
+var ErrInvalidReaction = errors.New("invalid reaction type")
 
 // ── User ──────────────────────────────────────────
 
@@ -44,6 +49,7 @@ type LLMConfig struct {
 	BaseURL       string    `json:"base_url"`
 	EncryptedKey  []byte    `json:"-"`                // AES-256-GCM encrypted API key (DB storage)
 	DecryptedKey  string    `json:"-"`                // Decrypted API key (never serialized)
+	APIKey        string    `json:"api_key,omitempty"` // Input field for create/update; not stored
 	Model         string    `json:"model"`
 	IsDefault     bool      `json:"is_default"`
 	MaxTokens     int       `json:"max_tokens"`
@@ -60,10 +66,23 @@ type PlatformConnection struct {
 	Platform      string     `json:"platform"`
 	PlatformUID   string     `json:"platform_uid,omitempty"`
 	DisplayName   string     `json:"display_name,omitempty"`
+	EncryptedAuth []byte     `json:"-"`                        // AES-256-GCM encrypted auth data (cookies/tokens)
 	Status        string     `json:"status"`
 	LastVerified  *time.Time `json:"last_verified,omitempty"`
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`
+}
+
+// ── Platform Auth ─────────────────────────────────
+
+// AuthStartResult is returned when starting a platform authentication flow.
+type AuthStartResult struct {
+	QRCodePNG   []byte            `json:"-"`              // QR code image bytes (sent as binary)
+	AuthRef     string            `json:"auth_ref"`       // Reference ID for polling auth status
+	Status      string            `json:"status"`         // "qr_ready", "polling", "done", "failed"
+	DisplayName string            `json:"display_name"`   // Platform display name (set on success)
+	PlatformUID string            `json:"platform_uid"`   // Platform user ID (set on success)
+	Extra       map[string]string `json:"extra,omitempty"`
 }
 
 // ── Publish Log ───────────────────────────────────
@@ -196,4 +215,95 @@ type UserQuota struct {
 	DailyAIUsed  int       `json:"daily_ai_used"`
 	QuotaResetAt time.Time `json:"quota_reset_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// ── Shared Notes ──────────────────────────────────
+
+type SharedNote struct {
+	ID               string     `json:"id"`
+	EncryptedContent string     `json:"encrypted_content"`
+	EncryptedTitle   string     `json:"encrypted_title"`
+	ShareKeyHash     string     `json:"-"`
+	HasPassword      bool       `json:"has_password"`
+	IsPublic         bool       `json:"is_public"`
+	ExpiresAt        *time.Time `json:"expires_at,omitempty"`
+	ViewCount        int        `json:"view_count"`
+	MaxViews         *int       `json:"max_views,omitempty"`
+	ReactionHeart    int        `json:"reaction_heart"`
+	ReactionBookmark int        `json:"reaction_bookmark"`
+	CreatedBy        uuid.UUID  `json:"-"`
+	CreatedAt        time.Time  `json:"created_at"`
+}
+
+type CreateShareRequest struct {
+	EncryptedContent string `json:"encrypted_content"`
+	EncryptedTitle   string `json:"encrypted_title"`
+	ShareKeyHash     string `json:"share_key_hash"`
+	HasPassword      bool   `json:"has_password"`
+	IsPublic         *bool  `json:"is_public,omitempty"`
+	ExpiresHours     *int   `json:"expires_hours,omitempty"`
+	MaxViews         *int   `json:"max_views,omitempty"`
+}
+
+type CreateShareResponse struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+}
+
+type GetShareResponse struct {
+	ID               string     `json:"id"`
+	EncryptedContent string     `json:"encrypted_content"`
+	EncryptedTitle   string     `json:"encrypted_title"`
+	HasPassword      bool       `json:"has_password"`
+	ExpiresAt        *time.Time `json:"expires_at,omitempty"`
+	ViewCount        int        `json:"view_count"`
+	MaxViews         *int       `json:"max_views,omitempty"`
+}
+
+// DiscoverFeedItem is a public shared note in the discovery feed.
+type DiscoverFeedItem struct {
+	ID               string    `json:"id"`
+	EncryptedTitle   string    `json:"encrypted_title"`
+	HasPassword      bool      `json:"has_password"`
+	ViewCount        int       `json:"view_count"`
+	ReactionHeart    int       `json:"reaction_heart"`
+	ReactionBookmark int       `json:"reaction_bookmark"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
+// ReactRequest is the payload for reacting to a shared note.
+type ReactRequest struct {
+	ReactionType string `json:"reaction_type"` // "heart" or "bookmark"
+}
+
+// ReactResponse confirms a reaction toggle.
+type ReactResponse struct {
+	ReactionType string `json:"reaction_type"`
+	Active       bool   `json:"active"` // true = added, false = removed
+	Count        int    `json:"count"`  // new total count for this reaction type
+}
+
+// ── Comments ─────────────────────────────────────────
+
+// Comment represents an encrypted comment on a shared note.
+type Comment struct {
+	ID               uuid.UUID  `json:"id"`
+	SharedNoteID     string     `json:"shared_note_id"`
+	UserID           uuid.UUID  `json:"user_id"`
+	EncryptedContent string     `json:"encrypted_content"`
+	ParentID         *uuid.UUID `json:"parent_id,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+}
+
+// CreateCommentRequest is the payload for creating a comment.
+type CreateCommentRequest struct {
+	EncryptedContent string `json:"encrypted_content"`
+	ParentID         string `json:"parent_id,omitempty"` // optional, for replies
+}
+
+// ListCommentsResponse is the paginated response for listing comments.
+type ListCommentsResponse struct {
+	Comments []Comment `json:"comments"`
+	Total    int       `json:"total"`
 }

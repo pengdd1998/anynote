@@ -29,7 +29,7 @@ class SyncMetaDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Get all sync metadata.
-  Future<List<SyncMetum>> getAll() {
+  Future<List<SyncMetaData>> getAll() {
     return select(syncMeta).get();
   }
 }

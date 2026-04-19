@@ -3,7 +3,6 @@ package queue
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/hibiken/asynq"
 )
@@ -20,18 +19,14 @@ type Service struct {
 }
 
 // New creates a new queue service.
-func New(redisURL string) (*Service, error) {
-	client, err := asynq.NewClient(asynq.RedisClientOpt{Addr: redisURL})
-	if err != nil {
-		return nil, fmt.Errorf("create asynq client: %w", err)
-	}
-
+func New(redisURL string) *Service {
+	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisURL})
 	mux := asynq.NewServeMux()
 
 	return &Service{
 		client: client,
 		mux:    mux,
-	}, nil
+	}
 }
 
 // EnqueueAIJob enqueues an AI proxy job for shared LLM processing.
@@ -43,8 +38,7 @@ func (s *Service) EnqueueAIJob(ctx context.Context, userID string, payload inter
 
 	task := asynq.NewTask(TaskTypeAIProxy, data)
 	info, err := s.client.EnqueueContext(ctx, task,
-		asynq.QueueName("ai"),
-		asynq.Priority(priority),
+		asynq.Queue("ai"),
 		asynq.MaxRetry(2),
 		asynq.Timeout(120*1e9), // 120s
 	)
@@ -55,21 +49,17 @@ func (s *Service) EnqueueAIJob(ctx context.Context, userID string, payload inter
 	return info.ID, nil
 }
 
-// EnqueuePublishJob enqueues a publish job.
+// EnqueuePublishJob enqueues a publish job. The payload is expected to contain
+// all fields required by PublishJobPayload (user_id, platform, publish_log_id, etc.).
 func (s *Service) EnqueuePublishJob(ctx context.Context, userID string, platform string, payload interface{}) (string, error) {
-	data, err := json.Marshal(map[string]interface{}{
-		"user_id":  userID,
-		"platform": platform,
-		"payload":  payload,
-	})
+	data, err := json.Marshal(payload)
 	if err != nil {
 		return "", err
 	}
 
 	task := asynq.NewTask(TaskTypePublish, data)
 	info, err := s.client.EnqueueContext(ctx, task,
-		asynq.QueueName("publish"),
-		asynq.Priority(PriorityNormal),
+		asynq.Queue("publish"),
 		asynq.MaxRetry(3),
 	)
 	if err != nil {
@@ -82,6 +72,13 @@ func (s *Service) EnqueuePublishJob(ctx context.Context, userID string, platform
 // HandleFunc registers a handler for a task type.
 func (s *Service) HandleFunc(taskType string, handler func(ctx context.Context, t *asynq.Task) error) {
 	s.mux.HandleFunc(taskType, handler)
+}
+
+// RegisterHandlers registers all task handlers using the provided handler instances.
+// This is the preferred way to wire up handlers with full dependency injection.
+func (s *Service) RegisterHandlers(aiHandler *AIJobHandler, publishHandler *PublishJobHandler) {
+	s.mux.HandleFunc(TaskTypeAIProxy, aiHandler.HandleTask)
+	s.mux.HandleFunc(TaskTypePublish, publishHandler.HandleTask)
 }
 
 // Run starts the worker process.

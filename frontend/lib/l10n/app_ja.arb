@@ -1,0 +1,937 @@
+{
+  "@@locale": "ja",
+
+  "appTitle": "AnyNote",
+
+  "welcomeBack": "おかえりなさい",
+
+  "signInToVault": "暗号化された保管庫にサインイン",
+
+  "email": "メールアドレス",
+
+  "emailRequired": "メールアドレスを入力してください",
+
+  "password": "パスワード",
+
+  "passwordRequired": "パスワードを入力してください",
+
+  "signIn": "サインイン",
+
+  "noAccountRegister": "アカウントをお持ちでない方はこちら",
+
+  "recoverFromBackup": "バックアップから復元",
+
+  "noEncryptionKeys": "暗号鍵が見つかりません。先に登録してください。",
+
+  "invalidEmailOrPassword": "メールアドレスまたはパスワードが正しくありません。",
+
+  "accountNotFoundRegister": "アカウントが見つかりません。先に登録してください。",
+
+  "unableToReachServer": "サーバーに接続できません。通信環境を確認してください。",
+
+  "createAccount": "アカウント作成",
+
+  "startEncryptedJourney": "暗号化メモを始めましょう",
+
+  "username": "ユーザー名",
+
+  "usernameRequired": "ユーザー名を入力してください",
+
+  "confirmPassword": "パスワード確認",
+
+  "passwordsDoNotMatch": "パスワードが一致しません",
+
+  "passwordMinLength": "パスワードは8文字以上で入力してください",
+
+  "encryptionNotice": "データはこのパスワードで暗号化されます。紛失すると復元できません。",
+
+  "alreadyHaveAccount": "アカウントをお持ちの方はこちら",
+
+  "emailOrUsernameTaken": "そのメールアドレスまたはユーザー名は既に使用されています。",
+
+  "invalidInput": "入力内容に誤りがあります。確認してください。",
+
+  "saveRecoveryKey": "リカバリーキーを保存",
+
+  "recoveryKeyInstructions": "このリカバリーキーを安全な場所に保管してください。パスワードを忘れた場合、データの復元に必要です。",
+
+  "copyRecoveryKey": "リカバリーキーをコピー",
+
+  "recoveryKeyCopied": "リカバリーキーをクリップボードにコピーしました",
+
+  "iSavedIt": "保存しました",
+
+  "recoverAccount": "アカウント復元",
+
+  "recoverAccountInstructions": "12語のリカバリーキーを入力して、この端末で暗号化保管庫を復元してください。",
+
+  "recoveryKeyLabel": "リカバリーキー（12語）",
+
+  "pasteFromClipboard": "クリップボードから貼り付け",
+
+  "recoveryKeyRequired": "リカバリーキーを入力してください",
+
+  "recoveryKeyWordCount": "リカバリーキーはちょうど12語である必要があります",
+
+  "recoveryKeyFormatHint": "12語を正しい順序で、スペースで区切って入力してください。",
+
+  "invalidRecoveryKey": "無効なリカバリーキーです。入力内容を確認して再度お試しください。",
+
+  "invalidRecoveryKeyForAccount": "このアカウントのリカバリーキーではありません。",
+
+  "accountNotFoundCheckEmail": "アカウントが見つかりません。メールアドレスを確認してください。",
+
+  "backToSignIn": "サインインに戻る",
+
+  "skip": "スキップ",
+
+  "next": "次へ",
+
+  "getStarted": "始める",
+
+  "onboardingPrivacyTitle": "あなたのメモ、あなたのプライバシー",
+
+  "onboardingPrivacyDesc": "AnyNoteはすべてのメモをクラウドに送信する前に端末で暗号化します。誰にも — 開発者にも — 読まれることはありません。",
+
+  "onboardingMasterPasswordTitle": "マスターパスワード",
+
+  "onboardingMasterPasswordDesc": "暗号鍵の元になるマスターパスワードを設定します。必ず覚えておいてください — リカバリーキーがない限りパスワードの再設定はできません。",
+
+  "onboardingRecoveryKeyTitle": "リカバリーキー",
+
+  "onboardingRecoveryKeyDesc": "12語のリカバリーキーが発行されます。安全に保管してください — パスワードを忘れた場合、メモを復元する唯一の手段です。",
+
+  "onboardingAITitle": "AI搭載のライティング",
+
+  "onboardingAIDesc": "AIを使ってメモの作成、アウトライン作成、あらゆるプラットフォーム向けの変換ができます。コンテンツは一切記録されません。",
+
+  "searchNotes": "メモを検索...",
+
+  "collections": "コレクション",
+
+  "sortNotes": "メモの並び替え",
+
+  "updatedNewest": "更新日（新しい順）",
+
+  "updatedOldest": "更新日（古い順）",
+
+  "createdNewest": "作成日（新しい順）",
+
+  "createdOldest": "作成日（古い順）",
+
+  "titleAZ": "タイトル A-Z",
+
+  "listView": "リスト表示",
+
+  "gridView": "グリッド表示",
+
+  "advancedSearch": "詳細検索",
+
+  "closeSearch": "検索を閉じる",
+
+  "searchNotesTooltip": "メモを検索",
+
+  "createNewNote": "新規メモを作成",
+
+  "noNotesYet": "メモはまだありません",
+
+  "tapToCapture": "+ をタップして最初のメモを作成しましょう",
+
+  "newNote": "新規メモ",
+
+  "noResults": "結果なし",
+
+  "tryDifferentSearch": "別のキーワードで検索してみてください",
+
+  "deleteNoteQuestion": "メモを削除しますか？",
+
+  "deleteNoteConfirm": "「{title}」を削除してよろしいですか？",
+
+  "cancel": "キャンセル",
+
+  "delete": "削除",
+
+  "noteDeleted": "メモを削除しました",
+
+  "undo": "元に戻す",
+
+  "unpinNote": "ピン留めを解除",
+
+  "pinNote": "ピン留め",
+
+  "deleteNote": "メモを削除",
+
+  "blankNote": "空白のメモ",
+
+  "fromTemplate": "テンプレートから作成",
+
+  "justNow": "たった今",
+
+  "minutesAgo": "{count}分前",
+
+  "hoursAgo": "{count}時間前",
+
+  "daysAgo": "{count}日前",
+
+  "untitled": "無題",
+
+  "versionHistory": "バージョン履歴",
+
+  "editNote": "メモを編集",
+
+  "exportOrShare": "エクスポート・共有",
+
+  "shareViaLink": "リンクで共有",
+
+  "exportAsMarkdown": "Markdownでエクスポート",
+
+  "exportAsHTML": "HTMLでエクスポート",
+
+  "exportAsPlainText": "プレーンテキストでエクスポート",
+
+  "failedToLoadNote": "メモの読み込みに失敗しました",
+
+  "retry": "再試行",
+
+  "noteNotFound": "メモが見つかりません",
+
+  "notSynced": "未同期",
+
+  "couldNotLoadForExport": "エクスポート用のメモを読み込めませんでした",
+
+  "deleteNoteDialog": "メモの削除",
+
+  "deleteNoteDialogMessage": "このメモはゴミ箱に移動します。後で復元できます。",
+
+  "title": "タイトル",
+
+  "startWriting": "入力を始める...",
+
+  "saveAndClose": "保存して閉じる",
+
+  "savingNote": "メモを保存中",
+
+  "plainText": "プレーンテキスト",
+
+  "richText": "リッチテキスト",
+
+  "edit": "編集",
+
+  "preview": "プレビュー",
+
+  "manageTags": "タグを管理",
+
+  "addImage": "画像を追加",
+
+  "noteContent": "メモの内容",
+
+  "tags": "タグ",
+
+  "closeTagPicker": "タグ選択を閉じる",
+
+  "newTagName": "新しいタグ名",
+
+  "add": "追加",
+
+  "noTagsYet": "タグはまだありません。上で作成してください。",
+
+  "failedToAddImage": "画像の追加に失敗しました: {error}",
+
+  "restore": "復元",
+
+  "close": "閉じる",
+
+  "restoreVersion": "バージョンを復元",
+
+  "restoreVersionConfirm": "現在のメモの内容をバージョン {version} に置き換えますか？現在の内容のスナップショットが先に保存されます。",
+
+  "versionRestored": "バージョンを復元しました",
+
+  "failedToRestore": "復元に失敗しました: {error}",
+
+  "failedToLoadVersions": "バージョンの読み込みに失敗しました",
+
+  "noVersionsYet": "バージョン履歴はまだありません",
+
+  "versionsSavedAutomatically": "メモを編集すると自動的にバージョンが保存されます。",
+
+  "current": "現在",
+
+  "settings": "設定",
+
+  "account": "アカウント",
+
+  "plan": "プラン",
+
+  "upgrade": "アップグレード",
+
+  "loading": "読み込み中...",
+
+  "unableToLoadAccountInfo": "アカウント情報を読み込めません",
+
+  "aiSection": "AI",
+
+  "llmConfiguration": "LLM設定",
+
+  "configureAIProviders": "AIプロバイダーを設定",
+
+  "aiQuota": "AI利用枠",
+
+  "requestsToday": "本日のリクエスト数: {used}/{limit}",
+
+  "unableToLoadQuota": "利用枠を読み込めません",
+
+  "publishing": "公開",
+
+  "platformConnections": "プラットフォーム連携",
+
+  "manageConnectedPlatforms": "連携中のプラットフォームを管理",
+
+  "securityPrivacy": "セキュリティとプライバシー",
+
+  "encryptionSettings": "暗号化設定",
+
+  "e2eEncryptionActive": "E2E暗号化 有効",
+
+  "sync": "同期",
+
+  "syncStatus": "同期ステータス",
+
+  "lastSyncedNever": "最終同期: なし",
+
+  "lastSynced": "最終同期: {time}",
+
+  "checking": "確認中...",
+
+  "unableToLoadSyncStatus": "同期ステータスを読み込めません",
+
+  "syncNow": "今すぐ同期",
+
+  "syncCompleteWithConflicts": "同期完了（{count}件の競合）",
+
+  "synced": "同期完了: {pulled}件取得、{pushed}件送信",
+
+  "data": "データ",
+
+  "exportAllNotes": "すべてのメモをエクスポート",
+
+  "exportAllNotesDesc": "すべてのメモをファイルにエクスポート",
+
+  "markdownFormat": "Markdown (.md)",
+
+  "htmlFormat": "HTML (.html)",
+
+  "plainTextFormat": "プレーンテキスト (.txt)",
+
+  "noNotesToExport": "エクスポートするメモがありません",
+
+  "noNotesWithContent": "内容のあるメモがありません",
+
+  "exportFailed": "エクスポートに失敗しました: {error}",
+
+  "about": "アプリについて",
+
+  "version": "バージョン",
+
+  "privacyPolicy": "プライバシーポリシー",
+
+  "termsOfService": "利用規約",
+
+  "signOut": "サインアウト",
+
+  "signOutConfirmTitle": "サインアウト",
+
+  "signOutConfirmMessage": "サインアウトしてよろしいですか？メモにアクセスするには再度ログインが必要になります。",
+
+  "signOutFailed": "サインアウトに失敗しました: {error}",
+
+  "securityEncryption": "セキュリティと暗号化",
+
+  "e2eEncryptionActiveStatus": "E2E暗号化 有効",
+
+  "encryptionNotSetUp": "暗号化が設定されていません",
+
+  "encryptionAlgorithm": "データはXChaCha20-Poly1305で暗号化されています",
+
+  "keyDerivation": "鍵導出: Argon2id",
+
+  "masterKeyUnlocked": "マスターキー: ロック解除済み",
+
+  "masterKeyLocked": "マスターキー: ロック中",
+
+  "encryptedItems": "暗号化済みアイテム",
+
+  "notes": "メモ",
+
+  "tagsLabel": "タグ",
+
+  "collectionsLabel": "コレクション",
+
+  "aiContent": "AIコンテンツ",
+
+  "itemsCount": "{count}件",
+
+  "recoveryKeySection": "リカバリーキー",
+
+  "recoveryKeyUsage": "パスワードを忘れた場合、このキーでデータを復元できます。",
+
+  "viewRecoveryKey": "リカバリーキーを表示",
+
+  "noRecoveryKeyStored": "リカバリーキーが保存されていません。",
+
+  "recoveryKeyWarning": "リカバリーキーは登録時に生成されました。保存していない場合、パスワードなしではデータを復元できません。",
+
+  "copyToClipboard": "クリップボードにコピー",
+
+  "hide": "非表示",
+
+  "failedToLoadRecoveryKey": "リカバリーキーの読み込みに失敗しました",
+
+  "changePassword": "パスワード変更",
+
+  "reEncryptsData": "新しい鍵ですべてのデータを再暗号化します",
+
+  "verifyPassword": "パスワード確認",
+
+  "enterYourPassword": "パスワードを入力してください",
+
+  "verify": "確認",
+
+  "incorrectPassword": "パスワードが正しくありません",
+
+  "verificationFailed": "確認に失敗しました",
+
+  "currentPassword": "現在のパスワード",
+
+  "newPassword": "新しいパスワード",
+
+  "confirmNewPassword": "新しいパスワードの確認",
+
+  "reEncryptWarning": "警告: すべてのデータが再暗号化されます。",
+
+  "change": "変更",
+
+  "currentPasswordIncorrect": "現在のパスワードが正しくありません",
+
+  "passwordChangedSuccessfully": "パスワードを変更しました",
+
+  "failedToChangePassword": "パスワードの変更に失敗しました: {error}",
+
+  "dangerZone": "危険ゾーン",
+
+  "deleteAllLocalData": "すべてのローカルデータを削除",
+
+  "exportEncryptedBackup": "暗号化バックアップをエクスポート",
+
+  "importEncryptedBackup": "暗号化バックアップをインポート",
+
+  "deleteAllDataQuestion": "すべてのデータを削除しますか？",
+
+  "deleteAllDataMessage": "この操作は取り消せません。すべてのメモ、タグ、設定が完全に削除されます。",
+
+  "deleteEverything": "すべて削除",
+
+  "areYouAbsolutelySure": "本当に実行しますか？",
+
+  "typeDeleteToConfirm": "確認のため「DELETE」と入力してください。",
+
+  "typeDelete": "「DELETE」と入力",
+
+  "allLocalDataDeleted": "すべてのローカルデータを削除しました",
+
+  "failedToDeleteData": "データの削除に失敗しました: {error}",
+
+  "importBackup": "バックアップをインポート",
+
+  "importBackupMessage": "バックアップファイルからアイテムをインポートします。既存のアイテムは上書きされません。続行しますか？",
+
+  "import": "インポート",
+
+  "importedItemsFromBackup": "バックアップから{count}件のアイテムをインポートしました",
+
+  "backupExportFailed": "バックアップのエクスポートに失敗しました: {error}",
+
+  "backupImportFailed": "バックアップのインポートに失敗しました: {error}",
+
+  "llmConfigTitle": "LLM設定",
+
+  "noLLMConfigs": "LLM設定がありません",
+
+  "addLLMToEnableAI": "LLMを追加してAI機能を有効にしてください",
+
+  "addProvider": "プロバイダーを追加",
+
+  "defaultLabel": "デフォルト",
+
+  "testConnection": "接続テスト",
+
+  "failedToLoadConfigs": "設定の読み込みに失敗しました",
+
+  "addLLMProvider": "LLMプロバイダーを追加",
+
+  "name": "名前",
+
+  "provider": "プロバイダー",
+
+  "baseUrl": "ベースURL",
+
+  "apiKey": "APIキー",
+
+  "model": "モデル",
+
+  "modelHint": "例: gpt-4o",
+
+  "save": "保存",
+
+  "editLLMProvider": "LLMプロバイダーを編集",
+
+  "newApiKeyHint": "新しいAPIキー（変更しない場合は空欄）",
+
+  "testingConnection": "接続テスト中...",
+
+  "connectionSuccessful": "接続に成功しました",
+
+  "connectionFailed": "接続に失敗しました: {error}",
+
+  "deleteConfigQuestion": "{name}を削除しますか？",
+
+  "removeLLMConfigConfirm": "このLLM設定を削除してよろしいですか？",
+
+  "noPlatformsAvailable": "利用可能なプラットフォームがありません",
+
+  "platformConnectionsWillAppear": "プラットフォーム連携がここに表示されます",
+
+  "failedToLoadPlatforms": "プラットフォームの読み込みに失敗しました",
+
+  "connect": "連携",
+
+  "verifyButton": "確認",
+
+  "disconnect": "連携解除",
+
+  "connectedTo": "{name}と連携しました",
+
+  "failedToConnect": "連携に失敗しました: {error}",
+
+  "verifyingConnection": "接続を確認中...",
+
+  "connectionVerified": "接続が確認されました",
+
+  "connectionInvalid": "接続が無効です: {error}",
+
+  "verificationFailedError": "確認に失敗しました: {error}",
+
+  "disconnectPlatform": "{name}との連携を解除",
+
+  "disconnectPlatformConfirm": "{name}アカウントとの連携を解除してよろしいですか？",
+
+  "disconnectedFrom": "{name}との連携を解除しました",
+
+  "failedToDisconnect": "連携解除に失敗しました: {error}",
+
+  "scanQRCode": "QRコードをスキャン",
+
+  "scanQRInstructions": "{platform}アプリを開き、このQRコードをスキャンしてログインしてください",
+
+  "done": "完了",
+
+  "tagsTitle": "タグ",
+
+  "noTags": "タグがありません",
+
+  "createTagsToOrganize": "タグを作成してメモを整理しましょう",
+
+  "newTag": "新しいタグ",
+
+  "tagName": "タグ名",
+
+  "tagNameHint": "例: アイデア、仕事、プライベート",
+
+  "create": "作成",
+
+  "encrypted": "（暗号化済み）",
+
+  "aiCompose": "AI作成",
+
+  "aiPoweredWriting": "AI搭載ライティング",
+
+  "aiComposeDesc": "メモを選択して、AIがあらゆるプラットフォーム向けの洗練されたコンテンツを作成します。",
+
+  "startComposing": "作成を開始",
+
+  "recentCompositions": "最近の作成",
+
+  "noCompositionsYet": "作成履歴はまだありません",
+
+  "newComposition": "新規作成",
+
+  "topicOrTheme": "トピックまたはテーマ",
+
+  "topicHint": "コンテンツのテーマを入力してください",
+
+  "targetPlatform": "対象プラットフォーム",
+
+  "selectNotes": "メモを選択",
+
+  "selectedCount": "{count}件選択",
+
+  "noNotesAvailableCreate": "メモがありません。\n先にメモを作成してください。",
+
+  "contentPreview": "コンテンツプレビュー",
+
+  "noContent": "（内容なし）",
+
+  "copy": "コピー",
+
+  "saveAsNote": "メモとして保存",
+
+  "copiedToClipboard": "クリップボードにコピーしました",
+
+  "savedAsNote": "メモとして保存しました",
+
+  "publish": "公開",
+
+  "connectedPlatforms": "連携中のプラットフォーム",
+
+  "noPlatformsConnected": "連携中のプラットフォームがありません",
+
+  "connectAPlatform": "プラットフォームと連携",
+
+  "publishContent": "コンテンツを公開",
+
+  "content": "内容",
+
+  "tagsCommaSeparated": "タグ（カンマ区切り）",
+
+  "tagsHint": "タグ1, タグ2, タグ3",
+
+  "selectPlatformToPublish": "上のプラットフォームを選択して公開してください",
+
+  "publishedStatus": "公開完了！ステータス: {status}",
+
+  "titleAndContentRequired": "タイトルと内容は必須です",
+
+  "publishRequestSubmitted": "公開リクエストを送信しました",
+
+  "recentPublications": "最近の公開",
+
+  "noPublicationsYet": "公開履歴はまだありません",
+
+  "viewAll": "すべて表示（{count}件）",
+
+  "publishHistory": "公開履歴",
+
+  "filterByStatus": "ステータスで絞り込み",
+
+  "all": "すべて",
+
+  "published": "公開済み",
+
+  "failed": "失敗",
+
+  "publishingStatus": "公開中",
+
+  "pending": "保留中",
+
+  "noPublicationsWithStatus": "{status}の公開はありません",
+
+  "clearFilter": "フィルターをクリア",
+
+  "noPublications": "公開履歴がありません",
+
+  "publishedContentWillAppear": "公開したコンテンツがここに表示されます",
+
+  "failedToLoadPublishHistory": "公開履歴の読み込みに失敗しました",
+
+  "viewDetails": "詳細を表示",
+
+  "platform": "プラットフォーム",
+
+  "status": "ステータス",
+
+  "created": "作成日",
+
+  "publishedDate": "公開日",
+
+  "url": "URL",
+
+  "error": "エラー",
+
+  "contentLabel": "内容",
+
+  "failedToLoadDetail": "詳細の読み込みに失敗しました: {error}",
+
+  "collectionsTitle": "コレクション",
+
+  "noCollectionsYet": "コレクションはまだありません",
+
+  "groupNotesIntoCollections": "メモをコレクションにまとめましょう",
+
+  "newCollection": "新しいコレクション",
+
+  "deleteCollectionQuestion": "コレクションを削除しますか？",
+
+  "deleteCollectionConfirm": "「{title}」を削除してよろしいですか？コレクション内のメモは削除されません。",
+
+  "collectionDeleted": "コレクションを削除しました",
+
+  "untitledCollection": "無題のコレクション",
+
+  "noteCount": "{count}件のメモ{suffix}",
+
+  "collectionTitle": "コレクション名",
+
+  "collectionTitleHint": "このコレクションの名前を入力してください",
+
+  "collectionNotFound": "コレクションが見つかりません",
+
+  "failedToLoadCollection": "コレクションの読み込みに失敗しました",
+
+  "noNotesInCollection": "このコレクションにメモはありません",
+
+  "tapToAddNotes": "+ をタップしてメモを追加",
+
+  "addNotes": "メモを追加",
+
+  "removeFromCollection": "コレクションから削除しますか？",
+
+  "removeNoteConfirm": "「{title}」をこのコレクションから削除しますか？メモ自体は削除されません。",
+
+  "remove": "削除",
+
+  "renameCollection": "コレクション名を変更",
+
+  "renameCollectionTooltip": "コレクション名を変更",
+
+  "deleteCollectionTooltip": "コレクションを削除",
+
+  "deleteCollectionDialogTitle": "コレクションの削除",
+
+  "deleteCollectionDialogMessage": "このコレクションとすべてのメモの関連付けが削除されます。メモ自体は削除されません。",
+
+  "noNotesAvailable": "追加できるメモがありません",
+
+  "removeFromCollectionTooltip": "コレクションから削除",
+
+  "search": "検索",
+
+  "clearAllFilters": "すべてのフィルターをクリア",
+
+  "searchYourNotes": "メモを検索",
+
+  "enterQueryOrFilters": "キーワードを入力するかフィルターを使ってメモを探してください",
+
+  "recentSearches": "最近の検索",
+
+  "clearAll": "すべてクリア",
+
+  "noResultsFound": "結果が見つかりません",
+
+  "tryAdjustingSearch": "検索条件やフィルターを調整してみてください",
+
+  "searchError": "検索エラー: {error}",
+
+  "dateRange": "期間",
+
+  "tagsFilter": "タグ",
+
+  "collectionsFilter": "コレクション",
+
+  "tagsCount": "{count}件のタグ",
+
+  "collectionsCount": "{count}件のコレクション",
+
+  "resultsCount": "{count}件の結果",
+
+  "noTagsAvailable": "タグがありません",
+
+  "noCollectionsAvailable": "コレクションがありません",
+
+  "selectTags": "タグを選択",
+
+  "apply": "適用",
+
+  "selectCollections": "コレクションを選択",
+
+  "shareNote": "メモを共有",
+
+  "passwordProtection": "パスワード保護",
+
+  "requirePassword": "パスワードを要求",
+
+  "requirePasswordDesc": "閲覧時にパスワードの入力が必要です",
+
+  "expiresAfter": "有効期限",
+
+  "oneHour": "1時間",
+
+  "twentyFourHours": "24時間",
+
+  "sevenDays": "7日間",
+
+  "never": "期限なし",
+
+  "passwordRequiredForShare": "パスワード保護を有効にする場合、パスワードは必須です",
+
+  "failedToCreateShareLink": "共有リンクの作成に失敗しました: {error}",
+
+  "linkCopiedToClipboard": "リンクをクリップボードにコピーしました",
+
+  "copyLink": "リンクをコピー",
+
+  "passwordProtectedShareInfo": "このリンクはパスワードで保護されています。パスワードは別途お伝えください。",
+
+  "publicShareInfo": "このリンクを知っていれば誰でもメモを閲覧できます。",
+
+  "linkExpiresIn": "リンクの有効期限: {expiry}",
+
+  "encrypting": "暗号化中...",
+
+  "createShareLink": "共有リンクを作成",
+
+  "language": "言語",
+
+  "english": "English",
+
+  "chinese": "中文",
+
+  "languageChangedNotice": "言語の変更はアプリの再起動後に反映されます",
+
+  "zenMode": "集中モード",
+
+  "enterZenMode": "集中モードを開始",
+
+  "exitZenMode": "集中モードを終了",
+
+  "wordCount": "{count}語",
+
+  "charCount": "{count}文字",
+
+  "importNotes": "メモをインポート",
+
+  "importMarkdown": "Markdownをインポート",
+
+  "importTextFiles": "テキストファイルをインポート",
+
+  "importAppleNotes": "Appleメモをインポート",
+
+  "importComplete": "インポート完了: {count}件インポート、{skipped}件スキップ",
+
+  "markdownPreview": "Markdownプレビュー",
+
+  "restoreFromBackup": "バックアップから復元",
+
+  "selectBackupFile": "バックアップファイルを選択",
+
+  "selectBackupFileDesc": "AnyNoteの暗号化バックアップファイル（.enc）を選択してデータを復元してください。",
+
+  "browseFiles": "ファイルを選択",
+
+  "selectedFile": "選択済みのファイル",
+
+  "nextStep": "次へ",
+
+  "back": "戻る",
+
+  "backupDetails": "バックアップの詳細",
+
+  "backupFormat": "フォーマット",
+
+  "backupVersion": "バージョン",
+
+  "exportDate": "エクスポート日",
+
+  "totalItems": "合計アイテム数",
+
+  "itemCounts": "アイテム数",
+
+  "verificationErrors": "検証エラー",
+
+  "backupValid": "バックアップの検証に成功",
+
+  "backupInvalid": "バックアップの検証に失敗",
+
+  "unlockToVerify": "暗号化をロック解除してバックアップの内容を検証してください。",
+
+  "restorePreviewTitle": "復元プレビュー",
+
+  "notesToRestore": "メモ",
+
+  "tagsToRestore": "タグ",
+
+  "collectionsToRestore": "コレクション",
+
+  "contentsToRestore": "AIコンテンツ",
+
+  "earliestDate": "最古",
+
+  "latestDate": "最新",
+
+  "noConflictsDetected": "競合は検出されませんでした。すべてのアイテムが新規として追加されます。",
+
+  "noteTitlesPreview": "メモタイトル",
+
+  "andMoreItems": "他{count}件...",
+
+  "conflictStrategyTitle": "競合の解決方法",
+
+  "conflictStrategyDesc": "ローカルに既に存在するアイテムの処理方法を選択してください。",
+
+  "strategyOverwrite": "上書き",
+
+  "strategyOverwriteDesc": "ローカルのアイテムをバックアップの内容で上書きします",
+
+  "strategySkip": "スキップ",
+
+  "strategySkipDesc": "ローカルのアイテムを保持し、バックアップの重複をスキップします",
+
+  "strategyKeepBoth": "両方を保持",
+
+  "strategyKeepBothDesc": "バックアップのアイテムを既存のものと並べてインポートします（「（復元済み）」サフィックス付き）",
+
+  "restoreWarning": "復元されたアイテムは同期キューに追加されます。しばらく時間がかかる場合があります。",
+
+  "startRestore": "復元を開始",
+
+  "restoringBackup": "バックアップを復元中...",
+
+  "restoreProgress": "{total}件中{current}件を処理中",
+
+  "restoreCompleted": "復元が完了しました",
+
+  "restoreCompletedWithErrors": "復元は完了しましたが、一部エラーがあります",
+
+  "restoreResults": "結果",
+
+  "itemsRestored": "復元済み",
+
+  "itemsSkipped": "スキップ",
+
+  "conflictsFound": "競合",
+
+  "errorsDuringRestore": "エラー",
+
+  "conflictsDetected": "{count}件のアイテムがローカルに既に存在します",
+
+  "existingNotesCount": "{count}件のメモ",
+
+  "existingTagsCount": "{count}件のタグ",
+
+  "existingCollectionsCount": "{count}件のコレクション",
+
+  "existingContentsCount": "{count}件のAIコンテンツ",
+
+  "filePickerError": "ファイル選択を開けませんでした: {error}",
+
+  "restoreFromBackupDesc": "暗号化バックアップファイルからデータを復元",
+
+  "importNotesDesc": "Markdown、Appleメモ、またはプレーンテキストからインポート",
+
+  "onboardingWriteTitle": "思いついたことを書き留めよう",
+
+  "onboardingWriteDesc": "どの端末でもメモを作成 — コンテンツは安全に暗号化されます",
+
+  "japanese": "日本語",
+
+  "korean": "한국어"
+}

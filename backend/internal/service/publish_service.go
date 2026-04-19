@@ -2,11 +2,19 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 
 	"github.com/anynote/backend/internal/domain"
 )
+
+// QueueEnqueuer abstracts the queue enqueue operation so publish_service
+// does not depend directly on the queue package.
+type QueueEnqueuer interface {
+	EnqueuePublishJob(ctx context.Context, userID string, platform string, payload interface{}) (string, error)
+}
 
 type PublishService interface {
 	Publish(ctx context.Context, userID uuid.UUID, req PublishRequest) (*domain.PublishLog, error)
@@ -31,10 +39,30 @@ type PublishLogRepository interface {
 
 type publishService struct {
 	logRepo PublishLogRepository
+	queue   QueueEnqueuer
+	pushSvc PushService // optional; nil means no push notifications
 }
 
-func NewPublishService(logRepo PublishLogRepository) PublishService {
-	return &publishService{logRepo: logRepo}
+// NewPublishService creates a publish service with the given log repository.
+// The queue parameter is optional; if nil, jobs are not enqueued (useful for
+// tests or server-mode where only the worker handles publishing).
+func NewPublishService(logRepo PublishLogRepository, queue QueueEnqueuer, opts ...PublishServiceOption) PublishService {
+	svc := &publishService{
+		logRepo: logRepo,
+		queue:   queue,
+	}
+	for _, opt := range opts {
+		opt(svc)
+	}
+	return svc
+}
+
+// PublishServiceOption configures a publishService during construction.
+type PublishServiceOption func(*publishService)
+
+// WithPublishPushService sets the push notification service for publish events.
+func WithPublishPushService(pushSvc PushService) PublishServiceOption {
+	return func(s *publishService) { s.pushSvc = pushSvc }
 }
 
 func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req PublishRequest) (*domain.PublishLog, error) {
@@ -51,8 +79,46 @@ func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req Publ
 		return nil, err
 	}
 
-	// In production, enqueue via asynq for async processing
-	// For now, return the log entry (actual publishing happens in worker)
+	// Enqueue the publish job for async processing by the worker.
+	if s.queue != nil {
+		payload := map[string]interface{}{
+			"user_id":        userID.String(),
+			"platform":       req.Platform,
+			"publish_log_id": log.ID.String(),
+			"title":          req.Title,
+			"content":        req.Content,
+			"tags":           req.Tags,
+		}
+
+		jobID, err := s.queue.EnqueuePublishJob(ctx, userID.String(), req.Platform, payload)
+		if err != nil {
+			// Update status to failed if enqueue fails.
+			_ = s.logRepo.UpdateStatus(ctx, log.ID, "failed", fmt.Sprintf("failed to enqueue: %v", err), "")
+			return nil, fmt.Errorf("enqueue publish job: %w", err)
+		}
+
+		slog.Info("publish job enqueued", "publish_log_id", log.ID.String(), "job_id", jobID)
+	}
+
+	// Trigger push notification for publish start.
+	// In production, a second push would fire when the worker completes.
+	if s.pushSvc != nil {
+		go func() {
+			payload := PushPayload{
+				Title:    "Publishing Started",
+				Body:     fmt.Sprintf("Publishing to %s: %s", req.Platform, req.Title),
+				Priority: "normal",
+				Data: map[string]interface{}{
+					"type":           "publish_started",
+					"platform":       req.Platform,
+					"publish_log_id": log.ID.String(),
+				},
+			}
+			if err := s.pushSvc.SendPush(context.Background(), userID.String(), payload); err != nil {
+				slog.Error("failed to send publish push", "user_id", userID.String(), "error", err)
+			}
+		}()
+	}
 
 	return log, nil
 }
@@ -62,12 +128,12 @@ func (s *publishService) GetHistory(ctx context.Context, userID uuid.UUID) ([]do
 }
 
 func (s *publishService) GetByID(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*domain.PublishLog, error) {
-	log, err := s.logRepo.GetByID(ctx, id)
+	publishLog, err := s.logRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	if log.UserID != userID {
+	if publishLog.UserID != userID {
 		return nil, ErrUserNotFound
 	}
-	return log, nil
+	return publishLog, nil
 }

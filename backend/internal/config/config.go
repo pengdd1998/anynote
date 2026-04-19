@@ -17,6 +17,20 @@ type Config struct {
 	Auth     AuthConfig     `yaml:"auth"`
 	LLM      LLMConfig      `yaml:"llm"`
 	Chrome   ChromeConfig   `yaml:"chrome"`
+	Log      LogConfig      `yaml:"log"`
+}
+
+// MinIOConfig defaults — Bucket defaults to "anynote" when empty.
+func (c MinIOConfig) BucketName() string {
+	if c.Bucket == "" {
+		return "anynote"
+	}
+	return c.Bucket
+}
+
+// LogConfig controls structured logging behaviour.
+type LogConfig struct {
+	Level string `yaml:"level"` // debug, info, warn, error (default: info)
 }
 
 type ServerConfig struct {
@@ -77,7 +91,10 @@ func Load(path string) (*Config, error) {
 			Port:         8080,
 			ReadTimeout:  15 * time.Second,
 			WriteTimeout: 120 * time.Second, // Long for SSE streaming
-			AllowOrigins: []string{"*"},
+			AllowOrigins: []string{"http://localhost:*"},
+		},
+		Log: LogConfig{
+			Level: "info",
 		},
 		Database: DatabaseConfig{
 			MaxOpenConns:    25,
@@ -161,4 +178,35 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("PORT"); v != "" {
 		fmt.Sscanf(v, "%d", &c.Server.Port)
 	}
+	if v := os.Getenv("LOG_LEVEL"); v != "" {
+		c.Log.Level = v
+	}
+}
+
+// LogLevel returns the configured log level as a string (debug, info, warn, error).
+func (c *Config) LogLevel() string {
+	if c.Log.Level == "" {
+		return "info"
+	}
+	return c.Log.Level
+}
+
+// Validate checks critical configuration values and returns an error if any are invalid or missing.
+func (c *Config) Validate() error {
+	if c.Auth.JWTSecret == "" {
+		return fmt.Errorf("JWT_SECRET is required but not set")
+	}
+	if len(c.Auth.JWTSecret) < 16 {
+		return fmt.Errorf("JWT_SECRET must be at least 16 characters, got %d", len(c.Auth.JWTSecret))
+	}
+	if c.Auth.MasterEncryptionKey == "" {
+		return fmt.Errorf("MASTER_ENCRYPTION_KEY is required but not set")
+	}
+	if len(c.Auth.MasterEncryptionKey) < 16 {
+		return fmt.Errorf("MASTER_ENCRYPTION_KEY must be at least 16 characters, got %d", len(c.Auth.MasterEncryptionKey))
+	}
+	if c.Database.URL == "" {
+		return fmt.Errorf("DATABASE_URL is required but not set")
+	}
+	return nil
 }

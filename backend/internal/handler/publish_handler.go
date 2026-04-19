@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/anynote/backend/internal/domain"
 	"github.com/anynote/backend/internal/service"
 	"github.com/go-chi/chi/v5"
 )

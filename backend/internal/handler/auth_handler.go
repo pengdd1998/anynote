@@ -19,8 +19,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Email == "" || req.Username == "" || len(req.AuthKeyHash) == 0 {
-		writeError(w, http.StatusBadRequest, "validation_error", "Email, username, and auth_key_hash are required")
+	// Validate input
+	if err := validateEmail(req.Email); err != nil {
+		writeValidationError(w, err.(*ValidationError))
+		return
+	}
+	if err := validateUsername(req.Username); err != nil {
+		writeValidationError(w, err.(*ValidationError))
+		return
+	}
+	if len(req.AuthKeyHash) == 0 {
+		writeError(w, http.StatusBadRequest, "validation_error", "auth_key_hash is required")
 		return
 	}
 
@@ -47,8 +56,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Email == "" || len(req.AuthKeyHash) == 0 {
-		writeError(w, http.StatusBadRequest, "validation_error", "Email and auth_key_hash are required")
+	if err := validateEmail(req.Email); err != nil {
+		writeValidationError(w, err.(*ValidationError))
+		return
+	}
+	if len(req.AuthKeyHash) == 0 {
+		writeError(w, http.StatusBadRequest, "validation_error", "auth_key_hash is required")
 		return
 	}
 

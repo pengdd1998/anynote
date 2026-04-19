@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/sync_status_widget.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
+import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 
 class TagsScreen extends ConsumerStatefulWidget {
@@ -22,11 +27,14 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final db = ref.read(databaseProvider);
+    final crypto = ref.read(cryptoServiceProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tags'),
+        title: Text(l10n.tagsTitle),
+        actions: const [SyncStatusWidget()],
       ),
       body: StreamBuilder<List<Tag>>(
         stream: db.tagsDao.watchAllTags(),
@@ -38,49 +46,54 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
           final tags = snapshot.data ?? [];
 
           if (tags.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.label_outline, size: 64, color: Colors.grey.shade400),
-                  const SizedBox(height: 16),
-                  Text('No tags yet', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  const Text('Create tags to organize your notes', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
+            return EmptyState(
+              icon: Icons.label_outline,
+              title: l10n.noTags,
+              subtitle: l10n.createTagsToOrganize,
             );
           }
 
-          return Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            padding: const EdgeInsets.all(16),
-            children: tags.map((tag) {
-              return Chip(
-                label: Text(tag.plainName ?? '(encrypted)'),
-                deleteIcon: const Icon(Icons.close, size: 18),
-                onDeleted: () => _deleteTag(db, tag),
-              );
-            }).toList(),
+          return RefreshIndicator(
+            onRefresh: () async {
+              // Refresh the stream by re-querying; the StreamBuilder will
+              // pick up the latest data automatically. This also provides
+              // pull-to-refresh UX feedback.
+              await db.tagsDao.getAllTags();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: tags.map((tag) {
+                  return Chip(
+                    label: Text(tag.plainName ?? l10n.encrypted),
+                    deleteIcon: const Icon(Icons.close, size: 18),
+                    onDeleted: () => _deleteTag(db, tag),
+                  );
+                }).toList(),
+              ),
+            ),
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateDialog(db),
+        onPressed: () => _showCreateDialog(db, crypto),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showCreateDialog(dynamic db) {
+  void _showCreateDialog(AppDatabase db, CryptoService crypto) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('New Tag'),
+        title: Text(l10n.newTag),
         content: TextField(
           controller: _tagNameController,
-          decoration: const InputDecoration(labelText: 'Tag name', hintText: 'e.g., ideas, work, personal'),
+          decoration: InputDecoration(labelText: l10n.tagName, hintText: l10n.tagNameHint),
           autofocus: true,
         ),
         actions: [
@@ -89,30 +102,33 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
               Navigator.pop(ctx);
               _tagNameController.clear();
             },
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () async {
               final name = _tagNameController.text.trim();
               if (name.isNotEmpty) {
-                // In production: encrypt name before saving
+                final tagId = const Uuid().v4();
+                final encryptedName = await crypto.encryptForItem(tagId, name);
                 await db.tagsDao.createTag(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  encryptedName: name,
+                  id: tagId,
+                  encryptedName: encryptedName,
                   plainName: name,
                 );
               }
-              Navigator.pop(ctx);
+              if (ctx.mounted) {
+                Navigator.pop(ctx);
+              }
               _tagNameController.clear();
             },
-            child: const Text('Create'),
+            child: Text(l10n.create),
           ),
         ],
       ),
     );
   }
 
-  void _deleteTag(dynamic db, Tag tag) {
+  void _deleteTag(AppDatabase db, Tag tag) {
     db.tagsDao.deleteTag(tag.id);
   }
 }

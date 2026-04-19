@@ -22,11 +22,12 @@ type LLMConfigRepository interface {
 }
 
 type aiProxyService struct {
-	gateway     *llm.Gateway
-	llmRepo     LLMConfigRepository
-	quotaSvc    QuotaService
-	rateLimiter *RateLimiter
-	defaultCfg  llm.GatewayConfig
+	gateway       *llm.Gateway
+	llmRepo       LLMConfigRepository
+	quotaSvc      QuotaService
+	rateLimiter   *RateLimiter
+	defaultCfg    llm.GatewayConfig
+	encryptionKey []byte
 }
 
 func NewAIProxyService(
@@ -35,13 +36,15 @@ func NewAIProxyService(
 	quotaSvc QuotaService,
 	rateLimiter *RateLimiter,
 	defaultCfg llm.GatewayConfig,
+	encryptionKey []byte,
 ) AIProxyService {
 	return &aiProxyService{
-		gateway:     gateway,
-		llmRepo:     llmRepo,
-		quotaSvc:    quotaSvc,
-		rateLimiter: rateLimiter,
-		defaultCfg:  defaultCfg,
+		gateway:       gateway,
+		llmRepo:       llmRepo,
+		quotaSvc:      quotaSvc,
+		rateLimiter:   rateLimiter,
+		defaultCfg:    defaultCfg,
+		encryptionKey: encryptionKey,
 	}
 }
 
@@ -51,11 +54,17 @@ func (s *aiProxyService) Proxy(ctx context.Context, userID string, req domain.AI
 	// 1. Check if user has custom LLM configuration
 	userCfg, err := s.llmRepo.GetDefaultByUser(ctx, uid)
 	if err == nil && userCfg != nil {
+		// Decrypt the stored encrypted API key
+		decryptedKey, decErr := llm.DecryptAPIKey(userCfg.EncryptedKey, s.encryptionKey)
+		if decErr != nil {
+			return nil, fmt.Errorf("decrypt api key: %w", decErr)
+		}
+
 		// Dedicated mode: use user's own API key
 		dedicatedCfg := llm.GatewayConfig{
 			Provider:    userCfg.Provider,
 			BaseURL:     userCfg.BaseURL,
-			APIKey:      userCfg.DecryptedKey,
+			APIKey:      decryptedKey,
 			Model:       userCfg.Model,
 			MaxTokens:   userCfg.MaxTokens,
 			Temperature: userCfg.Temperature,

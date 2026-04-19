@@ -73,6 +73,22 @@ test-backend: ## Run backend tests
 test-frontend: ## Run frontend tests
 	cd $(FRONTEND_DIR) && flutter test
 
+# ── Coverage ─────────────────────────────────────────
+
+coverage-backend: ## Generate backend test coverage report
+	cd $(BACKEND_DIR) && $(GOTEST) ./... -race -count=1 -coverprofile=coverage.out -covermode=atomic
+	@cd $(BACKEND_DIR) && $$(GOCMD) tool cover -func=coverage.out | grep total
+	@echo "Detailed report: cd backend && go tool cover -html=coverage.out -o coverage.html"
+
+coverage-frontend: ## Generate frontend test coverage report
+	cd $(FRONTEND_DIR) && flutter test --coverage
+	@echo "Coverage data: frontend/coverage/lcov.info"
+
+# ── Release ──────────────────────────────────────────
+
+release: ## Create a release (usage: make release bump=patch|minor|major)
+	@bash scripts/release.sh $(or $(bump),patch)
+
 # ── Formatting ───────────────────────────────────────
 
 fmt: ## Format all code

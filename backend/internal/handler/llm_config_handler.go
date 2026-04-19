@@ -42,6 +42,9 @@ func (h *LLMConfigHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Copy APIKey (JSON input field) to DecryptedKey for the service layer.
+	cfg.DecryptedKey = cfg.APIKey
+
 	if cfg.Name == "" || cfg.Provider == "" || cfg.BaseURL == "" || cfg.DecryptedKey == "" || cfg.Model == "" {
 		writeError(w, http.StatusBadRequest, "validation_error", "name, provider, base_url, api_key, and model are required")
 		return

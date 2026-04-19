@@ -66,6 +66,7 @@ coverage.txt
 docker-compose.override.yml
 docker-compose.*.yml
 !docker-compose.yml
+!docker-compose.prod.yml
 
 # ── Frontend: Flutter / Dart ──────────────────────────────────
 # Build output
@@ -88,7 +89,21 @@ frontend/lib/**/*.gr.dart
 frontend/**/*.mocks.dart
 
 # Native build
-frontend/android/
+# Android: ignore all, but allow critical config files
+frontend/android/*
+!frontend/android/app/
+frontend/android/app/*
+!frontend/android/app/build.gradle
+!frontend/android/app/proguard-rules.pro
+!frontend/android/app/src/
+frontend/android/app/src/*
+!frontend/android/app/src/main/
+frontend/android/app/src/main/*
+!frontend/android/app/src/main/res/
+frontend/android/app/src/main/res/*
+!frontend/android/app/src/main/res/values/
+frontend/android/app/src/main/res/values/*
+!frontend/android/app/src/main/res/values/strings.xml
 frontend/ios/
 frontend/windows/
 frontend/linux/

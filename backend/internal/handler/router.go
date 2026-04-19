@@ -13,13 +13,14 @@ import (
 )
 
 // Router creates and configures the main HTTP router.
-func Router(cfg *config.Config, services *Services) http.Handler {
+func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http.Handler {
 	r := chi.NewRouter()
 
 	// Middleware
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(chiMiddleware.Recoverer)
+	r.Use(RequestLogger)
 	r.Use(chiMiddleware.Timeout(120 * time.Second))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.Server.AllowOrigins,
@@ -30,11 +31,9 @@ func Router(cfg *config.Config, services *Services) http.Handler {
 		MaxAge:           300,
 	}))
 
-	// Health check
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
-	})
+	// Health check routes (outside auth middleware, public access).
+	r.Get("/health", healthH.HealthCheck)
+	r.Get("/ready", healthH.ReadinessCheck)
 
 	// Handlers
 	authH := &AuthHandler{authService: services.Auth}
@@ -42,15 +41,33 @@ func Router(cfg *config.Config, services *Services) http.Handler {
 	aiH := &AIHandler{aiService: services.AIProxy, quotaSvc: services.Quota}
 	llmH := &LLMConfigHandler{llmService: services.LLMConfig}
 	publishH := &PublishHandler{publishService: services.Publish}
-	platformH := &PlatformHandler{platformService: services.Platform}
+	platformH := NewPlatformHandler(services.Platform, []byte(cfg.Auth.MasterEncryptionKey))
+	shareH := &ShareHandler{shareService: services.Share}
+	pushH := &PushHandler{pushService: services.Push}
+	commentH := &CommentHandler{commentService: services.Comment}
+	wsH := NewWSHandler(services.Presence, cfg.Auth.JWTSecret)
+
+	// Rate limiters
+	authRateLimiter := service.NewRateLimiter(20, time.Minute)    // 20 req/min per IP
+	syncRateLimiter := service.NewRateLimiter(30, time.Minute)    // 30 req/min per user
+	publishRateLimiter := service.NewRateLimiter(10, time.Minute) // 10 req/min per user
 
 	r.Route("/api/v1", func(r chi.Router) {
-		// Public auth routes
+		// Public auth routes (rate limited by IP)
 		r.Route("/auth", func(r chi.Router) {
-			r.Post("/register", authH.Register)
-			r.Post("/login", authH.Login)
-			r.Post("/refresh", authH.RefreshToken)
+			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/register", authH.Register)
+			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/login", authH.Login)
+			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/refresh", authH.RefreshToken)
 		})
+
+		// Public share retrieval (no auth required)
+		r.Get("/share/{id}", shareH.GetShare)
+
+		// Public discovery feed (no auth required)
+		r.Get("/share/discover", shareH.DiscoverFeed)
+
+		// WebSocket (auth handled inside handler via query-param token)
+		r.Get("/ws", wsH.HandleConnection)
 
 		// Authenticated routes
 		r.Group(func(r chi.Router) {
@@ -59,10 +76,10 @@ func Router(cfg *config.Config, services *Services) http.Handler {
 			// Auth
 			r.Get("/auth/me", authH.Me)
 
-			// Sync
-			r.Get("/sync/pull", syncH.Pull)
-			r.Post("/sync/push", syncH.Push)
-			r.Get("/sync/status", syncH.Status)
+			// Sync (rate limited by user)
+			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/pull", syncH.Pull)
+			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Post("/sync/push", syncH.Push)
+			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/status", syncH.Status)
 
 			// AI Proxy
 			r.Post("/ai/proxy", aiH.Proxy)
@@ -76,8 +93,8 @@ func Router(cfg *config.Config, services *Services) http.Handler {
 			r.Post("/llm/configs/{id}/test", llmH.TestConnection)
 			r.Get("/llm/providers", llmH.ListProviders)
 
-			// Publish
-			r.Post("/publish", publishH.Publish)
+			// Publish (rate limited by user)
+			r.With(RateLimitMiddleware(publishRateLimiter, UserIDKeyFunc, time.Minute)).Post("/publish", publishH.Publish)
 			r.Get("/publish/history", publishH.History)
 			r.Get("/publish/{id}", publishH.GetByID)
 
@@ -86,6 +103,19 @@ func Router(cfg *config.Config, services *Services) http.Handler {
 			r.Post("/platforms/{platform}/connect", platformH.Connect)
 			r.Delete("/platforms/{platform}/connect", platformH.Disconnect)
 			r.Post("/platforms/{platform}/verify", platformH.Verify)
+
+			// Share
+			r.Post("/share", shareH.CreateShare)
+			r.Post("/share/{id}/react", shareH.ToggleReaction)
+
+			// Device registration (push notifications)
+			r.Post("/devices/register", pushH.RegisterDeviceToken)
+			r.Post("/devices/unregister", pushH.UnregisterDeviceToken)
+
+			// Comments
+			r.Get("/share/{id}/comments", commentH.ListComments)
+			r.Post("/share/{id}/comments", commentH.CreateComment)
+			r.Delete("/comments/{id}", commentH.DeleteComment)
 		})
 	})
 
@@ -101,4 +131,8 @@ type Services struct {
 	LLMConfig service.LLMConfigService
 	Publish   service.PublishService
 	Platform  service.PlatformService
+	Share     service.ShareService
+	Push      service.PushService
+	Comment   service.CommentService
+	Presence  service.PresenceService
 }

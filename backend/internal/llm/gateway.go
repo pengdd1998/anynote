@@ -3,6 +3,7 @@ package llm
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/anynote/backend/internal/domain"
 )
@@ -64,18 +65,36 @@ func (g *Gateway) Chat(ctx context.Context, cfg GatewayConfig, req ChatRequest) 
 	}
 	req.Stream = false
 
+	// Propagate retry configuration from gateway config to request so
+	// the provider can use it.  Defaults are applied when either field is
+	// zero-valued.
+	if req.MaxRetries == 0 {
+		req.MaxRetries = cfg.MaxRetries
+	}
+	if req.RetryBaseDelay == 0 {
+		req.RetryBaseDelay = cfg.RetryBaseDelay
+	}
+	if req.MaxRetries == 0 {
+		req.MaxRetries = 3
+	}
+	if req.RetryBaseDelay == 0 {
+		req.RetryBaseDelay = 1 * time.Second
+	}
+
 	return provider.Chat(ctx, cfg.APIKey, cfg.BaseURL, req)
 }
 
 // GatewayConfig holds LLM provider configuration.
 type GatewayConfig struct {
-	Provider    string
-	BaseURL     string
-	APIKey      string
-	Model       string
-	MaxTokens   int
-	Temperature float32
-	Timeout     int64 // nanoseconds
+	Provider        string
+	BaseURL         string
+	APIKey          string
+	Model           string
+	MaxTokens       int
+	Temperature     float32
+	Timeout         int64 // nanoseconds
+	MaxRetries      int           // maximum retry attempts (default 3)
+	RetryBaseDelay  time.Duration // base delay for exponential backoff (default 1s)
 }
 
 // ChatRequest is the request payload for LLM chat.
@@ -85,6 +104,10 @@ type ChatRequest struct {
 	Temperature *float32             `json:"temperature,omitempty"`
 	MaxTokens   *int                 `json:"max_tokens,omitempty"`
 	Stream      bool                 `json:"stream"`
+
+	// Retry configuration (not sent to provider; used internally by retry logic)
+	MaxRetries     int           `json:"-"`
+	RetryBaseDelay time.Duration `json:"-"`
 }
 
 // ChatResponse is the non-streaming response from LLM.

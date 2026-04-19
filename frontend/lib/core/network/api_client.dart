@@ -1,14 +1,25 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../routing/app_router.dart';
 
 /// API client for communicating with the AnyNote backend.
 ///
 /// All endpoints return JSON. SSE streaming is handled separately.
 class ApiClient {
   final Dio _dio;
+  final FlutterSecureStorage _secureStorage;
   String? _accessToken;
 
+  /// Completer used as a mutex to prevent concurrent token refresh attempts.
+  Completer<String?>? _refreshCompleter;
+
   ApiClient({required String baseUrl})
-      : _dio = Dio(BaseOptions(
+      : _secureStorage = const FlutterSecureStorage(),
+        _dio = Dio(BaseOptions(
           baseUrl: baseUrl,
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 120), // Long for SSE
@@ -19,6 +30,9 @@ class ApiClient {
         )) {
     _dio.interceptors.add(_AuthInterceptor(this));
   }
+
+  /// The base URL used for API requests.
+  String get baseUrl => _dio.options.baseUrl;
 
   // ── Auth ──────────────────────────────────────────
 
@@ -32,17 +46,110 @@ class ApiClient {
     _accessToken = null;
   }
 
+  /// Store the refresh token in secure storage.
+  Future<void> storeRefreshToken(String token) async {
+    await _secureStorage.write(key: 'refresh_token', value: token);
+  }
+
+  /// Read the stored refresh token from secure storage.
+  Future<String?> getStoredRefreshToken() async {
+    return _secureStorage.read(key: 'refresh_token');
+  }
+
+  /// Store the access token in secure storage for persistence across restarts.
+  Future<void> storeAccessTokenSecure(String token) async {
+    await _secureStorage.write(key: 'access_token', value: token);
+  }
+
+  /// Load tokens from secure storage into memory. Call during app startup.
+  Future<void> loadStoredTokens() async {
+    final accessToken = await _secureStorage.read(key: 'access_token');
+    if (accessToken != null) {
+      _accessToken = accessToken;
+    }
+  }
+
+  /// Attempt to refresh the access token using the stored refresh token.
+  /// Uses a Completer-based mutex to ensure only one refresh runs at a time.
+  /// Returns the new access token on success, or null on failure.
+  Future<String?> tryRefreshToken() async {
+    // If a refresh is already in progress, wait for it and reuse the result.
+    if (_refreshCompleter != null) {
+      return _refreshCompleter!.future;
+    }
+
+    _refreshCompleter = Completer<String?>();
+
+    try {
+      final refreshToken = await _secureStorage.read(key: 'refresh_token');
+      if (refreshToken == null) {
+        _refreshCompleter!.complete(null);
+        return null;
+      }
+
+      // Use a fresh Dio instance without interceptors to avoid recursive refresh.
+      final refreshDio = Dio(BaseOptions(
+        baseUrl: _dio.options.baseUrl,
+        connectTimeout: _dio.options.connectTimeout,
+        headers: {'Content-Type': 'application/json'},
+      ));
+
+      final response = await refreshDio.post('/api/v1/auth/refresh', data: {
+        'refresh_token': refreshToken,
+      });
+
+      final newAccessToken = response.data['access_token'] as String;
+      final newRefreshToken = response.data['refresh_token'] as String;
+
+      // Store new tokens in secure storage.
+      await _secureStorage.write(key: 'access_token', value: newAccessToken);
+      await _secureStorage.write(key: 'refresh_token', value: newRefreshToken);
+
+      // Update in-memory token.
+      _accessToken = newAccessToken;
+
+      _refreshCompleter!.complete(newAccessToken);
+      return newAccessToken;
+    } catch (_) {
+      // Refresh failed -- clear all tokens.
+      await _clearAllTokens();
+      _refreshCompleter!.complete(null);
+      return null;
+    } finally {
+      _refreshCompleter = null;
+    }
+  }
+
+  /// Clear all stored tokens and redirect to login.
+  Future<void> _clearAllTokens() async {
+    _accessToken = null;
+    await _secureStorage.delete(key: 'access_token');
+    await _secureStorage.delete(key: 'refresh_token');
+  }
+
+  /// Public logout method: clears in-memory access token and removes both
+  /// tokens from secure storage.
+  Future<void> logout() async {
+    await _clearAllTokens();
+  }
+
   // ── Auth API ──────────────────────────────────────
 
   Future<AuthResponse> register(RegisterRequest req) async {
     final res = await _dio.post('/api/v1/auth/register', data: req.toJson());
-    return AuthResponse.fromJson(res.data);
+    final authRes = AuthResponse.fromJson(res.data);
+    setAccessToken(authRes.accessToken);
+    await storeAccessTokenSecure(authRes.accessToken);
+    await storeRefreshToken(authRes.refreshToken);
+    return authRes;
   }
 
   Future<AuthResponse> login(LoginRequest req) async {
     final res = await _dio.post('/api/v1/auth/login', data: req.toJson());
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
+    await storeAccessTokenSecure(authRes.accessToken);
+    await storeRefreshToken(authRes.refreshToken);
     return authRes;
   }
 
@@ -53,6 +160,12 @@ class ApiClient {
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
     return authRes;
+  }
+
+  /// Get the current authenticated user's profile.
+  Future<Map<String, dynamic>> getMe() async {
+    final res = await _dio.get('/api/v1/auth/me');
+    return res.data as Map<String, dynamic>;
   }
 
   // ── Sync API ──────────────────────────────────────
@@ -171,6 +284,55 @@ class ApiClient {
     final res = await _dio.post('/api/v1/platforms/$platform/verify');
     return res.data as Map<String, dynamic>;
   }
+
+  // ── Share API ─────────────────────────────────────
+
+  /// Create a shared note. Returns {id, url}.
+  Future<Map<String, dynamic>> createShare(Map<String, dynamic> req) async {
+    final res = await _dio.post('/api/v1/share', data: req);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Get a shared note by ID. No authentication required.
+  Future<Map<String, dynamic>> getSharedNote(String shareId) async {
+    final res = await _dio.get('/api/v1/share/$shareId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Fetch the public discovery feed. No authentication required.
+  Future<List<Map<String, dynamic>>> discoverFeed({int limit = 20, int offset = 0}) async {
+    final res = await _dio.get(
+      '/api/v1/share/discover',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  /// Toggle a reaction on a shared note. Requires authentication.
+  Future<Map<String, dynamic>> toggleReaction(String shareId, String reactionType) async {
+    final res = await _dio.post(
+      '/api/v1/share/$shareId/react',
+      data: {'reaction_type': reactionType},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ── Device Registration API ────────────────────────
+
+  /// Register a device token for push notifications.
+  Future<void> registerDevice(String token, String platform) async {
+    await _dio.post('/api/v1/devices/register', data: {
+      'token': token,
+      'platform': platform,
+    });
+  }
+
+  /// Unregister a device token.
+  Future<void> unregisterDevice(String token) async {
+    await _dio.post('/api/v1/devices/unregister', data: {
+      'token': token,
+    });
+  }
 }
 
 // ── Auth Interceptor ─────────────────────────────────
@@ -189,12 +351,53 @@ class _AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 401 && _client._accessToken != null) {
-      // Token expired - could trigger refresh here
-      _client.clearAccessToken();
+  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+    if (err.response?.statusCode == 401) {
+      // Do not attempt refresh for the refresh endpoint itself.
+      if (err.requestOptions.path == '/api/v1/auth/refresh') {
+        await _client._clearAllTokens();
+        handler.reject(err);
+        return;
+      }
+
+      final refreshToken = await _client.getStoredRefreshToken();
+      if (refreshToken == null) {
+        // No refresh token available, clear state and redirect to login.
+        await _client._clearAllTokens();
+        _navigateToLogin();
+        handler.reject(err);
+        return;
+      }
+
+      // Attempt to refresh the token (mutex ensures only one concurrent attempt).
+      final newAccessToken = await _client.tryRefreshToken();
+
+      if (newAccessToken != null) {
+        // Refresh succeeded -- retry the original request with the new token.
+        err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+        try {
+          final retryResponse = await _client._dio.fetch(err.requestOptions);
+          handler.resolve(retryResponse);
+        } on DioException catch (retryErr) {
+          // Retry itself failed.
+          handler.next(retryErr);
+        }
+      } else {
+        // Refresh failed -- clear tokens and redirect to login.
+        _navigateToLogin();
+        handler.reject(err);
+      }
+    } else {
+      handler.next(err);
     }
-    handler.next(err);
+  }
+
+  /// Navigate to the login screen using go_router's global key.
+  void _navigateToLogin() {
+    final context = rootNavigatorKey.currentContext;
+    if (context != null && context.mounted) {
+      context.go('/auth/login');
+    }
   }
 }
 

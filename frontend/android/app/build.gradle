@@ -1,0 +1,103 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '0.1.0'
+}
+
+android {
+    namespace 'com.anynote.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.anynote.app"
+        minSdk 24
+        targetSdk 34
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    // ---------------------------------------------------------------
+    // Release signing configuration
+    // ---------------------------------------------------------------
+    // To create a release build:
+    // 1. Generate keystore:
+    //      keytool -genkey -v -keystore upload-keystore.jks \
+    //        -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+    // 2. Set environment variables (or add to ~/.gradle/gradle.properties):
+    //      ANDROID_KEYSTORE_PATH, ANDROID_KEYSTORE_PASSWORD,
+    //      ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+    // 3. Place the keystore file at android/app/upload-keystore.jks
+    //    (this path is gitignored)
+    // ---------------------------------------------------------------
+
+    signingConfigs {
+        debug {
+            storeFile = System.getenv("ANDROID_KEYSTORE_PATH")
+                    ? file(System.getenv("ANDROID_KEYSTORE_PATH"))
+                    : debugKeystoreFile()
+            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "androiddebugkey"
+            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: "android"
+        }
+        release {
+            def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+            if (keystorePath != null && file(keystorePath).exists()) {
+                storeFile file(keystorePath)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {}
+
+// Helper to locate the debug keystore
+static def debugKeystoreFile() {
+    return file("${System.getProperty('user.home')}/.android/debug.keystore")
+}

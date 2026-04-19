@@ -43,7 +43,7 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
   }) async {
     await (update(collections)..where((c) => c.id.equals(id)))
         .write(CollectionsCompanion(
-      encryptedTitle: Value(encryptedTitle),
+      encryptedTitle: encryptedTitle != null ? Value(encryptedTitle) : const Value.absent(),
       plainTitle: Value(plainTitle),
       isSynced: const Value(false),
     ));

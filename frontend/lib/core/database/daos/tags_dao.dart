@@ -39,7 +39,7 @@ class TagsDao extends DatabaseAccessor<AppDatabase> with _$TagsDaoMixin {
     String? plainName,
   }) async {
     await (update(tags)..where((t) => t.id.equals(id))).write(TagsCompanion(
-      encryptedName: Value(encryptedName),
+      encryptedName: encryptedName != null ? Value(encryptedName) : const Value.absent(),
       plainName: Value(plainName),
       isSynced: const Value(false),
     ));

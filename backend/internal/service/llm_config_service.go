@@ -52,9 +52,9 @@ func (s *llmConfigService) Create(ctx context.Context, userID uuid.UUID, cfg dom
 	if err != nil {
 		return nil, fmt.Errorf("encrypt api key: %w", err)
 	}
-	// Store encrypted key (would need a separate field in production)
-
-	_ = encryptedKey
+	// Store encrypted key, clear plaintext
+	cfg.EncryptedKey = encryptedKey
+	cfg.DecryptedKey = ""
 	if err := s.repo.Create(ctx, &cfg); err != nil {
 		return nil, err
 	}
@@ -74,9 +74,10 @@ func (s *llmConfigService) Update(ctx context.Context, userID uuid.UUID, cfg dom
 	if cfg.DecryptedKey != "" {
 		encryptedKey, err := llm.EncryptAPIKey(cfg.DecryptedKey, s.masterKey)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("encrypt api key: %w", err)
 		}
-		_ = encryptedKey
+		cfg.EncryptedKey = encryptedKey
+		cfg.DecryptedKey = ""
 	}
 
 	if err := s.repo.Update(ctx, &cfg); err != nil {
@@ -107,10 +108,16 @@ func (s *llmConfigService) TestConnection(ctx context.Context, userID uuid.UUID,
 		return fmt.Errorf("unauthorized")
 	}
 
+	// Decrypt the stored API key for testing
+	decryptedKey, err := llm.DecryptAPIKey(cfg.EncryptedKey, s.masterKey)
+	if err != nil {
+		return fmt.Errorf("decrypt api key: %w", err)
+	}
+
 	gwCfg := llm.GatewayConfig{
 		Provider: cfg.Provider,
 		BaseURL:  cfg.BaseURL,
-		APIKey:   cfg.DecryptedKey,
+		APIKey:   decryptedKey,
 		Model:    cfg.Model,
 	}
 
