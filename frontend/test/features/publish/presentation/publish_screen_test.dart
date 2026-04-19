@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/features/publish/data/publish_providers.dart';
 import 'package:anynote/features/publish/presentation/publish_screen.dart';
 import 'package:anynote/main.dart';

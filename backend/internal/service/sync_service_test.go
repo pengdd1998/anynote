@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -372,10 +373,10 @@ func TestSyncService_Push_ConflictsTriggerPushNotification(t *testing.T) {
 		upsertResult: false, // all items conflict
 	}
 
-	pushCalled := false
+	var pushCalled atomic.Bool
 	pushSvc := &mockPushServiceForSync{
 		sendPushFn: func(ctx context.Context, userIDStr string, payload PushPayload) error {
-			pushCalled = true
+			pushCalled.Store(true)
 			if userIDStr != userID.String() {
 				t.Errorf("sendPush userID = %q, want %q", userIDStr, userID.String())
 			}
@@ -399,10 +400,14 @@ func TestSyncService_Push_ConflictsTriggerPushNotification(t *testing.T) {
 		t.Fatalf("len(Conflicts) = %d, want 1", len(resp.Conflicts))
 	}
 
-	// Wait for the goroutine to complete.
-	// The push is sent in a goroutine, so we need a brief wait.
-	time.Sleep(50 * time.Millisecond)
-	if !pushCalled {
+	// Wait for the async push notification goroutine to complete.
+	for i := 0; i < 50; i++ {
+		if pushCalled.Load() {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if !pushCalled.Load() {
 		t.Error("expected SendPush to be called when conflicts occur")
 	}
 }
