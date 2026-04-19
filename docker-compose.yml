@@ -1,0 +1,110 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: anynote-postgres
+    environment:
+      POSTGRES_USER: anynote
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-anynote_dev}
+      POSTGRES_DB: anynote
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anynote"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: anynote-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: anynote-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chrome:
+    image: chromedp/headless-shell:latest
+    container_name: anynote-chrome
+    ports:
+      - "9222:9222"
+    environment:
+      - CHROME_FLAGS=--no-sandbox --disable-gpu --disable-dev-shm-usage
+
+  server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: anynote-server
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://anynote:${POSTGRES_PASSWORD:-anynote_dev}@postgres:5432/anynote?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-change-in-production}
+      - MASTER_ENCRYPTION_KEY=${MASTER_ENCRYPTION_KEY:-dev-master-key-change-in-production}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: ["./server"]
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: anynote-worker
+    environment:
+      - DATABASE_URL=postgres://anynote:${POSTGRES_PASSWORD:-anynote_dev}@postgres:5432/anynote?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - CHROME_WS_URL=ws://chrome:9222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chrome:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+    command: ["./worker"]
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

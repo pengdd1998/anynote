@@ -1,0 +1,951 @@
+{
+  "@@locale": "zh",
+
+  "appTitle": "AnyNote",
+
+  "welcomeBack": "欢迎回来",
+
+  "signInToVault": "登录你的加密保险库",
+
+  "email": "邮箱",
+
+  "emailRequired": "请输入邮箱",
+
+  "password": "密码",
+
+  "passwordRequired": "请输入密码",
+
+  "signIn": "登录",
+
+  "noAccountRegister": "没有账号？注册",
+
+  "recoverFromBackup": "从备份恢复",
+
+  "noEncryptionKeys": "未找到加密密钥，请先注册。",
+
+  "invalidEmailOrPassword": "邮箱或密码错误。",
+
+  "accountNotFoundRegister": "账号不存在，请先注册。",
+
+  "unableToReachServer": "无法连接服务器，请检查网络。",
+
+  "createAccount": "创建账号",
+
+  "startEncryptedJourney": "开启你的加密笔记之旅",
+
+  "username": "用户名",
+
+  "usernameRequired": "请输入用户名",
+
+  "confirmPassword": "确认密码",
+
+  "passwordsDoNotMatch": "两次输入的密码不一致",
+
+  "passwordMinLength": "密码至少需要8个字符",
+
+  "encryptionNotice": "你的数据将使用此密码加密。如果丢失密码，我们无法帮你恢复。",
+
+  "alreadyHaveAccount": "已有账号？登录",
+
+  "emailOrUsernameTaken": "邮箱或用户名已被注册。",
+
+  "invalidInput": "输入无效，请检查填写内容。",
+
+  "saveRecoveryKey": "保存你的恢复密钥",
+
+  "recoveryKeyInstructions": "请将此恢复密钥保存在安全的地方。忘记密码时需要用它来恢复数据。",
+
+  "copyRecoveryKey": "复制恢复密钥",
+
+  "recoveryKeyCopied": "恢复密钥已复制到剪贴板",
+
+  "iSavedIt": "我已保存",
+
+  "recoverAccount": "恢复账号",
+
+  "recoverAccountInstructions": "输入你的12词恢复密钥，在此设备上恢复你的加密保险库。",
+
+  "recoveryKeyLabel": "恢复密钥（12个词）",
+
+  "pasteFromClipboard": "从剪贴板粘贴",
+
+  "recoveryKeyRequired": "请输入恢复密钥",
+
+  "recoveryKeyWordCount": "恢复密钥必须为12个词",
+
+  "recoveryKeyFormatHint": "请按正确顺序输入12个词，以空格分隔。",
+
+  "invalidRecoveryKey": "恢复密钥无效，请检查输入。",
+
+  "invalidRecoveryKeyForAccount": "该恢复密钥与此账号不匹配。",
+
+  "accountNotFoundCheckEmail": "账号不存在，请检查邮箱地址。",
+
+  "backToSignIn": "返回登录",
+
+  "skip": "跳过",
+
+  "next": "下一步",
+
+  "getStarted": "开始使用",
+
+  "onboardingPrivacyTitle": "你的笔记，你的隐私",
+
+  "onboardingPrivacyDesc": "AnyNote 在每条笔记到达云端之前都会在你的设备上进行加密。任何人——包括我们自己——都无法读取你的笔记。",
+
+  "onboardingMasterPasswordTitle": "主密码",
+
+  "onboardingMasterPasswordDesc": "设置一个主密码来派生你的加密密钥。请务必记住——没有恢复密钥将无法重置密码。",
+
+  "onboardingRecoveryKeyTitle": "恢复密钥",
+
+  "onboardingRecoveryKeyDesc": "你将获得一个12词恢复密钥。请妥善保存——这是忘记密码后恢复笔记的唯一方式。",
+
+  "onboardingAITitle": "AI 智能写作",
+
+  "onboardingAIDesc": "使用 AI 来撰写、提纲和改编你的笔记，适配任何平台。你的内容绝不会被记录。",
+
+  "searchNotes": "搜索笔记...",
+
+  "collections": "合集",
+
+  "sortNotes": "排序",
+
+  "updatedNewest": "按更新时间（最新）",
+
+  "updatedOldest": "按更新时间（最早）",
+
+  "createdNewest": "按创建时间（最新）",
+
+  "createdOldest": "按创建时间（最早）",
+
+  "titleAZ": "按标题 A-Z",
+
+  "listView": "列表视图",
+
+  "gridView": "网格视图",
+
+  "advancedSearch": "高级搜索",
+
+  "closeSearch": "关闭搜索",
+
+  "searchNotesTooltip": "搜索笔记",
+
+  "createNewNote": "创建新笔记",
+
+  "noNotesYet": "还没有笔记",
+
+  "tapToCapture": "点击 + 创建你的第一条笔记",
+
+  "newNote": "新建笔记",
+
+  "noResults": "没有结果",
+
+  "tryDifferentSearch": "试试其他搜索词",
+
+  "deleteNoteQuestion": "删除笔记？",
+
+  "deleteNoteConfirm": "确定要删除「{title}」吗？",
+
+  "cancel": "取消",
+
+  "delete": "删除",
+
+  "noteDeleted": "笔记已删除",
+
+  "undo": "撤销",
+
+  "unpinNote": "取消置顶",
+
+  "pinNote": "置顶笔记",
+
+  "deleteNote": "删除笔记",
+
+  "blankNote": "空白笔记",
+
+  "fromTemplate": "从模板创建",
+
+  "justNow": "刚刚",
+
+  "minutesAgo": "{count}分钟前",
+
+  "hoursAgo": "{count}小时前",
+
+  "daysAgo": "{count}天前",
+
+  "untitled": "无标题",
+
+  "versionHistory": "版本历史",
+
+  "editNote": "编辑笔记",
+
+  "exportOrShare": "导出或分享",
+
+  "shareViaLink": "通过链接分享",
+
+  "exportAsMarkdown": "导出为 Markdown",
+
+  "exportAsHTML": "导出为 HTML",
+
+  "exportAsPlainText": "导出为纯文本",
+
+  "failedToLoadNote": "加载笔记失败",
+
+  "retry": "重试",
+
+  "noteNotFound": "笔记未找到",
+
+  "notSynced": "未同步",
+
+  "couldNotLoadForExport": "无法加载笔记以导出",
+
+  "deleteNoteDialog": "删除笔记",
+
+  "deleteNoteDialogMessage": "此笔记将被移至回收站，你可以稍后恢复。",
+
+  "title": "标题",
+
+  "startWriting": "开始写作...",
+
+  "saveAndClose": "保存并关闭",
+
+  "savingNote": "正在保存",
+
+  "plainText": "纯文本",
+
+  "richText": "富文本",
+
+  "edit": "编辑",
+
+  "preview": "预览",
+
+  "manageTags": "管理标签",
+
+  "addImage": "添加图片",
+
+  "noteContent": "笔记内容",
+
+  "tags": "标签",
+
+  "closeTagPicker": "关闭标签选择器",
+
+  "newTagName": "新标签名称",
+
+  "add": "添加",
+
+  "noTagsYet": "还没有标签，请在上方创建。",
+
+  "failedToAddImage": "添加图片失败：{error}",
+
+  "restore": "恢复",
+
+  "close": "关闭",
+
+  "restoreVersion": "恢复版本",
+
+  "restoreVersionConfirm": "用版本 {version} 替换当前笔记内容？当前内容将先保存一个快照。",
+
+  "versionRestored": "版本已恢复",
+
+  "failedToRestore": "恢复失败：{error}",
+
+  "failedToLoadVersions": "加载版本失败",
+
+  "noVersionsYet": "暂无版本",
+
+  "versionsSavedAutomatically": "编辑笔记时会自动保存版本。",
+
+  "current": "当前",
+
+  "settings": "设置",
+
+  "account": "账号",
+
+  "plan": "套餐",
+
+  "upgrade": "升级",
+
+  "loading": "加载中...",
+
+  "unableToLoadAccountInfo": "无法加载账号信息",
+
+  "aiSection": "AI",
+
+  "llmConfiguration": "LLM 配置",
+
+  "configureAIProviders": "配置你的 AI 提供商",
+
+  "aiQuota": "AI 配额",
+
+  "requestsToday": "今日已使用 {used}/{limit} 次请求",
+
+  "unableToLoadQuota": "无法加载配额",
+
+  "publishing": "发布",
+
+  "platformConnections": "平台连接",
+
+  "manageConnectedPlatforms": "管理已连接的平台",
+
+  "securityPrivacy": "安全与隐私",
+
+  "encryptionSettings": "加密设置",
+
+  "e2eEncryptionActive": "端到端加密已启用",
+
+  "sync": "同步",
+
+  "syncStatus": "同步状态",
+
+  "lastSyncedNever": "上次同步：从未",
+
+  "lastSynced": "上次同步：{time}",
+
+  "checking": "检查中...",
+
+  "unableToLoadSyncStatus": "无法加载同步状态",
+
+  "syncNow": "立即同步",
+
+  "syncCompleteWithConflicts": "同步完成，{count} 个冲突",
+
+  "synced": "已同步：拉取 {pulled} 条，推送 {pushed} 条",
+
+  "data": "数据",
+
+  "exportAllNotes": "导出所有笔记",
+
+  "exportAllNotesDesc": "将所有笔记导出为文件",
+
+  "markdownFormat": "Markdown (.md)",
+
+  "htmlFormat": "HTML (.html)",
+
+  "plainTextFormat": "纯文本 (.txt)",
+
+  "noNotesToExport": "没有可导出的笔记",
+
+  "noNotesWithContent": "没有包含内容的笔记可导出",
+
+  "exportFailed": "导出失败：{error}",
+
+  "about": "关于",
+
+  "version": "版本",
+
+  "privacyPolicy": "隐私政策",
+
+  "termsOfService": "服务条款",
+
+  "signOut": "退出登录",
+
+  "signOutConfirmTitle": "退出登录",
+
+  "signOutConfirmMessage": "确定要退出登录吗？你将需要重新登录才能访问你的笔记。",
+
+  "signOutFailed": "退出失败：{error}",
+
+  "securityEncryption": "安全与加密",
+
+  "e2eEncryptionActiveStatus": "端到端加密已启用",
+
+  "encryptionNotSetUp": "加密尚未设置",
+
+  "encryptionAlgorithm": "你的数据使用 XChaCha20-Poly1305 加密",
+
+  "keyDerivation": "密钥派生：Argon2id",
+
+  "masterKeyUnlocked": "主密钥：已解锁",
+
+  "masterKeyLocked": "主密钥：已锁定",
+
+  "encryptedItems": "已加密项目",
+
+  "notes": "笔记",
+
+  "tagsLabel": "标签",
+
+  "collectionsLabel": "合集",
+
+  "aiContent": "AI 内容",
+
+  "itemsCount": "{count} 项",
+
+  "recoveryKeySection": "恢复密钥",
+
+  "recoveryKeyUsage": "如果你忘记密码，可以使用此密钥恢复数据。",
+
+  "viewRecoveryKey": "查看恢复密钥",
+
+  "noRecoveryKeyStored": "未存储恢复密钥。",
+
+  "recoveryKeyWarning": "恢复密钥在注册时生成。如果你没有保存它，在忘记密码的情况下将无法恢复数据。",
+
+  "copyToClipboard": "复制到剪贴板",
+
+  "hide": "隐藏",
+
+  "failedToLoadRecoveryKey": "加载恢复密钥失败",
+
+  "changePassword": "修改密码",
+
+  "reEncryptsData": "将使用新密钥重新加密所有数据",
+
+  "verifyPassword": "验证密码",
+
+  "enterYourPassword": "输入你的密码",
+
+  "verify": "验证",
+
+  "incorrectPassword": "密码错误",
+
+  "verificationFailed": "验证失败",
+
+  "currentPassword": "当前密码",
+
+  "newPassword": "新密码",
+
+  "confirmNewPassword": "确认新密码",
+
+  "reEncryptWarning": "警告：这将重新加密你的所有数据。",
+
+  "change": "修改",
+
+  "currentPasswordIncorrect": "当前密码错误",
+
+  "passwordChangedSuccessfully": "密码修改成功",
+
+  "failedToChangePassword": "修改密码失败：{error}",
+
+  "dangerZone": "危险区域",
+
+  "deleteAllLocalData": "删除所有本地数据",
+
+  "exportEncryptedBackup": "导出加密备份",
+
+  "importEncryptedBackup": "导入加密备份",
+
+  "deleteAllDataQuestion": "删除所有数据？",
+
+  "deleteAllDataMessage": "此操作不可逆。你的所有笔记、标签和设置将被永久删除。",
+
+  "deleteEverything": "删除全部",
+
+  "areYouAbsolutelySure": "你确定吗？",
+
+  "typeDeleteToConfirm": "输入 DELETE 以确认。",
+
+  "typeDelete": "输入 DELETE",
+
+  "allLocalDataDeleted": "所有本地数据已删除",
+
+  "failedToDeleteData": "删除数据失败：{error}",
+
+  "importBackup": "导入备份",
+
+  "importBackupMessage": "将从备份文件中导入项目。已有项目不会被覆盖。继续？",
+
+  "import": "导入",
+
+  "importedItemsFromBackup": "已从备份导入 {count} 项",
+
+  "backupExportFailed": "备份导出失败：{error}",
+
+  "backupImportFailed": "备份导入失败：{error}",
+
+  "llmConfigTitle": "LLM 配置",
+
+  "noLLMConfigs": "没有 LLM 配置",
+
+  "addLLMToEnableAI": "添加 LLM 以启用 AI 功能",
+
+  "addProvider": "添加提供商",
+
+  "defaultLabel": "默认",
+
+  "testConnection": "测试连接",
+
+  "failedToLoadConfigs": "加载配置失败",
+
+  "addLLMProvider": "添加 LLM 提供商",
+
+  "name": "名称",
+
+  "provider": "提供商",
+
+  "baseUrl": "接口地址",
+
+  "apiKey": "API 密钥",
+
+  "model": "模型",
+
+  "modelHint": "例如 gpt-4o",
+
+  "save": "保存",
+
+  "editLLMProvider": "编辑 LLM 提供商",
+
+  "newApiKeyHint": "新 API 密钥（留空则保持不变）",
+
+  "testingConnection": "正在测试连接...",
+
+  "connectionSuccessful": "连接成功",
+
+  "connectionFailed": "连接失败：{error}",
+
+  "deleteConfigQuestion": "删除 {name}？",
+
+  "removeLLMConfigConfirm": "确定要删除此 LLM 配置吗？",
+
+  "noPlatformsAvailable": "暂无可用平台",
+
+  "platformConnectionsWillAppear": "平台连接将显示在这里",
+
+  "failedToLoadPlatforms": "加载平台失败",
+
+  "connect": "连接",
+
+  "verifyButton": "验证",
+
+  "disconnect": "断开连接",
+
+  "connectedTo": "已连接到 {name}",
+
+  "failedToConnect": "连接失败：{error}",
+
+  "verifyingConnection": "正在验证连接...",
+
+  "connectionVerified": "连接验证通过",
+
+  "connectionInvalid": "连接无效：{error}",
+
+  "verificationFailedError": "验证失败：{error}",
+
+  "disconnectPlatform": "断开 {name} 的连接",
+
+  "disconnectPlatformConfirm": "确定要断开你的 {name} 账号连接吗？",
+
+  "disconnectedFrom": "已断开与 {name} 的连接",
+
+  "failedToDisconnect": "断开连接失败：{error}",
+
+  "scanQRCode": "扫描二维码",
+
+  "scanQRInstructions": "打开 {platform} 应用并扫描此二维码登录",
+
+  "done": "完成",
+
+  "tagsTitle": "标签",
+
+  "noTags": "没有标签",
+
+  "createTagsToOrganize": "创建标签来管理你的笔记",
+
+  "newTag": "新建标签",
+
+  "tagName": "标签名称",
+
+  "tagNameHint": "例如：灵感、工作、个人",
+
+  "create": "创建",
+
+  "encrypted": "（已加密）",
+
+  "aiCompose": "AI 写作",
+
+  "aiPoweredWriting": "AI 智能写作",
+
+  "aiComposeDesc": "选择你的笔记，让 AI 帮你创作适配任何平台的精炼内容。",
+
+  "startComposing": "开始写作",
+
+  "recentCompositions": "最近创作",
+
+  "noCompositionsYet": "还没有创作",
+
+  "newComposition": "新创作",
+
+  "topicOrTheme": "主题",
+
+  "topicHint": "创作的内容主题是什么？",
+
+  "targetPlatform": "目标平台",
+
+  "selectNotes": "选择笔记",
+
+  "selectedCount": "已选 {count} 篇",
+
+  "noNotesAvailableCreate": "暂无笔记。\n请先创建一些笔记。",
+
+  "contentPreview": "内容预览",
+
+  "noContent": "（无内容）",
+
+  "copy": "复制",
+
+  "saveAsNote": "保存为笔记",
+
+  "copiedToClipboard": "已复制到剪贴板",
+
+  "savedAsNote": "已保存为笔记",
+
+  "publish": "发布",
+
+  "connectedPlatforms": "已连接平台",
+
+  "noPlatformsConnected": "尚未连接平台",
+
+  "connectAPlatform": "连接平台",
+
+  "publishContent": "发布内容",
+
+  "content": "内容",
+
+  "tagsCommaSeparated": "标签（逗号分隔）",
+
+  "tagsHint": "标签1, 标签2, 标签3",
+
+  "selectPlatformToPublish": "请在上方选择一个平台以发布",
+
+  "publishedStatus": "已发布！状态：{status}",
+
+  "titleAndContentRequired": "标题和内容为必填项",
+
+  "publishRequestSubmitted": "发布请求已提交",
+
+  "recentPublications": "最近发布",
+
+  "noPublicationsYet": "暂无发布",
+
+  "viewAll": "查看全部（{count}）",
+
+  "publishHistory": "发布历史",
+
+  "filterByStatus": "按状态筛选",
+
+  "all": "全部",
+
+  "published": "已发布",
+
+  "failed": "失败",
+
+  "publishingStatus": "发布中",
+
+  "pending": "等待中",
+
+  "noPublicationsWithStatus": "没有{status}的发布",
+
+  "clearFilter": "清除筛选",
+
+  "noPublications": "暂无发布",
+
+  "publishedContentWillAppear": "已发布的内容将显示在这里",
+
+  "failedToLoadPublishHistory": "加载发布历史失败",
+
+  "viewDetails": "查看详情",
+
+  "platform": "平台",
+
+  "status": "状态",
+
+  "created": "创建时间",
+
+  "publishedDate": "发布时间",
+
+  "url": "链接",
+
+  "error": "错误",
+
+  "contentLabel": "内容",
+
+  "failedToLoadDetail": "加载详情失败：{error}",
+
+  "collectionsTitle": "合集",
+
+  "noCollectionsYet": "还没有合集",
+
+  "groupNotesIntoCollections": "将笔记分组到合集中",
+
+  "newCollection": "新建合集",
+
+  "deleteCollectionQuestion": "删除合集？",
+
+  "deleteCollectionConfirm": "确定要删除「{title}」吗？合集中的笔记不会被删除。",
+
+  "collectionDeleted": "合集已删除",
+
+  "untitledCollection": "无标题合集",
+
+  "noteCount": "{count} 篇笔记{suffix}",
+
+  "collectionTitle": "合集标题",
+
+  "collectionTitleHint": "输入此合集的名称",
+
+  "collectionNotFound": "合集未找到",
+
+  "failedToLoadCollection": "加载合集失败",
+
+  "noNotesInCollection": "此合集中没有笔记",
+
+  "tapToAddNotes": "点击 + 添加笔记",
+
+  "addNotes": "添加笔记",
+
+  "removeFromCollection": "从合集中移除？",
+
+  "removeNoteConfirm": "将「{title}」从此合集中移除？笔记不会被删除。",
+
+  "remove": "移除",
+
+  "renameCollection": "重命名合集",
+
+  "renameCollectionTooltip": "重命名合集",
+
+  "deleteCollectionTooltip": "删除合集",
+
+  "deleteCollectionDialogTitle": "删除合集",
+
+  "deleteCollectionDialogMessage": "此合集及其所有笔记关联将被移除。笔记本身不会被删除。",
+
+  "noNotesAvailable": "暂无可用笔记",
+
+  "removeFromCollectionTooltip": "从合集中移除",
+
+  "search": "搜索",
+
+  "clearAllFilters": "清除所有筛选",
+
+  "searchYourNotes": "搜索你的笔记",
+
+  "enterQueryOrFilters": "输入关键词或使用筛选条件查找笔记",
+
+  "recentSearches": "最近搜索",
+
+  "clearAll": "清除全部",
+
+  "noResultsFound": "未找到结果",
+
+  "tryAdjustingSearch": "尝试调整搜索条件",
+
+  "searchError": "搜索出错：{error}",
+
+  "dateRange": "日期范围",
+
+  "tagsFilter": "标签",
+
+  "collectionsFilter": "合集",
+
+  "tagsCount": "{count} 个标签",
+
+  "collectionsCount": "{count} 个合集",
+
+  "resultsCount": "{count} 条结果",
+
+  "noTagsAvailable": "暂无可用标签",
+
+  "noCollectionsAvailable": "暂无可用合集",
+
+  "selectTags": "选择标签",
+
+  "apply": "应用",
+
+  "selectCollections": "选择合集",
+
+  "shareNote": "分享笔记",
+
+  "passwordProtection": "密码保护",
+
+  "requirePassword": "需要密码",
+
+  "requirePasswordDesc": "接收者需要输入密码才能查看",
+
+  "expiresAfter": "过期时间",
+
+  "oneHour": "1 小时",
+
+  "twentyFourHours": "24 小时",
+
+  "sevenDays": "7 天",
+
+  "never": "永不过期",
+
+  "passwordRequiredForShare": "启用密码保护时必须设置密码",
+
+  "failedToCreateShareLink": "创建分享链接失败：{error}",
+
+  "linkCopiedToClipboard": "链接已复制到剪贴板",
+
+  "copyLink": "复制链接",
+
+  "passwordProtectedShareInfo": "此链接受密码保护，请单独分享密码。",
+
+  "publicShareInfo": "任何拥有此链接的人都可以查看此笔记。",
+
+  "linkExpiresIn": "链接将于 {expiry} 后过期",
+
+  "encrypting": "加密中...",
+
+  "createShareLink": "创建分享链接",
+
+  "language": "语言",
+
+  "english": "English",
+
+  "chinese": "中文",
+
+  "languageChangedNotice": "语言更改将在重启应用后生效",
+
+  "zenMode": "专注模式",
+
+  "enterZenMode": "进入专注模式",
+
+  "exitZenMode": "退出专注模式",
+
+  "wordCount": "{count} 个字",
+
+  "charCount": "{count} 个字符",
+
+  "importNotes": "导入笔记",
+
+  "importMarkdown": "导入 Markdown",
+
+  "importTextFiles": "导入文本文件",
+
+  "importAppleNotes": "导入 Apple Notes",
+
+  "importComplete": "导入完成：已导入 {count} 条笔记，跳过 {skipped} 条",
+
+  "markdownPreview": "Markdown 预览",
+
+  "restoreFromBackup": "从备份恢复",
+
+  "selectBackupFile": "选择备份文件",
+
+  "selectBackupFileDesc": "选择 AnyNote 加密备份文件（.enc）来恢复你的数据。",
+
+  "browseFiles": "浏览文件",
+
+  "selectedFile": "已选文件",
+
+  "nextStep": "下一步",
+
+  "back": "返回",
+
+  "backupDetails": "备份详情",
+
+  "backupFormat": "格式",
+
+  "backupVersion": "版本",
+
+  "exportDate": "导出日期",
+
+  "totalItems": "总项目数",
+
+  "itemCounts": "项目计数",
+
+  "verificationErrors": "验证错误",
+
+  "backupValid": "备份验证通过",
+
+  "backupInvalid": "备份验证失败",
+
+  "unlockToVerify": "请解锁加密以验证备份内容。",
+
+  "restorePreviewTitle": "恢复预览",
+
+  "notesToRestore": "笔记",
+
+  "tagsToRestore": "标签",
+
+  "collectionsToRestore": "集合",
+
+  "contentsToRestore": "AI 内容",
+
+  "earliestDate": "最早",
+
+  "latestDate": "最新",
+
+  "noConflictsDetected": "未检测到冲突，所有项目将作为新项目添加。",
+
+  "noteTitlesPreview": "笔记标题",
+
+  "andMoreItems": "...还有 {count} 项",
+
+  "conflictStrategyTitle": "冲突处理",
+
+  "conflictStrategyDesc": "选择如何处理本地已存在的项目。",
+
+  "strategyOverwrite": "覆盖",
+
+  "strategyOverwriteDesc": "用备份版本替换本地项目",
+
+  "strategySkip": "跳过",
+
+  "strategySkipDesc": "保留本地项目，跳过备份中的重复项",
+
+  "strategyKeepBoth": "保留两者",
+
+  "strategyKeepBothDesc": "导入备份项目并保留现有项目（添加'(已恢复)'后缀）",
+
+  "restoreWarning": "恢复的项目将排队等待同步，这可能需要一些时间。",
+
+  "startRestore": "开始恢复",
+
+  "restoringBackup": "正在恢复备份...",
+
+  "restoreProgress": "正在处理 {current} / {total}",
+
+  "restoreCompleted": "恢复成功完成",
+
+  "restoreCompletedWithErrors": "恢复完成，但有部分错误",
+
+  "restoreResults": "结果",
+
+  "itemsRestored": "已恢复",
+
+  "itemsSkipped": "已跳过",
+
+  "conflictsFound": "冲突",
+
+  "errorsDuringRestore": "错误",
+
+  "conflictsDetected": "{count} 个项目已存在于本地",
+
+  "existingNotesCount": "{count} 条笔记",
+
+  "existingTagsCount": "{count} 个标签",
+
+  "existingCollectionsCount": "{count} 个集合",
+
+  "existingContentsCount": "{count} 个 AI 内容",
+
+  "filePickerError": "无法打开文件选择器：{error}",
+
+  "restoreFromBackupDesc": "从加密备份文件恢复数据",
+
+  "importNotesDesc": "从 Markdown、Apple Notes 或纯文本导入",
+
+  "onboardingWriteTitle": "写下你的想法",
+
+  "onboardingWriteDesc": "在任何设备上创建笔记，你的内容将被安全加密",
+
+  "japanese": "日本語",
+
+  "korean": "한국어",
+
+  "discoverFeed": "发现",
+
+  "noPublicNotes": "暂无公开笔记",
+
+  "noPublicNotesDesc": "标记为公开的共享笔记将在此处显示。",
+
+  "failedToLoadDiscoverFeed": "加载发现页失败",
+
+  "encryptedNote": "加密笔记",
+
+  "reactionFailed": "操作失败",
+
+  "monthsAgo": "{count}个月前"
+}

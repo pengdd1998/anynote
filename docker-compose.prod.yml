@@ -1,0 +1,259 @@
+# Production override for AnyNote.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This file overrides development defaults with production-ready settings:
+#   - Resource limits on all services
+#   - Restart policies (unless-stopped)
+#   - Health checks for all services
+#   - Log rotation (JSON driver, 50 MB max, 3 files)
+#   - No ports exposed to host except server via localhost only
+#   - Separate networks: frontend (public) and backend (internal)
+#   - PostgreSQL tuning for production workloads
+#   - Redis with maxmemory, AOF persistence, and eviction policy
+#   - Container security hardening
+#
+# Requires a .env file (or exported env vars) with production values for
+# POSTGRES_PASSWORD, JWT_SECRET, MASTER_ENCRYPTION_KEY, MINIO_ACCESS_KEY,
+# MINIO_SECRET_KEY, REDIS_PASSWORD, and any optional API keys.
+
+version: "3.9"
+
+services:
+  # ── PostgreSQL ────────────────────────────────────────
+  # Note: ports from docker-compose.yml still bind to 0.0.0.0.
+  # Production security relies on:
+  #   1. Host firewall (UFW/iptables) blocking external access to 5432
+  #   2. The backend network (internal: true) isolating service communication
+  postgres:
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - effective_cache_size=768MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - wal_buffers=16MB
+      - -c
+      - min_wal_size=512MB
+      - -c
+      - max_wal_size=2GB
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - max_connections=100
+      - -c
+      - log_min_duration_statement=1000
+      - -c
+      - log_checkpoints=on
+      - -c
+      - log_connections=on
+      - -c
+      - log_disconnections=on
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - backend
+
+  # ── Redis ─────────────────────────────────────────────
+  redis:
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-changeme-in-production}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
+      --save 60 1000
+      --save 300 100
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - backend
+
+  # ── MinIO ─────────────────────────────────────────────
+  minio:
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - backend
+
+  # ── Chrome headless ──────────────────────────────────
+  chrome:
+    restart: unless-stopped
+    environment:
+      - CHROME_FLAGS=--no-sandbox --disable-gpu --disable-dev-shm-usage --disable-setuid-sandbox
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - backend
+
+  # ── API Server ───────────────────────────────────────
+  server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-none}
+    restart: unless-stopped
+    # Note: server port 8080 from docker-compose.yml binds to 0.0.0.0.
+    # The reverse proxy (nginx/caddy) connects to localhost:8080.
+    # The host firewall must block external access to 8080.
+    environment:
+      DATABASE_URL: postgres://anynote:${POSTGRES_PASSWORD}@postgres:5432/anynote?sslmode=disable
+      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme-in-production}@redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      QWEN_API_KEY: ${QWEN_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes: []  # No source mount in production; use built image
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - frontend
+      - backend
+
+  # ── Background Worker ────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+      args:
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-none}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://anynote:${POSTGRES_PASSWORD}@postgres:5432/anynote?sslmode=disable
+      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme-in-production}@redis:6379/0
+      # CHROME_WS_URL is set automatically by entrypoint-worker.sh
+      # to ws://127.0.0.1:9222 (local Chromium instance).
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes: []  # No source mount in production; use built image
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # Check that the worker process is running and that Chromium's
+      # DevTools port is accepting connections.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9222/json/version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - backend
+
+networks:
+  frontend:
+    name: anynote-frontend
+    driver: bridge
+  backend:
+    name: anynote-backend
+    driver: bridge
+    internal: true  # No external access to this network

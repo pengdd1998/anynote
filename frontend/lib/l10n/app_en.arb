@@ -1,0 +1,1700 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "AnyNote",
+  "@appTitle": { "description": "Application name displayed in the app bar and title" },
+
+  "welcomeBack": "Welcome Back",
+  "@welcomeBack": { "description": "Login screen heading" },
+
+  "signInToVault": "Sign in to your encrypted vault",
+  "@signInToVault": { "description": "Login screen subtitle" },
+
+  "email": "Email",
+  "@email": { "description": "Email form field label" },
+
+  "emailRequired": "Email is required",
+  "@emailRequired": { "description": "Validation error when email is empty" },
+
+  "password": "Password",
+  "@password": { "description": "Password form field label" },
+
+  "passwordRequired": "Password is required",
+  "@passwordRequired": { "description": "Validation error when password is empty" },
+
+  "signIn": "Sign In",
+  "@signIn": { "description": "Sign in button label" },
+
+  "noAccountRegister": "Don't have an account? Register",
+  "@noAccountRegister": { "description": "Link to registration screen" },
+
+  "recoverFromBackup": "Recover from backup",
+  "@recoverFromBackup": { "description": "Link to account recovery screen" },
+
+  "noEncryptionKeys": "No encryption keys found. Please register first.",
+  "@noEncryptionKeys": { "description": "Error when salt is missing during login" },
+
+  "invalidEmailOrPassword": "Invalid email or password.",
+  "@invalidEmailOrPassword": { "description": "Auth error on login" },
+
+  "accountNotFoundRegister": "Account not found. Please register first.",
+  "@accountNotFoundRegister": { "description": "Auth error when account does not exist" },
+
+  "unableToReachServer": "Unable to reach the server. Please check your connection.",
+  "@unableToReachServer": { "description": "Network error message" },
+
+  "createAccount": "Create Account",
+  "@createAccount": { "description": "Registration screen heading and submit button" },
+
+  "startEncryptedJourney": "Start your encrypted note journey",
+  "@startEncryptedJourney": { "description": "Registration screen subtitle" },
+
+  "username": "Username",
+  "@username": { "description": "Username form field label" },
+
+  "usernameRequired": "Username is required",
+  "@usernameRequired": { "description": "Validation error when username is empty" },
+
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": { "description": "Confirm password form field label" },
+
+  "passwordsDoNotMatch": "Passwords do not match",
+  "@passwordsDoNotMatch": { "description": "Validation error when passwords differ" },
+
+  "passwordMinLength": "Password must be at least 8 characters",
+  "@passwordMinLength": { "description": "Validation error for short password" },
+
+  "encryptionNotice": "Your data will be encrypted with this password. We cannot recover it if lost.",
+  "@encryptionNotice": { "description": "Warning about password importance during registration" },
+
+  "alreadyHaveAccount": "Already have an account? Sign In",
+  "@alreadyHaveAccount": { "description": "Link to login screen from registration" },
+
+  "emailOrUsernameTaken": "Email or username already taken.",
+  "@emailOrUsernameTaken": { "description": "Registration conflict error" },
+
+  "invalidInput": "Invalid input. Please check your details.",
+  "@invalidInput": { "description": "Generic validation error during registration" },
+
+  "saveRecoveryKey": "Save Your Recovery Key",
+  "@saveRecoveryKey": { "description": "Recovery key dialog title" },
+
+  "recoveryKeyInstructions": "Store this recovery key in a safe place. You will need it to recover your data if you forget your password.",
+  "@recoveryKeyInstructions": { "description": "Instructions shown with the recovery key" },
+
+  "copyRecoveryKey": "Copy recovery key",
+  "@copyRecoveryKey": { "description": "Tooltip for copy recovery key button" },
+
+  "recoveryKeyCopied": "Recovery key copied to clipboard",
+  "@recoveryKeyCopied": { "description": "Snackbar confirmation after copying recovery key" },
+
+  "iSavedIt": "I've Saved It",
+  "@iSavedIt": { "description": "Button confirming the user saved their recovery key" },
+
+  "recoverAccount": "Recover Account",
+  "@recoverAccount": { "description": "Recovery screen heading and submit button" },
+
+  "recoverAccountInstructions": "Enter your 12-word recovery key to restore your encrypted vault on this device.",
+  "@recoverAccountInstructions": { "description": "Recovery screen subtitle" },
+
+  "recoveryKeyLabel": "Recovery Key (12 words)",
+  "@recoveryKeyLabel": { "description": "Form field label for recovery key input" },
+
+  "pasteFromClipboard": "Paste from clipboard",
+  "@pasteFromClipboard": { "description": "Tooltip for paste button" },
+
+  "recoveryKeyRequired": "Recovery key is required",
+  "@recoveryKeyRequired": { "description": "Validation error when recovery key is empty" },
+
+  "recoveryKeyWordCount": "Recovery key must be exactly 12 words",
+  "@recoveryKeyWordCount": { "description": "Validation error for wrong word count" },
+
+  "recoveryKeyFormatHint": "Enter all 12 words separated by spaces, in the correct order.",
+  "@recoveryKeyFormatHint": { "description": "Helper text below the recovery key input" },
+
+  "invalidRecoveryKey": "Invalid recovery key. Please check your words and try again.",
+  "@invalidRecoveryKey": { "description": "Error when recovery key is malformed" },
+
+  "invalidRecoveryKeyForAccount": "Invalid recovery key for this account.",
+  "@invalidRecoveryKeyForAccount": { "description": "Error when recovery key does not match account" },
+
+  "accountNotFoundCheckEmail": "Account not found. Please check your email.",
+  "@accountNotFoundCheckEmail": { "description": "Error when no account matches the email" },
+
+  "backToSignIn": "Back to Sign In",
+  "@backToSignIn": { "description": "Link back to login from recovery screen" },
+
+  "skip": "Skip",
+  "@skip": { "description": "Button to skip onboarding" },
+
+  "next": "Next",
+  "@next": { "description": "Button to go to next onboarding page" },
+
+  "getStarted": "Get Started",
+  "@getStarted": { "description": "Button to finish onboarding and proceed" },
+
+  "onboardingPrivacyTitle": "Your Notes, Your Privacy",
+  "@onboardingPrivacyTitle": { "description": "Onboarding page 1 title" },
+
+  "onboardingPrivacyDesc": "AnyNote encrypts every note on your device before it reaches the cloud. No one -- not even us -- can read your notes.",
+  "@onboardingPrivacyDesc": { "description": "Onboarding page 1 description" },
+
+  "onboardingMasterPasswordTitle": "Master Password",
+  "@onboardingMasterPasswordTitle": { "description": "Onboarding page 2 title" },
+
+  "onboardingMasterPasswordDesc": "Set a master password that derives your encryption key. Remember it -- there is no password reset without your recovery key.",
+  "@onboardingMasterPasswordDesc": { "description": "Onboarding page 2 description" },
+
+  "onboardingRecoveryKeyTitle": "Recovery Key",
+  "@onboardingRecoveryKeyTitle": { "description": "Onboarding page 3 title" },
+
+  "onboardingRecoveryKeyDesc": "You will receive a 12-word recovery key. Store it safely -- it is the only way to recover your notes if you forget your password.",
+  "@onboardingRecoveryKeyDesc": { "description": "Onboarding page 3 description" },
+
+  "onboardingAITitle": "AI-Powered Composing",
+  "@onboardingAITitle": { "description": "Onboarding page 4 title" },
+
+  "onboardingAIDesc": "Use AI to compose, outline, and adapt your notes for any platform. Your content is never logged.",
+  "@onboardingAIDesc": { "description": "Onboarding page 4 description" },
+
+  "searchNotes": "Search notes...",
+  "@searchNotes": { "description": "Search text field hint" },
+
+  "collections": "Collections",
+  "@collections": { "description": "Tooltip for collections button and screen title" },
+
+  "sortNotes": "Sort notes",
+  "@sortNotes": { "description": "Tooltip for sort menu" },
+
+  "updatedNewest": "Updated (newest)",
+  "@updatedNewest": { "description": "Sort option: newest updated first" },
+
+  "updatedOldest": "Updated (oldest)",
+  "@updatedOldest": { "description": "Sort option: oldest updated first" },
+
+  "createdNewest": "Created (newest)",
+  "@createdNewest": { "description": "Sort option: newest created first" },
+
+  "createdOldest": "Created (oldest)",
+  "@createdOldest": { "description": "Sort option: oldest created first" },
+
+  "titleAZ": "Title A-Z",
+  "@titleAZ": { "description": "Sort option: alphabetical by title" },
+
+  "listView": "List view",
+  "@listView": { "description": "Tooltip for list view toggle" },
+
+  "gridView": "Grid view",
+  "@gridView": { "description": "Tooltip for grid view toggle" },
+
+  "advancedSearch": "Advanced search",
+  "@advancedSearch": { "description": "Tooltip for advanced search button" },
+
+  "closeSearch": "Close search",
+  "@closeSearch": { "description": "Tooltip for closing search" },
+
+  "searchNotesTooltip": "Search notes",
+  "@searchNotesTooltip": { "description": "Tooltip for opening search" },
+
+  "createNewNote": "Create new note",
+  "@createNewNote": { "description": "Tooltip for FAB and accessibility label" },
+
+  "noNotesYet": "No notes yet",
+  "@noNotesYet": { "description": "Empty state title for notes list" },
+
+  "tapToCapture": "Tap + to capture your first note",
+  "@tapToCapture": { "description": "Empty state subtitle for notes list" },
+
+  "newNote": "New Note",
+  "@newNote": { "description": "Action label for creating a new note" },
+
+  "noResults": "No results",
+  "@noResults": { "description": "Empty state title for search results" },
+
+  "tryDifferentSearch": "Try a different search term",
+  "@tryDifferentSearch": { "description": "Empty state subtitle for search results" },
+
+  "deleteNoteQuestion": "Delete note?",
+  "@deleteNoteQuestion": { "description": "Confirmation dialog title for deleting a note" },
+
+  "deleteNoteConfirm": "Are you sure you want to delete \"{title}\"?",
+  "@deleteNoteConfirm": {
+    "description": "Confirmation dialog body for deleting a note",
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+
+  "cancel": "Cancel",
+  "@cancel": { "description": "Cancel button label" },
+
+  "delete": "Delete",
+  "@delete": { "description": "Delete button label" },
+
+  "noteDeleted": "Note deleted",
+  "@noteDeleted": { "description": "Snackbar after deleting a note" },
+
+  "undo": "Undo",
+  "@undo": { "description": "Snackbar undo action label" },
+
+  "unpinNote": "Unpin note",
+  "@unpinNote": { "description": "Context menu item to unpin a note" },
+
+  "pinNote": "Pin note",
+  "@pinNote": { "description": "Context menu item to pin a note" },
+
+  "deleteNote": "Delete note",
+  "@deleteNote": { "description": "Context menu item to delete a note" },
+
+  "blankNote": "Blank Note",
+  "@blankNote": { "description": "Create option for a blank note" },
+
+  "fromTemplate": "From Template",
+  "@fromTemplate": { "description": "Create option from a template" },
+
+  "justNow": "Just now",
+  "@justNow": { "description": "Relative time: less than 1 minute ago" },
+
+  "minutesAgo": "{count}m ago",
+  "@minutesAgo": {
+    "description": "Relative time: minutes ago",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "hoursAgo": "{count}h ago",
+  "@hoursAgo": {
+    "description": "Relative time: hours ago",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "daysAgo": "{count}d ago",
+  "@daysAgo": {
+    "description": "Relative time: days ago",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "untitled": "Untitled",
+  "@untitled": { "description": "Placeholder title for notes without a title" },
+
+  "versionHistory": "Version History",
+  "@versionHistory": { "description": "Screen title and tooltip for version history" },
+
+  "editNote": "Edit note",
+  "@editNote": { "description": "Tooltip for edit note button" },
+
+  "exportOrShare": "Export or share",
+  "@exportOrShare": { "description": "Tooltip for export/share menu" },
+
+  "shareViaLink": "Share via link",
+  "@shareViaLink": { "description": "Export menu item" },
+
+  "exportAsMarkdown": "Export as Markdown",
+  "@exportAsMarkdown": { "description": "Export menu item" },
+
+  "exportAsHTML": "Export as HTML",
+  "@exportAsHTML": { "description": "Export menu item" },
+
+  "exportAsPlainText": "Export as Plain Text",
+  "@exportAsPlainText": { "description": "Export menu item" },
+
+  "failedToLoadNote": "Failed to load note",
+  "@failedToLoadNote": { "description": "Error title when note loading fails" },
+
+  "retry": "Retry",
+  "@retry": { "description": "Retry button label" },
+
+  "noteNotFound": "Note not found",
+  "@noteNotFound": { "description": "Message when note ID does not exist" },
+
+  "notSynced": "Not synced",
+  "@notSynced": { "description": "Label for unsynced note status" },
+
+  "couldNotLoadForExport": "Could not load note for export",
+  "@couldNotLoadForExport": { "description": "Snackbar when note cannot be loaded for export" },
+
+  "deleteNoteDialog": "Delete Note",
+  "@deleteNoteDialog": { "description": "Delete note dialog title" },
+
+  "deleteNoteDialogMessage": "This note will be moved to trash. You can restore it later.",
+  "@deleteNoteDialogMessage": { "description": "Delete note dialog message" },
+
+  "title": "Title",
+  "@title": { "description": "Note title text field hint" },
+
+  "startWriting": "Start writing...",
+  "@startWriting": { "description": "Content text field hint in editor" },
+
+  "saveAndClose": "Save and close",
+  "@saveAndClose": { "description": "Tooltip for save/close button" },
+
+  "savingNote": "Saving note",
+  "@savingNote": { "description": "Accessibility label for saving indicator" },
+
+  "plainText": "Plain text",
+  "@plainText": { "description": "Tooltip for plain text editor toggle" },
+
+  "richText": "Rich text",
+  "@richText": { "description": "Tooltip for rich text editor toggle" },
+
+  "edit": "Edit",
+  "@edit": { "description": "Edit mode toggle tooltip" },
+
+  "preview": "Preview",
+  "@preview": { "description": "Preview mode toggle tooltip" },
+
+  "manageTags": "Manage tags",
+  "@manageTags": { "description": "Tooltip for tag picker button" },
+
+  "addImage": "Add image",
+  "@addImage": { "description": "Tooltip for add image button" },
+
+  "noteContent": "Note content",
+  "@noteContent": { "description": "Accessibility label for note content area" },
+
+  "tags": "Tags",
+  "@tags": { "description": "Tag picker sheet heading" },
+
+  "closeTagPicker": "Close tag picker",
+  "@closeTagPicker": { "description": "Tooltip for closing tag picker" },
+
+  "newTagName": "New tag name",
+  "@newTagName": { "description": "Hint text and accessibility label for new tag input" },
+
+  "add": "Add",
+  "@add": { "description": "Add button in tag picker" },
+
+  "noTagsYet": "No tags yet. Create one above.",
+  "@noTagsYet": { "description": "Empty state in tag picker" },
+
+  "failedToAddImage": "Failed to add image: {error}",
+  "@failedToAddImage": {
+    "description": "Error when image insertion fails",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "restore": "Restore",
+  "@restore": { "description": "Restore version button" },
+
+  "close": "Close",
+  "@close": { "description": "Close button label" },
+
+  "restoreVersion": "Restore Version",
+  "@restoreVersion": { "description": "Dialog title for confirming version restore" },
+
+  "restoreVersionConfirm": "Replace the current note content with version {version}? A snapshot of the current content will be saved first.",
+  "@restoreVersionConfirm": {
+    "description": "Confirmation body for restoring a version",
+    "placeholders": {
+      "version": { "type": "int" }
+    }
+  },
+
+  "versionRestored": "Version restored",
+  "@versionRestored": { "description": "Snackbar after restoring a version" },
+
+  "failedToRestore": "Failed to restore: {error}",
+  "@failedToRestore": {
+    "description": "Error snackbar when restore fails",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "failedToLoadVersions": "Failed to load versions",
+  "@failedToLoadVersions": { "description": "Error title when versions fail to load" },
+
+  "noVersionsYet": "No versions yet",
+  "@noVersionsYet": { "description": "Empty state title for version history" },
+
+  "versionsSavedAutomatically": "Versions are saved automatically when you edit a note.",
+  "@versionsSavedAutomatically": { "description": "Empty state subtitle for version history" },
+
+  "current": "Current",
+  "@current": { "description": "Badge label for the current version" },
+
+  "settings": "Settings",
+  "@settings": { "description": "Settings screen title and nav tab label" },
+
+  "account": "Account",
+  "@account": { "description": "Settings section header" },
+
+  "plan": "Plan",
+  "@plan": { "description": "Plan label in settings" },
+
+  "upgrade": "Upgrade",
+  "@upgrade": { "description": "Upgrade plan button" },
+
+  "loading": "Loading...",
+  "@loading": { "description": "Loading placeholder text" },
+
+  "unableToLoadAccountInfo": "Unable to load account info",
+  "@unableToLoadAccountInfo": { "description": "Error subtitle for account info" },
+
+  "aiSection": "AI",
+  "@aiSection": { "description": "Settings section header for AI features" },
+
+  "llmConfiguration": "LLM Configuration",
+  "@llmConfiguration": { "description": "Settings item title" },
+
+  "configureAIProviders": "Configure your AI providers",
+  "@configureAIProviders": { "description": "Settings item subtitle" },
+
+  "aiQuota": "AI Quota",
+  "@aiQuota": { "description": "Settings item title" },
+
+  "requestsToday": "{used}/{limit} requests today",
+  "@requestsToday": {
+    "description": "AI quota usage display",
+    "placeholders": {
+      "used": { "type": "int" },
+      "limit": { "type": "int" }
+    }
+  },
+
+  "unableToLoadQuota": "Unable to load quota",
+  "@unableToLoadQuota": { "description": "Error subtitle for AI quota" },
+
+  "publishing": "Publishing",
+  "@publishing": { "description": "Settings section header" },
+
+  "platformConnections": "Platform Connections",
+  "@platformConnections": { "description": "Settings item title" },
+
+  "manageConnectedPlatforms": "Manage connected platforms",
+  "@manageConnectedPlatforms": { "description": "Settings item subtitle" },
+
+  "securityPrivacy": "Security & Privacy",
+  "@securityPrivacy": { "description": "Settings section header" },
+
+  "encryptionSettings": "Encryption Settings",
+  "@encryptionSettings": { "description": "Settings item title" },
+
+  "e2eEncryptionActive": "E2E encryption active",
+  "@e2eEncryptionActive": { "description": "Settings item subtitle" },
+
+  "sync": "Sync",
+  "@sync": { "description": "Settings section header" },
+
+  "syncStatus": "Sync Status",
+  "@syncStatus": { "description": "Settings item title" },
+
+  "lastSyncedNever": "Last synced: Never",
+  "@lastSyncedNever": { "description": "Subtitle when never synced" },
+
+  "lastSynced": "Last synced: {time}",
+  "@lastSynced": {
+    "description": "Subtitle showing last sync time",
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+
+  "checking": "Checking...",
+  "@checking": { "description": "Loading state for sync status" },
+
+  "unableToLoadSyncStatus": "Unable to load sync status",
+  "@unableToLoadSyncStatus": { "description": "Error subtitle for sync status" },
+
+  "syncNow": "Sync Now",
+  "@syncNow": { "description": "Sync button label" },
+
+  "syncCompleteWithConflicts": "Sync complete with {count} conflicts",
+  "@syncCompleteWithConflicts": {
+    "description": "Snackbar after sync with conflicts",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "synced": "Synced: {pulled} pulled, {pushed} pushed",
+  "@synced": {
+    "description": "Snackbar after successful sync",
+    "placeholders": {
+      "pulled": { "type": "int" },
+      "pushed": { "type": "int" }
+    }
+  },
+
+  "data": "Data",
+  "@data": { "description": "Settings section header" },
+
+  "exportAllNotes": "Export All Notes",
+  "@exportAllNotes": { "description": "Settings item title" },
+
+  "exportAllNotesDesc": "Export all notes to a file",
+  "@exportAllNotesDesc": { "description": "Settings item subtitle" },
+
+  "markdownFormat": "Markdown (.md)",
+  "@markdownFormat": { "description": "Export format option" },
+
+  "htmlFormat": "HTML (.html)",
+  "@htmlFormat": { "description": "Export format option" },
+
+  "plainTextFormat": "Plain Text (.txt)",
+  "@plainTextFormat": { "description": "Export format option" },
+
+  "noNotesToExport": "No notes to export",
+  "@noNotesToExport": { "description": "Snackbar when no notes exist" },
+
+  "noNotesWithContent": "No notes with content to export",
+  "@noNotesWithContent": { "description": "Snackbar when notes have no content" },
+
+  "exportFailed": "Export failed: {error}",
+  "@exportFailed": {
+    "description": "Snackbar on export failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "about": "About",
+  "@about": { "description": "Settings section header" },
+
+  "version": "Version",
+  "@version": { "description": "Version label in settings" },
+
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": { "description": "Settings item title" },
+
+  "termsOfService": "Terms of Service",
+  "@termsOfService": { "description": "Settings item title" },
+
+  "signOut": "Sign Out",
+  "@signOut": { "description": "Sign out button label" },
+
+  "signOutConfirmTitle": "Sign Out",
+  "@signOutConfirmTitle": { "description": "Sign out confirmation dialog title" },
+
+  "signOutConfirmMessage": "Are you sure you want to sign out? You will need to log in again to access your notes.",
+  "@signOutConfirmMessage": { "description": "Sign out confirmation dialog body" },
+
+  "signOutFailed": "Sign out failed: {error}",
+  "@signOutFailed": {
+    "description": "Snackbar on sign out failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "securityEncryption": "Security & Encryption",
+  "@securityEncryption": { "description": "Encryption screen title" },
+
+  "e2eEncryptionActiveStatus": "E2E Encryption Active",
+  "@e2eEncryptionActiveStatus": { "description": "Status when encryption is set up" },
+
+  "encryptionNotSetUp": "Encryption Not Set Up",
+  "@encryptionNotSetUp": { "description": "Status when encryption is not initialized" },
+
+  "encryptionAlgorithm": "Your data is encrypted with XChaCha20-Poly1305",
+  "@encryptionAlgorithm": { "description": "Description of encryption algorithm used" },
+
+  "keyDerivation": "Key derivation: Argon2id",
+  "@keyDerivation": { "description": "Description of key derivation function" },
+
+  "masterKeyUnlocked": "Master key: unlocked",
+  "@masterKeyUnlocked": { "description": "Status when master key is available" },
+
+  "masterKeyLocked": "Master key: locked",
+  "@masterKeyLocked": { "description": "Status when master key is not available" },
+
+  "encryptedItems": "Encrypted Items",
+  "@encryptedItems": { "description": "Section header for encrypted item counts" },
+
+  "notes": "Notes",
+  "@notes": { "description": "Label for notes count and nav tab" },
+
+  "tagsLabel": "Tags",
+  "@tagsLabel": { "description": "Label for tags count" },
+
+  "collectionsLabel": "Collections",
+  "@collectionsLabel": { "description": "Label for collections count" },
+
+  "aiContent": "AI Content",
+  "@aiContent": { "description": "Label for AI content count" },
+
+  "itemsCount": "{count} items",
+  "@itemsCount": {
+    "description": "Number of items for a category",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "recoveryKeySection": "Recovery Key",
+  "@recoveryKeySection": { "description": "Section header for recovery key" },
+
+  "recoveryKeyUsage": "Use this key to recover your data if you forget your password.",
+  "@recoveryKeyUsage": { "description": "Description of recovery key purpose" },
+
+  "viewRecoveryKey": "View Recovery Key",
+  "@viewRecoveryKey": { "description": "Button to reveal the recovery key" },
+
+  "noRecoveryKeyStored": "No recovery key stored.",
+  "@noRecoveryKeyStored": { "description": "Message when no recovery key is found" },
+
+  "recoveryKeyWarning": "The recovery key was generated during registration. If you did not save it, you cannot recover your data without your password.",
+  "@recoveryKeyWarning": { "description": "Warning about missing recovery key" },
+
+  "copyToClipboard": "Copy to Clipboard",
+  "@copyToClipboard": { "description": "Button to copy recovery key" },
+
+  "hide": "Hide",
+  "@hide": { "description": "Button to hide the recovery key" },
+
+  "failedToLoadRecoveryKey": "Failed to load recovery key",
+  "@failedToLoadRecoveryKey": { "description": "Error loading recovery key" },
+
+  "changePassword": "Change Password",
+  "@changePassword": { "description": "Settings item title and dialog title" },
+
+  "reEncryptsData": "Re-encrypts all data with new key",
+  "@reEncryptsData": { "description": "Subtitle for change password" },
+
+  "verifyPassword": "Verify Password",
+  "@verifyPassword": { "description": "Dialog title for password verification" },
+
+  "enterYourPassword": "Enter your password",
+  "@enterYourPassword": { "description": "Password verification input label" },
+
+  "verify": "Verify",
+  "@verify": { "description": "Verify button label" },
+
+  "incorrectPassword": "Incorrect password",
+  "@incorrectPassword": { "description": "Snackbar for wrong password" },
+
+  "verificationFailed": "Verification failed",
+  "@verificationFailed": { "description": "Snackbar for verification failure" },
+
+  "currentPassword": "Current Password",
+  "@currentPassword": { "description": "Form field label" },
+
+  "newPassword": "New Password",
+  "@newPassword": { "description": "Form field label" },
+
+  "confirmNewPassword": "Confirm New Password",
+  "@confirmNewPassword": { "description": "Form field label" },
+
+  "reEncryptWarning": "Warning: This will re-encrypt all your data.",
+  "@reEncryptWarning": { "description": "Warning in change password dialog" },
+
+  "change": "Change",
+  "@change": { "description": "Change password dialog submit button" },
+
+  "currentPasswordIncorrect": "Current password is incorrect",
+  "@currentPasswordIncorrect": { "description": "Snackbar for wrong current password" },
+
+  "passwordChangedSuccessfully": "Password changed successfully",
+  "@passwordChangedSuccessfully": { "description": "Snackbar on successful password change" },
+
+  "failedToChangePassword": "Failed to change password: {error}",
+  "@failedToChangePassword": {
+    "description": "Snackbar on password change failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "dangerZone": "Danger Zone",
+  "@dangerZone": { "description": "Section header for destructive actions" },
+
+  "deleteAllLocalData": "Delete All Local Data",
+  "@deleteAllLocalData": { "description": "Button to delete all data" },
+
+  "exportEncryptedBackup": "Export Encrypted Backup",
+  "@exportEncryptedBackup": { "description": "Button to export backup" },
+
+  "importEncryptedBackup": "Import Encrypted Backup",
+  "@importEncryptedBackup": { "description": "Button to import backup" },
+
+  "deleteAllDataQuestion": "Delete All Data?",
+  "@deleteAllDataQuestion": { "description": "Dialog title for delete all" },
+
+  "deleteAllDataMessage": "This action is irreversible. All your notes, tags, and settings will be permanently deleted.",
+  "@deleteAllDataMessage": { "description": "Dialog body for delete all" },
+
+  "deleteEverything": "Delete Everything",
+  "@deleteEverything": { "description": "Confirm button for delete all" },
+
+  "areYouAbsolutelySure": "Are you absolutely sure?",
+  "@areYouAbsolutelySure": { "description": "Double confirmation dialog title" },
+
+  "typeDeleteToConfirm": "Type DELETE to confirm.",
+  "@typeDeleteToConfirm": { "description": "Instruction to type DELETE" },
+
+  "typeDelete": "Type DELETE",
+  "@typeDelete": { "description": "Label for the confirmation input field" },
+
+  "allLocalDataDeleted": "All local data has been deleted",
+  "@allLocalDataDeleted": { "description": "Snackbar after data deletion" },
+
+  "failedToDeleteData": "Failed to delete data: {error}",
+  "@failedToDeleteData": {
+    "description": "Snackbar on deletion failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "importBackup": "Import Backup",
+  "@importBackup": { "description": "Dialog title for backup import" },
+
+  "importBackupMessage": "This will import items from the backup file. Existing items will not be overwritten. Continue?",
+  "@importBackupMessage": { "description": "Dialog body for backup import" },
+
+  "import": "Import",
+  "@import": { "description": "Import confirm button" },
+
+  "importedItemsFromBackup": "Imported {count} items from backup",
+  "@importedItemsFromBackup": {
+    "description": "Snackbar after successful import",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "backupExportFailed": "Backup export failed: {error}",
+  "@backupExportFailed": {
+    "description": "Snackbar on backup export failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "backupImportFailed": "Backup import failed: {error}",
+  "@backupImportFailed": {
+    "description": "Snackbar on backup import failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "llmConfigTitle": "LLM Configuration",
+  "@llmConfigTitle": { "description": "LLM config screen title" },
+
+  "noLLMConfigs": "No LLM configurations",
+  "@noLLMConfigs": { "description": "Empty state title" },
+
+  "addLLMToEnableAI": "Add an LLM to enable AI features",
+  "@addLLMToEnableAI": { "description": "Empty state subtitle" },
+
+  "addProvider": "Add Provider",
+  "@addProvider": { "description": "Action label and button text" },
+
+  "defaultLabel": "Default",
+  "@defaultLabel": { "description": "Badge for the default LLM config" },
+
+  "testConnection": "Test connection",
+  "@testConnection": { "description": "Tooltip for test button" },
+
+  "failedToLoadConfigs": "Failed to load configs",
+  "@failedToLoadConfigs": { "description": "Error message for LLM config loading" },
+
+  "addLLMProvider": "Add LLM Provider",
+  "@addLLMProvider": { "description": "Dialog title" },
+
+  "name": "Name",
+  "@name": { "description": "Form field label for name" },
+
+  "provider": "Provider",
+  "@provider": { "description": "Form field label for provider dropdown" },
+
+  "baseUrl": "Base URL",
+  "@baseUrl": { "description": "Form field label" },
+
+  "apiKey": "API Key",
+  "@apiKey": { "description": "Form field label" },
+
+  "model": "Model",
+  "@model": { "description": "Form field label" },
+
+  "modelHint": "e.g., gpt-4o",
+  "@modelHint": { "description": "Hint text for model field" },
+
+  "save": "Save",
+  "@save": { "description": "Save button label" },
+
+  "editLLMProvider": "Edit LLM Provider",
+  "@editLLMProvider": { "description": "Dialog title" },
+
+  "newApiKeyHint": "New API Key (leave blank to keep current)",
+  "@newApiKeyHint": { "description": "Hint for optional API key update" },
+
+  "testingConnection": "Testing connection...",
+  "@testingConnection": { "description": "Snackbar while testing" },
+
+  "connectionSuccessful": "Connection successful",
+  "@connectionSuccessful": { "description": "Snackbar on test success" },
+
+  "connectionFailed": "Connection failed: {error}",
+  "@connectionFailed": {
+    "description": "Snackbar on test failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "deleteConfigQuestion": "Delete {name}?",
+  "@deleteConfigQuestion": {
+    "description": "Confirmation dialog title for deleting a config",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "removeLLMConfigConfirm": "Are you sure you want to remove this LLM configuration?",
+  "@removeLLMConfigConfirm": { "description": "Confirmation body for deleting config" },
+
+  "noPlatformsAvailable": "No platforms available",
+  "@noPlatformsAvailable": { "description": "Empty state for platform connections" },
+
+  "platformConnectionsWillAppear": "Platform connections will appear here",
+  "@platformConnectionsWillAppear": { "description": "Empty state subtitle" },
+
+  "failedToLoadPlatforms": "Failed to load platforms",
+  "@failedToLoadPlatforms": { "description": "Error message" },
+
+  "connect": "Connect",
+  "@connect": { "description": "Connect button label" },
+
+  "verifyButton": "Verify",
+  "@verifyButton": { "description": "Verify button label" },
+
+  "disconnect": "Disconnect",
+  "@disconnect": { "description": "Disconnect button label" },
+
+  "connectedTo": "Connected to {name}",
+  "@connectedTo": {
+    "description": "Snackbar after connecting to a platform",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "failedToConnect": "Failed to connect: {error}",
+  "@failedToConnect": {
+    "description": "Snackbar on connection failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "verifyingConnection": "Verifying connection...",
+  "@verifyingConnection": { "description": "Snackbar while verifying" },
+
+  "connectionVerified": "Connection verified",
+  "@connectionVerified": { "description": "Snackbar on verify success" },
+
+  "connectionInvalid": "Connection invalid: {error}",
+  "@connectionInvalid": {
+    "description": "Snackbar on verify failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "verificationFailedError": "Verification failed: {error}",
+  "@verificationFailedError": {
+    "description": "Snackbar on verification network error",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "disconnectPlatform": "Disconnect {name}",
+  "@disconnectPlatform": {
+    "description": "Dialog title for disconnecting",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "disconnectPlatformConfirm": "Are you sure you want to disconnect your {name} account?",
+  "@disconnectPlatformConfirm": {
+    "description": "Dialog body for disconnecting",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "disconnectedFrom": "Disconnected from {name}",
+  "@disconnectedFrom": {
+    "description": "Snackbar after disconnecting",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "failedToDisconnect": "Failed to disconnect: {error}",
+  "@failedToDisconnect": {
+    "description": "Snackbar on disconnect failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "scanQRCode": "Scan QR Code",
+  "@scanQRCode": { "description": "QR code dialog title" },
+
+  "scanQRInstructions": "Open {platform} app and scan this QR code to login",
+  "@scanQRInstructions": {
+    "description": "Instructions for QR code scanning",
+    "placeholders": {
+      "platform": { "type": "String" }
+    }
+  },
+
+  "done": "Done",
+  "@done": { "description": "Done button label" },
+
+  "tagsTitle": "Tags",
+  "@tagsTitle": { "description": "Tags screen title" },
+
+  "noTags": "No tags",
+  "@noTags": { "description": "Empty state title" },
+
+  "createTagsToOrganize": "Create tags to organize your notes",
+  "@createTagsToOrganize": { "description": "Empty state subtitle" },
+
+  "newTag": "New Tag",
+  "@newTag": { "description": "Dialog title for creating a tag" },
+
+  "tagName": "Tag name",
+  "@tagName": { "description": "Form field label" },
+
+  "tagNameHint": "e.g., ideas, work, personal",
+  "@tagNameHint": { "description": "Hint text for tag name" },
+
+  "create": "Create",
+  "@create": { "description": "Create button label" },
+
+  "encrypted": "(encrypted)",
+  "@encrypted": { "description": "Placeholder for encrypted tag name" },
+
+  "aiCompose": "AI Compose",
+  "@aiCompose": { "description": "Compose screen title and nav tab label" },
+
+  "aiPoweredWriting": "AI-Powered Writing",
+  "@aiPoweredWriting": { "description": "Hero card title" },
+
+  "aiComposeDesc": "Select your notes and let AI help you create polished content for any platform.",
+  "@aiComposeDesc": { "description": "Hero card description" },
+
+  "startComposing": "Start Composing",
+  "@startComposing": { "description": "Button label to start composing" },
+
+  "recentCompositions": "Recent Compositions",
+  "@recentCompositions": { "description": "Section header" },
+
+  "noCompositionsYet": "No compositions yet",
+  "@noCompositionsYet": { "description": "Empty state title" },
+
+  "newComposition": "New Composition",
+  "@newComposition": { "description": "Bottom sheet heading" },
+
+  "topicOrTheme": "Topic or theme",
+  "@topicOrTheme": { "description": "Form field label" },
+
+  "topicHint": "What should the composition be about?",
+  "@topicHint": { "description": "Hint text for topic input" },
+
+  "targetPlatform": "Target platform",
+  "@targetPlatform": { "description": "Dropdown label" },
+
+  "selectNotes": "Select Notes",
+  "@selectNotes": { "description": "Section label" },
+
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "description": "Number of notes selected",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "noNotesAvailableCreate": "No notes available.\nCreate some notes first.",
+  "@noNotesAvailableCreate": { "description": "Empty state in note selector" },
+
+  "contentPreview": "Content Preview",
+  "@contentPreview": { "description": "Preview sheet heading" },
+
+  "noContent": "(No content)",
+  "@noContent": { "description": "Placeholder when content is empty" },
+
+  "copy": "Copy",
+  "@copy": { "description": "Copy button label" },
+
+  "saveAsNote": "Save as Note",
+  "@saveAsNote": { "description": "Button to save content as a note" },
+
+  "copiedToClipboard": "Copied to clipboard",
+  "@copiedToClipboard": { "description": "Snackbar after copying content" },
+
+  "savedAsNote": "Saved as note",
+  "@savedAsNote": { "description": "Snackbar after saving as note" },
+
+  "publish": "Publish",
+  "@publish": { "description": "Publish screen title, nav tab label, and submit button" },
+
+  "connectedPlatforms": "Connected Platforms",
+  "@connectedPlatforms": { "description": "Section header" },
+
+  "noPlatformsConnected": "No platforms connected",
+  "@noPlatformsConnected": { "description": "Empty state in publish screen" },
+
+  "connectAPlatform": "Connect a Platform",
+  "@connectAPlatform": { "description": "Button to go to platform connections" },
+
+  "publishContent": "Publish Content",
+  "@publishContent": { "description": "Section header" },
+
+  "content": "Content",
+  "@content": { "description": "Content form field label" },
+
+  "tagsCommaSeparated": "Tags (comma separated)",
+  "@tagsCommaSeparated": { "description": "Form field label" },
+
+  "tagsHint": "tag1, tag2, tag3",
+  "@tagsHint": { "description": "Hint for tags input" },
+
+  "selectPlatformToPublish": "Select a platform above to publish",
+  "@selectPlatformToPublish": { "description": "Hint to select a platform" },
+
+  "publishedStatus": "Published! Status: {status}",
+  "@publishedStatus": {
+    "description": "Success message after publishing",
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "titleAndContentRequired": "Title and content are required",
+  "@titleAndContentRequired": { "description": "Validation error in publish form" },
+
+  "publishRequestSubmitted": "Publish request submitted",
+  "@publishRequestSubmitted": { "description": "Snackbar after publish request" },
+
+  "recentPublications": "Recent Publications",
+  "@recentPublications": { "description": "Section header" },
+
+  "noPublicationsYet": "No publications yet",
+  "@noPublicationsYet": { "description": "Empty state title" },
+
+  "viewAll": "View All ({count})",
+  "@viewAll": {
+    "description": "Button to view all publications",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "publishHistory": "Publish History",
+  "@publishHistory": { "description": "Screen title" },
+
+  "filterByStatus": "Filter by status",
+  "@filterByStatus": { "description": "Tooltip for filter menu" },
+
+  "all": "All",
+  "@all": { "description": "Filter option: show all" },
+
+  "published": "Published",
+  "@published": { "description": "Filter option and status" },
+
+  "failed": "Failed",
+  "@failed": { "description": "Filter option and status" },
+
+  "publishingStatus": "Publishing",
+  "@publishingStatus": { "description": "Filter option and status (in progress)" },
+
+  "pending": "Pending",
+  "@pending": { "description": "Filter option and status" },
+
+  "noPublicationsWithStatus": "No {status} publications",
+  "@noPublicationsWithStatus": {
+    "description": "Empty state when filtering by status",
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "clearFilter": "Clear Filter",
+  "@clearFilter": { "description": "Button to clear status filter" },
+
+  "noPublications": "No publications",
+  "@noPublications": { "description": "Empty state title (unfiltered)" },
+
+  "publishedContentWillAppear": "Published content will appear here",
+  "@publishedContentWillAppear": { "description": "Empty state subtitle" },
+
+  "failedToLoadPublishHistory": "Failed to load publish history",
+  "@failedToLoadPublishHistory": { "description": "Error title" },
+
+  "viewDetails": "View Details",
+  "@viewDetails": { "description": "Button label" },
+
+  "platform": "Platform",
+  "@platform": { "description": "Detail row label" },
+
+  "status": "Status",
+  "@status": { "description": "Detail row label" },
+
+  "created": "Created",
+  "@created": { "description": "Detail row label" },
+
+  "publishedDate": "Published",
+  "@publishedDate": { "description": "Detail row label" },
+
+  "url": "URL",
+  "@url": { "description": "Detail row label" },
+
+  "error": "Error",
+  "@error": { "description": "Detail row label" },
+
+  "contentLabel": "Content",
+  "@contentLabel": { "description": "Section label in publish detail" },
+
+  "failedToLoadDetail": "Failed to load detail: {error}",
+  "@failedToLoadDetail": {
+    "description": "Error loading publish detail",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "collectionsTitle": "Collections",
+  "@collectionsTitle": { "description": "Collections screen title" },
+
+  "noCollectionsYet": "No collections yet",
+  "@noCollectionsYet": { "description": "Empty state title" },
+
+  "groupNotesIntoCollections": "Group your notes into collections",
+  "@groupNotesIntoCollections": { "description": "Empty state subtitle" },
+
+  "newCollection": "New Collection",
+  "@newCollection": { "description": "Action label and dialog title" },
+
+  "deleteCollectionQuestion": "Delete collection?",
+  "@deleteCollectionQuestion": { "description": "Confirmation dialog title" },
+
+  "deleteCollectionConfirm": "Are you sure you want to delete \"{title}\"? Notes in this collection will not be deleted.",
+  "@deleteCollectionConfirm": {
+    "description": "Confirmation body for deleting collection",
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+
+  "collectionDeleted": "Collection deleted",
+  "@collectionDeleted": { "description": "Snackbar after collection deletion" },
+
+  "untitledCollection": "Untitled Collection",
+  "@untitledCollection": { "description": "Placeholder for untitled collections" },
+
+  "noteCount": "{count} note{suffix}",
+  "@noteCount": {
+    "description": "Note count display with plural suffix",
+    "placeholders": {
+      "count": { "type": "int" },
+      "suffix": { "type": "String" }
+    }
+  },
+
+  "collectionTitle": "Collection title",
+  "@collectionTitle": { "description": "Form field label" },
+
+  "collectionTitleHint": "Enter a name for this collection",
+  "@collectionTitleHint": { "description": "Hint for collection title" },
+
+  "collectionNotFound": "Collection not found",
+  "@collectionNotFound": { "description": "Error message" },
+
+  "failedToLoadCollection": "Failed to load collection",
+  "@failedToLoadCollection": { "description": "Error title" },
+
+  "noNotesInCollection": "No notes in this collection",
+  "@noNotesInCollection": { "description": "Empty state title" },
+
+  "tapToAddNotes": "Tap + to add notes",
+  "@tapToAddNotes": { "description": "Empty state subtitle" },
+
+  "addNotes": "Add Notes",
+  "@addNotes": { "description": "Action label and sheet heading" },
+
+  "removeFromCollection": "Remove from collection?",
+  "@removeFromCollection": { "description": "Confirmation dialog title" },
+
+  "removeNoteConfirm": "Remove \"{title}\" from this collection? The note will not be deleted.",
+  "@removeNoteConfirm": {
+    "description": "Confirmation body for removing note from collection",
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+
+  "remove": "Remove",
+  "@remove": { "description": "Remove button label" },
+
+  "renameCollection": "Rename Collection",
+  "@renameCollection": { "description": "Dialog title" },
+
+  "renameCollectionTooltip": "Rename collection",
+  "@renameCollectionTooltip": { "description": "Tooltip" },
+
+  "deleteCollectionTooltip": "Delete collection",
+  "@deleteCollectionTooltip": { "description": "Tooltip" },
+
+  "deleteCollectionDialogTitle": "Delete Collection",
+  "@deleteCollectionDialogTitle": { "description": "Dialog title" },
+
+  "deleteCollectionDialogMessage": "This collection and all its note associations will be removed. Notes themselves will not be deleted.",
+  "@deleteCollectionDialogMessage": { "description": "Dialog body" },
+
+  "noNotesAvailable": "No notes available",
+  "@noNotesAvailable": { "description": "Empty state in add notes sheet" },
+
+  "removeFromCollectionTooltip": "Remove from collection",
+  "@removeFromCollectionTooltip": { "description": "Tooltip for remove icon" },
+
+  "search": "Search",
+  "@search": { "description": "Search screen title" },
+
+  "clearAllFilters": "Clear all filters",
+  "@clearAllFilters": { "description": "Tooltip for clear filters button" },
+
+  "searchYourNotes": "Search your notes",
+  "@searchYourNotes": { "description": "Empty state title" },
+
+  "enterQueryOrFilters": "Enter a query or use filters to find notes",
+  "@enterQueryOrFilters": { "description": "Empty state subtitle" },
+
+  "recentSearches": "Recent Searches",
+  "@recentSearches": { "description": "Section header" },
+
+  "clearAll": "Clear all",
+  "@clearAll": { "description": "Button to clear recent searches" },
+
+  "noResultsFound": "No results found",
+  "@noResultsFound": { "description": "Empty state title for search" },
+
+  "tryAdjustingSearch": "Try adjusting your search or filters",
+  "@tryAdjustingSearch": { "description": "Empty state subtitle for search" },
+
+  "searchError": "Search error: {error}",
+  "@searchError": {
+    "description": "Error message for search failures",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "dateRange": "Date Range",
+  "@dateRange": { "description": "Filter chip label" },
+
+  "tagsFilter": "Tags",
+  "@tagsFilter": { "description": "Filter chip label with count" },
+
+  "collectionsFilter": "Collections",
+  "@collectionsFilter": { "description": "Filter chip label with count" },
+
+  "tagsCount": "{count} tags",
+  "@tagsCount": {
+    "description": "Filter chip label when tags are selected",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "collectionsCount": "{count} collections",
+  "@collectionsCount": {
+    "description": "Filter chip label when collections are selected",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "resultsCount": "{count} results",
+  "@resultsCount": {
+    "description": "Search results count display, may show '50 / 320' format",
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+
+  "noTagsAvailable": "No tags available",
+  "@noTagsAvailable": { "description": "Snackbar when no tags for filter" },
+
+  "noCollectionsAvailable": "No collections available",
+  "@noCollectionsAvailable": { "description": "Snackbar when no collections for filter" },
+
+  "selectTags": "Select tags",
+  "@selectTags": { "description": "Dialog title" },
+
+  "apply": "Apply",
+  "@apply": { "description": "Apply button label" },
+
+  "selectCollections": "Select collections",
+  "@selectCollections": { "description": "Dialog title" },
+
+  "shareNote": "Share Note",
+  "@shareNote": { "description": "Share sheet title" },
+
+  "passwordProtection": "Password Protection",
+  "@passwordProtection": { "description": "Section label" },
+
+  "requirePassword": "Require password",
+  "@requirePassword": { "description": "Toggle title" },
+
+  "requirePasswordDesc": "Recipients must enter a password to view",
+  "@requirePasswordDesc": { "description": "Toggle subtitle" },
+
+  "expiresAfter": "Expires After",
+  "@expiresAfter": { "description": "Section label" },
+
+  "oneHour": "1 hour",
+  "@oneHour": { "description": "Expiry option" },
+
+  "twentyFourHours": "24 hours",
+  "@twentyFourHours": { "description": "Expiry option" },
+
+  "sevenDays": "7 days",
+  "@sevenDays": { "description": "Expiry option" },
+
+  "never": "Never",
+  "@never": { "description": "Expiry option: no expiration" },
+
+  "passwordRequiredForShare": "Password is required when password protection is enabled",
+  "@passwordRequiredForShare": { "description": "Error when password toggle is on but field is empty" },
+
+  "failedToCreateShareLink": "Failed to create share link: {error}",
+  "@failedToCreateShareLink": {
+    "description": "Error when share creation fails",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "linkCopiedToClipboard": "Link copied to clipboard",
+  "@linkCopiedToClipboard": { "description": "Snackbar after copying share link" },
+
+  "copyLink": "Copy Link",
+  "@copyLink": { "description": "Button label and tooltip" },
+
+  "passwordProtectedShareInfo": "This link is password-protected. Share the password separately.",
+  "@passwordProtectedShareInfo": { "description": "Info text for password-protected links" },
+
+  "publicShareInfo": "Anyone with this link can view the note.",
+  "@publicShareInfo": { "description": "Info text for public links" },
+
+  "linkExpiresIn": "Link expires {expiry}",
+  "@linkExpiresIn": {
+    "description": "Expiry info text",
+    "placeholders": {
+      "expiry": { "type": "String" }
+    }
+  },
+
+  "encrypting": "Encrypting...",
+  "@encrypting": { "description": "Button label while creating share link" },
+
+  "createShareLink": "Create Share Link",
+  "@createShareLink": { "description": "Button label to create share" },
+
+  "language": "Language",
+  "@language": { "description": "Language setting label" },
+
+  "english": "English",
+  "@english": { "description": "Language option" },
+
+  "chinese": "Chinese",
+  "@chinese": { "description": "Language option" },
+
+  "languageChangedNotice": "Language will take effect after restarting the app",
+  "@languageChangedNotice": { "description": "Notice shown after changing language" },
+
+  "zenMode": "Zen mode",
+  "@zenMode": { "description": "Toggle for distraction-free writing mode" },
+
+  "enterZenMode": "Enter focus mode",
+  "@enterZenMode": { "description": "Tooltip for zen mode button" },
+
+  "exitZenMode": "Exit focus mode",
+  "@exitZenMode": { "description": "Tooltip to exit zen mode" },
+
+  "wordCount": "{count, plural, =0{0 words} =1{1 word} other{{count} words}}",
+  "@wordCount": { "description": "Word count display", "placeholders": { "count": { "type": "int" } } },
+
+  "charCount": "{count, plural, =0{0 characters} =1{1 character} other{{count} characters}}",
+  "@charCount": { "description": "Character count display", "placeholders": { "count": { "type": "int" } } },
+
+  "importNotes": "Import Notes",
+  "@importNotes": { "description": "Tooltip and bottom sheet title for importing notes" },
+
+  "importMarkdown": "Import Markdown",
+  "@importMarkdown": { "description": "Import option for markdown files" },
+
+  "importTextFiles": "Import Text Files",
+  "@importTextFiles": { "description": "Import option for plain text files" },
+
+  "importAppleNotes": "Import Apple Notes",
+  "@importAppleNotes": { "description": "Import option for Apple Notes HTML exports" },
+
+  "importComplete": "Import complete: {count} notes imported, {skipped} skipped",
+  "@importComplete": {
+    "description": "Snackbar after import finishes",
+    "placeholders": {
+      "count": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  },
+
+  "markdownPreview": "Markdown Preview",
+  "@markdownPreview": { "description": "Screen title for markdown preview" },
+
+  "restoreFromBackup": "Restore from Backup",
+  "@restoreFromBackup": { "description": "Restore screen title and settings item" },
+
+  "selectBackupFile": "Select Backup File",
+  "@selectBackupFile": { "description": "File selection step title" },
+
+  "selectBackupFileDesc": "Choose an AnyNote encrypted backup file (.enc) to restore your data.",
+  "@selectBackupFileDesc": { "description": "File selection step description" },
+
+  "browseFiles": "Browse Files",
+  "@browseFiles": { "description": "Button to open file picker" },
+
+  "selectedFile": "Selected file",
+  "@selectedFile": { "description": "Label for selected file display" },
+
+  "nextStep": "Next",
+  "@nextStep": { "description": "Button to advance to the next step" },
+
+  "back": "Back",
+  "@back": { "description": "Button to go back to the previous step" },
+
+  "backupDetails": "Backup Details",
+  "@backupDetails": { "description": "Section header for backup info" },
+
+  "backupFormat": "Format",
+  "@backupFormat": { "description": "Label for backup format" },
+
+  "backupVersion": "Version",
+  "@backupVersion": { "description": "Label for backup version number" },
+
+  "exportDate": "Export Date",
+  "@exportDate": { "description": "Label for backup export date" },
+
+  "totalItems": "Total Items",
+  "@totalItems": { "description": "Label for total item count" },
+
+  "itemCounts": "Item Counts",
+  "@itemCounts": { "description": "Section header for item type counts" },
+
+  "verificationErrors": "Verification Errors",
+  "@verificationErrors": { "description": "Section header for verification errors" },
+
+  "backupValid": "Backup Verified",
+  "@backupValid": { "description": "Status when backup is valid" },
+
+  "backupInvalid": "Backup Verification Failed",
+  "@backupInvalid": { "description": "Status when backup has errors" },
+
+  "unlockToVerify": "Unlock encryption to verify backup contents.",
+  "@unlockToVerify": { "description": "Hint when crypto is locked" },
+
+  "restorePreviewTitle": "Restore Preview",
+  "@restorePreviewTitle": { "description": "Section header for restore preview" },
+
+  "notesToRestore": "Notes",
+  "@notesToRestore": { "description": "Note count in restore preview" },
+
+  "tagsToRestore": "Tags",
+  "@tagsToRestore": { "description": "Tag count in restore preview" },
+
+  "collectionsToRestore": "Collections",
+  "@collectionsToRestore": { "description": "Collection count in restore preview" },
+
+  "contentsToRestore": "AI Content",
+  "@contentsToRestore": { "description": "AI content count in restore preview" },
+
+  "earliestDate": "Earliest",
+  "@earliestDate": { "description": "Label for earliest date in preview" },
+
+  "latestDate": "Latest",
+  "@latestDate": { "description": "Label for latest date in preview" },
+
+  "noConflictsDetected": "No conflicts detected. All items will be added as new.",
+  "@noConflictsDetected": { "description": "Message when no conflicts exist" },
+
+  "noteTitlesPreview": "Note Titles",
+  "@noteTitlesPreview": { "description": "Section header for note titles preview" },
+
+  "andMoreItems": "...and {count} more",
+  "@andMoreItems": {
+    "description": "Overflow indicator for preview list",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "conflictStrategyTitle": "Conflict Resolution",
+  "@conflictStrategyTitle": { "description": "Strategy selection title" },
+
+  "conflictStrategyDesc": "Choose how to handle items that already exist locally.",
+  "@conflictStrategyDesc": { "description": "Strategy selection description" },
+
+  "strategyOverwrite": "Overwrite",
+  "@strategyOverwrite": { "description": "Overwrite strategy name" },
+
+  "strategyOverwriteDesc": "Replace local items with backup versions",
+  "@strategyOverwriteDesc": { "description": "Overwrite strategy description" },
+
+  "strategySkip": "Skip",
+  "@strategySkip": { "description": "Skip strategy name" },
+
+  "strategySkipDesc": "Keep local items, skip backup duplicates",
+  "@strategySkipDesc": { "description": "Skip strategy description" },
+
+  "strategyKeepBoth": "Keep Both",
+  "@strategyKeepBoth": { "description": "Keep both strategy name" },
+
+  "strategyKeepBothDesc": "Import backup items alongside existing ones (with '(restored)' suffix)",
+  "@strategyKeepBothDesc": { "description": "Keep both strategy description" },
+
+  "restoreWarning": "Restored items will be queued for sync. This may take a moment.",
+  "@restoreWarning": { "description": "Warning before starting restore" },
+
+  "startRestore": "Start Restore",
+  "@startRestore": { "description": "Button to begin restore operation" },
+
+  "restoringBackup": "Restoring backup...",
+  "@restoringBackup": { "description": "Status during restore" },
+
+  "restoreProgress": "Processing {current} of {total}",
+  "@restoreProgress": {
+    "description": "Progress text during restore",
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "restoreCompleted": "Restore completed successfully",
+  "@restoreCompleted": { "description": "Success message after restore" },
+
+  "restoreCompletedWithErrors": "Restore completed with some errors",
+  "@restoreCompletedWithErrors": { "description": "Message when restore has errors" },
+
+  "restoreResults": "Results",
+  "@restoreResults": { "description": "Section header for restore results" },
+
+  "itemsRestored": "Restored",
+  "@itemsRestored": { "description": "Count of restored items" },
+
+  "itemsSkipped": "Skipped",
+  "@itemsSkipped": { "description": "Count of skipped items" },
+
+  "conflictsFound": "Conflicts",
+  "@conflictsFound": { "description": "Count of conflicts" },
+
+  "errorsDuringRestore": "Errors",
+  "@errorsDuringRestore": { "description": "Section header for error details" },
+
+  "conflictsDetected": "{count} item(s) already exist locally",
+  "@conflictsDetected": {
+    "description": "Warning about conflicting items",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "existingNotesCount": "{count} notes",
+  "@existingNotesCount": {
+    "description": "Conflicting notes count",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "existingTagsCount": "{count} tags",
+  "@existingTagsCount": {
+    "description": "Conflicting tags count",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "existingCollectionsCount": "{count} collections",
+  "@existingCollectionsCount": {
+    "description": "Conflicting collections count",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "existingContentsCount": "{count} AI contents",
+  "@existingContentsCount": {
+    "description": "Conflicting AI content count",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "filePickerError": "Failed to open file picker: {error}",
+  "@filePickerError": {
+    "description": "Error when file picker fails",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "restoreFromBackupDesc": "Restore data from an encrypted backup file",
+  "@restoreFromBackupDesc": { "description": "Subtitle for restore settings item" },
+
+  "importNotesDesc": "Import from Markdown, Apple Notes, or plain text",
+  "@importNotesDesc": { "description": "Subtitle for import notes settings item" },
+
+  "onboardingWriteTitle": "Write down your thoughts",
+  "@onboardingWriteTitle": { "description": "Onboarding interactive demo page title" },
+
+  "onboardingWriteDesc": "Create notes on any device -- your content will be securely encrypted",
+  "@onboardingWriteDesc": { "description": "Onboarding interactive demo page description" },
+
+  "japanese": "Japanese",
+  "@japanese": { "description": "Language option" },
+
+  "korean": "Korean",
+  "@korean": { "description": "Language option" },
+
+  "discoverFeed": "Discover",
+  "@discoverFeed": { "description": "Discovery feed screen title" },
+
+  "noPublicNotes": "No public notes yet",
+  "@noPublicNotes": { "description": "Empty state title when no public shared notes exist" },
+
+  "noPublicNotesDesc": "Shared notes marked as public will appear here.",
+  "@noPublicNotesDesc": { "description": "Empty state subtitle for discovery feed" },
+
+  "failedToLoadDiscoverFeed": "Failed to load discovery feed",
+  "@failedToLoadDiscoverFeed": { "description": "Error message when discovery feed fails to load" },
+
+  "encryptedNote": "Encrypted note",
+  "@encryptedNote": { "description": "Placeholder title for encrypted shared notes in discovery feed" },
+
+  "reactionFailed": "Failed to react",
+  "@reactionFailed": { "description": "Error message when toggling a reaction fails" },
+
+  "monthsAgo": "{count}mo ago",
+  "@monthsAgo": {
+    "description": "Relative time: months ago",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+}
