@@ -209,15 +209,7 @@ class TestAppHandle {
     if (_disposed) return;
     _disposed = true;
 
-    // 1. Unmount the widget tree so StreamBuilder subscriptions are cancelled.
-    //    This triggers Drift's StreamQueryStore.markAsClosed which creates a
-    //    zero-duration timer for cleanup.
-    await _tester.pumpWidget(Container());
-    // Use pumpAndSettle to fire all pending zero-duration timers from Drift
-    // cleanup. Timeout after 1 second in case something keeps scheduling.
-    await _tester.pumpAndSettle(const Duration(seconds: 1));
-
-    // 2. Now close the database.
+    // 1. Close the database to clean up Drift internal timers.
     try {
       final db = _container.read(databaseProvider);
       await db.close();
@@ -225,17 +217,15 @@ class TestAppHandle {
       // Container may already be disposed.
     }
 
-    // 3. PumpAndSettle again to handle timers from db.close().
+    // 2. Unmount the widget tree.
+    await _tester.pumpWidget(Container());
     await _tester.pumpAndSettle(const Duration(seconds: 1));
 
-    // 4. Dispose the provider container.
+    // 3. Dispose the provider container.
     try {
       _container.dispose();
     } catch (_) {
       // Already disposed.
     }
-
-    // 5. Final pumpAndSettle.
-    await _tester.pumpAndSettle(const Duration(seconds: 1));
   }
 }

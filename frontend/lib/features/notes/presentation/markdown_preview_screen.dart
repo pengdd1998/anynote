@@ -150,14 +150,27 @@ class MarkdownPreviewScreen extends ConsumerWidget {
 /// Pre-processes the raw content to extract LaTeX expressions into
 /// placeholders, then builds a [MarkdownBody] with custom element
 /// builders that substitute the placeholders with [FlutterMath] widgets.
-class _MarkdownScrollView extends StatelessWidget {
+class _MarkdownScrollView extends StatefulWidget {
   final String content;
 
   const _MarkdownScrollView({required this.content});
 
   @override
+  State<_MarkdownScrollView> createState() => _MarkdownScrollViewState();
+}
+
+class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final scrollController = ScrollController();
+    final content = widget.content;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -272,7 +285,7 @@ class _MarkdownScrollView extends StatelessWidget {
     );
 
     return SingleChildScrollView(
-      controller: scrollController,
+      controller: _scrollController,
       padding: const EdgeInsets.all(16),
       child: MarkdownBody(
         data: processed,

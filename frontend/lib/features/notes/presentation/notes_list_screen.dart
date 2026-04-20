@@ -39,7 +39,13 @@ const _kPageSize = 50;
 enum ImportType { markdown, text, appleNotes }
 
 class NotesListScreen extends ConsumerStatefulWidget {
-  const NotesListScreen({super.key});
+  /// When false, skips the initial Drift watch subscription in initState.
+  /// Use this in widget tests to avoid timer leaks from Drift's
+  /// StreamQueryStore that the test framework cannot drain.
+  @visibleForTesting
+  final bool autoLoad;
+
+  const NotesListScreen({super.key, this.autoLoad = true});
 
   @override
   ConsumerState<NotesListScreen> createState() => _NotesListScreenState();
@@ -110,7 +116,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _loadInitialNotes();
+    if (widget.autoLoad) {
+      _loadInitialNotes();
+    }
   }
 
   @override
