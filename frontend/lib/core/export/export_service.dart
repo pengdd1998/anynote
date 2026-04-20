@@ -4,17 +4,24 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'web_download_stub.dart'
+    if (dart.library.html) 'web_download_web.dart' as web_download;
+
 /// Supported export formats.
 enum ExportFormat { markdown, html, plainText }
 
 /// Service for exporting notes to various file formats.
 ///
-/// Generates files in the system temp directory and optionally shares them
-/// using the platform share sheet via share_plus.
+/// On native platforms, generates files in the system temp directory and
+/// optionally shares them using the platform share sheet via share_plus.
 ///
-/// File-based export requires a native filesystem and is not supported on web.
-/// All export methods throw [UnsupportedError] when running on web.
-// TODO(web): Implement browser download using package:web / dart:js_interop.
+/// On web, triggers a browser download via the [web_download] helper (which
+/// creates a Blob and programmatically clicks an anchor element).
+///
+/// Use [exportAndShare] as the primary entry point -- it handles both platforms
+/// automatically. The individual `exportAs*` / `exportBatch` methods return a
+/// [File] on native but trigger a browser download on web (the returned [File]
+/// is a placeholder on web and should not be used for further I/O).
 class ExportService {
   /// Sanitize a title so it is safe to use as a filename component.
   static String _sanitizeTitle(String title) {
@@ -30,16 +37,22 @@ class ExportService {
     String content,
     String noteId,
   ) async {
-    if (kIsWeb) {
-      throw UnsupportedError(
-        'File export is not supported on web platform',
-      );
-    }
-    final dir = await getTemporaryDirectory();
     final sanitized = _sanitizeTitle(title);
     final suffix = noteId.length >= 8 ? noteId.substring(0, 8) : noteId;
-    final file = File('${dir.path}/${sanitized}_$suffix.md');
-    await file.writeAsString('# $title\n\n$content');
+    final filename = '${sanitized}_$suffix.md';
+    final fileContent = '# $title\n\n$content';
+
+    if (kIsWeb) {
+      web_download.triggerBrowserDownload(
+        fileContent,
+        filename,
+        'text/markdown;charset=utf-8',
+      );
+      return File('');
+    }
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/$filename');
+    await file.writeAsString(fileContent);
     return file;
   }
 
@@ -49,38 +62,44 @@ class ExportService {
     String content,
     String noteId,
   ) async {
-    if (kIsWeb) {
-      throw UnsupportedError(
-        'File export is not supported on web platform',
-      );
-    }
     final htmlContent = _markdownToHtml(content);
-    final dir = await getTemporaryDirectory();
     final sanitized = _sanitizeTitle(title);
     final suffix = noteId.length >= 8 ? noteId.substring(0, 8) : noteId;
-    final file = File('${dir.path}/${sanitized}_$suffix.html');
-    await file.writeAsString(
-      '<!DOCTYPE html>\n'
-      '<html><head><meta charset="utf-8"><title>$title</title>\n'
-      '<style>\n'
-      'body{font-family:system-ui,-apple-system,sans-serif;'
-      'max-width:800px;margin:0 auto;padding:20px;line-height:1.6;color:#333}\n'
-      'h1{font-size:1.8em;border-bottom:1px solid #eee;padding-bottom:8px}\n'
-      'h2{font-size:1.5em}\n'
-      'h3{font-size:1.2em}\n'
-      'code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em}\n'
-      'pre{background:#f4f4f4;padding:16px;border-radius:8px;overflow-x:auto}\n'
-      'pre code{background:none;padding:0}\n'
-      'blockquote{border-left:3px solid #ccc;padding-left:16px;color:#666;margin:0}\n'
-      'img{max-width:100%}\n'
-      'a{color:#0066cc}\n'
-      'ul,ol{padding-left:24px}\n'
-      '</style></head>\n'
-      '<body>\n'
-      '<h1>${_escapeHtml(title)}</h1>\n'
-      '$htmlContent\n'
-      '</body></html>',
-    );
+    final filename = '${sanitized}_$suffix.html';
+    final fullHtml =
+        '<!DOCTYPE html>\n'
+        '<html><head><meta charset="utf-8"><title>$title</title>\n'
+        '<style>\n'
+        'body{font-family:system-ui,-apple-system,sans-serif;'
+        'max-width:800px;margin:0 auto;padding:20px;line-height:1.6;color:#333}\n'
+        'h1{font-size:1.8em;border-bottom:1px solid #eee;padding-bottom:8px}\n'
+        'h2{font-size:1.5em}\n'
+        'h3{font-size:1.2em}\n'
+        'code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em}\n'
+        'pre{background:#f4f4f4;padding:16px;border-radius:8px;overflow-x:auto}\n'
+        'pre code{background:none;padding:0}\n'
+        'blockquote{border-left:3px solid #ccc;padding-left:16px;color:#666;margin:0}\n'
+        'img{max-width:100%}\n'
+        'a{color:#0066cc}\n'
+        'ul,ol{padding-left:24px}\n'
+        '</style></head>\n'
+        '<body>\n'
+        '<h1>${_escapeHtml(title)}</h1>\n'
+        '$htmlContent\n'
+        '</body></html>';
+
+    if (kIsWeb) {
+      web_download.triggerBrowserDownload(
+        fullHtml,
+        filename,
+        'text/html;charset=utf-8',
+      );
+      return File('');
+    }
+
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/$filename');
+    await file.writeAsString(fullHtml);
     return file;
   }
 
@@ -90,16 +109,22 @@ class ExportService {
     String content,
     String noteId,
   ) async {
-    if (kIsWeb) {
-      throw UnsupportedError(
-        'File export is not supported on web platform',
-      );
-    }
-    final dir = await getTemporaryDirectory();
     final sanitized = _sanitizeTitle(title);
     final suffix = noteId.length >= 8 ? noteId.substring(0, 8) : noteId;
-    final file = File('${dir.path}/${sanitized}_$suffix.txt');
-    await file.writeAsString('$title\n\n$content');
+    final filename = '${sanitized}_$suffix.txt';
+    final fileContent = '$title\n\n$content';
+
+    if (kIsWeb) {
+      web_download.triggerBrowserDownload(
+        fileContent,
+        filename,
+        'text/plain;charset=utf-8',
+      );
+      return File('');
+    }
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/$filename');
+    await file.writeAsString(fileContent);
     return file;
   }
 
@@ -111,17 +136,10 @@ class ExportService {
     List<({String title, String content, String id})> notes,
     ExportFormat format,
   ) async {
-    if (kIsWeb) {
-      throw UnsupportedError(
-        'File export is not supported on web platform',
-      );
-    }
-    final dir = await getTemporaryDirectory();
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-    final File file;
 
-    switch (format) {
-      case ExportFormat.markdown:
+    final (content, filename, mimeType) = switch (format) {
+      ExportFormat.markdown => () {
         final buffer = StringBuffer();
         for (final note in notes) {
           buffer.writeln('# ${note.title}');
@@ -131,10 +149,9 @@ class ExportService {
           buffer.writeln('---');
           buffer.writeln();
         }
-        file = File('${dir.path}/anynote_export_$timestamp.md');
-        await file.writeAsString(buffer.toString());
-
-      case ExportFormat.html:
+        return (buffer.toString(), 'anynote_export_$timestamp.md', 'text/markdown;charset=utf-8');
+      }(),
+      ExportFormat.html => () {
         final buffer = StringBuffer();
         for (final note in notes) {
           buffer.writeln('<article>');
@@ -143,32 +160,31 @@ class ExportService {
           buffer.writeln('</article>');
           buffer.writeln('<hr>');
         }
-        final htmlContent = buffer.toString();
-        file = File('${dir.path}/anynote_export_$timestamp.html');
-        await file.writeAsString(
-          '<!DOCTYPE html>\n'
-          '<html><head><meta charset="utf-8"><title>AnyNote Export</title>\n'
-          '<style>\n'
-          'body{font-family:system-ui,-apple-system,sans-serif;'
-          'max-width:800px;margin:0 auto;padding:20px;line-height:1.6;color:#333}\n'
-          'h1{font-size:1.8em;border-bottom:1px solid #eee;padding-bottom:8px}\n'
-          'h2{font-size:1.5em}\n'
-          'h3{font-size:1.2em}\n'
-          'code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em}\n'
-          'pre{background:#f4f4f4;padding:16px;border-radius:8px;overflow-x:auto}\n'
-          'pre code{background:none;padding:0}\n'
-          'blockquote{border-left:3px solid #ccc;padding-left:16px;color:#666;margin:0}\n'
-          'img{max-width:100%}\n'
-          'a{color:#0066cc}\n'
-          'ul,ol{padding-left:24px}\n'
-          'hr{border:none;border-top:1px solid #eee;margin:32px 0}\n'
-          '</style></head>\n'
-          '<body>\n'
-          '$htmlContent\n'
-          '</body></html>',
-        );
-
-      case ExportFormat.plainText:
+        final htmlBody = buffer.toString();
+        final fullHtml =
+            '<!DOCTYPE html>\n'
+            '<html><head><meta charset="utf-8"><title>AnyNote Export</title>\n'
+            '<style>\n'
+            'body{font-family:system-ui,-apple-system,sans-serif;'
+            'max-width:800px;margin:0 auto;padding:20px;line-height:1.6;color:#333}\n'
+            'h1{font-size:1.8em;border-bottom:1px solid #eee;padding-bottom:8px}\n'
+            'h2{font-size:1.5em}\n'
+            'h3{font-size:1.2em}\n'
+            'code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em}\n'
+            'pre{background:#f4f4f4;padding:16px;border-radius:8px;overflow-x:auto}\n'
+            'pre code{background:none;padding:0}\n'
+            'blockquote{border-left:3px solid #ccc;padding-left:16px;color:#666;margin:0}\n'
+            'img{max-width:100%}\n'
+            'a{color:#0066cc}\n'
+            'ul,ol{padding-left:24px}\n'
+            'hr{border:none;border-top:1px solid #eee;margin:32px 0}\n'
+            '</style></head>\n'
+            '<body>\n'
+            '$htmlBody\n'
+            '</body></html>';
+        return (fullHtml, 'anynote_export_$timestamp.html', 'text/html;charset=utf-8');
+      }(),
+      ExportFormat.plainText => () {
         final buffer = StringBuffer();
         for (final note in notes) {
           buffer.writeln(note.title);
@@ -178,19 +194,29 @@ class ExportService {
           buffer.writeln('=' * 40);
           buffer.writeln();
         }
-        file = File('${dir.path}/anynote_export_$timestamp.txt');
-        await file.writeAsString(buffer.toString());
+        return (buffer.toString(), 'anynote_export_$timestamp.txt', 'text/plain;charset=utf-8');
+      }(),
+    };
+
+    if (kIsWeb) {
+      web_download.triggerBrowserDownload(content, filename, mimeType);
+      return File('');
     }
 
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/$filename');
+    await file.writeAsString(content);
     return file;
   }
 
   /// Share a file using the platform share sheet.
+  ///
+  /// On web this is a no-op because the browser download is already triggered
+  /// by the export methods.
   static Future<void> shareFile(File file, {String? subject}) async {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'File sharing is not supported on web platform',
-      );
+      // Browser download was already triggered by the export method.
+      return;
     }
     await Share.shareXFiles(
       [XFile(file.path)],

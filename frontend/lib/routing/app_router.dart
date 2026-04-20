@@ -7,49 +7,42 @@ import '../core/widgets/adaptive_scaffold.dart';
 import '../core/widgets/offline_banner.dart';
 import '../l10n/app_localizations.dart';
 import '../main.dart';
+// Eager imports: on the default user path, loaded at startup.
 import '../features/auth/presentation/onboarding_screen.dart';
+import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/recovery_screen.dart';
+import '../features/auth/presentation/register_screen.dart';
 import '../features/notes/presentation/notes_list_screen.dart';
 import '../features/notes/presentation/note_detail_screen.dart';
 import '../features/notes/presentation/note_editor_screen.dart';
 import '../features/notes/presentation/version_history_screen.dart';
 import '../features/notes/presentation/markdown_preview_screen.dart';
-// TODO(perf): Use deferred imports for the compose feature screens to reduce
-// initial bundle size. The compose/AI feature is heavy (it pulls in the LLM
-// prompt builder, cluster logic, and outline generation). Since users do not
-// land on this tab by default, deferring these four screens would save
-// significant startup time. Requires build_runner setup for dart2js deferred
-// library loading -- see https://dart.dev/guides/language/language-tour#deferred-loading.
-// Affected imports:
-//   compose_screen.dart, cluster_screen.dart, outline_screen.dart,
-//   compose_editor_screen.dart
-import '../features/compose/presentation/compose_screen.dart';
-import '../features/compose/presentation/cluster_screen.dart';
-import '../features/compose/presentation/outline_screen.dart';
-import '../features/compose/presentation/compose_editor_screen.dart';
-// TODO(perf): Use deferred import for the publish feature. Publish depends on
-// platform adapters (XHS publishing via chromedp) which are rarely needed.
-// Deferring publish_screen.dart and publish_history_screen.dart would
-// lighten the initial load for users who primarily take notes.
-import '../features/publish/presentation/publish_screen.dart';
-import '../features/publish/presentation/publish_history_screen.dart';
-// TODO(perf): Use deferred imports for infrequently visited settings sub-screens.
-// LLM config, platform connection, encryption, import, and restore screens are
-// only accessed when the user explicitly navigates to them from settings.
-// Each can be loaded on demand with minimal user-visible delay.
 import '../features/settings/presentation/settings_screen.dart';
-import '../features/settings/presentation/llm_config_screen.dart';
-import '../features/settings/presentation/platform_connection_screen.dart';
-import '../features/settings/presentation/encryption_screen.dart';
-import '../features/settings/presentation/import_screen.dart';
-import '../features/settings/presentation/restore_screen.dart';
-import '../features/auth/presentation/login_screen.dart';
-import '../features/auth/presentation/recovery_screen.dart';
-import '../features/auth/presentation/register_screen.dart';
 import '../features/collections/presentation/collections_list_screen.dart';
 import '../features/collections/presentation/collection_detail_screen.dart';
 import '../features/share/presentation/shared_note_viewer.dart';
 import '../features/share/presentation/discover_screen.dart';
 import '../features/search/presentation/advanced_search_screen.dart';
+
+// Deferred imports: heavy or rarely visited screens loaded on demand.
+import '../features/compose/presentation/compose_screen.dart' deferred as compose;
+import '../features/compose/presentation/cluster_screen.dart' deferred as cluster;
+import '../features/compose/presentation/outline_screen.dart' deferred as outline;
+import '../features/compose/presentation/compose_editor_screen.dart'
+    deferred as compose_editor;
+import '../features/publish/presentation/publish_screen.dart' deferred as publish;
+import '../features/publish/presentation/publish_history_screen.dart'
+    deferred as publish_history;
+import '../features/settings/presentation/llm_config_screen.dart'
+    deferred as llm_config;
+import '../features/settings/presentation/platform_connection_screen.dart'
+    deferred as platform_conn;
+import '../features/settings/presentation/encryption_screen.dart'
+    deferred as encryption;
+import '../features/settings/presentation/import_screen.dart'
+    deferred as import_screen;
+import '../features/settings/presentation/restore_screen.dart'
+    deferred as restore;
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -227,18 +220,25 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Compose (AI)
+        // Compose (AI) -- deferred, heavy dependency tree.
         GoRoute(
           path: '/compose',
-          pageBuilder: (context, state) =>
-              fadeThroughTransition(const ComposeScreen()),
+          pageBuilder: (context, state) => fadeThroughTransition(
+            _DeferredLoader(
+              load: compose.library.load(),
+              builder: () => compose.ComposeScreen(),
+            ),
+          ),
           routes: [
             GoRoute(
               path: 'cluster/:id',
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
-                ClusterScreen(
-                  sessionId: state.pathParameters['id']!,
+                _DeferredLoader(
+                  load: cluster.library.load(),
+                  builder: () => cluster.ClusterScreen(
+                    sessionId: state.pathParameters['id']!,
+                  ),
                 ),
               ),
             ),
@@ -246,8 +246,11 @@ final appRouter = GoRouter(
               path: 'outline/:id',
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
-                OutlineScreen(
-                  sessionId: state.pathParameters['id']!,
+                _DeferredLoader(
+                  load: outline.library.load(),
+                  builder: () => outline.OutlineScreen(
+                    sessionId: state.pathParameters['id']!,
+                  ),
                 ),
               ),
             ),
@@ -255,25 +258,36 @@ final appRouter = GoRouter(
               path: 'editor/:id',
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
-                ComposeEditorScreen(
-                  sessionId: state.pathParameters['id']!,
+                _DeferredLoader(
+                  load: compose_editor.library.load(),
+                  builder: () => compose_editor.ComposeEditorScreen(
+                    sessionId: state.pathParameters['id']!,
+                  ),
                 ),
               ),
             ),
           ],
         ),
 
-        // Publish
+        // Publish -- deferred, platform adapters rarely needed.
         GoRoute(
           path: '/publish',
-          pageBuilder: (context, state) =>
-              fadeThroughTransition(const PublishScreen()),
+          pageBuilder: (context, state) => fadeThroughTransition(
+            _DeferredLoader(
+              load: publish.library.load(),
+              builder: () => publish.PublishScreen(),
+            ),
+          ),
           routes: [
             GoRoute(
               path: 'history',
               parentNavigatorKey: rootNavigatorKey,
-              pageBuilder: (context, state) =>
-                  slideTransition(const PublishHistoryScreen()),
+              pageBuilder: (context, state) => slideTransition(
+                _DeferredLoader(
+                  load: publish_history.library.load(),
+                  builder: () => publish_history.PublishHistoryScreen(),
+                ),
+              ),
             ),
           ],
         ),
@@ -287,32 +301,52 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'llm',
               parentNavigatorKey: rootNavigatorKey,
-              pageBuilder: (context, state) =>
-                  slideTransition(const LLMConfigScreen()),
+              pageBuilder: (context, state) => slideTransition(
+                _DeferredLoader(
+                  load: llm_config.library.load(),
+                  builder: () => llm_config.LLMConfigScreen(),
+                ),
+              ),
             ),
             GoRoute(
               path: 'platforms',
               parentNavigatorKey: rootNavigatorKey,
-              pageBuilder: (context, state) =>
-                  slideTransition(const PlatformConnectionScreen()),
+              pageBuilder: (context, state) => slideTransition(
+                _DeferredLoader(
+                  load: platform_conn.library.load(),
+                  builder: () => platform_conn.PlatformConnectionScreen(),
+                ),
+              ),
             ),
             GoRoute(
               path: 'security',
               parentNavigatorKey: rootNavigatorKey,
-              pageBuilder: (context, state) =>
-                  slideTransition(const EncryptionScreen()),
+              pageBuilder: (context, state) => slideTransition(
+                _DeferredLoader(
+                  load: encryption.library.load(),
+                  builder: () => encryption.EncryptionScreen(),
+                ),
+              ),
             ),
             GoRoute(
               path: 'import',
               parentNavigatorKey: rootNavigatorKey,
-              pageBuilder: (context, state) =>
-                  slideTransition(const ImportScreen()),
+              pageBuilder: (context, state) => slideTransition(
+                _DeferredLoader(
+                  load: import_screen.library.load(),
+                  builder: () => import_screen.ImportScreen(),
+                ),
+              ),
             ),
             GoRoute(
               path: 'restore',
               parentNavigatorKey: rootNavigatorKey,
-              pageBuilder: (context, state) =>
-                  slideTransition(const RestoreScreen()),
+              pageBuilder: (context, state) => slideTransition(
+                _DeferredLoader(
+                  load: restore.library.load(),
+                  builder: () => restore.RestoreScreen(),
+                ),
+              ),
             ),
           ],
         ),
@@ -493,5 +527,38 @@ void _onDestinationSelected(BuildContext context, int index) {
       context.go('/publish');
     case 3:
       context.go('/settings');
+  }
+}
+
+/// Widget that loads a deferred library and shows a loading indicator until
+/// the library is ready. After the first load, subsequent visits resolve
+/// immediately because [LibraryLoader.load] is a no-op once loaded.
+class _DeferredLoader extends StatefulWidget {
+  final Future<void> load;
+  final Widget Function() builder;
+
+  const _DeferredLoader({required this.load, required this.builder});
+
+  @override
+  State<_DeferredLoader> createState() => _DeferredLoaderState();
+}
+
+class _DeferredLoaderState extends State<_DeferredLoader> {
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.load.then((_) {
+      if (mounted) setState(() => _loaded = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loaded) return widget.builder();
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
   }
 }
