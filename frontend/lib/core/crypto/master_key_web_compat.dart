@@ -7,6 +7,11 @@ import 'package:web/web.dart' as web;
 // Web implementation of platform-specific crypto functions for MasterKeyManager.
 // Uses WebCrypto API for PBKDF2, HMAC-SHA256, SHA-256.
 
+/// KDF version for web platform (PBKDF2 with 600k iterations).
+/// This version does not change; only the native Argon2id parameters are
+/// being upgraded. The web version constant exists for API compatibility.
+const int kdfVersionNative = 1;
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
 /// Helper: create a JSArray<JSString> from a list of Dart strings.
@@ -33,10 +38,14 @@ Uint8List generateSaltImpl() {
 }
 
 /// Derive master key using PBKDF2-SHA256 with 600,000 iterations.
+/// The [kdfVersion] parameter is accepted for API compatibility with the
+/// native implementation but is ignored -- web PBKDF2 parameters are not
+/// being changed (600k iterations is above OWASP recommendations).
 Future<Uint8List> deriveMasterKeyImpl(
   String password,
-  Uint8List salt,
-) async {
+  Uint8List salt, [
+  int? kdfVersion,
+]) async {
   final subtle = web.window.crypto.subtle;
   final passwordBytes = Uint8List.fromList(utf8.encode(password));
 

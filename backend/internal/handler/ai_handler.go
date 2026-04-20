@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
 
 	"github.com/anynote/backend/internal/domain"
 	"github.com/anynote/backend/internal/service"
@@ -30,6 +33,15 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 	if len(req.Messages) == 0 {
 		writeError(w, http.StatusBadRequest, "validation_error", "Messages are required")
 		return
+	}
+
+	// Cap max_tokens based on the user's quota plan.
+	uid := parseUUID(userID)
+	capForPlan := h.maxTokensCap(r.Context(), uid)
+	if req.MaxTokens == nil || *req.MaxTokens == 0 {
+		req.MaxTokens = &capForPlan
+	} else if *req.MaxTokens > capForPlan {
+		req.MaxTokens = &capForPlan
 	}
 
 	chunkCh, err := h.aiService.Proxy(r.Context(), userID, req)
@@ -107,6 +119,27 @@ func (h *AIHandler) handleNonStream(w http.ResponseWriter, chunkCh <-chan domain
 		"content": fullContent,
 		"done":    true,
 	})
+}
+
+const (
+	maxTokensFree      = 4096
+	maxTokensPro       = 16384
+)
+
+// maxTokensCap returns the server-side max_tokens cap for the user's plan.
+// Falls back to the free-tier cap on any error.
+func (h *AIHandler) maxTokensCap(ctx context.Context, uid uuid.UUID) int {
+	quota, err := h.quotaSvc.GetQuota(ctx, uid)
+	if err != nil {
+		return maxTokensFree
+	}
+
+	switch quota.Plan {
+	case "pro", "lifetime":
+		return maxTokensPro
+	default:
+		return maxTokensFree
+	}
 }
 
 func (h *AIHandler) GetQuota(w http.ResponseWriter, r *http.Request) {

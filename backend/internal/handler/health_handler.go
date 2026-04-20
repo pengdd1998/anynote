@@ -19,19 +19,28 @@ type Pinger interface {
 	Ping(ctx context.Context) error
 }
 
+// BucketChecker is implemented by S3/MinIO clients that can verify bucket access.
+type BucketChecker interface {
+	// HealthCheck verifies connectivity by confirming the configured bucket exists.
+	HealthCheck(ctx context.Context) error
+}
+
 // HealthHandler provides health check endpoints.
 type HealthHandler struct {
 	db          Pinger
 	redisClient *redis.Client
+	minioClient BucketChecker
 }
 
 // NewHealthHandler creates a new health check handler.
 // The db parameter accepts any Pinger (pgxpool.Pool, sql.DB, etc.).
 // The redisClient may be nil if Redis is not configured.
-func NewHealthHandler(db Pinger, rdb *redis.Client) *HealthHandler {
+// The minioClient may be nil if MinIO is not configured.
+func NewHealthHandler(db Pinger, rdb *redis.Client, minio BucketChecker) *HealthHandler {
 	return &HealthHandler{
 		db:          db,
 		redisClient: rdb,
+		minioClient: minio,
 	}
 }
 
@@ -48,7 +57,7 @@ func (h *HealthHandler) HealthCheck(w http.ResponseWriter, _ *http.Request) {
 }
 
 // ReadinessCheck handles GET /ready.
-// Returns 200 if all dependencies (PostgreSQL, Redis) are reachable,
+// Returns 200 if all dependencies (PostgreSQL, Redis, MinIO) are reachable,
 // 503 otherwise with details about which dependency failed.
 func (h *HealthHandler) ReadinessCheck(w http.ResponseWriter, _ *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -75,6 +84,18 @@ func (h *HealthHandler) ReadinessCheck(w http.ResponseWriter, _ *http.Request) {
 		}
 	} else {
 		checks["redis"] = "not_configured"
+	}
+
+	// Check MinIO connectivity.
+	if h.minioClient != nil {
+		if err := h.minioClient.HealthCheck(ctx); err != nil {
+			checks["minio"] = fmt.Sprintf("unhealthy: %s", err.Error())
+			allHealthy = false
+		} else {
+			checks["minio"] = "ok"
+		}
+	} else {
+		checks["minio"] = "not_configured"
 	}
 
 	status := http.StatusOK

@@ -18,6 +18,7 @@ class KeyStorage {
   static const _keyEncryptKey = 'encrypt_key';
   static const _keySalt = 'argon2_salt';
   static const _keyRecoveryKey = 'recovery_key_encrypted';
+  static const _keyKdfVersion = 'kdf_version';
 
   static const _secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -101,11 +102,13 @@ class KeyStorage {
       await prefs.remove(_keyEncryptKey);
       await prefs.remove(_keySalt);
       await prefs.remove(_keyRecoveryKey);
+      await prefs.remove(_keyKdfVersion);
     } else {
       await _secureStorage.delete(key: _keyMasterKey);
       await _secureStorage.delete(key: _keyEncryptKey);
       await _secureStorage.delete(key: _keySalt);
       await _secureStorage.delete(key: _keyRecoveryKey);
+      await _secureStorage.delete(key: _keyKdfVersion);
     }
   }
 

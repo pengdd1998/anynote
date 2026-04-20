@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -112,10 +113,10 @@ func TestValidateUsername(t *testing.T) {
 	}{
 		{"valid", "john_doe", false},
 		{"min_length", "abc", false},
-		{"max_length", string(make([]byte, 50)), false},
+		{"max_length", strings.Repeat("a", 50), false},
 		{"empty", "", true},
 		{"too_short", "ab", true},
-		{"too_long", string(make([]byte, 51)), true},
+		{"too_long", strings.Repeat("a", 51), true},
 		{"whitespace_only", "   ", true},
 	}
 

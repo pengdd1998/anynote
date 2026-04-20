@@ -81,6 +81,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 			// Auth
 			r.Get("/auth/me", authH.Me)
+			r.Delete("/auth/account", authH.DeleteAccount)
 
 			// Sync (rate limited by user)
 			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/pull", syncH.Pull)

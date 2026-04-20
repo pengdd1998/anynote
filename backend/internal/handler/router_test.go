@@ -33,6 +33,9 @@ func (s *routerStubAuthService) RefreshToken(ctx context.Context, refreshToken s
 func (s *routerStubAuthService) GetCurrentUser(ctx context.Context, userID uuid.UUID) (*domain.User, error) {
 	return nil, nil
 }
+func (s *routerStubAuthService) DeleteAccount(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error {
+	return nil
+}
 
 // routerStubSyncService implements service.SyncService.
 type routerStubSyncService struct{}
@@ -226,7 +229,7 @@ func newTestRouterServices() (*config.Config, *Services, *HealthHandler) {
 		Comment:   &routerStubCommentService{},
 		Presence:  &routerStubPresenceService{},
 	}
-	healthH := NewHealthHandler(&routerStubPinger{}, nil)
+	healthH := NewHealthHandler(&routerStubPinger{}, nil, nil)
 	return cfg, services, healthH
 }
 

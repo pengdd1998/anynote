@@ -69,6 +69,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       // Step 7: On success, store keys locally.
       await MasterKeyManager.storeMasterKey(masterKey);
       await MasterKeyManager.storeSalt(salt);
+      await MasterKeyManager.storeKdfVersion(
+        MasterKeyManager.currentKdfVersion,
+      );
 
       // Derive and store the encrypt key for data encryption.
       await MasterKeyManager.deriveEncryptKey(masterKey);

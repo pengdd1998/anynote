@@ -11,6 +11,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'master_key_native_compat.dart'
     if (dart.library.js) 'master_key_web_compat.dart';
 
+/// Current KDF version.
+///
+/// On native (Argon2id): version 2 = opsLimitSensitive + memLimitModerate (OWASP).
+/// On web (PBKDF2): version is always 1 (600k iterations, already acceptable).
+int get _currentKdfVersion => kdfVersionNative;
+
 /// Master key management for E2E encryption.
 ///
 /// Key hierarchy:
@@ -34,6 +40,7 @@ import 'master_key_native_compat.dart'
 class MasterKeyManager {
   static const _masterKeyKey = 'anynote_master_key';
   static const _saltKey = 'anynote_salt';
+  static const _kdfVersionKey = 'anynote_kdf_version';
 
   static const _secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -50,11 +57,17 @@ class MasterKeyManager {
   ///
   /// On native: uses Argon2id via sodium_libs (crypto_pwhash).
   /// On web: uses PBKDF2-SHA256 with 600,000 iterations via WebCrypto.
+  ///
+  /// When [kdfVersion] is provided, uses the KDF parameters for that version.
+  /// This is used during migration: existing users whose keys were derived with
+  /// an older KDF version can be re-derived with legacy parameters, then
+  /// upgraded to the current version.
   static Future<Uint8List> deriveMasterKey(
     String password,
-    Uint8List salt,
-  ) {
-    return deriveMasterKeyImpl(password, salt);
+    Uint8List salt, [
+    int? kdfVersion,
+  ]) {
+    return deriveMasterKeyImpl(password, salt, kdfVersion);
   }
 
   /// Derive Auth Key from master key.
@@ -164,10 +177,58 @@ class MasterKeyManager {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_masterKeyKey);
       await prefs.remove(_saltKey);
+      await prefs.remove(_kdfVersionKey);
     } else {
       await _secureStorage.delete(key: _masterKeyKey);
       await _secureStorage.delete(key: _saltKey);
+      await _secureStorage.delete(key: _kdfVersionKey);
     }
+  }
+
+  /// Store the KDF version used to derive the current master key.
+  ///
+  /// This enables future parameter migrations: when the KDF parameters are
+  /// upgraded, the app can detect that a user's key was derived with an older
+  /// version and perform a one-time migration at login.
+  static Future<void> storeKdfVersion(int version) async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_kdfVersionKey, version);
+    } else {
+      await _secureStorage.write(
+        key: _kdfVersionKey,
+        value: version.toString(),
+      );
+    }
+  }
+
+  /// Retrieve the stored KDF version.
+  ///
+  /// Returns null if no version has been stored (pre-migration users).
+  /// Returns [kdfVersionNative] for native and 1 for web by default.
+  static Future<int?> getStoredKdfVersion() async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getInt(_kdfVersionKey);
+    } else {
+      final value = await _secureStorage.read(key: _kdfVersionKey);
+      if (value == null) return null;
+      return int.tryParse(value);
+    }
+  }
+
+  /// Get the current KDF version for the active platform.
+  static int get currentKdfVersion => _currentKdfVersion;
+
+  /// Check if a stored KDF version needs migration to the current version.
+  ///
+  /// Returns true if:
+  /// - No KDF version is stored (pre-migration user), or
+  /// - The stored version is less than the current version.
+  static Future<bool> needsKdfMigration() async {
+    final stored = await getStoredKdfVersion();
+    if (stored == null) return true; // Pre-migration user.
+    return stored < _currentKdfVersion;
   }
 
   // ── Shared helpers ─────────────────────────────────────────────────

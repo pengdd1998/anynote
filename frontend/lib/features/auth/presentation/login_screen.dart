@@ -41,28 +41,67 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
 
-      // Step 2: Derive master key from password via Argon2id.
-      final masterKey = await MasterKeyManager.deriveMasterKey(
-        _passwordController.text,
-        salt,
-      );
+      // Step 2: Check KDF version to handle parameter migration.
+      // Existing users may have keys derived with older (weaker) Argon2id
+      // parameters. We detect this and fall back to legacy params if needed.
+      final storedKdfVersion = await MasterKeyManager.getStoredKdfVersion();
+      final currentVersion = MasterKeyManager.currentKdfVersion;
+      final needsMigration =
+          storedKdfVersion == null || storedKdfVersion < currentVersion;
 
-      // Step 3: Derive auth key from master key via BLAKE2b.
-      final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
-
-      // Step 4: Hash auth key for server verification.
-      final authKeyHash = await MasterKeyManager.hashAuthKey(authKey);
-
-      // Step 5: Send hashed auth key to server.
+      // Step 3: Derive master key and attempt login.
+      // Try current KDF parameters first. If the user's key was derived with
+      // old params and this fails, retry with legacy parameters.
       final api = ref.read(apiClientProvider);
-      await api.login(LoginRequest(
-        email: _emailController.text.trim(),
-        authKeyHash: authKeyHash,
-      ),);
+      Uint8List masterKey;
+      int usedKdfVersion;
 
-      // Step 6: On success, store master key and derived keys locally.
+      try {
+        // Try current KDF version first.
+        masterKey = await MasterKeyManager.deriveMasterKey(
+          _passwordController.text,
+          salt,
+          currentVersion,
+        );
+        usedKdfVersion = currentVersion;
+
+        final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
+        final authKeyHash = await MasterKeyManager.hashAuthKey(authKey);
+
+        await api.login(LoginRequest(
+          email: _emailController.text.trim(),
+          authKeyHash: authKeyHash,
+        ));
+      } catch (firstAttemptError) {
+        // If we have reason to believe this might be a KDF version mismatch
+        // (existing user with no stored version, or old version), retry with
+        // legacy parameters.
+        if (needsMigration) {
+          // Derive with legacy KDF version (1).
+          masterKey = await MasterKeyManager.deriveMasterKey(
+            _passwordController.text,
+            salt,
+            1, // Legacy version: opsLimitModerate + memLimitInteractive.
+          );
+          usedKdfVersion = 1;
+
+          final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
+          final authKeyHash = await MasterKeyManager.hashAuthKey(authKey);
+
+          await api.login(LoginRequest(
+            email: _emailController.text.trim(),
+            authKeyHash: authKeyHash,
+          ));
+        } else {
+          // No migration expected; re-throw the original error.
+          rethrow;
+        }
+      }
+
+      // Step 4: On success, store master key and derived keys locally.
       await MasterKeyManager.storeMasterKey(masterKey);
       await MasterKeyManager.storeSalt(salt);
+      await MasterKeyManager.storeKdfVersion(usedKdfVersion);
 
       // Derive and store the encrypt key for data encryption.
       await MasterKeyManager.deriveEncryptKey(masterKey);

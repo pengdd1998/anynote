@@ -30,6 +30,7 @@ type PublishJobHandler struct {
 	registry    *platform.Registry
 	publishRepo service.PublishLogRepository
 	platformRep service.PlatformConnectionRepository
+	pushSvc     service.PushService // optional; nil means no push notifications
 	masterKey   []byte
 }
 
@@ -39,13 +40,18 @@ func NewPublishJobHandler(
 	publishRepo service.PublishLogRepository,
 	platformRep service.PlatformConnectionRepository,
 	masterKey []byte,
+	pushSvc ...service.PushService,
 ) *PublishJobHandler {
-	return &PublishJobHandler{
+	h := &PublishJobHandler{
 		registry:    registry,
 		publishRepo: publishRepo,
 		platformRep: platformRep,
 		masterKey:   masterKey,
 	}
+	if len(pushSvc) > 0 {
+		h.pushSvc = pushSvc[0]
+	}
+	return h
 }
 
 // HandleTask is the asynq handler function for publish tasks.
@@ -123,6 +129,10 @@ func (h *PublishJobHandler) HandleTask(ctx context.Context, t *asynq.Task) error
 			"platform", payload.Platform, "error", err,
 		)
 		_ = h.publishRepo.UpdateStatus(ctx, logID, "failed", err.Error(), "")
+
+		// Notify the user that publishing failed.
+		h.sendPublishPush(context.Background(), payload.UserID, payload.Platform, payload.PublishLogID, false, err.Error())
+
 		// Retriable: return error to asynq so it retries up to MaxRetry
 		return fmt.Errorf("publish failed: %w", err)
 	}
@@ -147,5 +157,46 @@ func (h *PublishJobHandler) HandleTask(ctx context.Context, t *asynq.Task) error
 		"platform_post_id", platformPostID,
 	)
 
+	// Notify the user that publishing succeeded.
+	h.sendPublishPush(context.Background(), payload.UserID, payload.Platform, payload.PublishLogID, true, "")
+
 	return nil
+}
+
+// sendPublishPush sends a push notification to the user about a publish result.
+// Errors are logged but never propagated to avoid interfering with the job outcome.
+func (h *PublishJobHandler) sendPublishPush(ctx context.Context, userID, platform, publishLogID string, success bool, errMsg string) {
+	if h.pushSvc == nil {
+		return
+	}
+
+	var title, body string
+	if success {
+		title = "Publish Complete"
+		body = fmt.Sprintf("Your note has been published to %s", platform)
+	} else {
+		title = "Publish Failed"
+		body = fmt.Sprintf("Failed to publish to %s: %s", platform, errMsg)
+	}
+
+	payload := service.PushPayload{
+		Title:    title,
+		Body:     body,
+		Priority: "normal",
+		Data: map[string]interface{}{
+			"type":           "publish_result",
+			"platform":       platform,
+			"publish_log_id": publishLogID,
+			"success":        success,
+		},
+	}
+
+	if err := h.pushSvc.SendPush(ctx, userID, payload); err != nil {
+		slog.Error("failed to send publish result push",
+			"user_id", userID,
+			"platform", platform,
+			"success", success,
+			"error", err,
+		)
+	}
 }

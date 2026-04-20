@@ -25,11 +25,23 @@ func (m *mockPinger) Ping(ctx context.Context) error {
 }
 
 // ---------------------------------------------------------------------------
+// Mock BucketChecker
+// ---------------------------------------------------------------------------
+
+type mockBucketChecker struct {
+	err error
+}
+
+func (m *mockBucketChecker) HealthCheck(ctx context.Context) error {
+	return m.err
+}
+
+// ---------------------------------------------------------------------------
 // HealthCheck tests
 // ---------------------------------------------------------------------------
 
 func TestHealthCheck_ReturnsOK(t *testing.T) {
-	h := NewHealthHandler(&mockPinger{}, nil)
+	h := NewHealthHandler(&mockPinger{}, nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	w := httptest.NewRecorder()
@@ -64,7 +76,7 @@ func TestHealthCheck_ReturnsOK(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestReadinessCheck_AllHealthy(t *testing.T) {
-	h := NewHealthHandler(&mockPinger{}, nil)
+	h := NewHealthHandler(&mockPinger{}, nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	w := httptest.NewRecorder()
@@ -97,10 +109,13 @@ func TestReadinessCheck_AllHealthy(t *testing.T) {
 	if checks["redis"] != "not_configured" {
 		t.Errorf("checks[redis] = %v, want %q", checks["redis"], "not_configured")
 	}
+	if checks["minio"] != "not_configured" {
+		t.Errorf("checks[minio] = %v, want %q", checks["minio"], "not_configured")
+	}
 }
 
 func TestReadinessCheck_DBUnhealthy(t *testing.T) {
-	h := NewHealthHandler(&mockPinger{err: errors.New("connection refused")}, nil)
+	h := NewHealthHandler(&mockPinger{err: errors.New("connection refused")}, nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	w := httptest.NewRecorder()
@@ -140,7 +155,7 @@ func TestReadinessCheck_WithRedisHealthy(t *testing.T) {
 	rdb := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	defer rdb.Close()
 
-	h := NewHealthHandler(&mockPinger{}, rdb)
+	h := NewHealthHandler(&mockPinger{}, rdb, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	w := httptest.NewRecorder()
@@ -176,7 +191,7 @@ func TestReadinessCheck_WithRedisUnhealthy(t *testing.T) {
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:1"})
 	defer rdb.Close()
 
-	h := NewHealthHandler(&mockPinger{}, rdb)
+	h := NewHealthHandler(&mockPinger{}, rdb, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	w := httptest.NewRecorder()
@@ -206,5 +221,101 @@ func TestReadinessCheck_WithRedisUnhealthy(t *testing.T) {
 	redisStatus, _ := checks["redis"].(string)
 	if redisStatus == "ok" {
 		t.Error("redis check should not be ok when Redis is unreachable")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// MinIO readiness tests
+// ---------------------------------------------------------------------------
+
+func TestReadinessCheck_MinIONotConfigured(t *testing.T) {
+	h := NewHealthHandler(&mockPinger{}, nil, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
+	w := httptest.NewRecorder()
+
+	h.ReadinessCheck(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	var body map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	checks, ok := body["checks"].(map[string]interface{})
+	if !ok {
+		t.Fatal("checks should be a map")
+	}
+	if checks["minio"] != "not_configured" {
+		t.Errorf("checks[minio] = %v, want %q", checks["minio"], "not_configured")
+	}
+}
+
+func TestReadinessCheck_MinioHealthy(t *testing.T) {
+	h := NewHealthHandler(&mockPinger{}, nil, &mockBucketChecker{})
+
+	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
+	w := httptest.NewRecorder()
+
+	h.ReadinessCheck(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	var body map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	checks, ok := body["checks"].(map[string]interface{})
+	if !ok {
+		t.Fatal("checks should be a map")
+	}
+	if checks["minio"] != "ok" {
+		t.Errorf("checks[minio] = %v, want %q", checks["minio"], "ok")
+	}
+}
+
+func TestReadinessCheck_MinioUnhealthy(t *testing.T) {
+	h := NewHealthHandler(&mockPinger{}, nil, &mockBucketChecker{err: errors.New("bucket not found")})
+
+	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
+	w := httptest.NewRecorder()
+
+	h.ReadinessCheck(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want %d", resp.StatusCode, http.StatusServiceUnavailable)
+	}
+
+	var body map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if body["status"] != "degraded" {
+		t.Errorf("status = %v, want %q", body["status"], "degraded")
+	}
+
+	checks, ok := body["checks"].(map[string]interface{})
+	if !ok {
+		t.Fatal("checks should be a map")
+	}
+	minioStatus, _ := checks["minio"].(string)
+	if minioStatus == "ok" {
+		t.Error("minio check should not be ok when bucket check fails")
 	}
 }

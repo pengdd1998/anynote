@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/anynote/backend/internal/domain"
 	"github.com/anynote/backend/internal/platform"
+	"github.com/anynote/backend/internal/service"
 )
 
 // ---------------------------------------------------------------------------
@@ -424,5 +426,231 @@ func TestPublishJobPayload_EmptyTags(t *testing.T) {
 
 	if decoded.Tags != nil {
 		t.Errorf("Tags should be nil when not provided, got %v", decoded.Tags)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Mock PushService for publish job handler tests
+// ---------------------------------------------------------------------------
+
+type mockPushService struct {
+	sendPushFn func(ctx context.Context, userID string, payload service.PushPayload) error
+	calls      []service.PushPayload
+}
+
+func (m *mockPushService) SendPush(ctx context.Context, userID string, payload service.PushPayload) error {
+	m.calls = append(m.calls, payload)
+	if m.sendPushFn != nil {
+		return m.sendPushFn(ctx, userID, payload)
+	}
+	return nil
+}
+
+func (m *mockPushService) RegisterDevice(ctx context.Context, userID string, token string, platform string) error {
+	return nil
+}
+
+func (m *mockPushService) UnregisterDevice(ctx context.Context, token string) error {
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Push notifications on publish result
+// ---------------------------------------------------------------------------
+
+func TestPublishJobHandler_HandleTask_Success_SendsPush(t *testing.T) {
+	userID := uuid.New()
+	logID := uuid.New()
+	masterKey := []byte("0123456789abcdef0123456789abcdef")
+
+	publishRepo := &mockPublishLogRepo{}
+	platformRepo := &mockPlatformConnRepo{
+		getByPlatformFn: func(ctx context.Context, uid uuid.UUID, p string) (*domain.PlatformConnection, error) {
+			return &domain.PlatformConnection{
+				ID:            uuid.New(),
+				UserID:        uid,
+				Platform:      p,
+				EncryptedAuth: []byte("auth-data"),
+			}, nil
+		},
+	}
+	registry := platform.NewRegistry()
+	registry.Register("mock", &mockPlatformAdapter{})
+	pushSvc := &mockPushService{}
+
+	h := NewPublishJobHandler(registry, publishRepo, platformRepo, masterKey, pushSvc)
+
+	payload := PublishJobPayload{
+		UserID:       userID.String(),
+		Platform:     "mock",
+		PublishLogID: logID.String(),
+		Title:        "Test",
+		Content:      "Content",
+	}
+
+	data, _ := json.Marshal(payload)
+	task := asynq.NewTask(TaskTypePublish, data)
+
+	err := h.HandleTask(context.Background(), task)
+	if err != nil {
+		t.Fatalf("HandleTask: %v", err)
+	}
+
+	if len(pushSvc.calls) != 1 {
+		t.Fatalf("expected 1 push notification, got %d", len(pushSvc.calls))
+	}
+	notif := pushSvc.calls[0]
+	if notif.Title != "Publish Complete" {
+		t.Errorf("Title = %q, want %q", notif.Title, "Publish Complete")
+	}
+	if notif.Body != "Your note has been published to mock" {
+		t.Errorf("Body = %q, want %q", notif.Body, "Your note has been published to mock")
+	}
+	if notif.Data["type"] != "publish_result" {
+		t.Errorf("Data[type] = %v, want %q", notif.Data["type"], "publish_result")
+	}
+	if notif.Data["success"] != true {
+		t.Errorf("Data[success] = %v, want true", notif.Data["success"])
+	}
+}
+
+func TestPublishJobHandler_HandleTask_Failure_SendsPush(t *testing.T) {
+	userID := uuid.New()
+	logID := uuid.New()
+	masterKey := []byte("0123456789abcdef0123456789abcdef")
+
+	publishRepo := &mockPublishLogRepo{}
+	platformRepo := &mockPlatformConnRepo{
+		getByPlatformFn: func(ctx context.Context, uid uuid.UUID, p string) (*domain.PlatformConnection, error) {
+			return &domain.PlatformConnection{
+				ID:            uuid.New(),
+				UserID:        uid,
+				Platform:      p,
+				EncryptedAuth: []byte("auth-data"),
+			}, nil
+		},
+	}
+	registry := platform.NewRegistry()
+	registry.Register("mock", &mockPlatformAdapter{
+		publishFn: func(ctx context.Context, encryptedAuth []byte, masterKey []byte, params platform.PublishParams) (*platform.PublishResult, error) {
+			return nil, errors.New("network timeout")
+		},
+	})
+	pushSvc := &mockPushService{}
+
+	h := NewPublishJobHandler(registry, publishRepo, platformRepo, masterKey, pushSvc)
+
+	payload := PublishJobPayload{
+		UserID:       userID.String(),
+		Platform:     "mock",
+		PublishLogID: logID.String(),
+		Title:        "Test",
+		Content:      "Content",
+	}
+
+	data, _ := json.Marshal(payload)
+	task := asynq.NewTask(TaskTypePublish, data)
+
+	err := h.HandleTask(context.Background(), task)
+	if err == nil {
+		t.Error("expected retriable error when publish fails")
+	}
+
+	if len(pushSvc.calls) != 1 {
+		t.Fatalf("expected 1 push notification, got %d", len(pushSvc.calls))
+	}
+	notif := pushSvc.calls[0]
+	if notif.Title != "Publish Failed" {
+		t.Errorf("Title = %q, want %q", notif.Title, "Publish Failed")
+	}
+	wantBody := "Failed to publish to mock: network timeout"
+	if notif.Body != wantBody {
+		t.Errorf("Body = %q, want %q", notif.Body, wantBody)
+	}
+	if notif.Data["success"] != false {
+		t.Errorf("Data[success] = %v, want false", notif.Data["success"])
+	}
+}
+
+func TestPublishJobHandler_HandleTask_NoPushService(t *testing.T) {
+	userID := uuid.New()
+	logID := uuid.New()
+	masterKey := []byte("0123456789abcdef0123456789abcdef")
+
+	publishRepo := &mockPublishLogRepo{}
+	platformRepo := &mockPlatformConnRepo{
+		getByPlatformFn: func(ctx context.Context, uid uuid.UUID, p string) (*domain.PlatformConnection, error) {
+			return &domain.PlatformConnection{
+				ID:            uuid.New(),
+				UserID:        uid,
+				Platform:      p,
+				EncryptedAuth: []byte("auth-data"),
+			}, nil
+		},
+	}
+	registry := platform.NewRegistry()
+	registry.Register("mock", &mockPlatformAdapter{})
+
+	// No push service passed -- should still succeed without errors.
+	h := NewPublishJobHandler(registry, publishRepo, platformRepo, masterKey)
+
+	payload := PublishJobPayload{
+		UserID:       userID.String(),
+		Platform:     "mock",
+		PublishLogID: logID.String(),
+		Title:        "Test",
+		Content:      "Content",
+	}
+
+	data, _ := json.Marshal(payload)
+	task := asynq.NewTask(TaskTypePublish, data)
+
+	err := h.HandleTask(context.Background(), task)
+	if err != nil {
+		t.Fatalf("HandleTask without push service: %v", err)
+	}
+}
+
+func TestPublishJobHandler_HandleTask_PushErrorDoesNotAffectJob(t *testing.T) {
+	userID := uuid.New()
+	logID := uuid.New()
+	masterKey := []byte("0123456789abcdef0123456789abcdef")
+
+	publishRepo := &mockPublishLogRepo{}
+	platformRepo := &mockPlatformConnRepo{
+		getByPlatformFn: func(ctx context.Context, uid uuid.UUID, p string) (*domain.PlatformConnection, error) {
+			return &domain.PlatformConnection{
+				ID:            uuid.New(),
+				UserID:        uid,
+				Platform:      p,
+				EncryptedAuth: []byte("auth-data"),
+			}, nil
+		},
+	}
+	registry := platform.NewRegistry()
+	registry.Register("mock", &mockPlatformAdapter{})
+	pushSvc := &mockPushService{
+		sendPushFn: func(ctx context.Context, userID string, payload service.PushPayload) error {
+			return fmt.Errorf("push service unavailable")
+		},
+	}
+
+	h := NewPublishJobHandler(registry, publishRepo, platformRepo, masterKey, pushSvc)
+
+	payload := PublishJobPayload{
+		UserID:       userID.String(),
+		Platform:     "mock",
+		PublishLogID: logID.String(),
+		Title:        "Test",
+		Content:      "Content",
+	}
+
+	data, _ := json.Marshal(payload)
+	task := asynq.NewTask(TaskTypePublish, data)
+
+	// The job should succeed even if push notification delivery fails.
+	err := h.HandleTask(context.Background(), task)
+	if err != nil {
+		t.Fatalf("HandleTask should succeed even when push fails: %v", err)
 	}
 }

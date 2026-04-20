@@ -236,16 +236,16 @@ void main() {
         password: passwordBytes,
         salt: pwhashSalt1,
         outLen: 32,
-        opsLimit: sodium.crypto.pwhash.opsLimitModerate,
-        memLimit: sodium.crypto.pwhash.memLimitInteractive,
+        opsLimit: sodium.crypto.pwhash.opsLimitSensitive,
+        memLimit: sodium.crypto.pwhash.memLimitModerate,
         alg: CryptoPwhashAlgorithm.argon2id13,
       );
       final key2 = sodium.crypto.pwhash.call(
         password: passwordBytes,
         salt: pwhashSalt1,
         outLen: 32,
-        opsLimit: sodium.crypto.pwhash.opsLimitModerate,
-        memLimit: sodium.crypto.pwhash.memLimitInteractive,
+        opsLimit: sodium.crypto.pwhash.opsLimitSensitive,
+        memLimit: sodium.crypto.pwhash.memLimitModerate,
         alg: CryptoPwhashAlgorithm.argon2id13,
       );
 
@@ -268,16 +268,16 @@ void main() {
         password: Int8List.fromList(utf8.encode('password-alpha')),
         salt: pwhashSalt,
         outLen: 32,
-        opsLimit: sodium.crypto.pwhash.opsLimitModerate,
-        memLimit: sodium.crypto.pwhash.memLimitInteractive,
+        opsLimit: sodium.crypto.pwhash.opsLimitSensitive,
+        memLimit: sodium.crypto.pwhash.memLimitModerate,
         alg: CryptoPwhashAlgorithm.argon2id13,
       );
       final key2 = sodium.crypto.pwhash.call(
         password: Int8List.fromList(utf8.encode('password-beta')),
         salt: pwhashSalt,
         outLen: 32,
-        opsLimit: sodium.crypto.pwhash.opsLimitModerate,
-        memLimit: sodium.crypto.pwhash.memLimitInteractive,
+        opsLimit: sodium.crypto.pwhash.opsLimitSensitive,
+        memLimit: sodium.crypto.pwhash.memLimitModerate,
         alg: CryptoPwhashAlgorithm.argon2id13,
       );
 

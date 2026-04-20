@@ -123,3 +123,43 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, user)
 }
+
+// DeleteAccount handles DELETE /api/v1/auth/account.
+// Requires a valid JWT and password confirmation via auth_key_hash.
+func (h *AuthHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "User not authenticated")
+		return
+	}
+
+	var req struct {
+		AuthKeyHash []byte `json:"auth_key_hash"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		return
+	}
+
+	if len(req.AuthKeyHash) == 0 {
+		writeError(w, http.StatusBadRequest, "validation_error", "auth_key_hash is required")
+		return
+	}
+	if len(req.AuthKeyHash) > 128 {
+		writeError(w, http.StatusBadRequest, "validation_error", "auth_key_hash must be at most 128 bytes")
+		return
+	}
+
+	if err := h.authService.DeleteAccount(r.Context(), parseUUID(userID), req.AuthKeyHash); err != nil {
+		if err == service.ErrInvalidCredentials {
+			writeError(w, http.StatusUnauthorized, "invalid_credentials", "Invalid password")
+		} else if err == service.ErrUserNotFound {
+			writeError(w, http.StatusNotFound, "not_found", "User not found")
+		} else {
+			writeError(w, http.StatusInternalServerError, "internal_error", "Account deletion failed")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}

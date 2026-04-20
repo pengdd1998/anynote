@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
@@ -52,6 +53,16 @@ func (m *mockUserRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User,
 		return nil, errors.New("user not found")
 	}
 	return u, nil
+}
+
+func (m *mockUserRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	u, ok := m.usersByID[id]
+	if !ok {
+		return errors.New("user not found")
+	}
+	delete(m.users, u.Email)
+	delete(m.usersByID, id)
+	return nil
 }
 
 // ---------------------------------------------------------------------------
@@ -331,5 +342,144 @@ func TestAuthService_GetCurrentUser_NotFound(t *testing.T) {
 	_, err := svc.GetCurrentUser(context.Background(), uuid.New())
 	if err == nil {
 		t.Error("expected error for non-existent user")
+	}
+}
+
+func TestAuthService_RefreshToken_RejectsAccessToken(t *testing.T) {
+	repo := newMockUserRepo()
+	svc := newTestAuthService(repo)
+
+	// Register to get a token pair.
+	resp, err := svc.Register(context.Background(), domain.RegisterRequest{
+		Email:       "heidi@example.com",
+		Username:    "heidi",
+		AuthKeyHash: mustHashAuthKey("key"),
+		Salt:        []byte("salt"),
+		RecoveryKey: []byte("recovery"),
+	})
+	if err != nil {
+		t.Fatalf("Register: %v", err)
+	}
+
+	// Using the access token as a refresh token should fail.
+	_, err = svc.RefreshToken(context.Background(), resp.AccessToken)
+	if !errors.Is(err, ErrInvalidTokenType) {
+		t.Errorf("RefreshToken with access token: error = %v, want ErrInvalidTokenType", err)
+	}
+}
+
+func TestAuthService_GeneratedTokensContainType(t *testing.T) {
+	repo := newMockUserRepo()
+	svc := newTestAuthService(repo)
+
+	resp, err := svc.Register(context.Background(), domain.RegisterRequest{
+		Email:       "ivan@example.com",
+		Username:    "ivan",
+		AuthKeyHash: mustHashAuthKey("key"),
+		Salt:        []byte("salt"),
+		RecoveryKey: []byte("recovery"),
+	})
+	if err != nil {
+		t.Fatalf("Register: %v", err)
+	}
+
+	// Parse access token and verify token_type claim.
+	accessClaims := parseTokenClaims(t, resp.AccessToken, testJWTSecret)
+	if tt, _ := accessClaims["token_type"].(string); tt != "access" {
+		t.Errorf("access token token_type = %q, want %q", tt, "access")
+	}
+
+	// Parse refresh token and verify token_type claim.
+	refreshClaims := parseTokenClaims(t, resp.RefreshToken, testJWTSecret)
+	if tt, _ := refreshClaims["token_type"].(string); tt != "refresh" {
+		t.Errorf("refresh token token_type = %q, want %q", tt, "refresh")
+	}
+}
+
+// parseTokenClaims is a test helper that parses a JWT and returns its claims.
+func parseTokenClaims(t *testing.T, tokenStr, secret string) jwt.MapClaims {
+	t.Helper()
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		t.Fatalf("parse token: %v", err)
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		t.Fatal("token claims are not MapClaims")
+	}
+	return claims
+}
+
+// ---------------------------------------------------------------------------
+// Tests: DeleteAccount
+// ---------------------------------------------------------------------------
+
+func TestAuthService_DeleteAccount_Success(t *testing.T) {
+	repo := newMockUserRepo()
+	svc := newTestAuthService(repo)
+
+	plainKey := "my-client-derived-auth-key"
+	hash := mustHashAuthKey(plainKey)
+
+	user := &domain.User{
+		ID:          uuid.New(),
+		Email:       "judy@example.com",
+		Username:    "judy",
+		AuthKeyHash: hash,
+		Plan:        "free",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+	repo.users[user.Email] = user
+	repo.usersByID[user.ID] = user
+
+	err := svc.DeleteAccount(context.Background(), user.ID, []byte(plainKey))
+	if err != nil {
+		t.Fatalf("DeleteAccount: %v", err)
+	}
+
+	// Verify user is gone from the repo.
+	if _, ok := repo.usersByID[user.ID]; ok {
+		t.Error("user should have been deleted from repo")
+	}
+}
+
+func TestAuthService_DeleteAccount_WrongPassword(t *testing.T) {
+	repo := newMockUserRepo()
+	svc := newTestAuthService(repo)
+
+	hash := mustHashAuthKey("correct-password")
+	user := &domain.User{
+		ID:          uuid.New(),
+		Email:       "karl@example.com",
+		Username:    "karl",
+		AuthKeyHash: hash,
+		Plan:        "free",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+	repo.users[user.Email] = user
+	repo.usersByID[user.ID] = user
+
+	err := svc.DeleteAccount(context.Background(), user.ID, []byte("wrong-password"))
+	if !errors.Is(err, ErrInvalidCredentials) {
+		t.Errorf("DeleteAccount error = %v, want ErrInvalidCredentials", err)
+	}
+
+	// Verify user was NOT deleted.
+	if _, ok := repo.usersByID[user.ID]; !ok {
+		t.Error("user should still exist after wrong password")
+	}
+}
+
+func TestAuthService_DeleteAccount_UserNotFound(t *testing.T) {
+	repo := newMockUserRepo()
+	svc := newTestAuthService(repo)
+
+	err := svc.DeleteAccount(context.Background(), uuid.New(), []byte("some-key"))
+	if !errors.Is(err, ErrUserNotFound) {
+		t.Errorf("DeleteAccount error = %v, want ErrUserNotFound", err)
 	}
 }

@@ -15,19 +15,16 @@ import (
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
 
+	"github.com/anynote/backend/internal/appsetup"
 	"github.com/anynote/backend/internal/config"
 	"github.com/anynote/backend/internal/handler"
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
-	"github.com/anynote/backend/internal/platform/medium"
-	"github.com/anynote/backend/internal/platform/webhook"
-	"github.com/anynote/backend/internal/platform/wechat"
-	"github.com/anynote/backend/internal/platform/wordpress"
-	"github.com/anynote/backend/internal/platform/xiaohongshu"
-	"github.com/anynote/backend/internal/platform/zhihu"
 	"github.com/anynote/backend/internal/repository"
 	"github.com/anynote/backend/internal/service"
 
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	redisv9 "github.com/redis/go-redis/v9"
 	"google.golang.org/api/option"
 )
@@ -85,6 +82,34 @@ func main() {
 	deviceTokenRepo := repository.NewDeviceTokenRepository(pool)
 	commentRepo := repository.NewCommentRepository(pool)
 
+	// Start background goroutine to periodically clean up expired shared notes.
+	cleanupCtx, cancelCleanup := context.WithCancel(context.Background())
+	go func() {
+		ticker := time.NewTicker(1 * time.Hour)
+		defer ticker.Stop()
+
+		// Run once immediately at startup.
+		if n, err := sharedNoteRepo.DeleteExpired(cleanupCtx); err != nil {
+			slog.Error("shared note cleanup failed", "error", err)
+		} else if n > 0 {
+			slog.Info("cleaned up expired shared notes", "deleted", n)
+		}
+
+		for {
+			select {
+			case <-ticker.C:
+				if n, err := sharedNoteRepo.DeleteExpired(cleanupCtx); err != nil {
+					slog.Error("shared note cleanup failed", "error", err)
+				} else if n > 0 {
+					slog.Info("cleaned up expired shared notes", "deleted", n)
+				}
+			case <-cleanupCtx.Done():
+				slog.Info("shared note cleanup goroutine stopped")
+				return
+			}
+		}
+	}()
+
 	// Initialize services
 	authSvc := service.NewAuthService(userRepo, cfg.Auth.JWTSecret, cfg.Auth.TokenExpiry, cfg.Auth.RefreshExpiry)
 	quotaSvc := service.NewQuotaService(quotaRepo)
@@ -114,27 +139,15 @@ func main() {
 
 	// Initialize platform adapters and registry
 	platformRegistry := platform.NewRegistry()
-	xhsAdapter := xiaohongshu.NewAdapter(cfg.Chrome.WSURL)
-	platformRegistry.Register(xhsAdapter.Name(), xhsAdapter)
-	wcAdapter := wechat.NewAdapter(cfg.Chrome.WSURL)
-	platformRegistry.Register(wcAdapter.Name(), wcAdapter)
-	zhihuAdapter := zhihu.NewAdapter(cfg.Chrome.WSURL)
-	platformRegistry.Register(zhihuAdapter.Name(), zhihuAdapter)
-	mediumAdapter := medium.NewAdapter(
-		os.Getenv("MEDIUM_CLIENT_ID"),
-		os.Getenv("MEDIUM_CLIENT_SECRET"),
-		os.Getenv("MEDIUM_REDIRECT_URI"),
-	)
-	platformRegistry.Register(mediumAdapter.Name(), mediumAdapter)
-	wpAdapter := wordpress.NewAdapter()
-	platformRegistry.Register(wpAdapter.Name(), wpAdapter)
-	webhookAdapter := webhook.NewAdapter()
-	platformRegistry.Register(webhookAdapter.Name(), webhookAdapter)
+	appsetup.RegisterDefaultAdapters(platformRegistry, cfg.Chrome.WSURL)
 	slog.Info("registered platform adapters", "platforms", platformRegistry.List())
 
 	platformSvc := service.NewPlatformService(platformConnRepo, platformRegistry)
 	shareSvc := service.NewShareService(sharedNoteRepo)
-	commentSvc := service.NewCommentService(commentRepo)
+	commentSvc := service.NewCommentService(commentRepo,
+		service.WithCommentPushService(pushSvc),
+		service.WithCommentShareRepo(sharedNoteRepo),
+	)
 
 	// Initialize Redis client for health checks and presence service.
 	// If Redis URL is not configured, the health handler gracefully reports
@@ -154,6 +167,26 @@ func main() {
 		presenceSvc = service.NewPresenceService(redisClient)
 	}
 
+	// Initialize MinIO client for health checks.
+	// If MinIO endpoint is not configured, the health handler gracefully reports
+	// minio as "not_configured" rather than failing.
+	var minioChecker handler.BucketChecker
+	if cfg.MinIO.Endpoint != "" {
+		minioClient, err := minio.New(cfg.MinIO.Endpoint, &minio.Options{
+			Creds:  credentials.NewStaticV4(cfg.MinIO.AccessKey, cfg.MinIO.SecretKey, ""),
+			Secure: cfg.MinIO.UseSSL,
+		})
+		if err != nil {
+			slog.Warn("MinIO client initialization failed, skipping MinIO health check", "error", err)
+		} else {
+			minioChecker = &minioBucketChecker{
+				client: minioClient,
+				bucket: cfg.MinIO.BucketName(),
+			}
+			slog.Info("MinIO client initialized", "endpoint", cfg.MinIO.Endpoint, "bucket", cfg.MinIO.BucketName())
+		}
+	}
+
 	// Setup router
 	services := &handler.Services{
 		Auth:      authSvc,
@@ -171,7 +204,7 @@ func main() {
 
 	// Health handler: pgxpool.Pool implements the Pinger interface used by
 	// HealthHandler for the readiness check.
-	healthH := handler.NewHealthHandler(pool, redisClient)
+	healthH := handler.NewHealthHandler(pool, redisClient, minioChecker)
 
 	router := handler.Router(cfg, services, healthH)
 
@@ -200,6 +233,7 @@ func main() {
 		}
 
 		slog.Info("closing database pool")
+		cancelCleanup()
 		pool.Close()
 
 		slog.Info("server stopped")
@@ -285,4 +319,23 @@ func (f *firebaseFCMClient) Send(ctx context.Context, msg *service.FCMMessage) (
 	}
 
 	return f.client.Send(ctx, fbMsg)
+}
+
+// minioBucketChecker adapts the minio.Client to the handler.BucketChecker interface.
+// It verifies MinIO connectivity by checking that the configured bucket exists.
+type minioBucketChecker struct {
+	client *minio.Client
+	bucket string
+}
+
+// HealthCheck verifies the MinIO bucket is accessible.
+func (m *minioBucketChecker) HealthCheck(ctx context.Context) error {
+	exists, err := m.client.BucketExists(ctx, m.bucket)
+	if err != nil {
+		return fmt.Errorf("minio bucket check: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("minio bucket %q does not exist", m.bucket)
+	}
+	return nil
 }

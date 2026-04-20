@@ -23,10 +23,11 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockAuthService struct {
-	registerFn      func(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error)
-	loginFn         func(ctx context.Context, req domain.LoginRequest) (*domain.AuthResponse, error)
-	refreshTokenFn  func(ctx context.Context, refreshToken string) (*domain.AuthResponse, error)
+	registerFn       func(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error)
+	loginFn          func(ctx context.Context, req domain.LoginRequest) (*domain.AuthResponse, error)
+	refreshTokenFn   func(ctx context.Context, refreshToken string) (*domain.AuthResponse, error)
 	getCurrentUserFn func(ctx context.Context, userID uuid.UUID) (*domain.User, error)
+	deleteAccountFn  func(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error
 }
 
 func (m *mockAuthService) Register(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error) {
@@ -57,6 +58,13 @@ func (m *mockAuthService) GetCurrentUser(ctx context.Context, userID uuid.UUID) 
 	return nil, errors.New("not implemented")
 }
 
+func (m *mockAuthService) DeleteAccount(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error {
+	if m.deleteAccountFn != nil {
+		return m.deleteAccountFn(ctx, userID, authKeyHash)
+	}
+	return errors.New("not implemented")
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -81,19 +89,36 @@ func setupAuthRouter(svc *mockAuthService) *chi.Mux {
 	r.Group(func(r chi.Router) {
 		r.Use(AuthMiddleware(testJWTSecret))
 		r.Get("/api/v1/auth/me", h.Me)
+		r.Delete("/api/v1/auth/account", h.DeleteAccount)
 	})
 
 	return r
 }
 
-// generateTestToken creates a valid JWT for the given user ID.
+// generateTestToken creates a valid access JWT for the given user ID.
 func generateTestToken(userID string) string {
 	claims := jwt.MapClaims{
-		"user_id": userID,
-		"email":   "test@example.com",
-		"plan":    "free",
-		"iat":     time.Now().Unix(),
-		"exp":     time.Now().Add(1 * time.Hour).Unix(),
+		"user_id":    userID,
+		"email":      "test@example.com",
+		"plan":       "free",
+		"token_type": "access",
+		"iat":        time.Now().Unix(),
+		"exp":        time.Now().Add(1 * time.Hour).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, _ := token.SignedString([]byte(testJWTSecret))
+	return tokenStr
+}
+
+// generateTestRefreshToken creates a valid refresh JWT for the given user ID.
+func generateTestRefreshToken(userID string) string {
+	claims := jwt.MapClaims{
+		"user_id":    userID,
+		"email":      "test@example.com",
+		"plan":       "free",
+		"token_type": "refresh",
+		"iat":        time.Now().Unix(),
+		"exp":        time.Now().Add(30 * 24 * time.Hour).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, _ := token.SignedString([]byte(testJWTSecret))
@@ -768,5 +793,195 @@ func TestAuthHandler_Register_ResponseStructure(t *testing.T) {
 		if _, ok := userMap[field]; !ok {
 			t.Errorf("missing field user.%q in response", field)
 		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: DELETE /api/v1/auth/account
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_DeleteAccount_Success(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockAuthService{
+		deleteAccountFn: func(ctx context.Context, id uuid.UUID, hash []byte) error {
+			return nil
+		},
+	}
+
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(map[string]interface{}{
+		"auth_key_hash": []byte("correct-hash"),
+	})
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/auth/account", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	var resp map[string]string
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if resp["status"] != "deleted" {
+		t.Errorf("status = %q, want %q", resp["status"], "deleted")
+	}
+}
+
+func TestAuthHandler_DeleteAccount_WrongPassword(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockAuthService{
+		deleteAccountFn: func(ctx context.Context, id uuid.UUID, hash []byte) error {
+			return service.ErrInvalidCredentials
+		},
+	}
+
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(map[string]interface{}{
+		"auth_key_hash": []byte("wrong-hash"),
+	})
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/auth/account", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusUnauthorized, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp.Error != "invalid_credentials" {
+		t.Errorf("error type = %q, want %q", errResp.Error, "invalid_credentials")
+	}
+}
+
+func TestAuthHandler_DeleteAccount_Unauthorized(t *testing.T) {
+	svc := &mockAuthService{}
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(map[string]interface{}{
+		"auth_key_hash": []byte("some-hash"),
+	})
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/auth/account", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	// No Authorization header.
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusUnauthorized, rec.Body.String())
+	}
+}
+
+func TestAuthHandler_DeleteAccount_MissingAuthKeyHash(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockAuthService{}
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(map[string]interface{}{})
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/auth/account", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp.Error != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	}
+}
+
+func TestAuthHandler_DeleteAccount_InvalidBody(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockAuthService{}
+	router := setupAuthRouter(svc)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/auth/account", bytes.NewReader([]byte("not-json")))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
+func TestAuthHandler_DeleteAccount_UserNotFound(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockAuthService{
+		deleteAccountFn: func(ctx context.Context, id uuid.UUID, hash []byte) error {
+			return service.ErrUserNotFound
+		},
+	}
+
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(map[string]interface{}{
+		"auth_key_hash": []byte("some-hash"),
+	})
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/auth/account", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusNotFound, rec.Body.String())
+	}
+}
+
+func TestAuthHandler_DeleteAccount_InternalError(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockAuthService{
+		deleteAccountFn: func(ctx context.Context, id uuid.UUID, hash []byte) error {
+			return errors.New("database connection lost")
+		},
+	}
+
+	router := setupAuthRouter(svc)
+
+	body, _ := json.Marshal(map[string]interface{}{
+		"auth_key_hash": []byte("some-hash"),
+	})
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/auth/account", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp.Error != "internal_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error, "internal_error")
 	}
 }

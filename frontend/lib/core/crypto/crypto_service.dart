@@ -59,11 +59,22 @@ class CryptoService {
 
   /// Unlock by re-deriving from password + stored salt.
   /// Used when the master key is not cached (e.g. fresh login).
+  ///
+  /// Uses the stored KDF version to ensure the correct Argon2id parameters
+  /// are used. Users who have not yet been migrated will use legacy params.
   Future<bool> unlockWithPassword(String password) async {
     final salt = await KeyStorage.loadSalt();
     if (salt == null) return false;
 
-    final masterKey = await MasterKeyManager.deriveMasterKey(password, salt);
+    // Use stored KDF version, defaulting to current version for new users.
+    final storedVersion = await MasterKeyManager.getStoredKdfVersion();
+    final kdfVersion = storedVersion ?? MasterKeyManager.currentKdfVersion;
+
+    final masterKey = await MasterKeyManager.deriveMasterKey(
+      password,
+      salt,
+      kdfVersion,
+    );
     final encryptKey = await MasterKeyManager.deriveEncryptKey(masterKey);
 
     await KeyStorage.saveMasterKey(masterKey);

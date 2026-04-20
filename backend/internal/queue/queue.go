@@ -16,6 +16,7 @@ const (
 type Service struct {
 	client *asynq.Client
 	mux    *asynq.ServeMux
+	server *asynq.Server
 }
 
 // New creates a new queue service.
@@ -97,7 +98,38 @@ func (s *Service) Run(redisURL string) error {
 	return srv.Run(s.mux)
 }
 
-// Shutdown closes the queue client.
+// Start starts the asynq worker server in the background. Call Stop to shut it
+// down gracefully. The caller should handle the error returned by Start (e.g.
+// if the Redis connection fails).
+func (s *Service) Start(redisURL string) error {
+	s.server = asynq.NewServer(
+		asynq.RedisClientOpt{Addr: redisURL},
+		asynq.Config{
+			Concurrency: 10,
+			Queues: map[string]int{
+				"ai":      2,
+				"publish": 1,
+			},
+		},
+	)
+
+	if err := s.server.Start(s.mux); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Stop gracefully shuts down the asynq worker server. In-progress tasks are
+// given time to complete before the server stops.
+func (s *Service) Stop() {
+	if s.server != nil {
+		s.server.Stop()
+		s.server = nil
+	}
+}
+
+// Shutdown closes the queue client. Call Stop first to shut down the worker server.
 func (s *Service) Shutdown() {
 	s.client.Close()
 }

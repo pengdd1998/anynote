@@ -17,9 +17,13 @@ func main() {
 	opts := &slog.HandlerOptions{Level: slog.LevelInfo}
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, opts)))
 
+	// DATABASE_URL is required. For local development, export it explicitly:
+	//   export DATABASE_URL="postgres://user:pass@localhost:5432/anynote?sslmode=disable"
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		dbURL = "postgres://anynote:anynote_dev@localhost:5432/anynote?sslmode=disable"
+		slog.Error("DATABASE_URL environment variable is required but not set")
+		fmt.Fprintln(os.Stderr, "Usage: DATABASE_URL=<postgres://...> go run ./cmd/migrate")
+		os.Exit(1)
 	}
 
 	migrationsDir := "db/migrations"

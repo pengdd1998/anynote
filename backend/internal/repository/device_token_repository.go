@@ -34,6 +34,14 @@ func (r *DeviceTokenRepository) DeleteByToken(ctx context.Context, token string)
 	return err
 }
 
+// DeleteByUser removes all device tokens for a given user.
+// The device_tokens table uses a TEXT user_id without a foreign key, so it is
+// not covered by ON DELETE CASCADE and must be cleaned up explicitly.
+func (r *DeviceTokenRepository) DeleteByUser(ctx context.Context, userID string) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM device_tokens WHERE user_id = $1`, userID)
+	return err
+}
+
 func (r *DeviceTokenRepository) ListByUser(ctx context.Context, userID string) ([]service.DeviceTokenEntry, error) {
 	rows, err := r.pool.Query(ctx,
 		`SELECT id, user_id, token, platform, created_at

@@ -7,6 +7,14 @@ import 'package:sodium_libs/sodium_libs_sumo.dart';
 // Native implementation of platform-specific crypto functions for MasterKeyManager.
 // Uses sodium_libs (libsodium) for Argon2id, BLAKE2b.
 
+/// Current KDF version for native (Argon2id) key derivation.
+///
+/// Version history:
+///   1 - opsLimitModerate (2 ops) + memLimitInteractive (32MB). Below OWASP.
+///   2 - opsLimitSensitive (4 ops) + memLimitModerate (256MB). Meets OWASP
+///       recommendations: 64MB+ memory, 3+ iterations, parallelism=1.
+const int kdfVersionNative = 2;
+
 /// Generate a 32-byte salt using cryptographically secure random.
 Uint8List generateSaltImpl() {
   final random = Random.secure();
@@ -18,10 +26,18 @@ Uint8List generateSaltImpl() {
 }
 
 /// Derive master key using Argon2id (libsodium crypto_pwhash).
+///
+/// Uses OWASP-recommended parameters:
+///   - opsLimit: opsLimitSensitive (4 iterations, >= OWASP minimum of 3)
+///   - memLimit: memLimitModerate (256MB, >= OWASP minimum of 64MB)
+///   - algorithm: Argon2id v1.3
+///   - parallelism: 1 (libsodium default)
+/// See: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 Future<Uint8List> deriveMasterKeyImpl(
   String password,
-  Uint8List salt,
-) async {
+  Uint8List salt, [
+  int? kdfVersion,
+]) async {
   final sodium = await _getSodium();
 
   final Uint8List pwhashSalt;
@@ -35,12 +51,28 @@ Future<Uint8List> deriveMasterKeyImpl(
   }
 
   final passwordBytes = Int8List.fromList(utf8.encode(password));
+
+  // Select KDF parameters based on version.
+  // Version 1 (legacy): opsLimitModerate + memLimitInteractive.
+  // Version 2 (current): opsLimitSensitive + memLimitModerate (OWASP-aligned).
+  final int opsLimit;
+  final int memLimit;
+  if (kdfVersion == null || kdfVersion >= kdfVersionNative) {
+    // Current default: OWASP-aligned parameters.
+    opsLimit = sodium.crypto.pwhash.opsLimitSensitive;
+    memLimit = sodium.crypto.pwhash.memLimitModerate;
+  } else {
+    // Legacy fallback for migrating existing users.
+    opsLimit = sodium.crypto.pwhash.opsLimitModerate;
+    memLimit = sodium.crypto.pwhash.memLimitInteractive;
+  }
+
   final key = sodium.crypto.pwhash.call(
     password: passwordBytes,
     salt: pwhashSalt,
     outLen: 32,
-    opsLimit: sodium.crypto.pwhash.opsLimitModerate,
-    memLimit: sodium.crypto.pwhash.memLimitInteractive,
+    opsLimit: opsLimit,
+    memLimit: memLimit,
     alg: CryptoPwhashAlgorithm.argon2id13,
   );
 

@@ -16,11 +16,12 @@ import (
 func TestAuthMiddlewareValidToken(t *testing.T) {
 	secret := "test-secret"
 
-	// Generate a valid token
+	// Generate a valid access token
 	claims := jwt.MapClaims{
-		"user_id": "550e8400-e29b-41d4-a716-446655440000",
-		"email":   "test@example.com",
-		"plan":    "free",
+		"user_id":    "550e8400-e29b-41d4-a716-446655440000",
+		"email":      "test@example.com",
+		"plan":       "free",
+		"token_type": "access",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, _ := token.SignedString([]byte(secret))
@@ -180,6 +181,44 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestAuthMiddleware_RefreshTokenRejected(t *testing.T) {
+	secret := "test-secret"
+
+	// Create a valid JWT with token_type=refresh.
+	claims := jwt.MapClaims{
+		"user_id":    "550e8400-e29b-41d4-a716-446655440000",
+		"email":      "test@example.com",
+		"plan":       "free",
+		"token_type": "refresh",
+		"iat":        time.Now().Unix(),
+		"exp":        time.Now().Add(30 * 24 * time.Hour).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, _ := token.SignedString([]byte(secret))
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("next should not be called with refresh token")
+	})
+
+	middleware := AuthMiddleware(secret)(next)
+
+	req := httptest.NewRequest("GET", "/test", nil)
+	req.Header.Set("Authorization", "Bearer "+tokenStr)
+	rec := httptest.NewRecorder()
+
+	middleware.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", rec.Code)
+	}
+
+	var errResp map[string]interface{}
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp["error"] != "invalid_token_type" {
+		t.Errorf("error = %v, want invalid_token_type", errResp["error"])
 	}
 }
 

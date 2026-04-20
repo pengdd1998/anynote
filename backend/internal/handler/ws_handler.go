@@ -193,6 +193,13 @@ func (h *WSHandler) validateToken(tokenStr string) (string, error) {
 	if !ok || userID == "" {
 		return "", errors.New("user_id not found in token claims")
 	}
+
+	// Reject refresh tokens used for WebSocket connections.
+	tokenType, _ := claims["token_type"].(string)
+	if tokenType == "refresh" {
+		return "", errors.New("access token required, refresh token not allowed")
+	}
+
 	return userID, nil
 }
 

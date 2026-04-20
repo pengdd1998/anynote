@@ -53,25 +53,27 @@ func TestE2EAuthFlow(t *testing.T) {
 	// Generate a realistic access token that AuthMiddleware will accept.
 	mintAccessToken := func() string {
 		claims := jwt.MapClaims{
-			"user_id": userID.String(),
-			"email":   testEmail,
-			"plan":    "free",
-			"iat":     time.Now().Unix(),
-			"exp":     time.Now().Add(1 * time.Hour).Unix(),
+			"user_id":    userID.String(),
+			"email":      testEmail,
+			"plan":       "free",
+			"token_type": "access",
+			"iat":        time.Now().Unix(),
+			"exp":        time.Now().Add(1 * time.Hour).Unix(),
 		}
 		tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		s, _ := tok.SignedString([]byte(jwtSecret))
 		return s
 	}
 
-	// Generate a refresh token (same shape, longer expiry).
+	// Generate a refresh token (with token_type=refresh, longer expiry).
 	mintRefreshToken := func() string {
 		claims := jwt.MapClaims{
-			"user_id": userID.String(),
-			"email":   testEmail,
-			"plan":    "free",
-			"iat":     time.Now().Unix(),
-			"exp":     time.Now().Add(30 * 24 * time.Hour).Unix(),
+			"user_id":    userID.String(),
+			"email":      testEmail,
+			"plan":       "free",
+			"token_type": "refresh",
+			"iat":        time.Now().Unix(),
+			"exp":        time.Now().Add(30 * 24 * time.Hour).Unix(),
 		}
 		tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		s, _ := tok.SignedString([]byte(jwtSecret))

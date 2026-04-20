@@ -73,6 +73,13 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 				return
 			}
 
+			// Reject refresh tokens used for API access.
+			tokenType, _ := claims["token_type"].(string)
+			if tokenType != "access" {
+				writeError(w, http.StatusUnauthorized, "invalid_token_type", "Access token required")
+				return
+			}
+
 			ctx := context.WithValue(r.Context(), userIDKey, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

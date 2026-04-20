@@ -59,3 +59,12 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Use
 	}
 	return &u, nil
 }
+
+// Delete removes a user by ID. Related records in tables with ON DELETE CASCADE
+// foreign keys (sync_blobs, user_quotas, llm_configs, platform_connections,
+// publish_logs, shared_notes, note_comments, note_reactions) are automatically
+// removed by PostgreSQL.
+func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
+	return err
+}

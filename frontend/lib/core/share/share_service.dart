@@ -389,8 +389,9 @@ class ShareService {
       password: passwordBytes,
       salt: pwhashSalt,
       outLen: 32,
-      opsLimit: sodium.crypto.pwhash.opsLimitModerate,
-      memLimit: sodium.crypto.pwhash.memLimitInteractive,
+      // OWASP-aligned parameters: opsLimitSensitive (4 ops) + memLimitModerate (256MB).
+      opsLimit: sodium.crypto.pwhash.opsLimitSensitive,
+      memLimit: sodium.crypto.pwhash.memLimitModerate,
       alg: CryptoPwhashAlgorithm.argon2id13,
     );
 
