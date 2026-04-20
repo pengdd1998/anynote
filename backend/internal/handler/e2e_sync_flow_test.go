@@ -234,7 +234,7 @@ func TestE2ESyncFlow_PushConflict(t *testing.T) {
 			return &domain.SyncPushResponse{
 				Accepted: []uuid.UUID{},
 				Conflicts: []domain.SyncConflict{
-					{ItemID: itemID, ServerVersion: 10},
+					{ItemID: itemID, ItemType: "note", ServerVersion: 10, ClientVersion: 8},
 				},
 			}, nil
 		},

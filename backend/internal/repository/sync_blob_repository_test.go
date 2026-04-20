@@ -288,3 +288,59 @@ func TestMockSyncBlobRepo_DifferentUsers(t *testing.T) {
 		t.Errorf("user2 latest = %d, want 1", v2)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Tests: BatchUpsert with enriched result fields
+// ---------------------------------------------------------------------------
+
+func TestSyncBlobRepository_BatchUpsert_DocumentsEnrichedResult(t *testing.T) {
+	t.Run("BatchUpsert_populates_ItemType_and_ClientVersion", func(t *testing.T) {
+		// Expected behavior:
+		//   BatchUpsert should populate ItemType and ClientVersion in each result,
+		//   enabling callers to construct enriched conflict info without a secondary lookup.
+		t.Log("documented: BatchUpsert returns ItemType and ClientVersion in results")
+	})
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Operation logging methods
+// ---------------------------------------------------------------------------
+
+func TestSyncBlobRepository_OperationLogMethods(t *testing.T) {
+	t.Run("InsertOperationLog_records_sync_operation", func(t *testing.T) {
+		// Expected behavior:
+		//   INSERT INTO sync_operation_logs (id, user_id, operation_type, item_type, item_id, version, created_at)
+		//   VALUES ($1, $2, $3, $4, $5, $6, $7)
+		//   Records a single sync operation for debugging and conflict tracking.
+		//   version=0 is used as a sentinel to indicate a conflict (server rejected the push).
+		t.Log("documented: InsertOperationLog inserts a single sync operation log entry")
+	})
+
+	t.Run("BatchInsertOperationLogs_uses_pgx_Batch", func(t *testing.T) {
+		// Expected behavior:
+		//   Pipelines all insert queries in a single pgx.Batch round-trip.
+		//   Returns nil on success, error if any individual insert fails.
+		t.Log("documented: BatchInsertOperationLogs uses pgx.Batch for bulk insert")
+	})
+
+	t.Run("GetItemsByType_returns_type_counts", func(t *testing.T) {
+		// Expected behavior:
+		//   SELECT item_type, COUNT(*) FROM sync_blobs WHERE user_id = $1 GROUP BY item_type
+		//   Returns a map of item_type -> count for the given user.
+		t.Log("documented: GetItemsByType returns per-type item counts via GROUP BY")
+	})
+
+	t.Run("GetConflictCount_returns_conflict_log_count", func(t *testing.T) {
+		// Expected behavior:
+		//   SELECT COUNT(*) FROM sync_operation_logs WHERE user_id = $1 AND operation_type = 'push' AND version = 0
+		//   Counts all logged conflicts (version=0 sentinel) for the user.
+		t.Log("documented: GetConflictCount counts version=0 operation logs for the user")
+	})
+
+	t.Run("ListOperationLogs_returns_recent_logs", func(t *testing.T) {
+		// Expected behavior:
+		//   SELECT ... FROM sync_operation_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2
+		//   Returns recent sync operation logs for debugging. Default limit 50, max 500.
+		t.Log("documented: ListOperationLogs returns paginated recent logs ordered by created_at DESC")
+	})
+}

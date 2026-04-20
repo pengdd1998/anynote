@@ -119,3 +119,19 @@ func (h *SyncHandler) Status(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, resp)
 }
+
+func (h *SyncHandler) Stats(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+
+	resp, err := h.syncService.GetStats(r.Context(), parseUUID(userID))
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "sync_error", "Failed to get sync stats")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}

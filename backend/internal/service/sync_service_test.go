@@ -81,6 +81,8 @@ func (m *mockSyncBlobRepo) BatchUpsert(ctx context.Context, blobs []*domain.Sync
 	results := make([]domain.BatchUpsertResult, len(blobs))
 	for i, blob := range blobs {
 		results[i].ItemID = blob.ItemID
+		results[i].ItemType = blob.ItemType
+		results[i].ClientVersion = blob.Version
 		if m.upsertErr != nil {
 			results[i].Error = m.upsertErr
 			continue
@@ -124,6 +126,26 @@ func (m *mockSyncBlobRepo) GetStatusSummary(ctx context.Context, userID uuid.UUI
 		TotalItems:    m.totalItems,
 		LastUpdated:   m.lastUpdated,
 	}, nil
+}
+
+func (m *mockSyncBlobRepo) GetItemsByType(ctx context.Context, userID uuid.UUID) (map[string]int, error) {
+	result := make(map[string]int)
+	for _, b := range m.blobs {
+		result[b.ItemType]++
+	}
+	return result, nil
+}
+
+func (m *mockSyncBlobRepo) GetConflictCount(ctx context.Context, userID uuid.UUID) (int64, error) {
+	return 0, nil
+}
+
+func (m *mockSyncBlobRepo) InsertOperationLog(ctx context.Context, log *domain.SyncOperationLog) error {
+	return nil
+}
+
+func (m *mockSyncBlobRepo) BatchInsertOperationLogs(ctx context.Context, logs []domain.SyncOperationLog) error {
+	return nil
 }
 
 // ---------------------------------------------------------------------------
@@ -510,6 +532,130 @@ func (m *customUpsertRepo) GetStatusSummary(ctx context.Context, userID uuid.UUI
 		TotalItems:    m.totalItems,
 		LastUpdated:   m.lastUpdated,
 	}, nil
+}
+
+func (m *customUpsertRepo) GetItemsByType(ctx context.Context, userID uuid.UUID) (map[string]int, error) {
+	result := make(map[string]int)
+	for _, b := range m.blobs {
+		result[b.ItemType]++
+	}
+	return result, nil
+}
+
+func (m *customUpsertRepo) GetConflictCount(ctx context.Context, userID uuid.UUID) (int64, error) {
+	return 0, nil
+}
+
+func (m *customUpsertRepo) InsertOperationLog(ctx context.Context, log *domain.SyncOperationLog) error {
+	return nil
+}
+
+func (m *customUpsertRepo) BatchInsertOperationLogs(ctx context.Context, logs []domain.SyncOperationLog) error {
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Tests: GetStats
+// ---------------------------------------------------------------------------
+
+func TestSyncService_GetStats_Success(t *testing.T) {
+	userID := uuid.New()
+	now := time.Now()
+
+	repo := &mockSyncBlobRepo{
+		blobs: []domain.SyncBlob{
+			{UserID: userID, ItemType: "note", Version: 3},
+			{UserID: userID, ItemType: "note", Version: 5},
+			{UserID: userID, ItemType: "tag", Version: 4},
+		},
+		latestVersion: 5,
+		totalItems:    3,
+		lastUpdated:   now,
+	}
+
+	svc := NewSyncService(repo)
+	stats, err := svc.GetStats(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetStats: %v", err)
+	}
+
+	if stats.TotalItems != 3 {
+		t.Errorf("TotalItems = %d, want 3", stats.TotalItems)
+	}
+	if stats.ItemsByType["note"] != 2 {
+		t.Errorf("ItemsByType[note] = %d, want 2", stats.ItemsByType["note"])
+	}
+	if stats.ItemsByType["tag"] != 1 {
+		t.Errorf("ItemsByType[tag] = %d, want 1", stats.ItemsByType["tag"])
+	}
+	if !stats.LastSyncedAt.Equal(now) {
+		t.Errorf("LastSyncedAt = %v, want %v", stats.LastSyncedAt, now)
+	}
+}
+
+func TestSyncService_GetStats_StatusSummaryError(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		statusSummaryErr: errors.New("db unavailable"),
+	}
+
+	svc := NewSyncService(repo)
+	_, err := svc.GetStats(context.Background(), userID)
+	if err == nil {
+		t.Error("GetStats should return error when GetStatusSummary fails")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Push with enriched conflict info
+// ---------------------------------------------------------------------------
+
+func TestSyncService_Push_ConflictIncludesTypeAndVersion(t *testing.T) {
+	userID := uuid.New()
+	itemID := uuid.New()
+
+	// Custom repo that rejects all items (conflict).
+	repo := &customUpsertRepo{
+		batchUpsertFn: func(blobs []*domain.SyncBlob) []domain.BatchUpsertResult {
+			results := make([]domain.BatchUpsertResult, len(blobs))
+			for i, blob := range blobs {
+				results[i].ItemID = blob.ItemID
+				results[i].ItemType = blob.ItemType
+				results[i].ClientVersion = blob.Version
+				results[i].ServerVersion = blob.Version + 5 // server has newer version
+			}
+			return results
+		},
+	}
+
+	svc := NewSyncService(repo)
+	resp, err := svc.Push(context.Background(), userID, domain.SyncPushRequest{
+		Blobs: []domain.SyncPushItem{
+			{ItemID: itemID, ItemType: "note", Version: 3, EncryptedData: []byte("enc"), BlobSize: 3},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Push: %v", err)
+	}
+
+	if len(resp.Conflicts) != 1 {
+		t.Fatalf("len(Conflicts) = %d, want 1", len(resp.Conflicts))
+	}
+
+	c := resp.Conflicts[0]
+	if c.ItemID != itemID {
+		t.Errorf("Conflict.ItemID = %v, want %v", c.ItemID, itemID)
+	}
+	if c.ItemType != "note" {
+		t.Errorf("Conflict.ItemType = %q, want %q", c.ItemType, "note")
+	}
+	if c.ServerVersion != 8 {
+		t.Errorf("Conflict.ServerVersion = %d, want 8", c.ServerVersion)
+	}
+	if c.ClientVersion != 3 {
+		t.Errorf("Conflict.ClientVersion = %d, want 3", c.ClientVersion)
+	}
 }
 
 // ---------------------------------------------------------------------------

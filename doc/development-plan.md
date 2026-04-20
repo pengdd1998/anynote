@@ -30,9 +30,9 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Encryption (server) | AES-256-GCM for API key storage at rest |
 | Infra | Docker Compose (PostgreSQL, Redis, MinIO, Chrome headless) |
 
-### Current State Summary (Updated 2026-04-20)
+### Current State Summary (Updated 2026-04-21)
 
-**All features through Phase 27 are complete.** The app is production-ready with 1200+ tests passing.
+**All features through Phase 31 are complete.** The app is production-ready with 1276+ tests passing (668 Go + 608 Flutter).
 
 | Module | Completeness | Notes |
 |---|---|---|
@@ -45,7 +45,7 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Backend Publish | 100% | Async publish with platform adapters, history, 25 tests |
 | Backend WebSocket/Presence | 100% | Room-based collab, CRDT relay, rate limiting, Redis pub/sub, 65 tests |
 | Backend Security | 100% | Security headers, JWT auth, per-IP/user rate limiting, 19 tests |
-| Backend Tests | 100% | 662 test functions across 56 test files, 18 packages |
+| Backend Tests | 100% | 668 test functions across 56+ test files, 18 packages |
 | Frontend Crypto | 100% | Native: XChaCha20-Poly1305 + Argon2id; Web: AES-256-GCM + PBKDF2, 100+ tests |
 | Frontend Database | 100% | Drift schema v8, 11 tables, FTS5 with CJK tokenizer, all DAOs tested |
 | Frontend Sync Engine | 100% | Pull/push, LWW, version vectors, periodic sync, connectivity-aware |
@@ -59,7 +59,7 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Frontend Desktop | 100% | Menu bar, window state persistence, keyboard shortcuts, adaptive layout |
 | Frontend Search | 100% | FTS5 with BM25 ranking, CJK tokenizer, advanced search screen |
 | Frontend Localization | 100% | EN + ZH + JA + KO |
-| Frontend Tests | 100% | 543 tests (14 skipped) across 55+ test files |
+| Frontend Tests | 100% | 608 tests (14 skipped, 0 failures) across 55+ test files |
 
 ### Main Phases
 
@@ -76,6 +76,10 @@ Build a local-first, privacy-first note-taking application where the server neve
 11. **Phase 25: Desktop Polish** — COMPLETED (menu bar, window state, shortcuts)
 12. **Phase 26: App Store Prep** — COMPLETED (icons, splash, Fastlane, privacy policy)
 13. **Phase 27: Production Readiness** — COMPLETED (lint cleanup, deployment config, web build verification)
+14. **Phase 28: Code Quality & Security** — COMPLETED (memory leaks, test fixes, input validation, rate limiter eviction)
+15. **Phase 29: Push Notifications & E2E Tests** — COMPLETED (FCM push, E2E test suites, accessibility audit)
+16. **Phase 30: Security Hardening + Sync Performance** — COMPLETED (body size limits, SSE fix, auth validation, TOCTOU fix, sync pagination)
+17. **Phase 31: Security & Feature Completion** — COMPLETED (Argon2id upgrade, account deletion, push for publish/comments)
 
 ---
 
@@ -969,17 +973,121 @@ PWA manifest valid (`web/manifest.json`). WebCrypto code paths implemented.
 
 ---
 
-## Future Considerations (Post-Phase 28)
+## Phase 29: Push Notifications, E2E Tests, Accessibility — COMPLETED
+
+**Goal**: Implement push notification dispatch, end-to-end test suites, and accessibility audit.
+
+### 29.1 FCM Push Notifications ✅
+
+- **File**: `backend/internal/service/push_service.go`, `backend/internal/config/config.go`
+- Implemented FCM push via `firebase.google.com/go/v4/messaging`
+- Device token CRUD in PostgreSQL
+- FirebaseConfig in app config (credentials file path, project ID)
+
+### 29.2 E2E Integration Tests ✅
+
+- **Backend**: `e2e_auth_flow_test.go`, `e2e_publish_flow_test.go`, `e2e_sync_flow_test.go`
+- **Frontend**: `test/e2e/auth_flow_test.dart`, `test/e2e/note_crud_flow_test.dart`, `test/e2e/sync_flow_test.dart`
+- Full flow coverage: auth registration/login/refresh, sync pull/push/conflict, publish queue/complete
+
+### 29.3 Accessibility Audit ✅
+
+- **File**: `frontend/lib/core/accessibility/a11y_utils.dart`
+- Full WCAG 2.1 AA audit with screen reader semantics
+- Test helpers: `frontend/test/helpers/test_app_helper.dart` (pumpScreen, FakeCryptoService, defaultProviderOverrides)
+- `frontend/test/core/accessibility/` — accessibility-specific test cases
+
+---
+
+## Phase 30: Security Hardening + Sync Performance — COMPLETED
+
+**Goal**: Address remaining security findings and optimize sync performance.
+
+### 30.1 Body size limits ✅
+
+- **File**: `backend/internal/handler/middleware.go`
+- `MaxBodySize` middleware: 10MB default, 50MB for sync/push endpoints
+
+### 30.2 SSE fix ✅
+
+- **File**: `backend/internal/handler/ai_handler.go`
+- Error payload now uses `json.Marshal` instead of `fmt.Fprintf` for proper SSE formatting
+
+### 30.3 Auth validation ✅
+
+- Field length limits: AuthKeyHash 128, Salt 64, RecoveryKey 1024
+- Username regex: `^[a-zA-Z0-9_-]+$`
+
+### 30.4 TOCTOU fix ✅
+
+- **File**: `backend/internal/repository/sync_blob_repository.go`
+- Upsert now uses atomic `INSERT ON CONFLICT DO UPDATE WHERE version < $4`
+
+### 30.5 Sync performance ✅
+
+- Cursor pagination: limit/cursor/HasMore/NextCursor
+- `pgx.Batch` for bulk upsert
+- Combined `GetStatusSummary` endpoint
+
+### 30.6 WS/Docker hardening ✅
+
+- Configurable WebSocket origins via `WS_ALLOWED_ORIGINS` env var
+- Docker `cap_drop ALL`, `mem_limit`, `read_only`
+
+---
+
+## Phase 31: Security Hardening & Feature Completion — COMPLETED
+
+**Goal**: Argon2id parameter upgrade, account deletion, and push notifications for publish/comments.
+
+### 31.1 Worker graceful shutdown ✅
+
+- Signal handling (SIGINT/SIGTERM, 5s timeout)
+
+### 31.2 Expired share cleanup ✅
+
+- Background job (hourly, cancellable on shutdown)
+
+### 31.3 Account deletion ✅
+
+- `DELETE /api/v1/auth/account` with auth key verification
+
+### 31.4 JWT token_type claim separation ✅
+
+- Access vs refresh token type claims
+
+### 31.5 AI proxy max_tokens cap + DRY platform adapter ✅
+
+- max_tokens cap based on user plan tier
+- DRY platform adapter registration via appsetup package
+
+### 31.6 MinIO health check + WS origins ✅
+
+- BucketChecker interface in readiness endpoint
+- Configurable WebSocket allowed origins
+
+### 31.7 Argon2id parameter hardening ✅
+
+- opsLimitSensitive + memLimitModerate with migration support
+- KDF version tracking (v1 legacy, v2 current) with try-current-first fallback
+- Share key derivation upgraded to stronger parameters
+- Login flow: version-aware key derivation with automatic migration
+- Registration: stores KDF version for new users
+
+### 31.8 Push notifications for publish/comments ✅
+
+- Push on publish completion and new comments
+
+---
+
+## Future Considerations (Post-Phase 31)
 
 These are optional improvements for after initial release:
 
 | Area | Description | Priority |
 |------|-------------|----------|
-| Push Notification Dispatch | Replace log-only push service with actual FCM/APNs | P2 |
-| E2E Integration Tests | Golden tests + full backend integration test suite | P2 |
 | Performance Profiling | Memory profiling, startup time optimization | P3 |
 | Offline-First Enhancement | Queue operations offline, sync on reconnect | P3 |
 | Multi-Device Sync | Cross-device session management, conflict UI | P3 |
-| Accessibility Audit | Full WCAG 2.1 AA audit with screen reader testing | P2 |
 | Internationalization | RTL language support, plural rules, date formatting | P3 |
 | Analytics (Privacy-Preserving) | Opt-in, anonymized usage telemetry | P3 |

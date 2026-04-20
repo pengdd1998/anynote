@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/crypto/key_storage.dart';
+import '../../../core/network/connectivity_service.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_queue_manager.dart';
 
@@ -20,10 +21,21 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
 // ── Sync Queue Manager Provider ───────────────────────
 
 /// Provides the SyncQueueManager for offline-first operations.
+///
+/// The queue manager is wired to the [connectivityServiceProvider] so that it
+/// can skip processing when the device is offline and only flush queued
+/// operations when connectivity is restored.
 final syncQueueManagerProvider = Provider<SyncQueueManager>((ref) {
   final db = ref.watch(databaseProvider);
   final engine = ref.watch(syncEngineProvider);
-  return SyncQueueManager(db, engine);
+  // Watch the connectivity service so the queue manager gets rebuilt if
+  // the service is recreated (shouldn't happen in practice, but correct).
+  ref.watch(connectivityServiceProvider);
+  return SyncQueueManager(
+    db,
+    engine,
+    connectivityChecker: () => ref.read(connectivityServiceProvider),
+  );
 });
 
 // ── AI Quota ──────────────────────────────────────────

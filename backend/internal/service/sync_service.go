@@ -15,6 +15,7 @@ type SyncService interface {
 	Pull(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error)
 	Push(ctx context.Context, userID uuid.UUID, req domain.SyncPushRequest) (*domain.SyncPushResponse, error)
 	GetStatus(ctx context.Context, userID uuid.UUID) (*domain.SyncStatusResponse, error)
+	GetStats(ctx context.Context, userID uuid.UUID) (*domain.SyncStatsResponse, error)
 }
 
 type SyncBlobRepository interface {
@@ -27,6 +28,10 @@ type SyncBlobRepository interface {
 	CountItems(ctx context.Context, userID uuid.UUID) (int, error)
 	GetLastUpdated(ctx context.Context, userID uuid.UUID) (time.Time, error)
 	GetStatusSummary(ctx context.Context, userID uuid.UUID) (domain.SyncStatusSummary, error)
+	GetItemsByType(ctx context.Context, userID uuid.UUID) (map[string]int, error)
+	GetConflictCount(ctx context.Context, userID uuid.UUID) (int64, error)
+	InsertOperationLog(ctx context.Context, log *domain.SyncOperationLog) error
+	BatchInsertOperationLogs(ctx context.Context, logs []domain.SyncOperationLog) error
 }
 
 type syncService struct {
@@ -111,17 +116,50 @@ func (s *syncService) Push(ctx context.Context, userID uuid.UUID, req domain.Syn
 	// Execute batch upsert in a single database round-trip.
 	results := s.blobRepo.BatchUpsert(ctx, blobs)
 
+	// Build operation logs for all items.
+	var opLogs []domain.SyncOperationLog
+	now := time.Now()
+
 	for _, res := range results {
 		if res.Error != nil {
 			continue // Skip items that had DB errors
 		}
 		if res.Accepted {
 			accepted = append(accepted, res.ItemID)
+			opLogs = append(opLogs, domain.SyncOperationLog{
+				ID:            uuid.New(),
+				UserID:        userID,
+				OperationType: "push",
+				ItemType:      res.ItemType,
+				ItemID:        res.ItemID,
+				Version:       res.ClientVersion,
+				CreatedAt:     now,
+			})
 		} else {
 			conflicts = append(conflicts, domain.SyncConflict{
 				ItemID:        res.ItemID,
+				ItemType:      res.ItemType,
 				ServerVersion: res.ServerVersion,
+				ClientVersion: res.ClientVersion,
 			})
+			// version=0 is used as a sentinel to indicate a conflict was logged.
+			opLogs = append(opLogs, domain.SyncOperationLog{
+				ID:            uuid.New(),
+				UserID:        userID,
+				OperationType: "push",
+				ItemType:      res.ItemType,
+				ItemID:        res.ItemID,
+				Version:       0,
+				CreatedAt:     now,
+			})
+		}
+	}
+
+	// Log operations in a single batch round-trip.
+	if len(opLogs) > 0 {
+		if err := s.blobRepo.BatchInsertOperationLogs(ctx, opLogs); err != nil {
+			slog.Error("failed to batch insert operation logs", "user_id", userID.String(), "error", err)
+			// Non-fatal: operation logging failure should not block the push response.
 		}
 	}
 
@@ -134,7 +172,7 @@ func (s *syncService) Push(ctx context.Context, userID uuid.UUID, req domain.Syn
 				Body:     fmt.Sprintf("%d item(s) had conflicts during sync", len(conflicts)),
 				Priority: "high",
 				Data: map[string]interface{}{
-					"type":        "sync_conflict",
+					"type":          "sync_conflict",
 					"conflict_count": len(conflicts),
 				},
 			}
@@ -157,5 +195,29 @@ func (s *syncService) GetStatus(ctx context.Context, userID uuid.UUID) (*domain.
 		LatestVersion: summary.LatestVersion,
 		TotalItems:    summary.TotalItems,
 		LastSyncedAt:  summary.LastUpdated,
+	}, nil
+}
+
+func (s *syncService) GetStats(ctx context.Context, userID uuid.UUID) (*domain.SyncStatsResponse, error) {
+	summary, err := s.blobRepo.GetStatusSummary(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get status summary: %w", err)
+	}
+
+	itemsByType, err := s.blobRepo.GetItemsByType(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get items by type: %w", err)
+	}
+
+	conflictCount, err := s.blobRepo.GetConflictCount(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get conflict count: %w", err)
+	}
+
+	return &domain.SyncStatsResponse{
+		TotalItems:     summary.TotalItems,
+		ItemsByType:    itemsByType,
+		LastSyncedAt:   summary.LastUpdated,
+		TotalConflicts: conflictCount,
 	}, nil
 }

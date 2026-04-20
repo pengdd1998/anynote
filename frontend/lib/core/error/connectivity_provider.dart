@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/settings/data/settings_providers.dart';
+import '../network/connectivity_service.dart';
 import '../sync/sync_queue_manager.dart';
 
 /// Connectivity state exposed to the app.
@@ -14,47 +14,43 @@ typedef ConnectivityState = bool?;
 
 /// Provider that exposes the current network connectivity state.
 ///
-/// Uses a simple periodic DNS lookup check rather than the
-/// `connectivity_plus` package to avoid adding a new dependency.
-/// The check is performed every 30 seconds while the app is active.
+/// Delegates to [connectivityServiceProvider] (powered by `connectivity_plus`)
+/// and converts the synchronous bool into a stream so that existing consumers
+/// which watch this as a `StreamProvider<ConnectivityState>` continue to work
+/// without changes.
 ///
 /// Screens can watch this provider to show offline banners or disable
 /// network-dependent actions.
 final connectivityProvider = StreamProvider<ConnectivityState>((ref) {
+  // Start the connectivity service so it begins monitoring.
+  ref.watch(connectivityServiceProvider);
+
   final controller = StreamController<ConnectivityState>.broadcast();
-  Timer? timer;
-  bool lastState = true;
+  StreamSubscription<bool>? subscription;
 
-  Future<void> performCheck() async {
-    try {
-      // Lightweight DNS lookup to verify network reachability.
-      final result = await InternetAddress.lookup('dns.google')
-          .timeout(const Duration(seconds: 5));
-      final isOnline = result.isNotEmpty;
-      if (lastState != isOnline) {
-        lastState = isOnline;
-        controller.add(isOnline);
-      }
-    } catch (_) {
-      if (lastState != false) {
-        lastState = false;
-        controller.add(false);
-      }
-    }
-  }
-
-  // Emit an initial null to indicate unknown state, then check immediately.
+  // Emit an initial null to indicate unknown state.
   controller.add(null);
-  performCheck();
 
-  // Periodic checks every 30 seconds.
-  timer = Timer.periodic(const Duration(seconds: 30), (_) {
-    performCheck();
-  });
+  // Subscribe to the connectivity service's stream for real-time updates.
+  subscription = ref.read(connectivityServiceProvider.notifier).connectivityStream.listen(
+    (isConnected) {
+      controller.add(isConnected);
+    },
+    onError: (_) {
+      controller.add(false);
+    },
+  );
+
+  // Also emit the current state immediately so late subscribers get it.
+  // The stream may not re-emit the current value, so we push it once.
+  final current = ref.read(connectivityServiceProvider);
+  if (current != null) {
+    controller.add(current);
+  }
 
   // Clean up on disposal.
   ref.onDispose(() {
-    timer?.cancel();
+    subscription?.cancel();
     controller.close();
   });
 
@@ -67,13 +63,31 @@ final connectivityProvider = StreamProvider<ConnectivityState>((ref) {
 /// When connectivity transitions from offline to online, this provider
 /// reads the [SyncQueueManager] and calls [SyncQueueManager.processQueue]
 /// to flush any operations that were queued while offline.
+///
+/// This provider also listens directly to [connectivityServiceProvider] for
+/// a faster response than the stream-based [connectivityProvider] allows.
 final connectivitySyncTriggerProvider = Provider<void>((ref) {
+  // Watch the service provider to start monitoring.
+  ref.watch(connectivityServiceProvider);
+
+  // Listen to the raw connectivity service for immediate transition detection.
+  ref.listen<bool>(connectivityServiceProvider, (previous, next) {
+    final wasOffline = previous == false;
+    final isOnline = next == true;
+
+    if (wasOffline && isOnline) {
+      // Connectivity restored -- process any queued offline operations.
+      final queueManager = ref.read(syncQueueManagerProvider);
+      queueManager.processQueue();
+    }
+  });
+
+  // Also keep the stream-based provider alive for legacy consumers.
   ref.listen(connectivityProvider, (previous, next) {
     final wasOffline = previous?.valueOrNull == false;
     final isOnline = next.valueOrNull == true;
 
     if (wasOffline && isOnline) {
-      // Connectivity restored -- process any queued offline operations.
       final queueManager = ref.read(syncQueueManagerProvider);
       queueManager.processQueue();
     }

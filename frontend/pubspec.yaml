@@ -28,6 +28,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
 
   # Networking
+  connectivity_plus: ^6.0.3
   dio: ^5.4.3+1
   json_annotation: ^4.9.0
   web_socket_channel: ^3.0.1

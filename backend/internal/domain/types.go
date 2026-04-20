@@ -154,8 +154,10 @@ type SyncPushResponse struct {
 }
 
 type SyncConflict struct {
-	ItemID  uuid.UUID `json:"item_id"`
-	ServerVersion int  `json:"server_version"`
+	ItemID        uuid.UUID `json:"item_id"`
+	ItemType      string    `json:"item_type"`
+	ServerVersion int       `json:"server_version"`
+	ClientVersion int       `json:"client_version"`
 }
 
 type SyncStatusResponse struct {
@@ -174,9 +176,32 @@ type SyncStatusSummary struct {
 // BatchUpsertResult holds the outcome for a single item in a batch upsert.
 type BatchUpsertResult struct {
 	ItemID        uuid.UUID `json:"item_id"`
+	ItemType      string    `json:"item_type"`
+	ClientVersion int       `json:"client_version"`
 	Accepted      bool      `json:"accepted"`
 	ServerVersion int       `json:"server_version"`
 	Error         error     `json:"-"`
+}
+
+// ── Sync Operation Log ────────────────────────────
+
+// SyncOperationLog records a single sync push/pull operation for debugging and history.
+type SyncOperationLog struct {
+	ID            uuid.UUID `json:"id"`
+	UserID        uuid.UUID `json:"user_id"`
+	OperationType string    `json:"operation_type"` // "push" or "pull"
+	ItemType      string    `json:"item_type"`
+	ItemID        uuid.UUID `json:"item_id"`
+	Version       int       `json:"version"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+// SyncStatsResponse returns aggregate sync statistics for a user.
+type SyncStatsResponse struct {
+	TotalItems     int                `json:"total_items"`
+	ItemsByType    map[string]int     `json:"items_by_type"`
+	LastSyncedAt   time.Time          `json:"last_synced_at"`
+	TotalConflicts int64              `json:"total_conflicts"`
 }
 
 // ── Auth ──────────────────────────────────────────

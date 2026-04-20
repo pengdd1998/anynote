@@ -24,6 +24,7 @@ type mockSyncService struct {
 	pullFn      func(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error)
 	pushFn      func(ctx context.Context, userID uuid.UUID, req domain.SyncPushRequest) (*domain.SyncPushResponse, error)
 	getStatusFn func(ctx context.Context, userID uuid.UUID) (*domain.SyncStatusResponse, error)
+	getStatsFn  func(ctx context.Context, userID uuid.UUID) (*domain.SyncStatsResponse, error)
 }
 
 func (m *mockSyncService) Pull(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
@@ -47,6 +48,13 @@ func (m *mockSyncService) GetStatus(ctx context.Context, userID uuid.UUID) (*dom
 	return nil, errors.New("not implemented")
 }
 
+func (m *mockSyncService) GetStats(ctx context.Context, userID uuid.UUID) (*domain.SyncStatsResponse, error) {
+	if m.getStatsFn != nil {
+		return m.getStatsFn(ctx, userID)
+	}
+	return nil, errors.New("not implemented")
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -63,6 +71,7 @@ func setupSyncRouter(svc *mockSyncService) *chi.Mux {
 		r.Get("/api/v1/sync/pull", h.Pull)
 		r.Post("/api/v1/sync/push", h.Push)
 		r.Get("/api/v1/sync/status", h.Status)
+		r.Get("/api/v1/sync/stats", h.Stats)
 	})
 
 	return r
@@ -265,7 +274,7 @@ func TestSyncHandler_Push_Conflict(t *testing.T) {
 			return &domain.SyncPushResponse{
 				Accepted: []uuid.UUID{},
 				Conflicts: []domain.SyncConflict{
-					{ItemID: itemID, ServerVersion: 9},
+					{ItemID: itemID, ItemType: "note", ServerVersion: 9, ClientVersion: 8},
 				},
 			}, nil
 		},
@@ -562,6 +571,96 @@ func TestSyncHandler_Push_ServiceError(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/sync/push", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: GET /api/v1/sync/stats
+// ---------------------------------------------------------------------------
+
+func TestSyncHandler_Stats_Success(t *testing.T) {
+	userID := uuid.New()
+	now := time.Now()
+
+	svc := &mockSyncService{
+		getStatsFn: func(ctx context.Context, uid uuid.UUID) (*domain.SyncStatsResponse, error) {
+			return &domain.SyncStatsResponse{
+				TotalItems: 42,
+				ItemsByType: map[string]int{
+					"note":       30,
+					"tag":        10,
+					"collection": 2,
+				},
+				LastSyncedAt:   now,
+				TotalConflicts: 3,
+			}, nil
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/stats", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	var resp domain.SyncStatsResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if resp.TotalItems != 42 {
+		t.Errorf("TotalItems = %d, want 42", resp.TotalItems)
+	}
+	if resp.ItemsByType["note"] != 30 {
+		t.Errorf("ItemsByType[note] = %d, want 30", resp.ItemsByType["note"])
+	}
+	if resp.ItemsByType["tag"] != 10 {
+		t.Errorf("ItemsByType[tag] = %d, want 10", resp.ItemsByType["tag"])
+	}
+	if resp.TotalConflicts != 3 {
+		t.Errorf("TotalConflicts = %d, want 3", resp.TotalConflicts)
+	}
+}
+
+func TestSyncHandler_Stats_Unauthorized(t *testing.T) {
+	svc := &mockSyncService{}
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/stats", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
+	}
+}
+
+func TestSyncHandler_Stats_ServiceError(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockSyncService{
+		getStatsFn: func(ctx context.Context, uid uuid.UUID) (*domain.SyncStatsResponse, error) {
+			return nil, errors.New("database error")
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/stats", nil)
 	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
 	rec := httptest.NewRecorder()
 

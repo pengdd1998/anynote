@@ -90,6 +90,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 				RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute),
 			).Post("/sync/push", syncH.Push)
 			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/status", syncH.Status)
+			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/stats", syncH.Stats)
 
 			// AI Proxy
 			r.Post("/ai/proxy", aiH.Proxy)

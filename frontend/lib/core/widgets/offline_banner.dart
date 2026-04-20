@@ -37,7 +37,7 @@ class OfflineBanner extends ConsumerWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              'No internet connection',
+              'You are offline \u2014 changes will sync when connected',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

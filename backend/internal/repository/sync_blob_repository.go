@@ -137,6 +137,8 @@ func (r *SyncBlobRepository) BatchUpsert(ctx context.Context, blobs []*domain.Sy
 			blob.UserID, blob.ItemType, blob.ItemID, blob.Version, blob.EncryptedData, blob.BlobSize,
 		)
 		results[i].ItemID = blob.ItemID
+		results[i].ItemType = blob.ItemType
+		results[i].ClientVersion = blob.Version
 	}
 
 	br := r.pool.SendBatch(ctx, batch)
@@ -238,4 +240,113 @@ func (r *SyncBlobRepository) GetStatusSummary(ctx context.Context, userID uuid.U
 		summary.LastUpdated = *lastUpdated
 	}
 	return summary, nil
+}
+
+// GetItemsByType returns a map of item_type -> count for the given user.
+func (r *SyncBlobRepository) GetItemsByType(ctx context.Context, userID uuid.UUID) (map[string]int, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT item_type, COUNT(*) FROM sync_blobs WHERE user_id = $1 GROUP BY item_type`,
+		userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get items by type: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[string]int)
+	for rows.Next() {
+		var itemType string
+		var count int
+		if err := rows.Scan(&itemType, &count); err != nil {
+			return nil, fmt.Errorf("scan items by type: %w", err)
+		}
+		result[itemType] = count
+	}
+	return result, rows.Err()
+}
+
+// GetConflictCount returns the total number of logged sync conflicts for the given user.
+func (r *SyncBlobRepository) GetConflictCount(ctx context.Context, userID uuid.UUID) (int64, error) {
+	var count int64
+	err := r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM sync_operation_logs WHERE user_id = $1 AND operation_type = 'push' AND version = 0`,
+		userID,
+	).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("get conflict count: %w", err)
+	}
+	return count, nil
+}
+
+// InsertOperationLog records a sync operation log entry.
+// version=0 is used as a sentinel to indicate a conflict (server rejected the push).
+func (r *SyncBlobRepository) InsertOperationLog(ctx context.Context, log *domain.SyncOperationLog) error {
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO sync_operation_logs (id, user_id, operation_type, item_type, item_id, version, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		log.ID, log.UserID, log.OperationType, log.ItemType, log.ItemID, log.Version, log.CreatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("insert operation log: %w", err)
+	}
+	return nil
+}
+
+// BatchInsertOperationLogs records multiple sync operation log entries in a single round-trip.
+func (r *SyncBlobRepository) BatchInsertOperationLogs(ctx context.Context, logs []domain.SyncOperationLog) error {
+	if len(logs) == 0 {
+		return nil
+	}
+
+	batch := &pgx.Batch{}
+	for _, log := range logs {
+		batch.Queue(
+			`INSERT INTO sync_operation_logs (id, user_id, operation_type, item_type, item_id, version, created_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			log.ID, log.UserID, log.OperationType, log.ItemType, log.ItemID, log.Version, log.CreatedAt,
+		)
+	}
+
+	br := r.pool.SendBatch(ctx, batch)
+	defer br.Close()
+
+	for range logs {
+		if _, err := br.Exec(); err != nil {
+			return fmt.Errorf("batch insert operation log: %w", err)
+		}
+	}
+	return nil
+}
+
+// ListOperationLogs returns recent sync operation logs for a user, ordered by created_at descending.
+func (r *SyncBlobRepository) ListOperationLogs(ctx context.Context, userID uuid.UUID, limit int) ([]domain.SyncOperationLog, error) {
+	if limit < 1 {
+		limit = 50
+	}
+	if limit > 500 {
+		limit = 500
+	}
+
+	rows, err := r.pool.Query(ctx,
+		`SELECT id, user_id, operation_type, item_type, item_id, version, created_at
+		 FROM sync_operation_logs
+		 WHERE user_id = $1
+		 ORDER BY created_at DESC
+		 LIMIT $2`,
+		userID, limit,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list operation logs: %w", err)
+	}
+	defer rows.Close()
+
+	var logs []domain.SyncOperationLog
+	for rows.Next() {
+		var l domain.SyncOperationLog
+		if err := rows.Scan(&l.ID, &l.UserID, &l.OperationType, &l.ItemType, &l.ItemID, &l.Version, &l.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan operation log: %w", err)
+		}
+		logs = append(logs, l)
+	}
+	return logs, rows.Err()
 }

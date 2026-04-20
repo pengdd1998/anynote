@@ -4,13 +4,19 @@ import '../database/app_database.dart';
 import '../database/daos/sync_operations_dao.dart';
 import 'sync_engine.dart';
 
-/// Manages a persistent queue of sync operations with retry logic.
+/// Manages a persistent queue of sync operations with retry logic and
+/// connectivity awareness.
 ///
 /// The queue provides reliable offline-first sync by persisting operations
 /// to the local database. When the app comes back online, the queue is
 /// processed in order. Failed operations are retried with exponential
 /// backoff (1s, 2s, 4s, 8s, 16s, capped at 5 minutes) up to a maximum
 /// of 5 retries before being permanently failed.
+///
+/// If a [connectivityChecker] is provided, [processQueue] will skip
+/// processing when it reports the device as offline. Operations remain in
+/// the queue until connectivity is restored and the queue is flushed (which
+/// is typically driven by the [connectivitySyncTriggerProvider]).
 ///
 /// Usage:
 ///   - Call [enqueue] when a local create/update/delete occurs.
@@ -19,9 +25,18 @@ import 'sync_engine.dart';
 class SyncQueueManager {
   final AppDatabase _db;
   final SyncEngine _syncEngine;
+
+  /// Optional callback that returns whether the device is currently online.
+  /// When null, the queue assumes the device is always online (legacy mode).
+  final bool Function()? connectivityChecker;
+
   bool _isProcessing = false;
 
-  SyncQueueManager(this._db, this._syncEngine);
+  SyncQueueManager(
+    this._db,
+    this._syncEngine, {
+    this.connectivityChecker,
+  });
 
   /// Whether the queue is currently being processed.
   bool get isProcessing => _isProcessing;
@@ -29,10 +44,19 @@ class SyncQueueManager {
   /// Convenience accessor for the sync operations DAO.
   SyncOperationsDao get _dao => _db.syncOperationsDao;
 
+  /// Whether the device is currently connected to the network.
+  /// Returns true if no connectivity checker is configured.
+  bool get _isConnected => connectivityChecker?.call() ?? true;
+
   /// Enqueue a create/update/delete operation for reliable sync.
   ///
   /// If an operation for the same [itemId] is already pending, it is
   /// replaced with the new one.
+  ///
+  /// When the device is offline, calling [enqueue] is the primary mechanism
+  /// for ensuring the operation will be synced later. The
+  /// [connectivitySyncTriggerProvider] will call [processQueue] when the
+  /// device reconnects.
   Future<void> enqueue(
     String operationType,
     String itemType,
@@ -50,9 +74,20 @@ class SyncQueueManager {
   /// Process all pending and retryable operations in the queue.
   ///
   /// This method is idempotent: if it is already running, subsequent calls
-  /// are no-ops.
+  /// are no-ops. If the device is offline (as reported by
+  /// [connectivityChecker]), the call is skipped entirely and operations
+  /// remain queued for a future flush.
   Future<void> processQueue() async {
-    if (_isProcessing) return;
+    if (_isProcessing) {
+      return;
+    }
+
+    // Do not attempt to push when offline. Operations stay in the queue
+    // and will be flushed when connectivity is restored.
+    if (!_isConnected) {
+      return;
+    }
+
     _isProcessing = true;
 
     try {
@@ -65,6 +100,12 @@ class SyncQueueManager {
       // Process all pending operations in order.
       final pending = await _dao.getPendingOperations();
       for (final op in pending) {
+        // Re-check connectivity before each operation in case it drops
+        // mid-batch.
+        if (!_isConnected) {
+          break;
+        }
+
         await _processOperation(op);
       }
 

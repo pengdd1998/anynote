@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../main.dart';
 import '../../features/settings/data/settings_providers.dart';
 import '../crypto/crypto_service.dart';
+import '../network/connectivity_service.dart';
 import 'sync_engine.dart' show SyncResult;
 
 /// Manages automatic periodic sync while the app is in the foreground.
@@ -14,6 +15,10 @@ import 'sync_engine.dart' show SyncResult;
 ///
 /// On each sync cycle, the sync queue is also processed so that any
 /// previously-failed offline operations are retried.
+///
+/// When the device is offline (as reported by [connectivityServiceProvider]),
+/// periodic sync attempts are skipped. The sync queue is flushed automatically
+/// when connectivity is restored via [connectivitySyncTriggerProvider].
 class SyncLifecycle {
   final Ref _ref;
   Timer? _timer;
@@ -44,9 +49,20 @@ class SyncLifecycle {
 
   /// Run a single sync cycle immediately.
   ///
+  /// If the device is offline, the sync is skipped entirely and null is
+  /// returned. The offline queue will be flushed when connectivity is
+  /// restored.
+  ///
   /// After the main sync engine cycle completes, the sync queue manager
   /// processes any pending offline operations.
   Future<SyncResult?> syncNow() async {
+    // Skip sync entirely when offline. The queue will be flushed when
+    // the device reconnects.
+    final isConnected = _ref.read(connectivityServiceProvider);
+    if (!isConnected) {
+      return null;
+    }
+
     final engine = _ref.read(syncEngineProvider);
     try {
       final result = await engine.sync();

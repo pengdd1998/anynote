@@ -49,6 +49,9 @@ func (s *routerStubSyncService) Push(ctx context.Context, userID uuid.UUID, req 
 func (s *routerStubSyncService) GetStatus(ctx context.Context, userID uuid.UUID) (*domain.SyncStatusResponse, error) {
 	return nil, nil
 }
+func (s *routerStubSyncService) GetStats(ctx context.Context, userID uuid.UUID) (*domain.SyncStatsResponse, error) {
+	return nil, nil
+}
 
 // routerStubAIProxyService implements service.AIProxyService.
 type routerStubAIProxyService struct{}
