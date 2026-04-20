@@ -413,7 +413,7 @@ void main() {
             'inserts': remoteNodes.map((n) => n.toJson()).toList(),
           },
         ],
-      }));
+      }),);
 
       await Future<void>.delayed(Duration.zero);
 
@@ -441,7 +441,7 @@ void main() {
             'deletes': [nodeIdToDelete],
           },
         ],
-      }));
+      }),);
 
       await Future<void>.delayed(Duration.zero);
 
@@ -456,7 +456,7 @@ void main() {
       mockClient.simulateMessage(WSMessage(WSMessageType.cursor, {
         'room': 'note-cursor-remote',
         'position': 5,
-      }));
+      }),);
 
       await Future<void>.delayed(Duration.zero);
 
@@ -471,7 +471,7 @@ void main() {
       mockClient.simulateMessage(WSMessage(WSMessageType.edit, {
         'room': 'note-empty-ops',
         // No 'ops' key.
-      }));
+      }),);
 
       await Future<void>.delayed(Duration.zero);
 
@@ -486,7 +486,7 @@ void main() {
       mockClient.simulateMessage(WSMessage(WSMessageType.edit, {
         'room': 'note-no-ops',
         'ops': <Map<String, dynamic>>[],
-      }));
+      }),);
 
       await Future<void>.delayed(Duration.zero);
 
@@ -501,7 +501,7 @@ void main() {
         'ops': [
           {'inserts': []},
         ],
-      }));
+      }),);
 
       await Future<void>.delayed(Duration.zero);
 

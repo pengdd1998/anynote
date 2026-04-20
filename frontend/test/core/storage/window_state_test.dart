@@ -10,7 +10,7 @@ void main() {
 
   group('WindowBounds', () {
     test('constructs with required fields', () {
-      final bounds = WindowBounds(
+      const bounds = WindowBounds(
         x: 10.0,
         y: 20.0,
         width: 800.0,
@@ -24,7 +24,7 @@ void main() {
     });
 
     test('constructs with isMaximized true', () {
-      final bounds = WindowBounds(
+      const bounds = WindowBounds(
         x: 0,
         y: 0,
         width: 1920,
@@ -48,7 +48,7 @@ void main() {
     });
 
     test('toString includes all fields', () {
-      final bounds = WindowBounds(
+      const bounds = WindowBounds(
         x: 50,
         y: 75,
         width: 1024,
@@ -73,8 +73,8 @@ void main() {
     });
 
     test('different bounds are not identical', () {
-      final a = WindowBounds(x: 10, y: 20, width: 800, height: 600);
-      final b = WindowBounds(x: 10, y: 20, width: 800, height: 601);
+      const a = WindowBounds(x: 10, y: 20, width: 800, height: 600);
+      const b = WindowBounds(x: 10, y: 20, width: 800, height: 601);
       expect(identical(a, b), isFalse);
     });
   });

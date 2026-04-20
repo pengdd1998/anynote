@@ -71,22 +71,6 @@ void main() {
     });
   }
 
-  /// Populate the FTS5 index for bulk notes using a single batch INSERT.
-  /// Returns true if the FTS5 table exists and accepts writes.
-  Future<bool> populateFtsIndex(int count) async {
-    try {
-      await db.customStatement('''
-        INSERT INTO notes_fts (note_id, content, title)
-        SELECT id, plain_content, COALESCE(plain_title, '')
-        FROM notes
-        WHERE plain_content IS NOT NULL
-      ''');
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
   // ---------------------------------------------------------------------------
   // Pagination benchmarks
   // ---------------------------------------------------------------------------
