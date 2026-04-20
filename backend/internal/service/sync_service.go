@@ -16,6 +16,9 @@ type SyncService interface {
 	Push(ctx context.Context, userID uuid.UUID, req domain.SyncPushRequest) (*domain.SyncPushResponse, error)
 	GetStatus(ctx context.Context, userID uuid.UUID) (*domain.SyncStatusResponse, error)
 	GetStats(ctx context.Context, userID uuid.UUID) (*domain.SyncStatsResponse, error)
+	ListTags(ctx context.Context, userID uuid.UUID) (*domain.ListTagsResponse, error)
+	BatchDelete(ctx context.Context, userID uuid.UUID, itemIDs []uuid.UUID) (*domain.BatchDeleteResponse, error)
+	GetProgress(ctx context.Context, userID uuid.UUID) (*domain.SyncProgressResponse, error)
 }
 
 type SyncBlobRepository interface {
@@ -32,6 +35,9 @@ type SyncBlobRepository interface {
 	GetConflictCount(ctx context.Context, userID uuid.UUID) (int64, error)
 	InsertOperationLog(ctx context.Context, log *domain.SyncOperationLog) error
 	BatchInsertOperationLogs(ctx context.Context, logs []domain.SyncOperationLog) error
+	ListTagsByType(ctx context.Context, userID uuid.UUID, itemType string) ([]domain.TagListItem, error)
+	BatchDelete(ctx context.Context, userID uuid.UUID, itemIDs []uuid.UUID) (int, error)
+	GetOperationCounts(ctx context.Context, userID uuid.UUID) (pushCount, pullCount int64, err error)
 }
 
 type syncService struct {
@@ -219,5 +225,59 @@ func (s *syncService) GetStats(ctx context.Context, userID uuid.UUID) (*domain.S
 		ItemsByType:    itemsByType,
 		LastSyncedAt:   summary.LastUpdated,
 		TotalConflicts: conflictCount,
+	}, nil
+}
+
+func (s *syncService) ListTags(ctx context.Context, userID uuid.UUID) (*domain.ListTagsResponse, error) {
+	tags, err := s.blobRepo.ListTagsByType(ctx, userID, "tag")
+	if err != nil {
+		return nil, fmt.Errorf("list tags: %w", err)
+	}
+
+	return &domain.ListTagsResponse{Tags: tags}, nil
+}
+
+func (s *syncService) BatchDelete(ctx context.Context, userID uuid.UUID, itemIDs []uuid.UUID) (*domain.BatchDeleteResponse, error) {
+	deleted, err := s.blobRepo.BatchDelete(ctx, userID, itemIDs)
+	if err != nil {
+		return nil, fmt.Errorf("batch delete: %w", err)
+	}
+
+	return &domain.BatchDeleteResponse{Deleted: deleted}, nil
+}
+
+func (s *syncService) GetProgress(ctx context.Context, userID uuid.UUID) (*domain.SyncProgressResponse, error) {
+	summary, _ := s.blobRepo.GetStatusSummary(ctx, userID)
+
+	conflictCount, err := s.blobRepo.GetConflictCount(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get conflict count: %w", err)
+	}
+
+	pushCount, pullCount, err := s.blobRepo.GetOperationCounts(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get operation counts: %w", err)
+	}
+
+	// Determine health status based on recent conflict ratio.
+	healthStatus := "ok"
+	totalOps := pushCount + pullCount
+	if totalOps > 0 {
+		conflictRatio := float64(conflictCount) / float64(totalOps)
+		if conflictRatio > 0.1 {
+			healthStatus = "errors"
+		} else if conflictRatio > 0.01 {
+			healthStatus = "warnings"
+		}
+	}
+
+	return &domain.SyncProgressResponse{
+		TotalItems:    summary.TotalItems,
+		LatestVersion: summary.LatestVersion,
+		LastSyncedAt:  summary.LastUpdated,
+		ConflictCount: conflictCount,
+		HealthStatus:  healthStatus,
+		PushCount24h:  pushCount,
+		PullCount24h:  pullCount,
 	}, nil
 }

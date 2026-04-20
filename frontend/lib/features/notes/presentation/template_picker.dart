@@ -136,6 +136,8 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
         ),
 
         // Tabs
+        // TODO(localization): Tab labels 'Built-in' and 'My Templates' should be
+        // localized via .arb files.
         TabBar(
           controller: _tabController,
           tabs: const [
@@ -279,6 +281,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        // TODO(localization): Dialog title and body should use l10n strings
         title: const Text('Delete template?'),
         content: Text('Delete "${template.name}"? This cannot be undone.'),
         actions: [
@@ -316,6 +319,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
             children: [
               TextField(
                 controller: nameController,
+                // TODO(localization): Label 'Template name' should be localized
                 decoration: const InputDecoration(
                   labelText: 'Template name',
                   border: OutlineInputBorder(),
@@ -324,6 +328,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
               const SizedBox(height: 12),
               TextField(
                 controller: contentController,
+                // TODO(localization): Label 'Content' and hint 'Use {{date}}...' should be localized
                 decoration: const InputDecoration(
                   labelText: 'Content',
                   hintText: 'Use {{date}} for current date',

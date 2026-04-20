@@ -52,6 +52,15 @@ func (s *routerStubSyncService) GetStatus(ctx context.Context, userID uuid.UUID)
 func (s *routerStubSyncService) GetStats(ctx context.Context, userID uuid.UUID) (*domain.SyncStatsResponse, error) {
 	return nil, nil
 }
+func (s *routerStubSyncService) ListTags(ctx context.Context, userID uuid.UUID) (*domain.ListTagsResponse, error) {
+	return nil, nil
+}
+func (s *routerStubSyncService) BatchDelete(ctx context.Context, userID uuid.UUID, itemIDs []uuid.UUID) (*domain.BatchDeleteResponse, error) {
+	return nil, nil
+}
+func (s *routerStubSyncService) GetProgress(ctx context.Context, userID uuid.UUID) (*domain.SyncProgressResponse, error) {
+	return nil, nil
+}
 
 // routerStubAIProxyService implements service.AIProxyService.
 type routerStubAIProxyService struct{}
@@ -326,6 +335,9 @@ func TestRouter_AuthenticatedRoutesRequireAuth(t *testing.T) {
 		{"GET", "/api/v1/sync/pull"},
 		{"POST", "/api/v1/sync/push"},
 		{"GET", "/api/v1/sync/status"},
+		{"GET", "/api/v1/sync/progress"},
+		{"POST", "/api/v1/sync/batch-delete"},
+		{"GET", "/api/v1/tags"},
 		{"POST", "/api/v1/ai/proxy"},
 		{"GET", "/api/v1/ai/quota"},
 		{"GET", "/api/v1/llm/configs"},
@@ -380,6 +392,9 @@ func TestRouter_ChiRoutes(t *testing.T) {
 		"GET /api/v1/sync/pull",
 		"POST /api/v1/sync/push",
 		"GET /api/v1/sync/status",
+		"GET /api/v1/sync/progress",
+		"POST /api/v1/sync/batch-delete",
+		"GET /api/v1/tags",
 		"POST /api/v1/ai/proxy",
 		"GET /api/v1/ai/quota",
 		"GET /api/v1/llm/configs",

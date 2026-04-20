@@ -17,17 +17,24 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockSyncBlobRepo struct {
-	blobs            []domain.SyncBlob
-	latestVersion    int
-	totalItems       int
-	lastUpdated      time.Time
-	pullErr          error
-	upsertErr        error
-	upsertResult     bool // accepted or conflict
-	versionErr       error
-	countErr         error
-	lastUpdatedErr   error
-	statusSummaryErr error
+	blobs             []domain.SyncBlob
+	latestVersion     int
+	totalItems        int
+	lastUpdated       time.Time
+	pullErr           error
+	upsertErr         error
+	upsertResult      bool // accepted or conflict
+	versionErr        error
+	countErr          error
+	lastUpdatedErr    error
+	statusSummaryErr  error
+	listTagsByTypeErr error
+	batchDeleteErr    error
+	opCountsErr       error
+	opCountsPush      int64
+	opCountsPull      int64
+	conflictCountVal  int64
+	conflictCountErr  error
 }
 
 func (m *mockSyncBlobRepo) PullSince(ctx context.Context, userID uuid.UUID, sinceVersion int) ([]domain.SyncBlob, error) {
@@ -137,7 +144,10 @@ func (m *mockSyncBlobRepo) GetItemsByType(ctx context.Context, userID uuid.UUID)
 }
 
 func (m *mockSyncBlobRepo) GetConflictCount(ctx context.Context, userID uuid.UUID) (int64, error) {
-	return 0, nil
+	if m.conflictCountErr != nil {
+		return 0, m.conflictCountErr
+	}
+	return m.conflictCountVal, nil
 }
 
 func (m *mockSyncBlobRepo) InsertOperationLog(ctx context.Context, log *domain.SyncOperationLog) error {
@@ -146,6 +156,48 @@ func (m *mockSyncBlobRepo) InsertOperationLog(ctx context.Context, log *domain.S
 
 func (m *mockSyncBlobRepo) BatchInsertOperationLogs(ctx context.Context, logs []domain.SyncOperationLog) error {
 	return nil
+}
+
+func (m *mockSyncBlobRepo) ListTagsByType(ctx context.Context, userID uuid.UUID, itemType string) ([]domain.TagListItem, error) {
+	if m.listTagsByTypeErr != nil {
+		return nil, m.listTagsByTypeErr
+	}
+	var tags []domain.TagListItem
+	for _, b := range m.blobs {
+		if b.ItemType == itemType {
+			tags = append(tags, domain.TagListItem{
+				ItemID:    b.ItemID,
+				Version:   b.Version,
+				BlobSize:  b.BlobSize,
+				UpdatedAt: b.UpdatedAt,
+			})
+		}
+	}
+	return tags, nil
+}
+
+func (m *mockSyncBlobRepo) BatchDelete(ctx context.Context, userID uuid.UUID, itemIDs []uuid.UUID) (int, error) {
+	if m.batchDeleteErr != nil {
+		return 0, m.batchDeleteErr
+	}
+	deleted := 0
+	for _, id := range itemIDs {
+		for i, b := range m.blobs {
+			if b.ItemID == id {
+				m.blobs = append(m.blobs[:i], m.blobs[i+1:]...)
+				deleted++
+				break
+			}
+		}
+	}
+	return deleted, nil
+}
+
+func (m *mockSyncBlobRepo) GetOperationCounts(ctx context.Context, userID uuid.UUID) (int64, int64, error) {
+	if m.opCountsErr != nil {
+		return 0, 0, m.opCountsErr
+	}
+	return m.opCountsPush, m.opCountsPull, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -554,6 +606,29 @@ func (m *customUpsertRepo) BatchInsertOperationLogs(ctx context.Context, logs []
 	return nil
 }
 
+func (m *customUpsertRepo) ListTagsByType(ctx context.Context, userID uuid.UUID, itemType string) ([]domain.TagListItem, error) {
+	var tags []domain.TagListItem
+	for _, b := range m.blobs {
+		if b.ItemType == itemType {
+			tags = append(tags, domain.TagListItem{
+				ItemID:    b.ItemID,
+				Version:   b.Version,
+				BlobSize:  b.BlobSize,
+				UpdatedAt: b.UpdatedAt,
+			})
+		}
+	}
+	return tags, nil
+}
+
+func (m *customUpsertRepo) BatchDelete(ctx context.Context, userID uuid.UUID, itemIDs []uuid.UUID) (int, error) {
+	return len(itemIDs), nil
+}
+
+func (m *customUpsertRepo) GetOperationCounts(ctx context.Context, userID uuid.UUID) (int64, int64, error) {
+	return 5, 3, nil
+}
+
 // ---------------------------------------------------------------------------
 // Tests: GetStats
 // ---------------------------------------------------------------------------
@@ -770,4 +845,260 @@ func (m *mockPushServiceForSync) SendPush(ctx context.Context, userID string, pa
 		return m.sendPushFn(ctx, userID, payload)
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Tests: ListTags
+// ---------------------------------------------------------------------------
+
+func TestSyncService_ListTags_Success(t *testing.T) {
+	userID := uuid.New()
+	tagID1 := uuid.New()
+	tagID2 := uuid.New()
+	now := time.Now()
+
+	repo := &mockSyncBlobRepo{
+		blobs: []domain.SyncBlob{
+			{UserID: userID, ItemType: "tag", ItemID: tagID1, Version: 3, BlobSize: 64, UpdatedAt: now},
+			{UserID: userID, ItemType: "tag", ItemID: tagID2, Version: 7, BlobSize: 128, UpdatedAt: now},
+			{UserID: userID, ItemType: "note", ItemID: uuid.New(), Version: 5},
+		},
+	}
+
+	svc := NewSyncService(repo)
+	resp, err := svc.ListTags(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("ListTags: %v", err)
+	}
+
+	if len(resp.Tags) != 2 {
+		t.Fatalf("len(Tags) = %d, want 2", len(resp.Tags))
+	}
+	if resp.Tags[0].ItemID != tagID1 {
+		t.Errorf("Tags[0].ItemID = %v, want %v", resp.Tags[0].ItemID, tagID1)
+	}
+	if resp.Tags[1].Version != 7 {
+		t.Errorf("Tags[1].Version = %d, want 7", resp.Tags[1].Version)
+	}
+}
+
+func TestSyncService_ListTags_Empty(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		blobs: []domain.SyncBlob{
+			{UserID: userID, ItemType: "note", ItemID: uuid.New(), Version: 1},
+		},
+	}
+
+	svc := NewSyncService(repo)
+	resp, err := svc.ListTags(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("ListTags: %v", err)
+	}
+	if len(resp.Tags) != 0 {
+		t.Errorf("len(Tags) = %d, want 0", len(resp.Tags))
+	}
+}
+
+func TestSyncService_ListTags_RepoError(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		listTagsByTypeErr: errors.New("database unavailable"),
+	}
+
+	svc := NewSyncService(repo)
+	_, err := svc.ListTags(context.Background(), userID)
+	if err == nil {
+		t.Error("ListTags should return error when repo fails")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: BatchDelete
+// ---------------------------------------------------------------------------
+
+func TestSyncService_BatchDelete_Success(t *testing.T) {
+	userID := uuid.New()
+	id1 := uuid.New()
+	id2 := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		blobs: []domain.SyncBlob{
+			{UserID: userID, ItemType: "note", ItemID: id1, Version: 1},
+			{UserID: userID, ItemType: "tag", ItemID: id2, Version: 2},
+		},
+	}
+
+	svc := NewSyncService(repo)
+	resp, err := svc.BatchDelete(context.Background(), userID, []uuid.UUID{id1, id2})
+	if err != nil {
+		t.Fatalf("BatchDelete: %v", err)
+	}
+	if resp.Deleted != 2 {
+		t.Errorf("Deleted = %d, want 2", resp.Deleted)
+	}
+}
+
+func TestSyncService_BatchDelete_EmptyList(t *testing.T) {
+	userID := uuid.New()
+	repo := &mockSyncBlobRepo{}
+
+	svc := NewSyncService(repo)
+	resp, err := svc.BatchDelete(context.Background(), userID, []uuid.UUID{})
+	if err != nil {
+		t.Fatalf("BatchDelete: %v", err)
+	}
+	if resp.Deleted != 0 {
+		t.Errorf("Deleted = %d, want 0", resp.Deleted)
+	}
+}
+
+func TestSyncService_BatchDelete_RepoError(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		batchDeleteErr: errors.New("database unavailable"),
+	}
+
+	svc := NewSyncService(repo)
+	_, err := svc.BatchDelete(context.Background(), userID, []uuid.UUID{uuid.New()})
+	if err == nil {
+		t.Error("BatchDelete should return error when repo fails")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: GetProgress
+// ---------------------------------------------------------------------------
+
+func TestSyncService_GetProgress_Success(t *testing.T) {
+	userID := uuid.New()
+	now := time.Now()
+
+	repo := &mockSyncBlobRepo{
+		latestVersion:    42,
+		totalItems:       100,
+		lastUpdated:      now,
+		conflictCountVal: 0,
+		opCountsPush:     15,
+		opCountsPull:     8,
+	}
+
+	svc := NewSyncService(repo)
+	progress, err := svc.GetProgress(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetProgress: %v", err)
+	}
+
+	if progress.TotalItems != 100 {
+		t.Errorf("TotalItems = %d, want 100", progress.TotalItems)
+	}
+	if progress.LatestVersion != 42 {
+		t.Errorf("LatestVersion = %d, want 42", progress.LatestVersion)
+	}
+	if progress.ConflictCount != 0 {
+		t.Errorf("ConflictCount = %d, want 0", progress.ConflictCount)
+	}
+	if progress.HealthStatus != "ok" {
+		t.Errorf("HealthStatus = %q, want %q", progress.HealthStatus, "ok")
+	}
+	if progress.PushCount24h != 15 {
+		t.Errorf("PushCount24h = %d, want 15", progress.PushCount24h)
+	}
+	if progress.PullCount24h != 8 {
+		t.Errorf("PullCount24h = %d, want 8", progress.PullCount24h)
+	}
+}
+
+func TestSyncService_GetProgress_HighConflictRatio_Warnings(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		conflictCountVal: 1,
+		opCountsPush:     50,
+		opCountsPull:     0,
+	}
+
+	svc := NewSyncService(repo)
+	progress, err := svc.GetProgress(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetProgress: %v", err)
+	}
+
+	// conflict ratio = 1/50 = 0.02 > 0.01 but < 0.1, so "warnings"
+	if progress.HealthStatus != "warnings" {
+		t.Errorf("HealthStatus = %q, want %q", progress.HealthStatus, "warnings")
+	}
+}
+
+func TestSyncService_GetProgress_VeryHighConflictRatio_Errors(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		conflictCountVal: 10,
+		opCountsPush:     50,
+		opCountsPull:     0,
+	}
+
+	svc := NewSyncService(repo)
+	progress, err := svc.GetProgress(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetProgress: %v", err)
+	}
+
+	// conflict ratio = 10/50 = 0.2 > 0.1, so "errors"
+	if progress.HealthStatus != "errors" {
+		t.Errorf("HealthStatus = %q, want %q", progress.HealthStatus, "errors")
+	}
+}
+
+func TestSyncService_GetProgress_ConflictCountError(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		conflictCountErr: errors.New("db error"),
+	}
+
+	svc := NewSyncService(repo)
+	_, err := svc.GetProgress(context.Background(), userID)
+	if err == nil {
+		t.Error("GetProgress should return error when GetConflictCount fails")
+	}
+}
+
+func TestSyncService_GetProgress_OperationCountsError(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		opCountsErr: errors.New("db error"),
+	}
+
+	svc := NewSyncService(repo)
+	_, err := svc.GetProgress(context.Background(), userID)
+	if err == nil {
+		t.Error("GetProgress should return error when GetOperationCounts fails")
+	}
+}
+
+func TestSyncService_GetProgress_ZeroOps_NoDivideByZero(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockSyncBlobRepo{
+		conflictCountVal: 0,
+		opCountsPush:     0,
+		opCountsPull:     0,
+	}
+
+	svc := NewSyncService(repo)
+	progress, err := svc.GetProgress(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetProgress: %v", err)
+	}
+
+	// With zero total operations, health should be "ok" (no division).
+	if progress.HealthStatus != "ok" {
+		t.Errorf("HealthStatus = %q, want %q", progress.HealthStatus, "ok")
+	}
 }

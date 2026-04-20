@@ -107,6 +107,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
+                      // TODO(localization): This description paragraph should be a single l10n key.
                       'Import Markdown (.md) files with optional YAML '
                       'frontmatter. Supported frontmatter fields: title, '
                       'date, and tags. Falls back to filename for the '
@@ -127,11 +128,13 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // TODO(localization): 'Source' header should use l10n key
               const SettingsGroupHeader(title: 'Source'),
               SettingsGroup(
                 children: [
                   SettingsItem(
                     icon: Icons.insert_drive_file_outlined,
+                    // TODO(localization): 'Select Files' and subtitle should use l10n keys
                     title: 'Select Files',
                     subtitle: 'Choose one or more .md files',
                     trailing: _markdownState.isImporting
@@ -147,6 +150,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                   ),
                   SettingsItem(
                     icon: Icons.folder_open_outlined,
+                    // TODO(localization): 'Select Folder' and subtitle should use l10n keys
                     title: 'Select Folder',
                     subtitle: 'Import all .md files from a folder',
                     trailing: _markdownState.isImporting
@@ -173,6 +177,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   Future<void> _importMarkdownFiles() async {
     final result = await FilePicker.platform.pickFiles(
+      // TODO(localization): dialogTitle 'Select Markdown Files' should use l10n key
       dialogTitle: 'Select Markdown Files',
       type: FileType.custom,
       allowedExtensions: ['md', 'markdown'],
@@ -192,6 +197,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     if (filePaths.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
+          // TODO(localization): 'No .md files selected.' should use l10n key
           const SnackBar(content: Text('No .md files selected.')),
         );
       }
@@ -253,6 +259,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   Future<void> _importMarkdownFolder() async {
     final result = await FilePicker.platform.getDirectoryPath(
+      // TODO(localization): dialogTitle should use l10n key
       dialogTitle: 'Select Folder with Markdown Files',
     );
     if (result == null) return;
@@ -385,12 +392,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // TODO(localization): 'Apple Notes Export' header should use l10n key
               const SettingsGroupHeader(title: 'Apple Notes Export'),
               SettingsGroup(
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
+                      // TODO(localization): This description paragraph should be a single l10n key.
                       'Import notes exported from the Apple Notes app. '
                       'Select a folder containing HTML files exported from '
                       'Apple Notes (one file per note). Basic formatting '
@@ -412,11 +421,13 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // TODO(localization): 'Source' header should use l10n key
               const SettingsGroupHeader(title: 'Source'),
               SettingsGroup(
                 children: [
                   SettingsItem(
                     icon: Icons.folder_open_outlined,
+                    // TODO(localization): 'Select Folder' and subtitle should use l10n keys
                     title: 'Select Folder',
                     subtitle: 'Choose a folder with Apple Notes HTML files',
                     trailing: _appleNotesState.isImporting
@@ -443,6 +454,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   Future<void> _importAppleNotesFolder() async {
     final result = await FilePicker.platform.getDirectoryPath(
+      // TODO(localization): dialogTitle should use l10n key
       dialogTitle: 'Select Apple Notes Export Folder',
     );
     if (result == null) return;
@@ -498,12 +510,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // TODO(localization): 'Plain Text Files' header should use l10n key
               const SettingsGroupHeader(title: 'Plain Text Files'),
               SettingsGroup(
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
+                      // TODO(localization): This description paragraph should be a single l10n key.
                       'Import plain text (.txt) files as notes. The first '
                       'line of each file becomes the note title (if shorter '
                       'than 100 characters); otherwise the filename is used '
@@ -524,11 +538,13 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // TODO(localization): 'Source' header should use l10n key
               const SettingsGroupHeader(title: 'Source'),
               SettingsGroup(
                 children: [
                   SettingsItem(
                     icon: Icons.insert_drive_file_outlined,
+                    // TODO(localization): 'Select Files' and subtitle should use l10n keys
                     title: 'Select Files',
                     subtitle: 'Choose one or more .txt files',
                     trailing: _plainTextState.isImporting
@@ -544,6 +560,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                   ),
                   SettingsItem(
                     icon: Icons.folder_open_outlined,
+                    // TODO(localization): 'Select Folder' and subtitle should use l10n keys
                     title: 'Select Folder',
                     subtitle: 'Import all .txt files from a folder',
                     trailing: _plainTextState.isImporting
@@ -570,6 +587,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   Future<void> _importTextFiles() async {
     final result = await FilePicker.platform.pickFiles(
+      // TODO(localization): dialogTitle should use l10n key
       dialogTitle: 'Select Text Files',
       type: FileType.custom,
       allowedExtensions: ['txt'],
@@ -588,6 +606,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     if (filePaths.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
+          // TODO(localization): 'No .txt files selected.' should use l10n key
           const SnackBar(content: Text('No .txt files selected.')),
         );
       }
@@ -650,6 +669,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   Future<void> _importTextFolder() async {
     final result = await FilePicker.platform.getDirectoryPath(
+      // TODO(localization): dialogTitle should use l10n key
       dialogTitle: 'Select Folder with Text Files',
     );
     if (result == null) return;
@@ -782,6 +802,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                 icon: Icons.check_circle_outline,
                 iconColor: Colors.green,
                 title: l10n.itemsRestored,
+                // TODO(localization): Pluralization should use l10n key with count parameter
                 subtitle: '${result.importedCount} note${result.importedCount == 1 ? '' : 's'}',
               ),
               if (result.skippedCount > 0)
@@ -789,6 +810,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                   icon: Icons.skip_next_outlined,
                   iconColor: Colors.orange,
                   title: l10n.itemsSkipped,
+                  // TODO(localization): Pluralization should use l10n key with count parameter
                   subtitle:
                       '${result.skippedCount} file${result.skippedCount == 1 ? '' : 's'}',
                 ),
@@ -807,6 +829,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                       vertical: 8,
                     ),
                     child: Text(
+                      // TODO(localization): '... and N more errors' should use l10n key with count
                       '... and ${result.errors.length - 5} more errors',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.disabledColor,

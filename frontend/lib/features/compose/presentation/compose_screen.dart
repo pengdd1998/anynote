@@ -110,6 +110,7 @@ class ComposeScreen extends ConsumerWidget {
                       final item = items[index];
                       final title = item.plainBody != null && item.plainBody!.length > 80
                           ? '${item.plainBody!.substring(0, 80)}...'
+                          // TODO(localization): Use l10n.untitled instead of hardcoded 'Untitled'
                           : item.plainBody ?? 'Untitled';
                       final time = _formatTime(item.updatedAt);
                       final platform = item.platformStyle;
@@ -117,6 +118,7 @@ class ComposeScreen extends ConsumerWidget {
                       return Card(
                         child: Semantics(
                           button: true,
+                          // TODO(localization): Localize this semantic label composition string
                           label: 'Composition: $title. $time${platform != 'generic' ? '. Platform: $platform' : ''}',
                           child: ListTile(
                           leading: Icon(
@@ -216,6 +218,9 @@ class ComposeScreen extends ConsumerWidget {
   }
 
   String _formatTime(DateTime dt) {
+    // TODO(localization): Use AppLocalizations for relative time strings
+    // instead of hardcoded English. The notes_list_screen.dart has the
+    // correct pattern: l10n.justNow, l10n.minutesAgo(n), etc.
     final now = DateTime.now();
     final diff = now.difference(dt);
     if (diff.inMinutes < 1) return 'Just now';
@@ -242,6 +247,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   String _platformStyle = 'generic';
   final Set<String> _selectedIds = {};
 
+  // TODO(localization): Platform display names should be localized via .arb files.
+  // The tuple values (second element) are hardcoded English labels shown in the UI.
   static const _platformOptions = [
     ('generic', 'Generic'),
     ('xhs', 'XHS'),
@@ -361,6 +368,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                     itemCount: notes.length,
                     itemBuilder: (context, index) {
                       final note = notes[index];
+                      // TODO(localization): Use l10n.untitled instead of hardcoded 'Untitled'
                       final title = note.plainTitle ?? 'Untitled';
                       final preview = note.plainContent != null && note.plainContent!.length > 60
                           ? '${note.plainContent!.substring(0, 60)}...'

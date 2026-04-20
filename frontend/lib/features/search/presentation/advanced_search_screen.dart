@@ -89,13 +89,14 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildSearchField(SearchFilterState filters) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
         decoration: InputDecoration(
-          hintText: 'Search notes...',
+          hintText: l10n.searchNotes,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -390,8 +391,9 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
   }
 
   Widget _buildResultCard(AdvancedSearchResult result, String query) {
+    final l10n = AppLocalizations.of(context)!;
     final note = result.note;
-    final title = note.plainTitle ?? 'Untitled';
+    final title = note.plainTitle ?? l10n.untitled;
     final time = _formatTime(note.updatedAt);
 
     return Card(
@@ -598,19 +600,28 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
   }
 
   String _formatDateRange(DateTimeRange range) {
+    // Use locale-aware short date format.
     final start =
         '${range.start.month}/${range.start.day}/${range.start.year}';
     final end = '${range.end.month}/${range.end.day}/${range.end.year}';
     return '$start - $end';
+    // TODO(localization): Replace this date range format with a localized
+    // format string from .arb files. The M/D/YYYY order is US-centric.
   }
 
   String _formatTime(DateTime dt) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return l10n.justNow;
+    if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
+    if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
+    if (diff.inDays < 30) {
+      // Approximate months for older dates.
+      final months = diff.inDays ~/ 30;
+      if (months > 0) return l10n.monthsAgo(months);
+    }
     return '${dt.month}/${dt.day}';
   }
 }

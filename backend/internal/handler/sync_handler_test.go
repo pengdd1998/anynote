@@ -21,10 +21,13 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockSyncService struct {
-	pullFn      func(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error)
-	pushFn      func(ctx context.Context, userID uuid.UUID, req domain.SyncPushRequest) (*domain.SyncPushResponse, error)
-	getStatusFn func(ctx context.Context, userID uuid.UUID) (*domain.SyncStatusResponse, error)
-	getStatsFn  func(ctx context.Context, userID uuid.UUID) (*domain.SyncStatsResponse, error)
+	pullFn        func(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error)
+	pushFn        func(ctx context.Context, userID uuid.UUID, req domain.SyncPushRequest) (*domain.SyncPushResponse, error)
+	getStatusFn   func(ctx context.Context, userID uuid.UUID) (*domain.SyncStatusResponse, error)
+	getStatsFn    func(ctx context.Context, userID uuid.UUID) (*domain.SyncStatsResponse, error)
+	listTagsFn    func(ctx context.Context, userID uuid.UUID) (*domain.ListTagsResponse, error)
+	batchDeleteFn func(ctx context.Context, userID uuid.UUID, itemIDs []uuid.UUID) (*domain.BatchDeleteResponse, error)
+	getProgressFn func(ctx context.Context, userID uuid.UUID) (*domain.SyncProgressResponse, error)
 }
 
 func (m *mockSyncService) Pull(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
@@ -55,6 +58,27 @@ func (m *mockSyncService) GetStats(ctx context.Context, userID uuid.UUID) (*doma
 	return nil, errors.New("not implemented")
 }
 
+func (m *mockSyncService) ListTags(ctx context.Context, userID uuid.UUID) (*domain.ListTagsResponse, error) {
+	if m.listTagsFn != nil {
+		return m.listTagsFn(ctx, userID)
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (m *mockSyncService) BatchDelete(ctx context.Context, userID uuid.UUID, itemIDs []uuid.UUID) (*domain.BatchDeleteResponse, error) {
+	if m.batchDeleteFn != nil {
+		return m.batchDeleteFn(ctx, userID, itemIDs)
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (m *mockSyncService) GetProgress(ctx context.Context, userID uuid.UUID) (*domain.SyncProgressResponse, error) {
+	if m.getProgressFn != nil {
+		return m.getProgressFn(ctx, userID)
+	}
+	return nil, errors.New("not implemented")
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -72,6 +96,9 @@ func setupSyncRouter(svc *mockSyncService) *chi.Mux {
 		r.Post("/api/v1/sync/push", h.Push)
 		r.Get("/api/v1/sync/status", h.Status)
 		r.Get("/api/v1/sync/stats", h.Stats)
+		r.Get("/api/v1/sync/progress", h.Progress)
+		r.Post("/api/v1/sync/batch-delete", h.BatchDelete)
+		r.Get("/api/v1/tags", h.ListTags)
 	})
 
 	return r
@@ -661,6 +688,354 @@ func TestSyncHandler_Stats_ServiceError(t *testing.T) {
 	router := setupSyncRouter(svc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/stats", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: GET /api/v1/tags
+// ---------------------------------------------------------------------------
+
+func TestSyncHandler_ListTags_Success(t *testing.T) {
+	userID := uuid.New()
+	tag1 := uuid.New()
+	tag2 := uuid.New()
+	now := time.Now()
+
+	svc := &mockSyncService{
+		listTagsFn: func(ctx context.Context, uid uuid.UUID) (*domain.ListTagsResponse, error) {
+			if uid != userID {
+				t.Errorf("userID = %v, want %v", uid, userID)
+			}
+			return &domain.ListTagsResponse{
+				Tags: []domain.TagListItem{
+					{ItemID: tag1, Version: 3, BlobSize: 128, UpdatedAt: now},
+					{ItemID: tag2, Version: 5, BlobSize: 256, UpdatedAt: now},
+				},
+			}, nil
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/tags", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	var resp domain.ListTagsResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if len(resp.Tags) != 2 {
+		t.Fatalf("len(Tags) = %d, want 2", len(resp.Tags))
+	}
+	if resp.Tags[0].ItemID != tag1 {
+		t.Errorf("Tags[0].ItemID = %v, want %v", resp.Tags[0].ItemID, tag1)
+	}
+	if resp.Tags[1].Version != 5 {
+		t.Errorf("Tags[1].Version = %d, want 5", resp.Tags[1].Version)
+	}
+}
+
+func TestSyncHandler_ListTags_Empty(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockSyncService{
+		listTagsFn: func(ctx context.Context, uid uuid.UUID) (*domain.ListTagsResponse, error) {
+			return &domain.ListTagsResponse{Tags: nil}, nil
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/tags", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestSyncHandler_ListTags_Unauthorized(t *testing.T) {
+	svc := &mockSyncService{}
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/tags", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
+	}
+}
+
+func TestSyncHandler_ListTags_ServiceError(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockSyncService{
+		listTagsFn: func(ctx context.Context, uid uuid.UUID) (*domain.ListTagsResponse, error) {
+			return nil, errors.New("database unavailable")
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/tags", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: POST /api/v1/sync/batch-delete
+// ---------------------------------------------------------------------------
+
+func TestSyncHandler_BatchDelete_Success(t *testing.T) {
+	userID := uuid.New()
+	id1 := uuid.New()
+	id2 := uuid.New()
+
+	svc := &mockSyncService{
+		batchDeleteFn: func(ctx context.Context, uid uuid.UUID, itemIDs []uuid.UUID) (*domain.BatchDeleteResponse, error) {
+			if uid != userID {
+				t.Errorf("userID = %v, want %v", uid, userID)
+			}
+			if len(itemIDs) != 2 {
+				t.Errorf("len(itemIDs) = %d, want 2", len(itemIDs))
+			}
+			return &domain.BatchDeleteResponse{Deleted: 2}, nil
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	body, _ := json.Marshal(domain.BatchDeleteRequest{ItemIDs: []uuid.UUID{id1, id2}})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/sync/batch-delete", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	var resp domain.BatchDeleteResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if resp.Deleted != 2 {
+		t.Errorf("Deleted = %d, want 2", resp.Deleted)
+	}
+}
+
+func TestSyncHandler_BatchDelete_EmptyList(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockSyncService{}
+	router := setupSyncRouter(svc)
+
+	body, _ := json.Marshal(domain.BatchDeleteRequest{ItemIDs: []uuid.UUID{}})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/sync/batch-delete", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
+func TestSyncHandler_BatchDelete_BatchTooLarge(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockSyncService{}
+	router := setupSyncRouter(svc)
+
+	ids := make([]uuid.UUID, 1001)
+	for i := range ids {
+		ids[i] = uuid.New()
+	}
+
+	body, _ := json.Marshal(domain.BatchDeleteRequest{ItemIDs: ids})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/sync/batch-delete", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp.Error != "batch_too_large" {
+		t.Errorf("error type = %q, want %q", errResp.Error, "batch_too_large")
+	}
+}
+
+func TestSyncHandler_BatchDelete_InvalidBody(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockSyncService{}
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/sync/batch-delete", bytes.NewReader([]byte("not-json")))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestSyncHandler_BatchDelete_Unauthorized(t *testing.T) {
+	svc := &mockSyncService{}
+	router := setupSyncRouter(svc)
+
+	body, _ := json.Marshal(domain.BatchDeleteRequest{ItemIDs: []uuid.UUID{uuid.New()}})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/sync/batch-delete", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
+	}
+}
+
+func TestSyncHandler_BatchDelete_ServiceError(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockSyncService{
+		batchDeleteFn: func(ctx context.Context, uid uuid.UUID, itemIDs []uuid.UUID) (*domain.BatchDeleteResponse, error) {
+			return nil, errors.New("database unavailable")
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	body, _ := json.Marshal(domain.BatchDeleteRequest{ItemIDs: []uuid.UUID{uuid.New()}})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/sync/batch-delete", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: GET /api/v1/sync/progress
+// ---------------------------------------------------------------------------
+
+func TestSyncHandler_Progress_Success(t *testing.T) {
+	userID := uuid.New()
+	now := time.Now()
+
+	svc := &mockSyncService{
+		getProgressFn: func(ctx context.Context, uid uuid.UUID) (*domain.SyncProgressResponse, error) {
+			if uid != userID {
+				t.Errorf("userID = %v, want %v", uid, userID)
+			}
+			return &domain.SyncProgressResponse{
+				TotalItems:    100,
+				LatestVersion: 42,
+				LastSyncedAt:  now,
+				ConflictCount: 2,
+				HealthStatus:  "ok",
+				PushCount24h:  15,
+				PullCount24h:  8,
+			}, nil
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/progress", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	var resp domain.SyncProgressResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if resp.TotalItems != 100 {
+		t.Errorf("TotalItems = %d, want 100", resp.TotalItems)
+	}
+	if resp.HealthStatus != "ok" {
+		t.Errorf("HealthStatus = %q, want %q", resp.HealthStatus, "ok")
+	}
+	if resp.PushCount24h != 15 {
+		t.Errorf("PushCount24h = %d, want 15", resp.PushCount24h)
+	}
+}
+
+func TestSyncHandler_Progress_Unauthorized(t *testing.T) {
+	svc := &mockSyncService{}
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/progress", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
+	}
+}
+
+func TestSyncHandler_Progress_ServiceError(t *testing.T) {
+	userID := uuid.New()
+
+	svc := &mockSyncService{
+		getProgressFn: func(ctx context.Context, uid uuid.UUID) (*domain.SyncProgressResponse, error) {
+			return nil, errors.New("database error")
+		},
+	}
+
+	router := setupSyncRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/sync/progress", nil)
 	req.Header.Set("Authorization", "Bearer "+generateTestToken(userID.String()))
 	rec := httptest.NewRecorder()
 

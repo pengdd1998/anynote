@@ -493,6 +493,67 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     return queryBuilder.get();
   }
 
+  /// Content-only search that searches only the `content` column of the FTS5
+  /// index, ignoring the `title` column. Useful when the caller wants to find
+  /// notes whose body matches but the title should not influence results.
+  ///
+  /// Uses FTS5 column-filter syntax: `{content}:query`.
+  /// Returns notes ordered by bm25 relevance (best match first).
+  Future<List<SearchResult>> searchNotesByContent(
+    String query, {
+    String marker = '**',
+  }) async {
+    final sanitized = _sanitizeFtsQuery(query);
+    if (sanitized.isEmpty) return [];
+
+    // Wrap the sanitized query with a column filter so only the `content`
+    // column of the FTS5 index is searched.
+    final contentQuery = '{content}:$sanitized';
+
+    await customStatement(
+      'CREATE TEMP TABLE IF NOT EXISTS _fts_content_results ('
+      'note_id TEXT NOT NULL PRIMARY KEY, '
+      'rank REAL NOT NULL, '
+      'content_snippet TEXT NOT NULL'
+      ')',
+    );
+    await customStatement('DELETE FROM _fts_content_results');
+    await customStatement(
+      'INSERT INTO _fts_content_results (note_id, rank, content_snippet) '
+      'SELECT note_id, bm25(notes_fts), '
+      'highlight(notes_fts, 1, ?, ?) '
+      'FROM notes_fts WHERE notes_fts MATCH ? '
+      'ORDER BY rank',
+      [marker, marker, contentQuery],
+    );
+
+    final ftsResults = await customSelect(
+      'SELECT note_id, rank, content_snippet FROM _fts_content_results ORDER BY rank',
+      readsFrom: {notes},
+    ).get();
+
+    if (ftsResults.isEmpty) return [];
+
+    final matchingIds = ftsResults.map((r) => r.read<String>('note_id')).toList();
+    final noteRows = await (select(notes)
+          ..where((n) => n.id.isIn(matchingIds) & n.deletedAt.isNull()))
+        .get();
+
+    final noteMap = {for (final n in noteRows) n.id: n};
+
+    return ftsResults
+        .where((r) => noteMap.containsKey(r.read<String>('note_id')))
+        .map((r) {
+      final noteId = r.read<String>('note_id');
+      return SearchResult(
+        note: noteMap[noteId]!,
+        rank: r.read<double>('rank'),
+        contentSnippet: r.read<String>('content_snippet'),
+        titleSnippet: noteMap[noteId]!.plainTitle ?? '',
+      );
+    }).toList();
+  }
+
   /// Get notes by tag ID.
   Future<List<Note>> getNotesByTag(String tagId) async {
     final noteTagRows = await (select(noteTags)
@@ -539,13 +600,19 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   /// 1. Strips characters that are invalid in FTS5 MATCH expressions
   /// 2. Wraps tokens in double quotes for safe literal matching
   /// 3. Handles CJK characters correctly (they are already individual tokens)
+  /// 4. CJK multi-character phrases are kept as contiguous quoted strings
+  ///    so that all characters must appear in the same column and token stream
+  ///
+  /// Note: Fuzzy matching (typo tolerance) is not supported by FTS5's
+  /// unicode61 tokenizer. If fuzzy search is needed in the future, consider
+  /// integrating an external trigram index or a dedicated search library.
   static String _sanitizeFtsQuery(String query) {
     // Trim and collapse whitespace
     var cleaned = query.trim().replaceAll(RegExp(r'\s+'), ' ');
     if (cleaned.isEmpty) return '';
 
-    // Remove FTS5 special operators that could cause parse errors
-    // Keep: alphanumeric, CJK characters, spaces
+    // Remove FTS5 special operators that could cause parse errors.
+    // Keep: letters (including CJK via \p{L}), numbers, spaces.
     // Remove: ^ * OR AND NEAR ( ) { } : "
     cleaned = cleaned.replaceAll(RegExp(r'[^\p{L}\p{N}\s]', unicode: true), ' ');
     cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
@@ -555,6 +622,11 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     // Split into tokens and wrap each in double quotes for literal matching.
     // This prevents FTS5 syntax injection and handles CJK multi-char queries
     // by treating each space-separated segment as a quoted phrase.
+    //
+    // Example: "Python教程" becomes "\"Python教程\"" which FTS5 will match
+    // as a phrase query across its token stream (each CJK char is one token,
+    // Latin word is one token). The implicit AND between quoted phrases
+    // means both tokens must appear in the same row.
     final tokens = cleaned.split(' ').where((t) => t.isNotEmpty).toList();
     if (tokens.isEmpty) return '';
 

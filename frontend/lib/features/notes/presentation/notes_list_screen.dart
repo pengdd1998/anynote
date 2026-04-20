@@ -1263,6 +1263,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       // Close progress dialog.
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
+        // TODO(localization): 'Import failed' should use l10n string with error placeholder
         SnackBar(content: Text('Import failed: $e')),
       );
     }
@@ -1359,6 +1360,7 @@ class _InlineDetailPlaceholder extends StatelessWidget {
         children: [
           Icon(Icons.article_outlined, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
+          // TODO(localization): 'Select a note to view' should be localized via .arb files
           Text(
             'Select a note to view',
             style: Theme.of(context)

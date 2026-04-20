@@ -135,3 +135,67 @@ func (h *SyncHandler) Stats(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, resp)
 }
+
+func (h *SyncHandler) ListTags(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+
+	resp, err := h.syncService.ListTags(r.Context(), parseUUID(userID))
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "sync_error", "Failed to list tags")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *SyncHandler) BatchDelete(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+
+	var req domain.BatchDeleteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		return
+	}
+
+	if len(req.ItemIDs) == 0 {
+		writeError(w, http.StatusBadRequest, "validation_error", "item_ids must not be empty")
+		return
+	}
+
+	if len(req.ItemIDs) > 1000 {
+		writeError(w, http.StatusBadRequest, "batch_too_large", "Maximum 1000 items per batch delete")
+		return
+	}
+
+	resp, err := h.syncService.BatchDelete(r.Context(), parseUUID(userID), req.ItemIDs)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "sync_error", "Batch delete failed")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *SyncHandler) Progress(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+
+	resp, err := h.syncService.GetProgress(r.Context(), parseUUID(userID))
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "sync_error", "Failed to get sync progress")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}

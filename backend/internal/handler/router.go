@@ -92,6 +92,14 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			).Post("/sync/push", syncH.Push)
 			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/status", syncH.Status)
 			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/stats", syncH.Stats)
+			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/progress", syncH.Progress)
+			r.With(
+				MaxBodySize(SyncPushMaxBodyBytes),
+				RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute),
+			).Post("/sync/batch-delete", syncH.BatchDelete)
+
+			// Tags
+			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/tags", syncH.ListTags)
 
 			// AI Proxy
 			r.Post("/ai/proxy", aiH.Proxy)

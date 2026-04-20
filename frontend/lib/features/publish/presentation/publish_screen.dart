@@ -86,6 +86,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                 return Column(
                   children: platforms.map((p) {
                     final name =
+                        // TODO(localization): 'Unknown' fallback should use l10n key
                         p['name']?.toString() ?? p['platform']?.toString() ?? 'Unknown';
                     final platformKey =
                         p['key']?.toString() ?? name.toLowerCase();
@@ -103,6 +104,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           : null,
                       child: Semantics(
                         button: true,
+                        // TODO(localization): Semantic labels 'Platform:', 'Selected' should use l10n keys
                         label: 'Platform: $name${subtitle.isNotEmpty ? '. $subtitle' : ''}${isSelected ? '. Selected' : ''}',
                         child: ListTile(
                         leading: CircleAvatar(
@@ -140,6 +142,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         Icon(ErrorDisplay.errorIcon(appError),
                             size: 36, color: Colors.red,),
                         const SizedBox(height: 8),
+                        // TODO(localization): 'Failed to load platforms' should use l10n key
                         const Text('Failed to load platforms'),
                         const SizedBox(height: 4),
                         Text(ErrorDisplay.userMessage(appError),
@@ -149,8 +152,8 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         FilledButton.tonal(
                           onPressed: () =>
                               ref.invalidate(connectedPlatformsProvider),
-                          child: const Text('Retry'),
-                        ),
+                        // TODO(localization): 'Retry' button should use l10n.retry
+                        const Text('Retry'),
                       ],
                     ),
                   ),
@@ -228,6 +231,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         FilledButton.tonal(
                           onPressed: () =>
                               ref.invalidate(publishHistoryProvider),
+                          // TODO(localization): 'Retry' button should use l10n.retry
                           child: const Text('Retry'),
                         ),
                       ],
@@ -345,6 +349,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
 
   Widget _buildHistoryTile(BuildContext context, Map<String, dynamic> item) {
     final title = item['title']?.toString() ?? 'Untitled';
+    // TODO(localization): 'Unknown' platform fallback should use l10n key
     final platform = item['platform']?.toString() ?? 'Unknown';
     final status = item['status']?.toString() ?? 'unknown';
     final createdAt = item['created_at']?.toString() ?? '';
@@ -369,6 +374,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
     return Card(
       child: Semantics(
         button: platformURL.isNotEmpty,
+        // TODO(localization): Semantic labels 'Published:', 'Platform:', 'Status:' should use l10n keys
         label: 'Published: $title. Platform: $platform. Status: $status${createdAt.isNotEmpty ? '. $createdAt' : ''}',
         child: ListTile(
         leading: Icon(statusIcon, color: statusColor),
@@ -381,6 +387,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         trailing: platformURL.isNotEmpty
             ? Semantics(
                 button: true,
+                // TODO(localization): 'Open published article in browser' semantic label should use l10n key
                 label: 'Open published article in browser',
                 child: IconButton(
                   icon: const Icon(Icons.open_in_new, size: 18),
@@ -393,6 +400,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                 ),
               )
             : Semantics(
+                // TODO(localization): 'Status:' semantic label should use l10n key
                 label: 'Status: $status',
                 child: Chip(
                   label: Text(

@@ -118,7 +118,7 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
   Widget _buildHistoryCard(BuildContext context, Map<String, dynamic> item) {
     final l10n = AppLocalizations.of(context)!;
     final id = item['id']?.toString() ?? '';
-    final title = item['title']?.toString() ?? 'Untitled';
+    final title = item['title']?.toString() ?? 'Untitled'; // TODO(localization): 'Untitled' fallback should use l10n key
     final platform = item['platform']?.toString() ?? 'Unknown';
     final status = item['status']?.toString() ?? 'unknown';
     final createdAt = item['created_at']?.toString() ?? '';

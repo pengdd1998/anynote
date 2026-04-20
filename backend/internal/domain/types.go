@@ -204,6 +204,48 @@ type SyncStatsResponse struct {
 	TotalConflicts int64              `json:"total_conflicts"`
 }
 
+// ── Tag Listing ───────────────────────────────────
+
+// TagListItem represents a single tag item from the user's sync blobs.
+// Since tag data is encrypted, only metadata is returned by the server.
+type TagListItem struct {
+	ItemID    uuid.UUID `json:"item_id"`
+	Version   int       `json:"version"`
+	BlobSize  int       `json:"blob_size"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// ListTagsResponse is the response for listing tag items.
+type ListTagsResponse struct {
+	Tags []TagListItem `json:"tags"`
+}
+
+// ── Batch Delete ──────────────────────────────────
+
+// BatchDeleteRequest is the payload for deleting multiple sync blobs at once.
+type BatchDeleteRequest struct {
+	ItemIDs []uuid.UUID `json:"item_ids"`
+}
+
+// BatchDeleteResponse is the response for a batch delete operation.
+type BatchDeleteResponse struct {
+	Deleted int `json:"deleted"`
+}
+
+// ── Sync Progress ─────────────────────────────────
+
+// SyncProgressResponse returns the current sync state and health information.
+type SyncProgressResponse struct {
+	TotalItems       int       `json:"total_items"`
+	LatestVersion    int       `json:"latest_version"`
+	LastSyncedAt     time.Time `json:"last_synced_at"`
+	PendingCount     int64     `json:"pending_count"`      // operation logs awaiting processing
+	ConflictCount    int64     `json:"conflict_count"`     // total logged conflicts
+	HealthStatus     string    `json:"health_status"`      // "ok", "warnings", or "errors"
+	PushCount24h     int64     `json:"push_count_24h"`     // push operations in last 24 hours
+	PullCount24h     int64     `json:"pull_count_24h"`     // pull operations in last 24 hours
+}
+
 // ── Auth ──────────────────────────────────────────
 
 type RegisterRequest struct {

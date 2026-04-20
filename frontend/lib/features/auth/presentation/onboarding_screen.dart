@@ -34,6 +34,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _demoSyncVisible = false;
   Timer? _demoTimer;
 
+  // TODO(localization): 'My secret note...' demo text should use l10n key
   static const _demoText = 'My secret note...';
 
   List<_OnboardingPageData> _buildPages(AppLocalizations l10n) => [

@@ -216,7 +216,7 @@ class SettingsScreen extends ConsumerWidget {
                       SettingsItem(
                         icon: Icons.info_outline,
                         title: l10n.version,
-                        subtitle: '0.1.0',
+                        subtitle: '0.1.0', // TODO(localization): Version string should be sourced from config or l10n
                       ),
                       SettingsItem(
                         icon: Icons.privacy_tip_outlined,
@@ -275,12 +275,12 @@ class SettingsScreen extends ConsumerWidget {
         SettingsItem(
           icon: Icons.person_outline,
           title: l10n.email,
-          subtitle: account['email'] as String? ?? 'Unknown',
+          subtitle: account['email'] as String? ?? 'Unknown', // TODO(localization): 'Unknown' fallback should use l10n key
         ),
         SettingsItem(
           icon: Icons.badge_outlined,
           title: l10n.plan,
-          subtitle: account['plan'] as String? ?? 'Free',
+          subtitle: account['plan'] as String? ?? 'Free', // TODO(localization): 'Free' plan fallback should use l10n key
           trailing: FilledButton.tonal(
             onPressed: () {},
             style: FilledButton.styleFrom(
@@ -527,7 +527,7 @@ class SettingsScreen extends ConsumerWidget {
       // Decrypt notes that have encrypted content.
       final decrypted = <({String title, String content, String id})>[];
       for (final note in notes) {
-        String title = note.plainTitle ?? 'Untitled';
+        String title = note.plainTitle ?? 'Untitled'; // TODO(localization): 'Untitled' fallback should use l10n key
         String content = note.plainContent ?? '';
 
         if (crypto.isUnlocked) {

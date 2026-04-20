@@ -318,6 +318,89 @@ func (r *SyncBlobRepository) BatchInsertOperationLogs(ctx context.Context, logs 
 	return nil
 }
 
+// ListTagsByType returns metadata for all sync blobs of the given item_type for a user.
+// Since blob contents are encrypted, only metadata fields are returned.
+func (r *SyncBlobRepository) ListTagsByType(ctx context.Context, userID uuid.UUID, itemType string) ([]domain.TagListItem, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT item_id, version, blob_size, updated_at
+		 FROM sync_blobs
+		 WHERE user_id = $1 AND item_type = $2
+		 ORDER BY updated_at DESC`,
+		userID, itemType,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list tags by type: %w", err)
+	}
+	defer rows.Close()
+
+	var tags []domain.TagListItem
+	for rows.Next() {
+		var t domain.TagListItem
+		if err := rows.Scan(&t.ItemID, &t.Version, &t.BlobSize, &t.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan tag item: %w", err)
+		}
+		tags = append(tags, t)
+	}
+	return tags, rows.Err()
+}
+
+// BatchDelete removes multiple sync blobs for a user atomically within a transaction.
+// Returns the number of rows actually deleted.
+func (r *SyncBlobRepository) BatchDelete(ctx context.Context, userID uuid.UUID, itemIDs []uuid.UUID) (int, error) {
+	if len(itemIDs) == 0 {
+		return 0, nil
+	}
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Use a batch to send all delete queries in a single round-trip.
+	batch := &pgx.Batch{}
+	for _, id := range itemIDs {
+		batch.Queue(
+			`DELETE FROM sync_blobs WHERE user_id = $1 AND item_id = $2`,
+			userID, id,
+		)
+	}
+
+	br := tx.SendBatch(ctx, batch)
+	defer br.Close()
+
+	var deleted int
+	for range itemIDs {
+		tag, err := br.Exec()
+		if err != nil {
+			return 0, fmt.Errorf("batch delete item: %w", err)
+		}
+		deleted += int(tag.RowsAffected())
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("commit batch delete: %w", err)
+	}
+
+	return deleted, nil
+}
+
+// GetOperationCounts returns push and pull operation counts in the last 24 hours.
+func (r *SyncBlobRepository) GetOperationCounts(ctx context.Context, userID uuid.UUID) (pushCount, pullCount int64, err error) {
+	err = r.pool.QueryRow(ctx,
+		`SELECT
+		   COALESCE(SUM(CASE WHEN operation_type = 'push' AND version > 0 THEN 1 ELSE 0 END), 0),
+		   COALESCE(SUM(CASE WHEN operation_type = 'pull' THEN 1 ELSE 0 END), 0)
+		 FROM sync_operation_logs
+		 WHERE user_id = $1 AND created_at > NOW() - INTERVAL '24 hours'`,
+		userID,
+	).Scan(&pushCount, &pullCount)
+	if err != nil {
+		return 0, 0, fmt.Errorf("get operation counts: %w", err)
+	}
+	return pushCount, pullCount, nil
+}
+
 // ListOperationLogs returns recent sync operation logs for a user, ordered by created_at descending.
 func (r *SyncBlobRepository) ListOperationLogs(ctx context.Context, userID uuid.UUID, limit int) ([]domain.SyncOperationLog, error) {
 	if limit < 1 {

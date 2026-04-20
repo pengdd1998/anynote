@@ -321,6 +321,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
 
   String _formatExpiry(DateTime expiresAt) {
     final remaining = expiresAt.difference(DateTime.now().toUtc());
+    // TODO(localization): All expiry format strings below should use l10n keys with pluralization
     if (remaining.isNegative) return 'immediately';
     if (remaining.inHours < 1) return 'in less than 1 hour';
     if (remaining.inHours < 24) return 'in ${remaining.inHours} hours';

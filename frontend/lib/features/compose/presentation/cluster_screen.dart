@@ -39,6 +39,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        // TODO(localization): 'Note Clusters' should use l10n key
         title: const Text('Note Clusters'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -60,11 +61,13 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
             Text(
+              // TODO(localization): 'Clustering your notes...' should use l10n key
               'Clustering your notes...',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 8),
             Text(
+              // TODO(localization): 'AI is analyzing N notes about ...' should use l10n key with params
               'AI is analyzing ${session.selectedNoteIds.length} notes about "${session.topic}"',
               style: TextStyle(color: Colors.grey.shade600),
               textAlign: TextAlign.center,
@@ -116,6 +119,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
+                  // TODO(localization): 'AI found N themes. Select the ones to include.' should use l10n key
                   'AI found ${session.clusters.length} themes. Select the ones to include.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey.shade700,
@@ -187,6 +191,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
+                                  // TODO(localization): 'N notes' should use l10n key with pluralization
                                   '${cluster.noteIndices.length} notes',
                                   style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                                 ),
@@ -210,6 +215,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
             child: Row(
               children: [
                 Text(
+                  // TODO(localization): 'N clusters selected' should use l10n key with pluralization
                   '${session.selectedClusterIndices.length} clusters selected',
                   style: TextStyle(color: Colors.grey.shade600),
                 ),
@@ -223,6 +229,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                           context.push('/compose/outline/${widget.sessionId}');
                         },
                   icon: const Icon(Icons.list_alt),
+                  // TODO(localization): 'Generate Outline' button should use l10n key
                   label: const Text('Generate Outline'),
                 ),
               ],
