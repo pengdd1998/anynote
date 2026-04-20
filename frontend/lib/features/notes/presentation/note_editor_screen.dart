@@ -20,7 +20,7 @@ import '../../../core/collab/ws_client.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
-import '../../../core/monitoring/performance_monitor.dart';
+import '../../../core/performance/performance_monitor.dart';
 import '../../../core/storage/image_storage.dart';
 import '../../../core/widgets/markdown_preview.dart';
 import '../../collab/providers/collab_provider.dart';
@@ -292,7 +292,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Future<void> _saveNote() async {
     if (_isSaving) return;
 
-    PerformanceMonitor.start('note_save');
+    final pm = PerformanceMonitor.instance;
+    pm.start('note_save');
     final title = _titleController.text.trim();
     final content = _getContentForSave();
     final plainText = _extractPlainText();
@@ -349,11 +350,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           plainTitle: title.isEmpty ? null : title,
         );
       }
-      PerformanceMonitor.end('note_save');
+      pm.end('note_save');
     } catch (e) {
       // Store the error but do not lose the user's input.
       // The debounced save will retry automatically.
-      PerformanceMonitor.end('note_save');
+      pm.end('note_save');
       if (mounted) {
         final appError = ErrorMapper.map(e);
         setState(() {

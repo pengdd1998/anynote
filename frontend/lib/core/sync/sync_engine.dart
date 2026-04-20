@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import '../crypto/crypto_service.dart';
 import '../database/app_database.dart';
-import '../monitoring/performance_monitor.dart';
+import '../performance/performance_monitor.dart';
 import '../network/api_client.dart';
 import 'conflict_resolver.dart';
 
@@ -26,10 +26,11 @@ class SyncEngine {
 
   /// Full sync cycle: pull then push.
   Future<SyncResult> sync() async {
-    PerformanceMonitor.start('sync');
+    final pm = PerformanceMonitor.instance;
+    pm.start('sync');
     final pullResult = await pull();
     final pushResult = await push();
-    PerformanceMonitor.end('sync');
+    pm.end('sync');
     return SyncResult(
       pulledCount: pullResult,
       pushedCount: pushResult.accepted.length,

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -130,6 +131,9 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 		})
 	})
 
+	// Optional pprof endpoints (only when PPROF_ENABLED or DEBUG is set).
+	registerPprofRoutes(r)
+
 	return r
 }
 
@@ -146,4 +150,22 @@ type Services struct {
 	Push      service.PushService
 	Comment   service.CommentService
 	Presence  service.PresenceService
+}
+
+// registerPprofRoutes mounts /debug/pprof/* endpoints when the PPROF_ENABLED
+// or DEBUG environment variable is set to a truthy value ("1", "true", "yes").
+// In production without these variables the routes are not registered.
+func registerPprofRoutes(r chi.Router) {
+	enabled := os.Getenv("PPROF_ENABLED") != "" || os.Getenv("DEBUG") != ""
+	if !enabled {
+		return
+	}
+
+	r.Route("/debug", func(r chi.Router) {
+		r.HandleFunc("/pprof/", http.DefaultServeMux.ServeHTTP)
+		r.HandleFunc("/pprof/cmdline", http.DefaultServeMux.ServeHTTP)
+		r.HandleFunc("/pprof/profile", http.DefaultServeMux.ServeHTTP)
+		r.HandleFunc("/pprof/symbol", http.DefaultServeMux.ServeHTTP)
+		r.HandleFunc("/pprof/trace", http.DefaultServeMux.ServeHTTP)
+	})
 }

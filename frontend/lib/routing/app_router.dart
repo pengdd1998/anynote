@@ -13,12 +13,29 @@ import '../features/notes/presentation/note_detail_screen.dart';
 import '../features/notes/presentation/note_editor_screen.dart';
 import '../features/notes/presentation/version_history_screen.dart';
 import '../features/notes/presentation/markdown_preview_screen.dart';
+// TODO(perf): Use deferred imports for the compose feature screens to reduce
+// initial bundle size. The compose/AI feature is heavy (it pulls in the LLM
+// prompt builder, cluster logic, and outline generation). Since users do not
+// land on this tab by default, deferring these four screens would save
+// significant startup time. Requires build_runner setup for dart2js deferred
+// library loading -- see https://dart.dev/guides/language/language-tour#deferred-loading.
+// Affected imports:
+//   compose_screen.dart, cluster_screen.dart, outline_screen.dart,
+//   compose_editor_screen.dart
 import '../features/compose/presentation/compose_screen.dart';
 import '../features/compose/presentation/cluster_screen.dart';
 import '../features/compose/presentation/outline_screen.dart';
 import '../features/compose/presentation/compose_editor_screen.dart';
+// TODO(perf): Use deferred import for the publish feature. Publish depends on
+// platform adapters (XHS publishing via chromedp) which are rarely needed.
+// Deferring publish_screen.dart and publish_history_screen.dart would
+// lighten the initial load for users who primarily take notes.
 import '../features/publish/presentation/publish_screen.dart';
 import '../features/publish/presentation/publish_history_screen.dart';
+// TODO(perf): Use deferred imports for infrequently visited settings sub-screens.
+// LLM config, platform connection, encryption, import, and restore screens are
+// only accessed when the user explicitly navigates to them from settings.
+// Each can be loaded on demand with minimal user-visible delay.
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/llm_config_screen.dart';
 import '../features/settings/presentation/platform_connection_screen.dart';
