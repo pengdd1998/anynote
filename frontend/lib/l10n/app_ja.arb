@@ -1138,6 +1138,8 @@
 
   "noMdFilesSelected": ".mdファイルが選択されていません。",
 
+  "notSupportedOnWeb": "この機能はWeb版ではサポートされていません。",
+
   "selectMdFolderTitle": "Markdownファイルのあるフォルダを選択",
 
   "appleNotesExportHeader": "Appleメモのエクスポート",

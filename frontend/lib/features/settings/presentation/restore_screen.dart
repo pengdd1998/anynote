@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -696,6 +697,16 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
 
   Future<void> _startRestore() async {
     if (_selectedFilePath == null) return;
+
+    if (kIsWeb) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.notSupportedOnWeb)),
+        );
+      }
+      return;
+    }
 
     setState(() {
       _isProcessing = true;

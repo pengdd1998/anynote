@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' hide Column;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1166,6 +1167,14 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   void _performImport(BuildContext context, ImportType type) async {
     final l10n = AppLocalizations.of(context)!;
 
+    // File system APIs are not available on web platform.
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This feature is not available on web')),
+      );
+      return;
+    }
+
     // Show a progress dialog.
     showDialog(
       context: context,
@@ -1558,7 +1567,7 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
                   selectable: true,
                   // ignore: deprecated_member_use
                   imageBuilder: (uri, title, alt) {
-                    if (uri.scheme == 'file') {
+                    if (!kIsWeb && uri.scheme == 'file') {
                       return Image.file(
                         File.fromUri(uri),
                         fit: BoxFit.contain,

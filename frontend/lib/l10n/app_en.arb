@@ -2046,6 +2046,9 @@
   "noMdFilesSelected": "No .md files selected.",
   "@noMdFilesSelected": { "description": "SnackBar when no valid Markdown files were chosen" },
 
+  "notSupportedOnWeb": "This feature is not supported on web.",
+  "@notSupportedOnWeb": { "description": "SnackBar when a feature requiring filesystem access is used on web platform" },
+
   "selectMdFolderTitle": "Select Folder with Markdown Files",
   "@selectMdFolderTitle": { "description": "Folder picker dialog title for Markdown import" },
 

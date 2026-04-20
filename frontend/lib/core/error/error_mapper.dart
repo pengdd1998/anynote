@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'exceptions.dart';
 
@@ -31,7 +32,8 @@ class ErrorMapper {
     if (error is DioException) return _mapDioError(error);
 
     // Raw socket errors (can appear outside of Dio in rare cases).
-    if (error is SocketException) {
+    // SocketException is not available on web platform.
+    if (!kIsWeb && error is SocketException) {
       return NetworkException(
         message: 'No network connection. Please check your internet settings.',
         code: 'network/socket',

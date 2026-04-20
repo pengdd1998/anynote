@@ -1138,6 +1138,8 @@
 
   "noMdFilesSelected": "선택된 .md 파일이 없어요.",
 
+  "notSupportedOnWeb": "이 기능은 웹에서 지원되지 않습니다.",
+
   "selectMdFolderTitle": "Markdown 파일이 있는 폴더 선택",
 
   "appleNotesExportHeader": "Apple 메모 내보내기",

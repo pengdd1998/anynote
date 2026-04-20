@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
@@ -922,6 +923,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Pick an image from the gallery and insert a markdown reference.
   Future<void> _pickImage(BuildContext context) async {
+    // Image picking via file system is not available on web platform.
+    if (kIsWeb) {
+      if (!context.mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.failedToAddImage('Not available on web'))),
+      );
+      return;
+    }
+
     try {
       final picker = ImagePicker();
       final xFile = await picker.pickImage(source: ImageSource.gallery);

@@ -55,6 +55,13 @@ class PushNotificationService {
   Future<void> init() async {
     if (_initialized) return;
 
+    // Push notifications are not supported on web platform.
+    if (kIsWeb) {
+      debugPrint('Push notifications not supported on web');
+      _initialized = true;
+      return;
+    }
+
     try {
       // Firebase may not be configured in development builds.
       // Wrap in try/catch so the app continues to work without Firebase.
@@ -207,6 +214,7 @@ class PushNotificationService {
 
   /// Detect the current platform for device registration.
   String _detectPlatform() {
+    if (kIsWeb) return 'web';
     if (Platform.isAndroid) return 'android';
     if (Platform.isIOS) return 'ios';
     if (Platform.isMacOS) return 'ios'; // macOS uses APNs-like tokens

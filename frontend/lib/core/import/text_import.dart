@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'import_models.dart';
 
 /// Importer for plain text (.txt / .text) files as notes.
@@ -24,6 +26,7 @@ class TextImporter {
   /// Returns `null` if the file cannot be read, is empty, or cannot be decoded
   /// as UTF-8.
   Future<ImportedNote?> parseTextFile(File file) async {
+    if (kIsWeb) return null;
     try {
       if (!await file.exists()) return null;
 
@@ -85,6 +88,7 @@ class TextImporter {
   ///
   /// Files that cannot be decoded as UTF-8 are silently skipped.
   Future<List<ImportedNote>> parseTextDirectory(Directory dir) async {
+    if (kIsWeb) return [];
     final notes = <ImportedNote>[];
 
     try {
@@ -119,7 +123,7 @@ class TextImporter {
 
   /// Derive a title from a file path by removing the extension.
   static String _filenameToTitle(String filePath) {
-    final name = filePath.split(Platform.pathSeparator).last;
+    final name = filePath.split('/').last;
     final dotIndex = name.lastIndexOf('.');
     return dotIndex > 0 ? name.substring(0, dotIndex) : name;
   }

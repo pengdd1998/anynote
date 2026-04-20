@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../crypto/crypto_service.dart';
 
 /// Metadata about a backup file after verification.
@@ -135,6 +137,12 @@ class BackupVerifier {
   /// - Required fields are present (backup_key_id, encrypted_data)
   /// - If [CryptoService] is unlocked, attempts decryption to count items
   Future<BackupInfo> verify(String backupPath) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'Backup verification is not supported on web platform',
+      );
+    }
+
     final errors = <String>[];
 
     // 1. File existence and size check.
@@ -262,6 +270,12 @@ class BackupVerifier {
     Set<String> existingCollectionIds,
     Set<String> existingContentIds,
   ) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'Backup preview is not supported on web platform',
+      );
+    }
+
     if (!_crypto.isUnlocked) {
       throw StateError('Crypto service must be unlocked to preview backup');
     }

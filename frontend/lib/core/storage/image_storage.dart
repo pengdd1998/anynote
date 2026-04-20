@@ -2,15 +2,24 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 /// Manages local storage of note images.
+///
+/// Image storage requires a native filesystem and is not supported on web.
+/// All public methods throw [UnsupportedError] when running on web.
 class ImageStorage {
   static const _imagesDir = 'note_images';
 
   /// Save image bytes and return the local file path.
   static Future<String> saveImage(Uint8List bytes, String noteId) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'Image storage is not supported on web platform',
+      );
+    }
     final dir = await _getImagesDirectory();
     final hash = md5.convert(bytes).toString().substring(0, 12);
     final filename = '${noteId}_$hash.png';
@@ -21,6 +30,11 @@ class ImageStorage {
 
   /// Load image from local path.
   static Future<Uint8List?> loadImage(String path) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'Image storage is not supported on web platform',
+      );
+    }
     final file = File(path);
     if (await file.exists()) {
       return file.readAsBytes();
@@ -30,6 +44,11 @@ class ImageStorage {
 
   /// Delete all images for a note.
   static Future<void> deleteImagesForNote(String noteId) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'Image storage is not supported on web platform',
+      );
+    }
     final dir = await _getImagesDirectory();
     if (!await dir.exists()) return;
     await for (final entity in dir.list()) {

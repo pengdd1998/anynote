@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:uuid/uuid.dart';
 
 import '../crypto/crypto_service.dart';
@@ -41,6 +42,15 @@ class MarkdownImportService {
   /// paths are tracked in the returned [_ParsedBatch] so the caller (or
   /// [importFromDirectory]) can report accurate skip/error counts.
   Stream<ImportProgress> parseDirectory(Directory dir) async* {
+    if (kIsWeb) {
+      yield const ImportProgress(
+        current: 0,
+        total: 0,
+        currentFile: '',
+        status: ImportStatus.done,
+      );
+      return;
+    }
     final mdFiles = await _collectMarkdownFiles(dir);
     final total = mdFiles.length;
 
@@ -60,7 +70,7 @@ class MarkdownImportService {
 
     for (var i = 0; i < mdFiles.length; i++) {
       final file = mdFiles[i];
-      final fileName = file.path.split(Platform.pathSeparator).last;
+      final fileName = file.path.split('/').last;
 
       yield ImportProgress(
         current: i,
@@ -121,7 +131,7 @@ class MarkdownImportService {
     for (var i = 0; i < notes.length; i++) {
       final imported = notes[i];
       final fileName =
-          imported.sourcePath.split(Platform.pathSeparator).last;
+          imported.sourcePath.split('/').last;
 
       yield ImportProgress(
         current: i,
@@ -185,6 +195,10 @@ class MarkdownImportService {
   /// skipped). Progress events from both stages are not exposed here; use the
   /// two individual methods if you need streaming progress.
   Future<ImportResult> importFromDirectory(Directory dir) async {
+    if (kIsWeb) {
+      return const ImportResult(importedCount: 0, skippedCount: 0);
+    }
+
     // Reset per-batch counters.
     _importedCount = 0;
     _skippedCount = 0;
@@ -231,6 +245,7 @@ class MarkdownImportService {
 
   /// Recursively collect all `.md` files under [dir].
   Future<List<File>> _collectMarkdownFiles(Directory dir) async {
+    if (kIsWeb) return [];
     final results = <File>[];
     if (!await dir.exists()) return results;
 
@@ -439,7 +454,7 @@ class MarkdownImportService {
   /// Extract the filename without the `.md` extension for use as a fallback
   /// title.
   String _filenameWithoutExt(File file) {
-    final name = file.path.split(Platform.pathSeparator).last;
+    final name = file.path.split('/').last;
     return name.endsWith('.md') ? name.substring(0, name.length - 3) : name;
   }
 

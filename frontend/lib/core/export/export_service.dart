@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -10,6 +11,10 @@ enum ExportFormat { markdown, html, plainText }
 ///
 /// Generates files in the system temp directory and optionally shares them
 /// using the platform share sheet via share_plus.
+///
+/// File-based export requires a native filesystem and is not supported on web.
+/// All export methods throw [UnsupportedError] when running on web.
+// TODO(web): Implement browser download using package:web / dart:js_interop.
 class ExportService {
   /// Sanitize a title so it is safe to use as a filename component.
   static String _sanitizeTitle(String title) {
@@ -25,6 +30,11 @@ class ExportService {
     String content,
     String noteId,
   ) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'File export is not supported on web platform',
+      );
+    }
     final dir = await getTemporaryDirectory();
     final sanitized = _sanitizeTitle(title);
     final suffix = noteId.length >= 8 ? noteId.substring(0, 8) : noteId;
@@ -39,6 +49,11 @@ class ExportService {
     String content,
     String noteId,
   ) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'File export is not supported on web platform',
+      );
+    }
     final htmlContent = _markdownToHtml(content);
     final dir = await getTemporaryDirectory();
     final sanitized = _sanitizeTitle(title);
@@ -75,6 +90,11 @@ class ExportService {
     String content,
     String noteId,
   ) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'File export is not supported on web platform',
+      );
+    }
     final dir = await getTemporaryDirectory();
     final sanitized = _sanitizeTitle(title);
     final suffix = noteId.length >= 8 ? noteId.substring(0, 8) : noteId;
@@ -91,6 +111,11 @@ class ExportService {
     List<({String title, String content, String id})> notes,
     ExportFormat format,
   ) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'File export is not supported on web platform',
+      );
+    }
     final dir = await getTemporaryDirectory();
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
     final File file;
@@ -162,6 +187,11 @@ class ExportService {
 
   /// Share a file using the platform share sheet.
   static Future<void> shareFile(File file, {String? subject}) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'File sharing is not supported on web platform',
+      );
+    }
     await Share.shareXFiles(
       [XFile(file.path)],
       subject: subject ?? 'AnyNote Export',

@@ -18,6 +18,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart' show CupertinoPage;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -58,7 +59,7 @@ CustomTransitionPage<void> fadeThroughTransition(Widget child) {
 /// - Back: slide to right 30px + fade out (250ms, easeInCubic)
 Page<void> slideTransition(Widget child) {
   // Use CupertinoPageRoute on iOS for native platform feel.
-  if (Platform.isIOS) {
+  if (!kIsWeb && Platform.isIOS) {
     return CupertinoPage(child: child);
   }
 

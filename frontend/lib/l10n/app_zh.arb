@@ -1152,6 +1152,8 @@
 
   "noMdFilesSelected": "未选择.md文件。",
 
+  "notSupportedOnWeb": "此功能在网页端不支持。",
+
   "selectMdFolderTitle": "选择包含Markdown文件的文件夹",
 
   "appleNotesExportHeader": "Apple备忘录导出",

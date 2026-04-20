@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -502,6 +503,17 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
   /// Export an encrypted backup of all local data.
   Future<void> _exportBackup() async {
     final l10n = AppLocalizations.of(context)!;
+
+    // File system APIs are not available on web platform.
+    if (kIsWeb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This feature is not available on web')),
+        );
+      }
+      return;
+    }
+
     try {
       final db = ref.read(databaseProvider);
       final crypto = ref.read(cryptoServiceProvider);
@@ -535,6 +547,17 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
   /// Import data from an encrypted backup file.
   Future<void> _importBackup() async {
     final l10n = AppLocalizations.of(context)!;
+
+    // File system APIs are not available on web platform.
+    if (kIsWeb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This feature is not available on web')),
+        );
+      }
+      return;
+    }
+
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,

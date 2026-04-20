@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -169,6 +170,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   }
 
   Future<void> _importMarkdownFiles() async {
+    if (kIsWeb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        );
+      }
+      return;
+    }
     final result = await FilePicker.platform.pickFiles(
       dialogTitle: AppLocalizations.of(context)!.selectMdFilesTitle,
       type: FileType.custom,
@@ -249,6 +258,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   }
 
   Future<void> _importMarkdownFolder() async {
+    if (kIsWeb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        );
+      }
+      return;
+    }
     final result = await FilePicker.platform.getDirectoryPath(
       dialogTitle: AppLocalizations.of(context)!.selectMdFolderTitle,
     );
@@ -333,7 +350,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
     // Fallback title from filename.
     if (title.isEmpty) {
-      final name = file.path.split(Platform.pathSeparator).last;
+      final name = file.path.split('/').last;
       title = name.toLowerCase().endsWith('.md')
           ? name.substring(0, name.length - 3)
           : (name.toLowerCase().endsWith('.markdown')
@@ -436,6 +453,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   }
 
   Future<void> _importAppleNotesFolder() async {
+    if (kIsWeb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        );
+      }
+      return;
+    }
     final result = await FilePicker.platform.getDirectoryPath(
       dialogTitle: AppLocalizations.of(context)!.selectAppleNotesFolderTitle,
     );
@@ -561,6 +586,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   }
 
   Future<void> _importTextFiles() async {
+    if (kIsWeb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        );
+      }
+      return;
+    }
     final result = await FilePicker.platform.pickFiles(
       dialogTitle: AppLocalizations.of(context)!.selectTextFilesTitle,
       type: FileType.custom,
@@ -641,6 +674,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   }
 
   Future<void> _importTextFolder() async {
+    if (kIsWeb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        );
+      }
+      return;
+    }
     final result = await FilePicker.platform.getDirectoryPath(
       dialogTitle: AppLocalizations.of(context)!.selectTextFolderTitle,
     );
@@ -814,7 +855,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   /// Get the filename from a full path.
   static String _basename(String filePath) {
-    return filePath.split(Platform.pathSeparator).last;
+    return filePath.split('/').last;
   }
 }
 

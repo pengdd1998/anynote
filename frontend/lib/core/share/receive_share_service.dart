@@ -125,6 +125,9 @@ class ReceiveShareService {
   Future<void> checkPendingShare() async {
     if (_hasPendingShare) return;
 
+    // Share extensions are not available on web platform.
+    if (kIsWeb) return;
+
     String? pendingData;
 
     if (Platform.isAndroid) {

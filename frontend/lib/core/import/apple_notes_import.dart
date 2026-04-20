@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'import_models.dart';
 
 /// Importer for Apple Notes HTML exports.
@@ -22,6 +24,7 @@ class AppleNotesImporter {
   ///
   /// Returns `null` if the file cannot be read or parsed.
   Future<ImportedNote?> parseHtmlFile(File file) async {
+    if (kIsWeb) return null;
     try {
       if (!await file.exists()) return null;
 
@@ -49,6 +52,7 @@ class AppleNotesImporter {
   /// Files that fail to parse are silently skipped. Malformed HTML is handled
   /// gracefully on a per-file basis so one bad file does not abort the batch.
   Future<List<ImportedNote>> parseHtmlDirectory(Directory dir) async {
+    if (kIsWeb) return [];
     final notes = <ImportedNote>[];
 
     try {
@@ -228,7 +232,7 @@ class AppleNotesImporter {
 
   /// Derive a title from a file path by removing the extension.
   static String _filenameToTitle(String filePath) {
-    final name = filePath.split(Platform.pathSeparator).last;
+    final name = filePath.split('/').last;
     final dotIndex = name.lastIndexOf('.');
     return dotIndex > 0 ? name.substring(0, dotIndex) : name;
   }
