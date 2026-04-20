@@ -130,8 +130,10 @@ type SyncPullRequest struct {
 }
 
 type SyncPullResponse struct {
-	Blobs       []SyncBlob `json:"blobs"`
-	LatestVersion int       `json:"latest_version"`
+	Blobs         []SyncBlob `json:"blobs"`
+	LatestVersion int        `json:"latest_version"`
+	HasMore       bool       `json:"has_more"`
+	NextCursor    int        `json:"next_cursor"`
 }
 
 type SyncPushRequest struct {
@@ -160,6 +162,21 @@ type SyncStatusResponse struct {
 	LatestVersion  int       `json:"latest_version"`
 	TotalItems     int       `json:"total_items"`
 	LastSyncedAt   time.Time `json:"last_synced_at"`
+}
+
+// SyncStatusSummary is the raw status data returned by the repository layer.
+type SyncStatusSummary struct {
+	LatestVersion int
+	TotalItems    int
+	LastUpdated   time.Time
+}
+
+// BatchUpsertResult holds the outcome for a single item in a batch upsert.
+type BatchUpsertResult struct {
+	ItemID        uuid.UUID `json:"item_id"`
+	Accepted      bool      `json:"accepted"`
+	ServerVersion int       `json:"server_version"`
+	Error         error     `json:"-"`
 }
 
 // ── Auth ──────────────────────────────────────────

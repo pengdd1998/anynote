@@ -88,6 +88,8 @@ func validateRequired(value, fieldName string) error {
 	return nil
 }
 
+var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
 // validateUsername checks that the username meets requirements.
 func validateUsername(username string) error {
 	username = strings.TrimSpace(username)
@@ -99,6 +101,9 @@ func validateUsername(username string) error {
 	}
 	if len(username) > 50 {
 		return &ValidationError{Errors: []ValidationErr{{Field: "username", Message: "Username must be at most 50 characters"}}}
+	}
+	if !usernameRegex.MatchString(username) {
+		return &ValidationError{Errors: []ValidationErr{{Field: "username", Message: "Username must contain only alphanumeric characters, underscores, and hyphens"}}}
 	}
 	return nil
 }

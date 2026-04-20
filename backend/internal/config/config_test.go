@@ -461,6 +461,7 @@ func TestApplyEnvOverrides_NoEnvVars(t *testing.T) {
 		"DEEPSEEK_API_KEY", "QWEN_API_KEY", "CHROME_WS_URL",
 		"MINIO_ENDPOINT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY",
 		"PORT", "LOG_LEVEL", "LOG_FORMAT",
+		"WS_ALLOWED_ORIGINS",
 	}
 	for _, v := range envVars {
 		os.Unsetenv(v)
@@ -475,5 +476,54 @@ func TestApplyEnvOverrides_NoEnvVars(t *testing.T) {
 	}
 	if cfg.Auth.JWTSecret != "" {
 		t.Errorf("JWTSecret = %q, want empty (default)", cfg.Auth.JWTSecret)
+	}
+}
+
+func TestApplyEnvOverrides_WSAllowedOrigins(t *testing.T) {
+	os.Setenv("WS_ALLOWED_ORIGINS", "https://app.example.com, https://web.example.com")
+	defer os.Unsetenv("WS_ALLOWED_ORIGINS")
+
+	cfg, _ := Load("/nonexistent")
+	if len(cfg.Server.AllowOrigins) != 2 {
+		t.Fatalf("AllowOrigins = %v, want 2 entries", cfg.Server.AllowOrigins)
+	}
+	if cfg.Server.AllowOrigins[0] != "https://app.example.com" {
+		t.Errorf("AllowOrigins[0] = %q, want %q", cfg.Server.AllowOrigins[0], "https://app.example.com")
+	}
+	if cfg.Server.AllowOrigins[1] != "https://web.example.com" {
+		t.Errorf("AllowOrigins[1] = %q, want %q", cfg.Server.AllowOrigins[1], "https://web.example.com")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: splitCSV
+// ---------------------------------------------------------------------------
+
+func TestSplitCSV(t *testing.T) {
+	tests := []struct {
+		name string
+		input string
+		want []string
+	}{
+		{name: "single value", input: "https://example.com", want: []string{"https://example.com"}},
+		{name: "comma separated", input: "a, b, c", want: []string{"a", "b", "c"}},
+		{name: "trailing comma", input: "a, b,", want: []string{"a", "b"}},
+		{name: "leading comma", input: ",a", want: []string{"a"}},
+		{name: "empty string", input: "", want: []string{}},
+		{name: "only commas and spaces", input: ", , ,", want: nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := splitCSV(tt.input)
+			if len(got) != len(tt.want) {
+				t.Errorf("splitCSV(%q) = %v, want %v", tt.input, got, tt.want)
+				return
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("splitCSV(%q)[%d] = %q, want %q", tt.input, i, got[i], tt.want[i])
+				}
+			}
+		})
 	}
 }

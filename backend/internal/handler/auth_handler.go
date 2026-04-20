@@ -32,6 +32,18 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "validation_error", "auth_key_hash is required")
 		return
 	}
+	if len(req.AuthKeyHash) > 128 {
+		writeError(w, http.StatusBadRequest, "validation_error", "auth_key_hash must be at most 128 bytes")
+		return
+	}
+	if len(req.Salt) > 64 {
+		writeError(w, http.StatusBadRequest, "validation_error", "salt must be at most 64 bytes")
+		return
+	}
+	if len(req.RecoveryKey) > 1024 {
+		writeError(w, http.StatusBadRequest, "validation_error", "recovery_key must be at most 1024 bytes")
+		return
+	}
 
 	resp, err := h.authService.Register(r.Context(), req)
 	if err != nil {

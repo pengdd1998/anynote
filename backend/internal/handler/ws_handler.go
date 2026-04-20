@@ -69,16 +69,29 @@ func (r *clientRateLimiter) Allow() bool {
 
 // WSHandler handles WebSocket connections for real-time collaboration.
 type WSHandler struct {
-	presenceSvc service.PresenceService
-	jwtSecret   string
+	presenceSvc    service.PresenceService
+	jwtSecret      string
+	allowedOrigins []string
 }
 
 // NewWSHandler creates a new WebSocket handler.
-func NewWSHandler(presenceSvc service.PresenceService, jwtSecret string) *WSHandler {
+// allowedOrigins controls which origins may connect via WebSocket.
+// If empty, the wildcard pattern "*" is used (suitable for local development).
+func NewWSHandler(presenceSvc service.PresenceService, jwtSecret string, allowedOrigins []string) *WSHandler {
 	return &WSHandler{
-		presenceSvc: presenceSvc,
-		jwtSecret:   jwtSecret,
+		presenceSvc:    presenceSvc,
+		jwtSecret:      jwtSecret,
+		allowedOrigins: allowedOrigins,
 	}
+}
+
+// originPatterns returns the origin patterns for the WebSocket accept options.
+// When no patterns are configured (dev mode), it falls back to wildcard.
+func (h *WSHandler) originPatterns() []string {
+	if len(h.allowedOrigins) == 0 {
+		return []string{"*"}
+	}
+	return h.allowedOrigins
 }
 
 // IdleTimeout is the maximum duration a connection may be idle before being closed.
@@ -110,7 +123,7 @@ func (h *WSHandler) HandleConnection(w http.ResponseWriter, r *http.Request) {
 
 	// --- Upgrade to WebSocket ---
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		OriginPatterns: []string{"*"},
+		OriginPatterns: h.originPatterns(),
 	})
 	if err != nil {
 		slog.Error("ws: upgrade failed", "error", err)

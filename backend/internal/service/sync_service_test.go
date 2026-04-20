@@ -17,16 +17,17 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockSyncBlobRepo struct {
-	blobs          []domain.SyncBlob
-	latestVersion  int
-	totalItems     int
-	lastUpdated    time.Time
-	pullErr        error
-	upsertErr      error
-	upsertResult   bool // accepted or conflict
-	versionErr     error
-	countErr       error
-	lastUpdatedErr error
+	blobs            []domain.SyncBlob
+	latestVersion    int
+	totalItems       int
+	lastUpdated      time.Time
+	pullErr          error
+	upsertErr        error
+	upsertResult     bool // accepted or conflict
+	versionErr       error
+	countErr         error
+	lastUpdatedErr   error
+	statusSummaryErr error
 }
 
 func (m *mockSyncBlobRepo) PullSince(ctx context.Context, userID uuid.UUID, sinceVersion int) ([]domain.SyncBlob, error) {
@@ -43,11 +44,54 @@ func (m *mockSyncBlobRepo) PullSince(ctx context.Context, userID uuid.UUID, sinc
 	return result, nil
 }
 
+func (m *mockSyncBlobRepo) PullSincePaginated(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int) ([]domain.SyncBlob, error) {
+	if m.pullErr != nil {
+		return nil, m.pullErr
+	}
+	// Return blobs that are newer than sinceVersion, up to limit.
+	var result []domain.SyncBlob
+	for _, b := range m.blobs {
+		if b.Version > sinceVersion {
+			result = append(result, b)
+			if len(result) >= limit {
+				break
+			}
+		}
+	}
+	return result, nil
+}
+
+func (m *mockSyncBlobRepo) HasMoreSince(ctx context.Context, userID uuid.UUID, sinceVersion int) (bool, error) {
+	for _, b := range m.blobs {
+		if b.Version > sinceVersion {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (m *mockSyncBlobRepo) Upsert(ctx context.Context, blob *domain.SyncBlob) (bool, error) {
 	if m.upsertErr != nil {
 		return false, m.upsertErr
 	}
 	return m.upsertResult, nil
+}
+
+func (m *mockSyncBlobRepo) BatchUpsert(ctx context.Context, blobs []*domain.SyncBlob) []domain.BatchUpsertResult {
+	results := make([]domain.BatchUpsertResult, len(blobs))
+	for i, blob := range blobs {
+		results[i].ItemID = blob.ItemID
+		if m.upsertErr != nil {
+			results[i].Error = m.upsertErr
+			continue
+		}
+		if m.upsertResult {
+			results[i].Accepted = true
+		} else {
+			results[i].ServerVersion = blob.Version
+		}
+	}
+	return results
 }
 
 func (m *mockSyncBlobRepo) GetLatestVersion(ctx context.Context, userID uuid.UUID) (int, error) {
@@ -71,8 +115,19 @@ func (m *mockSyncBlobRepo) GetLastUpdated(ctx context.Context, userID uuid.UUID)
 	return m.lastUpdated, nil
 }
 
+func (m *mockSyncBlobRepo) GetStatusSummary(ctx context.Context, userID uuid.UUID) (domain.SyncStatusSummary, error) {
+	if m.statusSummaryErr != nil {
+		return domain.SyncStatusSummary{}, m.statusSummaryErr
+	}
+	return domain.SyncStatusSummary{
+		LatestVersion: m.latestVersion,
+		TotalItems:    m.totalItems,
+		LastUpdated:   m.lastUpdated,
+	}, nil
+}
+
 // ---------------------------------------------------------------------------
-// Tests
+// Tests: Pull
 // ---------------------------------------------------------------------------
 
 func TestSyncService_Pull_Success(t *testing.T) {
@@ -89,7 +144,7 @@ func TestSyncService_Pull_Success(t *testing.T) {
 	}
 
 	svc := NewSyncService(repo)
-	resp, err := svc.Pull(context.Background(), userID, 2)
+	resp, err := svc.Pull(context.Background(), userID, 2, 100, 0)
 	if err != nil {
 		t.Fatalf("Pull: %v", err)
 	}
@@ -110,7 +165,7 @@ func TestSyncService_Pull_NoNewBlobs(t *testing.T) {
 	}
 
 	svc := NewSyncService(repo)
-	resp, err := svc.Pull(context.Background(), userID, 10)
+	resp, err := svc.Pull(context.Background(), userID, 10, 100, 0)
 	if err != nil {
 		t.Fatalf("Pull: %v", err)
 	}
@@ -119,6 +174,9 @@ func TestSyncService_Pull_NoNewBlobs(t *testing.T) {
 	}
 	if resp.LatestVersion != 10 {
 		t.Errorf("LatestVersion = %d, want 10", resp.LatestVersion)
+	}
+	if resp.HasMore {
+		t.Error("HasMore = true, want false when no blobs returned")
 	}
 }
 
@@ -130,11 +188,85 @@ func TestSyncService_Pull_RepoError(t *testing.T) {
 	}
 
 	svc := NewSyncService(repo)
-	_, err := svc.Pull(context.Background(), userID, 0)
+	_, err := svc.Pull(context.Background(), userID, 0, 100, 0)
 	if err == nil {
 		t.Error("expected error when repo.PullSince fails")
 	}
 }
+
+func TestSyncService_Pull_PaginationWithLimit(t *testing.T) {
+	userID := uuid.New()
+	now := time.Now()
+
+	repo := &mockSyncBlobRepo{
+		blobs: []domain.SyncBlob{
+			{ID: uuid.New(), UserID: userID, Version: 3, UpdatedAt: now},
+			{ID: uuid.New(), UserID: userID, Version: 4, UpdatedAt: now},
+			{ID: uuid.New(), UserID: userID, Version: 5, UpdatedAt: now},
+		},
+		latestVersion: 5,
+	}
+
+	svc := NewSyncService(repo)
+
+	// Request first page with limit 2.
+	resp, err := svc.Pull(context.Background(), userID, 0, 2, 0)
+	if err != nil {
+		t.Fatalf("Pull: %v", err)
+	}
+	if len(resp.Blobs) != 2 {
+		t.Errorf("len(Blobs) = %d, want 2", len(resp.Blobs))
+	}
+	if !resp.HasMore {
+		t.Error("HasMore = false, want true when there are more pages")
+	}
+	if resp.NextCursor != 4 {
+		t.Errorf("NextCursor = %d, want 4 (last version in page)", resp.NextCursor)
+	}
+
+	// Request second page using cursor from first page.
+	resp2, err := svc.Pull(context.Background(), userID, 0, 2, resp.NextCursor)
+	if err != nil {
+		t.Fatalf("Pull page 2: %v", err)
+	}
+	if len(resp2.Blobs) != 1 {
+		t.Errorf("len(Blobs) page 2 = %d, want 1", len(resp2.Blobs))
+	}
+	if resp2.HasMore {
+		t.Error("HasMore page 2 = true, want false (no more pages)")
+	}
+}
+
+func TestSyncService_Pull_UsesCursorOverSince(t *testing.T) {
+	userID := uuid.New()
+	now := time.Now()
+
+	repo := &mockSyncBlobRepo{
+		blobs: []domain.SyncBlob{
+			{ID: uuid.New(), UserID: userID, Version: 5, UpdatedAt: now},
+			{ID: uuid.New(), UserID: userID, Version: 10, UpdatedAt: now},
+		},
+		latestVersion: 10,
+	}
+
+	svc := NewSyncService(repo)
+
+	// Cursor=5 should override since=0: only versions > 5 returned.
+	resp, err := svc.Pull(context.Background(), userID, 0, 100, 5)
+	if err != nil {
+		t.Fatalf("Pull: %v", err)
+	}
+	if len(resp.Blobs) != 1 {
+		t.Errorf("len(Blobs) = %d, want 1 (only version 10)", len(resp.Blobs))
+	}
+	if resp.Blobs[0].Version != 10 {
+		t.Errorf("Blob version = %d, want 10", resp.Blobs[0].Version)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Push
+// ---------------------------------------------------------------------------
 
 func TestSyncService_Push_AllAccepted(t *testing.T) {
 	userID := uuid.New()
@@ -193,12 +325,18 @@ func TestSyncService_Push_MixedResults(t *testing.T) {
 	// Use a custom repo that accepts the first item and conflicts on the second.
 	callCount := 0
 	repo := &customUpsertRepo{
-		upsertFn: func(blob *domain.SyncBlob) (bool, error) {
-			callCount++
-			if callCount == 1 {
-				return true, nil // accepted
+		batchUpsertFn: func(blobs []*domain.SyncBlob) []domain.BatchUpsertResult {
+			results := make([]domain.BatchUpsertResult, len(blobs))
+			for i, blob := range blobs {
+				results[i].ItemID = blob.ItemID
+				callCount++
+				if callCount == 1 {
+					results[i].Accepted = true
+				} else {
+					results[i].ServerVersion = blob.Version
+				}
 			}
-			return false, nil // conflict
+			return results
 		},
 	}
 
@@ -268,6 +406,10 @@ func TestSyncService_Push_EmptyRequest(t *testing.T) {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Tests: GetStatus
+// ---------------------------------------------------------------------------
+
 func TestSyncService_GetStatus_Success(t *testing.T) {
 	userID := uuid.New()
 	now := time.Now()
@@ -297,11 +439,9 @@ func TestSyncService_GetStatus_Success(t *testing.T) {
 func TestSyncService_GetStatus_RepoErrors(t *testing.T) {
 	userID := uuid.New()
 
-	// GetStatus tolerates individual repo errors (uses zero values).
+	// GetStatus tolerates summary query errors (uses zero values).
 	repo := &mockSyncBlobRepo{
-		versionErr:     errors.New("version query failed"),
-		countErr:       errors.New("count query failed"),
-		lastUpdatedErr: errors.New("last updated query failed"),
+		statusSummaryErr: errors.New("summary query failed"),
 	}
 
 	svc := NewSyncService(repo)
@@ -326,15 +466,30 @@ type customUpsertRepo struct {
 	latestVersion  int
 	totalItems     int
 	lastUpdated    time.Time
-	upsertFn       func(blob *domain.SyncBlob) (bool, error)
+	batchUpsertFn  func(blobs []*domain.SyncBlob) []domain.BatchUpsertResult
 }
 
 func (m *customUpsertRepo) PullSince(ctx context.Context, userID uuid.UUID, sinceVersion int) ([]domain.SyncBlob, error) {
 	return m.blobs, nil
 }
 
+func (m *customUpsertRepo) PullSincePaginated(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int) ([]domain.SyncBlob, error) {
+	return m.blobs, nil
+}
+
+func (m *customUpsertRepo) HasMoreSince(ctx context.Context, userID uuid.UUID, sinceVersion int) (bool, error) {
+	return false, nil
+}
+
 func (m *customUpsertRepo) Upsert(ctx context.Context, blob *domain.SyncBlob) (bool, error) {
-	return m.upsertFn(blob)
+	return false, nil
+}
+
+func (m *customUpsertRepo) BatchUpsert(ctx context.Context, blobs []*domain.SyncBlob) []domain.BatchUpsertResult {
+	if m.batchUpsertFn != nil {
+		return m.batchUpsertFn(blobs)
+	}
+	return make([]domain.BatchUpsertResult, len(blobs))
 }
 
 func (m *customUpsertRepo) GetLatestVersion(ctx context.Context, userID uuid.UUID) (int, error) {
@@ -347,6 +502,14 @@ func (m *customUpsertRepo) CountItems(ctx context.Context, userID uuid.UUID) (in
 
 func (m *customUpsertRepo) GetLastUpdated(ctx context.Context, userID uuid.UUID) (time.Time, error) {
 	return m.lastUpdated, nil
+}
+
+func (m *customUpsertRepo) GetStatusSummary(ctx context.Context, userID uuid.UUID) (domain.SyncStatusSummary, error) {
+	return domain.SyncStatusSummary{
+		LatestVersion: m.latestVersion,
+		TotalItems:    m.totalItems,
+		LastUpdated:   m.lastUpdated,
+	}, nil
 }
 
 // ---------------------------------------------------------------------------

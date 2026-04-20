@@ -18,6 +18,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 	// Middleware
 	r.Use(SecurityHeaders)
+	r.Use(MaxBodySize(DefaultMaxBodyBytes))
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(chiMiddleware.Recoverer)
@@ -50,7 +51,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	shareH := &ShareHandler{shareService: services.Share}
 	pushH := &PushHandler{pushService: services.Push}
 	commentH := &CommentHandler{commentService: services.Comment}
-	wsH := NewWSHandler(services.Presence, cfg.Auth.JWTSecret)
+	wsH := NewWSHandler(services.Presence, cfg.Auth.JWTSecret, cfg.Server.AllowOrigins)
 
 	// Rate limiters
 	authRateLimiter := service.NewRateLimiter(20, time.Minute)    // 20 req/min per IP
@@ -83,7 +84,10 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 			// Sync (rate limited by user)
 			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/pull", syncH.Pull)
-			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Post("/sync/push", syncH.Push)
+			r.With(
+				MaxBodySize(SyncPushMaxBodyBytes),
+				RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute),
+			).Post("/sync/push", syncH.Push)
 			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/sync/status", syncH.Status)
 
 			// AI Proxy

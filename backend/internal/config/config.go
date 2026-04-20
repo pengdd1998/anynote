@@ -3,10 +3,24 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
 )
+
+// splitCSV splits a comma-separated string into trimmed, non-empty parts.
+func splitCSV(s string) []string {
+	parts := strings.Split(s, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
 
 // Config holds all application configuration.
 type Config struct {
@@ -194,6 +208,10 @@ func (c *Config) applyEnvOverrides() {
 	}
 	if v := os.Getenv("FIREBASE_CREDENTIALS_FILE"); v != "" {
 		c.Firebase.CredentialsFile = v
+	}
+	if v := os.Getenv("WS_ALLOWED_ORIGINS"); v != "" {
+		// Comma-separated list of allowed WebSocket origins, e.g. "https://app.example.com,https://web.example.com"
+		c.Server.AllowOrigins = splitCSV(v)
 	}
 }
 

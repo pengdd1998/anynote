@@ -23,12 +23,14 @@ func TestSyncBlobRepository_DocumentsExpectedBehavior(t *testing.T) {
 	})
 
 	t.Run("Upsert_inserts_new_blob", func(t *testing.T) {
-		// Expected behavior:
-		//   1. SELECT version FROM sync_blobs WHERE user_id=$1 AND item_type=$2 AND item_id=$3
-		//   2. If no row exists -> INSERT new blob, return (true, nil)
-		//   3. If server version >= client version -> conflict, return (false, nil)
-		//   4. If server version < client version -> UPDATE, return (true, nil)
-		t.Log("documented: Upsert inserts new or updates if client version > server version")
+		// Expected behavior (atomic via INSERT ... ON CONFLICT):
+		//   INSERT INTO sync_blobs ... ON CONFLICT (user_id, item_type, item_id) DO UPDATE
+		//   SET version=$4, encrypted_data=$5, blob_size=$6, updated_at=NOW()
+		//   WHERE sync_blobs.version < $4
+		//   1. If no row exists -> INSERT succeeds, RowsAffected()=1, return (true, nil)
+		//   2. If server version < client version -> UPDATE fires, RowsAffected()=1, return (true, nil)
+		//   3. If server version >= client version -> no rows affected, return (false, nil)
+		t.Log("documented: Upsert uses atomic INSERT ON CONFLICT with version check")
 	})
 
 	t.Run("GetLatestVersion_returns_max", func(t *testing.T) {
@@ -113,6 +115,25 @@ func (m *mockSyncBlobRepo) CountItems(ctx context.Context, userID uuid.UUID) (in
 func (m *mockSyncBlobRepo) GetLastUpdated(_ context.Context, _ uuid.UUID) (interface{}, error) {
 	// Simplified for testing — not used in mock tests below.
 	return nil, nil
+}
+
+func (m *mockSyncBlobRepo) GetStatusSummary(ctx context.Context, userID uuid.UUID) (domain.SyncStatusSummary, error) {
+	summary := domain.SyncStatusSummary{
+		LatestVersion: 0,
+		TotalItems:    0,
+	}
+	for _, b := range m.blobs {
+		if b.UserID == userID {
+			summary.TotalItems++
+			if b.Version > summary.LatestVersion {
+				summary.LatestVersion = b.Version
+			}
+			if b.UpdatedAt.After(summary.LastUpdated) {
+				summary.LastUpdated = b.UpdatedAt
+			}
+		}
+	}
+	return summary, nil
 }
 
 func TestMockSyncBlobRepo_Upsert_NewBlob(t *testing.T) {

@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -177,5 +180,96 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestMaxBodySize_AllowsWithinLimit(t *testing.T) {
+	limit := int64(1024) // 1 KB limit for testing
+
+	var received []byte
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		received, err = io.ReadAll(r.Body)
+		if err != nil {
+			t.Errorf("unexpected error reading body: %v", err)
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	middleware := MaxBodySize(limit)(next)
+
+	body := bytes.NewBufferString(strings.Repeat("a", 512))
+	req := httptest.NewRequest("POST", "/test", body)
+	rec := httptest.NewRecorder()
+
+	middleware.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", rec.Code)
+	}
+	if len(received) != 512 {
+		t.Errorf("expected 512 bytes read, got %d", len(received))
+	}
+}
+
+func TestMaxBodySize_RejectsOverLimit(t *testing.T) {
+	limit := int64(1024) // 1 KB limit for testing
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Attempt to read the full body; MaxBytesReader should error.
+		_, err := io.ReadAll(r.Body)
+		if err == nil {
+			t.Error("expected error from MaxBytesReader when reading past limit")
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	middleware := MaxBodySize(limit)(next)
+
+	body := bytes.NewBufferString(strings.Repeat("a", 2048))
+	req := httptest.NewRequest("POST", "/test", body)
+	rec := httptest.NewRecorder()
+
+	middleware.ServeHTTP(rec, req)
+}
+
+func TestMaxBodySize_ExactlyAtLimit(t *testing.T) {
+	limit := int64(1024)
+
+	var received []byte
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		received, err = io.ReadAll(r.Body)
+		if err != nil {
+			t.Errorf("unexpected error reading body at exact limit: %v", err)
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	middleware := MaxBodySize(limit)(next)
+
+	body := bytes.NewBufferString(strings.Repeat("a", 1024))
+	req := httptest.NewRequest("POST", "/test", body)
+	rec := httptest.NewRecorder()
+
+	middleware.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", rec.Code)
+	}
+	if len(received) != 1024 {
+		t.Errorf("expected 1024 bytes read, got %d", len(received))
+	}
+}
+
+func TestMaxBodySize_Constants(t *testing.T) {
+	if DefaultMaxBodyBytes != 10*1024*1024 {
+		t.Errorf("DefaultMaxBodyBytes = %d, want 10485760", DefaultMaxBodyBytes)
+	}
+	if SyncPushMaxBodyBytes != 50*1024*1024 {
+		t.Errorf("SyncPushMaxBodyBytes = %d, want 52428800", SyncPushMaxBodyBytes)
+	}
+	if SyncPushMaxBodyBytes <= DefaultMaxBodyBytes {
+		t.Error("SyncPushMaxBodyBytes should be larger than DefaultMaxBodyBytes")
 	}
 }

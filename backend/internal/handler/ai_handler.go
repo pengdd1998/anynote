@@ -67,7 +67,8 @@ func (h *AIHandler) handleStream(w http.ResponseWriter, r *http.Request, chunkCh
 
 	for chunk := range chunkCh {
 		if chunk.Error != "" {
-			fmt.Fprintf(w, "event: error\ndata: {\"error\":\"%s\"}\n\n", chunk.Error)
+			errorPayload, _ := json.Marshal(map[string]string{"error": chunk.Error})
+			fmt.Fprintf(w, "event: error\ndata: %s\n\n", errorPayload)
 			flusher.Flush()
 			return
 		}

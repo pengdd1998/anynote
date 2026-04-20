@@ -28,6 +28,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    mem_limit: 512m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   redis:
     image: redis:7-alpine
@@ -39,6 +44,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    mem_limit: 256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   minio:
     image: minio/minio:latest
@@ -54,12 +64,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    mem_limit: 512m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   chrome:
     image: chromedp/headless-shell:latest
     container_name: anynote-chrome
     environment:
       - CHROME_FLAGS=--no-sandbox --disable-gpu --disable-dev-shm-usage
+    mem_limit: 1024m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_ADMIN
 
   server:
     build:
@@ -78,12 +100,21 @@ services:
       - QWEN_API_KEY=${QWEN_API_KEY:-}
       - PORT=${PORT:-8080}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - WS_ALLOWED_ORIGINS=${WS_ALLOWED_ORIGINS:-}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     command: ["./server"]
+    mem_limit: 512m
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   worker:
     build:
@@ -103,6 +134,14 @@ services:
       chrome:
         condition: service_started
     command: ["./worker"]
+    mem_limit: 512m
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
 volumes:
   postgres_data:

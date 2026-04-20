@@ -37,7 +37,7 @@ func (s *routerStubAuthService) GetCurrentUser(ctx context.Context, userID uuid.
 // routerStubSyncService implements service.SyncService.
 type routerStubSyncService struct{}
 
-func (s *routerStubSyncService) Pull(ctx context.Context, userID uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+func (s *routerStubSyncService) Pull(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
 	return nil, nil
 }
 func (s *routerStubSyncService) Push(ctx context.Context, userID uuid.UUID, req domain.SyncPushRequest) (*domain.SyncPushResponse, error) {

@@ -86,7 +86,7 @@ func (m *mockPresenceService) SubscribeRoom(ctx context.Context, room string) <-
 
 func TestNewWSHandler(t *testing.T) {
 	presenceSvc := &mockPresenceService{}
-	h := NewWSHandler(presenceSvc, "jwt-secret")
+	h := NewWSHandler(presenceSvc, "jwt-secret", nil)
 	if h == nil {
 		t.Fatal("NewWSHandler returned nil")
 	}
@@ -95,13 +95,40 @@ func TestNewWSHandler(t *testing.T) {
 	}
 }
 
+func TestNewWSHandler_AllowedOrigins(t *testing.T) {
+	presenceSvc := &mockPresenceService{}
+
+	t.Run("empty origins falls back to wildcard", func(t *testing.T) {
+		h := NewWSHandler(presenceSvc, "jwt-secret", nil)
+		patterns := h.originPatterns()
+		if len(patterns) != 1 || patterns[0] != "*" {
+			t.Errorf("originPatterns() = %v, want [*]", patterns)
+		}
+	})
+
+	t.Run("configured origins returned as-is", func(t *testing.T) {
+		origins := []string{"https://app.example.com", "https://web.example.com"}
+		h := NewWSHandler(presenceSvc, "jwt-secret", origins)
+		patterns := h.originPatterns()
+		if len(patterns) != 2 {
+			t.Fatalf("originPatterns() returned %d patterns, want 2", len(patterns))
+		}
+		if patterns[0] != "https://app.example.com" {
+			t.Errorf("patterns[0] = %q, want %q", patterns[0], "https://app.example.com")
+		}
+		if patterns[1] != "https://web.example.com" {
+			t.Errorf("patterns[1] = %q, want %q", patterns[1], "https://web.example.com")
+		}
+	})
+}
+
 // ---------------------------------------------------------------------------
 // Tests: validateToken (tested via HandleConnection HTTP responses)
 // ---------------------------------------------------------------------------
 
 func TestWSHandler_HandleConnection_MissingToken(t *testing.T) {
 	presenceSvc := &mockPresenceService{}
-	h := NewWSHandler(presenceSvc, testJWTSecret)
+	h := NewWSHandler(presenceSvc, testJWTSecret, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ws?room=test-room", nil)
 	rec := httptest.NewRecorder()
@@ -115,7 +142,7 @@ func TestWSHandler_HandleConnection_MissingToken(t *testing.T) {
 
 func TestWSHandler_HandleConnection_InvalidToken(t *testing.T) {
 	presenceSvc := &mockPresenceService{}
-	h := NewWSHandler(presenceSvc, testJWTSecret)
+	h := NewWSHandler(presenceSvc, testJWTSecret, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ws?token=invalid-token&room=test-room", nil)
 	rec := httptest.NewRecorder()
@@ -129,7 +156,7 @@ func TestWSHandler_HandleConnection_InvalidToken(t *testing.T) {
 
 func TestWSHandler_HandleConnection_MissingRoom(t *testing.T) {
 	presenceSvc := &mockPresenceService{}
-	h := NewWSHandler(presenceSvc, testJWTSecret)
+	h := NewWSHandler(presenceSvc, testJWTSecret, nil)
 
 	userID := uuid.New().String()
 	token := generateTestToken(userID)

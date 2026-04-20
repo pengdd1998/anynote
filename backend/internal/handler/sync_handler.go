@@ -33,7 +33,36 @@ func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.syncService.Pull(r.Context(), parseUUID(userID), since)
+	// Parse optional cursor (last version from previous page, 0 = first page).
+	cursorStr := r.URL.Query().Get("cursor")
+	cursor := 0
+	if cursorStr != "" {
+		if v, err := strconv.Atoi(cursorStr); err == nil {
+			cursor = v
+		}
+	}
+
+	if cursor < 0 {
+		writeError(w, http.StatusBadRequest, "validation_error", "cursor must be non-negative")
+		return
+	}
+
+	// Parse optional limit (default 100, max 500).
+	limitStr := r.URL.Query().Get("limit")
+	limit := 100
+	if limitStr != "" {
+		if v, err := strconv.Atoi(limitStr); err == nil {
+			limit = v
+		}
+	}
+
+	if limit < 1 {
+		limit = 100
+	} else if limit > 500 {
+		limit = 500
+	}
+
+	resp, err := h.syncService.Pull(r.Context(), parseUUID(userID), since, limit, cursor)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "sync_error", "Pull failed")
 		return

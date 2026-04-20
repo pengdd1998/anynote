@@ -21,14 +21,14 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockSyncService struct {
-	pullFn     func(ctx context.Context, userID uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error)
-	pushFn     func(ctx context.Context, userID uuid.UUID, req domain.SyncPushRequest) (*domain.SyncPushResponse, error)
+	pullFn      func(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error)
+	pushFn      func(ctx context.Context, userID uuid.UUID, req domain.SyncPushRequest) (*domain.SyncPushResponse, error)
 	getStatusFn func(ctx context.Context, userID uuid.UUID) (*domain.SyncStatusResponse, error)
 }
 
-func (m *mockSyncService) Pull(ctx context.Context, userID uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+func (m *mockSyncService) Pull(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
 	if m.pullFn != nil {
-		return m.pullFn(ctx, userID, sinceVersion)
+		return m.pullFn(ctx, userID, sinceVersion, limit, cursor)
 	}
 	return nil, errors.New("not implemented")
 }
@@ -78,7 +78,7 @@ func TestSyncHandler_Pull_Success(t *testing.T) {
 	itemID := uuid.New()
 
 	svc := &mockSyncService{
-		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
 			if uid != userID {
 				t.Errorf("userID = %v, want %v", uid, userID)
 			}
@@ -134,7 +134,7 @@ func TestSyncHandler_Pull_EmptyResponse(t *testing.T) {
 	userID := uuid.New()
 
 	svc := &mockSyncService{
-		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
 			return &domain.SyncPullResponse{
 				Blobs:         []domain.SyncBlob{},
 				LatestVersion: 10,
@@ -169,7 +169,7 @@ func TestSyncHandler_Pull_ServiceError(t *testing.T) {
 	userID := uuid.New()
 
 	svc := &mockSyncService{
-		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
 			return nil, errors.New("database unavailable")
 		},
 	}
@@ -496,7 +496,7 @@ func TestSyncHandler_Pull_InvalidSince(t *testing.T) {
 	userID := uuid.New()
 
 	svc := &mockSyncService{
-		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
 			if sinceVersion != 0 {
 				t.Errorf("sinceVersion = %d, want 0 (invalid param should default to 0)", sinceVersion)
 			}
@@ -521,7 +521,7 @@ func TestSyncHandler_Pull_DefaultSince(t *testing.T) {
 	userID := uuid.New()
 
 	svc := &mockSyncService{
-		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
 			if sinceVersion != 0 {
 				t.Errorf("sinceVersion = %d, want 0 (no param should default to 0)", sinceVersion)
 			}

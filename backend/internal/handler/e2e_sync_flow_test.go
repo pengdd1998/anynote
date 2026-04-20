@@ -55,7 +55,7 @@ func TestE2ESyncFlow(t *testing.T) {
 				Accepted: []uuid.UUID{itemID},
 			}, nil
 		},
-		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int) (*domain.SyncPullResponse, error) {
+		pullFn: func(ctx context.Context, uid uuid.UUID, sinceVersion int, limit int, cursor int) (*domain.SyncPullResponse, error) {
 			if uid != userID {
 				t.Errorf("pull: userID = %v, want %v", uid, userID)
 			}
@@ -331,7 +331,7 @@ func TestE2ESyncFlow_PullIncremental(t *testing.T) {
 	sinceVersion := 5
 
 	syncSvc := &mockSyncService{
-		pullFn: func(ctx context.Context, uid uuid.UUID, since int) (*domain.SyncPullResponse, error) {
+		pullFn: func(ctx context.Context, uid uuid.UUID, since int, limit int, cursor int) (*domain.SyncPullResponse, error) {
 			if since != sinceVersion {
 				t.Errorf("pull: since = %d, want %d", since, sinceVersion)
 			}
