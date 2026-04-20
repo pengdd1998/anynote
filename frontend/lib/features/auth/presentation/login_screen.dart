@@ -78,6 +78,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         context.go('/notes');
       }
     } catch (e) {
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       final appError = ErrorMapper.map(e);
       final message = switch (appError) {

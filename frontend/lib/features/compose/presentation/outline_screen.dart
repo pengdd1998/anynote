@@ -277,9 +277,8 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                       ? null
                       : () async {
                           await ref.read(composeSessionProvider.notifier).expandToDraft();
-                          if (mounted) {
-                            context.push('/compose/editor/${widget.sessionId}');
-                          }
+                          if (!context.mounted) return;
+                          context.push('/compose/editor/${widget.sessionId}');
                         },
                   icon: const Icon(Icons.edit_note),
                   label: const Text('Expand to Draft'),

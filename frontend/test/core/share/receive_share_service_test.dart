@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
@@ -10,7 +9,7 @@ import 'package:anynote/core/share/receive_share_service.dart';
 
 /// Method channel used by ReceiveShareService.
 const _channelName = 'com.anynote.app/share';
-final _channel = MethodChannel(_channelName);
+const _channel = MethodChannel(_channelName);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -421,7 +420,7 @@ void main() {
 
       expect(received.length, 1);
       expect(received[0].toNoteContent(),
-          '![shared image](file:///data/user/0/com.anynote.app/cache/shared_image.jpg)');
+          '![shared image](file:///data/user/0/com.anynote.app/cache/shared_image.jpg)',);
 
       service.dispose();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -454,7 +453,7 @@ void main() {
 
       expect(received.length, 1);
       expect(received[0].toNoteContent(),
-          'Shared file: /storage/emulated/0/doc.pdf');
+          'Shared file: /storage/emulated/0/doc.pdf',);
 
       service.dispose();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

@@ -219,9 +219,8 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                       ? null
                       : () async {
                           await ref.read(composeSessionProvider.notifier).generateOutline();
-                          if (mounted) {
-                            context.push('/compose/outline/${widget.sessionId}');
-                          }
+                          if (!context.mounted) return;
+                          context.push('/compose/outline/${widget.sessionId}');
                         },
                   icon: const Icon(Icons.list_alt),
                   label: const Text('Generate Outline'),

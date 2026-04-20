@@ -39,6 +39,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
       final crypto = ref.read(cryptoServiceProvider);
       final rawVersions =
           await db.noteVersionsDao.getVersionsForNote(widget.noteId);
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
 
       final decrypted = <_DecryptedVersion>[];

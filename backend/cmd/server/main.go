@@ -48,8 +48,8 @@ func main() {
 	}
 
 	// Initialize structured logger
-	initLogger(cfg.LogLevel())
-	slog.Info("configuration loaded", "log_level", cfg.LogLevel())
+	initLogger(cfg.LogLevel(), cfg.LogFormat())
+	slog.Info("configuration loaded", "log_level", cfg.LogLevel(), "log_format", cfg.LogFormat())
 
 	// Connect to PostgreSQL
 	pool, err := pgxpool.New(context.Background(), cfg.Database.URL)
@@ -57,7 +57,6 @@ func main() {
 		slog.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer pool.Close()
 
 	if err := pool.Ping(context.Background()); err != nil {
 		slog.Error("failed to ping database", "error", err)
@@ -171,19 +170,25 @@ func main() {
 		WriteTimeout: cfg.Server.WriteTimeout,
 	}
 
-	// Graceful shutdown
+	// Graceful shutdown: listen for SIGINT/SIGTERM, then drain HTTP requests
+	// with a 15-second timeout and close the database pool.
 	go func() {
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-		<-sigCh
+		sig := <-sigCh
 
-		slog.Info("shutting down server")
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		slog.Info("shutting down server", "signal", sig)
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
 		if err := srv.Shutdown(ctx); err != nil {
 			slog.Error("server shutdown error", "error", err)
 		}
+
+		slog.Info("closing database pool")
+		pool.Close()
+
+		slog.Info("server stopped")
 	}()
 
 	slog.Info("server starting", "addr", addr)
@@ -191,11 +196,12 @@ func main() {
 		slog.Error("server error", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("server stopped")
 }
 
-// initLogger configures the global slog logger with the given level.
-func initLogger(levelStr string) {
+// initLogger configures the global slog logger with the given level and format.
+// format "text" produces human-readable output; any other value (including the
+// default "json") produces structured JSON logs suitable for production.
+func initLogger(levelStr, format string) {
 	var level slog.Level
 	switch levelStr {
 	case "debug":
@@ -211,6 +217,12 @@ func initLogger(levelStr string) {
 	}
 
 	opts := &slog.HandlerOptions{Level: level}
-	handler := slog.NewJSONHandler(os.Stdout, opts)
+
+	var handler slog.Handler
+	if format == "text" {
+		handler = slog.NewTextHandler(os.Stdout, opts)
+	} else {
+		handler = slog.NewJSONHandler(os.Stdout, opts)
+	}
 	slog.SetDefault(slog.New(handler))
 }

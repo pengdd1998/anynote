@@ -267,6 +267,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
       final noteId = await ref.read(composeSessionProvider.notifier).saveDraftAsNote();
 
       if (!mounted) return;
+      if (!context.mounted) return;
 
       if (noteId != null) {
         final l10n = AppLocalizations.of(context)!;

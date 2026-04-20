@@ -938,12 +938,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // Trigger auto-save.
       _saveNote();
     } catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.failedToAddImage(e.toString()))),
-        );
-      }
+      if (!context.mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.failedToAddImage(e.toString()))),
+      );
     }
   }
 }

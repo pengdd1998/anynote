@@ -21,6 +21,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(chiMiddleware.Recoverer)
+	r.Use(MetricsMiddleware)
 	r.Use(RequestLogger)
 	r.Use(chiMiddleware.Timeout(120 * time.Second))
 	r.Use(cors.Handler(cors.Options{
@@ -35,6 +36,9 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	// Health check routes (outside auth middleware, public access).
 	r.Get("/health", healthH.HealthCheck)
 	r.Get("/ready", healthH.ReadinessCheck)
+
+	// Prometheus metrics endpoint (no auth required).
+	r.Handle("/metrics", MetricsHandler())
 
 	// Handlers
 	authH := &AuthHandler{authService: services.Auth}

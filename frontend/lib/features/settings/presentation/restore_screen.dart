@@ -393,29 +393,31 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         // Radio options.
         SettingsGroup(
           children: [
-            _StrategyOption(
-              value: ConflictStrategy.overwrite,
+            RadioGroup<ConflictStrategy>(
               groupValue: _strategy,
-              title: l10n.strategyOverwrite,
-              subtitle: l10n.strategyOverwriteDesc,
-              icon: Icons.sync,
-              onChanged: (v) => setState(() => _strategy = v!),
-            ),
-            _StrategyOption(
-              value: ConflictStrategy.skip,
-              groupValue: _strategy,
-              title: l10n.strategySkip,
-              subtitle: l10n.strategySkipDesc,
-              icon: Icons.skip_next,
-              onChanged: (v) => setState(() => _strategy = v!),
-            ),
-            _StrategyOption(
-              value: ConflictStrategy.keepBoth,
-              groupValue: _strategy,
-              title: l10n.strategyKeepBoth,
-              subtitle: l10n.strategyKeepBothDesc,
-              icon: Icons.content_copy,
-              onChanged: (v) => setState(() => _strategy = v!),
+              onChanged: (v) { if (v != null) setState(() => _strategy = v); },
+              child: Column(
+                children: [
+                  _StrategyOption(
+                    value: ConflictStrategy.overwrite,
+                    title: l10n.strategyOverwrite,
+                    subtitle: l10n.strategyOverwriteDesc,
+                    icon: Icons.sync,
+                  ),
+                  _StrategyOption(
+                    value: ConflictStrategy.skip,
+                    title: l10n.strategySkip,
+                    subtitle: l10n.strategySkipDesc,
+                    icon: Icons.skip_next,
+                  ),
+                  _StrategyOption(
+                    value: ConflictStrategy.keepBoth,
+                    title: l10n.strategyKeepBoth,
+                    subtitle: l10n.strategyKeepBothDesc,
+                    icon: Icons.content_copy,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -986,36 +988,31 @@ class _ConflictWarningCard extends StatelessWidget {
 /// Single radio option for conflict strategy selection.
 class _StrategyOption extends StatelessWidget {
   final ConflictStrategy value;
-  final ConflictStrategy groupValue;
   final String title;
   final String subtitle;
   final IconData icon;
-  final ValueChanged<ConflictStrategy?> onChanged;
 
   const _StrategyOption({
     required this.value,
-    required this.groupValue,
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isSelected = value == groupValue;
+    final group = RadioGroup.maybeOf<ConflictStrategy>(context);
+    final isSelected = group != null && group.groupValue == value;
 
     return InkWell(
-      onTap: () => onChanged(value),
+      onTap: () => group?.onChanged(value),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
           children: [
             Radio<ConflictStrategy>(
               value: value,
-              groupValue: groupValue,
-              onChanged: onChanged,
             ),
             const SizedBox(width: 8),
             Container(

@@ -248,6 +248,31 @@ func TestLogLevel_Custom(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// Tests: LogFormat
+// ---------------------------------------------------------------------------
+
+func TestLogFormat_Default(t *testing.T) {
+	cfg := &Config{Log: LogConfig{Format: ""}}
+	if cfg.LogFormat() != "json" {
+		t.Errorf("LogFormat() = %q, want %q", cfg.LogFormat(), "json")
+	}
+}
+
+func TestLogFormat_Text(t *testing.T) {
+	cfg := &Config{Log: LogConfig{Format: "text"}}
+	if cfg.LogFormat() != "text" {
+		t.Errorf("LogFormat() = %q, want %q", cfg.LogFormat(), "text")
+	}
+}
+
+func TestLogFormat_JSON(t *testing.T) {
+	cfg := &Config{Log: LogConfig{Format: "json"}}
+	if cfg.LogFormat() != "json" {
+		t.Errorf("LogFormat() = %q, want %q", cfg.LogFormat(), "json")
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Tests: applyEnvOverrides
 // ---------------------------------------------------------------------------
 
@@ -419,13 +444,23 @@ func TestApplyEnvOverrides_LogLevel(t *testing.T) {
 	}
 }
 
+func TestApplyEnvOverrides_LogFormat(t *testing.T) {
+	os.Setenv("LOG_FORMAT", "text")
+	defer os.Unsetenv("LOG_FORMAT")
+
+	cfg, _ := Load("/nonexistent")
+	if cfg.Log.Format != "text" {
+		t.Errorf("LogFormat = %q, want %q", cfg.Log.Format, "text")
+	}
+}
+
 func TestApplyEnvOverrides_NoEnvVars(t *testing.T) {
 	// Clear all relevant env vars to ensure defaults are not affected.
 	envVars := []string{
 		"DATABASE_URL", "REDIS_URL", "JWT_SECRET", "MASTER_ENCRYPTION_KEY",
 		"DEEPSEEK_API_KEY", "QWEN_API_KEY", "CHROME_WS_URL",
 		"MINIO_ENDPOINT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY",
-		"PORT", "LOG_LEVEL",
+		"PORT", "LOG_LEVEL", "LOG_FORMAT",
 	}
 	for _, v := range envVars {
 		os.Unsetenv(v)

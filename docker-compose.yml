@@ -1,4 +1,16 @@
-version: "3.9"
+# Base Docker Compose for AnyNote
+#
+# This file defines all services with their common configuration.
+# Use with an override file for the target environment:
+#
+#   Development:
+#     docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
+#
+#   Production:
+#     docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# When no override file is specified, Docker Compose automatically reads
+# docker-compose.override.yml if it exists.
 
 services:
   postgres:
@@ -8,8 +20,6 @@ services:
       POSTGRES_USER: anynote
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-anynote_dev}
       POSTGRES_DB: anynote
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01_schema.sql
@@ -22,8 +32,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: anynote-redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -38,9 +46,6 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
@@ -53,8 +58,6 @@ services:
   chrome:
     image: chromedp/headless-shell:latest
     container_name: anynote-chrome
-    ports:
-      - "9222:9222"
     environment:
       - CHROME_FLAGS=--no-sandbox --disable-gpu --disable-dev-shm-usage
 
@@ -63,8 +66,6 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: anynote-server
-    ports:
-      - "8080:8080"
     environment:
       - DATABASE_URL=postgres://anynote:${POSTGRES_PASSWORD:-anynote_dev}@postgres:5432/anynote?sslmode=disable
       - REDIS_URL=redis://redis:6379/0
@@ -75,13 +76,13 @@ services:
       - MASTER_ENCRYPTION_KEY=${MASTER_ENCRYPTION_KEY:-dev-master-key-change-in-production}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - QWEN_API_KEY=${QWEN_API_KEY:-}
+      - PORT=${PORT:-8080}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
     command: ["./server"]
 
   worker:
@@ -93,6 +94,7 @@ services:
       - DATABASE_URL=postgres://anynote:${POSTGRES_PASSWORD:-anynote_dev}@postgres:5432/anynote?sslmode=disable
       - REDIS_URL=redis://redis:6379/0
       - CHROME_WS_URL=ws://chrome:9222
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     depends_on:
       postgres:
         condition: service_healthy
@@ -100,8 +102,6 @@ services:
         condition: service_healthy
       chrome:
         condition: service_started
-    volumes:
-      - ./backend:/app
     command: ["./worker"]
 
 volumes:

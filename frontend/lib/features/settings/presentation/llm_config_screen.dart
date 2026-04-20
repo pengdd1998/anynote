@@ -351,10 +351,9 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 nav.pop();
               } catch (e) {
                 nav.pop();
-                if (mounted) {
-                  final appError = ErrorMapper.map(e);
-                  ErrorDisplay.showSnackBar(context, appError);
-                }
+                if (!context.mounted) return;
+                final appError = ErrorMapper.map(e);
+                ErrorDisplay.showSnackBar(context, appError);
               }
             },
             child: Text(l10n.delete),

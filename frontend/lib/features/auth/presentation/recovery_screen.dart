@@ -79,11 +79,13 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
         context.go('/notes');
       }
     } on ArgumentError catch (e) {
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       // Invalid mnemonic (wrong number of words, unknown word, checksum
       // mismatch).
       setState(() => _error = e.message ?? l10n.invalidRecoveryKey);
     } catch (e) {
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       final appError = ErrorMapper.map(e);
       final message = switch (appError) {

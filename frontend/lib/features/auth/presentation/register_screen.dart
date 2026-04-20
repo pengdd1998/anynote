@@ -83,6 +83,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         _showRecoveryKeyDialog();
       }
     } catch (e) {
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       final appError = ErrorMapper.map(e);
       final message = switch (appError) {

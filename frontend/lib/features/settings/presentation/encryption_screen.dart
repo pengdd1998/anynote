@@ -545,6 +545,8 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       final file = File(result.files.single.path!);
       final data = await file.readAsBytes();
 
+      if (!mounted) return;
+
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(

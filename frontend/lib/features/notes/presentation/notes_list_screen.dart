@@ -1060,24 +1060,24 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               onTap: () async {
                 Navigator.of(ctx).pop();
                 await db.notesDao.softDeleteNote(note.id);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.noteDeleted),
-                      action: SnackBarAction(
-                        label: l10n.undo,
-                        onPressed: () async {
-                          await (db.update(db.notes)
-                                ..where((n) => n.id.equals(note.id)))
-                              .write(const NotesCompanion(
-                            deletedAt: Value(null),
-                            isSynced: Value(false),
-                          ),);
-                        },
-                      ),
+                if (!mounted) return;
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.noteDeleted),
+                    action: SnackBarAction(
+                      label: l10n.undo,
+                      onPressed: () async {
+                        await (db.update(db.notes)
+                              ..where((n) => n.id.equals(note.id)))
+                            .write(const NotesCompanion(
+                          deletedAt: Value(null),
+                          isSynced: Value(false),
+                        ),);
+                      },
                     ),
-                  );
-                }
+                  ),
+                );
               },
               ),
             ),
@@ -1189,7 +1189,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             dialogTitle: l10n.importMarkdown,
           );
           if (dirPath == null) {
-            if (mounted) Navigator.pop(context);
+            if (context.mounted) Navigator.pop(context);
             return;
           }
           result = await mdImporter.importFromDirectory(Directory(dirPath));
@@ -1199,7 +1199,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             dialogTitle: l10n.importTextFiles,
           );
           if (dirPath == null) {
-            if (mounted) Navigator.pop(context);
+            if (context.mounted) Navigator.pop(context);
             return;
           }
           final txtImporter = TextImporter();
@@ -1218,7 +1218,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             dialogTitle: l10n.importAppleNotes,
           );
           if (dirPath == null) {
-            if (mounted) Navigator.pop(context);
+            if (context.mounted) Navigator.pop(context);
             return;
           }
           final appleImporter = AppleNotesImporter();
@@ -1233,7 +1233,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           );
       }
 
-      if (!mounted) return;
+      if (!context.mounted) return;
 
       // Close progress dialog.
       Navigator.pop(context);
@@ -1251,7 +1251,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       // Reload notes list.
       _resetAndReload();
     } catch (e) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       // Close progress dialog.
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(

@@ -289,6 +289,24 @@ func TestRouter_PublicShareRoutes(t *testing.T) {
 	}
 }
 
+func TestRouter_MetricsEndpoint(t *testing.T) {
+	cfg, services, healthH := newTestRouterServices()
+	router := Router(cfg, services, healthH)
+
+	req := httptest.NewRequest("GET", "/metrics", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("GET /metrics: got %d, want %d", rec.Code, http.StatusOK)
+	}
+	// The response body should contain Prometheus exposition text.
+	ct := rec.Header().Get("Content-Type")
+	if ct == "" {
+		t.Error("GET /metrics: Content-Type header is empty")
+	}
+}
+
 func TestRouter_AuthenticatedRoutesRequireAuth(t *testing.T) {
 	cfg, services, healthH := newTestRouterServices()
 	router := Router(cfg, services, healthH)
@@ -349,6 +367,7 @@ func TestRouter_ChiRoutes(t *testing.T) {
 	expectedPatterns := []string{
 		"GET /health",
 		"GET /ready",
+		"GET /metrics",
 		"POST /api/v1/auth/register",
 		"POST /api/v1/auth/login",
 		"GET /api/v1/auth/me",

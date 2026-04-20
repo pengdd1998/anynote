@@ -30,7 +30,8 @@ func (c MinIOConfig) BucketName() string {
 
 // LogConfig controls structured logging behaviour.
 type LogConfig struct {
-	Level string `yaml:"level"` // debug, info, warn, error (default: info)
+	Level  string `yaml:"level"`  // debug, info, warn, error (default: info)
+	Format string `yaml:"format"` // json (default) or text
 }
 
 type ServerConfig struct {
@@ -94,7 +95,8 @@ func Load(path string) (*Config, error) {
 			AllowOrigins: []string{"http://localhost:*"},
 		},
 		Log: LogConfig{
-			Level: "info",
+			Level:  "info",
+			Format: "json",
 		},
 		Database: DatabaseConfig{
 			MaxOpenConns:    25,
@@ -181,6 +183,9 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("LOG_LEVEL"); v != "" {
 		c.Log.Level = v
 	}
+	if v := os.Getenv("LOG_FORMAT"); v != "" {
+		c.Log.Format = v
+	}
 }
 
 // LogLevel returns the configured log level as a string (debug, info, warn, error).
@@ -189,6 +194,15 @@ func (c *Config) LogLevel() string {
 		return "info"
 	}
 	return c.Log.Level
+}
+
+// LogFormat returns the configured log format ("json" or "text").
+// Defaults to "json" for production use.
+func (c *Config) LogFormat() string {
+	if c.Log.Format == "" {
+		return "json"
+	}
+	return c.Log.Format
 }
 
 // Validate checks critical configuration values and returns an error if any are invalid or missing.

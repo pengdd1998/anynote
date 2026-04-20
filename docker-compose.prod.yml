@@ -1,35 +1,38 @@
-# Production override for AnyNote.
+# Production overrides for AnyNote
 #
 # Usage:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 #
-# This file overrides development defaults with production-ready settings:
-#   - Resource limits on all services
+# This file overrides the base docker-compose.yml with production settings:
+#   - Resource limits (CPU / memory) for all services
 #   - Restart policies (unless-stopped)
-#   - Health checks for all services
-#   - Log rotation (JSON driver, 50 MB max, 3 files)
-#   - No ports exposed to host except server via localhost only
-#   - Separate networks: frontend (public) and backend (internal)
-#   - PostgreSQL tuning for production workloads
-#   - Redis with maxmemory, AOF persistence, and eviction policy
-#   - Container security hardening
+#   - Extended health checks with start periods
+#   - Three-tier network isolation (frontend, backend, data)
+#   - Structured logging (json-file driver with rotation)
+#   - No source-code volume mounts (use built images)
+#   - Security hardening (read-only fs, no-new-privileges where possible)
+#   - PostgreSQL tuned for production workloads
+#   - Redis with persistence, memory limits, and eviction policy
 #
-# Requires a .env file (or exported env vars) with production values for
-# POSTGRES_PASSWORD, JWT_SECRET, MASTER_ENCRYPTION_KEY, MINIO_ACCESS_KEY,
-# MINIO_SECRET_KEY, REDIS_PASSWORD, and any optional API keys.
-
-version: "3.9"
+# Required environment variables -- copy .env.example to .env and set values:
+#   POSTGRES_PASSWORD, JWT_SECRET, MASTER_ENCRYPTION_KEY
+#   MINIO_ACCESS_KEY, MINIO_SECRET_KEY
 
 services:
   # ── PostgreSQL ────────────────────────────────────────
-  # Note: ports from docker-compose.yml still bind to 0.0.0.0.
-  # Production security relies on:
-  #   1. Host firewall (UFW/iptables) blocking external access to 5432
-  #   2. The backend network (internal: true) isolating service communication
   postgres:
     restart: unless-stopped
+    shm_size: 256mb
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: anynote
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: anynote
+    # Override base file ports -- no host exposure in production.
+    # Access is restricted to the data network only.
+    ports: []
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
     command:
       - postgres
       - -c
@@ -58,6 +61,12 @@ services:
       - log_connections=on
       - -c
       - log_disconnections=on
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anynote -d anynote -q"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -69,23 +78,32 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "50m"
-        max-file: "3"
+        max-size: "10m"
+        max-file: "5"
     networks:
-      - backend
+      - data
 
   # ── Redis ─────────────────────────────────────────────
   redis:
     restart: unless-stopped
     command: >
       redis-server
-      --requirepass ${REDIS_PASSWORD:-changeme-in-production}
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
       --appendonly yes
       --appendfsync everysec
       --save 60 1000
       --save 300 100
+    # Override base file ports -- no host exposure in production
+    ports: []
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -97,10 +115,10 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "50m"
-        max-file: "3"
+        max-size: "10m"
+        max-file: "5"
     networks:
-      - backend
+      - data
 
   # ── MinIO ─────────────────────────────────────────────
   minio:
@@ -108,6 +126,17 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    # Override base file ports -- no host exposure in production
+    ports: []
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
     deploy:
       resources:
         limits:
@@ -119,16 +148,24 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "50m"
-        max-file: "3"
+        max-size: "10m"
+        max-file: "5"
     networks:
-      - backend
+      - data
 
-  # ── Chrome headless ──────────────────────────────────
+  # ── Chrome headless ───────────────────────────────────
   chrome:
     restart: unless-stopped
     environment:
       - CHROME_FLAGS=--no-sandbox --disable-gpu --disable-dev-shm-usage --disable-setuid-sandbox
+    # Override base file ports -- no host exposure in production
+    ports: []
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:9222/json/version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -140,51 +177,49 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "50m"
+        max-size: "5m"
         max-file: "3"
     networks:
       - backend
 
-  # ── API Server ───────────────────────────────────────
+  # ── API Server ────────────────────────────────────────
   server:
     build:
       context: ./backend
       dockerfile: Dockerfile
       args:
-        VERSION: ${VERSION:-dev}
-        COMMIT: ${COMMIT:-none}
+        VERSION: ${VERSION:-latest}
+        COMMIT: ${COMMIT:-unknown}
     restart: unless-stopped
-    # Note: server port 8080 from docker-compose.yml binds to 0.0.0.0.
-    # The reverse proxy (nginx/caddy) connects to localhost:8080.
-    # The host firewall must block external access to 8080.
     environment:
       DATABASE_URL: postgres://anynote:${POSTGRES_PASSWORD}@postgres:5432/anynote?sslmode=disable
-      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme-in-production}@redis:6379/0
+      REDIS_URL: redis://redis:6379/0
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      JWT_SECRET: ${JWT_SECRET}
-      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       QWEN_API_KEY: ${QWEN_API_KEY:-}
+      PORT: ${PORT:-8080}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-    volumes: []  # No source mount in production; use built image
+    ports:
+      - "${PORT:-8080}:8080"
+    # Override base file -- no source mount in production
+    volumes: []
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${PORT:-8080}/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 15s
     security_opt:
       - no-new-privileges:true
-    read_only: true
-    tmpfs:
-      - /tmp
     deploy:
       resources:
         limits:
@@ -196,39 +231,45 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "50m"
-        max-file: "3"
+        max-size: "20m"
+        max-file: "10"
     networks:
       - frontend
       - backend
+      - data
 
-  # ── Background Worker ────────────────────────────────
+  # ── Background Worker ─────────────────────────────────
   worker:
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
       args:
-        VERSION: ${VERSION:-dev}
-        COMMIT: ${COMMIT:-none}
+        VERSION: ${VERSION:-latest}
+        COMMIT: ${COMMIT:-unknown}
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://anynote:${POSTGRES_PASSWORD}@postgres:5432/anynote?sslmode=disable
-      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme-in-production}@redis:6379/0
-      # CHROME_WS_URL is set automatically by entrypoint-worker.sh
-      # to ws://127.0.0.1:9222 (local Chromium instance).
+      REDIS_URL: redis://redis:6379/0
+      CHROME_WS_URL: ws://chrome:9222
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-    volumes: []  # No source mount in production; use built image
+    # Override base file -- no source mount in production
+    volumes: []
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      chrome:
+        condition: service_healthy
     healthcheck:
-      # Check that the worker process is running and that Chromium's
-      # DevTools port is accepting connections.
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9222/json/version"]
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep -q worker || exit 1"]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 3
       start_period: 15s
     security_opt:
@@ -244,11 +285,27 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "50m"
-        max-file: "3"
+        max-size: "20m"
+        max-file: "10"
     networks:
       - backend
+      - data
 
+# ── Persistent volumes ─────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+
+# ── Network isolation (three-tier) ─────────────────────
+#
+#   frontend  -- server only; accepts external traffic via published port
+#   backend   -- server <-> worker <-> chrome; no external access
+#   data      -- postgres, redis, minio; only server + worker connect here
+#
 networks:
   frontend:
     name: anynote-frontend
@@ -256,4 +313,8 @@ networks:
   backend:
     name: anynote-backend
     driver: bridge
-    internal: true  # No external access to this network
+    internal: true
+  data:
+    name: anynote-data
+    driver: bridge
+    internal: true
