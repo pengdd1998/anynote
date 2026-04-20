@@ -600,13 +600,11 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
   }
 
   String _formatDateRange(DateTimeRange range) {
-    // Use locale-aware short date format.
+    final l10n = AppLocalizations.of(context)!;
     final start =
         '${range.start.month}/${range.start.day}/${range.start.year}';
     final end = '${range.end.month}/${range.end.day}/${range.end.year}';
-    return '$start - $end';
-    // TODO(localization): Replace this date range format with a localized
-    // format string from .arb files. The M/D/YYYY order is US-centric.
+    return l10n.dateRangeFormat(start, end);
   }
 
   String _formatTime(DateTime dt) {

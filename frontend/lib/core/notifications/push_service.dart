@@ -135,7 +135,7 @@ class PushNotificationService {
       await _apiClient.registerDevice(token, platform);
       debugPrint('Device token registered: ${token.substring(0, 8)}...');
     } catch (e) {
-      ErrorReporter().reportError(e, StackTrace.current, context: 'push_register');
+      ErrorReporter.instance.reportError(e, StackTrace.current, context: 'push_register');
     }
   }
 
@@ -145,7 +145,7 @@ class PushNotificationService {
       await _apiClient.unregisterDevice(token);
       debugPrint('Device token unregistered');
     } catch (e) {
-      ErrorReporter().reportError(e, StackTrace.current, context: 'push_unregister');
+      ErrorReporter.instance.reportError(e, StackTrace.current, context: 'push_unregister');
     }
   }
 

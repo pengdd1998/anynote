@@ -392,8 +392,8 @@ func TestSyncHandler_Push_BatchTooLarge(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "batch_too_large" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "batch_too_large")
+	if errResp.Error.Code != "batch_too_large" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "batch_too_large")
 	}
 }
 
@@ -895,8 +895,8 @@ func TestSyncHandler_BatchDelete_BatchTooLarge(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "batch_too_large" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "batch_too_large")
+	if errResp.Error.Code != "batch_too_large" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "batch_too_large")
 	}
 }
 

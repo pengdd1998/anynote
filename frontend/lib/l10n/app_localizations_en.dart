@@ -1722,4 +1722,396 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTabLabel => 'Settings';
+
+  @override
+  String versionSemanticLabel(
+    int versionNumber,
+    String title,
+    String date,
+    String currentSuffix,
+  ) {
+    return 'Version $versionNumber, $title, $date$currentSuffix';
+  }
+
+  @override
+  String get currentSuffix => ', current';
+
+  @override
+  String noteTitleLabel(String title) {
+    return 'Note title: $title';
+  }
+
+  @override
+  String updatedDate(String date) {
+    return 'Updated $date';
+  }
+
+  @override
+  String get confirmDeleteNoteDialog => 'Confirm delete note dialog';
+
+  @override
+  String get expiryImmediately => 'immediately';
+
+  @override
+  String get expiryLessThanOneHour => 'in less than 1 hour';
+
+  @override
+  String expiryInHours(int count) {
+    return 'in $count hours';
+  }
+
+  @override
+  String expiryInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return 'in $count day$_temp0';
+  }
+
+  @override
+  String compositionSemanticLabel(
+    String title,
+    String time,
+    String platformSuffix,
+  ) {
+    return 'Composition: $title. $time$platformSuffix';
+  }
+
+  @override
+  String platformSuffix(String platform) {
+    return '. Platform: $platform';
+  }
+
+  @override
+  String get platformGeneric => 'Generic';
+
+  @override
+  String get platformXhs => 'XHS';
+
+  @override
+  String get platformTwitter => 'Twitter';
+
+  @override
+  String get platformBlog => 'Blog';
+
+  @override
+  String get platformLinkedin => 'LinkedIn';
+
+  @override
+  String get noteClusters => 'Note Clusters';
+
+  @override
+  String get clusteringNotes => 'Clustering your notes...';
+
+  @override
+  String analyzingNotes(int count, String topic) {
+    return 'AI is analyzing $count notes about \"$topic\"';
+  }
+
+  @override
+  String foundThemesSelect(int count) {
+    return 'AI found $count themes. Select the ones to include.';
+  }
+
+  @override
+  String notesCount(int count) {
+    return '$count notes';
+  }
+
+  @override
+  String clustersSelected(int count) {
+    return '$count clusters selected';
+  }
+
+  @override
+  String get generateOutline => 'Generate Outline';
+
+  @override
+  String get editorTitle => 'Editor';
+
+  @override
+  String adaptStyleFor(String platform) {
+    return 'Adapt style for $platform';
+  }
+
+  @override
+  String get saveNoteTooltip => 'Save as note';
+
+  @override
+  String get aiWriting => 'AI is writing...';
+
+  @override
+  String charsCount(int count) {
+    return '$count chars';
+  }
+
+  @override
+  String get compositionHint => 'Your composition will appear here...';
+
+  @override
+  String get outlineButton => 'Outline';
+
+  @override
+  String wordsCount(int count) {
+    return '$count words';
+  }
+
+  @override
+  String get viewAction => 'View';
+
+  @override
+  String get failedToSaveNote => 'Failed to save note';
+
+  @override
+  String get outlineTitle => 'Outline';
+
+  @override
+  String get editTitleTooltip => 'Edit title';
+
+  @override
+  String get generatingOutline => 'Generating outline...';
+
+  @override
+  String buildingStructureFromClusters(int count) {
+    return 'Building structure from $count clusters';
+  }
+
+  @override
+  String get noOutlineGenerated => 'No outline generated.';
+
+  @override
+  String sectionsDragToReorder(int count) {
+    return '$count sections -- drag to reorder';
+  }
+
+  @override
+  String get keyPoints => 'Key Points:';
+
+  @override
+  String fromCluster(int number) {
+    return 'From cluster $number';
+  }
+
+  @override
+  String get expandToDraft => 'Expand to Draft';
+
+  @override
+  String get editTitle => 'Edit Title';
+
+  @override
+  String get loginScreenLabel => 'AnyNote login screen';
+
+  @override
+  String errorLabel(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String get registrationScreenLabel => 'AnyNote registration screen';
+
+  @override
+  String get keyDerivationFailed => 'Key derivation failed. Please try again.';
+
+  @override
+  String get demoSecretNote => 'My secret note...';
+
+  @override
+  String importFailed(String error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String get selectNoteToView => 'Select a note to view';
+
+  @override
+  String get collectionFallback => 'Collection';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get freePlan => 'Free';
+
+  @override
+  String get importMarkdownDesc =>
+      'Import Markdown (.md) files with optional YAML frontmatter. Supported frontmatter fields: title, date, and tags. Falls back to filename for the title if none is specified.';
+
+  @override
+  String get sourceHeader => 'Source';
+
+  @override
+  String get selectFiles => 'Select Files';
+
+  @override
+  String get selectMdFilesSubtitle => 'Choose one or more .md files';
+
+  @override
+  String get selectFolder => 'Select Folder';
+
+  @override
+  String get importMdFolderSubtitle => 'Import all .md files from a folder';
+
+  @override
+  String get selectMdFilesTitle => 'Select Markdown Files';
+
+  @override
+  String get noMdFilesSelected => 'No .md files selected.';
+
+  @override
+  String get selectMdFolderTitle => 'Select Folder with Markdown Files';
+
+  @override
+  String get appleNotesExportHeader => 'Apple Notes Export';
+
+  @override
+  String get appleNotesImportDesc =>
+      'Import notes exported from the Apple Notes app. Select a folder containing HTML files exported from Apple Notes (one file per note). Basic formatting (bold, italic, headings, lists) will be converted to Markdown.';
+
+  @override
+  String get selectAppleNotesFolderSubtitle =>
+      'Choose a folder with Apple Notes HTML files';
+
+  @override
+  String get selectAppleNotesFolderTitle => 'Select Apple Notes Export Folder';
+
+  @override
+  String get plainTextFilesHeader => 'Plain Text Files';
+
+  @override
+  String get plainTextImportDesc =>
+      'Import plain text (.txt) files as notes. The first line of each file becomes the note title (if shorter than 100 characters); otherwise the filename is used as the title.';
+
+  @override
+  String get selectTxtFilesSubtitle => 'Choose one or more .txt files';
+
+  @override
+  String get importTxtFolderSubtitle => 'Import all .txt files from a folder';
+
+  @override
+  String get selectTextFilesTitle => 'Select Text Files';
+
+  @override
+  String get noTxtFilesSelected => 'No .txt files selected.';
+
+  @override
+  String get selectTextFolderTitle => 'Select Folder with Text Files';
+
+  @override
+  String fileCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count file$_temp0';
+  }
+
+  @override
+  String andMoreErrors(int count) {
+    return '... and $count more errors';
+  }
+
+  @override
+  String get stepFile => 'File';
+
+  @override
+  String get stepVerify => 'Verify';
+
+  @override
+  String get stepPreview => 'Preview';
+
+  @override
+  String get stepStrategy => 'Strategy';
+
+  @override
+  String get stepRestore => 'Restore';
+
+  @override
+  String get decryptFailed =>
+      'Failed to decrypt the shared note. The link may be corrupted or expired.';
+
+  @override
+  String get decryptingSharedNote => 'Decrypting shared note...';
+
+  @override
+  String get couldNotDecryptSharedNote => 'Could not decrypt the shared note';
+
+  @override
+  String get linkCorruptedExpired =>
+      'The link may be corrupted, expired, or incomplete.';
+
+  @override
+  String get passwordRequiredTitle => 'Password Required';
+
+  @override
+  String get enterPasswordToView =>
+      'Enter the password to view this shared note.';
+
+  @override
+  String get unlock => 'Unlock';
+
+  @override
+  String get sharedViaLink => 'Shared via link';
+
+  @override
+  String get sharedNote => 'Shared note';
+
+  @override
+  String platformSemanticLabel(
+    String name,
+    String subtitleSuffix,
+    String selectedSuffix,
+  ) {
+    return 'Platform: $name$subtitleSuffix$selectedSuffix';
+  }
+
+  @override
+  String publishedSemanticLabel(
+    String title,
+    String platform,
+    String status,
+    String dateSuffix,
+  ) {
+    return 'Published: $title. Platform: $platform. Status: $status$dateSuffix';
+  }
+
+  @override
+  String get openInBrowser => 'Open published article in browser';
+
+  @override
+  String statusLabel(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String get selectedLabel => 'Selected';
+
+  @override
+  String dateRangeFormat(String start, String end) {
+    return '$start - $end';
+  }
+
+  @override
+  String get builtInTab => 'Built-in';
+
+  @override
+  String get myTemplatesTab => 'My Templates';
+
+  @override
+  String get deleteTemplateConfirm => 'Delete template?';
+
+  @override
+  String deleteTemplateMessage(String name) {
+    return 'Delete \"$name\"? This cannot be undone.';
+  }
+
+  @override
+  String get templateNameLabel => 'Template name';
+
+  @override
+  String get templateDateHint => 'Use [date] for current date';
 }

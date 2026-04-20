@@ -1,5 +1,4 @@
 {
-  "@@locale": "ja",
 
   "appTitle": "AnyNote",
 
@@ -936,45 +935,286 @@
   "korean": "한국어",
 
   "menuFile": "ファイル",
+
   "menuNewNote": "新規メモ",
+
   "menuSave": "保存",
+
   "menuImport": "インポート...",
+
   "menuExport": "エクスポート...",
+
   "menuCloseTab": "タブを閉じる",
+
   "menuEdit": "編集",
+
   "menuUndo": "元に戻す",
+
   "menuRedo": "やり直す",
+
   "menuCut": "カット",
+
   "menuCopy": "コピー",
+
   "menuPaste": "ペースト",
+
   "menuSelectAll": "すべて選択",
+
   "menuFind": "検索...",
+
   "menuView": "表示",
+
   "menuToggleSidebar": "サイドバーの切り替え",
+
   "menuTogglePreview": "プレビューの切り替え",
+
   "menuZenMode": "集中モード",
+
   "menuFullScreen": "フルスクリーン",
+
   "menuExitFullScreen": "フルスクリーンを終了",
+
   "menuHelp": "ヘルプ",
+
   "menuAbout": "AnyNoteについて",
+
   "menuKeyboardShortcuts": "キーボードショートカット",
+
   "aboutDialogTitle": "AnyNoteについて",
+
   "aboutDescription": "ローカルファースト、プライバシーファーストのエンドツーエンド暗号化メモアプリ。",
+
   "aboutVersion": "バージョン {version}",
+
   "shortcutsDialogTitle": "キーボードショートカット",
+
   "shortcutNewNote": "新規メモ",
+
   "shortcutSave": "保存",
+
   "shortcutSearch": "検索",
+
   "shortcutToggleSidebar": "サイドバーの切り替え",
+
   "shortcutExportPdf": "PDFにエクスポート",
+
   "shortcutSettings": "設定を開く",
+
   "shortcutCloseNote": "メモを閉じる",
+
   "shortcutNextNote": "次のメモ",
+
   "shortcutFullScreen": "フルスクリーンの切り替え",
+
   "shortcutExitZen": "集中モードを終了 / ダイアログを閉じる",
 
   "notesTabLabel": "メモ",
+
   "composeTabLabel": "作成",
+
   "publishTabLabel": "公開",
-  "settingsTabLabel": "設定"
+
+  "settingsTabLabel": "設定",
+
+  "versionSemanticLabel": "バージョン {versionNumber}、{title}、{date}{currentSuffix}",
+
+  "currentSuffix": "、現在",
+
+  "noteTitleLabel": "メモのタイトル：{title}",
+
+  "updatedDate": "{date}に更新",
+
+  "confirmDeleteNoteDialog": "メモ削除確認ダイアログ",
+
+  "expiryImmediately": "すぐに",
+
+  "expiryLessThanOneHour": "1時間以内",
+
+  "expiryInHours": "{count}時間後",
+
+  "expiryInDays": "{count}日後",
+
+  "compositionSemanticLabel": "作品：{title}。{time}{platformSuffix}",
+
+  "platformSuffix": "。プラットフォーム：{platform}",
+
+  "platformGeneric": "汎用",
+
+  "platformXhs": "小紅書（RED）",
+
+  "platformTwitter": "Twitter",
+
+  "platformBlog": "ブログ",
+
+  "platformLinkedin": "LinkedIn",
+
+  "noteClusters": "メモクラスタ",
+
+  "clusteringNotes": "メモをクラスタリング中...",
+
+  "analyzingNotes": "AIが「{topic}」に関する{count}件のメモを分析中です",
+
+  "foundThemesSelect": "AIが{count}個のテーマを見つけました。含めるテーマを選択してください。",
+
+  "notesCount": "{count}件のメモ",
+
+  "clustersSelected": "{count}個のクラスタを選択済み",
+
+  "generateOutline": "アウトラインを生成",
+
+  "editorTitle": "エディタ",
+
+  "adaptStyleFor": "{platform}向けにスタイル調整",
+
+  "saveNoteTooltip": "メモとして保存",
+
+  "aiWriting": "AIが執筆中...",
+
+  "charsCount": "{count}文字",
+
+  "compositionHint": "ここに作品が表示されます...",
+
+  "outlineButton": "アウトライン",
+
+  "wordsCount": "{count}単語",
+
+  "viewAction": "表示",
+
+  "failedToSaveNote": "メモの保存に失敗しました",
+
+  "outlineTitle": "アウトライン",
+
+  "editTitleTooltip": "タイトルを編集",
+
+  "generatingOutline": "アウトラインを生成中...",
+
+  "buildingStructureFromClusters": "{count}個のクラスタから構造を構築中",
+
+  "noOutlineGenerated": "アウトラインが生成されませんでした。",
+
+  "sectionsDragToReorder": "{count}セクション -- ドラッグで並べ替え",
+
+  "keyPoints": "要点：",
+
+  "fromCluster": "クラスタ {number} から",
+
+  "expandToDraft": "下書きに展開",
+
+  "editTitle": "タイトルを編集",
+
+  "loginScreenLabel": "AnyNoteログイン画面",
+
+  "errorLabel": "エラー：{message}",
+
+  "registrationScreenLabel": "AnyNote登録画面",
+
+  "keyDerivationFailed": "鍵の導出に失敗しました。もう一度お試しください。",
+
+  "demoSecretNote": "秘密のメモ...",
+
+  "importFailed": "インポート失敗：{error}",
+
+  "selectNoteToView": "メモを選択して表示",
+
+  "collectionFallback": "コレクション",
+
+  "unknown": "不明",
+
+  "freePlan": "無料",
+
+  "importMarkdownDesc": "オプションのYAMLフロントマター付きMarkdown（.md）ファイルをインポートします。対応フロントマターフィールド：タイトル、日付、タグ。指定がない場合はファイル名がタイトルとして使用されます。",
+
+  "sourceHeader": "ソース",
+
+  "selectFiles": "ファイルを選択",
+
+  "selectMdFilesSubtitle": ".mdファイルを1つ以上選択",
+
+  "selectFolder": "フォルダを選択",
+
+  "importMdFolderSubtitle": "フォルダ内のすべての.mdファイルをインポート",
+
+  "selectMdFilesTitle": "Markdownファイルを選択",
+
+  "noMdFilesSelected": ".mdファイルが選択されていません。",
+
+  "selectMdFolderTitle": "Markdownファイルのあるフォルダを選択",
+
+  "appleNotesExportHeader": "Appleメモのエクスポート",
+
+  "appleNotesImportDesc": "Appleメモアプリからエクスポートされたメモをインポートします。AppleメモからエクスポートされたHTMLファイル（1メモ1ファイル）を含むフォルダを選択してください。基本的な書式（太字、斜体、見出し、リスト）はMarkdownに変換されます。",
+
+  "selectAppleNotesFolderSubtitle": "AppleメモのHTMLファイルを含むフォルダを選択",
+
+  "selectAppleNotesFolderTitle": "Appleメモのエクスポートフォルダを選択",
+
+  "plainTextFilesHeader": "プレーンテキストファイル",
+
+  "plainTextImportDesc": "プレーンテキスト（.txt）ファイルをメモとしてインポートします。各ファイルの最初の行がメモのタイトルになります（100文字未満の場合）。それ以外の場合はファイル名がタイトルとして使用されます。",
+
+  "selectTxtFilesSubtitle": ".txtファイルを1つ以上選択",
+
+  "importTxtFolderSubtitle": "フォルダ内のすべての.txtファイルをインポート",
+
+  "selectTextFilesTitle": "テキストファイルを選択",
+
+  "noTxtFilesSelected": ".txtファイルが選択されていません。",
+
+  "selectTextFolderTitle": "テキストファイルのあるフォルダを選択",
+
+  "fileCount": "{count}個のファイル",
+
+  "andMoreErrors": "...他{count}件のエラー",
+
+  "stepFile": "ファイル",
+
+  "stepVerify": "確認",
+
+  "stepPreview": "プレビュー",
+
+  "stepStrategy": "方式",
+
+  "stepRestore": "復元",
+
+  "decryptFailed": "共有メモの復号に失敗しました。リンクが破損しているか期限切れの可能性があります。",
+
+  "decryptingSharedNote": "共有メモを復号中...",
+
+  "couldNotDecryptSharedNote": "共有メモを復号できませんでした",
+
+  "linkCorruptedExpired": "リンクが破損、期限切れ、または不完全な可能性があります。",
+
+  "passwordRequiredTitle": "パスワードが必要です",
+
+  "enterPasswordToView": "この共有メモを表示するにはパスワードを入力してください。",
+
+  "unlock": "ロック解除",
+
+  "sharedViaLink": "リンクで共有",
+
+  "sharedNote": "共有メモ",
+
+  "platformSemanticLabel": "プラットフォーム：{name}{subtitleSuffix}{selectedSuffix}",
+
+  "publishedSemanticLabel": "公開済み：{title}。プラットフォーム：{platform}。ステータス：{status}{dateSuffix}",
+
+  "openInBrowser": "ブラウザで公開記事を開く",
+
+  "statusLabel": "ステータス：{status}",
+
+  "selectedLabel": "選択済み",
+
+  "dateRangeFormat": "{start} - {end}",
+
+  "builtInTab": "内蔵",
+
+  "myTemplatesTab": "マイテンプレート",
+
+  "deleteTemplateConfirm": "テンプレートを削除しますか？",
+
+  "deleteTemplateMessage": "「{name}」を削除しますか？この操作は元に戻せません。",
+
+  "templateNameLabel": "テンプレート名",
+
+  "templateDateHint": "[date]で現在の日付を挿入"
 }

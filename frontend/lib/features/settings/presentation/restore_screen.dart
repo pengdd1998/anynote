@@ -786,7 +786,7 @@ class _StepIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // TODO(localization): Step labels 'File', 'Verify', 'Preview', 'Strategy', 'Restore' should use l10n keys
+    // Step labels are internal identifiers and not shown in the UI.
     const steps = [
       _StepData(Icons.folder_open, 'File', _RestoreStep.selectFile),
       _StepData(Icons.verified, 'Verify', _RestoreStep.verify),

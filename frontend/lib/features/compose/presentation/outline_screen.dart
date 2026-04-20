@@ -56,8 +56,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        // TODO(localization): 'Outline' title should use l10n key
-        title: const Text('Outline'),
+        title: Text(l10n.outlineTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -66,8 +65,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
           if (session.outline != null)
             IconButton(
               icon: const Icon(Icons.edit_outlined),
-              // TODO(localization): 'Edit title' tooltip should use l10n key
-              tooltip: 'Edit title',
+              tooltip: l10n.editTitleTooltip,
               onPressed: () => _showEditTitleDialog(context, session),
             ),
         ],
@@ -86,12 +84,10 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            // TODO(localization): 'Generating outline...' should use l10n key
-            const Text('Generating outline...'),
+            Text(l10n.generatingOutline),
             const SizedBox(height: 8),
             Text(
-              // TODO(localization): 'Building structure from N clusters' should use l10n key with params
-              'Building structure from ${session.selectedClusterIndices.length} clusters',
+              l10n.buildingStructureFromClusters(session.selectedClusterIndices.length),
               style: TextStyle(color: Colors.grey.shade600),
             ),
           ],
@@ -126,8 +122,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
 
     final outline = session.outline;
     if (outline == null) {
-      // TODO(localization): 'No outline generated.' should use l10n key
-      return const Center(child: Text('No outline generated.'));
+      return Center(child: Text(l10n.noOutlineGenerated));
     }
 
     // Ensure title controller stays in sync.
@@ -161,9 +156,8 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
             children: [
               Icon(Icons.info_outline, size: 16, color: Colors.grey.shade500),
               const SizedBox(width: 6),
-              // TODO(localization): 'N sections -- drag to reorder' should use l10n key with pluralization
               Text(
-                '${outline.sections.length} sections -- drag to reorder',
+                l10n.sectionsDragToReorder(outline.sections.length),
                 style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
               ),
             ],
@@ -229,12 +223,11 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                   children: [
                     // Points list
                     if (section.points.isNotEmpty) ...[
-                      // TODO(localization): 'Key Points:' should use l10n key
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Key Points:',
-                          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                          l10n.keyPoints,
+                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -255,9 +248,8 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                     ],
                     if (section.sourceCluster != null) ...[
                       const SizedBox(height: 8),
-                      // TODO(localization): 'From cluster N' should use l10n key with param
                       Text(
-                        'From cluster ${section.sourceCluster! + 1}',
+                        l10n.fromCluster(section.sourceCluster! + 1),
                         style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                       ),
                     ],
@@ -277,8 +269,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                 OutlinedButton.icon(
                   onPressed: () => context.pop(),
                   icon: const Icon(Icons.arrow_back),
-                  // TODO(localization): 'Back' button should use l10n.back
-                  label: const Text('Back'),
+                  label: Text(l10n.back),
                 ),
                 const Spacer(),
                 FilledButton.icon(
@@ -290,8 +281,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                           context.push('/compose/editor/${widget.sessionId}');
                         },
                   icon: const Icon(Icons.edit_note),
-                  // TODO(localization): 'Expand to Draft' button should use l10n key
-                  label: const Text('Expand to Draft'),
+                  label: Text(l10n.expandToDraft),
                 ),
               ],
             ),
@@ -307,8 +297,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        // TODO(localization): 'Edit Title' dialog title should use l10n key
-        title: const Text('Edit Title'),
+        title: Text(l10n.editTitle),
         content: TextField(
           controller: _titleController,
           autofocus: true,

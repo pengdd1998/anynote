@@ -164,8 +164,8 @@ func TestCommentHandler_CreateComment_InvalidBody(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "invalid_request" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "invalid_request")
+	if errResp.Error.Code != "invalid_request" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "invalid_request")
 	}
 }
 
@@ -191,8 +191,8 @@ func TestCommentHandler_CreateComment_MissingEncryptedContent(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -489,8 +489,8 @@ func TestCommentHandler_DeleteComment_NotAuthor(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "forbidden" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "forbidden")
+	if errResp.Error.Code != "forbidden" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "forbidden")
 	}
 }
 
@@ -538,8 +538,8 @@ func TestCommentHandler_DeleteComment_InvalidUUID(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "invalid_id" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "invalid_id")
+	if errResp.Error.Code != "invalid_id" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "invalid_id")
 	}
 }
 

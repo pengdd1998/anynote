@@ -1669,4 +1669,380 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsTabLabel => '设置';
+
+  @override
+  String versionSemanticLabel(
+    int versionNumber,
+    String title,
+    String date,
+    String currentSuffix,
+  ) {
+    return '版本 $versionNumber，$title，$date$currentSuffix';
+  }
+
+  @override
+  String get currentSuffix => '，当前';
+
+  @override
+  String noteTitleLabel(String title) {
+    return '笔记标题：$title';
+  }
+
+  @override
+  String updatedDate(String date) {
+    return '更新于 $date';
+  }
+
+  @override
+  String get confirmDeleteNoteDialog => '确认删除笔记对话框';
+
+  @override
+  String get expiryImmediately => '已过期';
+
+  @override
+  String get expiryLessThanOneHour => '不到1小时后';
+
+  @override
+  String expiryInHours(int count) {
+    return '$count小时后';
+  }
+
+  @override
+  String expiryInDays(int count) {
+    return '$count天后';
+  }
+
+  @override
+  String compositionSemanticLabel(
+    String title,
+    String time,
+    String platformSuffix,
+  ) {
+    return '作品：$title。$time$platformSuffix';
+  }
+
+  @override
+  String platformSuffix(String platform) {
+    return '。平台：$platform';
+  }
+
+  @override
+  String get platformGeneric => '通用';
+
+  @override
+  String get platformXhs => '小红书';
+
+  @override
+  String get platformTwitter => 'Twitter';
+
+  @override
+  String get platformBlog => '博客';
+
+  @override
+  String get platformLinkedin => 'LinkedIn';
+
+  @override
+  String get noteClusters => '笔记聚类';
+
+  @override
+  String get clusteringNotes => '正在聚类您的笔记...';
+
+  @override
+  String analyzingNotes(int count, String topic) {
+    return 'AI正在分析$count条关于\"$topic\"的笔记';
+  }
+
+  @override
+  String foundThemesSelect(int count) {
+    return 'AI发现了$count个主题，请选择要包含的主题。';
+  }
+
+  @override
+  String notesCount(int count) {
+    return '$count条笔记';
+  }
+
+  @override
+  String clustersSelected(int count) {
+    return '已选择$count个聚类';
+  }
+
+  @override
+  String get generateOutline => '生成大纲';
+
+  @override
+  String get editorTitle => '编辑器';
+
+  @override
+  String adaptStyleFor(String platform) {
+    return '为$platform调整风格';
+  }
+
+  @override
+  String get saveNoteTooltip => '保存为笔记';
+
+  @override
+  String get aiWriting => 'AI正在撰写...';
+
+  @override
+  String charsCount(int count) {
+    return '$count字符';
+  }
+
+  @override
+  String get compositionHint => '您的作品将显示在此处...';
+
+  @override
+  String get outlineButton => '大纲';
+
+  @override
+  String wordsCount(int count) {
+    return '$count词';
+  }
+
+  @override
+  String get viewAction => '查看';
+
+  @override
+  String get failedToSaveNote => '保存笔记失败';
+
+  @override
+  String get outlineTitle => '大纲';
+
+  @override
+  String get editTitleTooltip => '编辑标题';
+
+  @override
+  String get generatingOutline => '正在生成大纲...';
+
+  @override
+  String buildingStructureFromClusters(int count) {
+    return '正在从$count个聚类构建结构';
+  }
+
+  @override
+  String get noOutlineGenerated => '未生成大纲。';
+
+  @override
+  String sectionsDragToReorder(int count) {
+    return '$count个章节 -- 拖动以重新排序';
+  }
+
+  @override
+  String get keyPoints => '要点：';
+
+  @override
+  String fromCluster(int number) {
+    return '来自聚类 $number';
+  }
+
+  @override
+  String get expandToDraft => '展开为草稿';
+
+  @override
+  String get editTitle => '编辑标题';
+
+  @override
+  String get loginScreenLabel => 'AnyNote登录界面';
+
+  @override
+  String errorLabel(String message) {
+    return '错误：$message';
+  }
+
+  @override
+  String get registrationScreenLabel => 'AnyNote注册界面';
+
+  @override
+  String get keyDerivationFailed => '密钥派生失败，请重试。';
+
+  @override
+  String get demoSecretNote => '我的秘密笔记...';
+
+  @override
+  String importFailed(String error) {
+    return '导入失败：$error';
+  }
+
+  @override
+  String get selectNoteToView => '选择一条笔记以查看';
+
+  @override
+  String get collectionFallback => '集合';
+
+  @override
+  String get unknown => '未知';
+
+  @override
+  String get freePlan => '免费';
+
+  @override
+  String get importMarkdownDesc =>
+      '导入带有可选YAML前置信息的Markdown（.md）文件。支持的前置信息字段：标题、日期和标签。如果未指定，将使用文件名作为标题。';
+
+  @override
+  String get sourceHeader => '来源';
+
+  @override
+  String get selectFiles => '选择文件';
+
+  @override
+  String get selectMdFilesSubtitle => '选择一个或多个.md文件';
+
+  @override
+  String get selectFolder => '选择文件夹';
+
+  @override
+  String get importMdFolderSubtitle => '从文件夹导入所有.md文件';
+
+  @override
+  String get selectMdFilesTitle => '选择Markdown文件';
+
+  @override
+  String get noMdFilesSelected => '未选择.md文件。';
+
+  @override
+  String get selectMdFolderTitle => '选择包含Markdown文件的文件夹';
+
+  @override
+  String get appleNotesExportHeader => 'Apple备忘录导出';
+
+  @override
+  String get appleNotesImportDesc =>
+      '导入从Apple备忘录应用导出的笔记。选择一个包含从Apple备忘录导出的HTML文件的文件夹（每个文件对应一条笔记）。基本格式（粗体、斜体、标题、列表）将被转换为Markdown。';
+
+  @override
+  String get selectAppleNotesFolderSubtitle => '选择包含Apple备忘录HTML文件的文件夹';
+
+  @override
+  String get selectAppleNotesFolderTitle => '选择Apple备忘录导出文件夹';
+
+  @override
+  String get plainTextFilesHeader => '纯文本文件';
+
+  @override
+  String get plainTextImportDesc =>
+      '导入纯文本（.txt）文件作为笔记。每个文件的第一行将成为笔记标题（如果少于100个字符），否则使用文件名作为标题。';
+
+  @override
+  String get selectTxtFilesSubtitle => '选择一个或多个.txt文件';
+
+  @override
+  String get importTxtFolderSubtitle => '从文件夹导入所有.txt文件';
+
+  @override
+  String get selectTextFilesTitle => '选择文本文件';
+
+  @override
+  String get noTxtFilesSelected => '未选择.txt文件。';
+
+  @override
+  String get selectTextFolderTitle => '选择包含文本文件的文件夹';
+
+  @override
+  String fileCount(int count) {
+    return '$count个文件';
+  }
+
+  @override
+  String andMoreErrors(int count) {
+    return '...以及另外$count个错误';
+  }
+
+  @override
+  String get stepFile => '文件';
+
+  @override
+  String get stepVerify => '验证';
+
+  @override
+  String get stepPreview => '预览';
+
+  @override
+  String get stepStrategy => '策略';
+
+  @override
+  String get stepRestore => '恢复';
+
+  @override
+  String get decryptFailed => '无法解密共享笔记，链接可能已损坏或过期。';
+
+  @override
+  String get decryptingSharedNote => '正在解密共享笔记...';
+
+  @override
+  String get couldNotDecryptSharedNote => '无法解密共享笔记';
+
+  @override
+  String get linkCorruptedExpired => '链接可能已损坏、过期或不完整。';
+
+  @override
+  String get passwordRequiredTitle => '需要密码';
+
+  @override
+  String get enterPasswordToView => '输入密码以查看此共享笔记。';
+
+  @override
+  String get unlock => '解锁';
+
+  @override
+  String get sharedViaLink => '通过链接共享';
+
+  @override
+  String get sharedNote => '共享笔记';
+
+  @override
+  String platformSemanticLabel(
+    String name,
+    String subtitleSuffix,
+    String selectedSuffix,
+  ) {
+    return '平台：$name$subtitleSuffix$selectedSuffix';
+  }
+
+  @override
+  String publishedSemanticLabel(
+    String title,
+    String platform,
+    String status,
+    String dateSuffix,
+  ) {
+    return '已发布：$title。平台：$platform。状态：$status$dateSuffix';
+  }
+
+  @override
+  String get openInBrowser => '在浏览器中打开已发布文章';
+
+  @override
+  String statusLabel(String status) {
+    return '状态：$status';
+  }
+
+  @override
+  String get selectedLabel => '已选择';
+
+  @override
+  String dateRangeFormat(String start, String end) {
+    return '$start - $end';
+  }
+
+  @override
+  String get builtInTab => '内置';
+
+  @override
+  String get myTemplatesTab => '我的模板';
+
+  @override
+  String get deleteTemplateConfirm => '删除模板？';
+
+  @override
+  String deleteTemplateMessage(String name) {
+    return '删除\"$name\"？此操作无法撤销。';
+  }
+
+  @override
+  String get templateNameLabel => '模板名称';
+
+  @override
+  String get templateDateHint => '使用 [date] 插入当前日期';
 }

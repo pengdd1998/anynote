@@ -8,6 +8,13 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// skippedPaths are paths for which request logging is suppressed to reduce noise.
+var skippedPaths = map[string]bool{
+	"/health":  true,
+	"/ready":   true,
+	"/metrics": true,
+}
+
 // responseWriter wraps http.ResponseWriter to capture the status code.
 type responseWriter struct {
 	http.ResponseWriter
@@ -34,16 +41,28 @@ func (rw *responseWriter) Flush() {
 
 // RequestLogger returns middleware that logs each request with structured fields.
 // It deliberately excludes request and response bodies for privacy (CLAUDE.md rule).
+// Noisy endpoints (/health, /ready, /metrics) are skipped to keep logs useful.
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip logging for noisy endpoints.
+		if skippedPaths[r.URL.Path] {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		start := time.Now()
 		rw := newResponseWriter(w)
+
+		// Set the X-Request-ID response header so clients can correlate errors.
+		requestID := middleware.GetReqID(r.Context())
+		if requestID != "" {
+			rw.Header().Set("X-Request-ID", requestID)
+		}
 
 		next.ServeHTTP(rw, r)
 
 		duration := time.Since(start)
 		userID := getUserID(r.Context())
-		requestID := middleware.GetReqID(r.Context())
 
 		attrs := []any{
 			"method", r.Method,

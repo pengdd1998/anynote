@@ -16,13 +16,13 @@ type LLMConfigHandler struct {
 func (h *LLMConfigHandler) List(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	configs, err := h.llmService.List(r.Context(), parseUUID(userID))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "list_error", "Failed to list configs")
+		writeError(w, r, http.StatusInternalServerError, "list_error", "Failed to list configs")
 		return
 	}
 
@@ -32,13 +32,13 @@ func (h *LLMConfigHandler) List(w http.ResponseWriter, r *http.Request) {
 func (h *LLMConfigHandler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	var cfg domain.LLMConfig
 	if err := json.NewDecoder(r.Body).Decode(&cfg); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
 
@@ -46,13 +46,13 @@ func (h *LLMConfigHandler) Create(w http.ResponseWriter, r *http.Request) {
 	cfg.DecryptedKey = cfg.APIKey
 
 	if cfg.Name == "" || cfg.Provider == "" || cfg.BaseURL == "" || cfg.DecryptedKey == "" || cfg.Model == "" {
-		writeError(w, http.StatusBadRequest, "validation_error", "name, provider, base_url, api_key, and model are required")
+		writeError(w, r, http.StatusBadRequest, "validation_error", "name, provider, base_url, api_key, and model are required")
 		return
 	}
 
 	result, err := h.llmService.Create(r.Context(), parseUUID(userID), cfg)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "create_error", "Failed to create config")
+		writeError(w, r, http.StatusInternalServerError, "create_error", "Failed to create config")
 		return
 	}
 
@@ -62,26 +62,26 @@ func (h *LLMConfigHandler) Create(w http.ResponseWriter, r *http.Request) {
 func (h *LLMConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	configID := chi.URLParam(r, "id")
 	if configID == "" {
-		writeError(w, http.StatusBadRequest, "missing_id", "Config ID is required")
+		writeError(w, r, http.StatusBadRequest, "missing_id", "Config ID is required")
 		return
 	}
 
 	var cfg domain.LLMConfig
 	if err := json.NewDecoder(r.Body).Decode(&cfg); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
 
 	cfg.ID = parseUUID(configID)
 	result, err := h.llmService.Update(r.Context(), parseUUID(userID), cfg)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "update_error", "Failed to update config")
+		writeError(w, r, http.StatusInternalServerError, "update_error", "Failed to update config")
 		return
 	}
 
@@ -91,18 +91,18 @@ func (h *LLMConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 func (h *LLMConfigHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	configID := chi.URLParam(r, "id")
 	if configID == "" {
-		writeError(w, http.StatusBadRequest, "missing_id", "Config ID is required")
+		writeError(w, r, http.StatusBadRequest, "missing_id", "Config ID is required")
 		return
 	}
 
 	if err := h.llmService.Delete(r.Context(), parseUUID(userID), parseUUID(configID)); err != nil {
-		writeError(w, http.StatusInternalServerError, "delete_error", "Failed to delete config")
+		writeError(w, r, http.StatusInternalServerError, "delete_error", "Failed to delete config")
 		return
 	}
 
@@ -112,13 +112,13 @@ func (h *LLMConfigHandler) Delete(w http.ResponseWriter, r *http.Request) {
 func (h *LLMConfigHandler) TestConnection(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	configID := chi.URLParam(r, "id")
 	if configID == "" {
-		writeError(w, http.StatusBadRequest, "missing_id", "Config ID is required")
+		writeError(w, r, http.StatusBadRequest, "missing_id", "Config ID is required")
 		return
 	}
 

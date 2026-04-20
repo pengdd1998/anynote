@@ -93,7 +93,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ConflictException() => l10n.emailOrUsernameTaken,
         ValidationException() => l10n.invalidInput,
         NetworkException() => l10n.unableToReachServer,
-        CryptoKeyDerivationException() => 'Key derivation failed. Please try again.', // TODO(localization): 'Key derivation failed...' should use l10n key
+        CryptoKeyDerivationException() => l10n.keyDerivationFailed,
         _ => ErrorDisplay.userMessage(appError),
       };
       setState(() => _error = message);
@@ -178,8 +178,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Semantics(
-                    // TODO(localization): 'AnyNote registration screen' semantic label should use l10n key
-                    label: 'AnyNote registration screen',
+                    label: l10n.registrationScreenLabel,
                     child: Icon(Icons.person_add_outlined, size: 64, color: Theme.of(context).colorScheme.primary),
                   ),
                   const SizedBox(height: 16),
@@ -192,8 +191,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Semantics(
                         liveRegion: true,
-                        // TODO(localization): 'Error:' prefix in semantic label should use l10n key
-                        label: 'Error: $_error',
+                        label: l10n.errorLabel(_error!),
                         child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                       ),
                     ),

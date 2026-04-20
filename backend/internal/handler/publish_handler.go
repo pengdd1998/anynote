@@ -13,29 +13,29 @@ type PublishHandler struct {
 }
 
 type publishRequest struct {
-	Platform       string   `json:"platform"`
-	ContentItemID  string   `json:"content_item_id"`
-	Title          string   `json:"title"`
-	Content        string   `json:"content"`
-	Tags           []string `json:"tags"`
-	ScheduleAt     *string  `json:"schedule_at,omitempty"`
+	Platform      string   `json:"platform"`
+	ContentItemID string   `json:"content_item_id"`
+	Title         string   `json:"title"`
+	Content       string   `json:"content"`
+	Tags          []string `json:"tags"`
+	ScheduleAt    *string  `json:"schedule_at,omitempty"`
 }
 
 func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	var req publishRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
 
 	if req.Platform == "" {
-		writeError(w, http.StatusBadRequest, "validation_error", "Platform is required")
+		writeError(w, r, http.StatusBadRequest, "validation_error", "Platform is required")
 		return
 	}
 
@@ -47,7 +47,7 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		Tags:          req.Tags,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "publish_error", "Failed to publish")
+		writeError(w, r, http.StatusInternalServerError, "publish_error", "Failed to publish")
 		return
 	}
 
@@ -57,13 +57,13 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 func (h *PublishHandler) History(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	logs, err := h.publishService.GetHistory(r.Context(), parseUUID(userID))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "history_error", "Failed to get history")
+		writeError(w, r, http.StatusInternalServerError, "history_error", "Failed to get history")
 		return
 	}
 
@@ -73,19 +73,19 @@ func (h *PublishHandler) History(w http.ResponseWriter, r *http.Request) {
 func (h *PublishHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	id := chi.URLParam(r, "id")
 	if id == "" {
-		writeError(w, http.StatusBadRequest, "missing_id", "Publish log ID is required")
+		writeError(w, r, http.StatusBadRequest, "missing_id", "Publish log ID is required")
 		return
 	}
 
 	log, err := h.publishService.GetByID(r.Context(), parseUUID(userID), parseUUID(id))
 	if err != nil {
-		writeError(w, http.StatusNotFound, "not_found", "Publish log not found")
+		writeError(w, r, http.StatusNotFound, "not_found", "Publish log not found")
 		return
 	}
 

@@ -219,8 +219,8 @@ func TestAuthHandler_Register_DuplicateEmail(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "email_exists" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "email_exists")
+	if errResp.Error.Code != "email_exists" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "email_exists")
 	}
 }
 
@@ -251,8 +251,8 @@ func TestAuthHandler_Register_DuplicateUsername(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "username_exists" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "username_exists")
+	if errResp.Error.Code != "username_exists" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "username_exists")
 	}
 }
 
@@ -293,8 +293,8 @@ func TestAuthHandler_Register_MissingFields(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -366,8 +366,8 @@ func TestAuthHandler_Login_WrongCredentials(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "invalid_credentials" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "invalid_credentials")
+	if errResp.Error.Code != "invalid_credentials" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "invalid_credentials")
 	}
 }
 
@@ -407,8 +407,8 @@ func TestAuthHandler_Login_MissingFields(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -601,8 +601,8 @@ func TestAuthHandler_Register_InternalError(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "internal_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "internal_error")
+	if errResp.Error.Code != "internal_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "internal_error")
 	}
 }
 
@@ -632,8 +632,8 @@ func TestAuthHandler_Login_InternalError(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "internal_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "internal_error")
+	if errResp.Error.Code != "internal_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "internal_error")
 	}
 }
 
@@ -663,8 +663,8 @@ func TestAuthHandler_Register_MissingAuthKeyHash(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -693,8 +693,8 @@ func TestAuthHandler_Login_MissingAuthKeyHash(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -861,8 +861,8 @@ func TestAuthHandler_DeleteAccount_WrongPassword(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "invalid_credentials" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "invalid_credentials")
+	if errResp.Error.Code != "invalid_credentials" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "invalid_credentials")
 	}
 }
 
@@ -906,8 +906,8 @@ func TestAuthHandler_DeleteAccount_MissingAuthKeyHash(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -981,7 +981,7 @@ func TestAuthHandler_DeleteAccount_InternalError(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "internal_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "internal_error")
+	if errResp.Error.Code != "internal_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "internal_error")
 	}
 }

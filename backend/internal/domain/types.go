@@ -279,9 +279,16 @@ type QuotaResponse struct {
 
 // ── Errors ────────────────────────────────────────
 
+// ErrorDetail contains the machine-readable code and human-readable message.
+type ErrorDetail struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+// ErrorResponse is the standard error envelope for all API responses.
 type ErrorResponse struct {
-	Error   string `json:"error"`
-	Message string `json:"message,omitempty"`
+	Error     ErrorDetail `json:"error"`
+	RequestID string      `json:"request_id,omitempty"`
 }
 
 type QuotaExceededResponse struct {

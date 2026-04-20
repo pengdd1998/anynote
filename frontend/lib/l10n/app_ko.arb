@@ -1,5 +1,4 @@
 {
-  "@@locale": "ko",
 
   "appTitle": "AnyNote",
 
@@ -936,45 +935,286 @@
   "korean": "한국어",
 
   "menuFile": "파일",
+
   "menuNewNote": "새 메모",
+
   "menuSave": "저장",
+
   "menuImport": "가져오기...",
+
   "menuExport": "내보내기...",
+
   "menuCloseTab": "탭 닫기",
+
   "menuEdit": "편집",
+
   "menuUndo": "실행 취소",
+
   "menuRedo": "다시 실행",
+
   "menuCut": "잘라내기",
+
   "menuCopy": "복사",
+
   "menuPaste": "붙여넣기",
+
   "menuSelectAll": "모두 선택",
+
   "menuFind": "찾기...",
+
   "menuView": "보기",
+
   "menuToggleSidebar": "사이드바 전환",
+
   "menuTogglePreview": "미리보기 전환",
+
   "menuZenMode": "집중 모드",
+
   "menuFullScreen": "전체 화면",
+
   "menuExitFullScreen": "전체 화면 종료",
+
   "menuHelp": "도움말",
+
   "menuAbout": "AnyNote 정보",
+
   "menuKeyboardShortcuts": "키보드 단축키",
+
   "aboutDialogTitle": "AnyNote 정보",
+
   "aboutDescription": "로컬 우선, 개인정보 우선의 종단간 암호화 메모 앱.",
+
   "aboutVersion": "버전 {version}",
+
   "shortcutsDialogTitle": "키보드 단축키",
+
   "shortcutNewNote": "새 메모",
+
   "shortcutSave": "저장",
+
   "shortcutSearch": "검색",
+
   "shortcutToggleSidebar": "사이드바 전환",
+
   "shortcutExportPdf": "PDF로 내보내기",
+
   "shortcutSettings": "설정 열기",
+
   "shortcutCloseNote": "메모 닫기",
+
   "shortcutNextNote": "다음 메모",
+
   "shortcutFullScreen": "전체 화면 전환",
+
   "shortcutExitZen": "집중 모드 종료 / 대화상자 닫기",
 
   "notesTabLabel": "메모",
+
   "composeTabLabel": "작성",
+
   "publishTabLabel": "게시",
-  "settingsTabLabel": "설정"
+
+  "settingsTabLabel": "설정",
+
+  "versionSemanticLabel": "버전 {versionNumber}, {title}, {date}{currentSuffix}",
+
+  "currentSuffix": ", 현재",
+
+  "noteTitleLabel": "메모 제목: {title}",
+
+  "updatedDate": "{date}에 업데이트됨",
+
+  "confirmDeleteNoteDialog": "메모 삭제 확인 대화상자",
+
+  "expiryImmediately": "즉시",
+
+  "expiryLessThanOneHour": "1시간 이내",
+
+  "expiryInHours": "{count}시간 후",
+
+  "expiryInDays": "{count}일 후",
+
+  "compositionSemanticLabel": "작성물: {title}. {time}{platformSuffix}",
+
+  "platformSuffix": ". 플랫폼: {platform}",
+
+  "platformGeneric": "일반",
+
+  "platformXhs": "샤오홍슈",
+
+  "platformTwitter": "Twitter",
+
+  "platformBlog": "블로그",
+
+  "platformLinkedin": "LinkedIn",
+
+  "noteClusters": "메모 클러스터",
+
+  "clusteringNotes": "메모를 클러스터링하는 중...",
+
+  "analyzingNotes": "AI가 \"{topic}\"에 대한 {count}개의 메모를 분석 중이에요",
+
+  "foundThemesSelect": "AI가 {count}개의 테마를 찾았어요. 포함할 테마를 선택해주세요.",
+
+  "notesCount": "{count}개 메모",
+
+  "clustersSelected": "{count}개 클러스터 선택됨",
+
+  "generateOutline": "개요 생성",
+
+  "editorTitle": "편집기",
+
+  "adaptStyleFor": "{platform}에 맞게 스타일 조정",
+
+  "saveNoteTooltip": "메모로 저장",
+
+  "aiWriting": "AI가 작성 중...",
+
+  "charsCount": "{count}자",
+
+  "compositionHint": "작성물이 여기에 표시됩니다...",
+
+  "outlineButton": "개요",
+
+  "wordsCount": "{count}단어",
+
+  "viewAction": "보기",
+
+  "failedToSaveNote": "메모 저장 실패",
+
+  "outlineTitle": "개요",
+
+  "editTitleTooltip": "제목 편집",
+
+  "generatingOutline": "개요 생성 중...",
+
+  "buildingStructureFromClusters": "{count}개 클러스터에서 구조를 구축하는 중",
+
+  "noOutlineGenerated": "개요가 생성되지 않았어요.",
+
+  "sectionsDragToReorder": "{count}개 섹션 -- 드래그하여 재정렬",
+
+  "keyPoints": "핵심 포인트:",
+
+  "fromCluster": "클러스터 {number}에서",
+
+  "expandToDraft": "초안으로 확장",
+
+  "editTitle": "제목 편집",
+
+  "loginScreenLabel": "AnyNote 로그인 화면",
+
+  "errorLabel": "오류: {message}",
+
+  "registrationScreenLabel": "AnyNote 가입 화면",
+
+  "keyDerivationFailed": "키 파생에 실패했어요. 다시 시도해주세요.",
+
+  "demoSecretNote": "나의 비밀 메모...",
+
+  "importFailed": "가져오기 실패: {error}",
+
+  "selectNoteToView": "메모를 선택하여 보기",
+
+  "collectionFallback": "컬렉션",
+
+  "unknown": "알 수 없음",
+
+  "freePlan": "무료",
+
+  "importMarkdownDesc": "선택적 YAML 프론트매터가 포함된 Markdown(.md) 파일을 가져옵니다. 지원되는 프론트매터 필드: 제목, 날짜, 태그입니다. 지정하지 않으면 파일 이름이 제목으로 사용됩니다.",
+
+  "sourceHeader": "소스",
+
+  "selectFiles": "파일 선택",
+
+  "selectMdFilesSubtitle": ".md 파일을 하나 이상 선택",
+
+  "selectFolder": "폴더 선택",
+
+  "importMdFolderSubtitle": "폴더의 모든 .md 파일 가져오기",
+
+  "selectMdFilesTitle": "Markdown 파일 선택",
+
+  "noMdFilesSelected": "선택된 .md 파일이 없어요.",
+
+  "selectMdFolderTitle": "Markdown 파일이 있는 폴더 선택",
+
+  "appleNotesExportHeader": "Apple 메모 내보내기",
+
+  "appleNotesImportDesc": "Apple 메모 앱에서 내보낸 메모를 가져옵니다. Apple 메모에서 내보낸 HTML 파일(메모당 하나)이 포함된 폴더를 선택하세요. 기본 서식(굵게, 기울임, 제목, 목록)이 Markdown으로 변환됩니다.",
+
+  "selectAppleNotesFolderSubtitle": "Apple 메모 HTML 파일이 있는 폴더 선택",
+
+  "selectAppleNotesFolderTitle": "Apple 메모 내보내기 폴더 선택",
+
+  "plainTextFilesHeader": "일반 텍스트 파일",
+
+  "plainTextImportDesc": "일반 텍스트(.txt) 파일을 메모로 가져옵니다. 각 파일의 첫 번째 줄이 메모 제목이 됩니다(100자 미만인 경우). 그렇지 않으면 파일 이름이 제목으로 사용됩니다.",
+
+  "selectTxtFilesSubtitle": ".txt 파일을 하나 이상 선택",
+
+  "importTxtFolderSubtitle": "폴더의 모든 .txt 파일 가져오기",
+
+  "selectTextFilesTitle": "텍스트 파일 선택",
+
+  "noTxtFilesSelected": "선택된 .txt 파일이 없어요.",
+
+  "selectTextFolderTitle": "텍스트 파일이 있는 폴더 선택",
+
+  "fileCount": "{count}개 파일",
+
+  "andMoreErrors": "...외 {count}개 오류",
+
+  "stepFile": "파일",
+
+  "stepVerify": "확인",
+
+  "stepPreview": "미리보기",
+
+  "stepStrategy": "방식",
+
+  "stepRestore": "복원",
+
+  "decryptFailed": "공유 메모 복호화에 실패했어요. 링크가 손상되었거나 만료되었을 수 있어요.",
+
+  "decryptingSharedNote": "공유 메모 복호화 중...",
+
+  "couldNotDecryptSharedNote": "공유 메모를 복호화할 수 없어요",
+
+  "linkCorruptedExpired": "링크가 손상되었거나, 만료되었거나, 불완전할 수 있어요.",
+
+  "passwordRequiredTitle": "비밀번호 필요",
+
+  "enterPasswordToView": "이 공유 메모를 보려면 비밀번호를 입력하세요.",
+
+  "unlock": "잠금 해제",
+
+  "sharedViaLink": "링크로 공유됨",
+
+  "sharedNote": "공유 메모",
+
+  "platformSemanticLabel": "플랫폼: {name}{subtitleSuffix}{selectedSuffix}",
+
+  "publishedSemanticLabel": "게시됨: {title}. 플랫폼: {platform}. 상태: {status}{dateSuffix}",
+
+  "openInBrowser": "브라우저에서 게시된 글 열기",
+
+  "statusLabel": "상태: {status}",
+
+  "selectedLabel": "선택됨",
+
+  "dateRangeFormat": "{start} - {end}",
+
+  "builtInTab": "기본 제공",
+
+  "myTemplatesTab": "내 템플릿",
+
+  "deleteTemplateConfirm": "템플릿을 삭제할까요?",
+
+  "deleteTemplateMessage": "\"{name}\"을(를) 삭제할까요? 이 작업은 되돌릴 수 없어요.",
+
+  "templateNameLabel": "템플릿 이름",
+
+  "templateDateHint": "[date]를 사용하여 현재 날짜 삽입"
 }

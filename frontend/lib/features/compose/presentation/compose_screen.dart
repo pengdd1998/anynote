@@ -110,16 +110,19 @@ class ComposeScreen extends ConsumerWidget {
                       final item = items[index];
                       final title = item.plainBody != null && item.plainBody!.length > 80
                           ? '${item.plainBody!.substring(0, 80)}...'
-                          // TODO(localization): Use l10n.untitled instead of hardcoded 'Untitled'
-                          : item.plainBody ?? 'Untitled';
+                          // Use localized untitled fallback
+                          : item.plainBody ?? l10n.untitled;
                       final time = _formatTime(item.updatedAt);
                       final platform = item.platformStyle;
 
                       return Card(
                         child: Semantics(
                           button: true,
-                          // TODO(localization): Localize this semantic label composition string
-                          label: 'Composition: $title. $time${platform != 'generic' ? '. Platform: $platform' : ''}',
+                          label: l10n.compositionSemanticLabel(
+                            title,
+                            time,
+                            platform != 'generic' ? l10n.platformSuffix(platform) : '',
+                          ),
                           child: ListTile(
                           leading: Icon(
                             Icons.auto_awesome,
@@ -218,15 +221,13 @@ class ComposeScreen extends ConsumerWidget {
   }
 
   String _formatTime(DateTime dt) {
-    // TODO(localization): Use AppLocalizations for relative time strings
-    // instead of hardcoded English. The notes_list_screen.dart has the
-    // correct pattern: l10n.justNow, l10n.minutesAgo(n), etc.
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return l10n.justNow;
+    if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
+    if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
     return '${dt.month}/${dt.day}';
   }
 }
@@ -247,14 +248,13 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   String _platformStyle = 'generic';
   final Set<String> _selectedIds = {};
 
-  // TODO(localization): Platform display names should be localized via .arb files.
-  // The tuple values (second element) are hardcoded English labels shown in the UI.
-  static const _platformOptions = [
-    ('generic', 'Generic'),
-    ('xhs', 'XHS'),
-    ('twitter', 'Twitter'),
-    ('blog', 'Blog'),
-    ('linkedin', 'LinkedIn'),
+  // Platform options with localized display names resolved at build time.
+  List<(String, String)> _platformOptions(AppLocalizations l10n) => [
+    ('generic', l10n.platformGeneric),
+    ('xhs', l10n.platformXhs),
+    ('twitter', l10n.platformTwitter),
+    ('blog', l10n.platformBlog),
+    ('linkedin', l10n.platformLinkedin),
   ];
 
   @override
@@ -326,7 +326,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                   labelText: l10n.targetPlatform,
                   prefixIcon: const Icon(Icons.share_outlined),
                 ),
-                items: _platformOptions
+                items: _platformOptions(l10n)
                     .map((o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)))
                     .toList(),
                 onChanged: (v) {
@@ -368,8 +368,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                     itemCount: notes.length,
                     itemBuilder: (context, index) {
                       final note = notes[index];
-                      // TODO(localization): Use l10n.untitled instead of hardcoded 'Untitled'
-                      final title = note.plainTitle ?? 'Untitled';
+                      // Use localized untitled fallback
+                      final title = note.plainTitle ?? l10n.untitled;
                       final preview = note.plainContent != null && note.plainContent!.length > 60
                           ? '${note.plainContent!.substring(0, 60)}...'
                           : note.plainContent ?? '';

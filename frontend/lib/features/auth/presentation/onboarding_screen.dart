@@ -34,8 +34,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _demoSyncVisible = false;
   Timer? _demoTimer;
 
-  // TODO(localization): 'My secret note...' demo text should use l10n key
-  static const _demoText = 'My secret note...';
+  // Demo text for the typing animation on page 3.
+  // Initialized from l10n on first build.
+  String _demoText = 'My secret note...';
+  bool _demoTextInitialized = false;
 
   List<_OnboardingPageData> _buildPages(AppLocalizations l10n) => [
     _OnboardingPageData(
@@ -129,6 +131,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    if (!_demoTextInitialized) {
+      _demoText = l10n.demoSecretNote;
+      _demoTextInitialized = true;
+    }
     final pages = _buildPages(l10n);
     final isLastPage = _currentPage == pages.length - 1;
     final colorScheme = Theme.of(context).colorScheme;

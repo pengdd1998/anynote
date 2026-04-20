@@ -1680,4 +1680,380 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsTabLabel => '設定';
+
+  @override
+  String versionSemanticLabel(
+    int versionNumber,
+    String title,
+    String date,
+    String currentSuffix,
+  ) {
+    return 'バージョン $versionNumber、$title、$date$currentSuffix';
+  }
+
+  @override
+  String get currentSuffix => '、現在';
+
+  @override
+  String noteTitleLabel(String title) {
+    return 'メモのタイトル：$title';
+  }
+
+  @override
+  String updatedDate(String date) {
+    return '$dateに更新';
+  }
+
+  @override
+  String get confirmDeleteNoteDialog => 'メモ削除確認ダイアログ';
+
+  @override
+  String get expiryImmediately => 'すぐに';
+
+  @override
+  String get expiryLessThanOneHour => '1時間以内';
+
+  @override
+  String expiryInHours(int count) {
+    return '$count時間後';
+  }
+
+  @override
+  String expiryInDays(int count) {
+    return '$count日後';
+  }
+
+  @override
+  String compositionSemanticLabel(
+    String title,
+    String time,
+    String platformSuffix,
+  ) {
+    return '作品：$title。$time$platformSuffix';
+  }
+
+  @override
+  String platformSuffix(String platform) {
+    return '。プラットフォーム：$platform';
+  }
+
+  @override
+  String get platformGeneric => '汎用';
+
+  @override
+  String get platformXhs => '小紅書（RED）';
+
+  @override
+  String get platformTwitter => 'Twitter';
+
+  @override
+  String get platformBlog => 'ブログ';
+
+  @override
+  String get platformLinkedin => 'LinkedIn';
+
+  @override
+  String get noteClusters => 'メモクラスタ';
+
+  @override
+  String get clusteringNotes => 'メモをクラスタリング中...';
+
+  @override
+  String analyzingNotes(int count, String topic) {
+    return 'AIが「$topic」に関する$count件のメモを分析中です';
+  }
+
+  @override
+  String foundThemesSelect(int count) {
+    return 'AIが$count個のテーマを見つけました。含めるテーマを選択してください。';
+  }
+
+  @override
+  String notesCount(int count) {
+    return '$count件のメモ';
+  }
+
+  @override
+  String clustersSelected(int count) {
+    return '$count個のクラスタを選択済み';
+  }
+
+  @override
+  String get generateOutline => 'アウトラインを生成';
+
+  @override
+  String get editorTitle => 'エディタ';
+
+  @override
+  String adaptStyleFor(String platform) {
+    return '$platform向けにスタイル調整';
+  }
+
+  @override
+  String get saveNoteTooltip => 'メモとして保存';
+
+  @override
+  String get aiWriting => 'AIが執筆中...';
+
+  @override
+  String charsCount(int count) {
+    return '$count文字';
+  }
+
+  @override
+  String get compositionHint => 'ここに作品が表示されます...';
+
+  @override
+  String get outlineButton => 'アウトライン';
+
+  @override
+  String wordsCount(int count) {
+    return '$count単語';
+  }
+
+  @override
+  String get viewAction => '表示';
+
+  @override
+  String get failedToSaveNote => 'メモの保存に失敗しました';
+
+  @override
+  String get outlineTitle => 'アウトライン';
+
+  @override
+  String get editTitleTooltip => 'タイトルを編集';
+
+  @override
+  String get generatingOutline => 'アウトラインを生成中...';
+
+  @override
+  String buildingStructureFromClusters(int count) {
+    return '$count個のクラスタから構造を構築中';
+  }
+
+  @override
+  String get noOutlineGenerated => 'アウトラインが生成されませんでした。';
+
+  @override
+  String sectionsDragToReorder(int count) {
+    return '$countセクション -- ドラッグで並べ替え';
+  }
+
+  @override
+  String get keyPoints => '要点：';
+
+  @override
+  String fromCluster(int number) {
+    return 'クラスタ $number から';
+  }
+
+  @override
+  String get expandToDraft => '下書きに展開';
+
+  @override
+  String get editTitle => 'タイトルを編集';
+
+  @override
+  String get loginScreenLabel => 'AnyNoteログイン画面';
+
+  @override
+  String errorLabel(String message) {
+    return 'エラー：$message';
+  }
+
+  @override
+  String get registrationScreenLabel => 'AnyNote登録画面';
+
+  @override
+  String get keyDerivationFailed => '鍵の導出に失敗しました。もう一度お試しください。';
+
+  @override
+  String get demoSecretNote => '秘密のメモ...';
+
+  @override
+  String importFailed(String error) {
+    return 'インポート失敗：$error';
+  }
+
+  @override
+  String get selectNoteToView => 'メモを選択して表示';
+
+  @override
+  String get collectionFallback => 'コレクション';
+
+  @override
+  String get unknown => '不明';
+
+  @override
+  String get freePlan => '無料';
+
+  @override
+  String get importMarkdownDesc =>
+      'オプションのYAMLフロントマター付きMarkdown（.md）ファイルをインポートします。対応フロントマターフィールド：タイトル、日付、タグ。指定がない場合はファイル名がタイトルとして使用されます。';
+
+  @override
+  String get sourceHeader => 'ソース';
+
+  @override
+  String get selectFiles => 'ファイルを選択';
+
+  @override
+  String get selectMdFilesSubtitle => '.mdファイルを1つ以上選択';
+
+  @override
+  String get selectFolder => 'フォルダを選択';
+
+  @override
+  String get importMdFolderSubtitle => 'フォルダ内のすべての.mdファイルをインポート';
+
+  @override
+  String get selectMdFilesTitle => 'Markdownファイルを選択';
+
+  @override
+  String get noMdFilesSelected => '.mdファイルが選択されていません。';
+
+  @override
+  String get selectMdFolderTitle => 'Markdownファイルのあるフォルダを選択';
+
+  @override
+  String get appleNotesExportHeader => 'Appleメモのエクスポート';
+
+  @override
+  String get appleNotesImportDesc =>
+      'Appleメモアプリからエクスポートされたメモをインポートします。AppleメモからエクスポートされたHTMLファイル（1メモ1ファイル）を含むフォルダを選択してください。基本的な書式（太字、斜体、見出し、リスト）はMarkdownに変換されます。';
+
+  @override
+  String get selectAppleNotesFolderSubtitle => 'AppleメモのHTMLファイルを含むフォルダを選択';
+
+  @override
+  String get selectAppleNotesFolderTitle => 'Appleメモのエクスポートフォルダを選択';
+
+  @override
+  String get plainTextFilesHeader => 'プレーンテキストファイル';
+
+  @override
+  String get plainTextImportDesc =>
+      'プレーンテキスト（.txt）ファイルをメモとしてインポートします。各ファイルの最初の行がメモのタイトルになります（100文字未満の場合）。それ以外の場合はファイル名がタイトルとして使用されます。';
+
+  @override
+  String get selectTxtFilesSubtitle => '.txtファイルを1つ以上選択';
+
+  @override
+  String get importTxtFolderSubtitle => 'フォルダ内のすべての.txtファイルをインポート';
+
+  @override
+  String get selectTextFilesTitle => 'テキストファイルを選択';
+
+  @override
+  String get noTxtFilesSelected => '.txtファイルが選択されていません。';
+
+  @override
+  String get selectTextFolderTitle => 'テキストファイルのあるフォルダを選択';
+
+  @override
+  String fileCount(int count) {
+    return '$count個のファイル';
+  }
+
+  @override
+  String andMoreErrors(int count) {
+    return '...他$count件のエラー';
+  }
+
+  @override
+  String get stepFile => 'ファイル';
+
+  @override
+  String get stepVerify => '確認';
+
+  @override
+  String get stepPreview => 'プレビュー';
+
+  @override
+  String get stepStrategy => '方式';
+
+  @override
+  String get stepRestore => '復元';
+
+  @override
+  String get decryptFailed => '共有メモの復号に失敗しました。リンクが破損しているか期限切れの可能性があります。';
+
+  @override
+  String get decryptingSharedNote => '共有メモを復号中...';
+
+  @override
+  String get couldNotDecryptSharedNote => '共有メモを復号できませんでした';
+
+  @override
+  String get linkCorruptedExpired => 'リンクが破損、期限切れ、または不完全な可能性があります。';
+
+  @override
+  String get passwordRequiredTitle => 'パスワードが必要です';
+
+  @override
+  String get enterPasswordToView => 'この共有メモを表示するにはパスワードを入力してください。';
+
+  @override
+  String get unlock => 'ロック解除';
+
+  @override
+  String get sharedViaLink => 'リンクで共有';
+
+  @override
+  String get sharedNote => '共有メモ';
+
+  @override
+  String platformSemanticLabel(
+    String name,
+    String subtitleSuffix,
+    String selectedSuffix,
+  ) {
+    return 'プラットフォーム：$name$subtitleSuffix$selectedSuffix';
+  }
+
+  @override
+  String publishedSemanticLabel(
+    String title,
+    String platform,
+    String status,
+    String dateSuffix,
+  ) {
+    return '公開済み：$title。プラットフォーム：$platform。ステータス：$status$dateSuffix';
+  }
+
+  @override
+  String get openInBrowser => 'ブラウザで公開記事を開く';
+
+  @override
+  String statusLabel(String status) {
+    return 'ステータス：$status';
+  }
+
+  @override
+  String get selectedLabel => '選択済み';
+
+  @override
+  String dateRangeFormat(String start, String end) {
+    return '$start - $end';
+  }
+
+  @override
+  String get builtInTab => '内蔵';
+
+  @override
+  String get myTemplatesTab => 'マイテンプレート';
+
+  @override
+  String get deleteTemplateConfirm => 'テンプレートを削除しますか？';
+
+  @override
+  String deleteTemplateMessage(String name) {
+    return '「$name」を削除しますか？この操作は元に戻せません。';
+  }
+
+  @override
+  String get templateNameLabel => 'テンプレート名';
+
+  @override
+  String get templateDateHint => '[date]で現在の日付を挿入';
 }

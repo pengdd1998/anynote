@@ -138,8 +138,8 @@ func TestRegisterDeviceToken_InvalidJSON(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(resp.Body).Decode(&errResp)
-	if errResp.Error != "invalid_request" {
-		t.Errorf("error = %q, want %q", errResp.Error, "invalid_request")
+	if errResp.Error.Code != "invalid_request" {
+		t.Errorf("error = %q, want %q", errResp.Error.Code, "invalid_request")
 	}
 }
 
@@ -167,8 +167,8 @@ func TestRegisterDeviceToken_EmptyToken(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(resp.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -219,8 +219,8 @@ func TestRegisterDeviceToken_InvalidPlatform(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(resp.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -370,8 +370,8 @@ func TestUnregisterDeviceToken_EmptyToken(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(resp.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 

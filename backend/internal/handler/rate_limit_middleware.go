@@ -18,7 +18,7 @@ func RateLimitMiddleware(limiter *service.RateLimiter, keyFunc func(r *http.Requ
 			key := keyFunc(r)
 			if !limiter.Allow(key) {
 				w.Header().Set("Retry-After", strconv.Itoa(int(window.Seconds())))
-				writeError(w, http.StatusTooManyRequests, "rate_limit_exceeded", "Too many requests. Please try again later.")
+				writeError(w, r, http.StatusTooManyRequests, "rate_limit_exceeded", "Too many requests. Please try again later.")
 				return
 			}
 			next.ServeHTTP(w, r)

@@ -7,6 +7,7 @@ import '../../../core/error/error.dart';
 import '../../../core/export/export_service.dart';
 import '../../../core/locale/locale_provider.dart';
 import '../../../core/notifications/push_service.dart';
+import '../../../core/providers/app_info_provider.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -21,6 +22,7 @@ class SettingsScreen extends ConsumerWidget {
     final accountAsync = ref.watch(accountInfoProvider);
     final aiQuotaAsync = ref.watch(aiQuotaProvider);
     final syncStatusAsync = ref.watch(syncStatusProvider);
+    final appInfoAsync = ref.watch(appInfoProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
@@ -216,7 +218,11 @@ class SettingsScreen extends ConsumerWidget {
                       SettingsItem(
                         icon: Icons.info_outline,
                         title: l10n.version,
-                        subtitle: '0.1.0', // TODO(localization): Version string should be sourced from config or l10n
+                        subtitle: appInfoAsync.when(
+                          data: (info) => '${info.version} (${info.buildNumber})',
+                          loading: () => '...',
+                          error: (_, __) => 'Unknown',
+                        ),
                       ),
                       SettingsItem(
                         icon: Icons.privacy_tip_outlined,
@@ -275,12 +281,12 @@ class SettingsScreen extends ConsumerWidget {
         SettingsItem(
           icon: Icons.person_outline,
           title: l10n.email,
-          subtitle: account['email'] as String? ?? 'Unknown', // TODO(localization): 'Unknown' fallback should use l10n key
+          subtitle: account['email'] as String? ?? l10n.unknown,
         ),
         SettingsItem(
           icon: Icons.badge_outlined,
           title: l10n.plan,
-          subtitle: account['plan'] as String? ?? 'Free', // TODO(localization): 'Free' plan fallback should use l10n key
+          subtitle: account['plan'] as String? ?? l10n.freePlan,
           trailing: FilledButton.tonal(
             onPressed: () {},
             style: FilledButton.styleFrom(
@@ -527,7 +533,7 @@ class SettingsScreen extends ConsumerWidget {
       // Decrypt notes that have encrypted content.
       final decrypted = <({String title, String content, String id})>[];
       for (final note in notes) {
-        String title = note.plainTitle ?? 'Untitled'; // TODO(localization): 'Untitled' fallback should use l10n key
+        String title = note.plainTitle ?? l10n.untitled;
         String content = note.plainContent ?? '';
 
         if (crypto.isUnlocked) {

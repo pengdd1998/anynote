@@ -424,7 +424,7 @@ func TestE2EAuthFlow_RegisterThenDuplicateEmail(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(resp2.Body).Decode(&errResp)
-	if errResp.Error != "email_exists" {
-		t.Errorf("duplicate register: error = %q, want %q", errResp.Error, "email_exists")
+	if errResp.Error.Code != "email_exists" {
+		t.Errorf("duplicate register: error = %q, want %q", errResp.Error.Code, "email_exists")
 	}
 }

@@ -56,29 +56,28 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
       });
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        // TODO(localization): 'Editor' title should use l10n key
-        title: const Text('Editor'),
+        title: Text(l10n.editorTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
           // Style adaptation button
-          // TODO(localization): 'Adapt style for...' tooltip should use l10n key with param
           IconButton(
             icon: const Icon(Icons.style),
-            tooltip: 'Adapt style for ${session.platformStyle}',
+            tooltip: l10n.adaptStyleFor(session.platformStyle),
             onPressed: session.isLoading || session.draft.isEmpty
                 ? null
                 : () => _adaptStyle(ref),
           ),
           // Save button
-          // TODO(localization): Save button tooltip should use l10n key (currently reuses 'Adapt style for...')
           IconButton(
             icon: const Icon(Icons.save_outlined),
-            tooltip: 'Adapt style for ${session.platformStyle}',
+            tooltip: l10n.saveNoteTooltip,
             onPressed: session.isLoading || session.draft.isEmpty || _isSaving
                 ? null
                 : () => _saveAsNote(context, ref),
@@ -136,9 +135,8 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(width: 12),
-                // TODO(localization): 'AI is writing...' should use l10n key
                 Text(
-                  'AI is writing...',
+                  l10n.aiWriting,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w500,
@@ -146,9 +144,8 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                   ),
                 ),
                 const Spacer(),
-                // TODO(localization): 'N chars' should use l10n key with pluralization
                 Text(
-                  '${session.draft.length} chars',
+                  l10n.charsCount(session.draft.length),
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
               ],
@@ -187,10 +184,9 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
               expands: true,
               textAlignVertical: TextAlignVertical.top,
               style: const TextStyle(fontSize: 15, height: 1.6),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 border: InputBorder.none,
-                // TODO(localization): 'Your composition will appear here...' hint should use l10n key
-                hintText: 'Your composition will appear here...',
+                hintText: l10n.compositionHint,
               ),
               onChanged: (text) {
                 ref.read(composeSessionProvider.notifier).updateDraft(text);
@@ -213,8 +209,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                 OutlinedButton.icon(
                   onPressed: () => context.pop(),
                   icon: const Icon(Icons.arrow_back, size: 18),
-                  // TODO(localization): 'Outline' button should use l10n key
-                  label: const Text('Outline'),
+                  label: Text(l10n.outlineButton),
                 ),
                 const SizedBox(width: 8),
 
@@ -228,9 +223,8 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                 const Spacer(),
 
                 // Word count
-                // TODO(localization): 'N words' should use l10n key with pluralization
                 Text(
-                  '${_countWords(session.draft)} words',
+                  l10n.wordsCount(_countWords(session.draft)),
                   style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                 ),
                 const SizedBox(width: 12),
@@ -282,17 +276,15 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.savedAsNote),
-            // TODO(localization): 'View' SnackBar action label should use l10n key
             action: SnackBarAction(
-              label: 'View',
+              label: l10n.viewAction,
               onPressed: () => context.push('/notes/$noteId'),
             ),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          // TODO(localization): 'Failed to save note' should use l10n key
-          const SnackBar(content: Text('Failed to save note')),
+          SnackBar(content: Text(l10n.failedToSaveNote)),
         );
       }
     } finally {

@@ -150,7 +150,7 @@ class NoteDetailScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Semantics(
-                  label: 'Note title: ${data.title}',
+                  label: l10n.noteTitleLabel(data.title),
                   header: true,
                   child: Text(
                   data.title,
@@ -162,13 +162,13 @@ class NoteDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Semantics(
-                  label: 'Updated ${data.updatedAt.toLocal().toString().substring(0, 16)}${data.isSynced ? '' : ', ${l10n.notSynced}'}',
+                  label: '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))}${data.isSynced ? '' : ', ${l10n.notSynced}'}',
                   child: Row(
                   children: [
                     Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
                     const SizedBox(width: 4),
                     Text(
-                      'Updated ${data.updatedAt.toLocal().toString().substring(0, 16)}',
+                      l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16)),
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                     ),
                     if (!data.isSynced) ...[
@@ -291,7 +291,7 @@ class NoteDetailScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e')),
+          SnackBar(content: Text(l10n.exportFailed(e.toString()))),
         );
       }
     }
@@ -324,7 +324,7 @@ class NoteDetailScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => Semantics(
-        label: 'Confirm delete note dialog',
+        label: l10n.confirmDeleteNoteDialog,
         child: AlertDialog(
         title: Text(l10n.deleteNoteDialog),
         content: Text(l10n.deleteNoteDialogMessage),

@@ -29,12 +29,16 @@ func (e *ValidationError) Error() string {
 
 // writeValidationError writes a 422 Unprocessable Entity response with field details.
 func writeValidationError(w http.ResponseWriter, ve *ValidationError) {
+	type errDetail struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	}
 	type validationResponse struct {
-		Error  string         `json:"error"`
+		Error  errDetail      `json:"error"`
 		Errors []ValidationErr `json:"errors"`
 	}
 	writeJSON(w, http.StatusUnprocessableEntity, validationResponse{
-		Error:  "validation_error",
+		Error:  errDetail{Code: "validation_error", Message: "Validation failed"},
 		Errors: ve.Errors,
 	})
 }

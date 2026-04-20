@@ -1,5 +1,4 @@
 {
-  "@@locale": "en",
 
   "appTitle": "AnyNote",
   "@appTitle": { "description": "Application name displayed in the app bar and title" },
@@ -1824,5 +1823,360 @@
   "@publishTabLabel": { "description": "Accessibility label for the Publish navigation tab" },
 
   "settingsTabLabel": "Settings",
-  "@settingsTabLabel": { "description": "Accessibility label for the Settings navigation tab" }
+  "@settingsTabLabel": { "description": "Accessibility label for the Settings navigation tab" },
+
+  "versionSemanticLabel": "Version {versionNumber}, {title}, {date}{currentSuffix}",
+  "@versionSemanticLabel": { "description": "Accessibility label for a version history item",
+    "placeholders": {"versionNumber": {"type": "int"}, "title": {"type": "String"}, "date": {"type": "String"}, "currentSuffix": {"type": "String"}}
+  },
+
+  "currentSuffix": ", current",
+  "@currentSuffix": { "description": "Appended to version semantic label for the current version" },
+
+  "noteTitleLabel": "Note title: {title}",
+  "@noteTitleLabel": { "description": "Semantic label prefix for note title",
+    "placeholders": {"title": {"type": "String"}}
+  },
+
+  "updatedDate": "Updated {date}",
+  "@updatedDate": { "description": "Label showing when a note was last updated",
+    "placeholders": {"date": {"type": "String"}}
+  },
+
+  "confirmDeleteNoteDialog": "Confirm delete note dialog",
+  "@confirmDeleteNoteDialog": { "description": "Semantic label for the delete confirmation dialog" },
+
+  "expiryImmediately": "immediately",
+  "@expiryImmediately": { "description": "Share link expiry: already expired" },
+
+  "expiryLessThanOneHour": "in less than 1 hour",
+  "@expiryLessThanOneHour": { "description": "Share link expiry: less than one hour remaining" },
+
+  "expiryInHours": "in {count} hours",
+  "@expiryInHours": { "description": "Share link expiry: hours remaining",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "expiryInDays": "in {count} day{count, plural, =1{} other{s}}",
+  "@expiryInDays": { "description": "Share link expiry: days remaining with pluralization",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "compositionSemanticLabel": "Composition: {title}. {time}{platformSuffix}",
+  "@compositionSemanticLabel": { "description": "Accessibility label for a composition card",
+    "placeholders": {"title": {"type": "String"}, "time": {"type": "String"}, "platformSuffix": {"type": "String"}}
+  },
+
+  "platformSuffix": ". Platform: {platform}",
+  "@platformSuffix": { "description": "Appended to composition semantic label when platform is set",
+    "placeholders": {"platform": {"type": "String"}}
+  },
+
+  "platformGeneric": "Generic",
+  "@platformGeneric": { "description": "Display name for generic platform in compose" },
+
+  "platformXhs": "XHS",
+  "@platformXhs": { "description": "Display name for XHS (Xiaohongshu) platform" },
+
+  "platformTwitter": "Twitter",
+  "@platformTwitter": { "description": "Display name for Twitter platform" },
+
+  "platformBlog": "Blog",
+  "@platformBlog": { "description": "Display name for Blog platform" },
+
+  "platformLinkedin": "LinkedIn",
+  "@platformLinkedin": { "description": "Display name for LinkedIn platform" },
+
+  "noteClusters": "Note Clusters",
+  "@noteClusters": { "description": "Title of the note clustering screen" },
+
+  "clusteringNotes": "Clustering your notes...",
+  "@clusteringNotes": { "description": "Loading message while AI clusters notes" },
+
+  "analyzingNotes": "AI is analyzing {count} notes about \"{topic}\"",
+  "@analyzingNotes": { "description": "Sub-status during note clustering",
+    "placeholders": {"count": {"type": "int"}, "topic": {"type": "String"}}
+  },
+
+  "foundThemesSelect": "AI found {count} themes. Select the ones to include.",
+  "@foundThemesSelect": { "description": "Info header after clustering completes",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "notesCount": "{count} notes",
+  "@notesCount": { "description": "Number of notes in a cluster",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "clustersSelected": "{count} clusters selected",
+  "@clustersSelected": { "description": "Number of selected clusters",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "generateOutline": "Generate Outline",
+  "@generateOutline": { "description": "Button to generate outline from selected clusters" },
+
+  "editorTitle": "Editor",
+  "@editorTitle": { "description": "Title of the compose editor screen" },
+
+  "adaptStyleFor": "Adapt style for {platform}",
+  "@adaptStyleFor": { "description": "Tooltip for style adaptation button",
+    "placeholders": {"platform": {"type": "String"}}
+  },
+
+  "saveNoteTooltip": "Save as note",
+  "@saveNoteTooltip": { "description": "Tooltip for the save button in compose editor" },
+
+  "aiWriting": "AI is writing...",
+  "@aiWriting": { "description": "Streaming indicator while AI generates content" },
+
+  "charsCount": "{count} chars",
+  "@charsCount": { "description": "Character count display",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "compositionHint": "Your composition will appear here...",
+  "@compositionHint": { "description": "Hint text in empty compose editor" },
+
+  "outlineButton": "Outline",
+  "@outlineButton": { "description": "Button label to go back to outline view" },
+
+  "wordsCount": "{count} words",
+  "@wordsCount": { "description": "Word count display",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "viewAction": "View",
+  "@viewAction": { "description": "SnackBar action to view a saved note" },
+
+  "failedToSaveNote": "Failed to save note",
+  "@failedToSaveNote": { "description": "Error message when saving a note fails" },
+
+  "outlineTitle": "Outline",
+  "@outlineTitle": { "description": "Title of the outline screen" },
+
+  "editTitleTooltip": "Edit title",
+  "@editTitleTooltip": { "description": "Tooltip for the edit title button in outline screen" },
+
+  "generatingOutline": "Generating outline...",
+  "@generatingOutline": { "description": "Loading message while AI generates outline" },
+
+  "buildingStructureFromClusters": "Building structure from {count} clusters",
+  "@buildingStructureFromClusters": { "description": "Sub-status during outline generation",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "noOutlineGenerated": "No outline generated.",
+  "@noOutlineGenerated": { "description": "Message when outline generation produced nothing" },
+
+  "sectionsDragToReorder": "{count} sections -- drag to reorder",
+  "@sectionsDragToReorder": { "description": "Section count with reorder hint",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "keyPoints": "Key Points:",
+  "@keyPoints": { "description": "Label before the list of key points in an outline section" },
+
+  "fromCluster": "From cluster {number}",
+  "@fromCluster": { "description": "Source cluster label in outline section",
+    "placeholders": {"number": {"type": "int"}}
+  },
+
+  "expandToDraft": "Expand to Draft",
+  "@expandToDraft": { "description": "Button to expand outline into full draft" },
+
+  "editTitle": "Edit Title",
+  "@editTitle": { "description": "Dialog title for editing the outline title" },
+
+  "loginScreenLabel": "AnyNote login screen",
+  "@loginScreenLabel": { "description": "Semantic label for the login screen icon" },
+
+  "errorLabel": "Error: {message}",
+  "@errorLabel": { "description": "Semantic label prefix for error messages",
+    "placeholders": {"message": {"type": "String"}}
+  },
+
+  "registrationScreenLabel": "AnyNote registration screen",
+  "@registrationScreenLabel": { "description": "Semantic label for the registration screen icon" },
+
+  "keyDerivationFailed": "Key derivation failed. Please try again.",
+  "@keyDerivationFailed": { "description": "Error when crypto key derivation fails during registration" },
+
+  "demoSecretNote": "My secret note...",
+  "@demoSecretNote": { "description": "Animated demo text in onboarding page 3" },
+
+  "importFailed": "Import failed: {error}",
+  "@importFailed": { "description": "Error message when note import fails",
+    "placeholders": {"error": {"type": "String"}}
+  },
+
+  "selectNoteToView": "Select a note to view",
+  "@selectNoteToView": { "description": "Placeholder text in tablet layout detail pane" },
+
+  "collectionFallback": "Collection",
+  "@collectionFallback": { "description": "Fallback title when collection has no plain title" },
+
+  "unknown": "Unknown",
+  "@unknown": { "description": "Fallback value for unknown data" },
+
+  "freePlan": "Free",
+  "@freePlan": { "description": "Free plan display name" },
+
+  "importMarkdownDesc": "Import Markdown (.md) files with optional YAML frontmatter. Supported frontmatter fields: title, date, and tags. Falls back to filename for the title if none is specified.",
+  "@importMarkdownDesc": { "description": "Description of the Markdown import format" },
+
+  "sourceHeader": "Source",
+  "@sourceHeader": { "description": "Section header for the import source picker" },
+
+  "selectFiles": "Select Files",
+  "@selectFiles": { "description": "Button to select files for import" },
+
+  "selectMdFilesSubtitle": "Choose one or more .md files",
+  "@selectMdFilesSubtitle": { "description": "Subtitle for the Markdown file picker button" },
+
+  "selectFolder": "Select Folder",
+  "@selectFolder": { "description": "Button to select a folder for import" },
+
+  "importMdFolderSubtitle": "Import all .md files from a folder",
+  "@importMdFolderSubtitle": { "description": "Subtitle for the Markdown folder picker button" },
+
+  "selectMdFilesTitle": "Select Markdown Files",
+  "@selectMdFilesTitle": { "description": "File picker dialog title for Markdown files" },
+
+  "noMdFilesSelected": "No .md files selected.",
+  "@noMdFilesSelected": { "description": "SnackBar when no valid Markdown files were chosen" },
+
+  "selectMdFolderTitle": "Select Folder with Markdown Files",
+  "@selectMdFolderTitle": { "description": "Folder picker dialog title for Markdown import" },
+
+  "appleNotesExportHeader": "Apple Notes Export",
+  "@appleNotesExportHeader": { "description": "Section header for Apple Notes import" },
+
+  "appleNotesImportDesc": "Import notes exported from the Apple Notes app. Select a folder containing HTML files exported from Apple Notes (one file per note). Basic formatting (bold, italic, headings, lists) will be converted to Markdown.",
+  "@appleNotesImportDesc": { "description": "Description of the Apple Notes import format" },
+
+  "selectAppleNotesFolderSubtitle": "Choose a folder with Apple Notes HTML files",
+  "@selectAppleNotesFolderSubtitle": { "description": "Subtitle for the Apple Notes folder picker" },
+
+  "selectAppleNotesFolderTitle": "Select Apple Notes Export Folder",
+  "@selectAppleNotesFolderTitle": { "description": "Folder picker dialog title for Apple Notes import" },
+
+  "plainTextFilesHeader": "Plain Text Files",
+  "@plainTextFilesHeader": { "description": "Section header for plain text import" },
+
+  "plainTextImportDesc": "Import plain text (.txt) files as notes. The first line of each file becomes the note title (if shorter than 100 characters); otherwise the filename is used as the title.",
+  "@plainTextImportDesc": { "description": "Description of the plain text import format" },
+
+  "selectTxtFilesSubtitle": "Choose one or more .txt files",
+  "@selectTxtFilesSubtitle": { "description": "Subtitle for the text file picker button" },
+
+  "importTxtFolderSubtitle": "Import all .txt files from a folder",
+  "@importTxtFolderSubtitle": { "description": "Subtitle for the text folder picker button" },
+
+  "selectTextFilesTitle": "Select Text Files",
+  "@selectTextFilesTitle": { "description": "File picker dialog title for text files" },
+
+  "noTxtFilesSelected": "No .txt files selected.",
+  "@noTxtFilesSelected": { "description": "SnackBar when no valid text files were chosen" },
+
+  "selectTextFolderTitle": "Select Folder with Text Files",
+  "@selectTextFolderTitle": { "description": "Folder picker dialog title for text import" },
+
+  "fileCount": "{count} file{count, plural, =1{} other{s}}",
+  "@fileCount": { "description": "Import result: number of files skipped with pluralization",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "andMoreErrors": "... and {count} more errors",
+  "@andMoreErrors": { "description": "Truncated error list suffix",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "stepFile": "File",
+  "@stepFile": { "description": "Step label in restore flow: select file" },
+
+  "stepVerify": "Verify",
+  "@stepVerify": { "description": "Step label in restore flow: verify backup" },
+
+  "stepPreview": "Preview",
+  "@stepPreview": { "description": "Step label in restore flow: preview contents" },
+
+  "stepStrategy": "Strategy",
+  "@stepStrategy": { "description": "Step label in restore flow: choose restore strategy" },
+
+  "stepRestore": "Restore",
+  "@stepRestore": { "description": "Step label in restore flow: execute restore" },
+
+  "decryptFailed": "Failed to decrypt the shared note. The link may be corrupted or expired.",
+  "@decryptFailed": { "description": "Error when shared note decryption fails" },
+
+  "decryptingSharedNote": "Decrypting shared note...",
+  "@decryptingSharedNote": { "description": "Loading message while decrypting a shared note" },
+
+  "couldNotDecryptSharedNote": "Could not decrypt the shared note",
+  "@couldNotDecryptSharedNote": { "description": "Fallback error title for decryption failure" },
+
+  "linkCorruptedExpired": "The link may be corrupted, expired, or incomplete.",
+  "@linkCorruptedExpired": { "description": "Error detail explaining why decryption failed" },
+
+  "passwordRequiredTitle": "Password Required",
+  "@passwordRequiredTitle": { "description": "Title of the password input section for protected shares" },
+
+  "enterPasswordToView": "Enter the password to view this shared note.",
+  "@enterPasswordToView": { "description": "Instruction text above the password field for shared notes" },
+
+  "unlock": "Unlock",
+  "@unlock": { "description": "Button to decrypt a password-protected shared note" },
+
+  "sharedViaLink": "Shared via link",
+  "@sharedViaLink": { "description": "Label for server-shared notes" },
+
+  "sharedNote": "Shared note",
+  "@sharedNote": { "description": "Label for self-contained shared notes" },
+
+  "platformSemanticLabel": "Platform: {name}{subtitleSuffix}{selectedSuffix}",
+  "@platformSemanticLabel": { "description": "Semantic label for a platform card in publish screen",
+    "placeholders": {"name": {"type": "String"}, "subtitleSuffix": {"type": "String"}, "selectedSuffix": {"type": "String"}}
+  },
+
+  "publishedSemanticLabel": "Published: {title}. Platform: {platform}. Status: {status}{dateSuffix}",
+  "@publishedSemanticLabel": { "description": "Semantic label for a publish history item",
+    "placeholders": {"title": {"type": "String"}, "platform": {"type": "String"}, "status": {"type": "String"}, "dateSuffix": {"type": "String"}}
+  },
+
+  "openInBrowser": "Open published article in browser",
+  "@openInBrowser": { "description": "Semantic label for the open-in-browser button" },
+
+  "statusLabel": "Status: {status}",
+  "@statusLabel": { "description": "Semantic label for status chip",
+    "placeholders": {"status": {"type": "String"}}
+  },
+
+  "selectedLabel": "Selected",
+  "@selectedLabel": { "description": "Semantic indicator that an item is selected" },
+
+  "dateRangeFormat": "{start} - {end}",
+  "@dateRangeFormat": { "description": "Date range display format",
+    "placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}
+  },
+
+  "builtInTab": "Built-in",
+  "@builtInTab": { "description": "Tab label for built-in templates" },
+
+  "myTemplatesTab": "My Templates",
+  "@myTemplatesTab": { "description": "Tab label for user-created templates" },
+
+  "deleteTemplateConfirm": "Delete template?",
+  "@deleteTemplateConfirm": { "description": "Dialog title for template deletion" },
+
+  "deleteTemplateMessage": "Delete \"{name}\"? This cannot be undone.",
+  "@deleteTemplateMessage": { "description": "Dialog body for template deletion",
+    "placeholders": {"name": {"type": "String"}}
+  },
+
+  "templateNameLabel": "Template name",
+  "@templateNameLabel": { "description": "Label for the template name text field" },
+
+  "templateDateHint": "Use [date] for current date",
+  "@templateDateHint": { "description": "Hint for the template content text field" }
 }

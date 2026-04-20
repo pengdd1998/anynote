@@ -16,7 +16,7 @@ type SyncHandler struct {
 func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
@@ -29,7 +29,7 @@ func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if since < 0 {
-		writeError(w, http.StatusBadRequest, "validation_error", "since must be non-negative")
+		writeError(w, r, http.StatusBadRequest, "validation_error", "since must be non-negative")
 		return
 	}
 
@@ -43,7 +43,7 @@ func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cursor < 0 {
-		writeError(w, http.StatusBadRequest, "validation_error", "cursor must be non-negative")
+		writeError(w, r, http.StatusBadRequest, "validation_error", "cursor must be non-negative")
 		return
 	}
 
@@ -64,7 +64,7 @@ func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.syncService.Pull(r.Context(), parseUUID(userID), since, limit, cursor)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "sync_error", "Pull failed")
+		writeError(w, r, http.StatusInternalServerError, "sync_error", "Pull failed")
 		return
 	}
 
@@ -74,13 +74,13 @@ func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 func (h *SyncHandler) Push(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	var req domain.SyncPushRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
 
@@ -91,13 +91,13 @@ func (h *SyncHandler) Push(w http.ResponseWriter, r *http.Request) {
 
 	// Limit batch size
 	if len(req.Blobs) > 1000 {
-		writeError(w, http.StatusBadRequest, "batch_too_large", "Maximum 1000 items per push")
+		writeError(w, r, http.StatusBadRequest, "batch_too_large", "Maximum 1000 items per push")
 		return
 	}
 
 	resp, err := h.syncService.Push(r.Context(), parseUUID(userID), req)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "sync_error", "Push failed")
+		writeError(w, r, http.StatusInternalServerError, "sync_error", "Push failed")
 		return
 	}
 
@@ -107,13 +107,13 @@ func (h *SyncHandler) Push(w http.ResponseWriter, r *http.Request) {
 func (h *SyncHandler) Status(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	resp, err := h.syncService.GetStatus(r.Context(), parseUUID(userID))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "sync_error", "Failed to get status")
+		writeError(w, r, http.StatusInternalServerError, "sync_error", "Failed to get status")
 		return
 	}
 
@@ -123,13 +123,13 @@ func (h *SyncHandler) Status(w http.ResponseWriter, r *http.Request) {
 func (h *SyncHandler) Stats(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	resp, err := h.syncService.GetStats(r.Context(), parseUUID(userID))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "sync_error", "Failed to get sync stats")
+		writeError(w, r, http.StatusInternalServerError, "sync_error", "Failed to get sync stats")
 		return
 	}
 
@@ -139,13 +139,13 @@ func (h *SyncHandler) Stats(w http.ResponseWriter, r *http.Request) {
 func (h *SyncHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	resp, err := h.syncService.ListTags(r.Context(), parseUUID(userID))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "sync_error", "Failed to list tags")
+		writeError(w, r, http.StatusInternalServerError, "sync_error", "Failed to list tags")
 		return
 	}
 
@@ -155,29 +155,29 @@ func (h *SyncHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 func (h *SyncHandler) BatchDelete(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	var req domain.BatchDeleteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
 
 	if len(req.ItemIDs) == 0 {
-		writeError(w, http.StatusBadRequest, "validation_error", "item_ids must not be empty")
+		writeError(w, r, http.StatusBadRequest, "validation_error", "item_ids must not be empty")
 		return
 	}
 
 	if len(req.ItemIDs) > 1000 {
-		writeError(w, http.StatusBadRequest, "batch_too_large", "Maximum 1000 items per batch delete")
+		writeError(w, r, http.StatusBadRequest, "batch_too_large", "Maximum 1000 items per batch delete")
 		return
 	}
 
 	resp, err := h.syncService.BatchDelete(r.Context(), parseUUID(userID), req.ItemIDs)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "sync_error", "Batch delete failed")
+		writeError(w, r, http.StatusInternalServerError, "sync_error", "Batch delete failed")
 		return
 	}
 
@@ -187,13 +187,13 @@ func (h *SyncHandler) BatchDelete(w http.ResponseWriter, r *http.Request) {
 func (h *SyncHandler) Progress(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	resp, err := h.syncService.GetProgress(r.Context(), parseUUID(userID))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "sync_error", "Failed to get sync progress")
+		writeError(w, r, http.StatusInternalServerError, "sync_error", "Failed to get sync progress")
 		return
 	}
 

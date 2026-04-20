@@ -156,8 +156,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Semantics(
-                    // TODO(localization): 'AnyNote login screen' semantic label should use l10n key
-                    label: 'AnyNote login screen',
+                    label: l10n.loginScreenLabel,
                     child: Icon(Icons.lock_outline, size: 64, color: Theme.of(context).colorScheme.primary),
                   ),
                   const SizedBox(height: 16),
@@ -170,8 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Semantics(
                         liveRegion: true,
-                        // TODO(localization): 'Error:' prefix in semantic label should use l10n key
-                        label: 'Error: $_error',
+                        label: l10n.errorLabel(_error!),
                         child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                       ),
                     ),

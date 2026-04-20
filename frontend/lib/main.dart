@@ -13,6 +13,7 @@ import 'core/database/app_database.dart';
 import 'core/deep_link/deep_link_handler.dart';
 import 'core/locale/locale_provider.dart';
 import 'core/monitoring/error_reporter.dart';
+import 'core/providers/app_info_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'core/network/api_client.dart';
 import 'core/notifications/push_service.dart';
@@ -34,7 +35,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize error reporting before anything else.
-  ErrorReporter().init();
+  ErrorReporter.instance.init();
 
   // Initialize crypto backend (no-op on web where WebCrypto is available;
   // on native, sodium_libs is initialized lazily by Encryptor/MasterKeyManager).
@@ -80,7 +81,7 @@ void main() async {
       child: const AnyNoteApp(),
     ),);
   }, (error, stackTrace) {
-    ErrorReporter().reportError(error, stackTrace, context: 'unhandled');
+    ErrorReporter.instance.reportError(error, stackTrace, context: 'unhandled');
   });
 }
 
@@ -250,6 +251,12 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 /// Tracks whether the user is currently authenticated.
 /// Set to true after successful login/register, false on logout.
 final authStateProvider = StateProvider<bool>((ref) => false);
+
+/// Global [ErrorReporter] singleton as a Riverpod provider so that
+/// screens and other providers can access it through the widget tree.
+final errorReporterProvider = Provider<ErrorReporter>((ref) {
+  return ErrorReporter.instance;
+});
 
 /// Whether the onboarding screen has been shown before.
 /// Stored in flutter_secure_storage so it survives app reinstalls on

@@ -97,8 +97,7 @@ class _CollectionDetailScreenState
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        // TODO(localization): 'Collection' fallback title should use l10n key
-        title: Text(_collection?.plainTitle ?? 'Collection'),
+        title: Text(_collection?.plainTitle ?? l10n.collectionFallback),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -181,7 +180,7 @@ class _CollectionDetailScreenState
       itemBuilder: (context, index) {
         final cn = validNotes[index];
         final note = _notesMap[cn.noteId]!;
-        final title = note.plainTitle ?? 'Untitled'; // TODO(localization): 'Untitled' fallback should use l10n key
+        final title = note.plainTitle ?? l10n.untitled;
 
         return Dismissible(
           key: ValueKey(cn.noteId),

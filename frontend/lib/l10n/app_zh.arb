@@ -1,5 +1,4 @@
 {
-  "@@locale": "zh",
 
   "appTitle": "AnyNote",
 
@@ -950,45 +949,286 @@
   "monthsAgo": "{count}个月前",
 
   "menuFile": "文件",
+
   "menuNewNote": "新建笔记",
+
   "menuSave": "保存",
+
   "menuImport": "导入...",
+
   "menuExport": "导出...",
+
   "menuCloseTab": "关闭标签页",
+
   "menuEdit": "编辑",
+
   "menuUndo": "撤销",
+
   "menuRedo": "重做",
+
   "menuCut": "剪切",
+
   "menuCopy": "复制",
+
   "menuPaste": "粘贴",
+
   "menuSelectAll": "全选",
+
   "menuFind": "查找...",
+
   "menuView": "视图",
+
   "menuToggleSidebar": "切换侧边栏",
+
   "menuTogglePreview": "切换预览",
+
   "menuZenMode": "专注模式",
+
   "menuFullScreen": "进入全屏",
+
   "menuExitFullScreen": "退出全屏",
+
   "menuHelp": "帮助",
+
   "menuAbout": "关于 AnyNote",
+
   "menuKeyboardShortcuts": "键盘快捷键",
+
   "aboutDialogTitle": "关于 AnyNote",
+
   "aboutDescription": "本地优先、隐私优先的端到端加密笔记应用。",
+
   "aboutVersion": "版本 {version}",
+
   "shortcutsDialogTitle": "键盘快捷键",
+
   "shortcutNewNote": "新建笔记",
+
   "shortcutSave": "保存",
+
   "shortcutSearch": "搜索",
+
   "shortcutToggleSidebar": "切换侧边栏",
+
   "shortcutExportPdf": "导出为 PDF",
+
   "shortcutSettings": "打开设置",
+
   "shortcutCloseNote": "关闭笔记",
+
   "shortcutNextNote": "下一条笔记",
+
   "shortcutFullScreen": "切换全屏",
+
   "shortcutExitZen": "退出专注模式 / 关闭对话框",
 
   "notesTabLabel": "笔记",
+
   "composeTabLabel": "创作",
+
   "publishTabLabel": "发布",
-  "settingsTabLabel": "设置"
+
+  "settingsTabLabel": "设置",
+
+  "versionSemanticLabel": "版本 {versionNumber}，{title}，{date}{currentSuffix}",
+
+  "currentSuffix": "，当前",
+
+  "noteTitleLabel": "笔记标题：{title}",
+
+  "updatedDate": "更新于 {date}",
+
+  "confirmDeleteNoteDialog": "确认删除笔记对话框",
+
+  "expiryImmediately": "已过期",
+
+  "expiryLessThanOneHour": "不到1小时后",
+
+  "expiryInHours": "{count}小时后",
+
+  "expiryInDays": "{count}天后",
+
+  "compositionSemanticLabel": "作品：{title}。{time}{platformSuffix}",
+
+  "platformSuffix": "。平台：{platform}",
+
+  "platformGeneric": "通用",
+
+  "platformXhs": "小红书",
+
+  "platformTwitter": "Twitter",
+
+  "platformBlog": "博客",
+
+  "platformLinkedin": "LinkedIn",
+
+  "noteClusters": "笔记聚类",
+
+  "clusteringNotes": "正在聚类您的笔记...",
+
+  "analyzingNotes": "AI正在分析{count}条关于\"{topic}\"的笔记",
+
+  "foundThemesSelect": "AI发现了{count}个主题，请选择要包含的主题。",
+
+  "notesCount": "{count}条笔记",
+
+  "clustersSelected": "已选择{count}个聚类",
+
+  "generateOutline": "生成大纲",
+
+  "editorTitle": "编辑器",
+
+  "adaptStyleFor": "为{platform}调整风格",
+
+  "saveNoteTooltip": "保存为笔记",
+
+  "aiWriting": "AI正在撰写...",
+
+  "charsCount": "{count}字符",
+
+  "compositionHint": "您的作品将显示在此处...",
+
+  "outlineButton": "大纲",
+
+  "wordsCount": "{count}词",
+
+  "viewAction": "查看",
+
+  "failedToSaveNote": "保存笔记失败",
+
+  "outlineTitle": "大纲",
+
+  "editTitleTooltip": "编辑标题",
+
+  "generatingOutline": "正在生成大纲...",
+
+  "buildingStructureFromClusters": "正在从{count}个聚类构建结构",
+
+  "noOutlineGenerated": "未生成大纲。",
+
+  "sectionsDragToReorder": "{count}个章节 -- 拖动以重新排序",
+
+  "keyPoints": "要点：",
+
+  "fromCluster": "来自聚类 {number}",
+
+  "expandToDraft": "展开为草稿",
+
+  "editTitle": "编辑标题",
+
+  "loginScreenLabel": "AnyNote登录界面",
+
+  "errorLabel": "错误：{message}",
+
+  "registrationScreenLabel": "AnyNote注册界面",
+
+  "keyDerivationFailed": "密钥派生失败，请重试。",
+
+  "demoSecretNote": "我的秘密笔记...",
+
+  "importFailed": "导入失败：{error}",
+
+  "selectNoteToView": "选择一条笔记以查看",
+
+  "collectionFallback": "集合",
+
+  "unknown": "未知",
+
+  "freePlan": "免费",
+
+  "importMarkdownDesc": "导入带有可选YAML前置信息的Markdown（.md）文件。支持的前置信息字段：标题、日期和标签。如果未指定，将使用文件名作为标题。",
+
+  "sourceHeader": "来源",
+
+  "selectFiles": "选择文件",
+
+  "selectMdFilesSubtitle": "选择一个或多个.md文件",
+
+  "selectFolder": "选择文件夹",
+
+  "importMdFolderSubtitle": "从文件夹导入所有.md文件",
+
+  "selectMdFilesTitle": "选择Markdown文件",
+
+  "noMdFilesSelected": "未选择.md文件。",
+
+  "selectMdFolderTitle": "选择包含Markdown文件的文件夹",
+
+  "appleNotesExportHeader": "Apple备忘录导出",
+
+  "appleNotesImportDesc": "导入从Apple备忘录应用导出的笔记。选择一个包含从Apple备忘录导出的HTML文件的文件夹（每个文件对应一条笔记）。基本格式（粗体、斜体、标题、列表）将被转换为Markdown。",
+
+  "selectAppleNotesFolderSubtitle": "选择包含Apple备忘录HTML文件的文件夹",
+
+  "selectAppleNotesFolderTitle": "选择Apple备忘录导出文件夹",
+
+  "plainTextFilesHeader": "纯文本文件",
+
+  "plainTextImportDesc": "导入纯文本（.txt）文件作为笔记。每个文件的第一行将成为笔记标题（如果少于100个字符），否则使用文件名作为标题。",
+
+  "selectTxtFilesSubtitle": "选择一个或多个.txt文件",
+
+  "importTxtFolderSubtitle": "从文件夹导入所有.txt文件",
+
+  "selectTextFilesTitle": "选择文本文件",
+
+  "noTxtFilesSelected": "未选择.txt文件。",
+
+  "selectTextFolderTitle": "选择包含文本文件的文件夹",
+
+  "fileCount": "{count}个文件",
+
+  "andMoreErrors": "...以及另外{count}个错误",
+
+  "stepFile": "文件",
+
+  "stepVerify": "验证",
+
+  "stepPreview": "预览",
+
+  "stepStrategy": "策略",
+
+  "stepRestore": "恢复",
+
+  "decryptFailed": "无法解密共享笔记，链接可能已损坏或过期。",
+
+  "decryptingSharedNote": "正在解密共享笔记...",
+
+  "couldNotDecryptSharedNote": "无法解密共享笔记",
+
+  "linkCorruptedExpired": "链接可能已损坏、过期或不完整。",
+
+  "passwordRequiredTitle": "需要密码",
+
+  "enterPasswordToView": "输入密码以查看此共享笔记。",
+
+  "unlock": "解锁",
+
+  "sharedViaLink": "通过链接共享",
+
+  "sharedNote": "共享笔记",
+
+  "platformSemanticLabel": "平台：{name}{subtitleSuffix}{selectedSuffix}",
+
+  "publishedSemanticLabel": "已发布：{title}。平台：{platform}。状态：{status}{dateSuffix}",
+
+  "openInBrowser": "在浏览器中打开已发布文章",
+
+  "statusLabel": "状态：{status}",
+
+  "selectedLabel": "已选择",
+
+  "dateRangeFormat": "{start} - {end}",
+
+  "builtInTab": "内置",
+
+  "myTemplatesTab": "我的模板",
+
+  "deleteTemplateConfirm": "删除模板？",
+
+  "deleteTemplateMessage": "删除\"{name}\"？此操作无法撤销。",
+
+  "templateNameLabel": "模板名称",
+
+  "templateDateHint": "使用 [date] 插入当前日期"
 }

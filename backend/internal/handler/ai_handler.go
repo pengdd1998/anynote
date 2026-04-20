@@ -20,18 +20,18 @@ type AIHandler struct {
 func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	var req domain.AIProxyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
 
 	if len(req.Messages) == 0 {
-		writeError(w, http.StatusBadRequest, "validation_error", "Messages are required")
+		writeError(w, r, http.StatusBadRequest, "validation_error", "Messages are required")
 		return
 	}
 
@@ -54,21 +54,21 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "ai_error", "AI proxy failed")
+		writeError(w, r, http.StatusInternalServerError, "ai_error", "AI proxy failed")
 		return
 	}
 
 	if req.Stream {
 		h.handleStream(w, r, chunkCh)
 	} else {
-		h.handleNonStream(w, chunkCh)
+		h.handleNonStream(w, r, chunkCh)
 	}
 }
 
 func (h *AIHandler) handleStream(w http.ResponseWriter, r *http.Request, chunkCh <-chan domain.StreamChunk) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		writeError(w, http.StatusInternalServerError, "streaming_not_supported", "")
+		writeError(w, r, http.StatusInternalServerError, "streaming_not_supported", "")
 		return
 	}
 
@@ -102,11 +102,11 @@ func (h *AIHandler) handleStream(w http.ResponseWriter, r *http.Request, chunkCh
 	flusher.Flush()
 }
 
-func (h *AIHandler) handleNonStream(w http.ResponseWriter, chunkCh <-chan domain.StreamChunk) {
+func (h *AIHandler) handleNonStream(w http.ResponseWriter, r *http.Request, chunkCh <-chan domain.StreamChunk) {
 	var fullContent string
 	for chunk := range chunkCh {
 		if chunk.Error != "" {
-			writeError(w, http.StatusInternalServerError, "ai_error", chunk.Error)
+			writeError(w, r, http.StatusInternalServerError, "ai_error", chunk.Error)
 			return
 		}
 		fullContent += chunk.Content
@@ -122,8 +122,8 @@ func (h *AIHandler) handleNonStream(w http.ResponseWriter, chunkCh <-chan domain
 }
 
 const (
-	maxTokensFree      = 4096
-	maxTokensPro       = 16384
+	maxTokensFree = 4096
+	maxTokensPro  = 16384
 )
 
 // maxTokensCap returns the server-side max_tokens cap for the user's plan.
@@ -145,13 +145,13 @@ func (h *AIHandler) maxTokensCap(ctx context.Context, uid uuid.UUID) int {
 func (h *AIHandler) GetQuota(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	quota, err := h.quotaSvc.GetQuota(r.Context(), parseUUID(userID))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "quota_error", "Failed to get quota")
+		writeError(w, r, http.StatusInternalServerError, "quota_error", "Failed to get quota")
 		return
 	}
 

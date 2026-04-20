@@ -174,7 +174,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          // TODO(localization): 'Failed to react' fallback should use l10n key
           content: Text(
             AppLocalizations.of(context)?.reactionFailed ?? 'Failed to react',
           ),

@@ -121,8 +121,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          // TODO(localization): Error message should use l10n key
-          _error = 'Failed to decrypt the shared note. The link may be corrupted or expired.';
+          _error = 'decrypt_failed';
           _isDecrypting = false;
         });
       }
@@ -165,8 +164,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          // TODO(localization): Error message should use l10n key
-          _error = 'Incorrect password. Please try again.';
+          _error = 'incorrect_password';
           _isDecrypting = false;
         });
       }
@@ -186,16 +184,25 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
     );
   }
 
+  /// Resolve the internal error sentinel to a localized user-facing string.
+  String _resolveError(AppLocalizations l10n) {
+    return switch (_error) {
+      'decrypt_failed' => l10n.decryptFailed,
+      'incorrect_password' => l10n.incorrectPassword,
+      _ => _error ?? l10n.couldNotDecryptSharedNote,
+    };
+  }
+
   Widget _buildBody(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     if (_isDecrypting) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            // TODO(localization): 'Decrypting shared note...' should use l10n key
-            Text('Decrypting shared note...'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(l10n.decryptingSharedNote),
           ],
         ),
       );
@@ -214,6 +221,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
   }
 
   Widget _buildErrorState(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -223,15 +231,13 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
             Icon(Icons.link_off, size: 64, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(
-              // TODO(localization): Fallback 'Could not decrypt...' should use l10n key
-              _error ?? 'Could not decrypt the shared note',
+              _resolveError(l10n),
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              // TODO(localization): This error detail should use l10n key
-              'The link may be corrupted, expired, or incomplete.',
+              l10n.linkCorruptedExpired,
               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -242,6 +248,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
   }
 
   Widget _buildPasswordInput(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -250,14 +257,12 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
           Icon(Icons.lock_outline, size: 64, color: theme.colorScheme.primary),
           const SizedBox(height: 16),
           Text(
-            // TODO(localization): 'Password Required' should use l10n key
-            'Password Required',
+            l10n.passwordRequiredTitle,
             style: theme.textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            // TODO(localization): This instruction should use l10n key
-            'Enter the password to view this shared note.',
+            l10n.enterPasswordToView,
             style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             textAlign: TextAlign.center,
           ),
@@ -265,11 +270,10 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
           TextField(
             controller: _passwordController,
             decoration: InputDecoration(
-              // TODO(localization): 'Password' label should use l10n.password
-              labelText: 'Password',
+              labelText: l10n.password,
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.lock_outline),
-              errorText: _error,
+              errorText: _error != null ? _resolveError(l10n) : null,
             ),
             obscureText: true,
             autofocus: true,
@@ -286,8 +290,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  // TODO(localization): 'Unlock' button text should use l10n key
-                  : const Text('Unlock'),
+                  : Text(l10n.unlock),
             ),
           ),
         ],
@@ -296,6 +299,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
   }
 
   Widget _buildDecryptedNote(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     final note = _decryptedNote!;
 
     return SingleChildScrollView(
@@ -322,10 +326,9 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
               ),
               const SizedBox(width: 4),
               Text(
-                // TODO(localization): 'Shared via link' / 'Shared note' should use l10n keys
                 _isServerShare == true
-                    ? 'Shared via link'
-                    : 'Shared note',
+                    ? l10n.sharedViaLink
+                    : l10n.sharedNote,
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
               ),
             ],

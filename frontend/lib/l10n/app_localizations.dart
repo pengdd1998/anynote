@@ -65,7 +65,7 @@ import 'app_localizations_zh.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -88,18 +88,18 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
     Locale('ja'),
     Locale('ko'),
-    Locale('zh')
+    Locale('zh'),
   ];
 
   /// Application name displayed in the app bar and title
@@ -3191,6 +3191,630 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settingsTabLabel;
+
+  /// Accessibility label for a version history item
+  ///
+  /// In en, this message translates to:
+  /// **'Version {versionNumber}, {title}, {date}{currentSuffix}'**
+  String versionSemanticLabel(
+    int versionNumber,
+    String title,
+    String date,
+    String currentSuffix,
+  );
+
+  /// Appended to version semantic label for the current version
+  ///
+  /// In en, this message translates to:
+  /// **', current'**
+  String get currentSuffix;
+
+  /// Semantic label prefix for note title
+  ///
+  /// In en, this message translates to:
+  /// **'Note title: {title}'**
+  String noteTitleLabel(String title);
+
+  /// Label showing when a note was last updated
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {date}'**
+  String updatedDate(String date);
+
+  /// Semantic label for the delete confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm delete note dialog'**
+  String get confirmDeleteNoteDialog;
+
+  /// Share link expiry: already expired
+  ///
+  /// In en, this message translates to:
+  /// **'immediately'**
+  String get expiryImmediately;
+
+  /// Share link expiry: less than one hour remaining
+  ///
+  /// In en, this message translates to:
+  /// **'in less than 1 hour'**
+  String get expiryLessThanOneHour;
+
+  /// Share link expiry: hours remaining
+  ///
+  /// In en, this message translates to:
+  /// **'in {count} hours'**
+  String expiryInHours(int count);
+
+  /// Share link expiry: days remaining with pluralization
+  ///
+  /// In en, this message translates to:
+  /// **'in {count} day{count, plural, =1{} other{s}}'**
+  String expiryInDays(int count);
+
+  /// Accessibility label for a composition card
+  ///
+  /// In en, this message translates to:
+  /// **'Composition: {title}. {time}{platformSuffix}'**
+  String compositionSemanticLabel(
+    String title,
+    String time,
+    String platformSuffix,
+  );
+
+  /// Appended to composition semantic label when platform is set
+  ///
+  /// In en, this message translates to:
+  /// **'. Platform: {platform}'**
+  String platformSuffix(String platform);
+
+  /// Display name for generic platform in compose
+  ///
+  /// In en, this message translates to:
+  /// **'Generic'**
+  String get platformGeneric;
+
+  /// Display name for XHS (Xiaohongshu) platform
+  ///
+  /// In en, this message translates to:
+  /// **'XHS'**
+  String get platformXhs;
+
+  /// Display name for Twitter platform
+  ///
+  /// In en, this message translates to:
+  /// **'Twitter'**
+  String get platformTwitter;
+
+  /// Display name for Blog platform
+  ///
+  /// In en, this message translates to:
+  /// **'Blog'**
+  String get platformBlog;
+
+  /// Display name for LinkedIn platform
+  ///
+  /// In en, this message translates to:
+  /// **'LinkedIn'**
+  String get platformLinkedin;
+
+  /// Title of the note clustering screen
+  ///
+  /// In en, this message translates to:
+  /// **'Note Clusters'**
+  String get noteClusters;
+
+  /// Loading message while AI clusters notes
+  ///
+  /// In en, this message translates to:
+  /// **'Clustering your notes...'**
+  String get clusteringNotes;
+
+  /// Sub-status during note clustering
+  ///
+  /// In en, this message translates to:
+  /// **'AI is analyzing {count} notes about \"{topic}\"'**
+  String analyzingNotes(int count, String topic);
+
+  /// Info header after clustering completes
+  ///
+  /// In en, this message translates to:
+  /// **'AI found {count} themes. Select the ones to include.'**
+  String foundThemesSelect(int count);
+
+  /// Number of notes in a cluster
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes'**
+  String notesCount(int count);
+
+  /// Number of selected clusters
+  ///
+  /// In en, this message translates to:
+  /// **'{count} clusters selected'**
+  String clustersSelected(int count);
+
+  /// Button to generate outline from selected clusters
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Outline'**
+  String get generateOutline;
+
+  /// Title of the compose editor screen
+  ///
+  /// In en, this message translates to:
+  /// **'Editor'**
+  String get editorTitle;
+
+  /// Tooltip for style adaptation button
+  ///
+  /// In en, this message translates to:
+  /// **'Adapt style for {platform}'**
+  String adaptStyleFor(String platform);
+
+  /// Tooltip for the save button in compose editor
+  ///
+  /// In en, this message translates to:
+  /// **'Save as note'**
+  String get saveNoteTooltip;
+
+  /// Streaming indicator while AI generates content
+  ///
+  /// In en, this message translates to:
+  /// **'AI is writing...'**
+  String get aiWriting;
+
+  /// Character count display
+  ///
+  /// In en, this message translates to:
+  /// **'{count} chars'**
+  String charsCount(int count);
+
+  /// Hint text in empty compose editor
+  ///
+  /// In en, this message translates to:
+  /// **'Your composition will appear here...'**
+  String get compositionHint;
+
+  /// Button label to go back to outline view
+  ///
+  /// In en, this message translates to:
+  /// **'Outline'**
+  String get outlineButton;
+
+  /// Word count display
+  ///
+  /// In en, this message translates to:
+  /// **'{count} words'**
+  String wordsCount(int count);
+
+  /// SnackBar action to view a saved note
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get viewAction;
+
+  /// Error message when saving a note fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save note'**
+  String get failedToSaveNote;
+
+  /// Title of the outline screen
+  ///
+  /// In en, this message translates to:
+  /// **'Outline'**
+  String get outlineTitle;
+
+  /// Tooltip for the edit title button in outline screen
+  ///
+  /// In en, this message translates to:
+  /// **'Edit title'**
+  String get editTitleTooltip;
+
+  /// Loading message while AI generates outline
+  ///
+  /// In en, this message translates to:
+  /// **'Generating outline...'**
+  String get generatingOutline;
+
+  /// Sub-status during outline generation
+  ///
+  /// In en, this message translates to:
+  /// **'Building structure from {count} clusters'**
+  String buildingStructureFromClusters(int count);
+
+  /// Message when outline generation produced nothing
+  ///
+  /// In en, this message translates to:
+  /// **'No outline generated.'**
+  String get noOutlineGenerated;
+
+  /// Section count with reorder hint
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sections -- drag to reorder'**
+  String sectionsDragToReorder(int count);
+
+  /// Label before the list of key points in an outline section
+  ///
+  /// In en, this message translates to:
+  /// **'Key Points:'**
+  String get keyPoints;
+
+  /// Source cluster label in outline section
+  ///
+  /// In en, this message translates to:
+  /// **'From cluster {number}'**
+  String fromCluster(int number);
+
+  /// Button to expand outline into full draft
+  ///
+  /// In en, this message translates to:
+  /// **'Expand to Draft'**
+  String get expandToDraft;
+
+  /// Dialog title for editing the outline title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Title'**
+  String get editTitle;
+
+  /// Semantic label for the login screen icon
+  ///
+  /// In en, this message translates to:
+  /// **'AnyNote login screen'**
+  String get loginScreenLabel;
+
+  /// Semantic label prefix for error messages
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String errorLabel(String message);
+
+  /// Semantic label for the registration screen icon
+  ///
+  /// In en, this message translates to:
+  /// **'AnyNote registration screen'**
+  String get registrationScreenLabel;
+
+  /// Error when crypto key derivation fails during registration
+  ///
+  /// In en, this message translates to:
+  /// **'Key derivation failed. Please try again.'**
+  String get keyDerivationFailed;
+
+  /// Animated demo text in onboarding page 3
+  ///
+  /// In en, this message translates to:
+  /// **'My secret note...'**
+  String get demoSecretNote;
+
+  /// Error message when note import fails
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}'**
+  String importFailed(String error);
+
+  /// Placeholder text in tablet layout detail pane
+  ///
+  /// In en, this message translates to:
+  /// **'Select a note to view'**
+  String get selectNoteToView;
+
+  /// Fallback title when collection has no plain title
+  ///
+  /// In en, this message translates to:
+  /// **'Collection'**
+  String get collectionFallback;
+
+  /// Fallback value for unknown data
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// Free plan display name
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get freePlan;
+
+  /// Description of the Markdown import format
+  ///
+  /// In en, this message translates to:
+  /// **'Import Markdown (.md) files with optional YAML frontmatter. Supported frontmatter fields: title, date, and tags. Falls back to filename for the title if none is specified.'**
+  String get importMarkdownDesc;
+
+  /// Section header for the import source picker
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get sourceHeader;
+
+  /// Button to select files for import
+  ///
+  /// In en, this message translates to:
+  /// **'Select Files'**
+  String get selectFiles;
+
+  /// Subtitle for the Markdown file picker button
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one or more .md files'**
+  String get selectMdFilesSubtitle;
+
+  /// Button to select a folder for import
+  ///
+  /// In en, this message translates to:
+  /// **'Select Folder'**
+  String get selectFolder;
+
+  /// Subtitle for the Markdown folder picker button
+  ///
+  /// In en, this message translates to:
+  /// **'Import all .md files from a folder'**
+  String get importMdFolderSubtitle;
+
+  /// File picker dialog title for Markdown files
+  ///
+  /// In en, this message translates to:
+  /// **'Select Markdown Files'**
+  String get selectMdFilesTitle;
+
+  /// SnackBar when no valid Markdown files were chosen
+  ///
+  /// In en, this message translates to:
+  /// **'No .md files selected.'**
+  String get noMdFilesSelected;
+
+  /// Folder picker dialog title for Markdown import
+  ///
+  /// In en, this message translates to:
+  /// **'Select Folder with Markdown Files'**
+  String get selectMdFolderTitle;
+
+  /// Section header for Apple Notes import
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Notes Export'**
+  String get appleNotesExportHeader;
+
+  /// Description of the Apple Notes import format
+  ///
+  /// In en, this message translates to:
+  /// **'Import notes exported from the Apple Notes app. Select a folder containing HTML files exported from Apple Notes (one file per note). Basic formatting (bold, italic, headings, lists) will be converted to Markdown.'**
+  String get appleNotesImportDesc;
+
+  /// Subtitle for the Apple Notes folder picker
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a folder with Apple Notes HTML files'**
+  String get selectAppleNotesFolderSubtitle;
+
+  /// Folder picker dialog title for Apple Notes import
+  ///
+  /// In en, this message translates to:
+  /// **'Select Apple Notes Export Folder'**
+  String get selectAppleNotesFolderTitle;
+
+  /// Section header for plain text import
+  ///
+  /// In en, this message translates to:
+  /// **'Plain Text Files'**
+  String get plainTextFilesHeader;
+
+  /// Description of the plain text import format
+  ///
+  /// In en, this message translates to:
+  /// **'Import plain text (.txt) files as notes. The first line of each file becomes the note title (if shorter than 100 characters); otherwise the filename is used as the title.'**
+  String get plainTextImportDesc;
+
+  /// Subtitle for the text file picker button
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one or more .txt files'**
+  String get selectTxtFilesSubtitle;
+
+  /// Subtitle for the text folder picker button
+  ///
+  /// In en, this message translates to:
+  /// **'Import all .txt files from a folder'**
+  String get importTxtFolderSubtitle;
+
+  /// File picker dialog title for text files
+  ///
+  /// In en, this message translates to:
+  /// **'Select Text Files'**
+  String get selectTextFilesTitle;
+
+  /// SnackBar when no valid text files were chosen
+  ///
+  /// In en, this message translates to:
+  /// **'No .txt files selected.'**
+  String get noTxtFilesSelected;
+
+  /// Folder picker dialog title for text import
+  ///
+  /// In en, this message translates to:
+  /// **'Select Folder with Text Files'**
+  String get selectTextFolderTitle;
+
+  /// Import result: number of files skipped with pluralization
+  ///
+  /// In en, this message translates to:
+  /// **'{count} file{count, plural, =1{} other{s}}'**
+  String fileCount(int count);
+
+  /// Truncated error list suffix
+  ///
+  /// In en, this message translates to:
+  /// **'... and {count} more errors'**
+  String andMoreErrors(int count);
+
+  /// Step label in restore flow: select file
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get stepFile;
+
+  /// Step label in restore flow: verify backup
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get stepVerify;
+
+  /// Step label in restore flow: preview contents
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get stepPreview;
+
+  /// Step label in restore flow: choose restore strategy
+  ///
+  /// In en, this message translates to:
+  /// **'Strategy'**
+  String get stepStrategy;
+
+  /// Step label in restore flow: execute restore
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get stepRestore;
+
+  /// Error when shared note decryption fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to decrypt the shared note. The link may be corrupted or expired.'**
+  String get decryptFailed;
+
+  /// Loading message while decrypting a shared note
+  ///
+  /// In en, this message translates to:
+  /// **'Decrypting shared note...'**
+  String get decryptingSharedNote;
+
+  /// Fallback error title for decryption failure
+  ///
+  /// In en, this message translates to:
+  /// **'Could not decrypt the shared note'**
+  String get couldNotDecryptSharedNote;
+
+  /// Error detail explaining why decryption failed
+  ///
+  /// In en, this message translates to:
+  /// **'The link may be corrupted, expired, or incomplete.'**
+  String get linkCorruptedExpired;
+
+  /// Title of the password input section for protected shares
+  ///
+  /// In en, this message translates to:
+  /// **'Password Required'**
+  String get passwordRequiredTitle;
+
+  /// Instruction text above the password field for shared notes
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the password to view this shared note.'**
+  String get enterPasswordToView;
+
+  /// Button to decrypt a password-protected shared note
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlock;
+
+  /// Label for server-shared notes
+  ///
+  /// In en, this message translates to:
+  /// **'Shared via link'**
+  String get sharedViaLink;
+
+  /// Label for self-contained shared notes
+  ///
+  /// In en, this message translates to:
+  /// **'Shared note'**
+  String get sharedNote;
+
+  /// Semantic label for a platform card in publish screen
+  ///
+  /// In en, this message translates to:
+  /// **'Platform: {name}{subtitleSuffix}{selectedSuffix}'**
+  String platformSemanticLabel(
+    String name,
+    String subtitleSuffix,
+    String selectedSuffix,
+  );
+
+  /// Semantic label for a publish history item
+  ///
+  /// In en, this message translates to:
+  /// **'Published: {title}. Platform: {platform}. Status: {status}{dateSuffix}'**
+  String publishedSemanticLabel(
+    String title,
+    String platform,
+    String status,
+    String dateSuffix,
+  );
+
+  /// Semantic label for the open-in-browser button
+  ///
+  /// In en, this message translates to:
+  /// **'Open published article in browser'**
+  String get openInBrowser;
+
+  /// Semantic label for status chip
+  ///
+  /// In en, this message translates to:
+  /// **'Status: {status}'**
+  String statusLabel(String status);
+
+  /// Semantic indicator that an item is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get selectedLabel;
+
+  /// Date range display format
+  ///
+  /// In en, this message translates to:
+  /// **'{start} - {end}'**
+  String dateRangeFormat(String start, String end);
+
+  /// Tab label for built-in templates
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in'**
+  String get builtInTab;
+
+  /// Tab label for user-created templates
+  ///
+  /// In en, this message translates to:
+  /// **'My Templates'**
+  String get myTemplatesTab;
+
+  /// Dialog title for template deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Delete template?'**
+  String get deleteTemplateConfirm;
+
+  /// Dialog body for template deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? This cannot be undone.'**
+  String deleteTemplateMessage(String name);
+
+  /// Label for the template name text field
+  ///
+  /// In en, this message translates to:
+  /// **'Template name'**
+  String get templateNameLabel;
+
+  /// Hint for the template content text field
+  ///
+  /// In en, this message translates to:
+  /// **'Use [date] for current date'**
+  String get templateDateHint;
 }
 
 class _AppLocalizationsDelegate
@@ -3224,8 +3848,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

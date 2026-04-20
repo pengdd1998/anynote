@@ -289,8 +289,8 @@ func TestLLMConfigHandler_Create_MissingFields(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 

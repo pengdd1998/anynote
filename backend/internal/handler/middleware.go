@@ -39,13 +39,13 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				writeError(w, http.StatusUnauthorized, "missing_authorization", "Authorization header required")
+				writeError(w, r, http.StatusUnauthorized, "missing_authorization", "Authorization header required")
 				return
 			}
 
 			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 			if tokenStr == authHeader {
-				writeError(w, http.StatusUnauthorized, "invalid_authorization", "Bearer token required")
+				writeError(w, r, http.StatusUnauthorized, "invalid_authorization", "Bearer token required")
 				return
 			}
 
@@ -57,26 +57,26 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 			})
 
 			if err != nil || !token.Valid {
-				writeError(w, http.StatusUnauthorized, "invalid_token", "Token is invalid or expired")
+				writeError(w, r, http.StatusUnauthorized, "invalid_token", "Token is invalid or expired")
 				return
 			}
 
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
-				writeError(w, http.StatusUnauthorized, "invalid_claims", "Invalid token claims")
+				writeError(w, r, http.StatusUnauthorized, "invalid_claims", "Invalid token claims")
 				return
 			}
 
 			userID, ok := claims["user_id"].(string)
 			if !ok {
-				writeError(w, http.StatusUnauthorized, "invalid_claims", "user_id not found in token")
+				writeError(w, r, http.StatusUnauthorized, "invalid_claims", "user_id not found in token")
 				return
 			}
 
 			// Reject refresh tokens used for API access.
 			tokenType, _ := claims["token_type"].(string)
 			if tokenType != "access" {
-				writeError(w, http.StatusUnauthorized, "invalid_token_type", "Access token required")
+				writeError(w, r, http.StatusUnauthorized, "invalid_token_type", "Access token required")
 				return
 			}
 

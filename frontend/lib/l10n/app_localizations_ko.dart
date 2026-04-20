@@ -1680,4 +1680,380 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsTabLabel => '설정';
+
+  @override
+  String versionSemanticLabel(
+    int versionNumber,
+    String title,
+    String date,
+    String currentSuffix,
+  ) {
+    return '버전 $versionNumber, $title, $date$currentSuffix';
+  }
+
+  @override
+  String get currentSuffix => ', 현재';
+
+  @override
+  String noteTitleLabel(String title) {
+    return '메모 제목: $title';
+  }
+
+  @override
+  String updatedDate(String date) {
+    return '$date에 업데이트됨';
+  }
+
+  @override
+  String get confirmDeleteNoteDialog => '메모 삭제 확인 대화상자';
+
+  @override
+  String get expiryImmediately => '즉시';
+
+  @override
+  String get expiryLessThanOneHour => '1시간 이내';
+
+  @override
+  String expiryInHours(int count) {
+    return '$count시간 후';
+  }
+
+  @override
+  String expiryInDays(int count) {
+    return '$count일 후';
+  }
+
+  @override
+  String compositionSemanticLabel(
+    String title,
+    String time,
+    String platformSuffix,
+  ) {
+    return '작성물: $title. $time$platformSuffix';
+  }
+
+  @override
+  String platformSuffix(String platform) {
+    return '. 플랫폼: $platform';
+  }
+
+  @override
+  String get platformGeneric => '일반';
+
+  @override
+  String get platformXhs => '샤오홍슈';
+
+  @override
+  String get platformTwitter => 'Twitter';
+
+  @override
+  String get platformBlog => '블로그';
+
+  @override
+  String get platformLinkedin => 'LinkedIn';
+
+  @override
+  String get noteClusters => '메모 클러스터';
+
+  @override
+  String get clusteringNotes => '메모를 클러스터링하는 중...';
+
+  @override
+  String analyzingNotes(int count, String topic) {
+    return 'AI가 \"$topic\"에 대한 $count개의 메모를 분석 중이에요';
+  }
+
+  @override
+  String foundThemesSelect(int count) {
+    return 'AI가 $count개의 테마를 찾았어요. 포함할 테마를 선택해주세요.';
+  }
+
+  @override
+  String notesCount(int count) {
+    return '$count개 메모';
+  }
+
+  @override
+  String clustersSelected(int count) {
+    return '$count개 클러스터 선택됨';
+  }
+
+  @override
+  String get generateOutline => '개요 생성';
+
+  @override
+  String get editorTitle => '편집기';
+
+  @override
+  String adaptStyleFor(String platform) {
+    return '$platform에 맞게 스타일 조정';
+  }
+
+  @override
+  String get saveNoteTooltip => '메모로 저장';
+
+  @override
+  String get aiWriting => 'AI가 작성 중...';
+
+  @override
+  String charsCount(int count) {
+    return '$count자';
+  }
+
+  @override
+  String get compositionHint => '작성물이 여기에 표시됩니다...';
+
+  @override
+  String get outlineButton => '개요';
+
+  @override
+  String wordsCount(int count) {
+    return '$count단어';
+  }
+
+  @override
+  String get viewAction => '보기';
+
+  @override
+  String get failedToSaveNote => '메모 저장 실패';
+
+  @override
+  String get outlineTitle => '개요';
+
+  @override
+  String get editTitleTooltip => '제목 편집';
+
+  @override
+  String get generatingOutline => '개요 생성 중...';
+
+  @override
+  String buildingStructureFromClusters(int count) {
+    return '$count개 클러스터에서 구조를 구축하는 중';
+  }
+
+  @override
+  String get noOutlineGenerated => '개요가 생성되지 않았어요.';
+
+  @override
+  String sectionsDragToReorder(int count) {
+    return '$count개 섹션 -- 드래그하여 재정렬';
+  }
+
+  @override
+  String get keyPoints => '핵심 포인트:';
+
+  @override
+  String fromCluster(int number) {
+    return '클러스터 $number에서';
+  }
+
+  @override
+  String get expandToDraft => '초안으로 확장';
+
+  @override
+  String get editTitle => '제목 편집';
+
+  @override
+  String get loginScreenLabel => 'AnyNote 로그인 화면';
+
+  @override
+  String errorLabel(String message) {
+    return '오류: $message';
+  }
+
+  @override
+  String get registrationScreenLabel => 'AnyNote 가입 화면';
+
+  @override
+  String get keyDerivationFailed => '키 파생에 실패했어요. 다시 시도해주세요.';
+
+  @override
+  String get demoSecretNote => '나의 비밀 메모...';
+
+  @override
+  String importFailed(String error) {
+    return '가져오기 실패: $error';
+  }
+
+  @override
+  String get selectNoteToView => '메모를 선택하여 보기';
+
+  @override
+  String get collectionFallback => '컬렉션';
+
+  @override
+  String get unknown => '알 수 없음';
+
+  @override
+  String get freePlan => '무료';
+
+  @override
+  String get importMarkdownDesc =>
+      '선택적 YAML 프론트매터가 포함된 Markdown(.md) 파일을 가져옵니다. 지원되는 프론트매터 필드: 제목, 날짜, 태그입니다. 지정하지 않으면 파일 이름이 제목으로 사용됩니다.';
+
+  @override
+  String get sourceHeader => '소스';
+
+  @override
+  String get selectFiles => '파일 선택';
+
+  @override
+  String get selectMdFilesSubtitle => '.md 파일을 하나 이상 선택';
+
+  @override
+  String get selectFolder => '폴더 선택';
+
+  @override
+  String get importMdFolderSubtitle => '폴더의 모든 .md 파일 가져오기';
+
+  @override
+  String get selectMdFilesTitle => 'Markdown 파일 선택';
+
+  @override
+  String get noMdFilesSelected => '선택된 .md 파일이 없어요.';
+
+  @override
+  String get selectMdFolderTitle => 'Markdown 파일이 있는 폴더 선택';
+
+  @override
+  String get appleNotesExportHeader => 'Apple 메모 내보내기';
+
+  @override
+  String get appleNotesImportDesc =>
+      'Apple 메모 앱에서 내보낸 메모를 가져옵니다. Apple 메모에서 내보낸 HTML 파일(메모당 하나)이 포함된 폴더를 선택하세요. 기본 서식(굵게, 기울임, 제목, 목록)이 Markdown으로 변환됩니다.';
+
+  @override
+  String get selectAppleNotesFolderSubtitle => 'Apple 메모 HTML 파일이 있는 폴더 선택';
+
+  @override
+  String get selectAppleNotesFolderTitle => 'Apple 메모 내보내기 폴더 선택';
+
+  @override
+  String get plainTextFilesHeader => '일반 텍스트 파일';
+
+  @override
+  String get plainTextImportDesc =>
+      '일반 텍스트(.txt) 파일을 메모로 가져옵니다. 각 파일의 첫 번째 줄이 메모 제목이 됩니다(100자 미만인 경우). 그렇지 않으면 파일 이름이 제목으로 사용됩니다.';
+
+  @override
+  String get selectTxtFilesSubtitle => '.txt 파일을 하나 이상 선택';
+
+  @override
+  String get importTxtFolderSubtitle => '폴더의 모든 .txt 파일 가져오기';
+
+  @override
+  String get selectTextFilesTitle => '텍스트 파일 선택';
+
+  @override
+  String get noTxtFilesSelected => '선택된 .txt 파일이 없어요.';
+
+  @override
+  String get selectTextFolderTitle => '텍스트 파일이 있는 폴더 선택';
+
+  @override
+  String fileCount(int count) {
+    return '$count개 파일';
+  }
+
+  @override
+  String andMoreErrors(int count) {
+    return '...외 $count개 오류';
+  }
+
+  @override
+  String get stepFile => '파일';
+
+  @override
+  String get stepVerify => '확인';
+
+  @override
+  String get stepPreview => '미리보기';
+
+  @override
+  String get stepStrategy => '방식';
+
+  @override
+  String get stepRestore => '복원';
+
+  @override
+  String get decryptFailed => '공유 메모 복호화에 실패했어요. 링크가 손상되었거나 만료되었을 수 있어요.';
+
+  @override
+  String get decryptingSharedNote => '공유 메모 복호화 중...';
+
+  @override
+  String get couldNotDecryptSharedNote => '공유 메모를 복호화할 수 없어요';
+
+  @override
+  String get linkCorruptedExpired => '링크가 손상되었거나, 만료되었거나, 불완전할 수 있어요.';
+
+  @override
+  String get passwordRequiredTitle => '비밀번호 필요';
+
+  @override
+  String get enterPasswordToView => '이 공유 메모를 보려면 비밀번호를 입력하세요.';
+
+  @override
+  String get unlock => '잠금 해제';
+
+  @override
+  String get sharedViaLink => '링크로 공유됨';
+
+  @override
+  String get sharedNote => '공유 메모';
+
+  @override
+  String platformSemanticLabel(
+    String name,
+    String subtitleSuffix,
+    String selectedSuffix,
+  ) {
+    return '플랫폼: $name$subtitleSuffix$selectedSuffix';
+  }
+
+  @override
+  String publishedSemanticLabel(
+    String title,
+    String platform,
+    String status,
+    String dateSuffix,
+  ) {
+    return '게시됨: $title. 플랫폼: $platform. 상태: $status$dateSuffix';
+  }
+
+  @override
+  String get openInBrowser => '브라우저에서 게시된 글 열기';
+
+  @override
+  String statusLabel(String status) {
+    return '상태: $status';
+  }
+
+  @override
+  String get selectedLabel => '선택됨';
+
+  @override
+  String dateRangeFormat(String start, String end) {
+    return '$start - $end';
+  }
+
+  @override
+  String get builtInTab => '기본 제공';
+
+  @override
+  String get myTemplatesTab => '내 템플릿';
+
+  @override
+  String get deleteTemplateConfirm => '템플릿을 삭제할까요?';
+
+  @override
+  String deleteTemplateMessage(String name) {
+    return '\"$name\"을(를) 삭제할까요? 이 작업은 되돌릴 수 없어요.';
+  }
+
+  @override
+  String get templateNameLabel => '템플릿 이름';
+
+  @override
+  String get templateDateHint => '[date]를 사용하여 현재 날짜 삽입';
 }

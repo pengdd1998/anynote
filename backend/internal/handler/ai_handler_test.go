@@ -265,8 +265,8 @@ func TestAIHandler_Proxy_NoMessages(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -545,10 +545,10 @@ func TestAIHandler_Proxy_NonStream_ErrorChunk(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&errResp); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
-	if errResp.Error != "ai_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "ai_error")
+	if errResp.Error.Code != "ai_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "ai_error")
 	}
-	if errResp.Message != "model overloaded" {
-		t.Errorf("error message = %q, want %q", errResp.Message, "model overloaded")
+	if errResp.Error.Message != "model overloaded" {
+		t.Errorf("error message = %q, want %q", errResp.Error.Message, "model overloaded")
 	}
 }

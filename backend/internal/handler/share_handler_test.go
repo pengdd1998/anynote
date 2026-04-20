@@ -173,8 +173,8 @@ func TestShareHandler_CreateShare_InvalidBody(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "invalid_request" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "invalid_request")
+	if errResp.Error.Code != "invalid_request" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "invalid_request")
 	}
 }
 
@@ -201,8 +201,8 @@ func TestShareHandler_CreateShare_MissingEncryptedContent(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -229,8 +229,8 @@ func TestShareHandler_CreateShare_MissingShareKeyHash(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "validation_error" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "validation_error")
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
 	}
 }
 
@@ -325,8 +325,8 @@ func TestShareHandler_GetShare_NotFound(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "not_found" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "not_found")
+	if errResp.Error.Code != "not_found" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "not_found")
 	}
 }
 
@@ -350,8 +350,8 @@ func TestShareHandler_GetShare_Expired(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "expired" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "expired")
+	if errResp.Error.Code != "expired" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "expired")
 	}
 }
 
@@ -375,8 +375,8 @@ func TestShareHandler_GetShare_MaxViewsReached(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "max_views" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "max_views")
+	if errResp.Error.Code != "max_views" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "max_views")
 	}
 }
 
@@ -640,8 +640,8 @@ func TestShareHandler_ToggleReaction_InvalidReactionType(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp.Error != "invalid_reaction" {
-		t.Errorf("error type = %q, want %q", errResp.Error, "invalid_reaction")
+	if errResp.Error.Code != "invalid_reaction" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "invalid_reaction")
 	}
 }
 

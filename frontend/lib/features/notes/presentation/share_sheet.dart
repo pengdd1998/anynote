@@ -320,12 +320,11 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
   }
 
   String _formatExpiry(DateTime expiresAt) {
+    final l10n = AppLocalizations.of(context)!;
     final remaining = expiresAt.difference(DateTime.now().toUtc());
-    // TODO(localization): All expiry format strings below should use l10n keys with pluralization
-    if (remaining.isNegative) return 'immediately';
-    if (remaining.inHours < 1) return 'in less than 1 hour';
-    if (remaining.inHours < 24) return 'in ${remaining.inHours} hours';
-    final days = remaining.inDays;
-    return 'in $days day${days != 1 ? 's' : ''}';
+    if (remaining.isNegative) return l10n.expiryImmediately;
+    if (remaining.inHours < 1) return l10n.expiryLessThanOneHour;
+    if (remaining.inHours < 24) return l10n.expiryInHours(remaining.inHours);
+    return l10n.expiryInDays(remaining.inDays);
   }
 }

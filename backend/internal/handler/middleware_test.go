@@ -10,6 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi/v5/middleware"
+
+	"github.com/anynote/backend/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -37,13 +40,13 @@ func TestAuthMiddlewareValidToken(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	middleware := AuthMiddleware(secret)(next)
+	mw := AuthMiddleware(secret)(next)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+tokenStr)
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 
 	if !called {
 		t.Error("next handler should be called")
@@ -60,12 +63,12 @@ func TestAuthMiddlewareMissingToken(t *testing.T) {
 		t.Error("next should not be called without token")
 	})
 
-	middleware := AuthMiddleware(secret)(next)
+	mw := AuthMiddleware(secret)(next)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("expected 401, got %d", rec.Code)
@@ -79,13 +82,13 @@ func TestAuthMiddlewareInvalidToken(t *testing.T) {
 		t.Error("next should not be called with invalid token")
 	})
 
-	middleware := AuthMiddleware(secret)(next)
+	mw := AuthMiddleware(secret)(next)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Bearer invalid-token")
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("expected 401, got %d", rec.Code)
@@ -99,22 +102,22 @@ func TestAuthMiddleware_NoBearerPrefix(t *testing.T) {
 		t.Error("next should not be called without Bearer prefix")
 	})
 
-	middleware := AuthMiddleware(secret)(next)
+	mw := AuthMiddleware(secret)(next)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Basic dXNlcjpwYXNz")
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("expected 401, got %d", rec.Code)
 	}
 
-	var errResp map[string]interface{}
+	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp["error"] != "invalid_authorization" {
-		t.Errorf("error = %v, want invalid_authorization", errResp["error"])
+	if errResp.Error.Code != "invalid_authorization" {
+		t.Errorf("error code = %q, want invalid_authorization", errResp.Error.Code)
 	}
 }
 
@@ -135,22 +138,22 @@ func TestAuthMiddleware_TokenMissingUserID(t *testing.T) {
 		t.Error("next should not be called when user_id is missing from claims")
 	})
 
-	middleware := AuthMiddleware(secret)(next)
+	mw := AuthMiddleware(secret)(next)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+tokenStr)
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("expected 401, got %d", rec.Code)
 	}
 
-	var errResp map[string]interface{}
+	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp["error"] != "invalid_claims" {
-		t.Errorf("error = %v, want invalid_claims", errResp["error"])
+	if errResp.Error.Code != "invalid_claims" {
+		t.Errorf("error code = %q, want invalid_claims", errResp.Error.Code)
 	}
 }
 
@@ -171,13 +174,13 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 		t.Error("next should not be called with expired token")
 	})
 
-	middleware := AuthMiddleware(secret)(next)
+	mw := AuthMiddleware(secret)(next)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+tokenStr)
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("expected 401, got %d", rec.Code)
@@ -203,22 +206,22 @@ func TestAuthMiddleware_RefreshTokenRejected(t *testing.T) {
 		t.Error("next should not be called with refresh token")
 	})
 
-	middleware := AuthMiddleware(secret)(next)
+	mw := AuthMiddleware(secret)(next)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+tokenStr)
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("expected 401, got %d", rec.Code)
 	}
 
-	var errResp map[string]interface{}
+	var errResp domain.ErrorResponse
 	json.NewDecoder(rec.Body).Decode(&errResp)
-	if errResp["error"] != "invalid_token_type" {
-		t.Errorf("error = %v, want invalid_token_type", errResp["error"])
+	if errResp.Error.Code != "invalid_token_type" {
+		t.Errorf("error code = %q, want invalid_token_type", errResp.Error.Code)
 	}
 }
 
@@ -235,13 +238,13 @@ func TestMaxBodySize_AllowsWithinLimit(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	middleware := MaxBodySize(limit)(next)
+	mw := MaxBodySize(limit)(next)
 
 	body := bytes.NewBufferString(strings.Repeat("a", 512))
 	req := httptest.NewRequest("POST", "/test", body)
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d", rec.Code)
@@ -263,13 +266,13 @@ func TestMaxBodySize_RejectsOverLimit(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	middleware := MaxBodySize(limit)(next)
+	mw := MaxBodySize(limit)(next)
 
 	body := bytes.NewBufferString(strings.Repeat("a", 2048))
 	req := httptest.NewRequest("POST", "/test", body)
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 }
 
 func TestMaxBodySize_ExactlyAtLimit(t *testing.T) {
@@ -285,13 +288,13 @@ func TestMaxBodySize_ExactlyAtLimit(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	middleware := MaxBodySize(limit)(next)
+	mw := MaxBodySize(limit)(next)
 
 	body := bytes.NewBufferString(strings.Repeat("a", 1024))
 	req := httptest.NewRequest("POST", "/test", body)
 	rec := httptest.NewRecorder()
 
-	middleware.ServeHTTP(rec, req)
+	mw.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d", rec.Code)
@@ -310,5 +313,108 @@ func TestMaxBodySize_Constants(t *testing.T) {
 	}
 	if SyncPushMaxBodyBytes <= DefaultMaxBodyBytes {
 		t.Error("SyncPushMaxBodyBytes should be larger than DefaultMaxBodyBytes")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: RequestLogger
+// ---------------------------------------------------------------------------
+
+func TestRequestLogger_SetsRequestIDHeader(t *testing.T) {
+	called := false
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusOK)
+	})
+
+	handler := middleware.RequestID(RequestLogger(next))
+
+	req := httptest.NewRequest("GET", "/api/v1/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if !called {
+		t.Error("next handler should be called")
+	}
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", rec.Code)
+	}
+
+	// Verify X-Request-ID header is set in the response.
+	reqID := rec.Header().Get("X-Request-ID")
+	if reqID == "" {
+		t.Error("X-Request-ID response header should be set")
+	}
+}
+
+func TestRequestLogger_SkipsHealthEndpoints(t *testing.T) {
+	skippedPaths := []string{"/health", "/ready", "/metrics"}
+	for _, path := range skippedPaths {
+		t.Run(path, func(t *testing.T) {
+			called := false
+			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				called = true
+				w.WriteHeader(http.StatusOK)
+			})
+
+			handler := RequestLogger(next)
+
+			req := httptest.NewRequest("GET", path, nil)
+			rec := httptest.NewRecorder()
+
+			handler.ServeHTTP(rec, req)
+
+			if !called {
+				t.Error("next handler should still be called for skipped paths")
+			}
+			// For skipped paths, no X-Request-ID header should be set by RequestLogger
+			// (since the RequestID middleware is separate and may still set it).
+			// The key behavior is that the request is passed through without logging.
+			if rec.Code != http.StatusOK {
+				t.Errorf("expected 200, got %d", rec.Code)
+			}
+		})
+	}
+}
+
+func TestRequestLogger_CapturesStatusCode(t *testing.T) {
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	handler := middleware.RequestID(RequestLogger(next))
+
+	req := httptest.NewRequest("GET", "/api/v1/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", rec.Code)
+	}
+}
+
+func TestRequestLogger_SSEFlush(t *testing.T) {
+	// Verify that the responseWriter properly forwards Flush calls.
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			t.Error("ResponseWriter should implement http.Flusher")
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		flusher.Flush()
+	})
+
+	handler := RequestLogger(next)
+
+	req := httptest.NewRequest("GET", "/api/v1/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", rec.Code)
 	}
 }

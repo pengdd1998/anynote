@@ -311,7 +311,12 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
           final isCurrent = index == 0;
 
           return A11yUtils.semanticCard(
-            label: 'Version ${version.versionNumber}, ${version.title}, ${_formatDate(version.createdAt)}${isCurrent ? ', current' : ''}',
+            label: l10n.versionSemanticLabel(
+              version.versionNumber,
+              version.title,
+              _formatDate(version.createdAt),
+              isCurrent ? l10n.currentSuffix : '',
+            ),
             child: Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: ListTile(

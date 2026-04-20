@@ -136,13 +136,11 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
         ),
 
         // Tabs
-        // TODO(localization): Tab labels 'Built-in' and 'My Templates' should be
-        // localized via .arb files.
         TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Built-in'),
-            Tab(text: 'My Templates'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.builtInTab),
+            Tab(text: AppLocalizations.of(context)!.myTemplatesTab),
           ],
         ),
 
@@ -281,9 +279,8 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        // TODO(localization): Dialog title and body should use l10n strings
-        title: const Text('Delete template?'),
-        content: Text('Delete "${template.name}"? This cannot be undone.'),
+        title: Text(l10n.deleteTemplateConfirm),
+        content: Text(l10n.deleteTemplateMessage(template.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -319,20 +316,18 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
             children: [
               TextField(
                 controller: nameController,
-                // TODO(localization): Label 'Template name' should be localized
-                decoration: const InputDecoration(
-                  labelText: 'Template name',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.templateNameLabel,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: contentController,
-                // TODO(localization): Label 'Content' and hint 'Use {{date}}...' should be localized
-                decoration: const InputDecoration(
-                  labelText: 'Content',
-                  hintText: 'Use {{date}} for current date',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.contentLabel,
+                  hintText: l10n.templateDateHint,
+                  border: const OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
                 maxLines: 8,

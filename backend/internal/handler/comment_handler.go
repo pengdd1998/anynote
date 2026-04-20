@@ -22,30 +22,30 @@ type CommentHandler struct {
 func (h *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	sharedNoteID := chi.URLParam(r, "id")
 	if sharedNoteID == "" {
-		writeError(w, http.StatusBadRequest, "missing_id", "Shared note ID is required")
+		writeError(w, r, http.StatusBadRequest, "missing_id", "Shared note ID is required")
 		return
 	}
 
 	var req domain.CreateCommentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
 
 	if req.EncryptedContent == "" {
-		writeError(w, http.StatusBadRequest, "validation_error", "encrypted_content is required")
+		writeError(w, r, http.StatusBadRequest, "validation_error", "encrypted_content is required")
 		return
 	}
 
 	comment, err := h.commentService.CreateComment(r.Context(), sharedNoteID, parseUUID(userID), req)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "create_error", "Failed to create comment")
+		writeError(w, r, http.StatusInternalServerError, "create_error", "Failed to create comment")
 		return
 	}
 
@@ -57,7 +57,7 @@ func (h *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 func (h *CommentHandler) ListComments(w http.ResponseWriter, r *http.Request) {
 	sharedNoteID := chi.URLParam(r, "id")
 	if sharedNoteID == "" {
-		writeError(w, http.StatusBadRequest, "missing_id", "Shared note ID is required")
+		writeError(w, r, http.StatusBadRequest, "missing_id", "Shared note ID is required")
 		return
 	}
 
@@ -81,7 +81,7 @@ func (h *CommentHandler) ListComments(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.commentService.ListComments(r.Context(), sharedNoteID, limit, offset)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal_error", "Failed to list comments")
+		writeError(w, r, http.StatusInternalServerError, "internal_error", "Failed to list comments")
 		return
 	}
 
@@ -93,26 +93,26 @@ func (h *CommentHandler) ListComments(w http.ResponseWriter, r *http.Request) {
 func (h *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	commentIDStr := chi.URLParam(r, "id")
 	if commentIDStr == "" {
-		writeError(w, http.StatusBadRequest, "missing_id", "Comment ID is required")
+		writeError(w, r, http.StatusBadRequest, "missing_id", "Comment ID is required")
 		return
 	}
 
 	commentID := parseUUID(commentIDStr)
 	if commentID == uuid.Nil {
-		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid comment ID format")
+		writeError(w, r, http.StatusBadRequest, "invalid_id", "Invalid comment ID format")
 		return
 	}
 
 	err := h.commentService.DeleteComment(r.Context(), commentID, parseUUID(userID))
 	if err != nil {
-		if !writeErrorFromSentinel(w, err) {
-			writeError(w, http.StatusInternalServerError, "delete_error", "Failed to delete comment")
+		if !writeErrorFromSentinel(w, r, err) {
+			writeError(w, r, http.StatusInternalServerError, "delete_error", "Failed to delete comment")
 		}
 		return
 	}

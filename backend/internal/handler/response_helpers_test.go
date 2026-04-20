@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/anynote/backend/internal/domain"
 	"github.com/anynote/backend/internal/service"
@@ -36,7 +39,12 @@ func TestWriteJSON(t *testing.T) {
 
 func TestWriteError(t *testing.T) {
 	w := httptest.NewRecorder()
-	writeError(w, http.StatusBadRequest, "test_error", "something went wrong")
+	r := httptest.NewRequest("GET", "/test", nil)
+	// Add chi request ID to context for request_id extraction.
+	ctx := context.WithValue(r.Context(), middleware.RequestIDKey, "test-req-123")
+	r = r.WithContext(ctx)
+
+	writeError(w, r, http.StatusBadRequest, "test_error", "something went wrong")
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("writeError status = %d, want %d", w.Code, http.StatusBadRequest)
@@ -51,21 +59,45 @@ func TestWriteError(t *testing.T) {
 	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
-	if resp.Error != "test_error" {
-		t.Errorf("error = %q, want %q", resp.Error, "test_error")
+	if resp.Error.Code != "test_error" {
+		t.Errorf("error code = %q, want %q", resp.Error.Code, "test_error")
 	}
-	if resp.Message != "something went wrong" {
-		t.Errorf("message = %q, want %q", resp.Message, "something went wrong")
+	if resp.Error.Message != "something went wrong" {
+		t.Errorf("error message = %q, want %q", resp.Error.Message, "something went wrong")
+	}
+	if resp.RequestID != "test-req-123" {
+		t.Errorf("request_id = %q, want %q", resp.RequestID, "test-req-123")
+	}
+}
+
+func TestWriteError_NilRequest(t *testing.T) {
+	w := httptest.NewRecorder()
+	// Passing nil request should not panic; request_id should be empty.
+	writeError(w, nil, http.StatusInternalServerError, "internal_error", "something broke")
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("writeError status = %d, want %d", w.Code, http.StatusInternalServerError)
+	}
+
+	var resp domain.ErrorResponse
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	if resp.Error.Code != "internal_error" {
+		t.Errorf("error code = %q, want %q", resp.Error.Code, "internal_error")
+	}
+	if resp.RequestID != "" {
+		t.Errorf("request_id = %q, want empty string", resp.RequestID)
 	}
 }
 
 func TestWriteErrorFromSentinel(t *testing.T) {
 	tests := []struct {
-		name         string
-		err          error
-		wantStatus   int
-		wantErrType  string
-		wantHandled  bool
+		name        string
+		err         error
+		wantStatus  int
+		wantErrCode string
+		wantHandled bool
 	}{
 		{"email_exists", service.ErrEmailExists, http.StatusConflict, "email_exists", true},
 		{"username_exists", service.ErrUsernameExists, http.StatusConflict, "username_exists", true},
@@ -81,7 +113,8 @@ func TestWriteErrorFromSentinel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			handled := writeErrorFromSentinel(w, tt.err)
+			r := httptest.NewRequest("GET", "/test", nil)
+			handled := writeErrorFromSentinel(w, r, tt.err)
 
 			if handled != tt.wantHandled {
 				t.Errorf("handled = %v, want %v", handled, tt.wantHandled)
@@ -96,8 +129,8 @@ func TestWriteErrorFromSentinel(t *testing.T) {
 				if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
 					t.Fatalf("failed to decode response: %v", err)
 				}
-				if resp.Error != tt.wantErrType {
-					t.Errorf("error = %q, want %q", resp.Error, tt.wantErrType)
+				if resp.Error.Code != tt.wantErrCode {
+					t.Errorf("error code = %q, want %q", resp.Error.Code, tt.wantErrCode)
 				}
 			}
 		})

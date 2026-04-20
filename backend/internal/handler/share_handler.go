@@ -20,29 +20,29 @@ type ShareHandler struct {
 func (h *ShareHandler) CreateShare(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	var req domain.CreateShareRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
 
 	if req.EncryptedContent == "" || req.EncryptedTitle == "" {
-		writeError(w, http.StatusBadRequest, "validation_error", "encrypted_content and encrypted_title are required")
+		writeError(w, r, http.StatusBadRequest, "validation_error", "encrypted_content and encrypted_title are required")
 		return
 	}
 
 	if req.ShareKeyHash == "" {
-		writeError(w, http.StatusBadRequest, "validation_error", "share_key_hash is required")
+		writeError(w, r, http.StatusBadRequest, "validation_error", "share_key_hash is required")
 		return
 	}
 
 	resp, err := h.shareService.CreateShare(r.Context(), parseUUID(userID), req)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "create_error", "Failed to create shared note")
+		writeError(w, r, http.StatusInternalServerError, "create_error", "Failed to create shared note")
 		return
 	}
 
@@ -54,7 +54,7 @@ func (h *ShareHandler) CreateShare(w http.ResponseWriter, r *http.Request) {
 func (h *ShareHandler) GetShare(w http.ResponseWriter, r *http.Request) {
 	shareID := chi.URLParam(r, "id")
 	if shareID == "" {
-		writeError(w, http.StatusBadRequest, "missing_id", "Share ID is required")
+		writeError(w, r, http.StatusBadRequest, "missing_id", "Share ID is required")
 		return
 	}
 
@@ -62,13 +62,13 @@ func (h *ShareHandler) GetShare(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case service.ErrShareNotFound:
-			writeError(w, http.StatusNotFound, "not_found", "Shared note not found")
+			writeError(w, r, http.StatusNotFound, "not_found", "Shared note not found")
 		case service.ErrShareExpired:
-			writeError(w, http.StatusGone, "expired", "Shared note has expired")
+			writeError(w, r, http.StatusGone, "expired", "Shared note has expired")
 		case service.ErrShareMaxViews:
-			writeError(w, http.StatusGone, "max_views", "Shared note has reached maximum views")
+			writeError(w, r, http.StatusGone, "max_views", "Shared note has reached maximum views")
 		default:
-			writeError(w, http.StatusInternalServerError, "internal_error", "Failed to retrieve shared note")
+			writeError(w, r, http.StatusInternalServerError, "internal_error", "Failed to retrieve shared note")
 		}
 		return
 	}
@@ -95,7 +95,7 @@ func (h *ShareHandler) DiscoverFeed(w http.ResponseWriter, r *http.Request) {
 
 	items, err := h.shareService.DiscoverFeed(r.Context(), limit, offset)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal_error", "Failed to fetch discovery feed")
+		writeError(w, r, http.StatusInternalServerError, "internal_error", "Failed to fetch discovery feed")
 		return
 	}
 
@@ -111,19 +111,19 @@ func (h *ShareHandler) DiscoverFeed(w http.ResponseWriter, r *http.Request) {
 func (h *ShareHandler) ToggleReaction(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
 	if userID == "" {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "")
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
 	shareID := chi.URLParam(r, "id")
 	if shareID == "" {
-		writeError(w, http.StatusBadRequest, "missing_id", "Share ID is required")
+		writeError(w, r, http.StatusBadRequest, "missing_id", "Share ID is required")
 		return
 	}
 
 	var req domain.ReactRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
 
@@ -131,11 +131,11 @@ func (h *ShareHandler) ToggleReaction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case service.ErrShareNotFound:
-			writeError(w, http.StatusNotFound, "not_found", "Shared note not found")
+			writeError(w, r, http.StatusNotFound, "not_found", "Shared note not found")
 		case service.ErrInvalidReaction:
-			writeError(w, http.StatusBadRequest, "invalid_reaction", "reaction_type must be 'heart' or 'bookmark'")
+			writeError(w, r, http.StatusBadRequest, "invalid_reaction", "reaction_type must be 'heart' or 'bookmark'")
 		default:
-			writeError(w, http.StatusInternalServerError, "internal_error", "Failed to toggle reaction")
+			writeError(w, r, http.StatusInternalServerError, "internal_error", "Failed to toggle reaction")
 		}
 		return
 	}

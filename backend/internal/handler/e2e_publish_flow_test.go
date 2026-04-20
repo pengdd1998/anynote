@@ -462,7 +462,7 @@ func TestE2EPublishFlow_PublishError(t *testing.T) {
 
 	var errResp domain.ErrorResponse
 	json.NewDecoder(resp.Body).Decode(&errResp)
-	if errResp.Error != "publish_error" {
-		t.Errorf("error = %q, want %q", errResp.Error, "publish_error")
+	if errResp.Error.Code != "publish_error" {
+		t.Errorf("error = %q, want %q", errResp.Error.Code, "publish_error")
 	}
 }
