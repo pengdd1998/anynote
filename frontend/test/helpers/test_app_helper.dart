@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/open.dart';
 import 'package:sqlite3/sqlite3.dart';
 
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+
 import 'package:anynote/core/crypto/crypto_service.dart';
 import 'package:anynote/core/error/connectivity_provider.dart';
 import 'package:anynote/core/sync/sync_engine.dart';
@@ -161,7 +163,10 @@ Future<TestAppHandle> pumpScreen(
         builder: (context) {
           container = ProviderScope.containerOf(context);
           return MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: [
+              ...AppLocalizations.localizationsDelegates,
+              quill.FlutterQuillLocalizations.delegate,
+            ],
             supportedLocales: AppLocalizations.supportedLocales,
             locale: const Locale('en'),
             home: screen,

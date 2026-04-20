@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -17,8 +18,8 @@ type PushPayload struct {
 }
 
 // PushService handles sending push notifications.
-// In production, this would integrate with FCM (Android) and APNs (iOS).
-// For now, implements the interface with logging.
+// When an FCMClient is provided, notifications are delivered via Firebase Cloud Messaging.
+// When FCMClient is nil, the service operates in log-only mode.
 type PushService interface {
 	// SendPush sends a notification to a specific user's devices.
 	SendPush(ctx context.Context, userID string, payload PushPayload) error
@@ -26,6 +27,23 @@ type PushService interface {
 	RegisterDevice(ctx context.Context, userID string, token string, platform string) error
 	// UnregisterDevice removes a device token.
 	UnregisterDevice(ctx context.Context, token string) error
+}
+
+// FCMClient abstracts Firebase Cloud Messaging for testability.
+// Implementations wrap the firebase.google.com/go/v4/messaging.Client.
+type FCMClient interface {
+	// Send delivers a message to FCM and returns the message ID on success.
+	Send(ctx context.Context, message *FCMMessage) (string, error)
+}
+
+// FCMMessage represents a push notification message sent to a single device token.
+// This is a clean domain type that avoids importing the Firebase SDK in the service layer.
+type FCMMessage struct {
+	Token     string                 // Device registration token
+	Title     string                 // Notification title
+	Body      string                 // Notification body
+	Data      map[string]string      // Arbitrary key-value data payload
+	Priority  string                 // "high" or "normal"
 }
 
 // DeviceTokenRepository defines persistence operations for device tokens.
@@ -46,12 +64,13 @@ type DeviceTokenEntry struct {
 
 type pushService struct {
 	repo DeviceTokenRepository
+	fcm  FCMClient // nil means log-only mode
 }
 
 // NewPushService creates a new push notification service.
-// In production, FCM/APNs clients would be injected here.
-func NewPushService(repo DeviceTokenRepository) PushService {
-	return &pushService{repo: repo}
+// Pass a nil FCMClient to operate in log-only mode (no actual push delivery).
+func NewPushService(repo DeviceTokenRepository, fcm FCMClient) PushService {
+	return &pushService{repo: repo, fcm: fcm}
 }
 
 func (s *pushService) SendPush(ctx context.Context, userID string, payload PushPayload) error {
@@ -66,16 +85,65 @@ func (s *pushService) SendPush(ctx context.Context, userID string, payload PushP
 		return nil
 	}
 
-	// In production, this would dispatch to FCM/APNs clients.
-	// For now, log the notification for each device.
+	// When no FCM client is configured, fall back to log-only mode.
+	if s.fcm == nil {
+		for _, device := range devices {
+			slog.Info("push notification (log-only)",
+				"user_id", userID,
+				"device_id", device.ID.String(),
+				"platform", device.Platform,
+				"title", payload.Title,
+				"body", payload.Body,
+				"priority", payload.Priority,
+			)
+		}
+		return nil
+	}
+
+	// Deliver via FCM for each registered device.
 	for _, device := range devices {
-		slog.Info("push notification",
+		data := convertDataToStringMap(payload.Data)
+		msg := &FCMMessage{
+			Token:    device.Token,
+			Title:    payload.Title,
+			Body:     payload.Body,
+			Data:     data,
+			Priority: payload.Priority,
+		}
+
+		_, err := s.fcm.Send(ctx, msg)
+		if err != nil {
+			if isUnregisteredError(err) {
+				// Stale token: remove from database and continue.
+				slog.Warn("removing stale device token",
+					"token_prefix", tokenPrefix(device.Token),
+					"user_id", userID,
+					"error", err,
+				)
+				if delErr := s.repo.DeleteByToken(ctx, device.Token); delErr != nil {
+					slog.Error("failed to delete stale token",
+						"token_prefix", tokenPrefix(device.Token),
+						"error", delErr,
+					)
+				}
+				continue
+			}
+
+			// Log non-fatal errors for individual devices but do not abort
+			// the entire batch -- other devices may still be reachable.
+			slog.Error("failed to send push notification",
+				"user_id", userID,
+				"device_id", device.ID.String(),
+				"token_prefix", tokenPrefix(device.Token),
+				"error", err,
+			)
+			continue
+		}
+
+		slog.Debug("push notification sent",
 			"user_id", userID,
 			"device_id", device.ID.String(),
 			"platform", device.Platform,
-			"title", payload.Title,
-			"body", payload.Body,
-			"priority", payload.Priority,
 		)
 	}
 
@@ -112,4 +180,31 @@ func tokenPrefix(token string) string {
 		return token[:8] + "..."
 	}
 	return token
+}
+
+// convertDataToStringMap converts a map[string]interface{} to map[string]string
+// for the FCM data payload. Each value is formatted via fmt.Sprint.
+func convertDataToStringMap(in map[string]interface{}) map[string]string {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = fmt.Sprint(v)
+	}
+	return out
+}
+
+// isUnregisteredError checks whether the FCM error indicates an unregistered
+// device token (e.g. "UNREGISTERED" or "invalid-registration-token").
+// This handles both the firebase.google.com/go/v4/messaging error type
+// (when wrapped) and string-matching as a safe fallback.
+func isUnregisteredError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "UNREGISTERED") ||
+		strings.Contains(msg, "invalid-registration-token") ||
+		strings.Contains(msg, "NotRegistered")
 }

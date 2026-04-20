@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/accessibility/a11y_utils.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -249,7 +250,9 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+              ExcludeSemantics(
+                child: Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.failedToLoadVersions,
@@ -277,7 +280,9 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, size: 64, color: Colors.grey.shade300),
+            ExcludeSemantics(
+              child: Icon(Icons.history, size: 64, color: Colors.grey.shade300),
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.noVersionsYet,
@@ -305,7 +310,9 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
           final version = _versions[index];
           final isCurrent = index == 0;
 
-          return Card(
+          return A11yUtils.semanticCard(
+            label: 'Version ${version.versionNumber}, ${version.title}, ${_formatDate(version.createdAt)}${isCurrent ? ', current' : ''}',
+            child: Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: ListTile(
               leading: CircleAvatar(
@@ -358,8 +365,9 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                         ),
                       ),
                     )
-                  : const Icon(Icons.chevron_right),
+                  : const ExcludeSemantics(child: Icon(Icons.chevron_right)),
               onTap: () => _showVersionPreview(version),
+            ),
             ),
           );
         },

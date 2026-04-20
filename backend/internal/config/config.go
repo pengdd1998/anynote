@@ -18,6 +18,7 @@ type Config struct {
 	LLM      LLMConfig      `yaml:"llm"`
 	Chrome   ChromeConfig   `yaml:"chrome"`
 	Log      LogConfig      `yaml:"log"`
+	Firebase FirebaseConfig `yaml:"firebase"`
 }
 
 // MinIOConfig defaults — Bucket defaults to "anynote" when empty.
@@ -83,6 +84,11 @@ type LLMProviderConfig struct {
 
 type ChromeConfig struct {
 	WSURL string `yaml:"ws_url"`
+}
+
+// FirebaseConfig holds Firebase Cloud Messaging credentials.
+type FirebaseConfig struct {
+	CredentialsFile string `yaml:"credentials_file"` // Path to Firebase service account JSON
 }
 
 // Load reads config from file and environment variables.
@@ -185,6 +191,9 @@ func (c *Config) applyEnvOverrides() {
 	}
 	if v := os.Getenv("LOG_FORMAT"); v != "" {
 		c.Log.Format = v
+	}
+	if v := os.Getenv("FIREBASE_CREDENTIALS_FILE"); v != "" {
+		c.Firebase.CredentialsFile = v
 	}
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/accessibility/a11y_utils.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -24,27 +25,41 @@ class NoteDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(
-            icon: const Icon(Icons.visibility_outlined),
-            tooltip: l10n.markdownPreview,
-            onPressed: () => context.push('/notes/$noteId/preview'),
+          A11yUtils.labeledButton(
+            label: l10n.markdownPreview,
+            child: IconButton(
+              icon: const Icon(Icons.visibility_outlined),
+              tooltip: l10n.markdownPreview,
+              onPressed: () => context.push('/notes/$noteId/preview'),
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: l10n.versionHistory,
-            onPressed: () => context.push('/notes/$noteId/history'),
+          A11yUtils.labeledButton(
+            label: l10n.versionHistory,
+            child: IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: l10n.versionHistory,
+              onPressed: () => context.push('/notes/$noteId/history'),
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: l10n.editNote,
-            onPressed: () => context.push('/notes/$noteId'),
+          A11yUtils.labeledButton(
+            label: l10n.editNote,
+            child: IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: l10n.editNote,
+              onPressed: () => context.push('/notes/$noteId'),
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            tooltip: l10n.deleteNote,
-            onPressed: () => _confirmDelete(context, db),
+          A11yUtils.labeledButton(
+            label: l10n.deleteNote,
+            child: IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: l10n.deleteNote,
+              onPressed: () => _confirmDelete(context, db),
+            ),
           ),
-          PopupMenuButton<String>(
+          A11yUtils.labeledButton(
+            label: l10n.exportOrShare,
+            child: PopupMenuButton<String>(
             icon: const Icon(Icons.share_outlined),
             tooltip: l10n.exportOrShare,
             onSelected: (value) => _onExportSelected(context, ref, value),
@@ -82,6 +97,7 @@ class NoteDetailScreen extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
           ),
         ],
       ),

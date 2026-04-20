@@ -5,6 +5,7 @@ import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -64,13 +65,16 @@ class MarkdownPreviewScreen extends ConsumerWidget {
               if (snapshot.hasData &&
                   snapshot.data != null &&
                   snapshot.data!.plainContent != null) {
-                return IconButton(
-                  icon: const Icon(Icons.share_outlined),
-                  tooltip:
-                      AppLocalizations.of(context)?.shareViaLink ?? 'Share',
-                  onPressed: () {
-                    Share.share(snapshot.data!.plainContent!);
-                  },
+                return A11yUtils.labeledButton(
+                  label: AppLocalizations.of(context)?.shareViaLink ?? 'Share',
+                  child: IconButton(
+                    icon: const Icon(Icons.share_outlined),
+                    tooltip:
+                        AppLocalizations.of(context)?.shareViaLink ?? 'Share',
+                    onPressed: () {
+                      Share.share(snapshot.data!.plainContent!);
+                    },
+                  ),
                 );
               }
               return const SizedBox.shrink();
@@ -96,10 +100,12 @@ class MarkdownPreviewScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.red.shade300,
+                    ExcludeSemantics(
+                      child: Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red.shade300,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -122,10 +128,12 @@ class MarkdownPreviewScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.description_outlined,
-                      size: 48,
-                      color: Colors.grey.shade400,
+                    ExcludeSemantics(
+                      child: Icon(
+                        Icons.description_outlined,
+                        size: 48,
+                        color: Colors.grey.shade400,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(

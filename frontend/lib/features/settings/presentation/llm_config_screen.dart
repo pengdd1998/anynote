@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/error/error.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../l10n/app_localizations.dart';
@@ -97,9 +98,12 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddDialog,
-        child: const Icon(Icons.add),
+      floatingActionButton: A11yUtils.labeledButton(
+        label: l10n.addProvider,
+        child: FloatingActionButton(
+          onPressed: _showAddDialog,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -131,10 +135,13 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: nameCtrl,
-                  decoration:
-                      InputDecoration(labelText: l10n.name),
+                A11yUtils.labeledTextField(
+                  label: l10n.name,
+                  child: TextField(
+                    controller: nameCtrl,
+                    decoration:
+                        InputDecoration(labelText: l10n.name),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
@@ -153,26 +160,34 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   },
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: urlCtrl,
-                  decoration:
-                      InputDecoration(labelText: l10n.baseUrl),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: keyCtrl,
-                  decoration: InputDecoration(
-                    labelText: l10n.apiKey,
-                    suffixIcon: const Icon(Icons.visibility_off),
+                A11yUtils.labeledTextField(
+                  label: l10n.baseUrl,
+                  child: TextField(
+                    controller: urlCtrl,
+                    decoration:
+                        InputDecoration(labelText: l10n.baseUrl),
                   ),
-                  obscureText: true,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: modelCtrl,
-                  decoration: InputDecoration(
-                    labelText: l10n.model,
-                    hintText: l10n.modelHint,
+                A11yUtils.labeledTextField(
+                  label: l10n.apiKey,
+                  child: TextField(
+                    controller: keyCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.apiKey,
+                      suffixIcon: const ExcludeSemantics(child: Icon(Icons.visibility_off)),
+                    ),
+                    obscureText: true,
+                  ),
+                ),                const SizedBox(height: 12),
+                A11yUtils.labeledTextField(
+                  label: l10n.model,
+                  child: TextField(
+                    controller: modelCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.model,
+                      hintText: l10n.modelHint,
+                    ),
                   ),
                 ),
               ],
@@ -231,32 +246,44 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: nameCtrl,
-                decoration:
-                    InputDecoration(labelText: l10n.name),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: urlCtrl,
-                decoration:
-                    InputDecoration(labelText: l10n.baseUrl),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: keyCtrl,
-                decoration: InputDecoration(
-                  labelText: l10n.newApiKeyHint,
-                  suffixIcon: const Icon(Icons.visibility_off),
+              A11yUtils.labeledTextField(
+                label: l10n.name,
+                child: TextField(
+                  controller: nameCtrl,
+                  decoration:
+                      InputDecoration(labelText: l10n.name),
                 ),
-                obscureText: true,
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: modelCtrl,
-                decoration: InputDecoration(
-                  labelText: l10n.model,
-                  hintText: l10n.modelHint,
+              A11yUtils.labeledTextField(
+                label: l10n.baseUrl,
+                child: TextField(
+                  controller: urlCtrl,
+                  decoration:
+                      InputDecoration(labelText: l10n.baseUrl),
+                ),
+              ),
+              const SizedBox(height: 12),
+              A11yUtils.labeledTextField(
+                label: l10n.newApiKeyHint,
+                child: TextField(
+                  controller: keyCtrl,
+                  decoration: InputDecoration(
+                    labelText: l10n.newApiKeyHint,
+                    suffixIcon: const ExcludeSemantics(child: Icon(Icons.visibility_off)),
+                  ),
+                  obscureText: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              A11yUtils.labeledTextField(
+                label: l10n.model,
+                child: TextField(
+                  controller: modelCtrl,
+                  decoration: InputDecoration(
+                    labelText: l10n.model,
+                    hintText: l10n.modelHint,
+                  ),
                 ),
               ),
             ],
@@ -410,14 +437,20 @@ class _LLMConfigCard extends StatelessWidget {
                   child: Text(l10n.defaultLabel,
                       style: TextStyle(fontSize: 11, color: colorScheme.onPrimaryContainer),),
                 ),
-              IconButton(
-                icon: const Icon(Icons.wifi_tethering_outlined, size: 20),
-                tooltip: l10n.testConnection,
-                onPressed: id.isEmpty ? null : onTest,
+              A11yUtils.labeledButton(
+                label: l10n.testConnection,
+                child: IconButton(
+                  icon: const Icon(Icons.wifi_tethering_outlined, size: 20),
+                  tooltip: l10n.testConnection,
+                  onPressed: id.isEmpty ? null : onTest,
+                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, size: 20),
-                onPressed: id.isEmpty ? null : onDelete,
+              A11yUtils.labeledButton(
+                label: l10n.delete,
+                child: IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 20),
+                  onPressed: id.isEmpty ? null : onDelete,
+                ),
               ),
             ],
           ),

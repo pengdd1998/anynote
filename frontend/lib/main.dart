@@ -216,17 +216,21 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
 
     return AppShortcuts(
       child: AppMenuBar(
-        child: MaterialApp.router(
-          title: 'AnyNote',
-          debugShowCheckedModeBanner: false,
-          showSemanticsDebugger: kDebugMode,
-          theme: AppTheme.lightTheme(),
-          darkTheme: AppTheme.darkTheme(),
-          themeMode: ThemeMode.system,
-          routerConfig: appRouter,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: locale,
+        child: MediaQuery.withClampedTextScaling(
+          minScaleFactor: 0.8,
+          maxScaleFactor: 2.0,
+          child: MaterialApp.router(
+            title: 'AnyNote',
+            debugShowCheckedModeBanner: false,
+            showSemanticsDebugger: kDebugMode,
+            theme: AppTheme.lightTheme(),
+            darkTheme: AppTheme.darkTheme(),
+            themeMode: ThemeMode.system,
+            routerConfig: appRouter,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: locale,
+          ),
         ),
       ),
     );
