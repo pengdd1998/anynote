@@ -18,10 +18,10 @@ enum ExportFormat { markdown, html, plainText }
 /// On web, triggers a browser download via the [web_download] helper (which
 /// creates a Blob and programmatically clicks an anchor element).
 ///
-/// Use [exportAndShare] as the primary entry point -- it handles both platforms
-/// automatically. The individual `exportAs*` / `exportBatch` methods return a
-/// [File] on native but trigger a browser download on web (the returned [File]
-/// is a placeholder on web and should not be used for further I/O).
+/// The individual `exportAs*` / `exportBatch` methods return a [File] on native
+/// but trigger a browser download on web. On web the returned [File] is a
+/// placeholder and should not be used for further I/O. Similarly, [shareFile]
+/// is a no-op on web because the download already happened during export.
 class ExportService {
   /// Sanitize a title so it is safe to use as a filename component.
   static String _sanitizeTitle(String title) {

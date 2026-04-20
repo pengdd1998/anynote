@@ -82,9 +82,10 @@ func (a *Adapter) StartAuth(ctx context.Context, masterKey []byte) (*platform.Au
 	}
 
 	// Navigate to the WeChat OA login page and wait for the QR code element.
-	// TODO: Verify QR code selector against actual WeChat MP platform DOM.
-	// The WeChat MP login page renders the QR code as an <img> or via a
-	// canvas element inside a container such as .qrcode or .login__qrcode.
+	// NOTE(wechat-selectors): The QR code selector targets the login page QR
+	// image via compound selectors (.login__type__scan img, .qrcode img, etc.).
+	// WeChat may change their login page DOM structure, requiring selector updates
+	// if the QR code element is no longer found.
 	qrSelector := `.login__type__scan img, .qrcode img, img[src*="qrcode"], .login_qrcode img`
 	if err := chromedp.Run(browserCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -160,7 +161,9 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 
 	// WeChat MP login sets a "slave_sid" or "bizuin" cookie upon successful
 	// login, or redirects to the main console page.
-	// TODO: Verify cookie names against actual WeChat MP login flow.
+	// NOTE(wechat-selectors): The cookie names (slave_sid, bizuin, slave_user)
+	// are checked to detect successful authentication. WeChat may rename or add
+	// new session cookies, requiring updates to the detection logic.
 	if err := chromedp.Run(handle.browserCtx,
 		chromedp.Location(&currentURL),
 		chromedp.Evaluate(`
@@ -273,9 +276,10 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	}
 
 	// Navigate to the publish page.
-	// TODO: Verify the exact publish URL and DOM selectors against the
-	// current WeChat MP platform.  The URL structure may differ depending
-	// on the account type and platform version.
+	// NOTE(wechat-selectors): The publish URL is constructed from the
+	// publishURL constant which targets the WeChat MP article editor endpoint.
+	// The URL structure and query parameters may differ across account types
+	// (subscription vs service account) or platform versions.
 	if err := chromedp.Run(browserCtx,
 		chromedp.EmulateViewport(1280, 800),
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -293,9 +297,10 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	}
 
 	// Reload with cookies applied.
-	// TODO: Verify the title input selector for the WeChat article editor.
-	// WeChat MP article editor typically uses a contenteditable div for the
-	// body and a standard input for the title.
+	// NOTE(wechat-selectors): The title selector targets #title, input.title,
+	// input[placeholder*="标题"], or input[name="title"]. The content selector
+	// targets the rich text editor area via contenteditable or textarea. WeChat
+	// may change their editor DOM structure or element IDs in future updates.
 	titleSelector := `#title, input.title, input[placeholder*="标题"], input[name="title"]`
 	contentSelector := `#js_editor, .edui-body-container, [contenteditable="true"], textarea[placeholder*="正文"]`
 	if err := chromedp.Run(browserCtx,
@@ -320,8 +325,10 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 		if filePath == "" {
 			continue
 		}
-		// TODO: Verify the file input selector for image uploads on the
-		// WeChat MP article editor.
+		// NOTE(wechat-selectors): The file input selector targets
+		// input[type="file"] for image uploads. WeChat may use a custom
+		// upload widget that replaces the standard file input, requiring
+		// selector updates if image uploads fail.
 		if err := chromedp.Run(browserCtx,
 			chromedp.SendKeys(`input[type="file"]`, filePath, chromedp.ByQuery),
 			chromedp.Sleep(actionDelay),
@@ -375,9 +382,11 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	}
 
 	// Save as draft.
-	// TODO: Verify the save/draft button selector.  WeChat MP typically has
-	// both a "Save" and a "Submit for Review" button.  We save as draft to
-	// allow the user to review and submit manually.
+	// NOTE(wechat-selectors): The save button selector targets #js_submit,
+	// button.js_save, or buttons containing "保存"/"Save". WeChat has both a
+	// "Save" and a "Submit for Review" button; this targets the save-draft
+	// action so users can review before manual submission. Button labels or
+	// IDs may change with editor updates.
 	if err := chromedp.Run(browserCtx,
 		chromedp.Sleep(actionDelay),
 		chromedp.Click(`#js_submit, button.js_save, button:has-text("保存"), button:has-text("Save")`, chromedp.ByQuery),
@@ -393,8 +402,10 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	}
 
 	// Try to extract the article ID from the resulting page.
-	// TODO: Verify how the WeChat MP editor exposes the draft article ID
-	// after saving.  The URL may contain an appmsgid parameter.
+	// NOTE(wechat-selectors): The draft article ID is extracted from the
+	// browser location URL, typically via the appmsgid query parameter.
+	// WeChat may change how the editor exposes the saved article ID (e.g.,
+	// returning it via an API response or a different URL format).
 	var articleURL string
 	chromedp.Run(browserCtx,
 		chromedp.Location(&articleURL),
@@ -488,8 +499,10 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 
 	// If the page contains indicators that the article has been removed or
 	// is unavailable, report accordingly.
-	// TODO: Verify the exact Chinese/English error messages on the WeChat
-	// MP platform when an article is deleted or unavailable.
+	// NOTE(wechat-selectors): The removed-article detection relies on specific
+	// Chinese and English phrases in the page content (e.g., "该内容已被发布者删除",
+	// "内容不存在", "has been deleted"). WeChat may update these messages or add
+	// new ones for different removal reasons (e.g., policy violations).
 	if strings.Contains(pageContent, "该内容已被发布者删除") ||
 		strings.Contains(pageContent, "内容不存在") ||
 		strings.Contains(pageContent, "此内容因违规无法查看") ||

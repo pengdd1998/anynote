@@ -130,6 +130,7 @@ minio_data/
 
 # ── Documentation (local only) ────────────────────────────────
 doc/
+!doc/api.md
 *.md
 !README.md
 
