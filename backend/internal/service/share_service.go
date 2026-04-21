@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -139,13 +140,29 @@ func (s *shareService) ToggleReaction(ctx context.Context, userID uuid.UUID, sha
 		return nil, ErrInvalidReaction
 	}
 
-	// Verify the shared note exists.
-	_, err := s.shareRepo.GetByID(ctx, shareID)
+	resp, err := s.shareRepo.React(ctx, shareID, userID, reactionType)
 	if err != nil {
-		return nil, ErrShareNotFound
+		// Map FK violation (missing share) to a stable sentinel so the
+		// handler layer can return 404 instead of 500.
+		if isFKViolation(err) {
+			return nil, ErrShareNotFound
+		}
+		return nil, err
 	}
+	return resp, nil
+}
 
-	return s.shareRepo.React(ctx, shareID, userID, reactionType)
+// isFKViolation returns true when the error is a PostgreSQL foreign-key
+// violation (SQLSTATE 23503), which indicates the referenced shared note
+// does not exist.
+func isFKViolation(err error) bool {
+	if err == nil {
+		return false
+	}
+	// The pgx error type is checked via its Error method containing the
+	// SQLSTATE code.  We avoid importing pgx in the service layer by
+	// matching the well-known error string pattern.
+	return strings.Contains(err.Error(), "23503")
 }
 
 // generateShareID creates a cryptographically random 32-character hex string.

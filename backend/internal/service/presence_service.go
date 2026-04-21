@@ -243,16 +243,25 @@ func (s *presenceService) SubscribeRoom(ctx context.Context, room string) <-chan
 	sub := s.rdb.Subscribe(ctx, roomChannel(room))
 	go func() {
 		defer close(ch)
+		defer sub.Close()
 		msgCh := sub.Channel()
-		for msg := range msgCh {
-			var wsMsg WSMessage
-			if err := json.Unmarshal([]byte(msg.Payload), &wsMsg); err != nil {
-				continue // skip malformed messages
-			}
+		for {
 			select {
-			case ch <- wsMsg:
-			default:
-				// Drop message if channel is full; prevents slow consumer blocking.
+			case <-ctx.Done():
+				return
+			case msg, ok := <-msgCh:
+				if !ok {
+					return
+				}
+				var wsMsg WSMessage
+				if err := json.Unmarshal([]byte(msg.Payload), &wsMsg); err != nil {
+					continue // skip malformed messages
+				}
+				select {
+				case ch <- wsMsg:
+				default:
+					// Drop message if channel is full; prevents slow consumer blocking.
+				}
 			}
 		}
 	}()

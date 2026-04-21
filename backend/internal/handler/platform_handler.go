@@ -86,6 +86,7 @@ func (h *PlatformHandler) Connect(w http.ResponseWriter, r *http.Request) {
 	pollCtx := r.Context()
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
+	defer h.platformService.CancelAuth(userID, platformName, authRef)
 	timeout := time.After(3 * time.Minute)
 
 	for {

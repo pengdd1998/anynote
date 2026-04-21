@@ -23,13 +23,14 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockPlatformService struct {
-	listFn      func(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error)
-	connectFn   func(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error)
-	disconnectFn func(ctx context.Context, userID uuid.UUID, platformName string) error
-	verifyFn    func(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error)
-	startAuthFn func(ctx context.Context, userID uuid.UUID, platformName string, masterKey []byte) (string, []byte, error)
-	pollAuthFn  func(ctx context.Context, userID uuid.UUID, platformName string, authRef string, masterKey []byte) ([]byte, error)
-	publishFn   func(ctx context.Context, userID uuid.UUID, platformName string, req service.PlatformPublishRequest, masterKey []byte) (*domain.PublishLog, error)
+	listFn        func(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error)
+	connectFn     func(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error)
+	disconnectFn  func(ctx context.Context, userID uuid.UUID, platformName string) error
+	verifyFn      func(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error)
+	startAuthFn   func(ctx context.Context, userID uuid.UUID, platformName string, masterKey []byte) (string, []byte, error)
+	pollAuthFn    func(ctx context.Context, userID uuid.UUID, platformName string, authRef string, masterKey []byte) ([]byte, error)
+	cancelAuthFn  func(userID uuid.UUID, platformName string, authRef string)
+	publishFn     func(ctx context.Context, userID uuid.UUID, platformName string, req service.PlatformPublishRequest, masterKey []byte) (*domain.PublishLog, error)
 	checkStatusFn func(ctx context.Context, userID uuid.UUID, platformName string, platformID string, masterKey []byte) (string, error)
 }
 
@@ -90,6 +91,12 @@ func (m *mockPlatformService) CheckStatus(ctx context.Context, userID uuid.UUID,
 }
 
 func (m *mockPlatformService) Stop() {}
+
+func (m *mockPlatformService) CancelAuth(userID uuid.UUID, platformName string, authRef string) {
+	if m.cancelAuthFn != nil {
+		m.cancelAuthFn(userID, platformName, authRef)
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Router setup helper

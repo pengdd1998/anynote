@@ -31,6 +31,10 @@ type PlatformService interface {
 	// Returns the encrypted auth data on success, or nil while still pending.
 	PollAuth(ctx context.Context, userID uuid.UUID, platformName string, authRef string, masterKey []byte) ([]byte, error)
 
+	// CancelAuth removes an in-memory auth session when the client disconnects
+	// before the authentication flow completes.
+	CancelAuth(userID uuid.UUID, platformName string, authRef string)
+
 	// Publish publishes content to a platform.
 	Publish(ctx context.Context, userID uuid.UUID, platformName string, req PlatformPublishRequest, masterKey []byte) (*domain.PublishLog, error)
 
@@ -108,6 +112,13 @@ func (s *platformService) cleanupExpiredSessions() {
 // Stop signals the background cleanup goroutine to terminate.
 func (s *platformService) Stop() {
 	close(s.stopCh)
+}
+
+// CancelAuth removes an in-memory auth session when the client disconnects
+// before completing the authentication flow.
+func (s *platformService) CancelAuth(userID uuid.UUID, platformName string, authRef string) {
+	sessionKey := authSessionKey(userID, platformName, authRef)
+	s.authSessions.Delete(sessionKey)
 }
 
 func (s *platformService) List(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error) {

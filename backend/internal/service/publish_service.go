@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -111,6 +112,8 @@ func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req Publ
 	// In production, a second push would fire when the worker completes.
 	if s.pushSvc != nil {
 		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
 			payload := PushPayload{
 				Title:    "Publishing Started",
 				Body:     fmt.Sprintf("Publishing to %s: %s", req.Platform, req.Title),
@@ -121,7 +124,7 @@ func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req Publ
 					"publish_log_id": log.ID.String(),
 				},
 			}
-			if err := s.pushSvc.SendPush(context.Background(), userID.String(), payload); err != nil {
+			if err := s.pushSvc.SendPush(ctx, userID.String(), payload); err != nil {
 				slog.Error("failed to send publish push", "user_id", userID.String(), "error", err)
 			}
 		}()

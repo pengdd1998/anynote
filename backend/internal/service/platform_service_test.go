@@ -630,3 +630,38 @@ func TestPlatformService_CheckStatus_UnsupportedPlatform(t *testing.T) {
 		t.Errorf("status = %q, want %q", status, "unknown")
 	}
 }
+
+func TestPlatformService_CancelAuth(t *testing.T) {
+	repo := newMockPlatformConnRepo()
+	registry := platform.NewRegistry()
+	adapter := &mockPlatformAdapter{
+		startAuthFn: func(ctx context.Context, masterKey []byte) (*platform.AuthSession, []byte, error) {
+			return &platform.AuthSession{AuthRef: "cancel-test-ref"}, []byte("qr"), nil
+		},
+	}
+	registry.Register("xiaohongshu", adapter)
+
+	svc := NewPlatformService(repo, registry)
+	userID := uuid.New()
+
+	// Start an auth session so it exists in the authSessions map.
+	authRef, _, err := svc.StartAuth(context.Background(), userID, "xiaohongshu", []byte("key"))
+	if err != nil {
+		t.Fatalf("StartAuth: %v", err)
+	}
+
+	// Verify the session exists by polling.
+	_, err = svc.PollAuth(context.Background(), userID, "xiaohongshu", authRef, []byte("key"))
+	if err != nil {
+		t.Fatalf("PollAuth before cancel: %v", err)
+	}
+
+	// Cancel the auth session.
+	svc.CancelAuth(userID, "xiaohongshu", authRef)
+
+	// PollAuth should now fail since the session was removed.
+	_, err = svc.PollAuth(context.Background(), userID, "xiaohongshu", authRef, []byte("key"))
+	if err == nil {
+		t.Error("expected error after CancelAuth, session should be removed")
+	}
+}

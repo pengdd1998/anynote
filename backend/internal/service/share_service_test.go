@@ -525,9 +525,6 @@ func TestShareService_DiscoverFeed_RepoError(t *testing.T) {
 
 func TestShareService_ToggleReaction_Heart(t *testing.T) {
 	repo := &mockSharedNoteRepo{
-		getByIDFn: func(ctx context.Context, id string) (*domain.SharedNote, error) {
-			return &domain.SharedNote{ID: id}, nil
-		},
 		reactFn: func(ctx context.Context, sharedNoteID string, userID uuid.UUID, reactionType string) (*domain.ReactResponse, error) {
 			return &domain.ReactResponse{ReactionType: "heart", Active: true, Count: 1}, nil
 		},
@@ -550,9 +547,6 @@ func TestShareService_ToggleReaction_Heart(t *testing.T) {
 
 func TestShareService_ToggleReaction_Bookmark(t *testing.T) {
 	repo := &mockSharedNoteRepo{
-		getByIDFn: func(ctx context.Context, id string) (*domain.SharedNote, error) {
-			return &domain.SharedNote{ID: id}, nil
-		},
 		reactFn: func(ctx context.Context, sharedNoteID string, userID uuid.UUID, reactionType string) (*domain.ReactResponse, error) {
 			return &domain.ReactResponse{ReactionType: "bookmark", Active: true, Count: 3}, nil
 		},
@@ -579,10 +573,28 @@ func TestShareService_ToggleReaction_InvalidReactionType(t *testing.T) {
 	}
 }
 
+func TestShareService_ToggleReaction_RepoErrorNotFK(t *testing.T) {
+	repo := &mockSharedNoteRepo{
+		reactFn: func(ctx context.Context, sharedNoteID string, userID uuid.UUID, reactionType string) (*domain.ReactResponse, error) {
+			return nil, errors.New("some other db error")
+		},
+	}
+
+	svc := NewShareService(repo)
+
+	_, err := svc.ToggleReaction(context.Background(), uuid.New(), "share123", "heart")
+	if err == nil {
+		t.Error("expected error from React")
+	}
+	if errors.Is(err, ErrShareNotFound) {
+		t.Errorf("non-FK error should not be mapped to ErrShareNotFound, got: %v", err)
+	}
+}
+
 func TestShareService_ToggleReaction_ShareNotFound(t *testing.T) {
 	repo := &mockSharedNoteRepo{
-		getByIDFn: func(ctx context.Context, id string) (*domain.SharedNote, error) {
-			return nil, errors.New("not found")
+		reactFn: func(ctx context.Context, sharedNoteID string, userID uuid.UUID, reactionType string) (*domain.ReactResponse, error) {
+			return nil, errors.New("foreign key violation: 23503")
 		},
 	}
 

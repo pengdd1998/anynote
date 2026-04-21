@@ -146,6 +146,8 @@ func (s *routerStubPlatformService) CheckStatus(ctx context.Context, userID uuid
 }
 func (s *routerStubPlatformService) Stop() {}
 
+func (s *routerStubPlatformService) CancelAuth(userID uuid.UUID, platformName string, authRef string) {}
+
 // routerStubShareService implements service.ShareService.
 type routerStubShareService struct{}
 

@@ -234,6 +234,54 @@ func TestQuotaService_IncrementUsage_ResetErrorIgnored(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// Tests: Reset cache avoids unnecessary DB writes
+// ---------------------------------------------------------------------------
+
+func TestQuotaService_ResetCache_SkipsDuplicateCalls(t *testing.T) {
+	userID := uuid.New()
+	resetCallCount := 0
+
+	repo := &mockQuotaRepo{
+		resetIfNeededFn: func(ctx context.Context, uid uuid.UUID) error {
+			resetCallCount++
+			return nil
+		},
+		getByUserIDFn: func(ctx context.Context, uid uuid.UUID) (*domain.UserQuota, error) {
+			return &domain.UserQuota{
+				UserID:       userID,
+				Plan:         "free",
+				DailyAILimit: 50,
+				DailyAIUsed:  5,
+				QuotaResetAt: time.Now().Add(24 * time.Hour),
+			}, nil
+		},
+		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) error {
+			return nil
+		},
+	}
+
+	svc := NewQuotaService(repo)
+
+	// First call: cache miss, should hit the repo.
+	_, _ = svc.GetQuota(context.Background(), userID)
+	if resetCallCount != 1 {
+		t.Fatalf("expected 1 ResetIfNeeded call after first GetQuota, got %d", resetCallCount)
+	}
+
+	// Second call: cache hit (same UTC day), should NOT hit the repo.
+	_, _ = svc.GetQuota(context.Background(), userID)
+	if resetCallCount != 1 {
+		t.Errorf("expected ResetIfNeeded to be skipped on second call, but call count = %d", resetCallCount)
+	}
+
+	// IncrementUsage should also skip the repo reset since cache is warm.
+	_ = svc.IncrementUsage(context.Background(), userID)
+	if resetCallCount != 1 {
+		t.Errorf("expected ResetIfNeeded to remain at 1 after IncrementUsage, but call count = %d", resetCallCount)
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Tests: Plan limit constants
 // ---------------------------------------------------------------------------
 
