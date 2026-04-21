@@ -21,6 +21,7 @@ var (
 	ErrUserNotFound       = errors.New("user not found")
 	ErrAccountDeletion    = errors.New("account deletion failed")
 	ErrInvalidTokenType   = errors.New("invalid token type")
+	ErrTokenRevoked       = errors.New("refresh token has been revoked")
 )
 
 type AuthService interface {
@@ -61,11 +62,12 @@ type RefreshTokenStore interface {
 }
 
 type authService struct {
-	userRepo       UserRepository
-	deviceTokens   deviceTokenDeleter
-	jwtSecret      string
-	tokenExpiry    time.Duration
-	refreshExpiry  time.Duration
+	userRepo         UserRepository
+	deviceTokens     deviceTokenDeleter
+	refreshTokenStore RefreshTokenStore
+	jwtSecret        string
+	tokenExpiry      time.Duration
+	refreshExpiry    time.Duration
 }
 
 func NewAuthService(userRepo UserRepository, jwtSecret string, tokenExpiry, refreshExpiry time.Duration) AuthService {
@@ -78,14 +80,17 @@ func NewAuthService(userRepo UserRepository, jwtSecret string, tokenExpiry, refr
 }
 
 // NewAuthServiceWithDeviceTokens creates an AuthService that also cleans up
-// device tokens on account deletion.
-func NewAuthServiceWithDeviceTokens(userRepo UserRepository, dt deviceTokenDeleter, jwtSecret string, tokenExpiry, refreshExpiry time.Duration) AuthService {
+// device tokens on account deletion. The refreshTokenStore enables token
+// rotation: when set, the service tracks issued refresh tokens and rejects
+// reuse of previously-rotated tokens.
+func NewAuthServiceWithDeviceTokens(userRepo UserRepository, dt deviceTokenDeleter, rts RefreshTokenStore, jwtSecret string, tokenExpiry, refreshExpiry time.Duration) AuthService {
 	return &authService{
-		userRepo:      userRepo,
-		deviceTokens:  dt,
-		jwtSecret:     jwtSecret,
-		tokenExpiry:   tokenExpiry,
-		refreshExpiry: refreshExpiry,
+		userRepo:          userRepo,
+		deviceTokens:      dt,
+		refreshTokenStore: rts,
+		jwtSecret:         jwtSecret,
+		tokenExpiry:       tokenExpiry,
+		refreshExpiry:     refreshExpiry,
 	}
 }
 
@@ -111,7 +116,22 @@ func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) 
 		return nil, err
 	}
 
-	return s.generateAuthResponse(user)
+	resp, err := s.generateAuthResponse(user)
+	if err != nil {
+		return nil, err
+	}
+
+	// Persist the refresh token when rotation tracking is enabled.
+	if s.refreshTokenStore != nil {
+		jti := s.extractJTI(resp.RefreshToken)
+		if jti != "" {
+			if storeErr := s.refreshTokenStore.Store(ctx, user.ID, jti, time.Now().Add(s.refreshExpiry)); storeErr != nil {
+				slog.Warn("auth: failed to store refresh token on register", "user_id", user.ID.String(), "error", storeErr)
+			}
+		}
+	}
+
+	return resp, nil
 }
 
 func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (*domain.AuthResponse, error) {
@@ -125,7 +145,22 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (*doma
 		return nil, ErrInvalidCredentials
 	}
 
-	return s.generateAuthResponse(user)
+	resp, err := s.generateAuthResponse(user)
+	if err != nil {
+		return nil, err
+	}
+
+	// Persist the refresh token when rotation tracking is enabled.
+	if s.refreshTokenStore != nil {
+		jti := s.extractJTI(resp.RefreshToken)
+		if jti != "" {
+			if storeErr := s.refreshTokenStore.Store(ctx, user.ID, jti, time.Now().Add(s.refreshExpiry)); storeErr != nil {
+				slog.Warn("auth: failed to store refresh token on login", "user_id", user.ID.String(), "error", storeErr)
+			}
+		}
+	}
+
+	return resp, nil
 }
 
 func (s *authService) RefreshToken(ctx context.Context, refreshToken string) (*domain.AuthResponse, error) {
@@ -144,17 +179,54 @@ func (s *authService) RefreshToken(ctx context.Context, refreshToken string) (*d
 		return nil, ErrInvalidTokenType
 	}
 
+	// Check if the token has been revoked (when rotation tracking is enabled).
+	oldJTI, _ := claims["jti"].(string)
+	if s.refreshTokenStore != nil && oldJTI != "" {
+		revoked, revErr := s.refreshTokenStore.IsRevoked(ctx, oldJTI)
+		if revErr != nil {
+			slog.Warn("auth: failed to check refresh token revocation", "error", revErr)
+		}
+		if revoked {
+			return nil, ErrTokenRevoked
+		}
+	}
+
 	userIDStr, ok := claims["user_id"].(string)
 	if !ok {
 		return nil, ErrInvalidCredentials
 	}
 
-	user, err := s.userRepo.GetByID(ctx, uuid.MustParse(userIDStr))
+	userID := uuid.MustParse(userIDStr)
+	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, ErrUserNotFound
 	}
 
-	return s.generateAuthResponse(user)
+	resp, err := s.generateAuthResponse(user)
+	if err != nil {
+		return nil, err
+	}
+
+	// Rotate: revoke the old token and persist the new one.
+	if s.refreshTokenStore != nil {
+		// Revoke the old token.
+		if oldJTI != "" {
+			if _, revokeErr := s.refreshTokenStore.Revoke(ctx, oldJTI); revokeErr != nil {
+				slog.Warn("auth: failed to revoke old refresh token during rotation",
+					"user_id", userID.String(), "error", revokeErr)
+			}
+		}
+		// Store the new token.
+		newJTI := s.extractJTI(resp.RefreshToken)
+		if newJTI != "" {
+			if storeErr := s.refreshTokenStore.Store(ctx, userID, newJTI, time.Now().Add(s.refreshExpiry)); storeErr != nil {
+				slog.Warn("auth: failed to store new refresh token during rotation",
+					"user_id", userID.String(), "error", storeErr)
+			}
+		}
+	}
+
+	return resp, nil
 }
 
 func (s *authService) GetCurrentUser(ctx context.Context, userID uuid.UUID) (*domain.User, error) {
@@ -187,6 +259,14 @@ func (s *authService) DeleteAccount(ctx context.Context, userID uuid.UUID, authK
 		}
 	}
 
+	// Revoke all refresh tokens for this user (best-effort cleanup).
+	if s.refreshTokenStore != nil {
+		if rtErr := s.refreshTokenStore.RevokeAllForUser(ctx, userID); rtErr != nil {
+			slog.Warn("auth: failed to revoke refresh tokens during account deletion",
+				"user_id", userID.String(), "error", rtErr)
+		}
+	}
+
 	if err := s.userRepo.Delete(ctx, userID); err != nil {
 		return fmt.Errorf("delete user: %w", err)
 	}
@@ -197,12 +277,15 @@ func (s *authService) DeleteAccount(ctx context.Context, userID uuid.UUID, authK
 func (s *authService) generateAuthResponse(user *domain.User) (*domain.AuthResponse, error) {
 	now := time.Now()
 
-	accessToken, err := s.generateToken(user, now, s.tokenExpiry, "access")
+	accessToken, err := s.generateToken(user, now, s.tokenExpiry, "access", "")
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := s.generateToken(user, now, s.refreshExpiry, "refresh")
+	// Generate a unique ID for the refresh token so the store can track it.
+	refreshTokenID := uuid.New().String()
+
+	refreshToken, err := s.generateToken(user, now, s.refreshExpiry, "refresh", refreshTokenID)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +298,7 @@ func (s *authService) generateAuthResponse(user *domain.User) (*domain.AuthRespo
 	}, nil
 }
 
-func (s *authService) generateToken(user *domain.User, now time.Time, expiry time.Duration, tokenType string) (string, error) {
+func (s *authService) generateToken(user *domain.User, now time.Time, expiry time.Duration, tokenType string, jti string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id":    user.ID.String(),
 		"email":      user.Email,
@@ -224,7 +307,27 @@ func (s *authService) generateToken(user *domain.User, now time.Time, expiry tim
 		"iat":        now.Unix(),
 		"exp":        now.Add(expiry).Unix(),
 	}
+	if jti != "" {
+		claims["jti"] = jti
+	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(s.jwtSecret))
+}
+
+// extractJTI parses a JWT token string and returns the "jti" claim, or an
+// empty string if the claim is absent or the token cannot be parsed.
+func (s *authService) extractJTI(tokenStr string) string {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(s.jwtSecret), nil
+	})
+	if err != nil {
+		return ""
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return ""
+	}
+	jti, _ := claims["jti"].(string)
+	return jti
 }

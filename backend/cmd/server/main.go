@@ -81,6 +81,7 @@ func main() {
 	sharedNoteRepo := repository.NewSharedNoteRepository(pool)
 	deviceTokenRepo := repository.NewDeviceTokenRepository(pool)
 	commentRepo := repository.NewCommentRepository(pool)
+	refreshTokenRepo := repository.NewRefreshTokenRepository(pool)
 
 	// Start background goroutine to periodically clean up expired shared notes.
 	cleanupCtx, cancelCleanup := context.WithCancel(context.Background())
@@ -111,7 +112,7 @@ func main() {
 	}()
 
 	// Initialize services
-	authSvc := service.NewAuthServiceWithDeviceTokens(userRepo, deviceTokenRepo, cfg.Auth.JWTSecret, cfg.Auth.TokenExpiry, cfg.Auth.RefreshExpiry)
+	authSvc := service.NewAuthServiceWithDeviceTokens(userRepo, deviceTokenRepo, refreshTokenRepo, cfg.Auth.JWTSecret, cfg.Auth.TokenExpiry, cfg.Auth.RefreshExpiry)
 	quotaSvc := service.NewQuotaService(quotaRepo)
 
 	// Initialize push notification service.
@@ -218,22 +219,26 @@ func main() {
 	}
 
 	// Graceful shutdown: listen for SIGINT/SIGTERM, then drain HTTP requests
-	// with a 15-second timeout and close the database pool.
+	// with a 10-second timeout, stop background goroutines, and close the
+	// database pool.
 	go func() {
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 		sig := <-sigCh
 
 		slog.Info("shutting down server", "signal", sig)
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
 		if err := srv.Shutdown(ctx); err != nil {
 			slog.Error("server shutdown error", "error", err)
 		}
 
-		slog.Info("closing database pool")
+		// Stop background goroutines.
+		platformSvc.Stop()
 		cancelCleanup()
+
+		slog.Info("closing database pool")
 		pool.Close()
 
 		slog.Info("server stopped")

@@ -70,6 +70,8 @@ func writeErrorFromSentinel(w http.ResponseWriter, r *http.Request, err error) b
 		writeError(w, r, http.StatusBadRequest, "invalid_reaction", "reaction_type must be 'heart' or 'bookmark'")
 	case service.ErrInvalidTokenType:
 		writeError(w, r, http.StatusUnauthorized, "invalid_token", "Invalid token type")
+	case service.ErrTokenRevoked:
+		writeError(w, r, http.StatusUnauthorized, "token_revoked", "Refresh token has been revoked")
 	default:
 		return false
 	}
