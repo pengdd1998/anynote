@@ -125,6 +125,19 @@ func generateTestRefreshToken(userID string) string {
 	return tokenStr
 }
 
+// generateTestWSToken creates a valid WebSocket JWT for the given user ID.
+func generateTestWSToken(userID string) string {
+	claims := jwt.MapClaims{
+		"user_id":    userID,
+		"token_type": "ws",
+		"iat":        time.Now().Unix(),
+		"exp":        time.Now().Add(60 * time.Second).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, _ := token.SignedString([]byte(testJWTSecret))
+	return tokenStr
+}
+
 func makeAuthResponse(userID uuid.UUID) *domain.AuthResponse {
 	return &domain.AuthResponse{
 		AccessToken:  "access-token-" + userID.String(),

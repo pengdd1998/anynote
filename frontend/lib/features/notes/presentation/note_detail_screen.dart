@@ -10,6 +10,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/export/export_service.dart';
 import '../../../core/widgets/markdown_preview.dart';
+import '../domain/decrypted_note.dart';
 import 'share_sheet.dart';
 
 class NoteDetailScreen extends ConsumerWidget {
@@ -124,7 +125,7 @@ class NoteDetailScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      ErrorDisplay.userMessage(appError),
+                      ErrorDisplay.userMessage(appError, l10n),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                     ),
@@ -199,7 +200,7 @@ class NoteDetailScreen extends ConsumerWidget {
 
   /// Load the note and decrypt its content.
   /// Falls back to the plain cache if decryption is not possible.
-  Future<_DecryptedNote?> _loadNote(
+  Future<DecryptedNote?> _loadNote(
     AppDatabase db,
     CryptoService crypto,
     AppLocalizations l10n,
@@ -229,7 +230,7 @@ class NoteDetailScreen extends ConsumerWidget {
       }
     }
 
-    return _DecryptedNote(
+    return DecryptedNote(
       title: title,
       content: content,
       updatedAt: note.updatedAt,
@@ -347,19 +348,4 @@ class NoteDetailScreen extends ConsumerWidget {
       ),
     );
   }
-}
-
-/// Simple data class for a decrypted note's display properties.
-class _DecryptedNote {
-  final String title;
-  final String content;
-  final DateTime updatedAt;
-  final bool isSynced;
-
-  _DecryptedNote({
-    required this.title,
-    required this.content,
-    required this.updatedAt,
-    required this.isSynced,
-  });
 }

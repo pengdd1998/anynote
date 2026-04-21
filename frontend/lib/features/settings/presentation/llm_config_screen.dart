@@ -85,7 +85,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 const SizedBox(height: 12),
                 Text(l10n.failedToLoadConfigs),
                 const SizedBox(height: 8),
-                Text(ErrorDisplay.userMessage(appError),
+                Text(ErrorDisplay.userMessage(appError, l10n),
                     style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),),
                 const SizedBox(height: 16),
                 FilledButton.tonal(

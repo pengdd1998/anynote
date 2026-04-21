@@ -92,7 +92,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
         AuthException() => l10n.invalidRecoveryKeyForAccount,
         NotFoundException() => l10n.accountNotFoundCheckEmail,
         NetworkException() => l10n.unableToReachServer,
-        _ => ErrorDisplay.userMessage(appError),
+        _ => ErrorDisplay.userMessage(appError, l10n),
       };
       setState(() => _error = message);
     } finally {

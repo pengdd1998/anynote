@@ -115,6 +115,7 @@ func (s *shareService) GetShare(ctx context.Context, id string) (*domain.GetShar
 		EncryptedContent: note.EncryptedContent,
 		EncryptedTitle:   note.EncryptedTitle,
 		HasPassword:      note.HasPassword,
+		ShareKeyHash:     note.ShareKeyHash,
 		ExpiresAt:        note.ExpiresAt,
 		ViewCount:        note.ViewCount + 1,
 		MaxViews:         note.MaxViews,

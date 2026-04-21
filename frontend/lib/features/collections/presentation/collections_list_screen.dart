@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -195,7 +196,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
               Icon(Icons.note_outlined, size: 14, color: Colors.grey.shade500),
               const SizedBox(width: 4),
               Text(
-                l10n.noteCount(noteCount, noteCount == 1 ? '' : 's'),
+                l10n.noteCount(noteCount),
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
               ),
             ],
@@ -253,7 +254,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                   Icon(Icons.note_outlined, size: 14, color: Colors.grey.shade500),
                   const SizedBox(width: 4),
                   Text(
-                    l10n.noteCount(noteCount, noteCount == 1 ? '' : 's'),
+                    l10n.noteCount(noteCount),
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                   ),
                 ],
@@ -320,11 +321,8 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     );
   }
 
-  /// Generate a simple unique ID.
-  /// Uses timestamp + random suffix for simplicity.
+  /// Generate a unique ID using UUID v4.
   String _generateId() {
-    final now = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
-    final random = DateTime.now().microsecond.toRadixString(36);
-    return 'col_${now}_$random';
+    return const Uuid().v4();
   }
 }

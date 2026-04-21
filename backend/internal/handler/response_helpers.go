@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,9 +13,11 @@ import (
 
 // writeJSON writes a JSON response with the given status code.
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		slog.Error("failed to encode JSON response", "error", err)
+	}
 }
 
 // writeError writes a standardized error response with the request ID extracted
@@ -24,15 +27,17 @@ func writeError(w http.ResponseWriter, r *http.Request, status int, code string,
 	if r != nil {
 		requestID = middleware.GetReqID(r.Context())
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(domain.ErrorResponse{
+	if err := json.NewEncoder(w).Encode(domain.ErrorResponse{
 		Error: domain.ErrorDetail{
 			Code:    code,
 			Message: message,
 		},
 		RequestID: requestID,
-	})
+	}); err != nil {
+		slog.Error("failed to encode error JSON response", "error", err)
+	}
 }
 
 // writeErrorFromSentinel maps service-layer sentinel errors to HTTP status codes

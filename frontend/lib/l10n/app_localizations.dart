@@ -2130,11 +2130,11 @@ abstract class AppLocalizations {
   /// **'Untitled Collection'**
   String get untitledCollection;
 
-  /// Note count display with plural suffix
+  /// Note count display with proper pluralization
   ///
   /// In en, this message translates to:
-  /// **'{count} note{suffix}'**
-  String noteCount(int count, String suffix);
+  /// **'{count, plural, =0{0 notes} =1{1 note} other{{count} notes}}'**
+  String noteCount(int count);
 
   /// Form field label
   ///
@@ -3819,6 +3819,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please unlock your vault first'**
   String get unlockRequired;
+
+  /// Placeholder text in the detail pane when no item is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Select an item to view'**
+  String get selectAnItemToView;
+
+  /// Title for features not yet available
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon'**
+  String get comingSoon;
+
+  /// Message for features not yet available
+  ///
+  /// In en, this message translates to:
+  /// **'This feature is not yet available. Stay tuned for future updates!'**
+  String get comingSoonMessage;
+
+  /// Button label to dismiss a dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get dismiss;
+
+  /// User message for network errors
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to connect to the server. Please check your internet connection.'**
+  String get errorConnection;
+
+  /// User message for server errors
+  ///
+  /// In en, this message translates to:
+  /// **'A server error occurred. Please try again later.'**
+  String get errorServer;
+
+  /// User message for auth errors
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please log in again.'**
+  String get errorSessionExpired;
+
+  /// User message for forbidden errors
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have permission to perform this action.'**
+  String get errorAccessDenied;
+
+  /// User message for not-found errors
+  ///
+  /// In en, this message translates to:
+  /// **'The requested item could not be found.'**
+  String get errorNotFound;
+
+  /// User message for rate-limit errors without specific time
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment and try again.'**
+  String get errorRateLimited;
+
+  /// User message for rate-limit errors with specific retry time
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait {seconds} seconds and try again.'**
+  String errorRateLimitedSeconds(int seconds);
+
+  /// User message for conflict errors
+  ///
+  /// In en, this message translates to:
+  /// **'A conflict was detected. Please refresh and try again.'**
+  String get errorConflict;
+
+  /// User message for crypto-locked errors
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption keys are locked. Please unlock to continue.'**
+  String get errorCryptoLocked;
+
+  /// User message for key derivation errors
+  ///
+  /// In en, this message translates to:
+  /// **'Key derivation failed. Please check your password.'**
+  String get errorKeyDerivation;
+
+  /// User message for crypto operation errors
+  ///
+  /// In en, this message translates to:
+  /// **'An encryption error occurred. Please try again.'**
+  String get errorCryptoOperation;
+
+  /// User message for sync errors
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed: {message}'**
+  String errorSync(String message);
+
+  /// User message for storage errors
+  ///
+  /// In en, this message translates to:
+  /// **'A local storage error occurred. Please restart the app.'**
+  String get errorStorage;
+
+  /// User message for unknown errors
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred. Please try again.'**
+  String get errorUnexpected;
+
+  /// Dialog title for network errors
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Error'**
+  String get errorTitleConnection;
+
+  /// Dialog title for server errors
+  ///
+  /// In en, this message translates to:
+  /// **'Server Error'**
+  String get errorTitleServer;
+
+  /// Dialog title for auth errors
+  ///
+  /// In en, this message translates to:
+  /// **'Session Expired'**
+  String get errorTitleSessionExpired;
+
+  /// Dialog title for forbidden errors
+  ///
+  /// In en, this message translates to:
+  /// **'Access Denied'**
+  String get errorTitleAccessDenied;
+
+  /// Dialog title for not-found errors
+  ///
+  /// In en, this message translates to:
+  /// **'Not Found'**
+  String get errorTitleNotFound;
+
+  /// Dialog title for rate-limit errors
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Limited'**
+  String get errorTitleRateLimited;
+
+  /// Dialog title for validation errors
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Input'**
+  String get errorTitleInvalidInput;
+
+  /// Dialog title for conflict errors
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict'**
+  String get errorTitleConflict;
+
+  /// Dialog title for crypto-locked errors
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption Locked'**
+  String get errorTitleCryptoLocked;
+
+  /// Dialog title for key derivation errors
+  ///
+  /// In en, this message translates to:
+  /// **'Key Error'**
+  String get errorTitleKeyError;
+
+  /// Dialog title for crypto operation errors
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption Error'**
+  String get errorTitleCrypto;
+
+  /// Dialog title for sync errors
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Error'**
+  String get errorTitleSync;
+
+  /// Dialog title for storage errors
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Error'**
+  String get errorTitleStorage;
+
+  /// Placeholder content shown when Terms of Service is not yet available
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service are currently being drafted. For now, our Privacy Policy governs the use of AnyNote services.'**
+  String get termsOfServiceContent;
 }
 
 class _AppLocalizationsDelegate

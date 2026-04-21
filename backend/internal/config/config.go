@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"os"
@@ -244,8 +245,8 @@ func (c *Config) Validate() error {
 	if c.Auth.MasterEncryptionKey == "" {
 		return fmt.Errorf("MASTER_ENCRYPTION_KEY is required but not set")
 	}
-	if len(c.Auth.MasterEncryptionKey) < 16 {
-		return fmt.Errorf("MASTER_ENCRYPTION_KEY must be at least 16 characters, got %d", len(c.Auth.MasterEncryptionKey))
+	if err := validateMasterKey(c.Auth.MasterEncryptionKey); err != nil {
+		return err
 	}
 	if c.Database.URL == "" {
 		return fmt.Errorf("DATABASE_URL is required but not set")
@@ -289,4 +290,24 @@ func (c *Config) Warn() {
 	if c.Server.Port <= 0 || c.Server.Port > 65535 {
 		slog.Warn("server port is out of valid range (1-65535)", "port", c.Server.Port)
 	}
+}
+
+// validateMasterKey ensures the master encryption key provides at least 32 bytes
+// of key material (required for AES-256). Accepts either:
+//   - A raw string of 32+ characters
+//   - A hex-encoded string of 64+ characters (decoded to 32+ bytes)
+func validateMasterKey(key string) error {
+	// Try hex decoding first.
+	if decoded, err := hex.DecodeString(key); err == nil {
+		if len(decoded) >= 32 {
+			return nil
+		}
+		return fmt.Errorf("MASTER_ENCRYPTION_KEY hex-decoded to %d bytes, need at least 32 bytes for AES-256", len(decoded))
+	}
+
+	// Not valid hex; treat as raw string.
+	if len(key) < 32 {
+		return fmt.Errorf("MASTER_ENCRYPTION_KEY must be at least 32 bytes (got %d); AES-256 requires a 32-byte key. Alternatively provide a 64-character hex-encoded string", len(key))
+	}
+	return nil
 }

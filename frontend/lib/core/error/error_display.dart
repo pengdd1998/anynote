@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import 'exceptions.dart';
-
-// ignore: unused_import used to disambiguate the static showDialog method
-// from Flutter's material showDialog function.
 
 /// Utility class for displaying errors to the user in a consistent manner.
 ///
 /// Use [showSnackBar] for transient, non-critical errors (network failures,
-/// sync issues). Use [showDialog] for critical errors that need acknowledgment
+/// sync issues). Use [showErrorDialog] for critical errors that need acknowledgment
 /// (auth failures, data corruption).
 class ErrorDisplay {
   ErrorDisplay._();
@@ -22,6 +20,7 @@ class ErrorDisplay {
     VoidCallback? onRetry,
   }) {
     if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context)!;
 
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -32,7 +31,7 @@ class ErrorDisplay {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                userMessage(error),
+                userMessage(error, l10n),
                 style: const TextStyle(fontSize: 14),
               ),
             ),
@@ -42,7 +41,7 @@ class ErrorDisplay {
         duration: const Duration(seconds: 4),
         action: onRetry != null
             ? SnackBarAction(
-                label: 'Retry',
+                label: l10n.retry,
                 textColor: Colors.white,
                 onPressed: onRetry,
               )
@@ -60,17 +59,18 @@ class ErrorDisplay {
     VoidCallback? onRetry,
   }) {
     if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         icon: Icon(errorIcon(error), size: 32),
-        title: Text(_dialogTitle(error)),
-        content: Text(userMessage(error)),
+        title: Text(dialogTitle(error, l10n)),
+        content: Text(userMessage(error, l10n)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Dismiss'),
+            child: Text(l10n.dismiss),
           ),
           if (onRetry != null)
             FilledButton(
@@ -78,7 +78,7 @@ class ErrorDisplay {
                 Navigator.of(ctx).pop();
                 onRetry();
               },
-              child: const Text('Retry'),
+              child: Text(l10n.retry),
             ),
         ],
       ),
@@ -87,8 +87,36 @@ class ErrorDisplay {
 
   /// Get a human-friendly message for the given error.
   ///
-  /// This produces consistent, user-facing strings for each error type.
-  static String userMessage(AppException error) {
+  /// When [l10n] is provided, localized strings are used. Otherwise, English
+  /// fallback strings are returned.
+  static String userMessage(AppException error, [AppLocalizations? l10n]) {
+    if (l10n == null) return _fallbackUserMessage(error);
+    return switch (error) {
+      NetworkException() => l10n.errorConnection,
+      ServerException() => l10n.errorServer,
+      AuthException() => l10n.errorSessionExpired,
+      ForbiddenException() => l10n.errorAccessDenied,
+      NotFoundException() => l10n.errorNotFound,
+      RateLimitException(:final retryAfterSeconds?) =>
+        l10n.errorRateLimitedSeconds(retryAfterSeconds),
+      RateLimitException() => l10n.errorRateLimited,
+      ValidationException(:final fieldErrors?) when fieldErrors.isNotEmpty =>
+        fieldErrors.values.join('; '),
+      ValidationException() => error.message,
+      ConflictException() => l10n.errorConflict,
+      CryptoLockedException() => l10n.errorCryptoLocked,
+      CryptoKeyDerivationException() => l10n.errorKeyDerivation,
+      CryptoOperationException() => l10n.errorCryptoOperation,
+      SyncConflictException() => error.message,
+      SyncException() => l10n.errorSync(error.message),
+      StorageException() => l10n.errorStorage,
+      UnknownException() => l10n.errorUnexpected,
+      _ => error.message,
+    };
+  }
+
+  /// English fallback messages when l10n is not available.
+  static String _fallbackUserMessage(AppException error) {
     return switch (error) {
       NetworkException() =>
         'Unable to connect to the server. Please check your internet connection.',
@@ -147,23 +175,23 @@ class ErrorDisplay {
   }
 
   /// Get a short dialog title for the given error type.
-  static String _dialogTitle(AppException error) {
+  static String dialogTitle(AppException error, AppLocalizations l10n) {
     return switch (error) {
-      NetworkException() => 'Connection Error',
-      ServerException() => 'Server Error',
-      AuthException() => 'Session Expired',
-      ForbiddenException() => 'Access Denied',
-      NotFoundException() => 'Not Found',
-      RateLimitException() => 'Rate Limited',
-      ValidationException() => 'Invalid Input',
-      ConflictException() => 'Conflict',
-      CryptoLockedException() => 'Encryption Locked',
-      CryptoKeyDerivationException() => 'Key Error',
-      CryptoOperationException() => 'Encryption Error',
-      SyncConflictException() => 'Sync Conflict',
-      SyncException() => 'Sync Error',
-      StorageException() => 'Storage Error',
-      _ => 'Error',
+      NetworkException() => l10n.errorTitleConnection,
+      ServerException() => l10n.errorTitleServer,
+      AuthException() => l10n.errorTitleSessionExpired,
+      ForbiddenException() => l10n.errorTitleAccessDenied,
+      NotFoundException() => l10n.errorTitleNotFound,
+      RateLimitException() => l10n.errorTitleRateLimited,
+      ValidationException() => l10n.errorTitleInvalidInput,
+      ConflictException() => l10n.errorTitleConflict,
+      CryptoLockedException() => l10n.errorTitleCryptoLocked,
+      CryptoKeyDerivationException() => l10n.errorTitleKeyError,
+      CryptoOperationException() => l10n.errorTitleCrypto,
+      SyncConflictException() => l10n.errorTitleSync,
+      SyncException() => l10n.errorTitleSync,
+      StorageException() => l10n.errorTitleStorage,
+      _ => l10n.errorTitleServer,
     };
   }
 

@@ -1098,8 +1098,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get untitledCollection => '无标题合集';
 
   @override
-  String noteCount(int count, String suffix) {
-    return '$count 篇笔记$suffix';
+  String noteCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 篇笔记',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2040,4 +2045,104 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get unlockRequired => '请先解锁您的保险库';
+
+  @override
+  String get selectAnItemToView => '选择一个项目以查看';
+
+  @override
+  String get comingSoon => '即将推出';
+
+  @override
+  String get comingSoonMessage => '此功能尚未上线，请关注后续更新！';
+
+  @override
+  String get dismiss => '关闭';
+
+  @override
+  String get errorConnection => '无法连接到服务器，请检查您的网络连接。';
+
+  @override
+  String get errorServer => '服务器发生错误，请稍后重试。';
+
+  @override
+  String get errorSessionExpired => '您的会话已过期，请重新登录。';
+
+  @override
+  String get errorAccessDenied => '您没有权限执行此操作。';
+
+  @override
+  String get errorNotFound => '找不到请求的项目。';
+
+  @override
+  String get errorRateLimited => '请求过于频繁，请稍后重试。';
+
+  @override
+  String errorRateLimitedSeconds(int seconds) {
+    return '请求过于频繁，请等待 $seconds 秒后重试。';
+  }
+
+  @override
+  String get errorConflict => '检测到冲突，请刷新后重试。';
+
+  @override
+  String get errorCryptoLocked => '加密密钥已锁定，请先解锁。';
+
+  @override
+  String get errorKeyDerivation => '密钥派生失败，请检查您的密码。';
+
+  @override
+  String get errorCryptoOperation => '加密操作出错，请重试。';
+
+  @override
+  String errorSync(String message) {
+    return '同步失败：$message';
+  }
+
+  @override
+  String get errorStorage => '本地存储出错，请重启应用。';
+
+  @override
+  String get errorUnexpected => '发生意外错误，请重试。';
+
+  @override
+  String get errorTitleConnection => '连接错误';
+
+  @override
+  String get errorTitleServer => '服务器错误';
+
+  @override
+  String get errorTitleSessionExpired => '会话过期';
+
+  @override
+  String get errorTitleAccessDenied => '访问被拒绝';
+
+  @override
+  String get errorTitleNotFound => '未找到';
+
+  @override
+  String get errorTitleRateLimited => '请求过频';
+
+  @override
+  String get errorTitleInvalidInput => '输入无效';
+
+  @override
+  String get errorTitleConflict => '冲突';
+
+  @override
+  String get errorTitleCryptoLocked => '加密已锁定';
+
+  @override
+  String get errorTitleKeyError => '密钥错误';
+
+  @override
+  String get errorTitleCrypto => '加密错误';
+
+  @override
+  String get errorTitleSync => '同步错误';
+
+  @override
+  String get errorTitleStorage => '存储错误';
+
+  @override
+  String get termsOfServiceContent => '服务条款正在起草中。目前，我们的隐私政策适用于 AnyNote 服务的使用。';
 }

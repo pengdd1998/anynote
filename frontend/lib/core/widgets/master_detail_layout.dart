@@ -41,7 +41,17 @@ class MasterDetailLayout extends StatefulWidget {
   final Widget Function(String? selectedId) detailPaneBuilder;
 
   /// Optional placeholder shown in the detail pane when no item is selected.
+  /// Deprecated in favor of [placeholderBuilder] which provides localization
+  /// context via [BuildContext].
   final Widget? emptyDetailPlaceholder;
+
+  /// Optional builder for the placeholder shown in the detail pane when no
+  /// item is selected. Receives a [BuildContext] so the placeholder can use
+  /// localization and theming.
+  ///
+  /// If both [emptyDetailPlaceholder] and [placeholderBuilder] are provided,
+  /// [placeholderBuilder] takes precedence.
+  final Widget Function(BuildContext context)? placeholderBuilder;
 
   /// The ID of the currently selected item, or null.
   final String? selectedId;
@@ -73,6 +83,7 @@ class MasterDetailLayout extends StatefulWidget {
     required this.masterPane,
     required this.detailPaneBuilder,
     this.emptyDetailPlaceholder,
+    this.placeholderBuilder,
     this.selectedId,
     this.onSelectionChanged,
     this.masterPaneWidth = 350,
@@ -175,27 +186,29 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
         Expanded(
           child: widget.selectedId != null
               ? widget.detailPaneBuilder(widget.selectedId)
-              : widget.emptyDetailPlaceholder ??
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.article_outlined,
-                          size: 64,
-                          color: Colors.grey.shade400,
+              : widget.placeholderBuilder != null
+                  ? widget.placeholderBuilder!(context)
+                  : widget.emptyDetailPlaceholder ??
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.article_outlined,
+                              size: 64,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Select an item to view',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(color: Colors.grey.shade500),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Select an item to view',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(color: Colors.grey.shade500),
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
         ),
       ],
     );

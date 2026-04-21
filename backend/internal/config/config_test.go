@@ -69,7 +69,7 @@ redis:
   url: "redis://localhost:6379"
 auth:
   jwt_secret: "my-jwt-secret-123456"
-  master_encryption_key: "my-master-key-1234567"
+  master_encryption_key: "my-master-key-123456789012345678"
   token_expiry: 12h
 log:
   level: debug
@@ -136,7 +136,7 @@ func TestValidate_Success(t *testing.T) {
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
 			JWTSecret:          "a-valid-jwt-secret-16ch",
-			MasterEncryptionKey: "a-valid-master-key-16",
+			MasterEncryptionKey: "a-valid-master-key-32-bytes-long!!",
 		},
 	}
 	if err := cfg.Validate(); err != nil {
@@ -148,7 +148,7 @@ func TestValidate_MissingJWTSecret(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			MasterEncryptionKey: "a-valid-master-key-16",
+			MasterEncryptionKey: "a-valid-master-key-32-bytes-long!!",
 		},
 	}
 	err := cfg.Validate()
@@ -162,7 +162,7 @@ func TestValidate_ShortJWTSecret(t *testing.T) {
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
 			JWTSecret:          "short",
-			MasterEncryptionKey: "a-valid-master-key-16",
+			MasterEncryptionKey: "a-valid-master-key-32-bytes-long!!",
 		},
 	}
 	err := cfg.Validate()
@@ -198,11 +198,40 @@ func TestValidate_ShortMasterKey(t *testing.T) {
 	}
 }
 
+func TestValidate_MasterKey_HexEncoded(t *testing.T) {
+	// 64 hex characters = 32 bytes, should pass validation.
+	cfg := &Config{
+		Database: DatabaseConfig{URL: "postgres://localhost/db"},
+		Auth: AuthConfig{
+			JWTSecret:          "a-valid-jwt-secret-16ch",
+			MasterEncryptionKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+		},
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("expected hex-encoded 32-byte key to pass, got error: %v", err)
+	}
+}
+
+func TestValidate_MasterKey_ShortHexEncoded(t *testing.T) {
+	// 32 hex characters = 16 bytes, should fail (needs 32 bytes).
+	cfg := &Config{
+		Database: DatabaseConfig{URL: "postgres://localhost/db"},
+		Auth: AuthConfig{
+			JWTSecret:          "a-valid-jwt-secret-16ch",
+			MasterEncryptionKey: "0123456789abcdef0123456789abcdef",
+		},
+	}
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected error for hex-decoded key under 32 bytes")
+	}
+}
+
 func TestValidate_MissingDatabaseURL(t *testing.T) {
 	cfg := &Config{
 		Auth: AuthConfig{
 			JWTSecret:          "a-valid-jwt-secret-16ch",
-			MasterEncryptionKey: "a-valid-master-key-16",
+			MasterEncryptionKey: "a-valid-master-key-32-bytes-long!!",
 		},
 	}
 	err := cfg.Validate()

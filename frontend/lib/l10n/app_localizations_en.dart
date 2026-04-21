@@ -1121,8 +1121,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get untitledCollection => 'Untitled Collection';
 
   @override
-  String noteCount(int count, String suffix) {
-    return '$count note$suffix';
+  String noteCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes',
+      one: '1 note',
+      zero: '0 notes',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2110,4 +2117,116 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unlockRequired => 'Please unlock your vault first';
+
+  @override
+  String get selectAnItemToView => 'Select an item to view';
+
+  @override
+  String get comingSoon => 'Coming Soon';
+
+  @override
+  String get comingSoonMessage =>
+      'This feature is not yet available. Stay tuned for future updates!';
+
+  @override
+  String get dismiss => 'Dismiss';
+
+  @override
+  String get errorConnection =>
+      'Unable to connect to the server. Please check your internet connection.';
+
+  @override
+  String get errorServer => 'A server error occurred. Please try again later.';
+
+  @override
+  String get errorSessionExpired =>
+      'Your session has expired. Please log in again.';
+
+  @override
+  String get errorAccessDenied =>
+      'You do not have permission to perform this action.';
+
+  @override
+  String get errorNotFound => 'The requested item could not be found.';
+
+  @override
+  String get errorRateLimited =>
+      'Too many requests. Please wait a moment and try again.';
+
+  @override
+  String errorRateLimitedSeconds(int seconds) {
+    return 'Too many requests. Please wait $seconds seconds and try again.';
+  }
+
+  @override
+  String get errorConflict =>
+      'A conflict was detected. Please refresh and try again.';
+
+  @override
+  String get errorCryptoLocked =>
+      'Encryption keys are locked. Please unlock to continue.';
+
+  @override
+  String get errorKeyDerivation =>
+      'Key derivation failed. Please check your password.';
+
+  @override
+  String get errorCryptoOperation =>
+      'An encryption error occurred. Please try again.';
+
+  @override
+  String errorSync(String message) {
+    return 'Sync failed: $message';
+  }
+
+  @override
+  String get errorStorage =>
+      'A local storage error occurred. Please restart the app.';
+
+  @override
+  String get errorUnexpected =>
+      'An unexpected error occurred. Please try again.';
+
+  @override
+  String get errorTitleConnection => 'Connection Error';
+
+  @override
+  String get errorTitleServer => 'Server Error';
+
+  @override
+  String get errorTitleSessionExpired => 'Session Expired';
+
+  @override
+  String get errorTitleAccessDenied => 'Access Denied';
+
+  @override
+  String get errorTitleNotFound => 'Not Found';
+
+  @override
+  String get errorTitleRateLimited => 'Rate Limited';
+
+  @override
+  String get errorTitleInvalidInput => 'Invalid Input';
+
+  @override
+  String get errorTitleConflict => 'Conflict';
+
+  @override
+  String get errorTitleCryptoLocked => 'Encryption Locked';
+
+  @override
+  String get errorTitleKeyError => 'Key Error';
+
+  @override
+  String get errorTitleCrypto => 'Encryption Error';
+
+  @override
+  String get errorTitleSync => 'Sync Error';
+
+  @override
+  String get errorTitleStorage => 'Storage Error';
+
+  @override
+  String get termsOfServiceContent =>
+      'Terms of Service are currently being drafted. For now, our Privacy Policy governs the use of AnyNote services.';
 }

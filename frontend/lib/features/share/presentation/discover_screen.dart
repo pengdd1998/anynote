@@ -6,22 +6,7 @@ import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-
-// ── Providers ──────────────────────────────────────
-
-/// Fetches the discovery feed from the API.
-final discoverFeedProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, int>((ref, offset) async {
-  final api = ref.watch(apiClientProvider);
-  return api.discoverFeed(limit: 20, offset: offset);
-});
-
-/// Tracks reaction state for individual items in the feed.
-/// Key format: "{shareId}:{reactionType}", value: true if active.
-final _reactionStateProvider =
-    StateProvider.family<Map<String, bool>, String>((ref, id) {
-  return {};
-});
+import '../data/discover_providers.dart';
 
 // ── Screen ─────────────────────────────────────────
 
@@ -115,11 +100,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   Future<void> _toggleReaction(String shareId, String reactionType) async {
     final api = ref.read(apiClientProvider);
     final stateKey = '$shareId:$reactionType';
-    final reactionState = ref.read(_reactionStateProvider(shareId));
+    final reactionState = ref.read(reactionStateProvider(shareId));
     final wasActive = reactionState[stateKey] ?? false;
 
     // Optimistic update.
-    ref.read(_reactionStateProvider(shareId).notifier).update(
+    ref.read(reactionStateProvider(shareId).notifier).update(
           (state) => {...state, stateKey: !wasActive},
         );
 
@@ -142,7 +127,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
       // Update with server truth.
       final active = result['active'] as bool;
-      ref.read(_reactionStateProvider(shareId).notifier).update(
+      ref.read(reactionStateProvider(shareId).notifier).update(
             (state) => {...state, stateKey: active},
           );
 
@@ -159,7 +144,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     } catch (e) {
       if (!mounted) return;
       // Revert optimistic update.
-      ref.read(_reactionStateProvider(shareId).notifier).update(
+      ref.read(reactionStateProvider(shareId).notifier).update(
             (state) => {...state, stateKey: wasActive},
           );
       if (itemIndex >= 0) {
@@ -307,7 +292,7 @@ class _DiscoverCard extends ConsumerWidget {
     final bookmarkCount = item['reaction_bookmark'] as int? ?? 0;
     final hasPassword = item['has_password'] as bool? ?? false;
 
-    final reactionState = ref.watch(_reactionStateProvider(shareId));
+    final reactionState = ref.watch(reactionStateProvider(shareId));
     final isHearted = reactionState['$shareId:heart'] ?? false;
     final isBookmarked = reactionState['$shareId:bookmark'] ?? false;
 

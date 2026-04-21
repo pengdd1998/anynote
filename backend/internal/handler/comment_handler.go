@@ -32,7 +32,9 @@ func (h *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req domain.CreateCommentRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
@@ -44,6 +46,20 @@ func (h *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	if len(req.EncryptedContent) > maxEncryptedContentLen {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "encrypted_content must be at most 1 MB")
 		return
+	}
+
+	// Validate shared note ID from URL path parameter.
+	if sharedNoteID == "" {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "shared_note_id is required")
+		return
+	}
+
+	// Validate optional parent_id format.
+	if req.ParentID != "" {
+		if _, parentErr := parseUUID(req.ParentID); parentErr != nil {
+			writeError(w, r, http.StatusBadRequest, "validation_error", "parent_id must be a valid UUID")
+			return
+		}
 	}
 
 	comment, err := h.commentService.CreateComment(r.Context(), sharedNoteID, userID, req)

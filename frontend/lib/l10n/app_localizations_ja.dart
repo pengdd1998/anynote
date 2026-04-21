@@ -1104,8 +1104,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get untitledCollection => '無題のコレクション';
 
   @override
-  String noteCount(int count, String suffix) {
-    return '$count件のメモ$suffix';
+  String noteCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count件のメモ',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2051,4 +2056,105 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get unlockRequired => '先に保管庫をロック解除してください';
+
+  @override
+  String get selectAnItemToView => '項目を選択して表示';
+
+  @override
+  String get comingSoon => '近日公開';
+
+  @override
+  String get comingSoonMessage => 'この機能はまだ利用できません。今後のアップデートをお待ちください！';
+
+  @override
+  String get dismiss => '閉じる';
+
+  @override
+  String get errorConnection => 'サーバーに接続できません。インターネット接続を確認してください。';
+
+  @override
+  String get errorServer => 'サーバーエラーが発生しました。後でもう一度お試しください。';
+
+  @override
+  String get errorSessionExpired => 'セッションが期限切れです。再度ログインしてください。';
+
+  @override
+  String get errorAccessDenied => 'このアクションを実行する権限がありません。';
+
+  @override
+  String get errorNotFound => '要求された項目が見つかりませんでした。';
+
+  @override
+  String get errorRateLimited => 'リクエストが多すぎます。しばらくしてからもう一度お試しください。';
+
+  @override
+  String errorRateLimitedSeconds(int seconds) {
+    return 'リクエストが多すぎます。$seconds秒後にもう一度お試しください。';
+  }
+
+  @override
+  String get errorConflict => '競合が検出されました。更新してもう一度お試しください。';
+
+  @override
+  String get errorCryptoLocked => '暗号化キーがロックされています。続行するにはロックを解除してください。';
+
+  @override
+  String get errorKeyDerivation => 'キーの導出に失敗しました。パスワードを確認してください。';
+
+  @override
+  String get errorCryptoOperation => '暗号化エラーが発生しました。もう一度お試しください。';
+
+  @override
+  String errorSync(String message) {
+    return '同期に失敗しました：$message';
+  }
+
+  @override
+  String get errorStorage => 'ローカルストレージエラーが発生しました。アプリを再起動してください。';
+
+  @override
+  String get errorUnexpected => '予期しないエラーが発生しました。もう一度お試しください。';
+
+  @override
+  String get errorTitleConnection => '接続エラー';
+
+  @override
+  String get errorTitleServer => 'サーバーエラー';
+
+  @override
+  String get errorTitleSessionExpired => 'セッション期限切れ';
+
+  @override
+  String get errorTitleAccessDenied => 'アクセス拒否';
+
+  @override
+  String get errorTitleNotFound => '見つかりません';
+
+  @override
+  String get errorTitleRateLimited => 'リクエスト制限';
+
+  @override
+  String get errorTitleInvalidInput => '無効な入力';
+
+  @override
+  String get errorTitleConflict => '競合';
+
+  @override
+  String get errorTitleCryptoLocked => '暗号化ロック';
+
+  @override
+  String get errorTitleKeyError => 'キーエラー';
+
+  @override
+  String get errorTitleCrypto => '暗号化エラー';
+
+  @override
+  String get errorTitleSync => '同期エラー';
+
+  @override
+  String get errorTitleStorage => 'ストレージエラー';
+
+  @override
+  String get termsOfServiceContent =>
+      '利用規約は現在作成中です。現時点ではプライバシーポリシーがAnyNoteサービスの利用に適用されます。';
 }

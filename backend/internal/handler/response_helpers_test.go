@@ -24,8 +24,8 @@ func TestWriteJSON(t *testing.T) {
 	}
 
 	ct := w.Header().Get("Content-Type")
-	if ct != "application/json" {
-		t.Errorf("Content-Type = %q, want %q", ct, "application/json")
+	if ct != "application/json; charset=utf-8" {
+		t.Errorf("Content-Type = %q, want %q", ct, "application/json; charset=utf-8")
 	}
 
 	var result map[string]string
@@ -51,8 +51,8 @@ func TestWriteError(t *testing.T) {
 	}
 
 	ct := w.Header().Get("Content-Type")
-	if ct != "application/json" {
-		t.Errorf("Content-Type = %q, want %q", ct, "application/json")
+	if ct != "application/json; charset=utf-8" {
+		t.Errorf("Content-Type = %q, want %q", ct, "application/json; charset=utf-8")
 	}
 
 	var resp domain.ErrorResponse

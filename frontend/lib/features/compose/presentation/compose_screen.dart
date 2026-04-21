@@ -168,7 +168,7 @@ class ComposeScreen extends ConsumerWidget {
                             size: 36, color: Colors.grey.shade400,),
                         const SizedBox(height: 8),
                         Text(
-                          ErrorDisplay.userMessage(appError),
+                          ErrorDisplay.userMessage(appError, l10n),
                           style: TextStyle(color: Theme.of(context).colorScheme.error),
                           textAlign: TextAlign.center,
                         ),
@@ -411,7 +411,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                             size: 36, color: Colors.grey.shade400,),
                         const SizedBox(height: 8),
                         Text(
-                          ErrorDisplay.userMessage(appError),
+                          ErrorDisplay.userMessage(appError, l10n),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -521,8 +521,9 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
     } catch (e) {
       if (mounted) {
         final appError = ErrorMapper.map(e);
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorDisplay.userMessage(appError))),
+          SnackBar(content: Text(ErrorDisplay.userMessage(appError, l10n))),
         );
       }
     } finally {

@@ -81,7 +81,9 @@ func (h *SyncHandler) Push(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var req domain.SyncPushRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
@@ -164,7 +166,9 @@ func (h *SyncHandler) BatchDelete(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var req domain.BatchDeleteRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}

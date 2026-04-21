@@ -159,7 +159,7 @@ func TestWSHandler_HandleConnection_MissingRoom(t *testing.T) {
 	h := NewWSHandler(presenceSvc, testJWTSecret, nil)
 
 	userID := uuid.New().String()
-	token := generateTestToken(userID)
+	token := generateTestWSToken(userID)
 
 	req := httptest.NewRequest(http.MethodGet, "/ws?token="+token, nil)
 	rec := httptest.NewRecorder()
@@ -179,7 +179,7 @@ func TestWSHandler_ValidateToken_Valid(t *testing.T) {
 	h := &WSHandler{jwtSecret: testJWTSecret}
 
 	userID := uuid.New().String()
-	token := generateTestToken(userID)
+	token := generateTestWSToken(userID)
 
 	gotUserID, err := h.validateToken(token)
 	if err != nil {

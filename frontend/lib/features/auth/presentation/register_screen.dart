@@ -94,7 +94,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ValidationException() => l10n.invalidInput,
         NetworkException() => l10n.unableToReachServer,
         CryptoKeyDerivationException() => l10n.keyDerivationFailed,
-        _ => ErrorDisplay.userMessage(appError),
+        _ => ErrorDisplay.userMessage(appError, l10n),
       };
       setState(() => _error = message);
     } finally {

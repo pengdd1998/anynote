@@ -4,11 +4,25 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/error/error_display.dart';
 import 'package:anynote/core/error/exceptions.dart';
+import 'package:anynote/l10n/app_localizations.dart';
 
 void main() {
   // ===========================================================================
   // ErrorDisplay.userMessage
   // ===========================================================================
+
+  /// Build a [MaterialApp] with localization delegates so that
+  /// [AppLocalizations.of] returns a non-null instance in widget tests.
+  Widget _buildTestApp(Widget home) {
+    return ProviderScope(
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('en'),
+        home: home,
+      ),
+    );
+  }
 
   group('ErrorDisplay.userMessage', () {
     test('NetworkException returns connection error message', () {
@@ -229,23 +243,21 @@ void main() {
       const error = NetworkException(message: 'No connection');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      ErrorDisplay.showSnackBar(
-                        context,
-                        error,
-                        onRetry: () {},
-                      );
-                    },
-                    child: const Text('Trigger Error'),
-                  );
-                },
-              ),
+        _buildTestApp(
+          Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    ErrorDisplay.showSnackBar(
+                      context,
+                      error,
+                      onRetry: () {},
+                    );
+                  },
+                  child: const Text('Trigger Error'),
+                );
+              },
             ),
           ),
         ),
@@ -270,19 +282,17 @@ void main() {
       const error = ServerException(message: 'Server down');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      ErrorDisplay.showSnackBar(context, error);
-                    },
-                    child: const Text('Trigger Error'),
-                  );
-                },
-              ),
+        _buildTestApp(
+          Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    ErrorDisplay.showSnackBar(context, error);
+                  },
+                  child: const Text('Trigger Error'),
+                );
+              },
             ),
           ),
         ),
@@ -300,25 +310,23 @@ void main() {
       bool retryCalled = false;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      ErrorDisplay.showSnackBar(
-                        context,
-                        error,
-                        onRetry: () {
-                          retryCalled = true;
-                        },
-                      );
-                    },
-                    child: const Text('Trigger'),
-                  );
-                },
-              ),
+        _buildTestApp(
+          Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    ErrorDisplay.showSnackBar(
+                      context,
+                      error,
+                      onRetry: () {
+                        retryCalled = true;
+                      },
+                    );
+                  },
+                  child: const Text('Trigger'),
+                );
+              },
             ),
           ),
         ),
@@ -340,20 +348,18 @@ void main() {
       const error = AuthException(message: 'expired');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      // Context is mounted here; should work normally.
-                      ErrorDisplay.showSnackBar(context, error);
-                    },
-                    child: const Text('Trigger'),
-                  );
-                },
-              ),
+        _buildTestApp(
+          Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    // Context is mounted here; should work normally.
+                    ErrorDisplay.showSnackBar(context, error);
+                  },
+                  child: const Text('Trigger'),
+                );
+              },
             ),
           ),
         ),
@@ -378,19 +384,17 @@ void main() {
       const error = ServerException(message: 'Server error');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      ErrorDisplay.showErrorDialog(context, error);
-                    },
-                    child: const Text('Show Dialog'),
-                  );
-                },
-              ),
+        _buildTestApp(
+          Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    ErrorDisplay.showErrorDialog(context, error);
+                  },
+                  child: const Text('Show Dialog'),
+                );
+              },
             ),
           ),
         ),
@@ -409,28 +413,23 @@ void main() {
 
     testWidgets('dialog with Retry button when onRetry is provided', (tester) async {
       const error = NetworkException(message: 'No internet');
-      bool retryCalled = false;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      ErrorDisplay.showErrorDialog(
-                        context,
-                        error,
-                        onRetry: () {
-                          retryCalled = true;
-                        },
-                      );
-                    },
-                    child: const Text('Show Dialog'),
-                  );
-                },
-              ),
+        _buildTestApp(
+          Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    ErrorDisplay.showErrorDialog(
+                      context,
+                      error,
+                      onRetry: () {},
+                    );
+                  },
+                  child: const Text('Show Dialog'),
+                );
+              },
             ),
           ),
         ),
@@ -449,25 +448,23 @@ void main() {
       bool retryCalled = false;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      ErrorDisplay.showErrorDialog(
-                        context,
-                        error,
-                        onRetry: () {
-                          retryCalled = true;
-                        },
-                      );
-                    },
-                    child: const Text('Show Dialog'),
-                  );
-                },
-              ),
+        _buildTestApp(
+          Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    ErrorDisplay.showErrorDialog(
+                      context,
+                      error,
+                      onRetry: () {
+                        retryCalled = true;
+                      },
+                    );
+                  },
+                  child: const Text('Show Dialog'),
+                );
+              },
             ),
           ),
         ),
@@ -490,25 +487,23 @@ void main() {
       bool retryCalled = false;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      ErrorDisplay.showErrorDialog(
-                        context,
-                        error,
-                        onRetry: () {
-                          retryCalled = true;
-                        },
-                      );
-                    },
-                    child: const Text('Show Dialog'),
-                  );
-                },
-              ),
+        _buildTestApp(
+          Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    ErrorDisplay.showErrorDialog(
+                      context,
+                      error,
+                      onRetry: () {
+                        retryCalled = true;
+                      },
+                    );
+                  },
+                  child: const Text('Show Dialog'),
+                );
+              },
             ),
           ),
         ),
@@ -541,19 +536,17 @@ void main() {
 
       for (final entry in errorTitles.entries) {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Builder(
-                  builder: (context) {
-                    return ElevatedButton(
-                      onPressed: () {
-                        ErrorDisplay.showErrorDialog(context, entry.key);
-                      },
-                      child: const Text('Show'),
-                    );
-                  },
-                ),
+          _buildTestApp(
+            Scaffold(
+              body: Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      ErrorDisplay.showErrorDialog(context, entry.key);
+                    },
+                    child: const Text('Show'),
+                  );
+                },
               ),
             ),
           ),

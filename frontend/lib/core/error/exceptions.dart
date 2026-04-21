@@ -152,6 +152,24 @@ class CryptoOperationException extends CryptoException {
   });
 }
 
+/// Decryption of a shared note failed (corrupted data, expired link, etc.).
+class DecryptFailedException extends CryptoException {
+  const DecryptFailedException({
+    super.message = 'Failed to decrypt the shared note.',
+    super.code = 'crypto/decrypt_failed',
+    super.originalError,
+  });
+}
+
+/// The password provided for a password-protected share is incorrect.
+class IncorrectPasswordException extends CryptoException {
+  const IncorrectPasswordException({
+    super.message = 'Incorrect password.',
+    super.code = 'crypto/incorrect_password',
+    super.originalError,
+  });
+}
+
 // ── Sync Errors ─────────────────────────────────────────
 
 /// Base for all sync-related errors.

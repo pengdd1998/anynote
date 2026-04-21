@@ -146,7 +146,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         const SizedBox(height: 8),
                         Text(l10n.failedToLoadPlatforms),
                         const SizedBox(height: 4),
-                        Text(ErrorDisplay.userMessage(appError),
+                        Text(ErrorDisplay.userMessage(appError, l10n),
                             style: const TextStyle(
                                 fontSize: 12, color: Colors.grey,),),
                         const SizedBox(height: 8),
@@ -227,7 +227,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         Icon(ErrorDisplay.errorIcon(appError),
                             size: 36, color: Colors.red,),
                         const SizedBox(height: 8),
-                        Text(ErrorDisplay.userMessage(appError)),
+                        Text(ErrorDisplay.userMessage(appError, l10n)),
                         const SizedBox(height: 8),
                         FilledButton.tonal(
                           onPressed: () =>

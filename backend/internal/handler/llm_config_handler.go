@@ -37,7 +37,9 @@ func (h *LLMConfigHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var cfg domain.LLMConfig
-	if err := json.NewDecoder(r.Body).Decode(&cfg); err != nil {
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&cfg); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
@@ -79,7 +81,9 @@ func (h *LLMConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var cfg domain.LLMConfig
-	if err := json.NewDecoder(r.Body).Decode(&cfg); err != nil {
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&cfg); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}

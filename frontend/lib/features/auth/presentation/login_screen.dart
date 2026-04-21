@@ -126,7 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         AuthException() => l10n.invalidEmailOrPassword,
         NotFoundException() => l10n.accountNotFoundRegister,
         NetworkException() => l10n.unableToReachServer,
-        _ => ErrorDisplay.userMessage(appError),
+        _ => ErrorDisplay.userMessage(appError, l10n),
       };
       setState(() => _error = message);
     } finally {

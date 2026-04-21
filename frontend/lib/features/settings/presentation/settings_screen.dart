@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -234,13 +236,13 @@ class SettingsScreen extends ConsumerWidget {
                         icon: Icons.privacy_tip_outlined,
                         title: l10n.privacyPolicy,
                         trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () {},
+                        onTap: () => _showPrivacyPolicy(context),
                       ),
                       SettingsItem(
                         icon: Icons.description_outlined,
                         title: l10n.termsOfService,
                         trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () {},
+                        onTap: () => _showTermsOfService(context),
                       ),
                     ],
                   ),
@@ -294,7 +296,7 @@ class SettingsScreen extends ConsumerWidget {
           title: l10n.plan,
           subtitle: account['plan'] as String? ?? l10n.freePlan,
           trailing: FilledButton.tonal(
-            onPressed: () {},
+            onPressed: () => _showComingSoon(context),
             style: FilledButton.styleFrom(
               visualDensity: VisualDensity.compact,
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -391,6 +393,72 @@ class SettingsScreen extends ConsumerWidget {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
+
+  void _showComingSoon(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.comingSoon),
+        content: Text(l10n.comingSoonMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.dismiss),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showPrivacyPolicy(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    // Load the privacy policy markdown from assets.
+    String content;
+    try {
+      content = await rootBundle.loadString('doc/legal/privacy-policy.md');
+    } catch (_) {
+      content = l10n.privacyPolicy;
+    }
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.privacyPolicy),
+        scrollable: true,
+        content: SizedBox(
+          width: MediaQuery.of(ctx).size.width * 0.8,
+          child: MarkdownBody(
+            data: content,
+            selectable: true,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.dismiss),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTermsOfService(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.termsOfService),
+        content: Text(l10n.termsOfServiceContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.dismiss),
+          ),
+        ],
+      ),
+    );
+  }
 
   String _getLanguageDisplayName(Locale locale, AppLocalizations l10n) {
     return switch (locale.languageCode) {

@@ -1104,8 +1104,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get untitledCollection => '제목 없는 컬렉션';
 
   @override
-  String noteCount(int count, String suffix) {
-    return '메모 $count개$suffix';
+  String noteCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '메모 $count개',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2051,4 +2056,105 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get unlockRequired => '먼저 보관함을 잠금 해제해 주세요';
+
+  @override
+  String get selectAnItemToView => '항목을 선택하여 보기';
+
+  @override
+  String get comingSoon => '출시 예정';
+
+  @override
+  String get comingSoonMessage => '이 기능은 아직 사용할 수 없습니다. 향후 업데이트를 기대해 주세요!';
+
+  @override
+  String get dismiss => '닫기';
+
+  @override
+  String get errorConnection => '서버에 연결할 수 없습니다. 인터넷 연결을 확인해 주세요.';
+
+  @override
+  String get errorServer => '서버 오류가 발생했습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get errorSessionExpired => '세션이 만료되었습니다. 다시 로그인해 주세요.';
+
+  @override
+  String get errorAccessDenied => '이 작업을 수행할 권한이 없습니다.';
+
+  @override
+  String get errorNotFound => '요청한 항목을 찾을 수 없습니다.';
+
+  @override
+  String get errorRateLimited => '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String errorRateLimitedSeconds(int seconds) {
+    return '요청이 너무 많습니다. $seconds초 후에 다시 시도해 주세요.';
+  }
+
+  @override
+  String get errorConflict => '충돌이 감지되었습니다. 새로고침 후 다시 시도해 주세요.';
+
+  @override
+  String get errorCryptoLocked => '암호화 키가 잠겨 있습니다. 계속하려면 잠금을 해제해 주세요.';
+
+  @override
+  String get errorKeyDerivation => '키 파생에 실패했습니다. 비밀번호를 확인해 주세요.';
+
+  @override
+  String get errorCryptoOperation => '암호화 오류가 발생했습니다. 다시 시도해 주세요.';
+
+  @override
+  String errorSync(String message) {
+    return '동기화 실패: $message';
+  }
+
+  @override
+  String get errorStorage => '로컬 저장소 오류가 발생했습니다. 앱을 다시 시작해 주세요.';
+
+  @override
+  String get errorUnexpected => '예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get errorTitleConnection => '연결 오류';
+
+  @override
+  String get errorTitleServer => '서버 오류';
+
+  @override
+  String get errorTitleSessionExpired => '세션 만료';
+
+  @override
+  String get errorTitleAccessDenied => '접근 거부';
+
+  @override
+  String get errorTitleNotFound => '찾을 수 없음';
+
+  @override
+  String get errorTitleRateLimited => '요청 제한';
+
+  @override
+  String get errorTitleInvalidInput => '잘못된 입력';
+
+  @override
+  String get errorTitleConflict => '충돌';
+
+  @override
+  String get errorTitleCryptoLocked => '암호화 잠김';
+
+  @override
+  String get errorTitleKeyError => '키 오류';
+
+  @override
+  String get errorTitleCrypto => '암호화 오류';
+
+  @override
+  String get errorTitleSync => '동기화 오류';
+
+  @override
+  String get errorTitleStorage => '저장소 오류';
+
+  @override
+  String get termsOfServiceContent =>
+      '이용약관은 현재 작성 중입니다. 현재 AnyNote 서비스 이용에는 개인정보 처리방침이 적용됩니다.';
 }

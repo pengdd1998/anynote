@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/error/exceptions.dart';
 import '../../../core/share/share_service.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -41,7 +42,7 @@ class SharedNoteViewer extends ConsumerStatefulWidget {
 class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
   DecryptedSharedNote? _decryptedNote;
   bool _isDecrypting = true;
-  String? _error;
+  AppException? _error;
   bool? _isServerShare;
 
   final _passwordController = TextEditingController();
@@ -121,7 +122,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'decrypt_failed';
+          _error = const DecryptFailedException();
           _isDecrypting = false;
         });
       }
@@ -164,7 +165,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'incorrect_password';
+          _error = const IncorrectPasswordException();
           _isDecrypting = false;
         });
       }
@@ -184,12 +185,12 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
     );
   }
 
-  /// Resolve the internal error sentinel to a localized user-facing string.
+  /// Resolve the internal typed exception to a localized user-facing string.
   String _resolveError(AppLocalizations l10n) {
     return switch (_error) {
-      'decrypt_failed' => l10n.decryptFailed,
-      'incorrect_password' => l10n.incorrectPassword,
-      _ => _error ?? l10n.couldNotDecryptSharedNote,
+      DecryptFailedException() => l10n.decryptFailed,
+      IncorrectPasswordException() => l10n.incorrectPassword,
+      _ => l10n.couldNotDecryptSharedNote,
     };
   }
 

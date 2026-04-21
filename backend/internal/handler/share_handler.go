@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -31,7 +33,9 @@ func (h *ShareHandler) CreateShare(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req domain.CreateShareRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}
@@ -69,6 +73,9 @@ func (h *ShareHandler) CreateShare(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetShare retrieves a shared note by ID. No authentication required.
+// If the share has a password (HasPassword=true), the client must send the
+// password via the X-Share-Password header or share_password query parameter.
+// The password is hashed and compared against the stored ShareKeyHash.
 // Returns the encrypted blob; the client must decrypt locally.
 func (h *ShareHandler) GetShare(w http.ResponseWriter, r *http.Request) {
 	shareID := chi.URLParam(r, "id")
@@ -85,6 +92,28 @@ func (h *ShareHandler) GetShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If the share is password-protected, verify the password hash.
+	if resp.HasPassword {
+		providedPassword := r.Header.Get("X-Share-Password")
+		if providedPassword == "" {
+			providedPassword = r.URL.Query().Get("share_password")
+		}
+		if providedPassword == "" {
+			writeError(w, r, http.StatusForbidden, "password_required", "This shared note requires a password")
+			return
+		}
+
+		// Hash the provided password and compare with stored hash.
+		hash := sha256.Sum256([]byte(providedPassword))
+		providedHash := hex.EncodeToString(hash[:])
+		if providedHash != resp.ShareKeyHash {
+			writeError(w, r, http.StatusForbidden, "wrong_password", "Incorrect password")
+			return
+		}
+	}
+
+	// Clear the server-side hash before sending to client.
+	resp.ShareKeyHash = ""
 	writeJSON(w, http.StatusOK, resp)
 }
 
@@ -134,7 +163,9 @@ func (h *ShareHandler) ToggleReaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req domain.ReactRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
 		return
 	}

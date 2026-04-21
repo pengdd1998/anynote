@@ -74,6 +74,9 @@ type WSHandler struct {
 	allowedOrigins []string
 }
 
+// wsTokenExpiry is how long a WebSocket-specific token remains valid.
+const wsTokenExpiry = 60 * time.Second
+
 // NewWSHandler creates a new WebSocket handler.
 // allowedOrigins controls which origins may connect via WebSocket.
 // If empty, the wildcard pattern "*" is used (suitable for local development).
@@ -83,6 +86,37 @@ func NewWSHandler(presenceSvc service.PresenceService, jwtSecret string, allowed
 		jwtSecret:      jwtSecret,
 		allowedOrigins: allowedOrigins,
 	}
+}
+
+// GenerateWSToken creates a short-lived (60s) JWT token specifically for
+// WebSocket connections. Requires an authenticated user (access token).
+// POST /api/v1/ws/token
+func (h *WSHandler) GenerateWSToken(w http.ResponseWriter, r *http.Request) {
+	userID, err := parseUserID(r)
+	if err != nil {
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+
+	now := time.Now()
+	claims := jwt.MapClaims{
+		"user_id":    userID.String(),
+		"token_type": "ws",
+		"iat":        now.Unix(),
+		"exp":        now.Add(wsTokenExpiry).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, err := token.SignedString([]byte(h.jwtSecret))
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "token_error", "Failed to generate WebSocket token")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"token":     tokenStr,
+		"expires_in": "60",
+	})
 }
 
 // originPatterns returns the origin patterns for the WebSocket accept options.
@@ -170,6 +204,7 @@ func (h *WSHandler) HandleConnection(w http.ResponseWriter, r *http.Request) {
 }
 
 // validateToken parses and validates a JWT string, returning the user_id claim.
+// Only tokens with token_type "ws" are accepted for WebSocket connections.
 func (h *WSHandler) validateToken(tokenStr string) (string, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -194,10 +229,11 @@ func (h *WSHandler) validateToken(tokenStr string) (string, error) {
 		return "", errors.New("user_id not found in token claims")
 	}
 
-	// Reject refresh tokens used for WebSocket connections.
+	// Only accept WebSocket-specific tokens (token_type "ws").
+	// Reject access tokens and refresh tokens.
 	tokenType, _ := claims["token_type"].(string)
-	if tokenType == "refresh" {
-		return "", errors.New("access token required, refresh token not allowed")
+	if tokenType != "ws" {
+		return "", errors.New("WebSocket token required; use POST /api/v1/ws/token to obtain one")
 	}
 
 	return userID, nil

@@ -1196,12 +1196,11 @@
   "untitledCollection": "Untitled Collection",
   "@untitledCollection": { "description": "Placeholder for untitled collections" },
 
-  "noteCount": "{count} note{suffix}",
+  "noteCount": "{count, plural, =0{0 notes} =1{1 note} other{{count} notes}}",
   "@noteCount": {
-    "description": "Note count display with plural suffix",
+    "description": "Note count display with proper pluralization",
     "placeholders": {
-      "count": { "type": "int" },
-      "suffix": { "type": "String" }
+      "count": { "type": "int" }
     }
   },
 
@@ -2187,5 +2186,107 @@
   "@offlineBanner": { "description": "Banner text shown when the device is offline" },
 
   "unlockRequired": "Please unlock your vault first",
-  "@unlockRequired": { "description": "Message shown when encryption keys are not unlocked" }
+  "@unlockRequired": { "description": "Message shown when encryption keys are not unlocked" },
+
+  "selectAnItemToView": "Select an item to view",
+  "@selectAnItemToView": { "description": "Placeholder text in the detail pane when no item is selected" },
+
+  "comingSoon": "Coming Soon",
+  "@comingSoon": { "description": "Title for features not yet available" },
+
+  "comingSoonMessage": "This feature is not yet available. Stay tuned for future updates!",
+  "@comingSoonMessage": { "description": "Message for features not yet available" },
+
+  "dismiss": "Dismiss",
+  "@dismiss": { "description": "Button label to dismiss a dialog" },
+
+  "errorConnection": "Unable to connect to the server. Please check your internet connection.",
+  "@errorConnection": { "description": "User message for network errors" },
+
+  "errorServer": "A server error occurred. Please try again later.",
+  "@errorServer": { "description": "User message for server errors" },
+
+  "errorSessionExpired": "Your session has expired. Please log in again.",
+  "@errorSessionExpired": { "description": "User message for auth errors" },
+
+  "errorAccessDenied": "You do not have permission to perform this action.",
+  "@errorAccessDenied": { "description": "User message for forbidden errors" },
+
+  "errorNotFound": "The requested item could not be found.",
+  "@errorNotFound": { "description": "User message for not-found errors" },
+
+  "errorRateLimited": "Too many requests. Please wait a moment and try again.",
+  "@errorRateLimited": { "description": "User message for rate-limit errors without specific time" },
+
+  "errorRateLimitedSeconds": "Too many requests. Please wait {seconds} seconds and try again.",
+  "@errorRateLimitedSeconds": {
+    "description": "User message for rate-limit errors with specific retry time",
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+
+  "errorConflict": "A conflict was detected. Please refresh and try again.",
+  "@errorConflict": { "description": "User message for conflict errors" },
+
+  "errorCryptoLocked": "Encryption keys are locked. Please unlock to continue.",
+  "@errorCryptoLocked": { "description": "User message for crypto-locked errors" },
+
+  "errorKeyDerivation": "Key derivation failed. Please check your password.",
+  "@errorKeyDerivation": { "description": "User message for key derivation errors" },
+
+  "errorCryptoOperation": "An encryption error occurred. Please try again.",
+  "@errorCryptoOperation": { "description": "User message for crypto operation errors" },
+
+  "errorSync": "Sync failed: {message}",
+  "@errorSync": {
+    "description": "User message for sync errors",
+    "placeholders": { "message": { "type": "String" } }
+  },
+
+  "errorStorage": "A local storage error occurred. Please restart the app.",
+  "@errorStorage": { "description": "User message for storage errors" },
+
+  "errorUnexpected": "An unexpected error occurred. Please try again.",
+  "@errorUnexpected": { "description": "User message for unknown errors" },
+
+  "errorTitleConnection": "Connection Error",
+  "@errorTitleConnection": { "description": "Dialog title for network errors" },
+
+  "errorTitleServer": "Server Error",
+  "@errorTitleServer": { "description": "Dialog title for server errors" },
+
+  "errorTitleSessionExpired": "Session Expired",
+  "@errorTitleSessionExpired": { "description": "Dialog title for auth errors" },
+
+  "errorTitleAccessDenied": "Access Denied",
+  "@errorTitleAccessDenied": { "description": "Dialog title for forbidden errors" },
+
+  "errorTitleNotFound": "Not Found",
+  "@errorTitleNotFound": { "description": "Dialog title for not-found errors" },
+
+  "errorTitleRateLimited": "Rate Limited",
+  "@errorTitleRateLimited": { "description": "Dialog title for rate-limit errors" },
+
+  "errorTitleInvalidInput": "Invalid Input",
+  "@errorTitleInvalidInput": { "description": "Dialog title for validation errors" },
+
+  "errorTitleConflict": "Conflict",
+  "@errorTitleConflict": { "description": "Dialog title for conflict errors" },
+
+  "errorTitleCryptoLocked": "Encryption Locked",
+  "@errorTitleCryptoLocked": { "description": "Dialog title for crypto-locked errors" },
+
+  "errorTitleKeyError": "Key Error",
+  "@errorTitleKeyError": { "description": "Dialog title for key derivation errors" },
+
+  "errorTitleCrypto": "Encryption Error",
+  "@errorTitleCrypto": { "description": "Dialog title for crypto operation errors" },
+
+  "errorTitleSync": "Sync Error",
+  "@errorTitleSync": { "description": "Dialog title for sync errors" },
+
+  "errorTitleStorage": "Storage Error",
+  "@errorTitleStorage": { "description": "Dialog title for storage errors" },
+
+  "termsOfServiceContent": "Terms of Service are currently being drafted. For now, our Privacy Policy governs the use of AnyNote services.",
+  "@termsOfServiceContent": { "description": "Placeholder content shown when Terms of Service is not yet available" }
 }

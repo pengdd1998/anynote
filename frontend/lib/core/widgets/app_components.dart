@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 
 import '../error/error.dart';
 import '../theme/app_theme.dart';
+import '../../l10n/app_localizations.dart';
 
 // =============================================================================
 // AppEmptyState
@@ -285,7 +286,7 @@ class AppErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final icon = ErrorDisplay.errorIcon(error);
-    final message = ErrorDisplay.userMessage(error);
+    final message = ErrorDisplay.userMessage(error, AppLocalizations.of(context));
 
     return Card(
       child: Padding(

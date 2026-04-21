@@ -676,7 +676,7 @@
 
   "untitledCollection": "無題のコレクション",
 
-  "noteCount": "{count}件のメモ{suffix}",
+  "noteCount": "{count, plural, other{{count}件のメモ}}",
 
   "collectionTitle": "コレクション名",
 
@@ -1222,5 +1222,69 @@
 
   "offlineBanner": "オフラインです \u2014 接続時に変更が同期されます",
 
-  "unlockRequired": "先に保管庫をロック解除してください"
+  "unlockRequired": "先に保管庫をロック解除してください",
+
+  "selectAnItemToView": "項目を選択して表示",
+
+  "comingSoon": "近日公開",
+
+  "comingSoonMessage": "この機能はまだ利用できません。今後のアップデートをお待ちください！",
+
+  "dismiss": "閉じる",
+
+  "errorConnection": "サーバーに接続できません。インターネット接続を確認してください。",
+
+  "errorServer": "サーバーエラーが発生しました。後でもう一度お試しください。",
+
+  "errorSessionExpired": "セッションが期限切れです。再度ログインしてください。",
+
+  "errorAccessDenied": "このアクションを実行する権限がありません。",
+
+  "errorNotFound": "要求された項目が見つかりませんでした。",
+
+  "errorRateLimited": "リクエストが多すぎます。しばらくしてからもう一度お試しください。",
+
+  "errorRateLimitedSeconds": "リクエストが多すぎます。{seconds}秒後にもう一度お試しください。",
+
+  "errorConflict": "競合が検出されました。更新してもう一度お試しください。",
+
+  "errorCryptoLocked": "暗号化キーがロックされています。続行するにはロックを解除してください。",
+
+  "errorKeyDerivation": "キーの導出に失敗しました。パスワードを確認してください。",
+
+  "errorCryptoOperation": "暗号化エラーが発生しました。もう一度お試しください。",
+
+  "errorSync": "同期に失敗しました：{message}",
+
+  "errorStorage": "ローカルストレージエラーが発生しました。アプリを再起動してください。",
+
+  "errorUnexpected": "予期しないエラーが発生しました。もう一度お試しください。",
+
+  "errorTitleConnection": "接続エラー",
+
+  "errorTitleServer": "サーバーエラー",
+
+  "errorTitleSessionExpired": "セッション期限切れ",
+
+  "errorTitleAccessDenied": "アクセス拒否",
+
+  "errorTitleNotFound": "見つかりません",
+
+  "errorTitleRateLimited": "リクエスト制限",
+
+  "errorTitleInvalidInput": "無効な入力",
+
+  "errorTitleConflict": "競合",
+
+  "errorTitleCryptoLocked": "暗号化ロック",
+
+  "errorTitleKeyError": "キーエラー",
+
+  "errorTitleCrypto": "暗号化エラー",
+
+  "errorTitleSync": "同期エラー",
+
+  "errorTitleStorage": "ストレージエラー",
+
+  "termsOfServiceContent": "利用規約は現在作成中です。現時点ではプライバシーポリシーがAnyNoteサービスの利用に適用されます。"
 }

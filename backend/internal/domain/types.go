@@ -346,6 +346,7 @@ type GetShareResponse struct {
 	EncryptedContent string     `json:"encrypted_content"`
 	EncryptedTitle   string     `json:"encrypted_title"`
 	HasPassword      bool       `json:"has_password"`
+	ShareKeyHash     string     `json:"-"` // Server-side only: used for password verification
 	ExpiresAt        *time.Time `json:"expires_at,omitempty"`
 	ViewCount        int        `json:"view_count"`
 	MaxViews         *int       `json:"max_views,omitempty"`

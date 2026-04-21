@@ -29,6 +29,7 @@ import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../settings/data/settings_providers.dart';
+import '../domain/decrypted_note.dart';
 import 'template_picker.dart';
 
 /// Page size for paginated note loading.
@@ -1401,7 +1402,7 @@ class _InlineNoteDetail extends ConsumerStatefulWidget {
 }
 
 class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
-  _DecryptedNote? _data;
+  DecryptedNote? _data;
   bool _isLoading = true;
   String? _error;
 
@@ -1457,7 +1458,7 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
 
       if (!mounted) return;
       setState(() {
-        _data = _DecryptedNote(
+        _data = DecryptedNote(
           title: title,
           content: content,
           updatedAt: note.updatedAt,
@@ -1600,21 +1601,6 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
       ],
     );
   }
-}
-
-/// Simple data class for a decrypted note's display properties.
-class _DecryptedNote {
-  final String title;
-  final String content;
-  final DateTime updatedAt;
-  final bool isSynced;
-
-  _DecryptedNote({
-    required this.title,
-    required this.content,
-    required this.updatedAt,
-    required this.isSynced,
-  });
 }
 
 /// Staggered entrance animation for note cards.

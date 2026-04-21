@@ -59,6 +59,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	authRateLimiter := service.NewRateLimiter(20, time.Minute)    // 20 req/min per IP
 	syncRateLimiter := service.NewRateLimiter(30, time.Minute)    // 30 req/min per user
 	publishRateLimiter := service.NewRateLimiter(10, time.Minute) // 10 req/min per user
+	discoverRateLimiter := service.NewRateLimiter(60, time.Minute) // 60 req/min per IP
 
 	r.Route("/api/v1", func(r chi.Router) {
 		// Public auth routes (rate limited by IP)
@@ -71,8 +72,8 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 		// Public share retrieval (no auth required)
 		r.Get("/share/{id}", shareH.GetShare)
 
-		// Public discovery feed (no auth required)
-		r.Get("/share/discover", shareH.DiscoverFeed)
+		// Public discovery feed (no auth required, rate limited by IP)
+		r.With(RateLimitMiddleware(discoverRateLimiter, IPKeyFunc, time.Minute)).Get("/share/discover", shareH.DiscoverFeed)
 
 		// WebSocket (auth handled inside handler via query-param token)
 		r.Get("/ws", wsH.HandleConnection)
@@ -80,6 +81,9 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 		// Authenticated routes
 		r.Group(func(r chi.Router) {
 			r.Use(AuthMiddleware(cfg.Auth.JWTSecret))
+
+			// WebSocket token generation (requires access token)
+			r.Post("/ws/token", wsH.GenerateWSToken)
 
 			// Auth
 			r.Get("/auth/me", authH.Me)
