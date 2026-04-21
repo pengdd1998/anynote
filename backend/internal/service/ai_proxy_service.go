@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 
@@ -80,8 +81,10 @@ func (s *aiProxyService) Proxy(ctx context.Context, userID string, req domain.AI
 		return nil, ErrQuotaExceeded
 	}
 
-	// Increment usage
-	_ = s.quotaSvc.IncrementUsage(ctx, uid)
+	// Increment usage (non-fatal: do not block the request on quota tracking failure).
+	if err := s.quotaSvc.IncrementUsage(ctx, uid); err != nil {
+		slog.Error("failed to increment AI usage", "user_id", userID, "error", err)
+	}
 
 	// 3. Use server default LLM
 	chatReq := s.toChatRequest(req, s.defaultCfg)

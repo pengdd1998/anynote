@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -164,8 +165,7 @@ type Services struct {
 // or DEBUG environment variable is set to a truthy value ("1", "true", "yes").
 // In production without these variables the routes are not registered.
 func registerPprofRoutes(r chi.Router) {
-	enabled := os.Getenv("PPROF_ENABLED") != "" || os.Getenv("DEBUG") != ""
-	if !enabled {
+	if !isTruthyEnv("PPROF_ENABLED") && !isTruthyEnv("DEBUG") {
 		return
 	}
 
@@ -176,4 +176,15 @@ func registerPprofRoutes(r chi.Router) {
 		r.HandleFunc("/pprof/symbol", http.DefaultServeMux.ServeHTTP)
 		r.HandleFunc("/pprof/trace", http.DefaultServeMux.ServeHTTP)
 	})
+}
+
+// isTruthyEnv returns true if the environment variable is set to a truthy value
+// ("1", "true", "yes"). Empty string or any other value returns false.
+func isTruthyEnv(key string) bool {
+	v := os.Getenv(key)
+	if v == "" {
+		return false
+	}
+	b, _ := strconv.ParseBool(v)
+	return b
 }

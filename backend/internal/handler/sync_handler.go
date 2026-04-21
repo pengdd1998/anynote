@@ -78,6 +78,8 @@ func (h *SyncHandler) Push(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	defer r.Body.Close()
+
 	var req domain.SyncPushRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
@@ -158,6 +160,8 @@ func (h *SyncHandler) BatchDelete(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
+
+	defer r.Body.Close()
 
 	var req domain.BatchDeleteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

@@ -17,7 +17,7 @@ import (
 )
 
 func TestAuthMiddlewareValidToken(t *testing.T) {
-	secret := "test-secret"
+	secret := "test-secret-minimum-16"
 
 	// Generate a valid access token
 	claims := jwt.MapClaims{
@@ -57,7 +57,7 @@ func TestAuthMiddlewareValidToken(t *testing.T) {
 }
 
 func TestAuthMiddlewareMissingToken(t *testing.T) {
-	secret := "test-secret"
+	secret := "test-secret-minimum-16"
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("next should not be called without token")
@@ -76,7 +76,7 @@ func TestAuthMiddlewareMissingToken(t *testing.T) {
 }
 
 func TestAuthMiddlewareInvalidToken(t *testing.T) {
-	secret := "test-secret"
+	secret := "test-secret-minimum-16"
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("next should not be called with invalid token")
@@ -96,7 +96,7 @@ func TestAuthMiddlewareInvalidToken(t *testing.T) {
 }
 
 func TestAuthMiddleware_NoBearerPrefix(t *testing.T) {
-	secret := "test-secret"
+	secret := "test-secret-minimum-16"
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("next should not be called without Bearer prefix")
@@ -122,7 +122,7 @@ func TestAuthMiddleware_NoBearerPrefix(t *testing.T) {
 }
 
 func TestAuthMiddleware_TokenMissingUserID(t *testing.T) {
-	secret := "test-secret"
+	secret := "test-secret-minimum-16"
 
 	// Create a valid JWT but without user_id claim.
 	claims := jwt.MapClaims{
@@ -158,7 +158,7 @@ func TestAuthMiddleware_TokenMissingUserID(t *testing.T) {
 }
 
 func TestAuthMiddleware_ExpiredToken(t *testing.T) {
-	secret := "test-secret"
+	secret := "test-secret-minimum-16"
 
 	// Create an expired JWT.
 	claims := jwt.MapClaims{
@@ -188,7 +188,7 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 }
 
 func TestAuthMiddleware_RefreshTokenRejected(t *testing.T) {
-	secret := "test-secret"
+	secret := "test-secret-minimum-16"
 
 	// Create a valid JWT with token_type=refresh.
 	claims := jwt.MapClaims{

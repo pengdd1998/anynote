@@ -1,7 +1,6 @@
 package service
 
 import (
-	"math/rand"
 	"sync"
 	"time"
 )
@@ -137,23 +136,17 @@ func (r *RateLimiter) evictLocked(now time.Time) {
 	}
 
 	// Sample up to sampleSize random keys for eviction.
+	// Collect keys lazily and stop early once we've checked enough.
 	const sampleSize = 200
-	keys := make([]string, 0, len(r.windows))
-	for k := range r.windows {
-		keys = append(keys, k)
-	}
-
-	// Shuffle and check a subset.
-	rand.Shuffle(len(keys), func(i, j int) { keys[i], keys[j] = keys[j], keys[i] })
-	limit := sampleSize
-	if limit > len(keys) {
-		limit = len(keys)
-	}
-	for i := 0; i < limit; i++ {
-		k := keys[i]
-		if w, ok := r.windows[k]; ok && r.isWindowExpired(w, windowStart) {
-			delete(r.windows, k)
+	checked := 0
+	for key := range r.windows {
+		if checked >= sampleSize {
+			break
 		}
+		if r.isWindowExpired(r.windows[key], windowStart) {
+			delete(r.windows, key)
+		}
+		checked++
 	}
 }
 

@@ -73,7 +73,12 @@ func (s *syncService) Pull(ctx context.Context, userID uuid.UUID, sinceVersion i
 		return nil, err
 	}
 
-	latestVersion, _ := s.blobRepo.GetLatestVersion(ctx, userID)
+	latestVersion, err := s.blobRepo.GetLatestVersion(ctx, userID)
+	if err != nil {
+		slog.Error("failed to get latest version", "user_id", userID.String(), "error", err)
+		// Continue with zero — the client will re-sync on next pull.
+		latestVersion = 0
+	}
 
 	// Determine next cursor and whether there are more pages.
 	var nextCursor int
@@ -195,7 +200,10 @@ func (s *syncService) Push(ctx context.Context, userID uuid.UUID, req domain.Syn
 }
 
 func (s *syncService) GetStatus(ctx context.Context, userID uuid.UUID) (*domain.SyncStatusResponse, error) {
-	summary, _ := s.blobRepo.GetStatusSummary(ctx, userID)
+	summary, err := s.blobRepo.GetStatusSummary(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get status summary: %w", err)
+	}
 
 	return &domain.SyncStatusResponse{
 		LatestVersion: summary.LatestVersion,
@@ -247,7 +255,10 @@ func (s *syncService) BatchDelete(ctx context.Context, userID uuid.UUID, itemIDs
 }
 
 func (s *syncService) GetProgress(ctx context.Context, userID uuid.UUID) (*domain.SyncProgressResponse, error) {
-	summary, _ := s.blobRepo.GetStatusSummary(ctx, userID)
+	summary, err := s.blobRepo.GetStatusSummary(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get status summary: %w", err)
+	}
 
 	conflictCount, err := s.blobRepo.GetConflictCount(ctx, userID)
 	if err != nil {

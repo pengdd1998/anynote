@@ -136,7 +136,10 @@ func (h *AIJobHandler) resolveConfig(ctx context.Context, uid uuid.UUID, req dom
 		return llm.GatewayConfig{}, chatReq, fmt.Errorf("quota exceeded")
 	}
 
-	_ = h.quotaSvc.IncrementUsage(ctx, uid)
+	// Increment usage (non-fatal: do not block the job on quota tracking failure).
+	if err := h.quotaSvc.IncrementUsage(ctx, uid); err != nil {
+		slog.Error("failed to increment AI usage in job", "user_id", uid.String(), "error", err)
+	}
 
 	if chatReq.Model == "" {
 		chatReq.Model = h.defaultCfg.Model

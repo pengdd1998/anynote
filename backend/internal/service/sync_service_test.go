@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -513,21 +514,18 @@ func TestSyncService_GetStatus_Success(t *testing.T) {
 func TestSyncService_GetStatus_RepoErrors(t *testing.T) {
 	userID := uuid.New()
 
-	// GetStatus tolerates summary query errors (uses zero values).
+	// GetStatus propagates summary query errors.
 	repo := &mockSyncBlobRepo{
 		statusSummaryErr: errors.New("summary query failed"),
 	}
 
 	svc := NewSyncService(repo)
-	status, err := svc.GetStatus(context.Background(), userID)
-	if err != nil {
-		t.Fatalf("GetStatus should not return error: %v", err)
+	_, err := svc.GetStatus(context.Background(), userID)
+	if err == nil {
+		t.Fatal("GetStatus should return error when repo fails")
 	}
-	if status.LatestVersion != 0 {
-		t.Errorf("LatestVersion = %d, want 0 (default on error)", status.LatestVersion)
-	}
-	if status.TotalItems != 0 {
-		t.Errorf("TotalItems = %d, want 0 (default on error)", status.TotalItems)
+	if !strings.Contains(err.Error(), "summary query failed") {
+		t.Errorf("error should wrap repo error, got: %v", err)
 	}
 }
 

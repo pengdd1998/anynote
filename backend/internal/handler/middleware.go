@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -35,6 +36,9 @@ func MaxBodySize(maxBytes int64) func(http.Handler) http.Handler {
 
 // AuthMiddleware validates JWT tokens and injects user_id into context.
 func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
+	if len(jwtSecret) < 16 {
+		panic(fmt.Sprintf("JWT_SECRET must be at least 16 characters, got %d", len(jwtSecret)))
+	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -43,8 +47,12 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-			if tokenStr == authHeader {
+			// Normalize "Bearer" prefix (case-insensitive per RFC 6750).
+			tokenStr := authHeader
+			if strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
+				tokenStr = strings.TrimSpace(authHeader[7:])
+			}
+			if tokenStr == "" || tokenStr == authHeader {
 				writeError(w, r, http.StatusUnauthorized, "invalid_authorization", "Bearer token required")
 				return
 			}

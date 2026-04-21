@@ -24,9 +24,17 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	defer r.Body.Close()
+
 	var req domain.AIProxyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		return
+	}
+
+	// Per-field validation: limit message count to prevent abuse.
+	if len(req.Messages) > 100 {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "Too many messages (max 100)")
 		return
 	}
 
