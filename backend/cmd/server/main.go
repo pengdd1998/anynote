@@ -48,6 +48,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Log warnings for non-critical configuration issues
+	cfg.Warn()
+
 	// Initialize structured logger
 	initLogger(cfg.LogLevel(), cfg.LogFormat())
 	slog.Info("configuration loaded", "log_level", cfg.LogLevel(), "log_format", cfg.LogFormat())

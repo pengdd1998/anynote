@@ -46,7 +46,9 @@ void main() {
     testWidgets('synced state has correct tooltip', (tester) async {
       await pumpBadge(tester, isSynced: true);
 
-      final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
+      final tooltip = tester.widget<Tooltip>(
+        find.byWidgetPredicate((w) => w is Tooltip && w.message != null),
+      );
       expect(tooltip.message, 'Synced');
     });
 
@@ -77,7 +79,9 @@ void main() {
     testWidgets('pending state has correct tooltip', (tester) async {
       await pumpBadge(tester, isSynced: false);
 
-      final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
+      final tooltip = tester.widget<Tooltip>(
+        find.byWidgetPredicate((w) => w is Tooltip && w.message != null),
+      );
       expect(tooltip.message, 'Pending sync');
     });
 
@@ -101,7 +105,9 @@ void main() {
     testWidgets('conflict state has correct tooltip', (tester) async {
       await pumpBadge(tester, isSynced: false, hasConflict: true);
 
-      final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
+      final tooltip = tester.widget<Tooltip>(
+        find.byWidgetPredicate((w) => w is Tooltip && w.message != null),
+      );
       expect(tooltip.message, 'Sync conflict');
     });
 
@@ -123,7 +129,12 @@ void main() {
     testWidgets('uses tooltip as default semantic label', (tester) async {
       await pumpBadge(tester, isSynced: true);
 
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate((w) =>
+            w is Semantics &&
+            w.properties.label != null &&
+            w.properties.label!.isNotEmpty),
+      );
       expect(semantics.properties.label, 'Synced');
     });
 
@@ -134,7 +145,12 @@ void main() {
         semanticLabel: 'Note is synced to server',
       );
 
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate((w) =>
+            w is Semantics &&
+            w.properties.label != null &&
+            w.properties.label!.isNotEmpty),
+      );
       expect(semantics.properties.label, 'Note is synced to server');
     });
 
@@ -144,8 +160,17 @@ void main() {
         (tester) async {
       await pumpBadge(tester, isSynced: true);
 
-      expect(find.byType(Tooltip), findsOneWidget);
-      expect(find.byType(Semantics), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is Tooltip && w.message != null),
+        findsOneWidget,
+      );
+      expect(
+        find.byWidgetPredicate((w) =>
+            w is Semantics &&
+            w.properties.label != null &&
+            w.properties.label!.isNotEmpty),
+        findsOneWidget,
+      );
       expect(find.byType(Icon), findsOneWidget);
     });
   });

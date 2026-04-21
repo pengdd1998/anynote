@@ -93,7 +93,9 @@ func (h *PublishJobHandler) HandleTask(ctx context.Context, t *asynq.Task) error
 		slog.Error("publish job: unsupported platform",
 			"platform", payload.Platform, "error", err,
 		)
-		_ = h.publishRepo.UpdateStatus(ctx, logID, "failed", fmt.Sprintf("unsupported platform: %s", payload.Platform), "")
+		if updateErr := h.publishRepo.UpdateStatus(ctx, logID, "failed", fmt.Sprintf("unsupported platform: %s", payload.Platform), ""); updateErr != nil {
+			slog.Error("publish job: failed to update status", "publish_log_id", payload.PublishLogID, "error", updateErr)
+		}
 		return nil // Non-retriable
 	}
 
@@ -103,7 +105,9 @@ func (h *PublishJobHandler) HandleTask(ctx context.Context, t *asynq.Task) error
 		slog.Error("publish job: platform not connected",
 			"user_id", payload.UserID, "platform", payload.Platform, "error", err,
 		)
-		_ = h.publishRepo.UpdateStatus(ctx, logID, "failed", "platform not connected", "")
+		if updateErr := h.publishRepo.UpdateStatus(ctx, logID, "failed", "platform not connected", ""); updateErr != nil {
+			slog.Error("publish job: failed to update status", "publish_log_id", payload.PublishLogID, "error", updateErr)
+		}
 		return nil // Non-retriable
 	}
 
@@ -111,7 +115,9 @@ func (h *PublishJobHandler) HandleTask(ctx context.Context, t *asynq.Task) error
 		slog.Error("publish job: no auth data stored",
 			"user_id", payload.UserID, "platform", payload.Platform,
 		)
-		_ = h.publishRepo.UpdateStatus(ctx, logID, "failed", "platform authentication expired", "")
+		if updateErr := h.publishRepo.UpdateStatus(ctx, logID, "failed", "platform authentication expired", ""); updateErr != nil {
+			slog.Error("publish job: failed to update status", "publish_log_id", payload.PublishLogID, "error", updateErr)
+		}
 		return nil // Non-retriable
 	}
 
@@ -128,7 +134,9 @@ func (h *PublishJobHandler) HandleTask(ctx context.Context, t *asynq.Task) error
 		slog.Error("publish job: publish failed",
 			"platform", payload.Platform, "error", err,
 		)
-		_ = h.publishRepo.UpdateStatus(ctx, logID, "failed", err.Error(), "")
+		if updateErr := h.publishRepo.UpdateStatus(ctx, logID, "failed", err.Error(), ""); updateErr != nil {
+			slog.Error("publish job: failed to update status", "publish_log_id", payload.PublishLogID, "error", updateErr)
+		}
 
 		// Notify the user that publishing failed.
 		h.sendPublishPush(context.Background(), payload.UserID, payload.Platform, payload.PublishLogID, false, err.Error())

@@ -144,7 +144,8 @@ void main() {
     });
 
     tearDown(() {
-      notifier.dispose();
+      // Only dispose the fakeClient and container; container.dispose() will
+      // handle disposing the PresenceNotifier obtained from the provider.
       fakeClient.dispose();
       container.dispose();
     });

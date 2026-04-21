@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -347,7 +348,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 				chromedp.Sleep(actionDelay),
 			); err != nil {
 				// Non-fatal: tags are supplementary content.
-				_ = err
+				slog.Debug("platform: tag insertion failed (non-fatal)", "platform", "zhihu", "error", err)
 			}
 		}
 	}

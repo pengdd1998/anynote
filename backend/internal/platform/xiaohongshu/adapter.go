@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -352,7 +353,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 		); err != nil {
 			// Non-fatal: tags may not be supported in this exact way.
 			// Log and continue.
-			_ = err
+			slog.Debug("platform: tag insertion failed (non-fatal)", "platform", "xiaohongshu", "error", err)
 		}
 	}
 

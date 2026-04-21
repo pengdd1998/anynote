@@ -86,6 +86,154 @@ void main() {
   });
 
   // ===========================================================================
+  // CRDTText -- local insert positions
+  // ===========================================================================
+
+  group('CRDTText local insert positions', () {
+    test('insert single character', () {
+      final crdt = CRDTText('site-A');
+      final nodes = crdt.localInsert(0, 'x');
+      expect(nodes.length, equals(1));
+      expect(nodes[0].value, equals('x'));
+      expect(nodes[0].siteId, equals('site-A'));
+      expect(nodes[0].id, equals('site-A:1'));
+      expect(crdt.text, equals('x'));
+    });
+
+    test('insert at the end of existing text', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'ab');
+      crdt.localInsert(2, 'cd');
+      expect(crdt.text, equals('abcd'));
+    });
+
+    test('insert at the beginning of existing text', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'cd');
+      crdt.localInsert(0, 'ab');
+      expect(crdt.text, equals('abcd'));
+    });
+
+    test('insert in the middle of existing text', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'ad');
+      crdt.localInsert(1, 'bc');
+      expect(crdt.text, equals('abcd'));
+    });
+
+    test('insert multi-byte unicode characters', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'hello');
+      crdt.localInsert(5, ' world');
+      expect(crdt.text, equals('hello world'));
+    });
+
+    test('node IDs are unique for each inserted character', () {
+      final crdt = CRDTText('site-A');
+      final nodes = crdt.localInsert(0, 'abc');
+      final ids = nodes.map((n) => n.id).toSet();
+      expect(ids.length, equals(3));
+    });
+
+    test('nodes are chained: each node leftOriginId is the previous node id', () {
+      final crdt = CRDTText('site-A');
+      final nodes = crdt.localInsert(0, 'abc');
+
+      // First node anchors at the start sentinel (empty string).
+      expect(nodes[0].leftOriginId, isEmpty);
+
+      // Second node is anchored after the first.
+      expect(nodes[1].leftOriginId, equals(nodes[0].id));
+
+      // Third node is anchored after the second.
+      expect(nodes[2].leftOriginId, equals(nodes[1].id));
+    });
+
+    test('nodeCount includes tombstones', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc');
+      expect(crdt.nodeCount, equals(3));
+
+      crdt.localDelete(1, 1);
+      // Node count is still 3 because deletes are tombstones.
+      expect(crdt.nodeCount, equals(3));
+    });
+
+    test('isEmpty is false after insert', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'a');
+      expect(crdt.isEmpty, isFalse);
+    });
+
+    test('isEmpty is true after all content deleted', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'a');
+      crdt.localDelete(0, 1);
+      // _nodes still has the tombstone, so isEmpty depends on nodeCount.
+      expect(crdt.isEmpty, isFalse);
+      expect(crdt.text, isEmpty);
+    });
+  });
+
+  // ===========================================================================
+  // CRDTText -- local delete behavior
+  // ===========================================================================
+
+  group('CRDTText local delete behavior', () {
+    test('delete returns the IDs of tombstoned nodes', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc');
+      final deletedIds = crdt.localDelete(0, 2);
+      expect(deletedIds.length, equals(2));
+      // Each ID should follow the pattern site-A:N.
+      for (final id in deletedIds) {
+        expect(id, startsWith('site-A:'));
+      }
+    });
+
+    test('delete from middle leaves surrounding text intact', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abcde');
+      crdt.localDelete(2, 1);
+      expect(crdt.text, equals('abde'));
+    });
+
+    test('multiple sequential deletes', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abcde');
+      crdt.localDelete(0, 1); // 'bcde'
+      crdt.localDelete(0, 1); // 'cde'
+      crdt.localDelete(0, 1); // 'de'
+      expect(crdt.text, equals('de'));
+    });
+
+    test('delete from end', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc');
+      crdt.localDelete(2, 1);
+      expect(crdt.text, equals('ab'));
+    });
+
+    test('delete entire document leaves empty text', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'xyz');
+      crdt.localDelete(0, 3);
+      expect(crdt.text, isEmpty);
+    });
+
+    test('deleted nodes have isDeleted true and empty value', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc');
+      final deletedIds = crdt.localDelete(1, 1);
+
+      final deletedNode =
+          crdt.getOperations().firstWhere((n) => n.id == deletedIds[0]);
+      expect(deletedNode.isDeleted, isTrue);
+      expect(deletedNode.value, isEmpty);
+    });
+  });
+
+  // ===========================================================================
   // CRDTText -- remote operations & convergence
   // ===========================================================================
 
@@ -325,6 +473,188 @@ void main() {
   });
 
   // ===========================================================================
+  // CRDTText -- remote insert causal dependency
+  // ===========================================================================
+
+  group('CRDTText remote insert causal dependency', () {
+    test('remoteInsert returns false when leftOrigin not yet present', () {
+      final crdt = CRDTText('site-A');
+
+      // Create a node that depends on a nonexistent leftOrigin.
+      final node = RGANode(
+        id: 'site-B:1',
+        leftOriginId: 'site-B:99', // Not present in crdt.
+        rightOriginId: '',
+        siteId: 'site-B',
+        clock: 1,
+        value: 'x',
+      );
+
+      final result = crdt.remoteInsert(node);
+      expect(result, isFalse);
+      expect(crdt.text, isEmpty);
+    });
+
+    test('remoteInsert returns false when rightOrigin not yet present', () {
+      final crdt = CRDTText('site-A');
+
+      // Create a node whose rightOrigin is not yet present.
+      final node = RGANode(
+        id: 'site-B:1',
+        leftOriginId: '',
+        rightOriginId: 'site-B:99', // Not present.
+        siteId: 'site-B',
+        clock: 1,
+        value: 'x',
+      );
+
+      final result = crdt.remoteInsert(node);
+      expect(result, isFalse);
+    });
+
+    test('remoteInsert returns true when both origins are empty', () {
+      final crdt = CRDTText('site-A');
+      final node = RGANode(
+        id: 'site-B:1',
+        leftOriginId: '',
+        rightOriginId: '',
+        siteId: 'site-B',
+        clock: 1,
+        value: 'x',
+      );
+
+      final result = crdt.remoteInsert(node);
+      expect(result, isTrue);
+      expect(crdt.text, equals('x'));
+    });
+
+    test('remoteInsert returns true when leftOrigin is present', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'a');
+      final anchorId = crdt.getOperations().first.id;
+
+      final node = RGANode(
+        id: 'site-B:1',
+        leftOriginId: anchorId,
+        rightOriginId: '',
+        siteId: 'site-B',
+        clock: 1,
+        value: 'x',
+      );
+
+      final result = crdt.remoteInsert(node);
+      expect(result, isTrue);
+      expect(crdt.text, equals('ax'));
+    });
+
+    test('remoteInsert updates Lamport clock on success', () {
+      final crdt = CRDTText('site-A');
+      expect(crdt.clock, equals(0));
+
+      final node = RGANode(
+        id: 'site-B:10',
+        leftOriginId: '',
+        rightOriginId: '',
+        siteId: 'site-B',
+        clock: 10,
+        value: 'x',
+      );
+
+      crdt.remoteInsert(node);
+      // Clock should be at least 10 (from _updateClock).
+      expect(crdt.clock, greaterThanOrEqualTo(10));
+    });
+  });
+
+  // ===========================================================================
+  // CRDTText -- remoteDelete
+  // ===========================================================================
+
+  group('CRDTText remoteDelete', () {
+    test('remoteDelete on existing node marks it as tombstone', () {
+      final crdt = CRDTText('site-A');
+      final nodes = crdt.localInsert(0, 'abc');
+
+      crdt.remoteDelete(nodes[1].id); // Delete 'b'.
+
+      expect(crdt.text, equals('ac'));
+    });
+
+    test('remoteDelete on nonexistent node is a no-op', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc');
+
+      // Delete a node ID that does not exist.
+      crdt.remoteDelete('nonexistent:999');
+
+      expect(crdt.text, equals('abc'));
+    });
+
+    test('remoteDelete is idempotent', () {
+      final crdt = CRDTText('site-A');
+      final nodes = crdt.localInsert(0, 'abc');
+
+      crdt.remoteDelete(nodes[0].id);
+      crdt.remoteDelete(nodes[0].id); // Delete same node again.
+
+      expect(crdt.text, equals('bc'));
+    });
+  });
+
+  // ===========================================================================
+  // CRDTText -- getOperations / getOpsSince
+  // ===========================================================================
+
+  group('CRDTText getOperations / getOpsSince', () {
+    test('getOperations returns all nodes including tombstones', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc');
+      crdt.localDelete(1, 1);
+
+      final ops = crdt.getOperations();
+      // 3 original nodes, all present (1 tombstoned).
+      expect(ops.length, equals(3));
+      final tombstoned = ops.where((n) => n.isDeleted).toList();
+      expect(tombstoned.length, equals(1));
+    });
+
+    test('getOperations returns unmodifiable list', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'ab');
+      final ops = crdt.getOperations();
+
+      expect(() => ops.add(RGANode(
+        id: 'x:1',
+        leftOriginId: '',
+        rightOriginId: '',
+        siteId: 'x',
+        clock: 1,
+        value: 'y',
+      )), throwsUnsupportedError);
+    });
+
+    test('getOpsSince returns nodes with clock greater than threshold', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc'); // clocks 1, 2, 3
+
+      final opsSince0 = crdt.getOpsSince(0);
+      expect(opsSince0.length, equals(3));
+
+      final opsSince1 = crdt.getOpsSince(1);
+      expect(opsSince1.length, equals(2));
+
+      final opsSince2 = crdt.getOpsSince(2);
+      expect(opsSince2.length, equals(1));
+
+      final opsSince3 = crdt.getOpsSince(3);
+      expect(opsSince3, isEmpty);
+
+      final opsSince100 = crdt.getOpsSince(100);
+      expect(opsSince100, isEmpty);
+    });
+  });
+
+  // ===========================================================================
   // CRDTText -- serialization
   // ===========================================================================
 
@@ -397,6 +727,53 @@ void main() {
       final node = RGANode.fromJson(json);
       expect(node.isDeleted, isFalse);
       expect(node.rightOriginId, isEmpty);
+    });
+
+    test('toJson contains expected keys', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'a');
+      final json = crdt.toJson();
+
+      expect(json, contains('site_id'));
+      expect(json, contains('clock'));
+      expect(json, contains('nodes'));
+      expect(json['site_id'], equals('site-A'));
+      expect(json['nodes'], isA<List>());
+    });
+
+    test('RGANode toJson contains expected keys', () {
+      final node = RGANode(
+        id: 's:1',
+        leftOriginId: '',
+        rightOriginId: '',
+        siteId: 's',
+        clock: 1,
+        value: 'a',
+      );
+      final json = node.toJson();
+
+      expect(json, contains('id'));
+      expect(json, contains('left_origin'));
+      expect(json, contains('right_origin'));
+      expect(json, contains('site'));
+      expect(json, contains('clock'));
+      expect(json, contains('value'));
+      expect(json, contains('deleted'));
+    });
+
+    test('RGANode toString contains key fields', () {
+      final node = RGANode(
+        id: 's:1',
+        leftOriginId: '',
+        rightOriginId: '',
+        siteId: 's',
+        clock: 1,
+        value: 'a',
+      );
+      final str = node.toString();
+      expect(str, contains('s:1'));
+      expect(str, contains('a'));
+      expect(str, contains('false'));
     });
   });
 
@@ -565,6 +942,227 @@ void main() {
       crdt.localInsert(0, 'a');
       crdt.localInsert(100, 'b'); // Way past the end.
       expect(crdt.text, equals('ab'));
+    });
+
+    test('delete on empty document returns empty list', () {
+      final crdt = CRDTText('site-A');
+      final deleted = crdt.localDelete(0, 5);
+      expect(deleted, isEmpty);
+      expect(crdt.text, isEmpty);
+    });
+
+    test('delete at index beyond visible length returns empty list', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc');
+      final deleted = crdt.localDelete(10, 1);
+      expect(deleted, isEmpty);
+    });
+
+    test('merge of empty list is a no-op', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc');
+      final textBefore = crdt.text;
+
+      crdt.merge([]);
+      expect(crdt.text, equals(textBefore));
+    });
+  });
+
+  // ===========================================================================
+  // Stress and convergence deep tests
+  // ===========================================================================
+
+  group('stress convergence', () {
+    test('10 sites all inserting at position 0 converge', () {
+      final siteCount = 10;
+      final sites = List.generate(siteCount, (i) => CRDTText('site-$i'));
+
+      final allOps = <RGANode>[];
+      for (final site in sites) {
+        final ops = site.localInsert(0, site.siteId.substring(5));
+        allOps.addAll(ops);
+      }
+
+      for (final site in sites) {
+        site.merge(allOps);
+      }
+
+      final expected = sites[0].text;
+      for (final site in sites) {
+        expect(site.text, equals(expected));
+      }
+      // Ordered by siteId: 0, 1, 2, ... 9.
+      expect(expected, equals('0123456789'));
+    });
+
+    test('interleaved insert and delete across many sites converges', () {
+      // Use a simpler approach: each site makes concurrent inserts only,
+      // after a shared base. Then verify all converge.
+      final siteCount = 5;
+      final sites = List.generate(siteCount, (i) => CRDTText('site-$i'));
+
+      // All sites start with a shared base "XX".
+      sites[0].localInsert(0, 'XX');
+      final baseOps = sites[0].getOperations();
+
+      for (var i = 1; i < siteCount; i++) {
+        sites[i].merge(baseOps);
+      }
+
+      // Each site inserts a different character between the two Xs.
+      final perSiteOps = <List<RGANode>>[];
+      for (var i = 0; i < siteCount; i++) {
+        final ops = sites[i].localInsert(1, String.fromCharCode(65 + i));
+        perSiteOps.add(ops);
+      }
+
+      // Star merge: each site receives every other site's ops.
+      for (var i = 0; i < siteCount; i++) {
+        for (var j = 0; j < siteCount; j++) {
+          if (i != j) {
+            for (final node in perSiteOps[j]) {
+              sites[i].remoteInsert(node);
+            }
+          }
+        }
+      }
+
+      // All must converge to the same text.
+      final expected = sites[0].text;
+      for (final site in sites) {
+        expect(site.text, equals(expected));
+      }
+      // Ordered by siteId: A, B, C, D, E between the two Xs.
+      expect(expected, equals('XABCDEX'));
+    });
+
+    test('repeated merge is idempotent', () {
+      final a = CRDTText('site-A');
+      final b = CRDTText('site-B');
+
+      a.localInsert(0, 'hello');
+      final opsA = a.getOperations();
+
+      b.merge(opsA);
+      final textAfterFirstMerge = b.text;
+
+      // Merge again with the same ops.
+      b.merge(opsA);
+
+      expect(b.text, equals(textAfterFirstMerge));
+    });
+
+    test('concurrent inserts at multiple positions converge', () {
+      final a = CRDTText('site-A');
+      final b = CRDTText('site-B');
+
+      // Shared base text "abcdef".
+      a.localInsert(0, 'abcdef');
+      b.merge(a.getOperations());
+
+      // A inserts at position 1.
+      final opsA = a.localInsert(1, 'X');
+
+      // B inserts at position 4.
+      final opsB = b.localInsert(4, 'Y');
+
+      // Sync both directions.
+      a.merge([opsB[0]]);
+      b.merge([opsA[0]]);
+
+      expect(a.text, equals(b.text));
+    });
+
+    test('long text insert and partial delete', () {
+      final crdt = CRDTText('site-A');
+      final text = 'The quick brown fox jumps over the lazy dog';
+      crdt.localInsert(0, text);
+
+      // Delete "brown ".
+      crdt.localDelete(10, 6);
+      expect(crdt.text, equals('The quick fox jumps over the lazy dog'));
+    });
+
+    test('insert after deleting all content', () {
+      final crdt = CRDTText('site-A');
+      crdt.localInsert(0, 'abc');
+      crdt.localDelete(0, 3);
+      expect(crdt.text, isEmpty);
+
+      crdt.localInsert(0, 'xyz');
+      expect(crdt.text, equals('xyz'));
+    });
+
+    test('concurrent delete of same character by two sites', () {
+      final a = CRDTText('site-A');
+      final b = CRDTText('site-B');
+
+      // Shared base "abc".
+      a.localInsert(0, 'abc');
+      b.merge(a.getOperations());
+
+      // Both delete the same character 'b' (index 1).
+      final delA = a.localDelete(1, 1);
+      final delB = b.localDelete(1, 1);
+
+      // Sync deletes.
+      for (final id in delA) {
+        b.remoteDelete(id);
+      }
+      for (final id in delB) {
+        a.remoteDelete(id);
+      }
+
+      expect(a.text, equals('ac'));
+      expect(b.text, equals('ac'));
+    });
+  });
+
+  // ===========================================================================
+  // RGANode construction and properties
+  // ===========================================================================
+
+  group('RGANode', () {
+    test('default isDeleted is false', () {
+      final node = RGANode(
+        id: 's:1',
+        leftOriginId: '',
+        rightOriginId: '',
+        siteId: 's',
+        clock: 1,
+        value: 'a',
+      );
+      expect(node.isDeleted, isFalse);
+    });
+
+    test('isDeleted can be set to true', () {
+      final node = RGANode(
+        id: 's:1',
+        leftOriginId: '',
+        rightOriginId: '',
+        siteId: 's',
+        clock: 1,
+        value: 'a',
+        isDeleted: true,
+      );
+      expect(node.isDeleted, isTrue);
+    });
+
+    test('value and isDeleted are mutable', () {
+      final node = RGANode(
+        id: 's:1',
+        leftOriginId: '',
+        rightOriginId: '',
+        siteId: 's',
+        clock: 1,
+        value: 'a',
+      );
+
+      node.value = '';
+      node.isDeleted = true;
+
+      expect(node.value, isEmpty);
+      expect(node.isDeleted, isTrue);
     });
   });
 }

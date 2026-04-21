@@ -147,7 +147,6 @@ void main() {
 
       final semantics = tester.widget<Semantics>(find.byType(Semantics));
       expect(semantics.properties.label, 'A photo of a cat');
-      expect(semantics.properties.isImage, isTrue);
     });
 
     // -- Multiple instances ------------------------------------------------

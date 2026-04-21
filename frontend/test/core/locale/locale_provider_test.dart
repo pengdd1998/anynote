@@ -83,6 +83,9 @@ void main() {
       final freshContainer = ProviderContainer();
       addTearDown(() => freshContainer.dispose());
 
+      // Read the provider to trigger lazy construction and _loadSavedLocale.
+      freshContainer.read(localeProvider);
+
       // Wait for the async _loadSavedLocale to complete
       await Future.delayed(const Duration(milliseconds: 50));
 

@@ -70,31 +70,38 @@ class DeepLinkHandler {
   /// Invalid or malformed URIs are rejected with a debug log warning and no
   /// navigation occurs.
   static void handleUri(BuildContext context, Uri uri) {
-    final segments = uri.pathSegments;
-    if (segments.isEmpty) return;
+    // Deep link URIs like "anynote://notes/new" are parsed by Dart's URI
+    // parser with "notes" as the host and "new" as the first path segment.
+    // Account for this by combining the host (if non-empty) with the path
+    // segments into a unified segment list.
+    final rawSegments = <String>[
+      if (uri.host.isNotEmpty) uri.host,
+      ...uri.pathSegments,
+    ];
+    if (rawSegments.isEmpty) return;
 
     // Validate the first segment (the route namespace) before switching on it.
-    if (!_isValidSegment(segments[0])) return;
+    if (!_isValidSegment(rawSegments[0])) return;
 
-    switch (segments[0]) {
+    switch (rawSegments[0]) {
       case 'notes':
-        if (segments.length == 1 ||
-            (segments.length == 2 && segments[1] == 'new')) {
+        if (rawSegments.length == 1 ||
+            (rawSegments.length == 2 && rawSegments[1] == 'new')) {
           context.push('/notes/new');
-        } else if (segments.length == 2) {
-          if (!_isValidId(segments[1])) return;
-          context.push('/notes/${segments[1]}');
+        } else if (rawSegments.length == 2) {
+          if (!_isValidId(rawSegments[1])) return;
+          context.push('/notes/${rawSegments[1]}');
         }
         break;
       case 'share':
-        if (segments.length == 2) {
-          if (segments[1] == 'received') {
+        if (rawSegments.length == 2) {
+          if (rawSegments[1] == 'received') {
             // Share extension callback: navigate to the share receiver
             // route which will redirect to the note editor.
             context.push('/share/received');
           } else {
-            if (!_isValidId(segments[1])) return;
-            context.push('/share/${segments[1]}');
+            if (!_isValidId(rawSegments[1])) return;
+            context.push('/share/${rawSegments[1]}');
           }
         }
         break;

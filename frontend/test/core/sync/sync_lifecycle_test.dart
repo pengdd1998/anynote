@@ -4,21 +4,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/crypto/crypto_service.dart';
+import 'package:anynote/core/database/app_database.dart';
+import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/core/network/connectivity_service.dart';
 import 'package:anynote/core/sync/sync_engine.dart';
 import 'package:anynote/core/sync/sync_lifecycle.dart';
 import 'package:anynote/core/sync/sync_queue_manager.dart';
+import 'package:anynote/features/settings/data/settings_providers.dart';
 import 'package:anynote/main.dart';
+import 'package:drift/drift.dart' show QueryExecutor;
 
 // ---------------------------------------------------------------------------
 // Manual mocks
 // ---------------------------------------------------------------------------
 
-/// A mock Ref that allows pre-programming provider reads via [overrides].
+/// A mock Ref that allows pre-programming provider reads via [_overrides].
 class _MockRef implements Ref {
   final Map<ProviderListenable<dynamic>, dynamic> _overrides = {};
 
-  void override<T>(ProviderListenable<T> provider, T value) {
+  void setOverride<T>(ProviderListenable<T> provider, T value) {
     _overrides[provider] = value;
   }
 
@@ -108,8 +112,8 @@ void main() {
       mockQueueManager = _MockSyncQueueManager();
 
       // Wire providers into mock ref.
-      ref.override<SyncEngine>(syncEngineProvider, mockEngine);
-      ref.override<SyncQueueManager>(
+      ref.setOverride<SyncEngine>(syncEngineProvider, mockEngine);
+      ref.setOverride<SyncQueueManager>(
           syncQueueManagerProvider, mockQueueManager);
     });
 
@@ -188,7 +192,7 @@ void main() {
           conflicts: [],
         );
         mockEngine.syncResult = expectedResult;
-        ref.override<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
 
         final result = await lifecycle.syncNow();
 
@@ -204,7 +208,7 @@ void main() {
 
         mockEngine.syncResult =
             SyncResult(pulledCount: 0, pushedCount: 0, conflicts: []);
-        ref.override<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
 
         await lifecycle.syncNow();
 
@@ -217,7 +221,7 @@ void main() {
 
         mockEngine.syncResult =
             SyncResult(pulledCount: 0, pushedCount: 0, conflicts: []);
-        ref.override<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
 
         expect(lifecycle.lastSyncAt, isNull);
         await lifecycle.syncNow();
@@ -228,7 +232,7 @@ void main() {
         final lifecycle = SyncLifecycle(ref);
         addTearDown(() => lifecycle.dispose());
 
-        ref.override<bool>(connectivityServiceProvider, false);
+        ref.setOverride<bool>(connectivityServiceProvider, false);
 
         final result = await lifecycle.syncNow();
 
@@ -242,7 +246,7 @@ void main() {
         addTearDown(() => lifecycle.dispose());
 
         mockEngine.syncError = Exception('Network error');
-        ref.override<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
 
         final result = await lifecycle.syncNow();
 
@@ -258,7 +262,7 @@ void main() {
 
         mockEngine.syncError = Exception('Sync failed');
         mockQueueManager.processQueueError = Exception('Queue failed');
-        ref.override<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
 
         // Should not throw -- both error paths are caught.
         final result = await lifecycle.syncNow();
@@ -271,7 +275,7 @@ void main() {
         addTearDown(() => lifecycle.dispose());
 
         mockEngine.syncError = Exception('fail');
-        ref.override<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
 
         await lifecycle.syncNow();
 
@@ -284,7 +288,7 @@ void main() {
 
         mockEngine.syncResult =
             SyncResult(pulledCount: 0, pushedCount: 0, conflicts: []);
-        ref.override<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
 
         final before = DateTime.now();
         await lifecycle.syncNow();
@@ -319,7 +323,7 @@ void main() {
 
         mockEngine.syncResult =
             SyncResult(pulledCount: 0, pushedCount: 0, conflicts: []);
-        ref.override<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
 
         await lifecycle.syncNow();
         final firstSync = lifecycle.lastSyncAt;
@@ -355,8 +359,8 @@ void main() {
         final lifecycle = SyncLifecycle(ref);
         addTearDown(() => lifecycle.dispose());
 
-        ref.override<bool>(connectivityServiceProvider, true);
-        ref.override<bool>(authStateProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(authStateProvider, true);
         mockEngine.syncResult =
             SyncResult(pulledCount: 0, pushedCount: 0, conflicts: []);
 
@@ -389,7 +393,7 @@ void main() {
         final lifecycle = SyncLifecycle(ref);
         addTearDown(() => lifecycle.dispose());
 
-        ref.override<bool>(connectivityServiceProvider, true);
+        ref.setOverride<bool>(connectivityServiceProvider, true);
         mockEngine.syncResult =
             SyncResult(pulledCount: 0, pushedCount: 0, conflicts: []);
 

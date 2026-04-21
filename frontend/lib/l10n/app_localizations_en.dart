@@ -1725,11 +1725,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String versionSemanticLabel(
-    int versionNumber,
-    String title,
-    String date,
-    String currentSuffix,
-  ) {
+      int versionNumber, String title, String date, String currentSuffix) {
     return 'Version $versionNumber, $title, $date$currentSuffix';
   }
 
@@ -1773,10 +1769,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String compositionSemanticLabel(
-    String title,
-    String time,
-    String platformSuffix,
-  ) {
+      String title, String time, String platformSuffix) {
     return 'Composition: $title. $time$platformSuffix';
   }
 
@@ -1961,6 +1954,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMdFilesSelected => 'No .md files selected.';
 
   @override
+  String get notSupportedOnWeb => 'This feature is not supported on web.';
+
+  @override
   String get selectMdFolderTitle => 'Select Folder with Markdown Files';
 
   @override
@@ -2062,20 +2058,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String platformSemanticLabel(
-    String name,
-    String subtitleSuffix,
-    String selectedSuffix,
-  ) {
+      String name, String subtitleSuffix, String selectedSuffix) {
     return 'Platform: $name$subtitleSuffix$selectedSuffix';
   }
 
   @override
   String publishedSemanticLabel(
-    String title,
-    String platform,
-    String status,
-    String dateSuffix,
-  ) {
+      String title, String platform, String status, String dateSuffix) {
     return 'Published: $title. Platform: $platform. Status: $status$dateSuffix';
   }
 

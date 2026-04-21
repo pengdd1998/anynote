@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/core/share/share_service.dart';
 import 'package:anynote/features/share/presentation/shared_note_viewer.dart';
+import 'package:anynote/l10n/app_localizations.dart';
 import 'package:anynote/main.dart';
 
 // ---------------------------------------------------------------------------
@@ -32,8 +34,9 @@ class FakeShareService extends ShareService {
     String? key,
     String? password,
   }) async {
-    if (onDecryptServer != null) {
-      final result = onDecryptServer(shareId: shareId, key: key, password: password);
+    final handler = onDecryptServer;
+    if (handler != null) {
+      final result = handler(shareId: shareId, key: key, password: password);
       if (result != null) return result;
     }
     throw Exception('decrypt failed');
@@ -45,8 +48,9 @@ class FakeShareService extends ShareService {
     String? key,
     String? password,
   }) async {
-    if (onDecryptPayload != null) {
-      final result = onDecryptPayload(payload: payload, key: key, password: password);
+    final handler = onDecryptPayload;
+    if (handler != null) {
+      final result = handler(payload: payload, key: key, password: password);
       if (result != null) return result;
     }
     throw Exception('decrypt failed');
@@ -77,6 +81,8 @@ Future<void> pumpViewer(
         ),
       ],
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: SharedNoteViewer(
           shareId: shareId,
           shareKeyFragment: shareKeyFragment,
@@ -155,8 +161,8 @@ void main() {
         shareKeyFragment: null,
       );
 
-      // Should show password input (lock icon and password field).
-      expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+      // Should show password input (lock icons: decorative + TextField prefix).
+      expect(find.byIcon(Icons.lock_outline), findsNWidgets(2));
       expect(find.byType(TextField), findsOneWidget);
     });
 

@@ -65,7 +65,7 @@ import 'app_localizations_zh.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -88,18 +88,18 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
     Locale('ja'),
     Locale('ko'),
-    Locale('zh'),
+    Locale('zh')
   ];
 
   /// Application name displayed in the app bar and title
@@ -3197,11 +3197,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version {versionNumber}, {title}, {date}{currentSuffix}'**
   String versionSemanticLabel(
-    int versionNumber,
-    String title,
-    String date,
-    String currentSuffix,
-  );
+      int versionNumber, String title, String date, String currentSuffix);
 
   /// Appended to version semantic label for the current version
   ///
@@ -3256,10 +3252,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Composition: {title}. {time}{platformSuffix}'**
   String compositionSemanticLabel(
-    String title,
-    String time,
-    String platformSuffix,
-  );
+      String title, String time, String platformSuffix);
 
   /// Appended to composition semantic label when platform is set
   ///
@@ -3567,6 +3560,12 @@ abstract class AppLocalizations {
   /// **'No .md files selected.'**
   String get noMdFilesSelected;
 
+  /// SnackBar when a feature requiring filesystem access is used on web platform
+  ///
+  /// In en, this message translates to:
+  /// **'This feature is not supported on web.'**
+  String get notSupportedOnWeb;
+
   /// Folder picker dialog title for Markdown import
   ///
   /// In en, this message translates to:
@@ -3740,21 +3739,14 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Platform: {name}{subtitleSuffix}{selectedSuffix}'**
   String platformSemanticLabel(
-    String name,
-    String subtitleSuffix,
-    String selectedSuffix,
-  );
+      String name, String subtitleSuffix, String selectedSuffix);
 
   /// Semantic label for a publish history item
   ///
   /// In en, this message translates to:
   /// **'Published: {title}. Platform: {platform}. Status: {status}{dateSuffix}'**
   String publishedSemanticLabel(
-    String title,
-    String platform,
-    String status,
-    String dateSuffix,
-  );
+      String title, String platform, String status, String dateSuffix);
 
   /// Semantic label for the open-in-browser button
   ///
@@ -3848,9 +3840,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

@@ -100,9 +100,9 @@ class RestoreService {
     for (final noteJson in notes) {
       current++;
       final n = noteJson as Map<String, dynamic>;
-      final noteId = n['id'] as String;
 
       try {
+        final noteId = n['id'] as String;
         if (existingNoteIds.contains(noteId)) {
           conflicts++;
           switch (strategy) {
@@ -176,7 +176,8 @@ class RestoreService {
           restored++;
         }
       } catch (e) {
-        errors.add('Note $noteId: ${e.toString()}');
+        final id = n['id'];
+        errors.add('Note ${id ?? 'unknown'}: ${e.toString()}');
       }
 
       onProgress?.call(RestoreProgress(

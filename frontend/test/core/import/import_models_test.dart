@@ -49,7 +49,7 @@ void main() {
     });
 
     test('const constructor works', () {
-      const note = ImportedNote(
+      final note = ImportedNote(
         title: 'Const',
         body: 'body',
         tags: ['t'],

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/google/uuid"
@@ -92,7 +93,9 @@ func (s *platformService) Disconnect(ctx context.Context, userID uuid.UUID, plat
 	if adapterErr == nil && len(conn.EncryptedAuth) > 0 {
 		// Revocation does not need the master key for all platforms;
 		// pass nil and let the adapter handle it gracefully.
-		_ = adapter.RevokeAuth(ctx, conn.EncryptedAuth, nil)
+		if revokeErr := adapter.RevokeAuth(ctx, conn.EncryptedAuth, nil); revokeErr != nil {
+			slog.Warn("platform: revoke auth failed (best-effort)", "platform", platformName, "error", revokeErr)
+		}
 	}
 
 	return s.platformRepo.Delete(ctx, conn.ID)

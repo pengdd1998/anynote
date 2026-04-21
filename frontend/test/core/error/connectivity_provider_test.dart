@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/error/connectivity_provider.dart';
 import 'package:anynote/core/network/connectivity_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:anynote/core/sync/sync_queue_manager.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
 import 'package:anynote/main.dart';
@@ -18,7 +19,7 @@ import 'package:anynote/main.dart';
 /// The real ConnectivityService extends Notifier<bool> backed by
 /// connectivity_plus. This mock replaces it with a manually controlled
 /// StreamController so we can emit connectivity changes in tests.
-class MockConnectivityService extends Notifier<bool> {
+class MockConnectivityService extends ConnectivityService {
   final StreamController<bool> _streamController =
       StreamController<bool>.broadcast();
 
@@ -33,6 +34,7 @@ class MockConnectivityService extends Notifier<bool> {
   }
 
   /// Expose the connectivity stream for the provider to subscribe to.
+  @override
   Stream<bool> get connectivityStream => _streamController.stream;
 
   /// Simulate a connectivity change.
@@ -43,6 +45,15 @@ class MockConnectivityService extends Notifier<bool> {
       _streamController.add(value);
     }
   }
+
+  @override
+  Stream<List<ConnectivityResult>> get onConnectivityChanged =>
+      _streamController.stream.map((connected) => connected
+          ? [ConnectivityResult.wifi]
+          : [ConnectivityResult.none]);
+
+  @override
+  Future<void> recheck() async {}
 }
 
 // ---------------------------------------------------------------------------

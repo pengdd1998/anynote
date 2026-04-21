@@ -103,7 +103,7 @@ void main() {
     });
   });
 
-  group('track', () async {
+  group('track', () {
     test('returns the result of the action', () async {
       monitor.start('pre-track');
 
@@ -149,11 +149,12 @@ void main() {
     });
 
     test('works with null return type', () async {
-      final result = await monitor.track<void>('void-op', () async {
+      await monitor.track<void>('void-op', () async {
         // no return
       });
 
-      expect(result, isNull);
+      // Timer should be cleaned up after track completes
+      expect(monitor.isRunning('void-op'), isFalse);
     });
   });
 

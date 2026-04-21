@@ -5,6 +5,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:anynote/core/providers/app_info_provider.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   // ===========================================================================
   // appInfoProvider
   // ===========================================================================
@@ -27,13 +29,13 @@ void main() {
     });
 
     test('resolves to a PackageInfo instance', () async {
-      final info = await container.read(appInfoProvider).future;
+      final info = await container.read(appInfoProvider.future);
 
       expect(info, isA<PackageInfo>());
     });
 
     test('PackageInfo has non-empty appName', () async {
-      final info = await container.read(appInfoProvider).future;
+      final info = await container.read(appInfoProvider.future);
 
       // In test environment, PackageInfo.fromPlatform() returns defaults
       // from the package_info_plus test setup. The app name should be a
@@ -42,20 +44,20 @@ void main() {
     });
 
     test('PackageInfo has non-empty packageName', () async {
-      final info = await container.read(appInfoProvider).future;
+      final info = await container.read(appInfoProvider.future);
 
       expect(info.packageName, isNotEmpty);
     });
 
     test('PackageInfo has version string', () async {
-      final info = await container.read(appInfoProvider).future;
+      final info = await container.read(appInfoProvider.future);
 
       // Version can be any string (including 'unknown' in test env).
       expect(info.version, isNotNull);
     });
 
     test('PackageInfo has buildNumber', () async {
-      final info = await container.read(appInfoProvider).future;
+      final info = await container.read(appInfoProvider.future);
 
       expect(info.buildNumber, isNotNull);
     });
@@ -68,8 +70,8 @@ void main() {
     });
 
     test('provider caches the result after first read', () async {
-      final info1 = await container.read(appInfoProvider).future;
-      final info2 = await container.read(appInfoProvider).future;
+      final info1 = await container.read(appInfoProvider.future);
+      final info2 = await container.read(appInfoProvider.future);
 
       // Both reads should return the same PackageInfo instance (cached).
       expect(identical(info1, info2), isTrue);
@@ -79,8 +81,8 @@ void main() {
       final container2 = ProviderContainer();
       addTearDown(() => container2.dispose());
 
-      final info1 = await container.read(appInfoProvider).future;
-      final info2 = await container2.read(appInfoProvider).future;
+      final info1 = await container.read(appInfoProvider.future);
+      final info2 = await container2.read(appInfoProvider.future);
 
       // Both should resolve successfully (possibly different instances but
       // same content since they come from the same platform).

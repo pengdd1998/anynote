@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -12,6 +13,7 @@ import 'package:anynote/core/storage/image_storage.dart';
 // ---------------------------------------------------------------------------
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   // These tests use a real temporary directory on the filesystem.
   // They require a native (non-web) environment.
 
@@ -19,9 +21,28 @@ void main() {
 
   setUp(() async {
     testDir = await Directory.systemTemp.createTemp('image_storage_test_');
+
+    // Mock path_provider to return our test directory.
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/path_provider'),
+      (MethodCall methodCall) async {
+        if (methodCall.method == 'getApplicationDocumentsDirectory') {
+          return testDir.path;
+        }
+        return null;
+      },
+    );
   });
 
   tearDown(() async {
+    // Remove the mock handler.
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/path_provider'),
+      null,
+    );
+
     if (await testDir.exists()) {
       await testDir.delete(recursive: true);
     }

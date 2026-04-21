@@ -267,7 +267,9 @@ func (h *WSHandler) readPump(ctx context.Context, conn *websocket.Conn, room, us
 			}
 			if err := json.Unmarshal(msg.Data, &data); err == nil && data.Username != "" {
 				username := data.Username
-				_ = h.presenceSvc.Join(ctx, room, userID, username)
+				if joinErr := h.presenceSvc.Join(ctx, room, userID, username); joinErr != nil {
+					slog.Warn("ws: re-join with username failed", "room", room, "error", joinErr)
+				}
 			}
 
 		default:
@@ -335,7 +337,9 @@ func sendRateLimitError(ctx context.Context, conn *websocket.Conn, code, message
 		Type: "error",
 		Data: json.RawMessage(fmt.Sprintf(`{"code":"%s","message":"%s"}`, code, message)),
 	}
-	_ = wsWriteJSON(ctx, conn, errMsg)
+	if writeErr := wsWriteJSON(ctx, conn, errMsg); writeErr != nil {
+		slog.Debug("ws: failed to send rate limit error", "error", writeErr)
+	}
 }
 
 // writePump reads from the room subscription channel and writes messages to the

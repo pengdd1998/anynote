@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/error/connectivity_provider.dart';
+import 'package:anynote/core/network/api_client.dart';
+import 'package:anynote/core/sync/sync_engine.dart';
 import 'package:anynote/core/sync/sync_lifecycle.dart';
 import 'package:anynote/core/sync/sync_queue_manager.dart';
 import 'package:anynote/core/widgets/sync_status_widget.dart';

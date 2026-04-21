@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -250,4 +251,42 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("DATABASE_URL is required but not set")
 	}
 	return nil
+}
+
+// Warn logs warnings for non-critical configuration issues.
+// These are configuration values that are not strictly required for the server
+// to start, but may indicate misconfiguration or missing optional features.
+func (c *Config) Warn() {
+	// Check Redis URL format.
+	if c.Redis.URL != "" {
+		if !strings.HasPrefix(c.Redis.URL, "redis://") && !strings.HasPrefix(c.Redis.URL, "rediss://") {
+			slog.Warn("REDIS_URL should start with redis:// or rediss://", "url", c.Redis.URL)
+		}
+	}
+
+	// Check Firebase credentials file exists (if configured).
+	if c.Firebase.CredentialsFile != "" {
+		if _, err := os.Stat(c.Firebase.CredentialsFile); err != nil {
+			slog.Warn("FIREBASE_CREDENTIALS_FILE not found", "path", c.Firebase.CredentialsFile, "error", err)
+		}
+	}
+
+	// Check LLM default BaseURL is a valid URL (if set).
+	if c.LLM.Default.BaseURL != "" {
+		if !strings.HasPrefix(c.LLM.Default.BaseURL, "http://") && !strings.HasPrefix(c.LLM.Default.BaseURL, "https://") {
+			slog.Warn("LLM default base_url should start with http:// or https://", "base_url", c.LLM.Default.BaseURL)
+		}
+	}
+
+	// Check LLM fallback BaseURL is a valid URL (if set).
+	if c.LLM.Fallback.BaseURL != "" {
+		if !strings.HasPrefix(c.LLM.Fallback.BaseURL, "http://") && !strings.HasPrefix(c.LLM.Fallback.BaseURL, "https://") {
+			slog.Warn("LLM fallback base_url should start with http:// or https://", "base_url", c.LLM.Fallback.BaseURL)
+		}
+	}
+
+	// Warn if server port is 0 or negative.
+	if c.Server.Port <= 0 || c.Server.Port > 65535 {
+		slog.Warn("server port is out of valid range (1-65535)", "port", c.Server.Port)
+	}
 }

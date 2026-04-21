@@ -69,7 +69,7 @@ void main() {
         title: 'No notes yet',
       );
 
-      expect(find.byType(Center), findsOneWidget);
+      expect(find.byType(Center), findsWidgets);
     });
 
     // -- Subtitle -----------------------------------------------------

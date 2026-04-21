@@ -93,7 +93,9 @@ func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req Publ
 		jobID, err := s.queue.EnqueuePublishJob(ctx, userID.String(), req.Platform, payload)
 		if err != nil {
 			// Update status to failed if enqueue fails.
-			_ = s.logRepo.UpdateStatus(ctx, log.ID, "failed", fmt.Sprintf("failed to enqueue: %v", err), "")
+			if updateErr := s.logRepo.UpdateStatus(ctx, log.ID, "failed", fmt.Sprintf("failed to enqueue: %v", err), ""); updateErr != nil {
+				slog.Error("publish: failed to update status after enqueue failure", "publish_log_id", log.ID.String(), "error", updateErr)
+			}
 			return nil, fmt.Errorf("enqueue publish job: %w", err)
 		}
 

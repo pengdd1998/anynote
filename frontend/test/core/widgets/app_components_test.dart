@@ -291,10 +291,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: const Scaffold(
+          home: Scaffold(
             body: AppErrorCard(
               error: error,
-              onRetry: voidFunction,
+              onRetry: () {},
             ),
           ),
         ),

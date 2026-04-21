@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -128,7 +129,9 @@ func (s *presenceService) Leave(ctx context.Context, room, userID string) error 
 	}
 
 	// Clear any typing indicator.
-	_ = s.SetTyping(ctx, room, userID, false)
+	if clearErr := s.SetTyping(ctx, room, userID, false); clearErr != nil {
+		slog.Warn("presence: failed to clear typing indicator on leave", "room", room, "user_id", userID, "error", clearErr)
+	}
 
 	// Publish leave event.
 	leaveData, _ := json.Marshal(map[string]string{

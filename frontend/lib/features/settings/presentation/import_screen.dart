@@ -815,7 +815,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                 icon: Icons.check_circle_outline,
                 iconColor: Colors.green,
                 title: l10n.itemsRestored,
-                subtitle: l10n.noteCount(result.importedCount),
+                subtitle: l10n.noteCount(result.importedCount, result.importedCount == 1 ? '' : 's'),
               ),
               if (result.skippedCount > 0)
                 SettingsItem(

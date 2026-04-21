@@ -165,7 +165,7 @@ void main() {
     });
 
     test('all-0xFF 32-byte array encodes to 64 f chars', () {
-      final ff = Uint8List filled = Uint8List(32)..fillRange(0, 32, 0xFF);
+      final ff = Uint8List(32)..fillRange(0, 32, 0xFF);
       expect(encodeHex(ff), 'f' * 64);
     });
 

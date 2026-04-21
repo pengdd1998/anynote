@@ -233,6 +233,9 @@ class BackupVerifier {
               (backupData['collections'] as List?)?.length ?? 0;
           contentCount =
               (backupData['contents'] as List?)?.length ?? 0;
+        } else {
+          errors.add('Decryption failed: returned null. '
+              'The encryption key may not match the backup.');
         }
       } catch (e) {
         errors.add('Decryption failed: ${e.toString()}');

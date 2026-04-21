@@ -322,8 +322,7 @@ void main() {
         {'id': 'pub-2', 'status': 'pending'},
       ];
 
-      final asyncValue = container.read(publishHistoryProvider);
-      final history = await asyncValue.future;
+      final history = await container.read(publishHistoryProvider.future);
 
       expect(history.length, 2);
       expect(history[0]['id'], 'pub-1');
@@ -333,7 +332,7 @@ void main() {
     test('build returns empty list when no history', () async {
       stubApi.publishHistoryToReturn = [];
 
-      final history = await container.read(publishHistoryProvider).future;
+      final history = await container.read(publishHistoryProvider.future);
       expect(history, isEmpty);
     });
 
@@ -343,7 +342,7 @@ void main() {
       ];
 
       // Initial load.
-      await container.read(publishHistoryProvider).future;
+      await container.read(publishHistoryProvider.future);
 
       // Simulate data change on server.
       stubApi.publishHistoryToReturn = [
@@ -357,7 +356,7 @@ void main() {
       // Allow the async rebuild to complete.
       await Future<void>.delayed(Duration.zero);
 
-      final updated = await container.read(publishHistoryProvider).future;
+      final updated = await container.read(publishHistoryProvider.future);
       expect(updated.length, 2);
     });
   });
@@ -391,7 +390,7 @@ void main() {
       ];
 
       final platforms =
-          await container.read(connectedPlatformsProvider).future;
+          await container.read(connectedPlatformsProvider.future);
 
       expect(platforms.length, 2);
       expect(platforms.every((p) => p['connected'] == true), isTrue);
@@ -403,7 +402,7 @@ void main() {
       ];
 
       final platforms =
-          await container.read(connectedPlatformsProvider).future;
+          await container.read(connectedPlatformsProvider.future);
       expect(platforms, isEmpty);
     });
 
@@ -411,7 +410,7 @@ void main() {
       stubApi.platformsToReturn = [];
 
       final platforms =
-          await container.read(connectedPlatformsProvider).future;
+          await container.read(connectedPlatformsProvider.future);
       expect(platforms, isEmpty);
     });
 
@@ -420,7 +419,7 @@ void main() {
         {'name': 'xhs', 'connected': true},
       ];
 
-      await container.read(connectedPlatformsProvider).future;
+      await container.read(connectedPlatformsProvider.future);
 
       // Add a new connected platform.
       stubApi.platformsToReturn = [
@@ -432,7 +431,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       final updated =
-          await container.read(connectedPlatformsProvider).future;
+          await container.read(connectedPlatformsProvider.future);
       expect(updated.length, 2);
     });
   });
@@ -466,7 +465,7 @@ void main() {
       };
 
       final detail =
-          await container.read(publishDetailProvider('pub-42')).future;
+          await container.read(publishDetailProvider('pub-42').future);
 
       expect(detail['id'], 'pub-42');
       expect(detail['status'], 'completed');

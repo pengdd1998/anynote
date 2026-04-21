@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,7 +32,9 @@ func NewQuotaService(quotaRepo QuotaRepository) QuotaService {
 
 func (s *quotaService) GetQuota(ctx context.Context, userID uuid.UUID) (*domain.QuotaResponse, error) {
 	// Reset quota if needed (daily reset)
-	_ = s.quotaRepo.ResetIfNeeded(ctx, userID)
+	if resetErr := s.quotaRepo.ResetIfNeeded(ctx, userID); resetErr != nil {
+		slog.Warn("quota: failed to check reset", "user_id", userID.String(), "error", resetErr)
+	}
 
 	quota, err := s.quotaRepo.GetByUserID(ctx, userID)
 	if err != nil {
@@ -53,6 +56,8 @@ func (s *quotaService) GetQuota(ctx context.Context, userID uuid.UUID) (*domain.
 }
 
 func (s *quotaService) IncrementUsage(ctx context.Context, userID uuid.UUID) error {
-	_ = s.quotaRepo.ResetIfNeeded(ctx, userID)
+	if resetErr := s.quotaRepo.ResetIfNeeded(ctx, userID); resetErr != nil {
+		slog.Warn("quota: failed to check reset", "user_id", userID.String(), "error", resetErr)
+	}
 	return s.quotaRepo.IncrementUsage(ctx, userID)
 }

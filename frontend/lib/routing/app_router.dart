@@ -225,7 +225,7 @@ final appRouter = GoRouter(
           path: '/compose',
           pageBuilder: (context, state) => fadeThroughTransition(
             _DeferredLoader(
-              load: compose.library.load(),
+              load: compose.loadLibrary(),
               builder: () => compose.ComposeScreen(),
             ),
           ),
@@ -235,7 +235,7 @@ final appRouter = GoRouter(
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
                 _DeferredLoader(
-                  load: cluster.library.load(),
+                  load: cluster.loadLibrary(),
                   builder: () => cluster.ClusterScreen(
                     sessionId: state.pathParameters['id']!,
                   ),
@@ -247,7 +247,7 @@ final appRouter = GoRouter(
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
                 _DeferredLoader(
-                  load: outline.library.load(),
+                  load: outline.loadLibrary(),
                   builder: () => outline.OutlineScreen(
                     sessionId: state.pathParameters['id']!,
                   ),
@@ -259,7 +259,7 @@ final appRouter = GoRouter(
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
                 _DeferredLoader(
-                  load: compose_editor.library.load(),
+                  load: compose_editor.loadLibrary(),
                   builder: () => compose_editor.ComposeEditorScreen(
                     sessionId: state.pathParameters['id']!,
                   ),
@@ -274,7 +274,7 @@ final appRouter = GoRouter(
           path: '/publish',
           pageBuilder: (context, state) => fadeThroughTransition(
             _DeferredLoader(
-              load: publish.library.load(),
+              load: publish.loadLibrary(),
               builder: () => publish.PublishScreen(),
             ),
           ),
@@ -284,7 +284,7 @@ final appRouter = GoRouter(
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
                 _DeferredLoader(
-                  load: publish_history.library.load(),
+                  load: publish_history.loadLibrary(),
                   builder: () => publish_history.PublishHistoryScreen(),
                 ),
               ),
@@ -303,7 +303,7 @@ final appRouter = GoRouter(
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
                 _DeferredLoader(
-                  load: llm_config.library.load(),
+                  load: llm_config.loadLibrary(),
                   builder: () => llm_config.LLMConfigScreen(),
                 ),
               ),
@@ -313,7 +313,7 @@ final appRouter = GoRouter(
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
                 _DeferredLoader(
-                  load: platform_conn.library.load(),
+                  load: platform_conn.loadLibrary(),
                   builder: () => platform_conn.PlatformConnectionScreen(),
                 ),
               ),
@@ -323,7 +323,7 @@ final appRouter = GoRouter(
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
                 _DeferredLoader(
-                  load: encryption.library.load(),
+                  load: encryption.loadLibrary(),
                   builder: () => encryption.EncryptionScreen(),
                 ),
               ),
@@ -333,7 +333,7 @@ final appRouter = GoRouter(
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
                 _DeferredLoader(
-                  load: import_screen.library.load(),
+                  load: import_screen.loadLibrary(),
                   builder: () => import_screen.ImportScreen(),
                 ),
               ),
@@ -343,7 +343,7 @@ final appRouter = GoRouter(
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) => slideTransition(
                 _DeferredLoader(
-                  load: restore.library.load(),
+                  load: restore.loadLibrary(),
                   builder: () => restore.RestoreScreen(),
                 ),
               ),

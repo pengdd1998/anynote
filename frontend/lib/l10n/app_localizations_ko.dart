@@ -1683,11 +1683,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String versionSemanticLabel(
-    int versionNumber,
-    String title,
-    String date,
-    String currentSuffix,
-  ) {
+      int versionNumber, String title, String date, String currentSuffix) {
     return '버전 $versionNumber, $title, $date$currentSuffix';
   }
 
@@ -1725,10 +1721,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String compositionSemanticLabel(
-    String title,
-    String time,
-    String platformSuffix,
-  ) {
+      String title, String time, String platformSuffix) {
     return '작성물: $title. $time$platformSuffix';
   }
 
@@ -1913,6 +1906,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get noMdFilesSelected => '선택된 .md 파일이 없어요.';
 
   @override
+  String get notSupportedOnWeb => '이 기능은 웹에서 지원되지 않습니다.';
+
+  @override
   String get selectMdFolderTitle => 'Markdown 파일이 있는 폴더 선택';
 
   @override
@@ -2004,20 +2000,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String platformSemanticLabel(
-    String name,
-    String subtitleSuffix,
-    String selectedSuffix,
-  ) {
+      String name, String subtitleSuffix, String selectedSuffix) {
     return '플랫폼: $name$subtitleSuffix$selectedSuffix';
   }
 
   @override
   String publishedSemanticLabel(
-    String title,
-    String platform,
-    String status,
-    String dateSuffix,
-  ) {
+      String title, String platform, String status, String dateSuffix) {
     return '게시됨: $title. 플랫폼: $platform. 상태: $status$dateSuffix';
   }
 

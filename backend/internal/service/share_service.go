@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -105,7 +106,9 @@ func (s *shareService) GetShare(ctx context.Context, id string) (*domain.GetShar
 	}
 
 	// Increment view count (best effort, do not fail the request).
-	_ = s.shareRepo.IncrementViewCount(ctx, id)
+	if viewErr := s.shareRepo.IncrementViewCount(ctx, id); viewErr != nil {
+		slog.Warn("share: failed to increment view count", "share_id", id, "error", viewErr)
+	}
 
 	return &domain.GetShareResponse{
 		ID:               note.ID,

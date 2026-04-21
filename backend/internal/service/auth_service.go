@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -166,7 +167,8 @@ func (s *authService) DeleteAccount(ctx context.Context, userID uuid.UUID, authK
 		if dtErr := s.deviceTokens.DeleteByUser(ctx, userID.String()); dtErr != nil {
 			// Log but do not abort: the primary goal is deleting the user row,
 			// which cascades to all FK-linked tables.
-			_ = dtErr
+			slog.Warn("auth: failed to delete device tokens during account deletion",
+				"user_id", userID.String(), "error", dtErr)
 		}
 	}
 

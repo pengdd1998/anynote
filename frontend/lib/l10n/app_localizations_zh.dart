@@ -1672,11 +1672,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String versionSemanticLabel(
-    int versionNumber,
-    String title,
-    String date,
-    String currentSuffix,
-  ) {
+      int versionNumber, String title, String date, String currentSuffix) {
     return '版本 $versionNumber，$title，$date$currentSuffix';
   }
 
@@ -1714,10 +1710,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String compositionSemanticLabel(
-    String title,
-    String time,
-    String platformSuffix,
-  ) {
+      String title, String time, String platformSuffix) {
     return '作品：$title。$time$platformSuffix';
   }
 
@@ -1902,6 +1895,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noMdFilesSelected => '未选择.md文件。';
 
   @override
+  String get notSupportedOnWeb => '此功能在网页端不支持。';
+
+  @override
   String get selectMdFolderTitle => '选择包含Markdown文件的文件夹';
 
   @override
@@ -1993,20 +1989,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String platformSemanticLabel(
-    String name,
-    String subtitleSuffix,
-    String selectedSuffix,
-  ) {
+      String name, String subtitleSuffix, String selectedSuffix) {
     return '平台：$name$subtitleSuffix$selectedSuffix';
   }
 
   @override
   String publishedSemanticLabel(
-    String title,
-    String platform,
-    String status,
-    String dateSuffix,
-  ) {
+      String title, String platform, String status, String dateSuffix) {
     return '已发布：$title。平台：$platform。状态：$status$dateSuffix';
   }
 

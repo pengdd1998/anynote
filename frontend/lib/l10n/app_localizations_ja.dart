@@ -1683,11 +1683,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String versionSemanticLabel(
-    int versionNumber,
-    String title,
-    String date,
-    String currentSuffix,
-  ) {
+      int versionNumber, String title, String date, String currentSuffix) {
     return 'バージョン $versionNumber、$title、$date$currentSuffix';
   }
 
@@ -1725,10 +1721,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String compositionSemanticLabel(
-    String title,
-    String time,
-    String platformSuffix,
-  ) {
+      String title, String time, String platformSuffix) {
     return '作品：$title。$time$platformSuffix';
   }
 
@@ -1913,6 +1906,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noMdFilesSelected => '.mdファイルが選択されていません。';
 
   @override
+  String get notSupportedOnWeb => 'この機能はWeb版ではサポートされていません。';
+
+  @override
   String get selectMdFolderTitle => 'Markdownファイルのあるフォルダを選択';
 
   @override
@@ -2004,20 +2000,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String platformSemanticLabel(
-    String name,
-    String subtitleSuffix,
-    String selectedSuffix,
-  ) {
+      String name, String subtitleSuffix, String selectedSuffix) {
     return 'プラットフォーム：$name$subtitleSuffix$selectedSuffix';
   }
 
   @override
   String publishedSemanticLabel(
-    String title,
-    String platform,
-    String status,
-    String dateSuffix,
-  ) {
+      String title, String platform, String status, String dateSuffix) {
     return '公開済み：$title。プラットフォーム：$platform。ステータス：$status$dateSuffix';
   }
 

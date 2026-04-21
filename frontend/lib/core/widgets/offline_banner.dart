@@ -25,28 +25,30 @@ class OfflineBanner extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.errorContainer,
       ),
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.wifi_off,
-              size: 14,
-              color: Theme.of(context).colorScheme.onErrorContainer,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'You are offline \u2014 changes will sync when connected',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.onErrorContainer,
+      child: isOffline
+          ? Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.wifi_off,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'You are offline \u2014 changes will sync when connected',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 }

@@ -159,7 +159,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // The banner should show "No internet connection" text.
-      expect(find.text('No internet connection'), findsOneWidget);
+      expect(find.text('You are offline \u2014 changes will sync when connected'), findsOneWidget);
       expect(find.byIcon(Icons.wifi_off), findsOneWidget);
     });
 
@@ -177,7 +177,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Verify the banner content.
-      expect(find.text('No internet connection'), findsOneWidget);
+      expect(find.text('You are offline \u2014 changes will sync when connected'), findsOneWidget);
       expect(find.byType(OfflineBanner), findsOneWidget);
     });
   });
@@ -224,7 +224,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // OfflineBanner should display the offline message.
-      expect(find.text('No internet connection'), findsOneWidget);
+      expect(find.text('You are offline \u2014 changes will sync when connected'), findsOneWidget);
     });
 
     testWidgets('sync status shows offline icon in notes list when offline',

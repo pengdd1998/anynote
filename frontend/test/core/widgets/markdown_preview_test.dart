@@ -393,7 +393,7 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: MarkdownPreview(
-              content: r'Special chars: < > & " \' / \\',
+              content: "Special chars: < > & \" ' / \\",
             ),
           ),
         ),

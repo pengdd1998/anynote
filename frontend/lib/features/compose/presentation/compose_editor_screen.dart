@@ -271,8 +271,8 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
       if (!mounted) return;
       if (!context.mounted) return;
 
+      final l10n = AppLocalizations.of(context)!;
       if (noteId != null) {
-        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.savedAsNote),

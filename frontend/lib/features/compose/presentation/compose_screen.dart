@@ -112,7 +112,7 @@ class ComposeScreen extends ConsumerWidget {
                           ? '${item.plainBody!.substring(0, 80)}...'
                           // Use localized untitled fallback
                           : item.plainBody ?? l10n.untitled;
-                      final time = _formatTime(item.updatedAt);
+                      final time = _formatTime(context, item.updatedAt);
                       final platform = item.platformStyle;
 
                       return Card(
@@ -220,7 +220,7 @@ class ComposeScreen extends ConsumerWidget {
     );
   }
 
-  String _formatTime(DateTime dt) {
+  String _formatTime(BuildContext context, DateTime dt) {
     final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(dt);

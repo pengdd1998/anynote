@@ -81,13 +81,25 @@ void main() {
     testWidgets('wraps child with Shortcuts widget', (tester) async {
       await pumpAppShortcuts(tester);
 
-      expect(find.byType(Shortcuts), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+        findsOneWidget,
+      );
     });
 
     testWidgets('wraps child with Actions widget', (tester) async {
       await pumpAppShortcuts(tester);
 
-      expect(find.byType(Actions), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) {
+          if (w is! Actions) return false;
+          return w.actions.containsKey(NewNoteIntent);
+        }),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Shortcuts and Actions are in correct order', (tester) async {
@@ -98,7 +110,10 @@ void main() {
       );
 
       // Find the Shortcuts widget
-      final shortcutsFinder = find.byType(Shortcuts);
+      final shortcutsFinder = find.byWidgetPredicate((w) {
+        if (w is! Shortcuts) return false;
+        return w.shortcuts.values.any((i) => i is NewNoteIntent);
+      });
       expect(shortcutsFinder, findsOneWidget);
 
       // The Actions widget should be a descendant of Shortcuts.
@@ -122,8 +137,12 @@ void main() {
         (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       // On Linux test environment, modifier is Ctrl.
@@ -137,8 +156,12 @@ void main() {
     testWidgets('registers SaveIntent shortcut', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       final keySet = LogicalKeySet(
@@ -151,8 +174,12 @@ void main() {
     testWidgets('registers SearchIntent shortcut', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       final keySet = LogicalKeySet(
@@ -165,8 +192,12 @@ void main() {
     testWidgets('registers ToggleSidebarIntent shortcut', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       final keySet = LogicalKeySet(
@@ -179,8 +210,12 @@ void main() {
     testWidgets('registers ExportPdfIntent shortcut', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       final keySet = LogicalKeySet(
@@ -193,8 +228,12 @@ void main() {
     testWidgets('registers OpenSettingsIntent shortcut', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       final keySet = LogicalKeySet(
@@ -207,8 +246,12 @@ void main() {
     testWidgets('registers CloseNoteIntent shortcut', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       final keySet = LogicalKeySet(
@@ -221,8 +264,12 @@ void main() {
     testWidgets('registers NextNoteIntent shortcut', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       final keySet = LogicalKeySet(
@@ -235,8 +282,12 @@ void main() {
     testWidgets('registers ToggleFullScreenIntent via F11', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       final keySet = LogicalKeySet(LogicalKeyboardKey.f11);
@@ -246,8 +297,12 @@ void main() {
     testWidgets('registers ExitZenOrDialogIntent via Escape', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       final keySet = LogicalKeySet(LogicalKeyboardKey.escape);
@@ -257,8 +312,12 @@ void main() {
     testWidgets('all ten shortcuts are registered', (tester) async {
       await pumpAppShortcuts(tester);
 
-      final shortcutsWidget =
-          tester.widget<Shortcuts>(find.byType(Shortcuts));
+      final shortcutsWidget = tester.widget<Shortcuts>(
+        find.byWidgetPredicate((w) {
+          if (w is! Shortcuts) return false;
+          return w.shortcuts.values.any((i) => i is NewNoteIntent);
+        }),
+      );
       final shortcuts = shortcutsWidget.shortcuts;
 
       // 10 shortcuts: N, S, F, B, P, comma, W, Tab, F11, Escape.

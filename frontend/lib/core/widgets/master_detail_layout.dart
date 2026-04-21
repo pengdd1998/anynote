@@ -153,6 +153,7 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
           curve: Curves.easeInOut,
           width: widget.sidebarVisible ? _masterWidth : 0,
           clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(),
           child: widget.sidebarVisible
               ? widget.masterPane
               : const SizedBox.shrink(),

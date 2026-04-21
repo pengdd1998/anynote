@@ -153,7 +153,8 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         FilledButton.tonal(
                           onPressed: () =>
                               ref.invalidate(connectedPlatformsProvider),
-                        Text(l10n.retry),
+                          child: Text(l10n.retry),
+                        ),
                       ],
                     ),
                   ),

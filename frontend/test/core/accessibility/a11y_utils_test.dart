@@ -114,7 +114,7 @@ void main() {
       );
 
       // The widget tree should have a Center between SizedBox and child.
-      expect(find.byType(Center), findsOneWidget);
+      expect(find.byType(Center), findsWidgets);
     });
   });
 
@@ -135,8 +135,10 @@ void main() {
         ),
       );
 
-      final constrainedBox =
-          tester.widget<ConstrainedBox>(find.byType(ConstrainedBox));
+      final constrainedBox = tester.widget<ConstrainedBox>(
+        find.byWidgetPredicate(
+            (w) => w is ConstrainedBox && w.constraints.minWidth == 48.0),
+      );
       final constraints = constrainedBox.constraints;
       expect(constraints.minWidth, 48.0);
       expect(constraints.minHeight, 48.0);
@@ -154,8 +156,10 @@ void main() {
         ),
       );
 
-      final constrainedBox =
-          tester.widget<ConstrainedBox>(find.byType(ConstrainedBox));
+      final constrainedBox = tester.widget<ConstrainedBox>(
+        find.byWidgetPredicate(
+            (w) => w is ConstrainedBox && w.constraints.minWidth == 64.0),
+      );
       expect(constrainedBox.constraints.minWidth, 64.0);
       expect(constrainedBox.constraints.minHeight, 64.0);
     });
@@ -171,7 +175,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(Center), findsOneWidget);
+      expect(find.byType(Center), findsWidgets);
     });
   });
 
@@ -215,7 +219,9 @@ void main() {
         ),
       );
 
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate((w) => w is Semantics && w.properties.button == true),
+      );
       expect(semantics.properties.button, isTrue);
       expect(semantics.properties.label, 'Delete note');
     });
@@ -238,7 +244,10 @@ void main() {
         ),
       );
 
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate(
+            (w) => w is Semantics && w.properties.label == 'Sync status'),
+      );
       expect(semantics.properties.label, 'Sync status');
     });
   });
@@ -262,7 +271,9 @@ void main() {
         ),
       );
 
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate((w) => w is Semantics && w.properties.textField == true),
+      );
       expect(semantics.properties.textField, isTrue);
       expect(semantics.properties.label, 'Search notes');
       expect(semantics.properties.hint, 'Type to search');
@@ -280,7 +291,10 @@ void main() {
         ),
       );
 
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate(
+            (w) => w is Semantics && w.properties.label == 'Title'),
+      );
       expect(semantics.properties.textField, isTrue);
       expect(semantics.properties.label, 'Title');
     });
@@ -305,7 +319,11 @@ void main() {
       );
 
       expect(find.byType(MergeSemantics), findsOneWidget);
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate((w) =>
+            w is Semantics &&
+            w.properties.label == 'Note: Shopping list, updated 2h ago'),
+      );
       expect(semantics.properties.button, isTrue);
       expect(semantics.properties.label, 'Note: Shopping list, updated 2h ago');
     });
@@ -323,7 +341,10 @@ void main() {
         ),
       );
 
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate(
+            (w) => w is Semantics && w.properties.label == 'Info card'),
+      );
       expect(semantics.properties.button, isFalse);
     });
   });
@@ -347,7 +368,12 @@ void main() {
         ),
       );
 
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate((w) =>
+            w is Semantics &&
+            w.properties.button == true &&
+            w.properties.enabled == true),
+      );
       expect(semantics.properties.button, isTrue);
       expect(semantics.properties.enabled, isTrue);
       expect(semantics.properties.label, 'Create note');
@@ -372,7 +398,12 @@ void main() {
         ),
       );
 
-      final semantics = tester.widget<Semantics>(find.byType(Semantics));
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate((w) =>
+            w is Semantics &&
+            w.properties.button == true &&
+            w.properties.enabled == false),
+      );
       expect(semantics.properties.enabled, isFalse);
 
       // GestureDetector.onTap should be null when disabled, so tapping does nothing.

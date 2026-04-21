@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/crypto/crypto_service.dart';
+import 'package:anynote/core/database/app_database.dart';
+import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/core/sync/sync_engine.dart';
 import 'package:anynote/core/sync/sync_queue.dart';
+import 'package:drift/drift.dart' hide Column, isNull, isNotNull;
 
 // ---------------------------------------------------------------------------
 // Manual mocks

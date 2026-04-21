@@ -280,6 +280,117 @@ void main() {
         expect(result, isNull);
       }
     });
+
+    test('negative dimensions are persisted and loaded as-is', () async {
+      // Negative positions can occur when a window is on a secondary monitor
+      // to the left of or above the primary monitor.
+      await WindowStateService.save(
+        x: -100.0,
+        y: -200.0,
+        width: 800.0,
+        height: 600.0,
+        isMaximized: false,
+      );
+
+      if (WindowStateService.isSupported) {
+        final result = await WindowStateService.load();
+        expect(result, isNotNull);
+        expect(result!.x, -100.0);
+        expect(result.y, -200.0);
+        expect(result.width, 800.0);
+        expect(result.height, 600.0);
+      }
+    });
+
+    test('save stores values under expected SharedPreferences keys', () async {
+      // Verify the exact key names used by WindowStateService so that any
+      // renaming is caught as a test failure.
+      await WindowStateService.save(
+        x: 42.0,
+        y: 84.0,
+        width: 640.0,
+        height: 480.0,
+        isMaximized: true,
+      );
+
+      if (WindowStateService.isSupported) {
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getDouble('window_x'), 42.0);
+        expect(prefs.getDouble('window_y'), 84.0);
+        expect(prefs.getDouble('window_width'), 640.0);
+        expect(prefs.getDouble('window_height'), 480.0);
+        expect(prefs.getBool('window_maximized'), isTrue);
+      }
+    });
+
+    test('load throws when prefs contain wrong types', () async {
+      // Simulate a corrupted prefs file where someone stored strings instead
+      // of doubles. SharedPreferences.getDouble throws a TypeError when the
+      // stored value is a different type, rather than returning null.
+      SharedPreferences.setMockInitialValues({
+        'window_x': 'not_a_double',
+        'window_y': 'not_a_double',
+        'window_width': 'not_a_double',
+        'window_height': 'not_a_double',
+      });
+
+      if (WindowStateService.isSupported) {
+        // The service does not catch type errors from getDouble, so the call
+        // should propagate the TypeError. This is acceptable because real
+        // SharedPreferences only stores values set by the app (typed correctly).
+        expect(
+          () => WindowStateService.load(),
+          throwsA(isA<TypeError>()),
+        );
+      }
+    });
+
+    test('multiple save calls update only the latest values', () async {
+      // Save three times with different values and verify the last one wins.
+      await WindowStateService.save(
+        x: 1.0,
+        y: 1.0,
+        width: 100.0,
+        height: 100.0,
+        isMaximized: false,
+      );
+      await WindowStateService.save(
+        x: 2.0,
+        y: 2.0,
+        width: 200.0,
+        height: 200.0,
+        isMaximized: false,
+      );
+      await WindowStateService.save(
+        x: 3.0,
+        y: 3.0,
+        width: 300.0,
+        height: 300.0,
+        isMaximized: true,
+      );
+
+      if (WindowStateService.isSupported) {
+        final result = await WindowStateService.load();
+        expect(result, isNotNull);
+        expect(result!.x, 3.0);
+        expect(result.y, 3.0);
+        expect(result.width, 300.0);
+        expect(result.height, 300.0);
+        expect(result.isMaximized, isTrue);
+      }
+    });
+
+    test(
+        'WindowBounds.defaults provides reasonable fallback for first launch',
+        () async {
+      const defaults = WindowBounds.defaults;
+      // Verify the defaults are reasonable for a desktop window.
+      expect(defaults.x, greaterThanOrEqualTo(0));
+      expect(defaults.y, greaterThanOrEqualTo(0));
+      expect(defaults.width, greaterThanOrEqualTo(640));
+      expect(defaults.height, greaterThanOrEqualTo(480));
+      expect(defaults.isMaximized, isFalse);
+    });
   });
 
   // ===========================================================================

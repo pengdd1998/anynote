@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:drift/native.dart';
@@ -536,14 +537,14 @@ void main() {
 
     test('returns empty list when canSearch is false', () async {
       // Default filters: no query, no tags, no collections.
-      final result = await container.read(searchResultsProvider).future;
+      final result = await container.read(searchResultsProvider.future);
       expect(result, isEmpty);
     });
 
     test('returns filtered notes when tag filter is set', () async {
       container.read(searchFiltersProvider.notifier).toggleTag('tag-work');
 
-      final results = await container.read(searchResultsProvider).future;
+      final results = await container.read(searchResultsProvider.future);
 
       expect(results.length, 1);
       expect(results[0].note.id, 'note-1');
@@ -554,7 +555,7 @@ void main() {
           .read(searchFiltersProvider.notifier)
           .toggleCollection('col-archive');
 
-      final results = await container.read(searchResultsProvider).future;
+      final results = await container.read(searchResultsProvider.future);
 
       expect(results.length, 1);
       expect(results[0].note.id, 'note-2');
@@ -563,7 +564,7 @@ void main() {
     test('includes tags in the result', () async {
       container.read(searchFiltersProvider.notifier).toggleTag('tag-work');
 
-      final results = await container.read(searchResultsProvider).future;
+      final results = await container.read(searchResultsProvider.future);
 
       expect(results[0].tags.length, 1);
       expect(results[0].tags[0].plainName, 'Work');
@@ -572,7 +573,7 @@ void main() {
     test('contentPreview is populated from plainContent', () async {
       container.read(searchFiltersProvider.notifier).toggleTag('tag-work');
 
-      final results = await container.read(searchResultsProvider).future;
+      final results = await container.read(searchResultsProvider.future);
 
       expect(results[0].contentPreview, isNotEmpty);
       expect(results[0].contentPreview, contains('Flutter'));
@@ -581,7 +582,7 @@ void main() {
     test('searchResultCount is set to result length for tag-only search', () async {
       container.read(searchFiltersProvider.notifier).toggleTag('tag-work');
 
-      await container.read(searchResultsProvider).future;
+      await container.read(searchResultsProvider.future);
 
       expect(container.read(searchResultCountProvider), 1);
     });
@@ -594,7 +595,7 @@ void main() {
       );
       container.read(searchFiltersProvider.notifier).toggleTag('tag-empty');
 
-      final results = await container.read(searchResultsProvider).future;
+      final results = await container.read(searchResultsProvider.future);
 
       expect(results, isEmpty);
       expect(container.read(searchResultCountProvider), 0);
@@ -602,7 +603,7 @@ void main() {
 
     test('clearAll resets filters and returns empty', () async {
       container.read(searchFiltersProvider.notifier).toggleTag('tag-work');
-      await container.read(searchResultsProvider).future;
+      await container.read(searchResultsProvider.future);
       expect(container.read(searchResultCountProvider), 1);
 
       container.read(searchFiltersProvider.notifier).clearAll();
@@ -615,7 +616,7 @@ void main() {
       );
       addTearDown(() => freshContainer.dispose());
 
-      final result = await freshContainer.read(searchResultsProvider).future;
+      final result = await freshContainer.read(searchResultsProvider.future);
       expect(result, isEmpty);
     });
   });
@@ -654,7 +655,7 @@ void main() {
     });
 
     test('returns all tags from the database', () async {
-      final tags = await container.read(allTagsProvider).future;
+      final tags = await container.read(allTagsProvider.future);
       expect(tags.length, 2);
       final names = tags.map((t) => t.plainName).toList();
       expect(names, containsAll(['Work', 'Personal']));
@@ -690,7 +691,7 @@ void main() {
     });
 
     test('returns all collections from the database', () async {
-      final collections = await container.read(allCollectionsProvider).future;
+      final collections = await container.read(allCollectionsProvider.future);
       expect(collections.length, 1);
       expect(collections[0].plainTitle, 'Diary');
     });
@@ -713,7 +714,7 @@ void main() {
     });
 
     test('returns empty list when no recent searches exist', () async {
-      final searches = await container.read(recentSearchesProvider).future;
+      final searches = await container.read(recentSearchesProvider.future);
       expect(searches, isEmpty);
     });
 
@@ -725,7 +726,7 @@ void main() {
       final freshContainer = ProviderContainer();
       addTearDown(() => freshContainer.dispose());
 
-      final searches = await freshContainer.read(recentSearchesProvider).future;
+      final searches = await freshContainer.read(recentSearchesProvider.future);
       expect(searches, ['flutter', 'riverpod']);
     });
   });

@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:drift/native.dart';
@@ -281,7 +282,7 @@ void main() {
     test('build fetches AI quota from API', () async {
       mockApi.aiQuotaResponse = {'used': 25, 'limit': 200};
 
-      final result = await container.read(aiQuotaProvider).future;
+      final result = await container.read(aiQuotaProvider.future);
 
       expect(result['used'], 25);
       expect(result['limit'], 200);
@@ -289,7 +290,7 @@ void main() {
 
     test('refresh reloads quota from API', () async {
       // First load.
-      final first = await container.read(aiQuotaProvider).future;
+      final first = await container.read(aiQuotaProvider.future);
       expect(first['used'], 10);
 
       // Change the stub response.
@@ -297,7 +298,7 @@ void main() {
 
       // Refresh.
       await container.read(aiQuotaProvider.notifier).refresh();
-      final second = await container.read(aiQuotaProvider).future;
+      final second = await container.read(aiQuotaProvider.future);
 
       expect(second['used'], 50);
     });
@@ -307,14 +308,14 @@ void main() {
 
       // The async value should eventually become an error.
       await expectLater(
-        container.read(aiQuotaProvider).future,
+        container.read(aiQuotaProvider.future),
         throwsA(isA<Exception>()),
       );
     });
 
     test('refresh sets error state on failure', () async {
       // First load succeeds.
-      await container.read(aiQuotaProvider).future;
+      await container.read(aiQuotaProvider.future);
 
       // Now API fails.
       mockApi.aiQuotaError = Exception('Server error');
@@ -322,7 +323,7 @@ void main() {
       await container.read(aiQuotaProvider.notifier).refresh();
 
       await expectLater(
-        container.read(aiQuotaProvider).future,
+        container.read(aiQuotaProvider.future),
         throwsA(isA<Exception>()),
       );
     });
@@ -355,7 +356,7 @@ void main() {
         'item_count': 150,
       };
 
-      final result = await container.read(syncStatusProvider).future;
+      final result = await container.read(syncStatusProvider.future);
 
       expect(result['latest_version'], 99);
       expect(result['item_count'], 150);
@@ -363,7 +364,7 @@ void main() {
 
     test('refresh reloads sync status', () async {
       // First load.
-      final first = await container.read(syncStatusProvider).future;
+      final first = await container.read(syncStatusProvider.future);
       expect(first['latest_version'], 42);
 
       // Change stub.
@@ -371,7 +372,7 @@ void main() {
 
       // Refresh.
       await container.read(syncStatusProvider.notifier).refresh();
-      final second = await container.read(syncStatusProvider).future;
+      final second = await container.read(syncStatusProvider.future);
 
       expect(second['latest_version'], 55);
     });
@@ -380,20 +381,20 @@ void main() {
       mockApi.syncStatusError = Exception('Connection refused');
 
       await expectLater(
-        container.read(syncStatusProvider).future,
+        container.read(syncStatusProvider.future),
         throwsA(isA<Exception>()),
       );
     });
 
     test('refresh sets error state on failure', () async {
-      await container.read(syncStatusProvider).future;
+      await container.read(syncStatusProvider.future);
 
       mockApi.syncStatusError = Exception('Timeout');
 
       await container.read(syncStatusProvider.notifier).refresh();
 
       await expectLater(
-        container.read(syncStatusProvider).future,
+        container.read(syncStatusProvider.future),
         throwsA(isA<Exception>()),
       );
     });
@@ -427,7 +428,7 @@ void main() {
         'username': 'alice',
       };
 
-      final result = await container.read(accountInfoProvider).future;
+      final result = await container.read(accountInfoProvider.future);
 
       expect(result['id'], 'user-abc');
       expect(result['email'], 'alice@example.com');
@@ -435,7 +436,7 @@ void main() {
     });
 
     test('refresh reloads account info', () async {
-      final first = await container.read(accountInfoProvider).future;
+      final first = await container.read(accountInfoProvider.future);
       expect(first['email'], 'test@example.com');
 
       mockApi.meResponse = {
@@ -444,7 +445,7 @@ void main() {
       };
 
       await container.read(accountInfoProvider.notifier).refresh();
-      final second = await container.read(accountInfoProvider).future;
+      final second = await container.read(accountInfoProvider.future);
 
       expect(second['email'], 'updated@example.com');
     });
@@ -453,20 +454,20 @@ void main() {
       mockApi.meError = Exception('Unauthorized');
 
       await expectLater(
-        container.read(accountInfoProvider).future,
+        container.read(accountInfoProvider.future),
         throwsA(isA<Exception>()),
       );
     });
 
     test('refresh sets error state on failure', () async {
-      await container.read(accountInfoProvider).future;
+      await container.read(accountInfoProvider.future);
 
       mockApi.meError = Exception('Server error');
 
       await container.read(accountInfoProvider.notifier).refresh();
 
       await expectLater(
-        container.read(accountInfoProvider).future,
+        container.read(accountInfoProvider.future),
         throwsA(isA<Exception>()),
       );
     });
@@ -499,7 +500,7 @@ void main() {
         {'id': 'cfg-2', 'name': 'DeepSeek Chat', 'provider': 'DeepSeek'},
       ];
 
-      final result = await container.read(llmConfigsProvider).future;
+      final result = await container.read(llmConfigsProvider.future);
 
       expect(result.length, 2);
       expect(result[0]['name'], 'GPT-4');
@@ -509,7 +510,7 @@ void main() {
     test('build returns empty list when no configs', () async {
       mockApi.llmConfigsResponse = [];
 
-      final result = await container.read(llmConfigsProvider).future;
+      final result = await container.read(llmConfigsProvider.future);
 
       expect(result, isEmpty);
     });
@@ -518,7 +519,7 @@ void main() {
       mockApi.llmConfigsResponse = [];
 
       // Initial load.
-      await container.read(llmConfigsProvider).future;
+      await container.read(llmConfigsProvider.future);
 
       // Create a new config.
       final newConfig = {'name': 'Claude', 'provider': 'Anthropic'};
@@ -528,7 +529,7 @@ void main() {
     });
 
     test('updateConfig calls API and invalidates self', () async {
-      await container.read(llmConfigsProvider).future;
+      await container.read(llmConfigsProvider.future);
 
       final updatedConfig = {'name': 'Updated GPT-4'};
       await container.read(llmConfigsProvider.notifier).updateConfig(
@@ -541,7 +542,7 @@ void main() {
     });
 
     test('delete calls API and invalidates self', () async {
-      await container.read(llmConfigsProvider).future;
+      await container.read(llmConfigsProvider.future);
 
       await container.read(llmConfigsProvider.notifier).delete('cfg-1');
 
@@ -562,7 +563,7 @@ void main() {
         {'id': 'cfg-1', 'name': 'Old Config'},
       ];
 
-      final first = await container.read(llmConfigsProvider).future;
+      final first = await container.read(llmConfigsProvider.future);
       expect(first.length, 1);
 
       // Update stub and refresh.
@@ -572,7 +573,7 @@ void main() {
       ];
 
       await container.read(llmConfigsProvider.notifier).refresh();
-      final second = await container.read(llmConfigsProvider).future;
+      final second = await container.read(llmConfigsProvider.future);
 
       expect(second.length, 2);
     });
@@ -581,7 +582,7 @@ void main() {
       mockApi.llmConfigsError = Exception('Server error');
 
       await expectLater(
-        container.read(llmConfigsProvider).future,
+        container.read(llmConfigsProvider.future),
         throwsA(isA<Exception>()),
       );
     });
@@ -611,7 +612,7 @@ void main() {
     test('fetches provider names from API', () async {
       mockApi.llmProvidersResponse = ['OpenAI', 'DeepSeek', 'Anthropic'];
 
-      final result = await container.read(llmProvidersProvider).future;
+      final result = await container.read(llmProvidersProvider.future);
 
       expect(result, ['OpenAI', 'DeepSeek', 'Anthropic']);
     });
@@ -619,7 +620,7 @@ void main() {
     test('returns empty list when no providers', () async {
       mockApi.llmProvidersResponse = [];
 
-      final result = await container.read(llmProvidersProvider).future;
+      final result = await container.read(llmProvidersProvider.future);
 
       expect(result, isEmpty);
     });
@@ -652,7 +653,7 @@ void main() {
         {'platform': 'weibo', 'connected': false},
       ];
 
-      final result = await container.read(platformsProvider).future;
+      final result = await container.read(platformsProvider.future);
 
       expect(result.length, 2);
       expect(result[0]['platform'], 'xhs');
@@ -662,7 +663,7 @@ void main() {
     test('build returns empty list when no platforms', () async {
       mockApi.platformsResponse = [];
 
-      final result = await container.read(platformsProvider).future;
+      final result = await container.read(platformsProvider.future);
 
       expect(result, isEmpty);
     });
@@ -670,7 +671,7 @@ void main() {
     test('connect calls API and invalidates self', () async {
       mockApi.platformsResponse = [];
 
-      await container.read(platformsProvider).future;
+      await container.read(platformsProvider.future);
 
       final result = await container.read(platformsProvider.notifier).connect(
         'xhs',
@@ -681,7 +682,7 @@ void main() {
     });
 
     test('disconnect calls API and invalidates self', () async {
-      await container.read(platformsProvider).future;
+      await container.read(platformsProvider.future);
 
       await container.read(platformsProvider.notifier).disconnect('xhs');
 
@@ -702,7 +703,7 @@ void main() {
         {'platform': 'xhs', 'connected': false},
       ];
 
-      final first = await container.read(platformsProvider).future;
+      final first = await container.read(platformsProvider.future);
       expect(first.length, 1);
 
       mockApi.platformsResponse = [
@@ -711,7 +712,7 @@ void main() {
       ];
 
       await container.read(platformsProvider.notifier).refresh();
-      final second = await container.read(platformsProvider).future;
+      final second = await container.read(platformsProvider.future);
 
       expect(second.length, 2);
     });
@@ -720,13 +721,13 @@ void main() {
       mockApi.listPlatformsError = Exception('Server error');
 
       await expectLater(
-        container.read(platformsProvider).future,
+        container.read(platformsProvider.future),
         throwsA(isA<Exception>()),
       );
     });
 
     test('connect propagates API error', () async {
-      await container.read(platformsProvider).future;
+      await container.read(platformsProvider.future);
 
       mockApi.connectPlatformError = Exception('Connection failed');
 
@@ -811,7 +812,7 @@ void main() {
 
     test('counts non-deleted notes, tags, collections, and AI content',
         () async {
-      final counts = await container.read(localItemCountsProvider).future;
+      final counts = await container.read(localItemCountsProvider.future);
 
       // note-3 is soft-deleted, so only 2 active notes.
       expect(counts['notes'], 2);
@@ -833,7 +834,7 @@ void main() {
       addTearDown(() => emptyContainer.dispose());
 
       final counts =
-          await emptyContainer.read(localItemCountsProvider).future;
+          await emptyContainer.read(localItemCountsProvider.future);
 
       expect(counts['notes'], 0);
       expect(counts['tags'], 0);
@@ -843,7 +844,7 @@ void main() {
 
     test('refresh invalidates self to trigger reload', () async {
       // First read.
-      final first = await container.read(localItemCountsProvider).future;
+      final first = await container.read(localItemCountsProvider.future);
       expect(first['notes'], 2);
 
       // Add a new note.
@@ -858,7 +859,7 @@ void main() {
       await container.read(localItemCountsProvider.notifier).refresh();
 
       // Wait for the invalidated provider to rebuild.
-      final second = await container.read(localItemCountsProvider).future;
+      final second = await container.read(localItemCountsProvider.future);
       expect(second['notes'], 3);
     });
   });

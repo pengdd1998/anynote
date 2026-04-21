@@ -462,6 +462,250 @@ void main() {
   });
 
   // ===========================================================================
+  // Share intent data formats
+  // ===========================================================================
+
+  group('share intent parsing', () {
+    test('URL share intent is parsed as text type', () async {
+      final service = ReceiveShareService();
+      final received = <SharedContent>[];
+      service.onShareReceived.listen(received.add);
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, (MethodCall call) async {
+        return null;
+      });
+
+      await service.init();
+
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      // A URL shared from a browser arrives as text content containing the URL.
+      final data = jsonEncode({
+        'type': 'text',
+        'text': 'https://example.com/article/123',
+      });
+      await messenger.handlePlatformMessage(
+        _channelName,
+        const StandardMethodCodec()
+            .encodeMethodCall(MethodCall('shareReceived', data)),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(received.length, 1);
+      expect(received[0].type, 'text');
+      expect(received[0].text, 'https://example.com/article/123');
+      expect(received[0].isText, isTrue);
+      // The note content for a URL share is just the raw URL.
+      expect(received[0].toNoteContent(), 'https://example.com/article/123');
+
+      service.dispose();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, null);
+    });
+
+    test('share intent with subject and text preserves both in text field',
+        () async {
+      final service = ReceiveShareService();
+      final received = <SharedContent>[];
+      service.onShareReceived.listen(received.add);
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, (MethodCall call) async {
+        return null;
+      });
+
+      await service.init();
+
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      // Android share intents may include a subject alongside the text.
+      // The subject is typically concatenated with the text by the sending app.
+      final data = jsonEncode({
+        'type': 'text',
+        'text': 'Meeting Notes\n\nShared from Email app',
+      });
+      await messenger.handlePlatformMessage(
+        _channelName,
+        const StandardMethodCodec()
+            .encodeMethodCall(MethodCall('shareReceived', data)),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(received.length, 1);
+      expect(received[0].text, contains('Meeting Notes'));
+      expect(received[0].text, contains('Shared from Email app'));
+
+      service.dispose();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, null);
+    });
+
+    test('deep link URL in shared text is preserved verbatim', () async {
+      // When an app shares an anynote:// deep link URL, it should be treated
+      // as regular text content. The routing layer handles deep link
+      // navigation separately.
+      const deepLink = 'anynote://share/received';
+      final service = ReceiveShareService();
+      final received = <SharedContent>[];
+      service.onShareReceived.listen(received.add);
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, (MethodCall call) async {
+        return null;
+      });
+
+      await service.init();
+
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final data = jsonEncode({
+        'type': 'text',
+        'text': deepLink,
+      });
+      await messenger.handlePlatformMessage(
+        _channelName,
+        const StandardMethodCodec()
+            .encodeMethodCall(MethodCall('shareReceived', data)),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(received.length, 1);
+      expect(received[0].text, deepLink);
+      expect(received[0].toNoteContent(), deepLink);
+
+      service.dispose();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, null);
+    });
+
+    test('empty string share data does not emit', () async {
+      final service = ReceiveShareService();
+      final received = <SharedContent>[];
+      service.onShareReceived.listen(received.add);
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, (MethodCall call) async {
+        return null;
+      });
+
+      await service.init();
+
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      // An empty string is technically valid JSON but produces null after
+      // jsonDecode, which should not crash the service.
+      await messenger.handlePlatformMessage(
+        _channelName,
+        const StandardMethodCodec()
+            .encodeMethodCall(const MethodCall('shareReceived', '')),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(received, isEmpty);
+
+      service.dispose();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, null);
+    });
+
+    test('invalid share type is handled gracefully', () async {
+      // A share with an unrecognized type should still be emitted; the
+      // consumer can inspect the type field.
+      final service = ReceiveShareService();
+      final received = <SharedContent>[];
+      service.onShareReceived.listen(received.add);
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, (MethodCall call) async {
+        return null;
+      });
+
+      await service.init();
+
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final data = jsonEncode({
+        'type': 'video',
+        'path': '/tmp/movie.mp4',
+      });
+      await messenger.handlePlatformMessage(
+        _channelName,
+        const StandardMethodCodec()
+            .encodeMethodCall(MethodCall('shareReceived', data)),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(received.length, 1);
+      expect(received[0].type, 'video');
+      // isText, isImage, isFile are all false for unknown types.
+      expect(received[0].isText, isFalse);
+      expect(received[0].isImage, isFalse);
+      expect(received[0].isFile, isFalse);
+      // toNoteContent falls back to text field for unknown types.
+      expect(received[0].toNoteContent(), '');
+
+      service.dispose();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, null);
+    });
+
+    test('multiple share items emitted sequentially preserve order', () async {
+      final service = ReceiveShareService();
+      final received = <SharedContent>[];
+      service.onShareReceived.listen(received.add);
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, (MethodCall call) async {
+        return null;
+      });
+
+      await service.init();
+
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+      // Simulate receiving multiple share items in quick succession.
+      final items = [
+        {'type': 'text', 'text': 'First item'},
+        {'type': 'image', 'path': '/tmp/a.jpg'},
+        {'type': 'text', 'text': 'Second text'},
+        {'type': 'file', 'path': '/tmp/doc.pdf'},
+      ];
+
+      for (final item in items) {
+        final data = jsonEncode(item);
+        await messenger.handlePlatformMessage(
+          _channelName,
+          const StandardMethodCodec()
+              .encodeMethodCall(MethodCall('shareReceived', data)),
+          (_) {},
+        );
+      }
+      await Future<void>.delayed(Duration.zero);
+
+      expect(received.length, 4);
+      expect(received[0].type, 'text');
+      expect(received[0].text, 'First item');
+      expect(received[1].type, 'image');
+      expect(received[1].path, '/tmp/a.jpg');
+      expect(received[2].type, 'text');
+      expect(received[2].text, 'Second text');
+      expect(received[3].type, 'file');
+      expect(received[3].path, '/tmp/doc.pdf');
+
+      service.dispose();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, null);
+    });
+  });
+
+  // ===========================================================================
   // receiveShareServiceProvider
   // ===========================================================================
 

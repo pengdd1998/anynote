@@ -52,6 +52,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final session = ref.watch(composeSessionProvider);
 
     return Scaffold(
