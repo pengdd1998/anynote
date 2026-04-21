@@ -39,7 +39,12 @@ void main() async {
 
   // Initialize crypto backend (no-op on web where WebCrypto is available;
   // on native, sodium_libs is initialized lazily by Encryptor/MasterKeyManager).
-  await CryptoCompat.init();
+  try {
+    await CryptoCompat.init();
+  } catch (e, st) {
+    ErrorReporter.instance.reportError(e, st, context: 'crypto_init');
+    // Continue — crypto will be initialized lazily when first needed.
+  }
 
   // Initialize window_manager on desktop and restore saved bounds.
   if (PlatformUtils.isDesktop) {
@@ -59,8 +64,14 @@ void main() async {
     await windowManager.show();
   }
 
-  // Initialize database
+  // Initialize database. Wrapping in try-catch to report migration failures
+  // without crashing the app — the user sees the error in logs/reporting.
   final db = AppDatabase();
+  try {
+    await db.customSelect('SELECT 1').getSingle();
+  } catch (e, st) {
+    ErrorReporter.instance.reportError(e, st, context: 'database_init');
+  }
 
   // Initialize API client
   final apiClient = ApiClient(baseUrl: const String.fromEnvironment(
