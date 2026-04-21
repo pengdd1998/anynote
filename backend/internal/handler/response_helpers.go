@@ -64,6 +64,8 @@ func writeErrorFromSentinel(w http.ResponseWriter, r *http.Request, err error) b
 		writeError(w, r, http.StatusNotFound, "not_found", "Comment not found")
 	case service.ErrNotCommentAuthor:
 		writeError(w, r, http.StatusForbidden, "forbidden", "Only the comment author can delete it")
+	case service.ErrNotOwner:
+		writeError(w, r, http.StatusForbidden, "forbidden", "You do not own this resource")
 	case service.ErrInvalidReaction:
 		writeError(w, r, http.StatusBadRequest, "invalid_reaction", "reaction_type must be 'heart' or 'bookmark'")
 	case service.ErrInvalidTokenType:

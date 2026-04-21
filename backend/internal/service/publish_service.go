@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -9,6 +10,10 @@ import (
 
 	"github.com/anynote/backend/internal/domain"
 )
+
+// ErrNotOwner is returned when a user attempts to access a resource
+// that belongs to a different user.
+var ErrNotOwner = errors.New("resource not owned by requesting user")
 
 // QueueEnqueuer abstracts the queue enqueue operation so publish_service
 // does not depend directly on the queue package.
@@ -135,7 +140,7 @@ func (s *publishService) GetByID(ctx context.Context, userID uuid.UUID, id uuid.
 		return nil, err
 	}
 	if publishLog.UserID != userID {
-		return nil, ErrUserNotFound
+		return nil, ErrNotOwner
 	}
 	return publishLog, nil
 }

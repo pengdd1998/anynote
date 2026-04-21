@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"crypto/subtle"
 	"net/http"
 	"os"
 	"strconv"
@@ -168,18 +169,48 @@ type Services struct {
 // registerPprofRoutes mounts /debug/pprof/* endpoints when the PPROF_ENABLED
 // or DEBUG environment variable is set to a truthy value ("1", "true", "yes").
 // In production without these variables the routes are not registered.
+//
+// When PPROF_PASSWORD is set, endpoints are protected by HTTP Basic Auth
+// (username "admin", password from the env var). When PPROF_PASSWORD is not
+// set, the endpoints are accessible without authentication -- in this case
+// ensure the server is behind a firewall or only bound to localhost.
 func registerPprofRoutes(r chi.Router) {
 	if !isTruthyEnv("PPROF_ENABLED") && !isTruthyEnv("DEBUG") {
 		return
 	}
 
+	pprofPassword := os.Getenv("PPROF_PASSWORD")
+
 	r.Route("/debug", func(r chi.Router) {
+		if pprofPassword != "" {
+			r.Use(pprofBasicAuth(pprofPassword))
+		}
 		r.HandleFunc("/pprof/", http.DefaultServeMux.ServeHTTP)
 		r.HandleFunc("/pprof/cmdline", http.DefaultServeMux.ServeHTTP)
 		r.HandleFunc("/pprof/profile", http.DefaultServeMux.ServeHTTP)
 		r.HandleFunc("/pprof/symbol", http.DefaultServeMux.ServeHTTP)
 		r.HandleFunc("/pprof/trace", http.DefaultServeMux.ServeHTTP)
 	})
+}
+
+// pprofBasicAuth returns middleware that validates HTTP Basic Auth credentials
+// for pprof endpoints. The username is fixed as "admin" and the password must
+// match the provided string. Timing-safe comparison is used to prevent
+// side-channel attacks.
+func pprofBasicAuth(password string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			user, pass, ok := r.BasicAuth()
+			if !ok ||
+				subtle.ConstantTimeCompare([]byte(user), []byte("admin")) != 1 ||
+				subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
+				w.Header().Set("WWW-Authenticate", `Basic realm="pprof"`)
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // isTruthyEnv returns true if the environment variable is set to a truthy value

@@ -121,9 +121,11 @@ void main() {
         const ChatMessage(role: 'user', content: 'test'),
       ];
 
+      // Simulate a null model variable to verify conditional key omission.
+      const String? model = null;
       final body = <String, dynamic>{
         'messages': messages.map((m) => {'role': m.role, 'content': m.content}).toList(),
-        if (null != null) 'model': null,
+        if (model != null) 'model': model,
         'stream': false,
       };
 

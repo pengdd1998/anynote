@@ -125,7 +125,9 @@ func (h *PublishHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	log, err := h.publishService.GetByID(r.Context(), userID, parsedID)
 	if err != nil {
-		writeError(w, r, http.StatusNotFound, "not_found", "Publish log not found")
+		if !writeErrorFromSentinel(w, r, err) {
+			writeError(w, r, http.StatusNotFound, "not_found", "Publish log not found")
+		}
 		return
 	}
 

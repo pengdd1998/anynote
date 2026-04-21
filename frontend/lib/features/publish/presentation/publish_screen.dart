@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/error/error.dart';
+import '../../../core/theme/alpha_constants.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/publish_providers.dart';
@@ -99,7 +100,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           ? Theme.of(context)
                               .colorScheme
                               .primaryContainer
-                              .withAlpha(80)
+                              .withAlpha(AppAlpha.bold)
                           : null,
                       child: Semantics(
                         button: true,

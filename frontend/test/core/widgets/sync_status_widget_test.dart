@@ -11,7 +11,6 @@ import 'package:anynote/core/sync/sync_lifecycle.dart';
 import 'package:anynote/core/sync/sync_queue_manager.dart';
 import 'package:anynote/core/widgets/sync_status_widget.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
-import 'package:anynote/main.dart';
 
 import '../../helpers/test_app_helper.dart';
 

@@ -12,7 +12,7 @@ import 'package:anynote/core/database/app_database.dart';
 import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
 import 'package:anynote/main.dart'
-    show apiClientProvider, cryptoServiceProvider, databaseProvider;
+    show apiClientProvider, databaseProvider;
 
 // ---------------------------------------------------------------------------
 // Mock ApiClient that records calls and returns preset responses.

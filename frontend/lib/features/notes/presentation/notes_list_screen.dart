@@ -16,6 +16,7 @@ import '../../../core/import/apple_notes_import.dart';
 import '../../../core/import/import_models.dart';
 import '../../../core/import/markdown_import_service.dart';
 import '../../../core/import/text_import.dart';
+import '../../../core/theme/alpha_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/adaptive_scaffold.dart';
 import '../../../core/widgets/app_components.dart';
@@ -696,7 +697,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       // Right swipe: pin/unpin with warm primary color.
       background: Container(
         decoration: BoxDecoration(
-          color: colorScheme.primary.withAlpha(40),
+          color: colorScheme.primary.withAlpha(AppAlpha.medium),
           borderRadius: cardRadius,
         ),
         alignment: Alignment.centerLeft,
@@ -726,7 +727,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       // Left swipe: delete with warm error color.
       secondaryBackground: Container(
         decoration: BoxDecoration(
-          color: colorScheme.error.withAlpha(40),
+          color: colorScheme.error.withAlpha(AppAlpha.medium),
           borderRadius: cardRadius,
         ),
         alignment: Alignment.centerRight,
@@ -834,7 +835,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       button: true,
       child: Card(
         color: isSelected
-            ? colorScheme.primaryContainer.withAlpha(80)
+            ? colorScheme.primaryContainer.withAlpha(AppAlpha.bold)
             : null,
         child: Material(
           color: Colors.transparent,
@@ -842,8 +843,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             onTap: () => _onNoteTap(note.id),
             onLongPress: () => _showNoteContextMenu(context, note, db),
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            splashColor: colorScheme.primary.withAlpha(25),
-            highlightColor: colorScheme.primary.withAlpha(15),
+            splashColor: colorScheme.primary.withAlpha(AppAlpha.light),
+            highlightColor: colorScheme.primary.withAlpha(AppAlpha.subtle),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
@@ -881,7 +882,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withAlpha(153),
+                      color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
                     ),
                   ),
                   if (tags.isNotEmpty)
@@ -894,7 +895,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                   Text(
                     time,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withAlpha(115),
+                      color: colorScheme.onSurface.withAlpha(AppAlpha.prominent),
                     ),
                   ),
                 ],
@@ -929,15 +930,15 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       button: true,
       child: Card(
         color: isSelected
-            ? colorScheme.primaryContainer.withAlpha(80)
+            ? colorScheme.primaryContainer.withAlpha(AppAlpha.bold)
             : null,
         margin: const EdgeInsets.all(4),
         child: InkWell(
           onTap: () => _onNoteTap(note.id),
           onLongPress: () => _showNoteContextMenu(context, note, db),
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          splashColor: colorScheme.primary.withAlpha(25),
-          highlightColor: colorScheme.primary.withAlpha(15),
+          splashColor: colorScheme.primary.withAlpha(AppAlpha.light),
+          highlightColor: colorScheme.primary.withAlpha(AppAlpha.subtle),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -976,7 +977,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withAlpha(153),
+                      color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
                     ),
                   ),
                 ),
@@ -990,7 +991,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 Text(
                   time,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurface.withAlpha(115),
+                    color: colorScheme.onSurface.withAlpha(AppAlpha.prominent),
                   ),
                 ),
               ],
@@ -1016,7 +1017,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           label: Text(
             tag.plainName ?? '...',
             style: theme.textTheme.labelSmall?.copyWith(
-              color: colorScheme.onSurface.withAlpha(153),
+              color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
             ),
           ),
           visualDensity: VisualDensity.compact,
@@ -1024,10 +1025,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           padding: EdgeInsets.zero,
           labelPadding: const EdgeInsets.symmetric(horizontal: 6),
           side: BorderSide(
-            color: colorScheme.outlineVariant.withAlpha(100),
+            color: colorScheme.outlineVariant.withAlpha(AppAlpha.heavy),
             width: 0.5,
           ),
-          backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(80),
+          backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(AppAlpha.bold),
         ),
         );
       }).toList(),
@@ -1566,8 +1567,8 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
                 MarkdownBody(
                   data: _data!.content,
                   selectable: true,
-                  // ignore: deprecated_member_use
-                  imageBuilder: (uri, title, alt) {
+                  sizedImageBuilder: (config) {
+                    final uri = config.uri;
                     if (!kIsWeb && uri.scheme == 'file') {
                       return Image.file(
                         File.fromUri(uri),
@@ -1577,7 +1578,7 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
                     }
                     return Image.network(uri.toString(),
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 48),);
+                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 48));
                   },
                   styleSheet: MarkdownStyleSheet(
                     p: const TextStyle(fontSize: 14, height: 1.6),

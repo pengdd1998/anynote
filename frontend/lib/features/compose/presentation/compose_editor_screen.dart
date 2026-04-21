@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/alpha_constants.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
 
@@ -126,7 +127,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Theme.of(context).colorScheme.primaryContainer.withAlpha(77),
+            color: Theme.of(context).colorScheme.primaryContainer.withAlpha(AppAlpha.semiBold),
             child: Row(
               children: [
                 SizedBox(

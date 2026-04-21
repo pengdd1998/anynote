@@ -45,6 +45,21 @@ type deviceTokenDeleter interface {
 	DeleteByUser(ctx context.Context, userID string) error
 }
 
+// RefreshTokenStore defines the operations needed for refresh token rotation.
+// Implementations persist token records so that reuse can be detected and
+// tokens can be revoked on logout or password change.
+type RefreshTokenStore interface {
+	// Store persists a new refresh token record.
+	Store(ctx context.Context, userID uuid.UUID, tokenID string, expiresAt time.Time) error
+	// Revoke marks a single refresh token as revoked. Returns whether the
+	// token existed and was successfully revoked.
+	Revoke(ctx context.Context, tokenID string) (bool, error)
+	// IsRevoked reports whether a refresh token has been revoked.
+	IsRevoked(ctx context.Context, tokenID string) (bool, error)
+	// RevokeAllForUser revokes every active refresh token for a user.
+	RevokeAllForUser(ctx context.Context, userID uuid.UUID) error
+}
+
 type authService struct {
 	userRepo       UserRepository
 	deviceTokens   deviceTokenDeleter

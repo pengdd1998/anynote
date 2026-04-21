@@ -298,8 +298,8 @@ func TestPublishService_GetByID_UnauthorizedUser(t *testing.T) {
 	if err == nil {
 		t.Error("expected error when accessing another user's publish log")
 	}
-	if !errors.Is(err, ErrUserNotFound) {
-		t.Errorf("error = %v, want ErrUserNotFound", err)
+	if !errors.Is(err, ErrNotOwner) {
+		t.Errorf("error = %v, want ErrNotOwner", err)
 	}
 }
 

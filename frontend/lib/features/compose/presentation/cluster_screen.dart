@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/alpha_constants.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
 
@@ -141,7 +142,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Card(
                   color: isSelected
-                      ? Theme.of(context).colorScheme.primaryContainer.withAlpha(77)
+                      ? Theme.of(context).colorScheme.primaryContainer.withAlpha(AppAlpha.semiBold)
                       : null,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

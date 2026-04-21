@@ -28,26 +28,6 @@ AppDatabase _createTestDatabase() {
   return AppDatabase.forTesting(NativeDatabase(file));
 }
 
-/// Helper to create a Note with sensible defaults.
-Note _makeNote({
-  required String id,
-  String? plainContent,
-  String? plainTitle,
-}) {
-  final now = DateTime.now();
-  return Note(
-    id: id,
-    encryptedContent: 'enc_$id',
-    plainContent: plainContent,
-    plainTitle: plainTitle,
-    version: 1,
-    createdAt: now,
-    updatedAt: now,
-    isSynced: true,
-    isPinned: false,
-  );
-}
-
 /// Re-implementation of the file-private _buildPreview for direct unit testing.
 /// This must stay in sync with the source in search_providers.dart.
 String buildPreview(String content, String query) {

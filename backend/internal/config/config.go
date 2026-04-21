@@ -114,7 +114,7 @@ func Load(path string) (*Config, error) {
 			Port:         8080,
 			ReadTimeout:  15 * time.Second,
 			WriteTimeout: 120 * time.Second, // Long for SSE streaming
-			AllowOrigins: []string{"http://localhost:*"},
+			AllowOrigins: []string{},
 		},
 		Log: LogConfig{
 			Level:  "info",
@@ -289,6 +289,11 @@ func (c *Config) Warn() {
 	// Warn if server port is 0 or negative.
 	if c.Server.Port <= 0 || c.Server.Port > 65535 {
 		slog.Warn("server port is out of valid range (1-65535)", "port", c.Server.Port)
+	}
+
+	// Warn if CORS AllowOrigins is empty (no cross-origin access allowed).
+	if len(c.Server.AllowOrigins) == 0 {
+		slog.Warn("CORS AllowOrigins is empty; cross-origin requests will be rejected. Set WS_ALLOWED_ORIGINS or server.allow_origins in config to enable.")
 	}
 }
 

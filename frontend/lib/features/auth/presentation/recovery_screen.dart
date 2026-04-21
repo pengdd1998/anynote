@@ -110,70 +110,87 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
             padding: const EdgeInsets.all(24),
             child: Form(
               key: _formKey,
+              child: FocusTraversalGroup(
+              policy: OrderedTraversalPolicy(),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.key_outlined,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.primary,),
+                  Semantics(
+                    label: l10n.recoverAccount,
+                    child: Icon(Icons.key_outlined,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.primary),
+                  ),
                   const SizedBox(height: 16),
                   Text(l10n.recoverAccount,
                       style: Theme.of(context).textTheme.headlineMedium,
-                      textAlign: TextAlign.center,),
+                      textAlign: TextAlign.center),
                   const SizedBox(height: 8),
-                  Text(
-                      l10n.recoverAccountInstructions,
+                  Text(l10n.recoverAccountInstructions,
                       style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,),
+                      textAlign: TextAlign.center),
                   const SizedBox(height: 32),
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(_error!,
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,),),
-                    ),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: l10n.email,
-                      prefixIcon: const Icon(Icons.email_outlined),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) =>
-                        v?.isEmpty ?? true ? l10n.emailRequired : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _mnemonicController,
-                    decoration: InputDecoration(
-                      labelText: l10n.recoveryKeyLabel,
-                      prefixIcon: const Icon(Icons.vpn_key_outlined),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.content_paste),
-                        tooltip: l10n.pasteFromClipboard,
-                        onPressed: () async {
-                          final data =
-                              await Clipboard.getData(Clipboard.kTextPlain);
-                          if (data?.text != null) {
-                            _mnemonicController.text = data!.text!;
-                          }
-                        },
+                      child: Semantics(
+                        liveRegion: true,
+                        label: l10n.errorLabel(_error!),
+                        child: Text(_error!,
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.error)),
                       ),
                     ),
-                    maxLines: 3,
-                    textInputAction: TextInputAction.done,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return l10n.recoveryKeyRequired;
-                      }
-                      final words = v.trim().split(RegExp(r'\s+'));
-                      if (words.length != 12) {
-                        return l10n.recoveryKeyWordCount;
-                      }
-                      return null;
-                    },
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(1),
+                    child: TextFormField(
+                      controller: _emailController,
+                      autofillHints: const [AutofillHints.email],
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: l10n.email,
+                        prefixIcon: const Icon(Icons.email_outlined),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) =>
+                          v?.isEmpty ?? true ? l10n.emailRequired : null,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(2),
+                    child: TextFormField(
+                      controller: _mnemonicController,
+                      decoration: InputDecoration(
+                        labelText: l10n.recoveryKeyLabel,
+                        prefixIcon: const Icon(Icons.vpn_key_outlined),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.content_paste),
+                          tooltip: l10n.pasteFromClipboard,
+                          onPressed: () async {
+                            final data =
+                                await Clipboard.getData(Clipboard.kTextPlain);
+                            if (data?.text != null) {
+                              _mnemonicController.text = data!.text!;
+                            }
+                          },
+                        ),
+                      ),
+                      maxLines: 3,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _submit(),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return l10n.recoveryKeyRequired;
+                        }
+                        final words = v.trim().split(RegExp(r'\s+'));
+                        if (words.length != 12) {
+                          return l10n.recoveryKeyWordCount;
+                        }
+                        return null;
+                      },
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -198,6 +215,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
                     child: Text(l10n.backToSignIn),
                   ),
                 ],
+              ),
               ),
             ),
           ),

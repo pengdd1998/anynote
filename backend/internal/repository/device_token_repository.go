@@ -24,7 +24,7 @@ func (r *DeviceTokenRepository) Create(ctx context.Context, id uuid.UUID, userID
 		`INSERT INTO device_tokens (id, user_id, token, platform)
 		 VALUES ($1, $2, $3, $4)
 		 ON CONFLICT (token) DO UPDATE SET user_id = $2, platform = $4, updated_at = NOW()`,
-		id.String(), userID, token, platform,
+		id, userID, token, platform,
 	)
 	return err
 }
@@ -37,14 +37,12 @@ func (r *DeviceTokenRepository) DeleteByToken(ctx context.Context, token string)
 // GetByToken retrieves a device token entry by its token value.
 func (r *DeviceTokenRepository) GetByToken(ctx context.Context, token string) (*service.DeviceTokenEntry, error) {
 	var e service.DeviceTokenEntry
-	var idStr string
 	err := r.pool.QueryRow(ctx,
 		`SELECT id, user_id, token, platform, created_at FROM device_tokens WHERE token = $1`, token,
-	).Scan(&idStr, &e.UserID, &e.Token, &e.Platform, &e.CreatedAt)
+	).Scan(&e.ID, &e.UserID, &e.Token, &e.Platform, &e.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
-	e.ID, _ = uuid.Parse(idStr)
 	return &e, nil
 }
 
@@ -69,11 +67,9 @@ func (r *DeviceTokenRepository) ListByUser(ctx context.Context, userID string) (
 	var entries []service.DeviceTokenEntry
 	for rows.Next() {
 		var e service.DeviceTokenEntry
-		var idStr string
-		if err := rows.Scan(&idStr, &e.UserID, &e.Token, &e.Platform, &e.CreatedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.UserID, &e.Token, &e.Platform, &e.CreatedAt); err != nil {
 			return nil, err
 		}
-		e.ID, _ = uuid.Parse(idStr)
 		entries = append(entries, e)
 	}
 	return entries, rows.Err()
