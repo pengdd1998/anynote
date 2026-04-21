@@ -2045,4 +2045,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get templateDateHint => '[date]를 사용하여 현재 날짜 삽입';
+
+  @override
+  String get offlineBanner => '오프라인 상태입니다 — 연결되면 변경사항이 동기화됩니다';
+
+  @override
+  String get unlockRequired => '먼저 보관함을 잠금 해제해 주세요';
 }

@@ -1218,5 +1218,9 @@
 
   "templateNameLabel": "テンプレート名",
 
-  "templateDateHint": "[date]で現在の日付を挿入"
+  "templateDateHint": "[date]で現在の日付を挿入",
+
+  "offlineBanner": "オフラインです \u2014 接続時に変更が同期されます",
+
+  "unlockRequired": "先に保管庫をロック解除してください"
 }

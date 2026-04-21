@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 
 	"github.com/anynote/backend/internal/domain"
 	"github.com/anynote/backend/internal/service"
@@ -20,8 +19,8 @@ type CommentHandler struct {
 // CreateComment creates a new encrypted comment on a shared note.
 // POST /api/v1/share/{id}/comments
 func (h *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -42,8 +41,12 @@ func (h *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "encrypted_content is required")
 		return
 	}
+	if len(req.EncryptedContent) > maxEncryptedContentLen {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "encrypted_content must be at most 1 MB")
+		return
+	}
 
-	comment, err := h.commentService.CreateComment(r.Context(), sharedNoteID, parseUUID(userID), req)
+	comment, err := h.commentService.CreateComment(r.Context(), sharedNoteID, userID, req)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "create_error", "Failed to create comment")
 		return
@@ -91,8 +94,8 @@ func (h *CommentHandler) ListComments(w http.ResponseWriter, r *http.Request) {
 // DeleteComment soft-deletes a comment. Only the comment author can delete.
 // DELETE /api/v1/comments/{id}
 func (h *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -103,13 +106,13 @@ func (h *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	commentID := parseUUID(commentIDStr)
-	if commentID == uuid.Nil {
+	commentID, err := parseUUID(commentIDStr)
+	if err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid_id", "Invalid comment ID format")
 		return
 	}
 
-	err := h.commentService.DeleteComment(r.Context(), commentID, parseUUID(userID))
+	err = h.commentService.DeleteComment(r.Context(), commentID, userID)
 	if err != nil {
 		if !writeErrorFromSentinel(w, r, err) {
 			writeError(w, r, http.StatusInternalServerError, "delete_error", "Failed to delete comment")

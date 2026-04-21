@@ -120,6 +120,12 @@ class SettingsScreen extends ConsumerWidget {
                         trailing: const Icon(Icons.chevron_right, size: 20),
                         onTap: () => context.push('/settings/security'),
                       ),
+                      SettingsItem(
+                        icon: Icons.label_outline,
+                        title: l10n.manageTags,
+                        trailing: const Icon(Icons.chevron_right, size: 20),
+                        onTap: () => context.push('/tags'),
+                      ),
                     ],
                   ),
                 ],

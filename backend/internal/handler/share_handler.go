@@ -10,6 +10,12 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+const (
+	maxEncryptedContentLen = 1_048_576 // 1 MB
+	maxEncryptedTitleLen   = 500
+	maxShareKeyHashLen     = 256
+)
+
 type ShareHandler struct {
 	shareService service.ShareService
 }
@@ -18,8 +24,8 @@ type ShareHandler struct {
 // The server only stores the client-encrypted blob and metadata.
 // The decryption key is never sent to the server.
 func (h *ShareHandler) CreateShare(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -35,12 +41,25 @@ func (h *ShareHandler) CreateShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(req.EncryptedContent) > maxEncryptedContentLen {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "encrypted_content must be at most 1 MB")
+		return
+	}
+	if len(req.EncryptedTitle) > maxEncryptedTitleLen {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "encrypted_title must be at most 500 characters")
+		return
+	}
+
 	if req.ShareKeyHash == "" {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "share_key_hash is required")
 		return
 	}
+	if len(req.ShareKeyHash) > maxShareKeyHashLen {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "share_key_hash must be at most 256 characters")
+		return
+	}
 
-	resp, err := h.shareService.CreateShare(r.Context(), parseUUID(userID), req)
+	resp, err := h.shareService.CreateShare(r.Context(), userID, req)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "create_error", "Failed to create shared note")
 		return
@@ -60,14 +79,7 @@ func (h *ShareHandler) GetShare(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.shareService.GetShare(r.Context(), shareID)
 	if err != nil {
-		switch err {
-		case service.ErrShareNotFound:
-			writeError(w, r, http.StatusNotFound, "not_found", "Shared note not found")
-		case service.ErrShareExpired:
-			writeError(w, r, http.StatusGone, "expired", "Shared note has expired")
-		case service.ErrShareMaxViews:
-			writeError(w, r, http.StatusGone, "max_views", "Shared note has reached maximum views")
-		default:
+		if !writeErrorFromSentinel(w, r, err) {
 			writeError(w, r, http.StatusInternalServerError, "internal_error", "Failed to retrieve shared note")
 		}
 		return
@@ -109,8 +121,8 @@ func (h *ShareHandler) DiscoverFeed(w http.ResponseWriter, r *http.Request) {
 // ToggleReaction toggles a heart or bookmark reaction on a shared note.
 // Requires authentication.
 func (h *ShareHandler) ToggleReaction(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -127,14 +139,9 @@ func (h *ShareHandler) ToggleReaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.shareService.ToggleReaction(r.Context(), parseUUID(userID), shareID, req.ReactionType)
+	resp, err := h.shareService.ToggleReaction(r.Context(), userID, shareID, req.ReactionType)
 	if err != nil {
-		switch err {
-		case service.ErrShareNotFound:
-			writeError(w, r, http.StatusNotFound, "not_found", "Shared note not found")
-		case service.ErrInvalidReaction:
-			writeError(w, r, http.StatusBadRequest, "invalid_reaction", "reaction_type must be 'heart' or 'bookmark'")
-		default:
+		if !writeErrorFromSentinel(w, r, err) {
 			writeError(w, r, http.StatusInternalServerError, "internal_error", "Failed to toggle reaction")
 		}
 		return

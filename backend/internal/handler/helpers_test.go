@@ -13,23 +13,26 @@ func TestParseUUID_ValidUUID(t *testing.T) {
 		t.Fatalf("setup: failed to parse UUID: %v", err)
 	}
 
-	got := parseUUID(input)
+	got, gotErr := parseUUID(input)
+	if gotErr != nil {
+		t.Errorf("parseUUID(%q) returned unexpected error: %v", input, gotErr)
+	}
 	if got != expected {
 		t.Errorf("parseUUID(%q) = %v, want %v", input, got, expected)
 	}
 }
 
 func TestParseUUID_InvalidUUID(t *testing.T) {
-	got := parseUUID("not-a-uuid")
-	if got != uuid.Nil {
-		t.Errorf("parseUUID(\"not-a-uuid\") = %v, want uuid.Nil", got)
+	_, gotErr := parseUUID("not-a-uuid")
+	if gotErr == nil {
+		t.Error(`parseUUID("not-a-uuid") expected error, got nil`)
 	}
 }
 
 func TestParseUUID_EmptyString(t *testing.T) {
-	got := parseUUID("")
-	if got != uuid.Nil {
-		t.Errorf("parseUUID(\"\") = %v, want uuid.Nil", got)
+	_, gotErr := parseUUID("")
+	if gotErr == nil {
+		t.Error(`parseUUID("") expected error, got nil`)
 	}
 }
 
@@ -40,7 +43,10 @@ func TestParseUUID_UppercaseUUID(t *testing.T) {
 		t.Fatalf("setup: failed to parse UUID: %v", err)
 	}
 
-	got := parseUUID(input)
+	got, gotErr := parseUUID(input)
+	if gotErr != nil {
+		t.Errorf("parseUUID(%q) returned unexpected error: %v", input, gotErr)
+	}
 	if got != expected {
 		t.Errorf("parseUUID(%q) = %v, want %v", input, got, expected)
 	}
@@ -53,7 +59,10 @@ func TestParseUUID_NilUUID(t *testing.T) {
 		t.Fatalf("setup: failed to parse nil UUID: %v", err)
 	}
 
-	got := parseUUID(input)
+	got, gotErr := parseUUID(input)
+	if gotErr != nil {
+		t.Errorf("parseUUID(%q) returned unexpected error: %v", input, gotErr)
+	}
 	if got != expected {
 		t.Errorf("parseUUID(%q) = %v, want %v", input, got, expected)
 	}

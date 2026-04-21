@@ -234,7 +234,7 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
           child: MaterialApp.router(
             title: 'AnyNote',
             debugShowCheckedModeBanner: false,
-            showSemanticsDebugger: kDebugMode,
+            showSemanticsDebugger: false,
             theme: AppTheme.lightTheme(),
             darkTheme: AppTheme.darkTheme(),
             themeMode: ThemeMode.system,

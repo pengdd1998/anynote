@@ -2181,5 +2181,11 @@
   "@templateNameLabel": { "description": "Label for the template name text field" },
 
   "templateDateHint": "Use [date] for current date",
-  "@templateDateHint": { "description": "Hint for the template content text field" }
+  "@templateDateHint": { "description": "Hint for the template content text field" },
+
+  "offlineBanner": "You are offline \u2014 changes will sync when connected",
+  "@offlineBanner": { "description": "Banner text shown when the device is offline" },
+
+  "unlockRequired": "Please unlock your vault first",
+  "@unlockRequired": { "description": "Message shown when encryption keys are not unlocked" }
 }

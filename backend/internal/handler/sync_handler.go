@@ -14,8 +14,8 @@ type SyncHandler struct {
 }
 
 func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -62,7 +62,7 @@ func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 		limit = 500
 	}
 
-	resp, err := h.syncService.Pull(r.Context(), parseUUID(userID), since, limit, cursor)
+	resp, err := h.syncService.Pull(r.Context(), userID, since, limit, cursor)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "sync_error", "Pull failed")
 		return
@@ -72,8 +72,8 @@ func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SyncHandler) Push(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -97,7 +97,7 @@ func (h *SyncHandler) Push(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.syncService.Push(r.Context(), parseUUID(userID), req)
+	resp, err := h.syncService.Push(r.Context(), userID, req)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "sync_error", "Push failed")
 		return
@@ -107,13 +107,13 @@ func (h *SyncHandler) Push(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SyncHandler) Status(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
-	resp, err := h.syncService.GetStatus(r.Context(), parseUUID(userID))
+	resp, err := h.syncService.GetStatus(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "sync_error", "Failed to get status")
 		return
@@ -123,13 +123,13 @@ func (h *SyncHandler) Status(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SyncHandler) Stats(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
-	resp, err := h.syncService.GetStats(r.Context(), parseUUID(userID))
+	resp, err := h.syncService.GetStats(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "sync_error", "Failed to get sync stats")
 		return
@@ -139,13 +139,13 @@ func (h *SyncHandler) Stats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SyncHandler) ListTags(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
-	resp, err := h.syncService.ListTags(r.Context(), parseUUID(userID))
+	resp, err := h.syncService.ListTags(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "sync_error", "Failed to list tags")
 		return
@@ -155,8 +155,8 @@ func (h *SyncHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SyncHandler) BatchDelete(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -179,7 +179,7 @@ func (h *SyncHandler) BatchDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.syncService.BatchDelete(r.Context(), parseUUID(userID), req.ItemIDs)
+	resp, err := h.syncService.BatchDelete(r.Context(), userID, req.ItemIDs)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "sync_error", "Batch delete failed")
 		return
@@ -189,13 +189,13 @@ func (h *SyncHandler) BatchDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SyncHandler) Progress(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
-	resp, err := h.syncService.GetProgress(r.Context(), parseUUID(userID))
+	resp, err := h.syncService.GetProgress(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "sync_error", "Failed to get sync progress")
 		return

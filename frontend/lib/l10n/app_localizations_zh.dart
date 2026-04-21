@@ -2034,4 +2034,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get templateDateHint => '使用 [date] 插入当前日期';
+
+  @override
+  String get offlineBanner => '您当前离线 — 恢复连接后将自动同步更改';
+
+  @override
+  String get unlockRequired => '请先解锁您的保险库';
 }

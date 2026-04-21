@@ -91,6 +91,14 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
 
   void _showCreateDialog(AppDatabase db, CryptoService crypto) {
     final l10n = AppLocalizations.of(context)!;
+
+    if (!crypto.isUnlocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.unlockRequired)),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

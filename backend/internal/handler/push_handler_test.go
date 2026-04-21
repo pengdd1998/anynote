@@ -22,9 +22,11 @@ type mockPushService struct {
 	registeredDevices []struct {
 		userID, token, platform string
 	}
-	unregisteredTokens []string
-	registerErr        error
-	unregisterErr      error
+	unregisteredEntries []struct {
+		userID, token string
+	}
+	registerErr   error
+	unregisterErr error
 }
 
 func (m *mockPushService) SendPush(ctx context.Context, userID string, payload service.PushPayload) error {
@@ -41,11 +43,13 @@ func (m *mockPushService) RegisterDevice(ctx context.Context, userID string, tok
 	return nil
 }
 
-func (m *mockPushService) UnregisterDevice(ctx context.Context, token string) error {
+func (m *mockPushService) UnregisterDevice(ctx context.Context, userID string, token string) error {
 	if m.unregisterErr != nil {
 		return m.unregisterErr
 	}
-	m.unregisteredTokens = append(m.unregisteredTokens, token)
+	m.unregisteredEntries = append(m.unregisteredEntries, struct {
+		userID, token string
+	}{userID, token})
 	return nil
 }
 
@@ -69,7 +73,7 @@ func TestRegisterDeviceToken_Success(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/register", bytes.NewReader(body))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.RegisterDeviceToken(w, req)
@@ -85,8 +89,8 @@ func TestRegisterDeviceToken_Success(t *testing.T) {
 		t.Fatalf("registered %d devices, want 1", len(mockSvc.registeredDevices))
 	}
 	d := mockSvc.registeredDevices[0]
-	if d.userID != "user-123" {
-		t.Errorf("userID = %q, want %q", d.userID, "user-123")
+	if d.userID != "550e8400-e29b-41d4-a716-446655440000" {
+		t.Errorf("userID = %q, want %q", d.userID, "550e8400-e29b-41d4-a716-446655440000")
 	}
 	if d.token != "device-token-abc" {
 		t.Errorf("token = %q, want %q", d.token, "device-token-abc")
@@ -124,7 +128,7 @@ func TestRegisterDeviceToken_InvalidJSON(t *testing.T) {
 	h := &PushHandler{pushService: mockSvc}
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/register", strings.NewReader("not-json"))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.RegisterDeviceToken(w, req)
@@ -153,7 +157,7 @@ func TestRegisterDeviceToken_EmptyToken(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/register", bytes.NewReader(body))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.RegisterDeviceToken(w, req)
@@ -182,7 +186,7 @@ func TestRegisterDeviceToken_EmptyPlatform(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/register", bytes.NewReader(body))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.RegisterDeviceToken(w, req)
@@ -205,7 +209,7 @@ func TestRegisterDeviceToken_InvalidPlatform(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/register", bytes.NewReader(body))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.RegisterDeviceToken(w, req)
@@ -236,7 +240,7 @@ func TestRegisterDeviceToken_ValidPlatforms(t *testing.T) {
 			})
 
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/register", bytes.NewReader(body))
-			req = req.WithContext(ctxWithUserID("user-123"))
+			req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 			w := httptest.NewRecorder()
 
 			h.RegisterDeviceToken(w, req)
@@ -261,7 +265,7 @@ func TestRegisterDeviceToken_ServiceError(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/register", bytes.NewReader(body))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.RegisterDeviceToken(w, req)
@@ -287,7 +291,7 @@ func TestUnregisterDeviceToken_Success(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/unregister", bytes.NewReader(body))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.UnregisterDeviceToken(w, req)
@@ -299,11 +303,11 @@ func TestUnregisterDeviceToken_Success(t *testing.T) {
 		t.Fatalf("status = %d, want %d", resp.StatusCode, http.StatusOK)
 	}
 
-	if len(mockSvc.unregisteredTokens) != 1 {
-		t.Fatalf("unregistered %d tokens, want 1", len(mockSvc.unregisteredTokens))
+	if len(mockSvc.unregisteredEntries) != 1 {
+		t.Fatalf("unregistered %d entries, want 1", len(mockSvc.unregisteredEntries))
 	}
-	if mockSvc.unregisteredTokens[0] != "device-token-to-remove" {
-		t.Errorf("token = %q, want %q", mockSvc.unregisteredTokens[0], "device-token-to-remove")
+	if mockSvc.unregisteredEntries[0].token != "device-token-to-remove" {
+		t.Errorf("token = %q, want %q", mockSvc.unregisteredEntries[0].token, "device-token-to-remove")
 	}
 }
 
@@ -334,7 +338,7 @@ func TestUnregisterDeviceToken_InvalidJSON(t *testing.T) {
 	h := &PushHandler{pushService: mockSvc}
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/unregister", strings.NewReader("not-json"))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.UnregisterDeviceToken(w, req)
@@ -356,7 +360,7 @@ func TestUnregisterDeviceToken_EmptyToken(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/unregister", bytes.NewReader(body))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.UnregisterDeviceToken(w, req)
@@ -384,7 +388,7 @@ func TestUnregisterDeviceToken_ServiceError(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/devices/unregister", bytes.NewReader(body))
-	req = req.WithContext(ctxWithUserID("user-123"))
+	req = req.WithContext(ctxWithUserID("550e8400-e29b-41d4-a716-446655440000"))
 	w := httptest.NewRecorder()
 
 	h.UnregisterDeviceToken(w, req)

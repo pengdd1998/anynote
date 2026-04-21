@@ -834,7 +834,7 @@ func (m *mockPushServiceForSync) RegisterDevice(ctx context.Context, userID stri
 	return nil
 }
 
-func (m *mockPushServiceForSync) UnregisterDevice(ctx context.Context, token string) error {
+func (m *mockPushServiceForSync) UnregisterDevice(ctx context.Context, userID string, token string) error {
 	return nil
 }
 

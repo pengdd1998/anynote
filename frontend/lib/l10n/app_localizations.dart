@@ -3807,6 +3807,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use [date] for current date'**
   String get templateDateHint;
+
+  /// Banner text shown when the device is offline
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline — changes will sync when connected'**
+  String get offlineBanner;
+
+  /// Message shown when encryption keys are not unlocked
+  ///
+  /// In en, this message translates to:
+  /// **'Please unlock your vault first'**
+  String get unlockRequired;
 }
 
 class _AppLocalizationsDelegate

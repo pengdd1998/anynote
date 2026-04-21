@@ -23,6 +23,7 @@ import '../features/collections/presentation/collection_detail_screen.dart';
 import '../features/share/presentation/shared_note_viewer.dart';
 import '../features/share/presentation/discover_screen.dart';
 import '../features/search/presentation/advanced_search_screen.dart';
+import '../features/tags/presentation/tags_screen.dart';
 
 // Deferred imports: heavy or rarely visited screens loaded on demand.
 import '../features/compose/presentation/compose_screen.dart' deferred as compose;
@@ -153,6 +154,13 @@ final appRouter = GoRouter(
       path: '/search',
       pageBuilder: (context, state) =>
           slideTransition(const AdvancedSearchScreen()),
+    ),
+
+    // Tags management (pushed from settings, no bottom nav shell)
+    GoRoute(
+      path: '/tags',
+      pageBuilder: (context, state) =>
+          slideTransition(const TagsScreen()),
     ),
 
     // Discover feed (public shared notes, accessible with or without auth)
@@ -379,6 +387,7 @@ class _PhoneShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: Column(
         children: [
@@ -389,11 +398,11 @@ class _PhoneShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex(context),
         onDestinationSelected: (index) => _onDestinationSelected(context, index),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.note_outlined), selectedIcon: Icon(Icons.note), label: 'Notes'),
-          NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), selectedIcon: Icon(Icons.auto_awesome), label: 'Compose'),
-          NavigationDestination(icon: Icon(Icons.publish_outlined), selectedIcon: Icon(Icons.publish), label: 'Publish'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
+        destinations: [
+          NavigationDestination(icon: const Icon(Icons.note_outlined), selectedIcon: const Icon(Icons.note), label: l10n?.notesTabLabel ?? 'Notes'),
+          NavigationDestination(icon: const Icon(Icons.auto_awesome_outlined), selectedIcon: const Icon(Icons.auto_awesome), label: l10n?.composeTabLabel ?? 'Compose'),
+          NavigationDestination(icon: const Icon(Icons.publish_outlined), selectedIcon: const Icon(Icons.publish), label: l10n?.publishTabLabel ?? 'Publish'),
+          NavigationDestination(icon: const Icon(Icons.settings_outlined), selectedIcon: const Icon(Icons.settings), label: l10n?.settingsTabLabel ?? 'Settings'),
         ],
       ),
     );
@@ -545,18 +554,50 @@ class _DeferredLoader extends StatefulWidget {
 
 class _DeferredLoaderState extends State<_DeferredLoader> {
   bool _loaded = false;
+  bool _hasError = false;
 
   @override
   void initState() {
     super.initState();
     widget.load.then((_) {
       if (mounted) setState(() => _loaded = true);
+    }).catchError((_) {
+      if (mounted) setState(() => _hasError = true);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loaded) return widget.builder();
+    if (_hasError) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: () {
+                  setState(() => _hasError = false);
+                  widget.load.then((_) {
+                    if (mounted) setState(() => _loaded = true);
+                  }).catchError((_) {
+                    if (mounted) setState(() => _hasError = true);
+                  });
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return const Scaffold(
       body: Center(child: CircularProgressIndicator()),
     );

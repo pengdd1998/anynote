@@ -14,10 +14,11 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockDeviceTokenRepo struct {
-	tokens   map[string]DeviceTokenEntry // keyed by token
+	tokens    map[string]DeviceTokenEntry // keyed by token
 	createErr error
 	deleteErr error
 	listErr   error
+	getErr    error
 }
 
 func newMockDeviceTokenRepo() *mockDeviceTokenRepo {
@@ -45,6 +46,17 @@ func (m *mockDeviceTokenRepo) DeleteByToken(ctx context.Context, token string) e
 	}
 	delete(m.tokens, token)
 	return nil
+}
+
+func (m *mockDeviceTokenRepo) GetByToken(ctx context.Context, token string) (*DeviceTokenEntry, error) {
+	if m.getErr != nil {
+		return nil, m.getErr
+	}
+	entry, ok := m.tokens[token]
+	if !ok {
+		return nil, fmt.Errorf("token not found: %s", token)
+	}
+	return &entry, nil
 }
 
 func (m *mockDeviceTokenRepo) ListByUser(ctx context.Context, userID string) ([]DeviceTokenEntry, error) {
@@ -399,7 +411,7 @@ func TestPushService_UnregisterDevice(t *testing.T) {
 	}
 	svc := NewPushService(repo, nil)
 
-	err := svc.UnregisterDevice(context.Background(), "token-to-remove")
+	err := svc.UnregisterDevice(context.Background(), "user-123", "token-to-remove")
 	if err != nil {
 		t.Fatalf("UnregisterDevice: %v", err)
 	}
@@ -411,12 +423,28 @@ func TestPushService_UnregisterDevice(t *testing.T) {
 
 func TestPushService_UnregisterDevice_RepoError(t *testing.T) {
 	repo := newMockDeviceTokenRepo()
-	repo.deleteErr = errors.New("db error")
+	repo.getErr = errors.New("db error")
 	svc := NewPushService(repo, nil)
 
-	err := svc.UnregisterDevice(context.Background(), "nonexistent-token")
+	err := svc.UnregisterDevice(context.Background(), "user-123", "nonexistent-token")
 	if err == nil {
-		t.Error("expected error when repo.DeleteByToken fails")
+		t.Error("expected error when repo.GetByToken fails")
+	}
+}
+
+func TestPushService_UnregisterDevice_WrongUser(t *testing.T) {
+	repo := newMockDeviceTokenRepo()
+	repo.tokens["token-to-remove"] = DeviceTokenEntry{
+		ID:       uuid.New(),
+		UserID:   "user-123",
+		Token:    "token-to-remove",
+		Platform: "android",
+	}
+	svc := NewPushService(repo, nil)
+
+	err := svc.UnregisterDevice(context.Background(), "other-user", "token-to-remove")
+	if err == nil {
+		t.Error("expected error when user does not own the token")
 	}
 }
 

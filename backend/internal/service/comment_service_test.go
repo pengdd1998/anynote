@@ -370,7 +370,7 @@ func (m *mockPushServiceForComments) RegisterDevice(ctx context.Context, userID 
 	return nil
 }
 
-func (m *mockPushServiceForComments) UnregisterDevice(ctx context.Context, token string) error {
+func (m *mockPushServiceForComments) UnregisterDevice(ctx context.Context, userID string, token string) error {
 	return nil
 }
 

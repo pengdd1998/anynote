@@ -25,13 +25,13 @@ func NewPlatformHandler(svc service.PlatformService, masterKey []byte) *Platform
 }
 
 func (h *PlatformHandler) List(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
-	connections, err := h.platformService.List(r.Context(), parseUUID(userID))
+	connections, err := h.platformService.List(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "list_error", "Failed to list platforms")
 		return
@@ -47,8 +47,8 @@ func (h *PlatformHandler) List(w http.ResponseWriter, r *http.Request) {
 //   - Subsequent events: type=status, data={status: "waiting"|"done"|"failed"}
 //   - Final event: type=status, data={status: "done", connection: {...}}
 func (h *PlatformHandler) Connect(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -60,7 +60,7 @@ func (h *PlatformHandler) Connect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Start the auth flow and get the QR code.
-	authRef, qrPNG, err := h.platformService.StartAuth(r.Context(), parseUUID(userID), platformName, h.masterKey)
+	authRef, qrPNG, err := h.platformService.StartAuth(r.Context(), userID, platformName, h.masterKey)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "connect_error", fmt.Sprintf("Failed to start auth: %s", err.Error()))
 		return
@@ -97,7 +97,7 @@ func (h *PlatformHandler) Connect(w http.ResponseWriter, r *http.Request) {
 			flusher.Flush()
 			return
 		case <-ticker.C:
-			encryptedAuth, pollErr := h.platformService.PollAuth(pollCtx, parseUUID(userID), platformName, authRef, h.masterKey)
+			encryptedAuth, pollErr := h.platformService.PollAuth(pollCtx, userID, platformName, authRef, h.masterKey)
 			if pollErr != nil {
 				fmt.Fprintf(w, "event: status\ndata: {\"status\":\"failed\",\"error\":\"%s\"}\n\n", pollErr.Error())
 				flusher.Flush()
@@ -119,8 +119,8 @@ func (h *PlatformHandler) Connect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PlatformHandler) Disconnect(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -131,7 +131,7 @@ func (h *PlatformHandler) Disconnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.platformService.Disconnect(r.Context(), parseUUID(userID), platformName); err != nil {
+	if err := h.platformService.Disconnect(r.Context(), userID, platformName); err != nil {
 		writeError(w, r, http.StatusInternalServerError, "disconnect_error", "Failed to disconnect platform")
 		return
 	}
@@ -140,8 +140,8 @@ func (h *PlatformHandler) Disconnect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PlatformHandler) Verify(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -152,7 +152,7 @@ func (h *PlatformHandler) Verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := h.platformService.Verify(r.Context(), parseUUID(userID), platformName)
+	conn, err := h.platformService.Verify(r.Context(), userID, platformName)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"valid": false,

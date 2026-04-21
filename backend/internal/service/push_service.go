@@ -25,8 +25,8 @@ type PushService interface {
 	SendPush(ctx context.Context, userID string, payload PushPayload) error
 	// RegisterDevice registers a device token for push notifications.
 	RegisterDevice(ctx context.Context, userID string, token string, platform string) error
-	// UnregisterDevice removes a device token.
-	UnregisterDevice(ctx context.Context, token string) error
+	// UnregisterDevice removes a device token after verifying it belongs to the requesting user.
+	UnregisterDevice(ctx context.Context, userID string, token string) error
 }
 
 // FCMClient abstracts Firebase Cloud Messaging for testability.
@@ -50,6 +50,7 @@ type FCMMessage struct {
 type DeviceTokenRepository interface {
 	Create(ctx context.Context, id uuid.UUID, userID string, token string, platform string) error
 	DeleteByToken(ctx context.Context, token string) error
+	GetByToken(ctx context.Context, token string) (*DeviceTokenEntry, error)
 	ListByUser(ctx context.Context, userID string) ([]DeviceTokenEntry, error)
 }
 
@@ -164,12 +165,23 @@ func (s *pushService) RegisterDevice(ctx context.Context, userID string, token s
 	return nil
 }
 
-func (s *pushService) UnregisterDevice(ctx context.Context, token string) error {
+func (s *pushService) UnregisterDevice(ctx context.Context, userID string, token string) error {
+	// Look up the token to verify ownership before deleting.
+	entry, err := s.repo.GetByToken(ctx, token)
+	if err != nil {
+		return fmt.Errorf("device token not found: %w", err)
+	}
+
+	// Verify the token belongs to the requesting user.
+	if entry.UserID != userID {
+		return fmt.Errorf("device token does not belong to the requesting user")
+	}
+
 	if err := s.repo.DeleteByToken(ctx, token); err != nil {
 		return fmt.Errorf("unregister device token: %w", err)
 	}
 
-	slog.Info("device unregistered from push", "token_prefix", tokenPrefix(token))
+	slog.Info("device unregistered from push", "user_id", userID, "token_prefix", tokenPrefix(token))
 	return nil
 }
 

@@ -14,13 +14,13 @@ type LLMConfigHandler struct {
 }
 
 func (h *LLMConfigHandler) List(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
-	configs, err := h.llmService.List(r.Context(), parseUUID(userID))
+	configs, err := h.llmService.List(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "list_error", "Failed to list configs")
 		return
@@ -30,8 +30,8 @@ func (h *LLMConfigHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LLMConfigHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -50,7 +50,7 @@ func (h *LLMConfigHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.llmService.Create(r.Context(), parseUUID(userID), cfg)
+	result, err := h.llmService.Create(r.Context(), userID, cfg)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "create_error", "Failed to create config")
 		return
@@ -60,8 +60,8 @@ func (h *LLMConfigHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LLMConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -69,6 +69,12 @@ func (h *LLMConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 	configID := chi.URLParam(r, "id")
 	if configID == "" {
 		writeError(w, r, http.StatusBadRequest, "missing_id", "Config ID is required")
+		return
+	}
+
+	parsedID, err := parseUUID(configID)
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid_id", "Invalid config ID format")
 		return
 	}
 
@@ -78,8 +84,8 @@ func (h *LLMConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg.ID = parseUUID(configID)
-	result, err := h.llmService.Update(r.Context(), parseUUID(userID), cfg)
+	cfg.ID = parsedID
+	result, err := h.llmService.Update(r.Context(), userID, cfg)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "update_error", "Failed to update config")
 		return
@@ -89,8 +95,8 @@ func (h *LLMConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LLMConfigHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -101,7 +107,13 @@ func (h *LLMConfigHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.llmService.Delete(r.Context(), parseUUID(userID), parseUUID(configID)); err != nil {
+	parsedID, err := parseUUID(configID)
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid_id", "Invalid config ID format")
+		return
+	}
+
+	if err := h.llmService.Delete(r.Context(), userID, parsedID); err != nil {
 		writeError(w, r, http.StatusInternalServerError, "delete_error", "Failed to delete config")
 		return
 	}
@@ -110,8 +122,8 @@ func (h *LLMConfigHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LLMConfigHandler) TestConnection(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -122,7 +134,13 @@ func (h *LLMConfigHandler) TestConnection(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := h.llmService.TestConnection(r.Context(), parseUUID(userID), parseUUID(configID)); err != nil {
+	parsedID, err := parseUUID(configID)
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid_id", "Invalid config ID format")
+		return
+	}
+
+	if err := h.llmService.TestConnection(r.Context(), userID, parsedID); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"success": false,
 			"error":   err.Error(),

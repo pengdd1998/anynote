@@ -26,8 +26,8 @@ type unregisterDeviceRequest struct {
 // RegisterDeviceToken handles POST /api/v1/devices/register.
 // Requires authentication. Registers a device token for push notifications.
 func (h *PushHandler) RegisterDeviceToken(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -55,7 +55,7 @@ func (h *PushHandler) RegisterDeviceToken(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := h.pushService.RegisterDevice(r.Context(), userID, req.Token, req.Platform); err != nil {
+	if err := h.pushService.RegisterDevice(r.Context(), userID.String(), req.Token, req.Platform); err != nil {
 		writeError(w, r, http.StatusInternalServerError, "register_error", "Failed to register device token")
 		return
 	}
@@ -68,8 +68,8 @@ func (h *PushHandler) RegisterDeviceToken(w http.ResponseWriter, r *http.Request
 // UnregisterDeviceToken handles POST /api/v1/devices/unregister.
 // Requires authentication. Removes a device token.
 func (h *PushHandler) UnregisterDeviceToken(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -85,7 +85,7 @@ func (h *PushHandler) UnregisterDeviceToken(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.pushService.UnregisterDevice(r.Context(), req.Token); err != nil {
+	if err := h.pushService.UnregisterDevice(r.Context(), userID.String(), req.Token); err != nil {
 		writeError(w, r, http.StatusInternalServerError, "unregister_error", "Failed to unregister device token")
 		return
 	}

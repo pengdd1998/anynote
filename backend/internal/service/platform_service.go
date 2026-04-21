@@ -5,12 +5,17 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/anynote/backend/internal/domain"
 	"github.com/anynote/backend/internal/platform"
 )
+
+// sessionMaxAge is the maximum lifetime of an in-memory auth session.
+// Sessions older than this are cleaned up by the background goroutine.
+const sessionMaxAge = 5 * time.Minute
 
 type PlatformService interface {
 	List(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error)
@@ -31,6 +36,9 @@ type PlatformService interface {
 
 	// CheckStatus checks the live status of a published post.
 	CheckStatus(ctx context.Context, userID uuid.UUID, platformName string, platformID string, masterKey []byte) (string, error)
+
+	// Stop terminates the background session cleanup goroutine.
+	Stop()
 }
 
 type PlatformConnectionRepository interface {
@@ -47,13 +55,59 @@ type platformService struct {
 
 	// authSessions stores in-progress auth sessions keyed by authRef.
 	authSessions sync.Map
+
+	// stopCh signals the background cleanup goroutine to stop.
+	stopCh chan struct{}
 }
 
 func NewPlatformService(platformRepo PlatformConnectionRepository, registry *platform.Registry) PlatformService {
-	return &platformService{
+	svc := &platformService{
 		platformRepo: platformRepo,
 		registry:     registry,
+		stopCh:       make(chan struct{}),
 	}
+
+	// Start background session cleanup.
+	go svc.cleanupExpiredSessions()
+
+	return svc
+}
+
+// cleanupExpiredSessions runs a background loop that removes auth sessions
+// older than sessionMaxAge every minute.
+func (s *platformService) cleanupExpiredSessions() {
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			now := time.Now()
+			s.authSessions.Range(func(key, value interface{}) bool {
+				session, ok := value.(*storedAuthSession)
+				if !ok {
+					s.authSessions.Delete(key)
+					return true
+				}
+				if now.Sub(session.createdAt) > sessionMaxAge {
+					s.authSessions.Delete(key)
+					slog.Debug("cleaned up expired platform auth session",
+						"auth_ref", session.authRef,
+						"platform", session.platform,
+					)
+				}
+				return true
+			})
+		case <-s.stopCh:
+			slog.Info("platform auth session cleanup goroutine stopped")
+			return
+		}
+	}
+}
+
+// Stop signals the background cleanup goroutine to terminate.
+func (s *platformService) Stop() {
+	close(s.stopCh)
 }
 
 func (s *platformService) List(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error) {
@@ -136,6 +190,7 @@ func (s *platformService) StartAuth(ctx context.Context, userID uuid.UUID, platf
 		platform:  platformName,
 		authRef:   session.AuthRef,
 		cdpHandle: session,
+		createdAt: time.Now(),
 	})
 
 	return session.AuthRef, qrPNG, nil
@@ -264,6 +319,7 @@ type storedAuthSession struct {
 	platform  string
 	authRef   string
 	cdpHandle *platform.AuthSession
+	createdAt time.Time
 }
 
 func authSessionKey(userID uuid.UUID, platformName, authRef string) string {

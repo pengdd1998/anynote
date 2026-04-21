@@ -144,6 +144,7 @@ func (s *routerStubPlatformService) Publish(ctx context.Context, userID uuid.UUI
 func (s *routerStubPlatformService) CheckStatus(ctx context.Context, userID uuid.UUID, platformName string, platformID string, masterKey []byte) (string, error) {
 	return "", nil
 }
+func (s *routerStubPlatformService) Stop() {}
 
 // routerStubShareService implements service.ShareService.
 type routerStubShareService struct{}
@@ -167,7 +168,7 @@ type routerStubPushService struct{}
 func (s *routerStubPushService) RegisterDevice(ctx context.Context, userID string, token string, platform string) error {
 	return nil
 }
-func (s *routerStubPushService) UnregisterDevice(ctx context.Context, token string) error {
+func (s *routerStubPushService) UnregisterDevice(ctx context.Context, userID string, token string) error {
 	return nil
 }
 func (s *routerStubPushService) SendPush(ctx context.Context, userID string, payload service.PushPayload) error {

@@ -1232,5 +1232,9 @@
 
   "templateNameLabel": "模板名称",
 
-  "templateDateHint": "使用 [date] 插入当前日期"
+  "templateDateHint": "使用 [date] 插入当前日期",
+
+  "offlineBanner": "您当前离线 \u2014 恢复连接后将自动同步更改",
+
+  "unlockRequired": "请先解锁您的保险库"
 }

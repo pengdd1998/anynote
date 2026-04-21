@@ -34,6 +34,20 @@ func (r *DeviceTokenRepository) DeleteByToken(ctx context.Context, token string)
 	return err
 }
 
+// GetByToken retrieves a device token entry by its token value.
+func (r *DeviceTokenRepository) GetByToken(ctx context.Context, token string) (*service.DeviceTokenEntry, error) {
+	var e service.DeviceTokenEntry
+	var idStr string
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, user_id, token, platform, created_at FROM device_tokens WHERE token = $1`, token,
+	).Scan(&idStr, &e.UserID, &e.Token, &e.Platform, &e.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	e.ID, _ = uuid.Parse(idStr)
+	return &e, nil
+}
+
 // DeleteByUser removes all device tokens for a given user.
 // The device_tokens table uses a TEXT user_id without a foreign key, so it is
 // not covered by ON DELETE CASCADE and must be cleaned up explicitly.

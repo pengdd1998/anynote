@@ -47,12 +47,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.authService.Register(r.Context(), req)
 	if err != nil {
-		switch err {
-		case service.ErrEmailExists:
-			writeError(w, r, http.StatusConflict, "email_exists", "Email already registered")
-		case service.ErrUsernameExists:
-			writeError(w, r, http.StatusConflict, "username_exists", "Username already taken")
-		default:
+		if !writeErrorFromSentinel(w, r, err) {
 			writeError(w, r, http.StatusInternalServerError, "internal_error", "Registration failed")
 		}
 		return
@@ -79,9 +74,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.authService.Login(r.Context(), req)
 	if err != nil {
-		if err == service.ErrInvalidCredentials {
-			writeError(w, r, http.StatusUnauthorized, "invalid_credentials", "Invalid email or password")
-		} else {
+		if !writeErrorFromSentinel(w, r, err) {
 			writeError(w, r, http.StatusInternalServerError, "internal_error", "Login failed")
 		}
 		return
@@ -101,7 +94,9 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.authService.RefreshToken(r.Context(), req.RefreshToken)
 	if err != nil {
-		writeError(w, r, http.StatusUnauthorized, "invalid_token", "Invalid or expired refresh token")
+		if !writeErrorFromSentinel(w, r, err) {
+			writeError(w, r, http.StatusUnauthorized, "invalid_token", "Invalid or expired refresh token")
+		}
 		return
 	}
 
@@ -109,13 +104,13 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "User not authenticated")
 		return
 	}
 
-	user, err := h.authService.GetCurrentUser(r.Context(), parseUUID(userID))
+	user, err := h.authService.GetCurrentUser(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusNotFound, "not_found", "User not found")
 		return
@@ -127,8 +122,8 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 // DeleteAccount handles DELETE /api/v1/auth/account.
 // Requires a valid JWT and password confirmation via auth_key_hash.
 func (h *AuthHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "User not authenticated")
 		return
 	}
@@ -150,12 +145,8 @@ func (h *AuthHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.authService.DeleteAccount(r.Context(), parseUUID(userID), req.AuthKeyHash); err != nil {
-		if err == service.ErrInvalidCredentials {
-			writeError(w, r, http.StatusUnauthorized, "invalid_credentials", "Invalid password")
-		} else if err == service.ErrUserNotFound {
-			writeError(w, r, http.StatusNotFound, "not_found", "User not found")
-		} else {
+	if err := h.authService.DeleteAccount(r.Context(), userID, req.AuthKeyHash); err != nil {
+		if !writeErrorFromSentinel(w, r, err) {
 			writeError(w, r, http.StatusInternalServerError, "internal_error", "Account deletion failed")
 		}
 		return

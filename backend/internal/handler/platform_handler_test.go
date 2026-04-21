@@ -89,6 +89,8 @@ func (m *mockPlatformService) CheckStatus(ctx context.Context, userID uuid.UUID,
 	return "", errors.New("not implemented")
 }
 
+func (m *mockPlatformService) Stop() {}
+
 // ---------------------------------------------------------------------------
 // Router setup helper
 // ---------------------------------------------------------------------------

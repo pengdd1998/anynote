@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -12,16 +11,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 
-	firebase "firebase.google.com/go/v4"
-	"firebase.google.com/go/v4/messaging"
 	"github.com/anynote/backend/internal/appsetup"
 	"github.com/anynote/backend/internal/config"
+	"github.com/anynote/backend/internal/fcmadapter"
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
 	"github.com/anynote/backend/internal/queue"
 	"github.com/anynote/backend/internal/repository"
 	"github.com/anynote/backend/internal/service"
-	"google.golang.org/api/option"
 )
 
 func main() {
@@ -87,7 +84,7 @@ func main() {
 	// When Firebase credentials are configured, push notifications are delivered
 	// via FCM. Otherwise the service operates in log-only mode.
 	var fcmClient service.FCMClient
-	fcmClient, err = initWorkerFCMClient(context.Background(), cfg.Firebase.CredentialsFile)
+	fcmClient, err = fcmadapter.InitFCMClient(context.Background(), cfg.Firebase.CredentialsFile)
 	if err != nil {
 		slog.Warn("FCM client initialization failed, falling back to log-only push", "error", err)
 		fcmClient = nil
@@ -191,47 +188,3 @@ func initWorkerLogger(levelStr string) {
 	slog.SetDefault(slog.New(handler))
 }
 
-// initWorkerFCMClient initializes the Firebase Cloud Messaging client for the worker.
-// Returns nil (no error) when credentialsFile is empty, meaning log-only mode.
-func initWorkerFCMClient(ctx context.Context, credentialsFile string) (service.FCMClient, error) {
-	if credentialsFile == "" {
-		return nil, nil
-	}
-
-	app, err := firebase.NewApp(ctx, nil, option.WithCredentialsFile(credentialsFile))
-	if err != nil {
-		return nil, fmt.Errorf("firebase app init: %w", err)
-	}
-
-	client, err := app.Messaging(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("firebase messaging client: %w", err)
-	}
-
-	return &workerFCMClient{client: client}, nil
-}
-
-// workerFCMClient adapts the Firebase messaging.Client to the service.FCMClient interface.
-type workerFCMClient struct {
-	client *messaging.Client
-}
-
-// Send converts the domain FCMMessage to a Firebase messaging.Message and delivers it.
-func (f *workerFCMClient) Send(ctx context.Context, msg *service.FCMMessage) (string, error) {
-	fbMsg := &messaging.Message{
-		Token: msg.Token,
-		Notification: &messaging.Notification{
-			Title: msg.Title,
-			Body:  msg.Body,
-		},
-		Android: &messaging.AndroidConfig{
-			Priority: msg.Priority,
-		},
-	}
-
-	if len(msg.Data) > 0 {
-		fbMsg.Data = msg.Data
-	}
-
-	return f.client.Send(ctx, fbMsg)
-}

@@ -450,7 +450,7 @@ func (m *mockPushService) RegisterDevice(ctx context.Context, userID string, tok
 	return nil
 }
 
-func (m *mockPushService) UnregisterDevice(ctx context.Context, token string) error {
+func (m *mockPushService) UnregisterDevice(ctx context.Context, userID string, token string) error {
 	return nil
 }
 

@@ -8,6 +8,12 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+const (
+	maxPublishTitleLen = 500
+	maxPublishTags     = 50
+	maxPublishTagLen   = 100
+)
+
 type PublishHandler struct {
 	publishService service.PublishService
 }
@@ -22,8 +28,8 @@ type publishRequest struct {
 }
 
 func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -39,7 +45,23 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log, err := h.publishService.Publish(r.Context(), parseUUID(userID), service.PublishRequest{
+	if len(req.Title) > maxPublishTitleLen {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "Title must be at most 500 characters")
+		return
+	}
+
+	if len(req.Tags) > maxPublishTags {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "Too many tags (max 50)")
+		return
+	}
+	for _, tag := range req.Tags {
+		if len(tag) > maxPublishTagLen {
+			writeError(w, r, http.StatusBadRequest, "validation_error", "Tag too long (max 100 characters each)")
+			return
+		}
+	}
+
+	log, err := h.publishService.Publish(r.Context(), userID, service.PublishRequest{
 		Platform:      req.Platform,
 		ContentItemID: req.ContentItemID,
 		Title:         req.Title,
@@ -55,13 +77,13 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PublishHandler) History(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
-	logs, err := h.publishService.GetHistory(r.Context(), parseUUID(userID))
+	logs, err := h.publishService.GetHistory(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "history_error", "Failed to get history")
 		return
@@ -71,8 +93,8 @@ func (h *PublishHandler) History(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PublishHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -83,7 +105,13 @@ func (h *PublishHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log, err := h.publishService.GetByID(r.Context(), parseUUID(userID), parseUUID(id))
+	parsedID, err := parseUUID(id)
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid_id", "Invalid publish log ID format")
+		return
+	}
+
+	log, err := h.publishService.GetByID(r.Context(), userID, parsedID)
 	if err != nil {
 		writeError(w, r, http.StatusNotFound, "not_found", "Publish log not found")
 		return

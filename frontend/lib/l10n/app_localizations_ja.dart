@@ -2045,4 +2045,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get templateDateHint => '[date]で現在の日付を挿入';
+
+  @override
+  String get offlineBanner => 'オフラインです — 接続時に変更が同期されます';
+
+  @override
+  String get unlockRequired => '先に保管庫をロック解除してください';
 }

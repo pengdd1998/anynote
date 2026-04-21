@@ -12,10 +12,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	firebase "firebase.google.com/go/v4"
-	"firebase.google.com/go/v4/messaging"
-
 	"github.com/anynote/backend/internal/appsetup"
+	"github.com/anynote/backend/internal/fcmadapter"
 	"github.com/anynote/backend/internal/config"
 	"github.com/anynote/backend/internal/handler"
 	"github.com/anynote/backend/internal/llm"
@@ -26,7 +24,6 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	redisv9 "github.com/redis/go-redis/v9"
-	"google.golang.org/api/option"
 )
 
 func main() {
@@ -114,14 +111,14 @@ func main() {
 	}()
 
 	// Initialize services
-	authSvc := service.NewAuthService(userRepo, cfg.Auth.JWTSecret, cfg.Auth.TokenExpiry, cfg.Auth.RefreshExpiry)
+	authSvc := service.NewAuthServiceWithDeviceTokens(userRepo, deviceTokenRepo, cfg.Auth.JWTSecret, cfg.Auth.TokenExpiry, cfg.Auth.RefreshExpiry)
 	quotaSvc := service.NewQuotaService(quotaRepo)
 
 	// Initialize push notification service.
 	// When Firebase credentials are configured, push notifications are delivered
 	// via FCM. Otherwise the service operates in log-only mode.
 	var fcmClient service.FCMClient
-	fcmClient, err = initFCMClient(context.Background(), cfg.Firebase.CredentialsFile)
+	fcmClient, err = fcmadapter.InitFCMClient(context.Background(), cfg.Firebase.CredentialsFile)
 	if err != nil {
 		slog.Warn("FCM client initialization failed, falling back to log-only push", "error", err)
 		fcmClient = nil
@@ -276,52 +273,6 @@ func initLogger(levelStr, format string) {
 		handler = slog.NewJSONHandler(os.Stdout, opts)
 	}
 	slog.SetDefault(slog.New(handler))
-}
-
-// initFCMClient initializes the Firebase Cloud Messaging client.
-// Returns nil (no error) when credentialsFile is empty, meaning log-only mode.
-// Returns an error if the credentials file is specified but invalid.
-func initFCMClient(ctx context.Context, credentialsFile string) (service.FCMClient, error) {
-	if credentialsFile == "" {
-		return nil, nil
-	}
-
-	app, err := firebase.NewApp(ctx, nil, option.WithCredentialsFile(credentialsFile))
-	if err != nil {
-		return nil, fmt.Errorf("firebase app init: %w", err)
-	}
-
-	client, err := app.Messaging(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("firebase messaging client: %w", err)
-	}
-
-	return &firebaseFCMClient{client: client}, nil
-}
-
-// firebaseFCMClient adapts the Firebase messaging.Client to the service.FCMClient interface.
-type firebaseFCMClient struct {
-	client *messaging.Client
-}
-
-// Send converts the domain FCMMessage to a Firebase messaging.Message and delivers it.
-func (f *firebaseFCMClient) Send(ctx context.Context, msg *service.FCMMessage) (string, error) {
-	fbMsg := &messaging.Message{
-		Token: msg.Token,
-		Notification: &messaging.Notification{
-			Title: msg.Title,
-			Body:  msg.Body,
-		},
-		Android: &messaging.AndroidConfig{
-			Priority: msg.Priority,
-		},
-	}
-
-	if len(msg.Data) > 0 {
-		fbMsg.Data = msg.Data
-	}
-
-	return f.client.Send(ctx, fbMsg)
 }
 
 // minioBucketChecker adapts the minio.Client to the handler.BucketChecker interface.

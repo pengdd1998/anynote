@@ -2103,4 +2103,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get templateDateHint => 'Use [date] for current date';
+
+  @override
+  String get offlineBanner =>
+      'You are offline — changes will sync when connected';
+
+  @override
+  String get unlockRequired => 'Please unlock your vault first';
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../error/connectivity_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 /// A thin banner shown at the top of the app when the device is offline.
 ///
@@ -16,6 +17,7 @@ class OfflineBanner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final connectivity = ref.watch(connectivityProvider);
     final isOffline = connectivity.valueOrNull == false;
+    final l10n = AppLocalizations.of(context);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -38,7 +40,7 @@ class OfflineBanner extends ConsumerWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'You are offline \u2014 changes will sync when connected',
+                    l10n?.offlineBanner ?? 'You are offline \u2014 changes will sync when connected',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

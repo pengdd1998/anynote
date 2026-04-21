@@ -12,14 +12,16 @@ import (
 	"github.com/anynote/backend/internal/service"
 )
 
+const maxChatMessageContent = 100_000 // 100 KB per message
+
 type AIHandler struct {
 	aiService service.AIProxyService
 	quotaSvc  service.QuotaService
 }
 
 func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
@@ -43,16 +45,24 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Cap individual message content length.
+	for i, msg := range req.Messages {
+		if len(msg.Content) > maxChatMessageContent {
+			writeError(w, r, http.StatusBadRequest, "validation_error",
+				fmt.Sprintf("Message %d content exceeds maximum size (100 KB)", i+1))
+			return
+		}
+	}
+
 	// Cap max_tokens based on the user's quota plan.
-	uid := parseUUID(userID)
-	capForPlan := h.maxTokensCap(r.Context(), uid)
+	capForPlan := h.maxTokensCap(r.Context(), userID)
 	if req.MaxTokens == nil || *req.MaxTokens == 0 {
 		req.MaxTokens = &capForPlan
 	} else if *req.MaxTokens > capForPlan {
 		req.MaxTokens = &capForPlan
 	}
 
-	chunkCh, err := h.aiService.Proxy(r.Context(), userID, req)
+	chunkCh, err := h.aiService.Proxy(r.Context(), userID.String(), req)
 	if err != nil {
 		if err == service.ErrQuotaExceeded {
 			writeJSON(w, http.StatusTooManyRequests, domain.QuotaExceededResponse{
@@ -151,13 +161,13 @@ func (h *AIHandler) maxTokensCap(ctx context.Context, uid uuid.UUID) int {
 }
 
 func (h *AIHandler) GetQuota(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-	if userID == "" {
+	userID, err := parseUserID(r)
+	if err != nil {
 		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
 		return
 	}
 
-	quota, err := h.quotaSvc.GetQuota(r.Context(), parseUUID(userID))
+	quota, err := h.quotaSvc.GetQuota(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "quota_error", "Failed to get quota")
 		return
