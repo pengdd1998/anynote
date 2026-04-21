@@ -905,9 +905,16 @@ void main() {
         ],
       );
 
-      // Wait for async _loadStatus to complete.
-      await Future<void>.delayed(Duration.zero);
-      await Future<void>.delayed(Duration.zero);
+      // Read the provider to trigger StateNotifier construction and start
+      // the async _loadStatus() call.
+      container.read(encryptionStatusProvider);
+
+      // Wait for async _loadStatus to complete. The StateNotifier constructor
+      // calls _loadStatus() which awaits isInitialized(), so we need to pump
+      // the event loop until the async operation completes.
+      for (var i = 0; i < 20; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
 
       final status = container.read(encryptionStatusProvider);
       expect(status.isInitialized, isTrue);

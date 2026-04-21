@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -6,6 +7,34 @@ import 'package:anynote/core/providers/app_info_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  // ---------------------------------------------------------------------------
+  // Setup: register a mock handler for the package_info_plus method channel.
+  // ---------------------------------------------------------------------------
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+      const MethodChannel('dev.fluttercommunity.plus/package_info'),
+      (MethodCall methodCall) async {
+        return <String, dynamic>{
+          'appName': 'AnyNote Test',
+          'packageName': 'com.example.anynote',
+          'version': '1.0.0',
+          'buildNumber': '42',
+          'buildSignature': '',
+          'installerStore': '',
+        };
+      },
+    );
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+      const MethodChannel('dev.fluttercommunity.plus/package_info'),
+      null,
+    );
+  });
 
   // ===========================================================================
   // appInfoProvider
@@ -37,9 +66,7 @@ void main() {
     test('PackageInfo has non-empty appName', () async {
       final info = await container.read(appInfoProvider.future);
 
-      // In test environment, PackageInfo.fromPlatform() returns defaults
-      // from the package_info_plus test setup. The app name should be a
-      // non-empty string.
+      // In test environment, the mock channel returns 'AnyNote Test'.
       expect(info.appName, isNotEmpty);
     });
 

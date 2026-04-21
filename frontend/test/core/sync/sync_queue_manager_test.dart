@@ -401,10 +401,14 @@ void main() {
         final stream = manager.watchPendingCount();
         expect(stream, isNotNull);
 
+        // Start listening before emitting, since the controller is broadcast
+        // and events are only delivered to active listeners.
+        final countFuture = stream.first;
+
         // Emit a value and verify it arrives.
         mockDao._pendingCountController.add(5);
 
-        final count = await stream.first;
+        final count = await countFuture;
         expect(count, 5);
       });
     });

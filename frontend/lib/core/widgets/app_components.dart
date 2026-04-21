@@ -194,7 +194,10 @@ class _AppLoadingCardState extends State<AppLoadingCard>
             children: [
               Expanded(child: _bar(height: 16, widthFraction: 0.6)),
               const SizedBox(width: 8),
-              _bar(height: 16, widthFraction: 0.08),
+              SizedBox(
+                width: 24,
+                child: _bar(height: 16, widthFraction: 1.0),
+              ),
             ],
           ),
           const SizedBox(height: 8),

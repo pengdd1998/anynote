@@ -243,7 +243,7 @@ void main() {
     group('error classification', () {
       test('classifies crypto-related errors as cryptoNotReady', () async {
         mockEngine.errorToThrow =
-            StateError('CryptoService is not unlocked');
+            Exception('CryptoService is not unlocked');
 
         final queue = SyncQueue(mockEngine, mockCrypto);
         addTearDown(() => queue.dispose());

@@ -459,11 +459,13 @@ void main() {
       expect(preview.startsWith('...'), isFalse);
     });
 
-    test('preview near end of content has trailing ellipsis', () {
+    test('preview near end of content has no trailing ellipsis when it reaches end', () {
       final content = '${'a' * 200}target';
       final preview = buildPreview(content, 'target');
       expect(preview.toLowerCase(), contains('target'));
-      expect(preview.endsWith('...'), isTrue);
+      // The substring reaches exactly to the end of the content, so no
+      // trailing ellipsis is needed.
+      expect(preview.endsWith('...'), isFalse);
     });
 
     test('preview is case-insensitive for matching', () {

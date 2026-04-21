@@ -67,10 +67,15 @@ final connectivityProvider = StreamProvider<ConnectivityState>((ref) {
 /// This provider also listens directly to [connectivityServiceProvider] for
 /// a faster response than the stream-based [connectivityProvider] allows.
 final connectivitySyncTriggerProvider = Provider<void>((ref) {
-  // Watch the service provider to start monitoring.
-  ref.watch(connectivityServiceProvider);
-
-  // Listen to the raw connectivity service for immediate transition detection.
+  // Listen to connectivity state changes to detect offline-to-online
+  // transitions and trigger sync queue processing.
+  //
+  // Using ref.listen (NOT ref.watch) to avoid provider rebuilds that would
+  // replace the listener callbacks. When ref.watch is used in a
+  // Provider<void>, state changes trigger a rebuild that discards the
+  // ref.listen callbacks from the previous build, causing them to fire
+  // only on the first change. ref.listen alone keeps the dependency alive
+  // and the callbacks persist across all subsequent state changes.
   ref.listen<bool>(connectivityServiceProvider, (previous, next) {
     final wasOffline = previous == false;
     final isOnline = next == true;
@@ -82,7 +87,7 @@ final connectivitySyncTriggerProvider = Provider<void>((ref) {
     }
   });
 
-  // Also keep the stream-based provider alive for legacy consumers.
+  // Keep the stream-based provider alive for legacy consumers.
   ref.listen(connectivityProvider, (previous, next) {
     final wasOffline = previous?.valueOrNull == false;
     final isOnline = next.valueOrNull == true;
