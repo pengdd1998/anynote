@@ -1,0 +1,143 @@
+# golangci-lint configuration for AnyNote Go backend
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  # Go version target
+  go: "1.22"
+  # Timeout for the entire run
+  timeout: 5m
+  # Directories to skip
+  skip-dirs:
+    - db/migrations
+  # Files to skip (generated code)
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.sql\\.go$"
+
+output:
+  # Sort results by: file, line, column, severity
+  sort-results: true
+
+linters:
+  enable:
+    - errcheck      # unchecked errors
+    - govet         # go vet
+    - staticcheck   # advanced static analysis
+    - unused        # unused code
+    - gosimple      # code simplification
+    - ineffassign   # ineffective assignments
+    - typecheck     # type checking
+    - gocritic      # style/performance issues
+    - goconst       # repeated strings
+    - misspell      # typos
+    - revive        # replacement for golint
+    - unconvert     # unnecessary conversions
+    - prealloc      # slice preallocation
+    - unparam       # unused function parameters
+    - whitespace    # extra whitespace
+
+linters-settings:
+  errcheck:
+    # Check for errors on type assertions
+    check-type-assertions: true
+    # Check for blank assignments (_ =)
+    check-blank: false
+
+  govet:
+    # Enable all analyzers
+    enable-all: true
+    # Disable shadowed variable checks (too noisy in practice)
+    disable:
+      - shadow
+
+  staticcheck:
+    # SA* checks are all enabled by default
+    checks: ["all"]
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+      - opinionated
+    disabled-checks:
+      - hugeParam        # large structs by value is intentional in some handlers
+      - rangeValCopy     # same reason
+      - exitAfterDefer   # log.Fatal in cmd packages is acceptable
+
+  goconst:
+    # Minimum occurrences of a string to trigger a warning
+    min occurrences: 3
+    # Minimum length of the string constant
+    min-len: 3
+    # Ignore tests
+    ignore-tests: true
+
+  misspell:
+    locale: US
+
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: increment-decrement
+      - name: indent-error-flow
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: var-declaration
+      - name: var-naming
+
+  unparam:
+    # Inspect exported functions
+    check-exported: false
+
+  prealloc:
+    # Report preallocation suggestions only on simple loops
+    simple: true
+    range-loops: true
+    for-loops: false
+
+  whitespace:
+    # Ensure no trailing whitespace
+    multi-if: false
+    multi-func: false
+
+issues:
+  # Maximum issues per linter to show
+  max-issues-per-linter: 50
+  # Maximum same issues to show
+  max-same-issues: 3
+  # Show all issues from a linter
+  new: false
+
+  # Exclude some linters from running on test files
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - goconst
+        - prealloc
+        - unparam
+
+    # Exclude generated files
+    - path: ".*\\.pb\\.go$"
+      linters:
+        - all
+
+    # Exclude known false positives in sqlc-generated code
+    - path: ".*\\.sql\\.go$"
+      linters:
+        - all
+
+severity:
+  default-severity: warning

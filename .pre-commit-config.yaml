@@ -1,0 +1,37 @@
+# Pre-commit hooks for AnyNote (Go + Dart/Flutter)
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      - id: go-vet
+        name: go vet
+        entry: bash -c 'cd backend && go vet ./...'
+        language: system
+        types: [go]
+        pass_filenames: false
+
+      - id: go-fmt
+        name: gofmt
+        entry: bash -c 'cd backend && test -z "$(gofmt -l .)"'
+        language: system
+        types: [go]
+        pass_filenames: false
+
+      - id: dart-analyze
+        name: dart analyze
+        entry: bash -c 'cd frontend && dart analyze lib/'
+        language: system
+        types: [dart]
+        pass_filenames: false

@@ -1,0 +1,64 @@
+{
+  // Editor
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": null,
+
+  // Go
+  "[go]": {
+    "editor.defaultFormatter": "golang.go"
+  },
+  "go.useLanguageServer": true,
+  "go.lintOnSave": "package",
+  "go.lintTool": "staticcheck",
+  "go.buildOnSave": "off",
+  "go.vetOnSave": "package",
+  "go.testFlags": ["-v", "-race"],
+
+  // Dart / Flutter
+  "[dart]": {
+    "editor.defaultFormatter": "dart-code.dart-code",
+    "editor.selectionHighlight": false,
+    "editor.suggestSelection": "first",
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off"
+  },
+  "dart.flutterHotReloadOnSave": "all",
+  "dart.organizeImportsOnSave": true,
+  "dart.lineLength": 80,
+  "dart.warnWhenEditingFilesOutsideWorkspace": false,
+
+  // File associations
+  "files.associations": {
+    "*.drift": "sql",
+    "*.graphql": "graphql",
+    "*.g.dart": "dart",
+    "*.freezed.dart": "dart"
+  },
+
+  // Search exclude
+  "search.exclude": {
+    "**/build/": true,
+    "**/*.g.dart": true,
+    "**/*.freezed.dart": true,
+    "**/node_modules/": true,
+    "**/.dart_tool/": true,
+    "**/.pub-cache/": true,
+    "**/ios/Pods/": true,
+    "**/.fvm/": true
+  },
+
+  // Files exclude
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/.pub-cache": true,
+    "**/build": true,
+    "**/.fvm": true
+  },
+
+  // YAML
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2
+  }
+}
