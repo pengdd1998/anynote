@@ -89,21 +89,13 @@ frontend/lib/**/*.gr.dart
 frontend/**/*.mocks.dart
 
 # Native build
-# Android: ignore all, but allow critical config files
-frontend/android/*
-!frontend/android/app/
-frontend/android/app/*
-!frontend/android/app/build.gradle
-!frontend/android/app/proguard-rules.pro
-!frontend/android/app/src/
-frontend/android/app/src/*
-!frontend/android/app/src/main/
-frontend/android/app/src/main/*
-!frontend/android/app/src/main/res/
-frontend/android/app/src/main/res/*
-!frontend/android/app/src/main/res/values/
-frontend/android/app/src/main/res/values/*
-!frontend/android/app/src/main/res/values/strings.xml
+# Android: track source, manifest, resources; ignore generated only
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/app/build/
+frontend/android/local.properties
+frontend/android/.idea/
+frontend/android/app/src/main/java/io/
 frontend/ios/
 frontend/windows/
 frontend/linux/
