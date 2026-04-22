@@ -8,6 +8,7 @@ import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/backup/backup_verifier.dart';
 import 'package:anynote/core/crypto/crypto_service.dart';
+import 'package:anynote/core/crypto/decryption_exception.dart';
 import 'package:anynote/core/crypto/master_key.dart';
 import 'package:anynote/core/database/app_database.dart';
 import '../crypto/sodium_test_init.dart';
@@ -49,7 +50,8 @@ void main() {
 
   // -- Helper to build a backup JSON envelope --
   String _writeBackupFile(Map<String, dynamic> envelope) {
-    final path = '${tempDir.path}/backup_${DateTime.now().microsecondsSinceEpoch}.json';
+    final path =
+        '${tempDir.path}/backup_${DateTime.now().microsecondsSinceEpoch}.json';
     File(path).writeAsStringSync(jsonEncode(envelope));
     return path;
   }
@@ -197,7 +199,8 @@ void main() {
       final result = await verifier.verify(path);
 
       expect(result.isValid, isFalse);
-      expect(result.errors, contains('Missing backup_key_id in backup envelope'));
+      expect(
+          result.errors, contains('Missing backup_key_id in backup envelope'));
     });
 
     test('returns error for missing encrypted_data', () async {
@@ -210,10 +213,13 @@ void main() {
       final result = await verifier.verify(path);
 
       expect(result.isValid, isFalse);
-      expect(result.errors, contains('Missing encrypted_data in backup envelope'));
+      expect(
+          result.errors, contains('Missing encrypted_data in backup envelope'));
     });
 
-    test('returns both errors when backup_key_id and encrypted_data are missing', () async {
+    test(
+        'returns both errors when backup_key_id and encrypted_data are missing',
+        () async {
       final path = _writeBackupFile({
         'format': 'anynote-backup-v1',
       });
@@ -225,7 +231,8 @@ void main() {
       expect(result.errors.length, 2);
     });
 
-    test('reports encryption keys not unlocked when crypto is locked', () async {
+    test('reports encryption keys not unlocked when crypto is locked',
+        () async {
       final lockedCrypto = CryptoService();
       final verifier = BackupVerifier(lockedCrypto);
 
@@ -238,21 +245,26 @@ void main() {
       final result = await verifier.verify(path);
 
       expect(result.isValid, isFalse);
-      expect(result.errors, contains(
-        'Encryption keys not unlocked. Cannot verify backup contents.',
-      ));
+      expect(
+          result.errors,
+          contains(
+            'Encryption keys not unlocked. Cannot verify backup contents.',
+          ));
     });
 
     test('reports decryption failure when key does not match', () async {
       final wrongCrypto = CryptoService();
-      final wrongKey = Uint8List.fromList(List.generate(32, (i) => (i * 17 + 3) % 256));
+      final wrongKey =
+          Uint8List.fromList(List.generate(32, (i) => (i * 17 + 3) % 256));
       wrongCrypto.injectEncryptKey(wrongKey);
 
       // Create a backup encrypted with the real crypto
       final backupPath = await _realEncryptBackup({
         'version': 1,
         'exported_at': '2026-01-01T00:00:00Z',
-        'notes': [{'id': 'n1'}],
+        'notes': [
+          {'id': 'n1'}
+        ],
       });
 
       final verifier = BackupVerifier(wrongCrypto);
@@ -330,11 +342,12 @@ void main() {
       );
     });
 
-    test('throws StateError when decryption returns null', () async {
+    test('throws DecryptionException when decryption fails', () async {
       // Use a crypto with a wrong key -- the encrypted_data was created with
       // the real key, so wrong key will fail decryption.
       final wrongCrypto = CryptoService();
-      final wrongKey = Uint8List.fromList(List.generate(32, (i) => (i * 7 + 11) % 256));
+      final wrongKey =
+          Uint8List.fromList(List.generate(32, (i) => (i * 7 + 11) % 256));
       wrongCrypto.injectEncryptKey(wrongKey);
 
       final backupPath = await _realEncryptBackup({
@@ -345,7 +358,7 @@ void main() {
       final verifier = BackupVerifier(wrongCrypto);
       expect(
         () => verifier.preview(backupPath, {}, {}, {}, {}),
-        throwsA(isA<StateError>()),
+        throwsA(isA<DecryptionException>()),
       );
     });
 

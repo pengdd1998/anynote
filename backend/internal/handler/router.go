@@ -61,6 +61,8 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	syncRateLimiter := service.NewRateLimiter(30, time.Minute)    // 30 req/min per user
 	publishRateLimiter := service.NewRateLimiter(10, time.Minute) // 10 req/min per user
 	discoverRateLimiter := service.NewRateLimiter(60, time.Minute) // 60 req/min per IP
+	aiRateLimiter := service.NewRateLimiter(20, time.Minute)      // 20 req/min per user
+	llmRateLimiter := service.NewRateLimiter(10, time.Minute)     // 10 req/min per user
 
 	r.Route("/api/v1", func(r chi.Router) {
 		// Public auth routes (rate limited by IP)
@@ -107,17 +109,17 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			// Tags
 			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Get("/tags", syncH.ListTags)
 
-			// AI Proxy
-			r.Post("/ai/proxy", aiH.Proxy)
-			r.Get("/ai/quota", aiH.GetQuota)
+			// AI Proxy (rate limited by user)
+			r.With(RateLimitMiddleware(aiRateLimiter, UserIDKeyFunc, time.Minute)).Post("/ai/proxy", aiH.Proxy)
+			r.With(RateLimitMiddleware(aiRateLimiter, UserIDKeyFunc, time.Minute)).Get("/ai/quota", aiH.GetQuota)
 
-			// LLM Config
-			r.Get("/llm/configs", llmH.List)
-			r.Post("/llm/configs", llmH.Create)
-			r.Put("/llm/configs/{id}", llmH.Update)
-			r.Delete("/llm/configs/{id}", llmH.Delete)
-			r.Post("/llm/configs/{id}/test", llmH.TestConnection)
-			r.Get("/llm/providers", llmH.ListProviders)
+			// LLM Config (rate limited by user)
+			r.With(RateLimitMiddleware(llmRateLimiter, UserIDKeyFunc, time.Minute)).Get("/llm/configs", llmH.List)
+			r.With(RateLimitMiddleware(llmRateLimiter, UserIDKeyFunc, time.Minute)).Post("/llm/configs", llmH.Create)
+			r.With(RateLimitMiddleware(llmRateLimiter, UserIDKeyFunc, time.Minute)).Put("/llm/configs/{id}", llmH.Update)
+			r.With(RateLimitMiddleware(llmRateLimiter, UserIDKeyFunc, time.Minute)).Delete("/llm/configs/{id}", llmH.Delete)
+			r.With(RateLimitMiddleware(llmRateLimiter, UserIDKeyFunc, time.Minute)).Post("/llm/configs/{id}/test", llmH.TestConnection)
+			r.With(RateLimitMiddleware(llmRateLimiter, UserIDKeyFunc, time.Minute)).Get("/llm/providers", llmH.ListProviders)
 
 			// Publish (rate limited by user)
 			r.With(RateLimitMiddleware(publishRateLimiter, UserIDKeyFunc, time.Minute)).Post("/publish", publishH.Publish)

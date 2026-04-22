@@ -7,6 +7,7 @@ import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/backup/backup_service.dart';
 import 'package:anynote/core/crypto/crypto_service.dart';
+import 'package:anynote/core/crypto/decryption_exception.dart';
 import 'package:anynote/core/crypto/master_key.dart';
 import 'package:anynote/core/database/app_database.dart';
 import '../crypto/sodium_test_init.dart';
@@ -103,8 +104,8 @@ void main() {
       expect(notes.length, 2);
 
       final note1 = notes.firstWhere(
-          (n) => (n as Map<String, dynamic>)['id'] == 'note-backup-1',)
-          as Map<String, dynamic>;
+        (n) => (n as Map<String, dynamic>)['id'] == 'note-backup-1',
+      ) as Map<String, dynamic>;
       expect(note1['plain_content'], 'plain content 1');
       expect(note1['plain_title'], 'Note One');
       expect(note1['encrypted_content'], 'enc-content-1');
@@ -185,7 +186,8 @@ void main() {
 
     test('throws on invalid JSON', () async {
       expect(
-        () => backupService.importBackup(Uint8List.fromList(utf8.encode('not json'))),
+        () => backupService
+            .importBackup(Uint8List.fromList(utf8.encode('not json'))),
         throwsA(isA<FormatException>()),
       );
     });
@@ -301,7 +303,7 @@ void main() {
       expect(note!.plainContent, 'Original Content');
     });
 
-    test('import with wrong key throws StateError', () async {
+    test('import with wrong key throws DecryptionException', () async {
       await db.notesDao.createNote(
         id: 'note-wrong-key',
         encryptedContent: 'enc',
@@ -312,13 +314,14 @@ void main() {
 
       // Use a different encrypt key for import
       final wrongCrypto = CryptoService();
-      final wrongKey = Uint8List.fromList(List.generate(32, (i) => (i * 13 + 7) % 256));
+      final wrongKey =
+          Uint8List.fromList(List.generate(32, (i) => (i * 13 + 7) % 256));
       wrongCrypto.injectEncryptKey(wrongKey);
       final wrongService = BackupService(db, wrongCrypto);
 
       expect(
         () => wrongService.importBackup(backupData),
-        throwsA(isA<StateError>()),
+        throwsA(isA<DecryptionException>()),
       );
     });
   });

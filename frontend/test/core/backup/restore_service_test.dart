@@ -8,6 +8,7 @@ import 'package:sodium_libs/sodium_libs_sumo.dart';
 import 'package:anynote/core/backup/restore_service.dart';
 import 'package:anynote/core/backup/restore_strategy.dart';
 import 'package:anynote/core/crypto/crypto_service.dart';
+import 'package:anynote/core/crypto/decryption_exception.dart';
 import 'package:anynote/core/crypto/master_key.dart';
 import 'package:anynote/core/database/app_database.dart';
 import '../crypto/sodium_test_init.dart';
@@ -87,9 +88,10 @@ void main() {
       );
     });
 
-    test('throws StateError when decryption fails', () async {
+    test('throws DecryptionException when decryption fails', () async {
       final wrongCrypto = CryptoService();
-      final wrongKey = Uint8List.fromList(List.generate(32, (i) => (i * 11 + 5) % 256));
+      final wrongKey =
+          Uint8List.fromList(List.generate(32, (i) => (i * 11 + 5) % 256));
       wrongCrypto.injectEncryptKey(wrongKey);
 
       final service = RestoreService(db, wrongCrypto);
@@ -102,7 +104,7 @@ void main() {
 
       expect(
         () => service.restore(backupData, ConflictStrategy.skip),
-        throwsA(isA<StateError>()),
+        throwsA(isA<DecryptionException>()),
       );
     });
 
@@ -268,7 +270,8 @@ void main() {
         'contents': [],
       });
 
-      final result = await service.restore(backupData, ConflictStrategy.overwrite);
+      final result =
+          await service.restore(backupData, ConflictStrategy.overwrite);
 
       expect(result.restored, 1);
       expect(result.conflicts, 1);
@@ -302,7 +305,8 @@ void main() {
         'contents': [],
       });
 
-      final result = await service.restore(backupData, ConflictStrategy.keepBoth);
+      final result =
+          await service.restore(backupData, ConflictStrategy.keepBoth);
 
       expect(result.restored, 1);
       expect(result.conflicts, 1);
@@ -339,7 +343,8 @@ void main() {
         'contents': [],
       });
 
-      final result = await service.restore(backupData, ConflictStrategy.keepBoth);
+      final result =
+          await service.restore(backupData, ConflictStrategy.keepBoth);
 
       expect(result.restored, 1);
       expect(result.hasErrors, isFalse);
@@ -356,7 +361,11 @@ void main() {
       final backupData = await _buildBackup({
         'notes': [],
         'tags': [
-          {'id': 'tag-conflict', 'encrypted_name': 'enc-new-tag', 'plain_name': 'NewTag'},
+          {
+            'id': 'tag-conflict',
+            'encrypted_name': 'enc-new-tag',
+            'plain_name': 'NewTag'
+          },
         ],
         'collections': [],
         'contents': [],
@@ -382,13 +391,18 @@ void main() {
       final backupData = await _buildBackup({
         'notes': [],
         'tags': [
-          {'id': 'tag-overwrite', 'encrypted_name': 'enc-new', 'plain_name': 'NewTag'},
+          {
+            'id': 'tag-overwrite',
+            'encrypted_name': 'enc-new',
+            'plain_name': 'NewTag'
+          },
         ],
         'collections': [],
         'contents': [],
       });
 
-      final result = await service.restore(backupData, ConflictStrategy.overwrite);
+      final result =
+          await service.restore(backupData, ConflictStrategy.overwrite);
 
       expect(result.restored, 1);
 
@@ -407,13 +421,18 @@ void main() {
       final backupData = await _buildBackup({
         'notes': [],
         'tags': [
-          {'id': 'tag-both', 'encrypted_name': 'enc-new', 'plain_name': 'NewTag'},
+          {
+            'id': 'tag-both',
+            'encrypted_name': 'enc-new',
+            'plain_name': 'NewTag'
+          },
         ],
         'collections': [],
         'contents': [],
       });
 
-      final result = await service.restore(backupData, ConflictStrategy.keepBoth);
+      final result =
+          await service.restore(backupData, ConflictStrategy.keepBoth);
 
       expect(result.restored, 1);
 
@@ -435,12 +454,17 @@ void main() {
         'notes': [],
         'tags': [],
         'collections': [
-          {'id': 'col-overwrite', 'encrypted_title': 'enc-new', 'plain_title': 'New Collection'},
+          {
+            'id': 'col-overwrite',
+            'encrypted_title': 'enc-new',
+            'plain_title': 'New Collection'
+          },
         ],
         'contents': [],
       });
 
-      final result = await service.restore(backupData, ConflictStrategy.overwrite);
+      final result =
+          await service.restore(backupData, ConflictStrategy.overwrite);
 
       expect(result.restored, 1);
 
@@ -484,7 +508,11 @@ void main() {
       final service = RestoreService(db, crypto);
       final backupData = await _buildBackup({
         'notes': [
-          {'id': 'n1', 'encrypted_content': 'enc-n1', 'plain_content': 'Note 1'},
+          {
+            'id': 'n1',
+            'encrypted_content': 'enc-n1',
+            'plain_content': 'Note 1'
+          },
         ],
         'tags': [
           {'id': 't1', 'encrypted_name': 'enc-t1', 'plain_name': 'Tag1'},
@@ -503,7 +531,8 @@ void main() {
       expect(result.hasErrors, isFalse);
     });
 
-    test('reports per-item errors without aborting the entire restore', () async {
+    test('reports per-item errors without aborting the entire restore',
+        () async {
       // Create a backup with two notes: one valid and one that will cause an error
       // because the DAO will throw on an empty id (we simulate via the DB).
       final service = RestoreService(db, crypto);
@@ -512,7 +541,11 @@ void main() {
       // And include a note with no 'id' key to cause a type cast error
       final backupData = await _buildBackup({
         'notes': [
-          {'id': 'n-good', 'encrypted_content': 'enc-good', 'plain_content': 'Good'},
+          {
+            'id': 'n-good',
+            'encrypted_content': 'enc-good',
+            'plain_content': 'Good'
+          },
           // This will cause a crash because 'id' is missing -> cast to String fails
           {'encrypted_content': 'enc-bad'},
         ],

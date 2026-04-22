@@ -30,28 +30,28 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Encryption (server) | AES-256-GCM for API key storage at rest |
 | Infra | Docker Compose (PostgreSQL, Redis, MinIO, Chrome headless) |
 
-### Current State Summary (Updated 2026-04-21)
+### Current State Summary (Updated 2026-04-22)
 
-**All features through Phase 50 are complete.** The app is production-ready with 1564+ tests (694 Go + 870 Flutter).
+**All features through Phase 56 are complete.** The app is production-ready with 2656+ tests (700+ Go + 1956+ Flutter).
 
 | Module | Completeness | Notes |
 |---|---|---|
 | Backend Auth | 100% | Register, login, refresh, me — JWT + bcrypt, 33 tests |
 | Backend Sync | 100% | Pull/push with LWW conflict resolution, 30 tests |
-| Backend LLM Gateway | 100% | 5 OpenAI-compatible providers, retry with backoff, AES-256-GCM key encryption, 80 tests |
-| Backend AI Proxy | 100% | Dual-mode (user LLM / shared server LLM), SSE streaming, quota, 19 tests |
+| Backend LLM Gateway | 100% | 5 OpenAI-compatible providers, retry with backoff, AES-256-GCM key encryption, shared HTTP client, fallback config, Prometheus metrics, 80 tests |
+| Backend AI Proxy | 100% | Dual-mode (user LLM / shared server LLM), SSE streaming, quota, per-chunk SSE limits, ctx.Done() streaming, role validation, 19 tests |
 | Backend Platform Adapters | 100% | 6 adapters (XHS, WeChat, Zhihu, Medium, WordPress, Webhook), 80 tests |
 | Backend Worker/Queue | 100% | asynq Redis queue, AI + publish job handlers, 40 tests |
 | Backend Publish | 100% | Async publish with platform adapters, history, 25 tests |
 | Backend WebSocket/Presence | 100% | Room-based collab, CRDT relay, rate limiting, Redis pub/sub, 65 tests |
 | Backend Security | 100% | Security headers, JWT auth, per-IP/user rate limiting, 19 tests |
-| Backend Tests | 100% | 668 test functions across 56+ test files, 18 packages |
+| Backend Tests | 100% | 700+ test functions across 56+ test files, 18 packages |
 | Frontend Crypto | 100% | Native: XChaCha20-Poly1305 + Argon2id; Web: AES-256-GCM + PBKDF2, 100+ tests |
 | Frontend Database | 100% | Drift schema v8, 11 tables, FTS5 with CJK tokenizer, all DAOs tested |
 | Frontend Sync Engine | 100% | Pull/push, LWW, version vectors, periodic sync, connectivity-aware |
 | Frontend Auth | 100% | Full crypto key derivation flow, BIP-39 recovery, token refresh |
 | Frontend Notes CRUD | 100% | Rich editor, auto-save, encryption, version history, zen mode, templates |
-| Frontend AI Compose | 100% | 4-stage pipeline (cluster, outline, expand, style-adapt) |
+| Frontend AI Compose | 100% | 4-stage pipeline (cluster, outline, expand, style-adapt), content limits, CancelToken, ErrorMapper, quota pre-check, concurrency guard |
 | Frontend Publish | 100% | Platform connection, publish form, history, 6 platform adapters |
 | Frontend Settings | 100% | Account, AI, LLM config, platforms, encryption, sync, import/export, language |
 | Frontend CRDT Collab | 100% | RGA CRDT, editor controller, WebSocket relay, presence indicators |
@@ -59,7 +59,7 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Frontend Desktop | 100% | Menu bar, window state persistence, keyboard shortcuts, adaptive layout |
 | Frontend Search | 100% | FTS5 with BM25 ranking, CJK tokenizer, advanced search screen |
 | Frontend Localization | 100% | EN + ZH + JA + KO |
-| Frontend Tests | 100% | 608 tests (14 skipped, 0 failures) across 55+ test files |
+| Frontend Tests | 100% | 1956+ tests (14 skipped, 0 failures) across 55+ test files |
 
 ### Main Phases
 
@@ -89,6 +89,12 @@ Build a local-first, privacy-first note-taking application where the server neve
 24. **Phase 48: Test Infrastructure & E2E Expansion** — COMPLETED (shared testutil package, share + AI proxy E2E flows)
 25. **Phase 49: Security Tests & Benchmarks** — COMPLETED (JWT tampering, input validation, injection vectors, perf baselines)
 26. **Phase 50: Frontend CRDT + Platform Tests** — COMPLETED (171 CRDT tests, 79 share/desktop tests, compilation fixes)
+27. **Phase 51: Security Hardening** — COMPLETED (WS tokens, share passwords, DisallowUnknownFields, frontend typed exceptions, ICU plurals)
+28. **Phase 52: Test Fixes** — COMPLETED (fix 36 failing tests + source bugs: connectivity provider, MarkdownPreview rewrite)
+29. **Phase 53: Backend Quality + Frontend Polish** — COMPLETED (ErrNotOwner, UUID migration, pprof auth, refresh tokens infra, a11y, alpha constants)
+30. **Phase 54: Refresh Token Rotation** — COMPLETED (refresh token rotation, graceful shutdown, test expansion)
+31. **Phase 55: Efficiency Fixes** — COMPLETED (code review efficiency improvements)
+32. **Phase 56: AI Module Hardening** — COMPLETED (shared HTTP client, stream cancellation, fallback LLM, Prometheus metrics, content limits, ErrorMapper, CancelToken, quota pre-check, concurrency guard, field validation, user-scoped delete)
 
 ---
 
@@ -1372,7 +1378,76 @@ Fixed pre-existing compilation errors in:
 
 ---
 
-## Future Considerations (Post-Phase 50)
+## Phase 56: AI Module Hardening — COMPLETED
+
+**Goal**: Comprehensive hardening of backend and frontend AI modules based on audit findings.
+
+### 56.1 Backend: Shared HTTP client + connection pooling
+
+- **File**: `backend/internal/llm/openai_compat.go`
+- `openaiCompatProvider` now uses a shared `http.Client` with connection pooling instead of creating a new client per request
+
+### 56.2 Backend: Stream cancellation via ctx.Done()
+
+- **File**: `backend/internal/llm/openai_compat.go`, `backend/internal/handler/ai_handler.go`
+- Both provider goroutine and handler monitor `ctx.Done()` for client disconnection
+- Ensures goroutine cleanup when users navigate away mid-stream
+
+### 56.3 Backend: Fallback LLM config
+
+- **File**: `backend/internal/service/ai_proxy_service.go`
+- Shared mode retries with fallback config when primary LLM fails
+- Prevents single-provider outages from blocking all users
+
+### 56.4 Backend: Per-chunk SSE limit
+
+- **File**: `backend/internal/handler/ai_handler.go`
+- 1MB max chunk size with truncation + warning log
+- Prevents memory issues from oversized LLM responses
+
+### 56.5 Backend: Prometheus metrics
+
+- **File**: `backend/internal/handler/ai_metrics.go` (NEW)
+- Request counter (total requests by provider/mode/status)
+- Token counter (prompt + completion tokens)
+- Active streams gauge (concurrent SSE connections)
+
+### 56.6 Backend: Usage extraction + role validation
+
+- LLM response usage data now populated in ChatResponse
+- AI proxy validates ChatMessage.Role against system/user/assistant
+- Provider CRUD validates against known provider list
+
+### 56.7 Backend: User-scoped delete
+
+- Repository delete query includes user_id in WHERE clause
+- Prevents cross-user data deletion
+
+### 56.8 Frontend: Content size limits
+
+- Max 10 notes selected, 100K chars total for AI compose
+- Clear user-facing error messages when limits exceeded
+
+### 56.9 Frontend: ErrorMapper + CancelToken
+
+- Compose module uses typed AppException errors via ErrorMapper
+- Dio CancelToken cancels streaming on screen dispose
+
+### 56.10 Frontend: Quota pre-check + concurrency guard
+
+- AI operations check quota before starting (fail fast)
+- Concurrency guard prevents parallel AI operations
+
+### 56.11 Frontend: ResponseParser
+
+- **File**: `frontend/lib/features/compose/domain/response_parser.dart` (NEW)
+- Extracted `_extractJson` to domain layer for reuse
+
+**Files changed**: Backend 13 modified + 1 new, Frontend 6 modified + 1 new, 1 test file updated
+
+---
+
+## Future Considerations (Post-Phase 56)
 
 These are optional improvements for after initial release:
 

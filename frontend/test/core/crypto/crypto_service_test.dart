@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/crypto/crypto_service.dart';
+import 'package:anynote/core/crypto/decryption_exception.dart';
 import 'package:anynote/core/crypto/encryptor.dart';
 import 'package:anynote/core/crypto/master_key.dart';
 import 'sodium_test_init.dart';
@@ -73,10 +74,8 @@ void main() {
       injectEncryptKey(service, testEncryptKey);
       const plaintext = 'same content, different items';
 
-      final encrypted1 =
-          await service.encryptForItem('item-alpha', plaintext);
-      final encrypted2 =
-          await service.encryptForItem('item-beta', plaintext);
+      final encrypted1 = await service.encryptForItem('item-alpha', plaintext);
+      final encrypted2 = await service.encryptForItem('item-beta', plaintext);
 
       // Different per-item keys should produce different ciphertexts.
       // However, random nonces also guarantee this. The important invariant
@@ -84,33 +83,33 @@ void main() {
       expect(encrypted1, isNot(equals(encrypted2)));
     });
 
-    test('decrypting with wrong item ID returns null', () async {
+    test('decrypting with wrong item ID throws DecryptionException', () async {
       injectEncryptKey(service, testEncryptKey);
       const plaintext = 'secret for item A';
 
-      final encrypted =
-          await service.encryptForItem('item-a', plaintext);
+      final encrypted = await service.encryptForItem('item-a', plaintext);
 
-      // Attempting to decrypt with a different item ID uses a different key
-      final result =
-          await service.decryptForItem('item-b', encrypted);
-
-      expect(result, isNull);
+      // Attempting to decrypt with a different item ID uses a different key,
+      // causing AEAD authentication failure.
+      expect(
+        () => service.decryptForItem('item-b', encrypted),
+        throwsA(isA<DecryptionException>()),
+      );
     });
 
-    test('decrypting tampered ciphertext returns null', () async {
+    test('decrypting tampered ciphertext throws DecryptionException', () async {
       injectEncryptKey(service, testEncryptKey);
       const itemId = 'note-tamper';
       const plaintext = 'original content';
 
-      final encrypted =
-          await service.encryptForItem(itemId, plaintext);
+      final encrypted = await service.encryptForItem(itemId, plaintext);
 
-      // Tamper with the base64 string
+      // Tamper with the base64 string to corrupt the AEAD tag.
       final tampered = _flipBase64Char(encrypted);
-      final result = await service.decryptForItem(itemId, tampered);
-
-      expect(result, isNull);
+      expect(
+        () => service.decryptForItem(itemId, tampered),
+        throwsA(isA<DecryptionException>()),
+      );
     });
   });
 
@@ -121,40 +120,40 @@ void main() {
       final data = Uint8List.fromList(List.generate(256, (i) => i));
 
       final encrypted = await service.encryptBlobForItem(itemId, data);
-      final decrypted =
-          await service.decryptBlobForItem(itemId, encrypted);
+      final decrypted = await service.decryptBlobForItem(itemId, encrypted);
 
       expect(decrypted, equals(data));
     });
 
-    test('blob with wrong item ID returns null', () async {
+    test('blob with wrong item ID throws DecryptionException', () async {
       injectEncryptKey(service, testEncryptKey);
       final data = Uint8List.fromList([1, 2, 3, 4, 5]);
 
-      final encrypted =
-          await service.encryptBlobForItem('blob-a', data);
-      final result =
-          await service.decryptBlobForItem('blob-b', encrypted);
+      final encrypted = await service.encryptBlobForItem('blob-a', data);
 
-      expect(result, isNull);
+      // Decrypting with a different item ID produces the wrong key,
+      // causing AEAD authentication failure.
+      expect(
+        () => service.decryptBlobForItem('blob-b', encrypted),
+        throwsA(isA<DecryptionException>()),
+      );
     });
 
-    test('blob with tampered data returns null', () async {
+    test('blob with tampered data throws DecryptionException', () async {
       injectEncryptKey(service, testEncryptKey);
       const itemId = 'blob-tamper';
       final data = Uint8List.fromList([10, 20, 30]);
 
-      final encrypted =
-          await service.encryptBlobForItem(itemId, data);
+      final encrypted = await service.encryptBlobForItem(itemId, data);
 
-      // Tamper with the encrypted data
+      // Tamper with the encrypted data to corrupt the AEAD tag.
       final tampered = Uint8List.fromList(encrypted);
       tampered[tampered.length - 1] ^= 0xFF;
 
-      final result =
-          await service.decryptBlobForItem(itemId, tampered);
-
-      expect(result, isNull);
+      expect(
+        () => service.decryptBlobForItem(itemId, tampered),
+        throwsA(isA<DecryptionException>()),
+      );
     });
   });
 
@@ -163,8 +162,7 @@ void main() {
       // Service is freshly created -- no key injected, locked by default
       expect(service.isUnlocked, isFalse);
 
-      final result =
-          await service.decryptForItem('any-item', 'any-encrypted');
+      final result = await service.decryptForItem('any-item', 'any-encrypted');
 
       expect(result, isNull);
     });
