@@ -2,6 +2,7 @@ package handler
 
 import (
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
@@ -103,10 +104,11 @@ func (h *ShareHandler) GetShare(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Hash the provided password and compare with stored hash.
+		// Hash the provided password and compare with stored hash using
+		// constant-time comparison to prevent timing side-channel attacks.
 		hash := sha256.Sum256([]byte(providedPassword))
 		providedHash := hex.EncodeToString(hash[:])
-		if providedHash != resp.ShareKeyHash {
+		if subtle.ConstantTimeCompare([]byte(providedHash), []byte(resp.ShareKeyHash)) != 1 {
 			writeError(w, r, http.StatusForbidden, "wrong_password", "Incorrect password")
 			return
 		}

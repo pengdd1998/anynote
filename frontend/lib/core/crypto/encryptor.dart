@@ -1,7 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
-
 import 'encryptor_native.dart' if (dart.library.js) 'encryptor_web.dart';
 
 /// AEAD encryptor for E2E encryption.
@@ -24,7 +22,6 @@ class Encryptor {
   /// [itemKey] - Per-item key (32 bytes) derived via derivePerItemKey()
   ///
   /// Returns base64-encoded string: nonce/iv || ciphertext + tag.
-  @visibleForTesting
   static Future<String> encrypt(String plaintext, Uint8List itemKey) {
     return encryptImpl(plaintext, itemKey);
   }
@@ -36,7 +33,6 @@ class Encryptor {
   ///
   /// Returns decrypted plaintext string.
   /// Throws on tag verification failure (tampered or wrong key).
-  @visibleForTesting
   static Future<String> decrypt(
     String encryptedBase64,
     Uint8List itemKey,
@@ -45,14 +41,12 @@ class Encryptor {
   }
 
   /// Encrypt binary data (for blob sync).
-  @visibleForTesting
   static Future<Uint8List> encryptBlob(Uint8List data, Uint8List itemKey) {
     return encryptBlobImpl(data, itemKey);
   }
 
   /// Decrypt binary data (from blob sync).
   /// Throws on tag verification failure.
-  @visibleForTesting
   static Future<Uint8List> decryptBlob(
     Uint8List encrypted,
     Uint8List itemKey,
@@ -65,7 +59,6 @@ class Encryptor {
   /// [encryptKey] - The master encrypt key (32 bytes)
   /// [itemId] - Unique item identifier (note UUID, tag UUID, etc.)
   /// Returns a 32-byte derived key unique to this item.
-  @visibleForTesting
   static Future<Uint8List> derivePerItemKey(
     Uint8List encryptKey,
     String itemId,

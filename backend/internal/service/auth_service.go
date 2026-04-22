@@ -166,7 +166,7 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (*doma
 func (s *authService) RefreshToken(ctx context.Context, refreshToken string) (*domain.AuthResponse, error) {
 	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
 		return []byte(s.jwtSecret), nil
-	})
+	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil || !token.Valid {
 		return nil, ErrInvalidCredentials
 	}
@@ -320,7 +320,7 @@ func (s *authService) generateToken(user *domain.User, now time.Time, expiry tim
 func (s *authService) extractJTI(tokenStr string) string {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return []byte(s.jwtSecret), nil
-	})
+	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil {
 		return ""
 	}

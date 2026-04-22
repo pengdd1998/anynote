@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -37,7 +37,6 @@ class KeyStorage {
   }
 
   /// Retrieve the master key. Returns null if not stored.
-  @visibleForTesting
   static Future<Uint8List?> loadMasterKey() async {
     final value = await _read(_keyMasterKey);
     return value != null ? _decode(value) : null;
@@ -55,7 +54,6 @@ class KeyStorage {
   }
 
   /// Retrieve the encryption key.
-  @visibleForTesting
   static Future<Uint8List?> loadEncryptKey() async {
     final value = await _read(_keyEncryptKey);
     return value != null ? _decode(value) : null;
@@ -73,7 +71,6 @@ class KeyStorage {
   }
 
   /// Retrieve the salt.
-  @visibleForTesting
   static Future<Uint8List?> loadSalt() async {
     final value = await _read(_keySalt);
     return value != null ? _decode(value) : null;
@@ -93,7 +90,6 @@ class KeyStorage {
   }
 
   /// Retrieve encrypted recovery key.
-  @visibleForTesting
   static Future<String?> loadRecoveryKey() async {
     return _read(_keyRecoveryKey);
   }

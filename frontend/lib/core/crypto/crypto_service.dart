@@ -1,8 +1,7 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'decryption_exception.dart';
 import 'encryptor.dart';
 import 'key_storage.dart';
 import 'master_key.dart';
@@ -207,8 +206,14 @@ class CryptoService {
     try {
       final itemKey = await _getOrDeriveItemKey(itemId);
       return await Encryptor.decrypt(encrypted, itemKey);
-    } catch (_) {
+    } on StateError {
+      // CryptoService is locked — no encrypt key available.
       return null;
+    } catch (e) {
+      throw DecryptionException(
+        'AEAD decryption failed for item $itemId',
+        cause: e,
+      );
     }
   }
 
@@ -226,8 +231,14 @@ class CryptoService {
     try {
       final itemKey = await _getOrDeriveItemKey(itemId);
       return await Encryptor.decryptBlob(encrypted, itemKey);
-    } catch (_) {
+    } on StateError {
+      // CryptoService is locked — no encrypt key available.
       return null;
+    } catch (e) {
+      throw DecryptionException(
+        'AEAD blob decryption failed for item $itemId',
+        cause: e,
+      );
     }
   }
 }

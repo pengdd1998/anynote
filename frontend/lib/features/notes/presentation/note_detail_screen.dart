@@ -6,6 +6,7 @@ import '../../../core/accessibility/a11y_utils.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/crypto/decryption_exception.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/export/export_service.dart';
@@ -61,44 +62,44 @@ class NoteDetailScreen extends ConsumerWidget {
           A11yUtils.labeledButton(
             label: l10n.exportOrShare,
             child: PopupMenuButton<String>(
-            icon: const Icon(Icons.share_outlined),
-            tooltip: l10n.exportOrShare,
-            onSelected: (value) => _onExportSelected(context, ref, value),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'share_link',
-                child: ListTile(
-                  leading: const Icon(Icons.link),
-                  title: Text(l10n.shareViaLink),
-                  contentPadding: EdgeInsets.zero,
+              icon: const Icon(Icons.share_outlined),
+              tooltip: l10n.exportOrShare,
+              onSelected: (value) => _onExportSelected(context, ref, value),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'share_link',
+                  child: ListTile(
+                    leading: const Icon(Icons.link),
+                    title: Text(l10n.shareViaLink),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'markdown',
-                child: ListTile(
-                  leading: const Icon(Icons.description_outlined),
-                  title: Text(l10n.exportAsMarkdown),
-                  contentPadding: EdgeInsets.zero,
+                PopupMenuItem(
+                  value: 'markdown',
+                  child: ListTile(
+                    leading: const Icon(Icons.description_outlined),
+                    title: Text(l10n.exportAsMarkdown),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'html',
-                child: ListTile(
-                  leading: const Icon(Icons.code),
-                  title: Text(l10n.exportAsHTML),
-                  contentPadding: EdgeInsets.zero,
+                PopupMenuItem(
+                  value: 'html',
+                  child: ListTile(
+                    leading: const Icon(Icons.code),
+                    title: Text(l10n.exportAsHTML),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'plaintext',
-                child: ListTile(
-                  leading: const Icon(Icons.text_snippet_outlined),
-                  title: Text(l10n.exportAsPlainText),
-                  contentPadding: EdgeInsets.zero,
+                PopupMenuItem(
+                  value: 'plaintext',
+                  child: ListTile(
+                    leading: const Icon(Icons.text_snippet_outlined),
+                    title: Text(l10n.exportAsPlainText),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         ],
       ),
@@ -117,7 +118,8 @@ class NoteDetailScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(ErrorDisplay.errorIcon(appError), size: 48, color: Colors.red.shade300),
+                    Icon(ErrorDisplay.errorIcon(appError),
+                        size: 48, color: Colors.red.shade300),
                     const SizedBox(height: 16),
                     Text(
                       l10n.failedToLoadNote,
@@ -127,7 +129,8 @@ class NoteDetailScreen extends ConsumerWidget {
                     Text(
                       ErrorDisplay.userMessage(appError, l10n),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 13),
                     ),
                     const SizedBox(height: 16),
                     FilledButton.tonal(
@@ -154,33 +157,42 @@ class NoteDetailScreen extends ConsumerWidget {
                   label: l10n.noteTitleLabel(data.title),
                   header: true,
                   child: Text(
-                  data.title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                    data.title,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Semantics(
-                  label: '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))}${data.isSynced ? '' : ', ${l10n.notSynced}'}',
+                  label:
+                      '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))}${data.isSynced ? '' : ', ${l10n.notSynced}'}',
                   child: Row(
-                  children: [
-                    Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
-                    const SizedBox(width: 4),
-                    Text(
-                      l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16)),
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                    ),
-                    if (!data.isSynced) ...[
-                      const SizedBox(width: 12),
-                      Icon(Icons.cloud_off, size: 14, color: Colors.orange.shade300),
+                    children: [
+                      Icon(Icons.access_time,
+                          size: 14, color: Colors.grey.shade500),
                       const SizedBox(width: 4),
-                      Text(l10n.notSynced,
-                          style:
-                              TextStyle(fontSize: 12, color: Colors.orange.shade300),),
+                      Text(
+                        l10n.updatedDate(data.updatedAt
+                            .toLocal()
+                            .toString()
+                            .substring(0, 16)),
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade500),
+                      ),
+                      if (!data.isSynced) ...[
+                        const SizedBox(width: 12),
+                        Icon(Icons.cloud_off,
+                            size: 14, color: Colors.orange.shade300),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.notSynced,
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.orange.shade300),
+                        ),
+                      ],
                     ],
-                  ],
                   ),
                 ),
                 const Divider(height: 32),
@@ -215,18 +227,22 @@ class NoteDetailScreen extends ConsumerWidget {
     // if the plain cache was cleared or the note arrived from sync without
     // populated plain fields.
     if (crypto.isUnlocked) {
-      final decryptedContent =
-          await crypto.decryptForItem(noteId, note.encryptedContent);
-      if (decryptedContent != null) {
-        content = decryptedContent;
-      }
-
-      if (note.encryptedTitle != null) {
-        final decryptedTitle =
-            await crypto.decryptForItem(noteId, note.encryptedTitle!);
-        if (decryptedTitle != null) {
-          title = decryptedTitle;
+      try {
+        final decryptedContent =
+            await crypto.decryptForItem(noteId, note.encryptedContent);
+        if (decryptedContent != null) {
+          content = decryptedContent;
         }
+
+        if (note.encryptedTitle != null) {
+          final decryptedTitle =
+              await crypto.decryptForItem(noteId, note.encryptedTitle!);
+          if (decryptedTitle != null) {
+            title = decryptedTitle;
+          }
+        }
+      } on DecryptionException {
+        // Fall back to plain cache values (already set above)
       }
     }
 
@@ -327,23 +343,24 @@ class NoteDetailScreen extends ConsumerWidget {
       builder: (ctx) => Semantics(
         label: l10n.confirmDeleteNoteDialog,
         child: AlertDialog(
-        title: Text(l10n.deleteNoteDialog),
-        content: Text(l10n.deleteNoteDialogMessage),
-        actions: [
-          TextButton(
+          title: Text(l10n.deleteNoteDialog),
+          content: Text(l10n.deleteNoteDialogMessage),
+          actions: [
+            TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel),),
-          FilledButton(
-            onPressed: () async {
-              await db.notesDao.softDeleteNote(noteId);
-              if (context.mounted) {
-                Navigator.pop(ctx);
-                context.pop();
-              }
-            },
-            child: Text(l10n.delete),
-          ),
-        ],
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                await db.notesDao.softDeleteNote(noteId);
+                if (context.mounted) {
+                  Navigator.pop(ctx);
+                  context.pop();
+                }
+              },
+              child: Text(l10n.delete),
+            ),
+          ],
         ),
       ),
     );
