@@ -22,7 +22,10 @@ Output JSON:
   }
 
   /// Stage 2: Generate outline from clusters.
-  String buildOutlinePrompt(List<Map<String, dynamic>> clusters, String platform) {
+  String buildOutlinePrompt(
+    List<Map<String, dynamic>> clusters,
+    String platform,
+  ) {
     return '''Based on these note clusters, create a detailed outline for a $platform post.
 
 Clusters:
@@ -42,7 +45,10 @@ Output JSON:
   }
 
   /// Stage 3: Expand outline into full content.
-  String buildExpandPrompt(Map<String, dynamic> outline, List<String> sourceNotes) {
+  String buildExpandPrompt(
+    Map<String, dynamic> outline,
+    List<String> sourceNotes,
+  ) {
     final sections = (outline['sections'] as List?) ?? [];
     return '''Write a detailed, engaging post based on this outline.
 
@@ -67,5 +73,15 @@ Content:
 $content
 
 Output the adapted content directly.''';
+  }
+
+  /// Truncate [text] to [maxChars], appending a truncation marker if needed.
+  /// Returns the original text unchanged when it fits within the limit.
+  static String truncateToLimit(String text, int maxChars) {
+    if (text.length <= maxChars) return text;
+    const truncationSuffix = '... (truncated)';
+    final cutOff = maxChars - truncationSuffix.length;
+    if (cutOff <= 0) return truncationSuffix;
+    return '${text.substring(0, cutOff)}$truncationSuffix';
   }
 }

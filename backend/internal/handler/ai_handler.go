@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -13,6 +14,11 @@ import (
 )
 
 const maxChatMessageContent = 100_000 // 100 KB per message
+
+// maxChunkSize is the maximum allowed size for a single SSE chunk content.
+// Chunks exceeding this limit are truncated to protect clients from oversized
+// payloads from misbehaving LLM providers.
+const maxChunkSize = 1 * 1024 * 1024 // 1 MB
 
 type AIHandler struct {
 	aiService service.AIProxyService
@@ -47,6 +53,16 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate that each message has a recognized role.
+	validRoles := map[string]bool{"system": true, "user": true, "assistant": true}
+	for i, msg := range req.Messages {
+		if !validRoles[msg.Role] {
+			writeError(w, r, http.StatusBadRequest, "validation_error",
+				fmt.Sprintf("Message %d has invalid role %q; valid roles: system, user, assistant", i+1, msg.Role))
+			return
+		}
+	}
+
 	// Cap individual message content length.
 	for i, msg := range req.Messages {
 		if len(msg.Content) > maxChatMessageContent {
@@ -67,6 +83,7 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 	chunkCh, err := h.aiService.Proxy(r.Context(), userID.String(), req)
 	if err != nil {
 		if err == service.ErrQuotaExceeded {
+			IncAIProxyRequest("unknown", "shared", "error")
 			writeJSON(w, http.StatusTooManyRequests, domain.QuotaExceededResponse{
 				Error:         "quota_exceeded",
 				RetryAfter:    30,
@@ -74,15 +91,19 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
+		IncAIProxyRequest("unknown", "shared", "error")
 		writeError(w, r, http.StatusInternalServerError, "ai_error", "AI proxy failed")
 		return
 	}
 
 	if req.Stream {
+		IncAIActiveStreams()
 		h.handleStream(w, r, chunkCh)
+		DecAIActiveStreams()
 	} else {
 		h.handleNonStream(w, r, chunkCh)
 	}
+	IncAIProxyRequest("unknown", "shared", "success")
 }
 
 func (h *AIHandler) handleStream(w http.ResponseWriter, r *http.Request, chunkCh <-chan domain.StreamChunk) {
@@ -97,29 +118,47 @@ func (h *AIHandler) handleStream(w http.ResponseWriter, r *http.Request, chunkCh
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no")
 
-	for chunk := range chunkCh {
-		if chunk.Error != "" {
-			errorPayload, _ := json.Marshal(map[string]string{"error": chunk.Error})
-			fmt.Fprintf(w, "event: error\ndata: %s\n\n", errorPayload)
+	for {
+		select {
+		case <-r.Context().Done():
+			// Client disconnected; stop writing immediately.
+			return
+		case chunk, ok := <-chunkCh:
+			if !ok {
+				// Stream ended without Done marker
+				fmt.Fprintf(w, "data: {\"done\":true}\n\n")
+				flusher.Flush()
+				return
+			}
+			if chunk.Error != "" {
+				errorPayload, _ := json.Marshal(map[string]string{"error": chunk.Error})
+				fmt.Fprintf(w, "event: error\ndata: %s\n\n", errorPayload)
+				flusher.Flush()
+				return
+			}
+
+			// Truncate oversized chunks before writing to SSE.
+			content := chunk.Content
+			if len(content) > maxChunkSize {
+				slog.Warn("SSE chunk truncated: exceeds maxChunkSize",
+					"original_size", len(content),
+					"max_size", maxChunkSize,
+				)
+				content = content[:maxChunkSize]
+			}
+
+			data, _ := json.Marshal(map[string]interface{}{
+				"content": content,
+				"done":    chunk.Done,
+			})
+			fmt.Fprintf(w, "data: %s\n\n", data)
 			flusher.Flush()
-			return
-		}
 
-		data, _ := json.Marshal(map[string]interface{}{
-			"content": chunk.Content,
-			"done":    chunk.Done,
-		})
-		fmt.Fprintf(w, "data: %s\n\n", data)
-		flusher.Flush()
-
-		if chunk.Done {
-			return
+			if chunk.Done {
+				return
+			}
 		}
 	}
-
-	// Stream ended without Done marker
-	fmt.Fprintf(w, "data: {\"done\":true}\n\n")
-	flusher.Flush()
 }
 
 func (h *AIHandler) handleNonStream(w http.ResponseWriter, r *http.Request, chunkCh <-chan domain.StreamChunk) {

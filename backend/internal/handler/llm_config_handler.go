@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/anynote/backend/internal/domain"
@@ -52,6 +53,12 @@ func (h *LLMConfigHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !isValidProvider(h.llmService.ListProviders(), cfg.Provider) {
+		writeError(w, r, http.StatusBadRequest, "validation_error",
+			fmt.Sprintf("invalid provider %q; valid providers: %v", cfg.Provider, h.llmService.ListProviders()))
+		return
+	}
+
 	result, err := h.llmService.Create(r.Context(), userID, cfg)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "create_error", "Failed to create config")
@@ -89,6 +96,13 @@ func (h *LLMConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cfg.ID = parsedID
+
+	if cfg.Provider != "" && !isValidProvider(h.llmService.ListProviders(), cfg.Provider) {
+		writeError(w, r, http.StatusBadRequest, "validation_error",
+			fmt.Sprintf("invalid provider %q; valid providers: %v", cfg.Provider, h.llmService.ListProviders()))
+		return
+	}
+
 	result, err := h.llmService.Update(r.Context(), userID, cfg)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "update_error", "Failed to update config")
@@ -160,4 +174,14 @@ func (h *LLMConfigHandler) TestConnection(w http.ResponseWriter, r *http.Request
 
 func (h *LLMConfigHandler) ListProviders(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, h.llmService.ListProviders())
+}
+
+// isValidProvider checks that the given provider name is in the known list.
+func isValidProvider(valid []string, provider string) bool {
+	for _, p := range valid {
+		if p == provider {
+			return true
+		}
+	}
+	return false
 }

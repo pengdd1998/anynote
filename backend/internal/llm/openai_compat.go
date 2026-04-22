@@ -18,7 +18,25 @@ import (
 
 // OpenAICompatProvider implements Provider for OpenAI-compatible APIs.
 // Covers: OpenAI, DeepSeek, Qwen, and any OpenAI-compatible endpoint.
-type OpenAICompatProvider struct{}
+type OpenAICompatProvider struct {
+	httpClient *http.Client
+}
+
+// NewOpenAICompatProvider creates an OpenAICompatProvider with a shared HTTP
+// client. If client is nil a default client is created with connection pooling
+// tuned for backend-to-API traffic.
+func NewOpenAICompatProvider(client *http.Client) *OpenAICompatProvider {
+	if client == nil {
+		client = &http.Client{
+			Transport: &http.Transport{
+				MaxIdleConns:        100,
+				MaxIdleConnsPerHost: 20,
+				IdleConnTimeout:     90 * time.Second,
+			},
+		}
+	}
+	return &OpenAICompatProvider{httpClient: client}
+}
 
 func (p *OpenAICompatProvider) Name() string { return "openai_compat" }
 
@@ -32,24 +50,32 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
+	// Use context timeout instead of client-level Timeout so the shared
+	// transport pool is not disrupted. The derived context is handed off to
+	// the background goroutine below, so cancel must NOT be deferred here --
+	// it must be called only after the goroutine finishes reading.
+	streamCtx, cancel := context.WithTimeout(ctx, 120*time.Second)
+
 	url := strings.TrimRight(baseURL, "/") + "/chat/completions"
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	httpReq, err := http.NewRequestWithContext(streamCtx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
+		cancel()
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+apiKey)
 
-	client := &http.Client{Timeout: 120 * time.Second}
-	resp, err := client.Do(httpReq)
+	resp, err := p.httpClient.Do(httpReq)
 	if err != nil {
+		cancel()
 		return nil, fmt.Errorf("send request: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
+		cancel()
 		return nil, fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
@@ -58,11 +84,19 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 	go func() {
 		defer close(ch)
 		defer resp.Body.Close()
+		defer cancel()
 
 		scanner := bufio.NewScanner(resp.Body)
 		scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 
 		for scanner.Scan() {
+			// Stop reading if the caller cancelled the context.
+			select {
+			case <-streamCtx.Done():
+				return
+			default:
+			}
+
 			line := scanner.Text()
 
 			if !strings.HasPrefix(line, "data: ") {
@@ -93,7 +127,13 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 		}
 
 		if err := scanner.Err(); err != nil {
-			ch <- domain.StreamChunk{Error: err.Error()}
+			// Only report scanner errors if the context is still active.
+			select {
+			case <-streamCtx.Done():
+				// Context cancelled; scanner error is expected.
+			default:
+				ch <- domain.StreamChunk{Error: err.Error()}
+			}
 		}
 	}()
 
@@ -112,6 +152,11 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 
 	maxRetries := req.MaxRetries
 	retryBaseDelay := req.RetryBaseDelay
+
+	// Use context timeout instead of client-level Timeout so the shared
+	// transport pool is not disrupted.
+	ctx, cancel := context.WithTimeout(ctx, 120*time.Second)
+	defer cancel()
 
 	var lastErr error
 	for attempt := 0; attempt <= maxRetries; attempt++ {
@@ -136,8 +181,7 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 		httpReq.Header.Set("Content-Type", "application/json")
 		httpReq.Header.Set("Authorization", "Bearer "+apiKey)
 
-		client := &http.Client{Timeout: 120 * time.Second}
-		resp, err := client.Do(httpReq)
+		resp, err := p.httpClient.Do(httpReq)
 		if err != nil {
 			lastErr = fmt.Errorf("send request: %w", err)
 			// Network errors are retriable
@@ -196,6 +240,11 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 		return &ChatResponse{
 			Content: chatResp.Choices[0].Message.Content,
 			Model:   chatResp.Model,
+			Usage: Usage{
+				PromptTokens:     chatResp.Usage.PromptTokens,
+				CompletionTokens: chatResp.Usage.CompletionTokens,
+				TotalTokens:      chatResp.Usage.TotalTokens,
+			},
 		}, nil
 	}
 

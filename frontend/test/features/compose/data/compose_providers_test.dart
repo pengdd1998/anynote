@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +17,8 @@ import 'package:anynote/features/compose/data/ai_repository.dart';
 import 'package:anynote/features/compose/data/compose_providers.dart';
 import 'package:anynote/features/compose/domain/cluster_model.dart';
 import 'package:anynote/features/compose/domain/outline_model.dart';
+import 'package:anynote/features/compose/domain/prompt_builder.dart';
+import 'package:anynote/features/compose/domain/response_parser.dart';
 import 'package:anynote/main.dart';
 
 // ---------------------------------------------------------------------------
@@ -34,14 +37,22 @@ class FakeAIRepository extends AIRepository {
   FakeAIRepository() : super(_FakeApiClient());
 
   @override
-  Future<String> chat(List<ChatMessage> messages, {String? model}) async {
+  Future<String> chat(
+    List<ChatMessage> messages, {
+    String? model,
+    CancelToken? cancelToken,
+  }) async {
     chatCalls.add(messages);
     if (chatResponse != null) return chatResponse!;
     return '{}';
   }
 
   @override
-  Stream<String> chatStream(List<ChatMessage> messages, {String? model}) {
+  Stream<String> chatStream(
+    List<ChatMessage> messages, {
+    String? model,
+    CancelToken? cancelToken,
+  }) {
     chatStreamCalls.add(messages);
     if (chatStreamResponse != null) return chatStreamResponse!;
     return Stream.fromIterable(['chunk1', 'chunk2']);
@@ -221,6 +232,121 @@ void main() {
       expect(state1.stage, state2.stage);
       expect(state1.isLoading, state2.isLoading);
     });
+
+    test('totalContentChars returns sum of all note content lengths', () {
+      const state = ComposeSessionState(
+        sessionId: 's1',
+        noteContents: {'n1': 'hello', 'n2': 'world!'},
+      );
+      // 'hello' = 5, 'world!' = 6 => total = 11
+      expect(state.totalContentChars, 11);
+    });
+
+    test('totalContentChars returns 0 when no notes selected', () {
+      const state = ComposeSessionState(sessionId: 's1');
+      expect(state.totalContentChars, 0);
+    });
+  });
+
+  // ===========================================================================
+  // Content Limits
+  // ===========================================================================
+
+  group('Content limits', () {
+    test('maxSelectedNotes is 10', () {
+      expect(maxSelectedNotes, 10);
+    });
+
+    test('maxTotalContentChars is 100000', () {
+      expect(maxTotalContentChars, 100000);
+    });
+
+    test('toggleNoteSelection rejects note when at max capacity', () {
+      final container = ProviderContainer(
+        overrides: [
+          aiRepositoryProvider.overrideWithValue(FakeAIRepository()),
+          databaseProvider.overrideWithValue(_createTestDb()),
+          cryptoServiceProvider.overrideWithValue(_FakeCryptoService()),
+        ],
+      );
+      addTearDown(() async {
+        await container.read(databaseProvider).close();
+        container.dispose();
+      });
+
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      // Add maxSelectedNotes notes.
+      for (var i = 0; i < maxSelectedNotes; i++) {
+        notifier.toggleNoteSelection('note-$i', 'content $i');
+      }
+
+      // Adding one more should fail with an error.
+      notifier.toggleNoteSelection('note-extra', 'extra content');
+
+      final state = container.read(composeSessionProvider);
+      expect(state.selectedNoteIds.length, maxSelectedNotes);
+      expect(state.error, contains('at most $maxSelectedNotes notes'));
+    });
+
+    test('toggleNoteSelection allows deselecting when at max', () {
+      final container = ProviderContainer(
+        overrides: [
+          aiRepositoryProvider.overrideWithValue(FakeAIRepository()),
+          databaseProvider.overrideWithValue(_createTestDb()),
+          cryptoServiceProvider.overrideWithValue(_FakeCryptoService()),
+        ],
+      );
+      addTearDown(() async {
+        await container.read(databaseProvider).close();
+        container.dispose();
+      });
+
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      // Add maxSelectedNotes notes.
+      for (var i = 0; i < maxSelectedNotes; i++) {
+        notifier.toggleNoteSelection('note-$i', 'content $i');
+      }
+
+      // Deselect one.
+      notifier.toggleNoteSelection('note-0', 'content 0');
+
+      final state = container.read(composeSessionProvider);
+      expect(state.selectedNoteIds.length, maxSelectedNotes - 1);
+      // No error -- deselect should work fine.
+      expect(state.error, isNull);
+    });
+
+    test('generateClusters rejects when content exceeds limit', () async {
+      final fakeAiRepo = FakeAIRepository();
+      final container = ProviderContainer(
+        overrides: [
+          aiRepositoryProvider.overrideWithValue(fakeAiRepo),
+          databaseProvider.overrideWithValue(_createTestDb()),
+          cryptoServiceProvider.overrideWithValue(_FakeCryptoService()),
+        ],
+      );
+      addTearDown(() async {
+        await container.read(databaseProvider).close();
+        container.dispose();
+      });
+
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      // Add a note with content exceeding the limit.
+      final hugeContent = 'A' * (maxTotalContentChars + 1);
+      notifier.toggleNoteSelection('n1', hugeContent);
+      notifier.setTopic('test topic');
+
+      await notifier.generateClusters();
+
+      // Should not have called the AI repo.
+      expect(fakeAiRepo.chatCalls, isEmpty);
+
+      final state = container.read(composeSessionProvider);
+      expect(state.error, contains('exceeds'));
+    });
   });
 
   // ===========================================================================
@@ -253,8 +379,7 @@ void main() {
     // -- Note selection -----------------------------------------------------
 
     test('toggleNoteSelection adds a note', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('note-1', 'content of note 1');
 
@@ -264,8 +389,7 @@ void main() {
     });
 
     test('toggleNoteSelection removes an already-selected note', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('note-1', 'content 1');
       notifier.toggleNoteSelection('note-1', 'content 1');
@@ -276,8 +400,7 @@ void main() {
     });
 
     test('toggleNoteSelection supports multiple notes', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('n1', 'c1');
       notifier.toggleNoteSelection('n2', 'c2');
@@ -291,8 +414,7 @@ void main() {
     // -- Topic --------------------------------------------------------------
 
     test('setTopic updates the topic', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.setTopic('My Composition Topic');
 
@@ -303,8 +425,7 @@ void main() {
     // -- Platform style -----------------------------------------------------
 
     test('setPlatformStyle updates the platform style', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.setPlatformStyle('xhs');
 
@@ -315,8 +436,7 @@ void main() {
     // -- Generate clusters --------------------------------------------------
 
     test('generateClusters does nothing when no notes selected', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.setTopic('topic');
       await notifier.generateClusters();
@@ -325,8 +445,7 @@ void main() {
     });
 
     test('generateClusters does nothing when topic is empty', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('n1', 'content');
       await notifier.generateClusters();
@@ -335,8 +454,7 @@ void main() {
     });
 
     test('generateClusters sets error on invalid JSON response', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('n1', 'content');
       notifier.setTopic('my topic');
@@ -348,12 +466,10 @@ void main() {
       final state = container.read(composeSessionProvider);
       expect(state.isLoading, isFalse);
       expect(state.error, isNotNull);
-      expect(state.error, contains('Failed to generate clusters'));
     });
 
     test('generateClusters succeeds with valid JSON', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('n1', 'content');
       notifier.setTopic('my topic');
@@ -383,8 +499,7 @@ void main() {
     });
 
     test('generateClusters selects all clusters by default', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('n1', 'c1');
       notifier.toggleNoteSelection('n2', 'c2');
@@ -399,8 +514,7 @@ void main() {
     });
 
     test('generateClusters sets loading state during operation', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('n1', 'content');
       notifier.setTopic('my topic');
@@ -421,8 +535,7 @@ void main() {
     // -- Cluster selection --------------------------------------------------
 
     test('toggleClusterSelection adds an index', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         stage: ComposeStage.cluster,
@@ -442,8 +555,7 @@ void main() {
     });
 
     test('toggleClusterSelection removes an index', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         stage: ComposeStage.cluster,
@@ -463,8 +575,7 @@ void main() {
     // -- Generate outline ---------------------------------------------------
 
     test('generateOutline does nothing when no clusters selected', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         stage: ComposeStage.cluster,
@@ -477,8 +588,7 @@ void main() {
     });
 
     test('generateOutline sets error on failure', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         stage: ComposeStage.cluster,
@@ -494,13 +604,12 @@ void main() {
       await notifier.generateOutline();
 
       final state = container.read(composeSessionProvider);
-      expect(state.error, contains('Failed to generate outline'));
+      expect(state.error, isNotNull);
       expect(state.isLoading, isFalse);
     });
 
     test('generateOutline succeeds with valid response', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         stage: ComposeStage.cluster,
@@ -523,8 +632,7 @@ void main() {
     });
 
     test('generateOutline parses sections correctly', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         stage: ComposeStage.cluster,
@@ -554,8 +662,7 @@ void main() {
     // -- Update outline -----------------------------------------------------
 
     test('updateOutline replaces the outline', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       final outline = OutlineModel(
         title: 'Updated',
@@ -574,8 +681,7 @@ void main() {
     // -- Reorder section ----------------------------------------------------
 
     test('reorderSection moves sections', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         outline: OutlineModel(
@@ -598,8 +704,7 @@ void main() {
     });
 
     test('reorderSection does nothing when outline is null', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       // outline is null by default -- should not throw.
       notifier.reorderSection(0, 1);
@@ -611,8 +716,7 @@ void main() {
     // -- Update draft -------------------------------------------------------
 
     test('updateDraft sets the draft text', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.updateDraft('This is the draft content');
 
@@ -623,11 +727,9 @@ void main() {
     // -- Clear error --------------------------------------------------------
 
     test('clearError removes the error', () {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
-      notifier.state =
-          notifier.state.copyWith(error: 'Something went wrong');
+      notifier.state = notifier.state.copyWith(error: 'Something went wrong');
 
       notifier.clearError();
 
@@ -638,8 +740,7 @@ void main() {
     // -- Extract JSON helper (tested indirectly via chat responses) ---------
 
     test('handles JSON in markdown fences', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('n1', 'c1');
       notifier.setTopic('t');
@@ -656,8 +757,7 @@ void main() {
     });
 
     test('handles raw JSON without fences', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.toggleNoteSelection('n1', 'c1');
       notifier.setTopic('t');
@@ -675,8 +775,7 @@ void main() {
     // -- Save draft as note -------------------------------------------------
 
     test('saveDraftAsNote returns null when draft is empty', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       final result = await notifier.saveDraftAsNote();
 
@@ -684,8 +783,7 @@ void main() {
     });
 
     test('saveDraftAsNote returns a note ID on success', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         draft: 'This is a draft.',
@@ -706,8 +804,7 @@ void main() {
 
     test('saveDraftAsNote falls back to AI Composition title when no outline',
         () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         draft: 'Draft without outline.',
@@ -723,8 +820,7 @@ void main() {
     // -- Expand to draft ----------------------------------------------------
 
     test('expandToDraft does nothing when outline is null', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       await notifier.expandToDraft();
 
@@ -732,8 +828,7 @@ void main() {
     });
 
     test('expandToDraft sets stage to editor', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         outline: OutlineModel(title: 'Test', sections: []),
@@ -751,8 +846,7 @@ void main() {
     });
 
     test('expandToDraft accumulates streaming chunks', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         outline: OutlineModel(title: 'Test', sections: []),
@@ -769,8 +863,7 @@ void main() {
     });
 
     test('expandToDraft sets error on stream failure', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         outline: OutlineModel(title: 'Test', sections: []),
@@ -782,15 +875,14 @@ void main() {
       await notifier.expandToDraft();
 
       final state = container.read(composeSessionProvider);
-      expect(state.error, contains('Failed to generate draft'));
+      expect(state.error, isNotNull);
       expect(state.isLoading, isFalse);
     });
 
     // -- Adapt style --------------------------------------------------------
 
     test('adaptStyle does nothing when draft is empty', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       await notifier.adaptStyle();
 
@@ -798,8 +890,7 @@ void main() {
     });
 
     test('adaptStyle streams adapted content', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
         draft: 'Original content',
@@ -817,19 +908,89 @@ void main() {
     });
 
     test('adaptStyle sets error on failure', () async {
-      final notifier =
-          container.read(composeSessionProvider.notifier);
+      final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(draft: 'content');
 
-      fakeAiRepo.chatStreamResponse =
-          Stream.error(Exception('stream failed'));
+      fakeAiRepo.chatStreamResponse = Stream.error(Exception('stream failed'));
 
       await notifier.adaptStyle();
 
       final state = container.read(composeSessionProvider);
-      expect(state.error, contains('Style adaptation failed'));
+      expect(state.error, isNotNull);
       expect(state.isLoading, isFalse);
+    });
+
+    // -- Cancel token -------------------------------------------------------
+
+    test('cancel does not throw when no active token', () {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      // Should not throw.
+      notifier.cancel();
+    });
+  });
+
+  // ===========================================================================
+  // ResponseParser
+  // ===========================================================================
+
+  group('ResponseParser', () {
+    test('extracts JSON from markdown fences', () {
+      const response =
+          'Here is the result:\n```json\n{"key": "value"}\n```\nDone.';
+      expect(ResponseParser.extractJson(response), '{"key": "value"}');
+    });
+
+    test('extracts JSON from code fences without language tag', () {
+      const response = 'Result:\n```\n{"key": "value"}\n```';
+      expect(ResponseParser.extractJson(response), '{"key": "value"}');
+    });
+
+    test('extracts raw JSON without fences', () {
+      const response = 'Some text {"key": "value"} more text';
+      expect(ResponseParser.extractJson(response), '{"key": "value"}');
+    });
+
+    test('returns original response when no JSON found', () {
+      const response = 'No JSON here at all';
+      expect(ResponseParser.extractJson(response), 'No JSON here at all');
+    });
+  });
+
+  // ===========================================================================
+  // PromptBuilder.truncateToLimit
+  // ===========================================================================
+
+  group('PromptBuilder.truncateToLimit', () {
+    test('returns text unchanged when within limit', () {
+      expect(PromptBuilder.truncateToLimit('hello', 100), 'hello');
+    });
+
+    test('returns text unchanged when exactly at limit', () {
+      const text = 'hello';
+      expect(PromptBuilder.truncateToLimit(text, text.length), 'hello');
+    });
+
+    test('truncates with suffix when exceeding limit', () {
+      final text = 'A' * 200;
+      final result = PromptBuilder.truncateToLimit(text, 100);
+      expect(result.length, lessThanOrEqualTo(100));
+      expect(result, endsWith('... (truncated)'));
+    });
+
+    test('handles limit smaller than truncation suffix', () {
+      final text = 'ABCDEFGHIJ';
+      // Limit of 5 is less than the suffix "... (truncated)" length (16).
+      final result = PromptBuilder.truncateToLimit(text, 5);
+      expect(result, '... (truncated)');
+    });
+
+    test('preserves content within the cutoff', () {
+      final text = 'ABCDEFGHIJ';
+      final result = PromptBuilder.truncateToLimit(text, 10);
+      // Exactly at limit, no truncation.
+      expect(result, 'ABCDEFGHIJ');
     });
   });
 

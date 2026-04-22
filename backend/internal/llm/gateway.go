@@ -19,7 +19,7 @@ func NewGateway() *Gateway {
 		providers: make(map[string]Provider),
 	}
 
-	compat := &OpenAICompatProvider{}
+	compat := NewOpenAICompatProvider(nil)
 	for _, name := range []string{"openai", "deepseek", "qwen", "anthropic", "custom"} {
 		gw.Register(name, compat)
 	}

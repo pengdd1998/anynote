@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
@@ -13,23 +14,41 @@ class AIRepository {
   AIRepository(this._apiClient);
 
   /// Send a non-streaming chat request.
-  Future<String> chat(List<ChatMessage> messages, {String? model}) async {
-    final response = await _apiClient.aiProxy({
-      'messages': messages.map((m) => {'role': m.role, 'content': m.content}).toList(),
-      if (model != null) 'model': model,
-      'stream': false,
-    });
+  Future<String> chat(
+    List<ChatMessage> messages, {
+    String? model,
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _apiClient.aiProxy(
+      {
+        'messages': messages
+            .map((m) => {'role': m.role, 'content': m.content})
+            .toList(),
+        if (model != null) 'model': model,
+        'stream': false,
+      },
+      cancelToken: cancelToken,
+    );
     return response['content'] as String;
   }
 
   /// Send a streaming chat request.
   /// Returns Stream<String> of content chunks.
-  Stream<String> chatStream(List<ChatMessage> messages, {String? model}) async* {
-    final response = await _apiClient.aiProxyStream({
-      'messages': messages.map((m) => {'role': m.role, 'content': m.content}).toList(),
-      if (model != null) 'model': model,
-      'stream': true,
-    });
+  Stream<String> chatStream(
+    List<ChatMessage> messages, {
+    String? model,
+    CancelToken? cancelToken,
+  }) async* {
+    final response = await _apiClient.aiProxyStream(
+      {
+        'messages': messages
+            .map((m) => {'role': m.role, 'content': m.content})
+            .toList(),
+        if (model != null) 'model': model,
+        'stream': true,
+      },
+      cancelToken: cancelToken,
+    );
 
     final stream = response.data?.stream;
     if (stream == null) return;

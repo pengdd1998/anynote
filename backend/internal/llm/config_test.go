@@ -112,7 +112,7 @@ func TestLoadFallbackConfig_EmptyValues(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestOpenAICompatProvider_Name(t *testing.T) {
-	p := &OpenAICompatProvider{}
+	p := NewOpenAICompatProvider(nil)
 	if p.Name() != "openai_compat" {
 		t.Errorf("Name() = %q, want %q", p.Name(), "openai_compat")
 	}

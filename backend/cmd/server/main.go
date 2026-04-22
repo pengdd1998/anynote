@@ -134,7 +134,18 @@ func main() {
 
 	masterKey := []byte(cfg.Auth.MasterEncryptionKey)
 
-	aiProxySvc := service.NewAIProxyService(gateway, llmConfigRepo, quotaSvc, rateLimiter, defaultLLMCfg, masterKey)
+	// Use the fallback constructor when a fallback LLM provider is configured.
+	// This enables automatic failover in shared mode when the default provider
+	// is unavailable.
+	var aiProxySvc service.AIProxyService
+	if cfg.LLM.Fallback.Provider != "" && cfg.LLM.Fallback.APIKey != "" {
+		fallbackLLMCfg := llm.LoadFallbackConfig(cfg)
+		aiProxySvc = service.NewAIProxyServiceWithFallback(gateway, llmConfigRepo, quotaSvc, rateLimiter, defaultLLMCfg, fallbackLLMCfg, masterKey)
+		slog.Info("AI proxy configured with fallback LLM", "default", cfg.LLM.Default.Provider, "fallback", cfg.LLM.Fallback.Provider)
+	} else {
+		aiProxySvc = service.NewAIProxyService(gateway, llmConfigRepo, quotaSvc, rateLimiter, defaultLLMCfg, masterKey)
+		slog.Info("AI proxy configured without fallback LLM", "default", cfg.LLM.Default.Provider)
+	}
 	llmConfigSvc := service.NewLLMConfigService(llmConfigRepo, gateway, masterKey)
 	publishSvc := service.NewPublishService(publishLogRepo, nil, service.WithPublishPushService(pushSvc))
 

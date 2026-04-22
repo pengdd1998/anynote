@@ -1,14 +1,26 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/error/error_mapper.dart';
+import '../../settings/data/settings_providers.dart';
 import '../domain/cluster_model.dart';
 import '../domain/outline_model.dart';
 import '../domain/prompt_builder.dart';
+import '../domain/response_parser.dart';
 import 'ai_repository.dart';
+
+// ── Content Limits ─────────────────────────────────
+
+/// Maximum number of notes that can be selected for a single compose session.
+const int maxSelectedNotes = 10;
+
+/// Maximum total character count across all selected note contents.
+const int maxTotalContentChars = 100000; // 100K chars
 
 // ── Compose Stage ──────────────────────────────────
 
@@ -100,13 +112,18 @@ class ComposeSessionState {
       topic: topic ?? this.topic,
       platformStyle: platformStyle ?? this.platformStyle,
       clusters: clusters ?? this.clusters,
-      selectedClusterIndices: selectedClusterIndices ?? this.selectedClusterIndices,
+      selectedClusterIndices:
+          selectedClusterIndices ?? this.selectedClusterIndices,
       outline: outline ?? this.outline,
       draft: draft ?? this.draft,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
   }
+
+  /// Total character count across all selected note contents.
+  int get totalContentChars =>
+      noteContents.values.fold(0, (sum, c) => sum + c.length);
 }
 
 // ── Compose Session Notifier ───────────────────────
@@ -116,15 +133,65 @@ class ComposeSessionState {
 class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   final Ref _ref;
 
+  /// Concurrency guard: true while an AI operation is in flight.
+  bool _isProcessing = false;
+
+  /// Active Dio CancelToken for stream cancellation.
+  CancelToken? _activeToken;
+
   ComposeSessionNotifier(this._ref, String sessionId)
       : super(ComposeSessionState(sessionId: sessionId));
 
   AIRepository get _aiRepo => _ref.read(aiRepositoryProvider);
   PromptBuilder get _promptBuilder => PromptBuilder();
 
+  // ── CancelToken lifecycle ──────────────────────
+
+  /// Cancel any in-flight AI operation and dispose the token.
+  void cancel() {
+    _activeToken?.cancel('Compose session cancelled');
+    _activeToken = null;
+  }
+
+  /// Create a fresh CancelToken, cancelling any existing one first.
+  CancelToken _freshToken() {
+    _activeToken?.cancel('Replaced by new request');
+    _activeToken = CancelToken();
+    return _activeToken!;
+  }
+
+  // ── Quota pre-check ────────────────────────────
+
+  /// Check the AI quota before starting an operation.
+  /// Returns `true` if the user has remaining quota, `false` otherwise.
+  /// When quota is exceeded, sets the error on the state.
+  Future<bool> _checkQuota() async {
+    try {
+      final quotaState = _ref.read(aiQuotaProvider);
+      final quotaData = quotaState.valueOrNull;
+      if (quotaData == null) return true; // No data yet, allow attempt.
+
+      // The quota response typically has 'remaining' and 'limit' fields.
+      final remaining = quotaData['remaining'];
+      if (remaining is int && remaining <= 0) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'AI quota exceeded. Please wait before trying again.',
+        );
+        return false;
+      }
+      return true;
+    } catch (_) {
+      // If quota check fails, allow the operation to proceed.
+      // The server will enforce the limit regardless.
+      return true;
+    }
+  }
+
   // ── Note selection ─────────────────────────────
 
   /// Toggle a note's inclusion in the selection.
+  /// Enforces [maxSelectedNotes] limit when adding a new note.
   void toggleNoteSelection(String noteId, String plainContent) {
     final ids = List<String>.from(state.selectedNoteIds);
     final contents = Map<String, String>.from(state.noteContents);
@@ -133,6 +200,14 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       ids.remove(noteId);
       contents.remove(noteId);
     } else {
+      // Enforce maximum selected notes limit.
+      if (ids.length >= maxSelectedNotes) {
+        state = state.copyWith(
+          error: 'You can select at most $maxSelectedNotes notes. '
+              'Deselect some notes before adding more.',
+        );
+        return;
+      }
       ids.add(noteId);
       contents[noteId] = plainContent;
     }
@@ -155,22 +230,44 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   /// Request AI clustering of selected notes.
   Future<void> generateClusters() async {
     if (state.selectedNoteIds.isEmpty || state.topic.isEmpty) return;
+    if (_isProcessing) return;
 
+    // Validate total content size before sending.
+    if (state.totalContentChars > maxTotalContentChars) {
+      state = state.copyWith(
+        error:
+            'Total content exceeds ${maxTotalContentChars ~/ 1000}K characters. '
+            'Please select fewer notes or shorten the content.',
+      );
+      return;
+    }
+
+    _isProcessing = true;
     state = state.copyWith(isLoading: true, error: null);
+    final token = _freshToken();
 
     try {
+      if (!await _checkQuota()) return;
+
       final noteTexts = state.selectedNoteIds
           .map((id) => state.noteContents[id] ?? '')
           .where((c) => c.isNotEmpty)
           .toList();
 
-      final prompt = _promptBuilder.buildClusterPrompt(noteTexts, state.topic);
-      final response = await _aiRepo.chat([
-        ChatMessage(role: 'user', content: prompt),
-      ]);
+      final combinedText = noteTexts.join('\n');
+      final truncatedText =
+          PromptBuilder.truncateToLimit(combinedText, maxTotalContentChars);
+      final truncatedNotes = truncatedText.split('\n');
+
+      final prompt =
+          _promptBuilder.buildClusterPrompt(truncatedNotes, state.topic);
+      final response = await _aiRepo.chat(
+        [ChatMessage(role: 'user', content: prompt)],
+        cancelToken: token,
+      );
 
       // Parse JSON from AI response.
-      final jsonStr = _extractJson(response);
+      final jsonStr = ResponseParser.extractJson(response);
       final json = jsonDecode(jsonStr) as Map<String, dynamic>;
       final clusterList = (json['clusters'] as List)
           .map((c) => ClusterModel.fromJson(c as Map<String, dynamic>))
@@ -188,10 +285,13 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         isLoading: false,
       );
     } catch (e) {
+      final appError = ErrorMapper.map(e);
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to generate clusters: $e',
+        error: appError.message,
       );
+    } finally {
+      _isProcessing = false;
     }
   }
 
@@ -211,10 +311,15 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   /// Generate an outline from selected clusters.
   Future<void> generateOutline() async {
     if (state.selectedClusterIndices.isEmpty) return;
+    if (_isProcessing) return;
 
+    _isProcessing = true;
     state = state.copyWith(isLoading: true, error: null);
+    final token = _freshToken();
 
     try {
+      if (!await _checkQuota()) return;
+
       final selectedClusters = state.selectedClusterIndices
           .map((i) => state.clusters[i].toJson())
           .toList();
@@ -224,11 +329,12 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         state.platformStyle,
       );
 
-      final response = await _aiRepo.chat([
-        ChatMessage(role: 'user', content: prompt),
-      ]);
+      final response = await _aiRepo.chat(
+        [ChatMessage(role: 'user', content: prompt)],
+        cancelToken: token,
+      );
 
-      final jsonStr = _extractJson(response);
+      final jsonStr = ResponseParser.extractJson(response);
       final json = jsonDecode(jsonStr) as Map<String, dynamic>;
       final outline = OutlineModel.fromJson(json);
 
@@ -238,10 +344,13 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         isLoading: false,
       );
     } catch (e) {
+      final appError = ErrorMapper.map(e);
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to generate outline: $e',
+        error: appError.message,
       );
+    } finally {
+      _isProcessing = false;
     }
   }
 
@@ -267,15 +376,20 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   /// Expand the outline into a full draft using streaming.
   Future<void> expandToDraft() async {
     if (state.outline == null) return;
+    if (_isProcessing) return;
 
+    _isProcessing = true;
     state = state.copyWith(
       stage: ComposeStage.editor,
       isLoading: true,
       draft: '',
       error: null,
     );
+    final token = _freshToken();
 
     try {
+      if (!await _checkQuota()) return;
+
       // Gather source notes from selected clusters.
       final sourceNotes = <String>[];
       for (final index in state.selectedClusterIndices) {
@@ -290,55 +404,72 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         }
       }
 
+      final combinedSource = sourceNotes.where((s) => s.isNotEmpty).join('\n');
+      final truncatedSource =
+          PromptBuilder.truncateToLimit(combinedSource, maxTotalContentChars);
+
       final prompt = _promptBuilder.buildExpandPrompt(
         state.outline!.toJson(),
-        sourceNotes.where((s) => s.isNotEmpty).toList(),
+        truncatedSource.split('\n'),
       );
 
       final buffer = StringBuffer();
 
-      await for (final chunk in _aiRepo.chatStream([
-        ChatMessage(role: 'user', content: prompt),
-      ])) {
+      await for (final chunk in _aiRepo.chatStream(
+        [ChatMessage(role: 'user', content: prompt)],
+        cancelToken: token,
+      )) {
         buffer.write(chunk);
         state = state.copyWith(draft: buffer.toString());
       }
 
       state = state.copyWith(isLoading: false);
     } catch (e) {
+      final appError = ErrorMapper.map(e);
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to generate draft: $e',
+        error: appError.message,
       );
+    } finally {
+      _isProcessing = false;
     }
   }
 
   /// Apply platform style adaptation to the current draft.
   Future<void> adaptStyle() async {
     if (state.draft.isEmpty) return;
+    if (_isProcessing) return;
 
+    _isProcessing = true;
     state = state.copyWith(isLoading: true, error: null);
+    final token = _freshToken();
 
     try {
+      if (!await _checkQuota()) return;
+
       final prompt = _promptBuilder.buildStyleAdaptPrompt(
         state.draft,
         state.platformStyle,
       );
 
       final buffer = StringBuffer();
-      await for (final chunk in _aiRepo.chatStream([
-        ChatMessage(role: 'user', content: prompt),
-      ])) {
+      await for (final chunk in _aiRepo.chatStream(
+        [ChatMessage(role: 'user', content: prompt)],
+        cancelToken: token,
+      )) {
         buffer.write(chunk);
         state = state.copyWith(draft: buffer.toString());
       }
 
       state = state.copyWith(isLoading: false);
     } catch (e) {
+      final appError = ErrorMapper.map(e);
       state = state.copyWith(
         isLoading: false,
-        error: 'Style adaptation failed: $e',
+        error: appError.message,
       );
+    } finally {
+      _isProcessing = false;
     }
   }
 
@@ -370,7 +501,8 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
 
       return noteId;
     } catch (e) {
-      state = state.copyWith(error: 'Failed to save: $e');
+      final appError = ErrorMapper.map(e);
+      state = state.copyWith(error: appError.message);
       return null;
     }
   }
@@ -378,27 +510,6 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   /// Clear the error message.
   void clearError() {
     state = state.copyWith(error: null);
-  }
-
-  // ── Helpers ────────────────────────────────────
-
-  /// Extract JSON object from an AI response that may contain
-  /// markdown fences or extra text around the JSON.
-  String _extractJson(String response) {
-    // Try to find JSON block in markdown code fences.
-    final fenceMatch = RegExp(r'```(?:json)?\s*\n?([\s\S]*?)\n?```').firstMatch(response);
-    if (fenceMatch != null) {
-      return fenceMatch.group(1)!.trim();
-    }
-
-    // Try to find a raw JSON object.
-    final braceStart = response.indexOf('{');
-    final braceEnd = response.lastIndexOf('}');
-    if (braceStart != -1 && braceEnd > braceStart) {
-      return response.substring(braceStart, braceEnd + 1);
-    }
-
-    return response;
   }
 }
 

@@ -26,7 +26,7 @@ type LLMConfigRepo interface {
 	GetDefaultByUser(ctx context.Context, userID uuid.UUID) (*domain.LLMConfig, error)
 	Create(ctx context.Context, cfg *domain.LLMConfig) error
 	Update(ctx context.Context, cfg *domain.LLMConfig) error
-	Delete(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
 
 type llmConfigService struct {
@@ -96,7 +96,7 @@ func (s *llmConfigService) Delete(ctx context.Context, userID uuid.UUID, configI
 		return fmt.Errorf("unauthorized")
 	}
 
-	return s.repo.Delete(ctx, configID)
+	return s.repo.Delete(ctx, configID, userID)
 }
 
 func (s *llmConfigService) TestConnection(ctx context.Context, userID uuid.UUID, configID uuid.UUID) error {

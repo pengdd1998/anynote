@@ -19,15 +19,17 @@ class ApiClient {
 
   ApiClient({required String baseUrl})
       : _secureStorage = const FlutterSecureStorage(),
-        _dio = Dio(BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 15),
-          receiveTimeout: const Duration(seconds: 120), // Long for SSE
-          sendTimeout: const Duration(seconds: 30),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        ),) {
+        _dio = Dio(
+          BaseOptions(
+            baseUrl: baseUrl,
+            connectTimeout: const Duration(seconds: 15),
+            receiveTimeout: const Duration(seconds: 120), // Long for SSE
+            sendTimeout: const Duration(seconds: 30),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          ),
+        ) {
     _dio.interceptors.add(_AuthInterceptor(this));
   }
 
@@ -88,15 +90,20 @@ class ApiClient {
       }
 
       // Use a fresh Dio instance without interceptors to avoid recursive refresh.
-      final refreshDio = Dio(BaseOptions(
-        baseUrl: _dio.options.baseUrl,
-        connectTimeout: _dio.options.connectTimeout,
-        headers: {'Content-Type': 'application/json'},
-      ),);
+      final refreshDio = Dio(
+        BaseOptions(
+          baseUrl: _dio.options.baseUrl,
+          connectTimeout: _dio.options.connectTimeout,
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
 
-      final response = await refreshDio.post('/api/v1/auth/refresh', data: {
-        'refresh_token': refreshToken,
-      },);
+      final response = await refreshDio.post(
+        '/api/v1/auth/refresh',
+        data: {
+          'refresh_token': refreshToken,
+        },
+      );
 
       final newAccessToken = response.data['access_token'] as String;
       final newRefreshToken = response.data['refresh_token'] as String;
@@ -154,9 +161,12 @@ class ApiClient {
   }
 
   Future<AuthResponse> refreshToken(String refreshToken) async {
-    final res = await _dio.post('/api/v1/auth/refresh', data: {
-      'refresh_token': refreshToken,
-    },);
+    final res = await _dio.post(
+      '/api/v1/auth/refresh',
+      data: {
+        'refresh_token': refreshToken,
+      },
+    );
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
     return authRes;
@@ -191,10 +201,14 @@ class ApiClient {
   // ── AI Proxy API ──────────────────────────────────
 
   /// Stream AI proxy response. Returns a Dio Response for SSE parsing.
-  Future<Response<ResponseBody>> aiProxyStream(Map<String, dynamic> body) async {
+  Future<Response<ResponseBody>> aiProxyStream(
+    Map<String, dynamic> body, {
+    CancelToken? cancelToken,
+  }) async {
     return _dio.post(
       '/api/v1/ai/proxy',
       data: body,
+      cancelToken: cancelToken,
       options: Options(
         responseType: ResponseType.stream,
         headers: {'Accept': 'text/event-stream'},
@@ -203,8 +217,15 @@ class ApiClient {
   }
 
   /// Non-streaming AI proxy call.
-  Future<Map<String, dynamic>> aiProxy(Map<String, dynamic> body) async {
-    final res = await _dio.post('/api/v1/ai/proxy', data: body);
+  Future<Map<String, dynamic>> aiProxy(
+    Map<String, dynamic> body, {
+    CancelToken? cancelToken,
+  }) async {
+    final res = await _dio.post(
+      '/api/v1/ai/proxy',
+      data: body,
+      cancelToken: cancelToken,
+    );
     return res.data as Map<String, dynamic>;
   }
 
@@ -220,7 +241,9 @@ class ApiClient {
     return (res.data as List).cast<Map<String, dynamic>>();
   }
 
-  Future<Map<String, dynamic>> createLlmConfig(Map<String, dynamic> config) async {
+  Future<Map<String, dynamic>> createLlmConfig(
+    Map<String, dynamic> config,
+  ) async {
     final res = await _dio.post('/api/v1/llm/configs', data: config);
     return res.data as Map<String, dynamic>;
   }
@@ -300,7 +323,10 @@ class ApiClient {
   }
 
   /// Fetch the public discovery feed. No authentication required.
-  Future<List<Map<String, dynamic>>> discoverFeed({int limit = 20, int offset = 0}) async {
+  Future<List<Map<String, dynamic>>> discoverFeed({
+    int limit = 20,
+    int offset = 0,
+  }) async {
     final res = await _dio.get(
       '/api/v1/share/discover',
       queryParameters: {'limit': limit, 'offset': offset},
@@ -309,7 +335,10 @@ class ApiClient {
   }
 
   /// Toggle a reaction on a shared note. Requires authentication.
-  Future<Map<String, dynamic>> toggleReaction(String shareId, String reactionType) async {
+  Future<Map<String, dynamic>> toggleReaction(
+    String shareId,
+    String reactionType,
+  ) async {
     final res = await _dio.post(
       '/api/v1/share/$shareId/react',
       data: {'reaction_type': reactionType},
@@ -321,17 +350,23 @@ class ApiClient {
 
   /// Register a device token for push notifications.
   Future<void> registerDevice(String token, String platform) async {
-    await _dio.post('/api/v1/devices/register', data: {
-      'token': token,
-      'platform': platform,
-    },);
+    await _dio.post(
+      '/api/v1/devices/register',
+      data: {
+        'token': token,
+        'platform': platform,
+      },
+    );
   }
 
   /// Unregister a device token.
   Future<void> unregisterDevice(String token) async {
-    await _dio.post('/api/v1/devices/unregister', data: {
-      'token': token,
-    },);
+    await _dio.post(
+      '/api/v1/devices/unregister',
+      data: {
+        'token': token,
+      },
+    );
   }
 }
 
@@ -351,7 +386,10 @@ class _AuthInterceptor extends Interceptor {
   }
 
   @override
-  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     if (err.response?.statusCode == 401) {
       // Do not attempt refresh for the refresh endpoint itself.
       if (err.requestOptions.path == '/api/v1/auth/refresh') {

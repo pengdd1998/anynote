@@ -99,7 +99,7 @@ func (m *mockLLMConfigRepo) Update(ctx context.Context, cfg *domain.LLMConfig) e
 	return nil
 }
 
-func (m *mockLLMConfigRepo) Delete(ctx context.Context, id uuid.UUID) error {
+func (m *mockLLMConfigRepo) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
 	delete(m.configs, id)
 	return nil
 }
@@ -211,7 +211,7 @@ func TestMockLLMConfigRepo_Delete(t *testing.T) {
 	cfgID := uuid.New()
 
 	repo.Create(ctx, &domain.LLMConfig{ID: cfgID, Name: "ToDelete"})
-	repo.Delete(ctx, cfgID)
+	repo.Delete(ctx, cfgID, uuid.New())
 
 	_, err := repo.GetByID(ctx, cfgID)
 	if err == nil {

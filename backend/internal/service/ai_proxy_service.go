@@ -28,6 +28,7 @@ type aiProxyService struct {
 	quotaSvc      QuotaService
 	rateLimiter   *RateLimiter
 	defaultCfg    llm.GatewayConfig
+	fallbackCfg   *llm.GatewayConfig // nil means no fallback configured
 	encryptionKey []byte
 }
 
@@ -45,6 +46,29 @@ func NewAIProxyService(
 		quotaSvc:      quotaSvc,
 		rateLimiter:   rateLimiter,
 		defaultCfg:    defaultCfg,
+		encryptionKey: encryptionKey,
+	}
+}
+
+// NewAIProxyServiceWithFallback creates an AIProxyService with a fallback LLM
+// config. The fallback is only used in shared mode (no user-owned config) when
+// the default gateway returns an error.
+func NewAIProxyServiceWithFallback(
+	gateway *llm.Gateway,
+	llmRepo LLMConfigRepository,
+	quotaSvc QuotaService,
+	rateLimiter *RateLimiter,
+	defaultCfg llm.GatewayConfig,
+	fallbackCfg llm.GatewayConfig,
+	encryptionKey []byte,
+) AIProxyService {
+	return &aiProxyService{
+		gateway:       gateway,
+		llmRepo:       llmRepo,
+		quotaSvc:      quotaSvc,
+		rateLimiter:   rateLimiter,
+		defaultCfg:    defaultCfg,
+		fallbackCfg:   &fallbackCfg,
 		encryptionKey: encryptionKey,
 	}
 }
@@ -88,7 +112,17 @@ func (s *aiProxyService) Proxy(ctx context.Context, userID string, req domain.AI
 
 	// 3. Use server default LLM
 	chatReq := s.toChatRequest(req, s.defaultCfg)
-	return s.gateway.ChatStream(ctx, s.defaultCfg, chatReq)
+	ch, err := s.gateway.ChatStream(ctx, s.defaultCfg, chatReq)
+	if err != nil && s.fallbackCfg != nil {
+		slog.Warn("default LLM failed, attempting fallback", "error", err)
+		fallbackReq := s.toChatRequest(req, *s.fallbackCfg)
+		fallbackCh, fallbackErr := s.gateway.ChatStream(ctx, *s.fallbackCfg, fallbackReq)
+		if fallbackErr != nil {
+			return nil, fmt.Errorf("default LLM failed: %w; fallback also failed: %w", err, fallbackErr)
+		}
+		return fallbackCh, nil
+	}
+	return ch, err
 }
 
 func (s *aiProxyService) toChatRequest(req domain.AIProxyRequest, cfg llm.GatewayConfig) llm.ChatRequest {

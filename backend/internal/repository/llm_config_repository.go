@@ -86,7 +86,7 @@ func (r *LLMConfigRepository) Update(ctx context.Context, cfg *domain.LLMConfig)
 	return err
 }
 
-func (r *LLMConfigRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	_, err := r.pool.Exec(ctx, `DELETE FROM llm_configs WHERE id = $1`, id)
+func (r *LLMConfigRepository) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM llm_configs WHERE id = $1 AND user_id = $2`, id, userID)
 	return err
 }

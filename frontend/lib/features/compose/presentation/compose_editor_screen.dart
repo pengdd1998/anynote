@@ -16,7 +16,8 @@ class ComposeEditorScreen extends ConsumerStatefulWidget {
   const ComposeEditorScreen({super.key, required this.sessionId});
 
   @override
-  ConsumerState<ComposeEditorScreen> createState() => _ComposeEditorScreenState();
+  ConsumerState<ComposeEditorScreen> createState() =>
+      _ComposeEditorScreenState();
 }
 
 class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
@@ -24,12 +25,18 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
   final _scrollController = ScrollController();
   bool _isSaving = false;
 
+  /// Cached reference to the notifier so we can cancel in dispose without
+  /// touching `ref` after the widget element has been unmounted.
+  ComposeSessionNotifier? _cachedNotifier;
+
   @override
   void initState() {
     super.initState();
     _editorController = TextEditingController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final notifier = ref.read(composeSessionProvider.notifier);
+      _cachedNotifier = notifier;
       final session = ref.read(composeSessionProvider);
       _editorController.text = session.draft;
     });
@@ -37,6 +44,9 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
 
   @override
   void dispose() {
+    // Cancel any in-flight AI streaming operations when leaving the screen.
+    // Use the cached notifier to avoid accessing ref after disposal.
+    _cachedNotifier?.cancel();
     _editorController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -99,7 +109,11 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 session.error!,
@@ -127,13 +141,19 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Theme.of(context).colorScheme.primaryContainer.withAlpha(AppAlpha.semiBold),
+            color: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withAlpha(AppAlpha.semiBold),
             child: Row(
               children: [
                 SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -164,8 +184,8 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                   child: Text(
                     session.outline!.title,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
               ],
@@ -217,7 +237,10 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                 // Platform style chip
                 if (session.platformStyle != 'generic')
                   Chip(
-                    label: Text(session.platformStyle, style: const TextStyle(fontSize: 12)),
+                    label: Text(
+                      session.platformStyle,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     visualDensity: VisualDensity.compact,
                   ),
 
@@ -232,14 +255,18 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
 
                 // Save as note
                 FilledButton.icon(
-                  onPressed: session.draft.isEmpty || _isSaving || session.isLoading
-                      ? null
-                      : () => _saveAsNote(context, ref),
+                  onPressed:
+                      session.draft.isEmpty || _isSaving || session.isLoading
+                          ? null
+                          : () => _saveAsNote(context, ref),
                   icon: _isSaving
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
                       : const Icon(Icons.save, size: 18),
                   label: Text(l10n.saveAsNote),
@@ -267,7 +294,8 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final noteId = await ref.read(composeSessionProvider.notifier).saveDraftAsNote();
+      final noteId =
+          await ref.read(composeSessionProvider.notifier).saveDraftAsNote();
 
       if (!mounted) return;
       if (!context.mounted) return;

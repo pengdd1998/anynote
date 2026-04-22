@@ -80,7 +80,7 @@ func (m *mockLLMConfigCRUDRepo) Update(ctx context.Context, cfg *domain.LLMConfi
 	return nil
 }
 
-func (m *mockLLMConfigCRUDRepo) Delete(ctx context.Context, id uuid.UUID) error {
+func (m *mockLLMConfigCRUDRepo) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
 	if m.deleteErr != nil {
 		return m.deleteErr
 	}
