@@ -9,7 +9,8 @@ void main() {
   // ===========================================================================
 
   group('MasterDetailLayout phone layout', () {
-    testWidgets('shows only master pane when screen width < 600', (tester) async {
+    testWidgets('shows only master pane when screen width < 600',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: MediaQuery(
@@ -77,7 +78,8 @@ void main() {
       expect(find.text('Detail: note-1'), findsOneWidget);
     });
 
-    testWidgets('shows default empty message when no selection', (tester) async {
+    testWidgets('shows default empty message when no selection',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: MediaQuery(
@@ -96,7 +98,8 @@ void main() {
       expect(find.text('Select an item to view'), findsOneWidget);
     });
 
-    testWidgets('shows default placeholder icon when no selection', (tester) async {
+    testWidgets('shows default placeholder icon when no selection',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: MediaQuery(
@@ -114,7 +117,8 @@ void main() {
       expect(find.byIcon(Icons.article_outlined), findsOneWidget);
     });
 
-    testWidgets('uses custom emptyDetailPlaceholder when provided', (tester) async {
+    testWidgets('uses custom emptyDetailPlaceholder when provided',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: MediaQuery(
@@ -203,7 +207,7 @@ void main() {
 
       // Master content should be hidden behind the zero-width animated container.
       // The AnimatedContainer should have width 0.
-      final animatedContainer = tester.widget<AnimatedContainer>(
+      final _ = tester.widget<AnimatedContainer>(
         find.byType(AnimatedContainer),
       );
       // The width is set via the constructor; we verify via the child tree.
@@ -256,7 +260,8 @@ void main() {
       expect(find.byType(GestureDetector), findsWidgets);
     });
 
-    testWidgets('divider is not shown when sidebarVisible=false', (tester) async {
+    testWidgets('divider is not shown when sidebarVisible=false',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: MediaQuery(

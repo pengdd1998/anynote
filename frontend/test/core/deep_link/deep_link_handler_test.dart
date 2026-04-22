@@ -6,10 +6,8 @@ import 'package:anynote/core/deep_link/deep_link_handler.dart';
 
 void main() {
   late GoRouter goRouter;
-  List<String> pushedRoutes = [];
 
   setUp(() {
-    pushedRoutes = [];
     goRouter = GoRouter(
       routes: [
         GoRoute(
@@ -62,7 +60,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/notes/new');
+      expect(goRouter.state.uri.path, '/notes/new');
     });
 
     testWidgets('navigates to /notes/new for anynote://notes (single segment)',
@@ -78,11 +76,10 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/notes/new');
+      expect(goRouter.state.uri.path, '/notes/new');
     });
 
-    testWidgets('navigates to specific note with valid UUID',
-        (tester) async {
+    testWidgets('navigates to specific note with valid UUID', (tester) async {
       await tester.pumpWidget(_buildTestApp());
       await tester.pumpAndSettle();
 
@@ -95,7 +92,7 @@ void main() {
 
       await tester.pumpAndSettle();
       expect(
-        goRouter.state?.uri.path,
+        goRouter.state.uri.path,
         '/notes/550e8400-e29b-41d4-a716-446655440000',
       );
     });
@@ -112,7 +109,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/notes/abc123');
+      expect(goRouter.state.uri.path, '/notes/abc123');
     });
 
     testWidgets('rejects note id with uppercase letters', (tester) async {
@@ -130,7 +127,7 @@ void main() {
 
       await tester.pumpAndSettle();
       // Should stay on root, navigation rejected
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
 
     testWidgets('rejects note id with special characters', (tester) async {
@@ -145,7 +142,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
 
     testWidgets('rejects note id with path traversal', (tester) async {
@@ -160,7 +157,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
 
     testWidgets('rejects overly long note id', (tester) async {
@@ -176,7 +173,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
   });
 
@@ -194,7 +191,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/share/received');
+      expect(goRouter.state.uri.path, '/share/received');
     });
 
     testWidgets('navigates to share with valid UUID id', (tester) async {
@@ -209,7 +206,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/share/abc123-def456');
+      expect(goRouter.state.uri.path, '/share/abc123-def456');
     });
 
     testWidgets('rejects share id with invalid characters', (tester) async {
@@ -224,7 +221,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
 
     testWidgets('does nothing for share with wrong segment count',
@@ -241,7 +238,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
   });
 
@@ -258,7 +255,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
 
     testWidgets('does nothing for unknown first segment', (tester) async {
@@ -273,7 +270,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
 
     testWidgets('does nothing for first segment with special characters',
@@ -290,7 +287,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
 
     testWidgets('handles notes with three segments (ignores extra)',
@@ -309,7 +306,7 @@ void main() {
 
       await tester.pumpAndSettle();
       // No navigation should occur (stays at root)
-      expect(goRouter.state?.uri.path, '/');
+      expect(goRouter.state.uri.path, '/');
     });
 
     testWidgets('handles notes with empty second segment', (tester) async {
@@ -327,7 +324,7 @@ void main() {
       await tester.pumpAndSettle();
       // segments would be ['notes'] (trailing slash produces no extra segment)
       // so segments.length == 1, which triggers the "new" navigation
-      expect(goRouter.state?.uri.path, '/notes/new');
+      expect(goRouter.state.uri.path, '/notes/new');
     });
   });
 }

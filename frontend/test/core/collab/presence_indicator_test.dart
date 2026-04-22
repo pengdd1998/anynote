@@ -46,22 +46,6 @@ class FakeWSClientNotifier extends WSClientNotifier {
   WSClient get client => fakeClient;
 }
 
-/// Provider override that injects the [FakeWSClientNotifier] with a
-/// pre-created [FakeWSClient].
-({
-  FakeWSClient fakeClient,
-  StateNotifierProvider<WSClientNotifier, WSConnectionState> override,
-}) _createFakeWsProvider() {
-  late FakeWSClient fakeClient;
-  final provider = StateNotifierProvider<WSClientNotifier, WSConnectionState>(
-    (ref) {
-      fakeClient = FakeWSClient();
-      return FakeWSClientNotifier(ref, fakeClient);
-    },
-  );
-  return (fakeClient: fakeClient, override: provider);
-}
-
 void main() {
   // ===========================================================================
   // RoomPresence model
@@ -357,7 +341,8 @@ void main() {
 
       fakeClient.controller.add(WSMessage(WSMessageType.ping, {}));
       fakeClient.controller.add(WSMessage(WSMessageType.pong, {}));
-      fakeClient.controller.add(WSMessage(WSMessageType.comment, {'text': 'hi'}));
+      fakeClient.controller
+          .add(WSMessage(WSMessageType.comment, {'text': 'hi'}));
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       // State should be unchanged after ignored messages.
@@ -478,7 +463,8 @@ void main() {
       );
     }
 
-    testWidgets('renders SizedBox.shrink for empty typing users', (tester) async {
+    testWidgets('renders SizedBox.shrink for empty typing users',
+        (tester) async {
       await pumpIndicator(tester, typingUsers: []);
 
       // No typing text should be present.
@@ -511,7 +497,8 @@ void main() {
         ],
       );
 
-      expect(find.textContaining('Alice and 2 others are typing'), findsOneWidget);
+      expect(
+          find.textContaining('Alice and 2 others are typing'), findsOneWidget);
     });
 
     testWidgets('shows "N others" for many users', (tester) async {
@@ -526,7 +513,8 @@ void main() {
         ],
       );
 
-      expect(find.textContaining('Alice and 4 others are typing'), findsOneWidget);
+      expect(
+          find.textContaining('Alice and 4 others are typing'), findsOneWidget);
     });
 
     testWidgets('typing text is in a Row widget', (tester) async {

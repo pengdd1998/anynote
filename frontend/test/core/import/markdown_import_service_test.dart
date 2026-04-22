@@ -1,49 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:anynote/core/crypto/crypto_service.dart';
 import 'package:anynote/core/import/import_models.dart';
-import 'package:anynote/core/import/markdown_import_service.dart';
-
-// ---------------------------------------------------------------------------
-// Fake CryptoService for testing
-// ---------------------------------------------------------------------------
-
-class FakeCryptoService extends CryptoService {
-  @override
-  bool get isUnlocked => true;
-
-  @override
-  Future<bool> isInitialized() async => true;
-
-  @override
-  Future<String> encryptForItem(String itemId, String plaintext) async =>
-      'enc_\$itemId:\$plaintext';
-
-  @override
-  Future<String?> decryptForItem(String itemId, String encrypted) async =>
-      encrypted.replaceFirst('enc_\$itemId:', '');
-
-  @override
-  Future<void> lock() async {}
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-File _createTempFile(String name, String content, {String? subdir}) {
-  final dir = Directory.systemTemp.createTempSync('anynote_md_test_');
-  if (subdir != null) {
-    Directory('${dir.path}/$subdir').createSync(recursive: true);
-  }
-  final path = subdir != null ? '${dir.path}/$subdir/$name' : '${dir.path}/$name';
-  final file = File(path);
-  file.createSync(recursive: true);
-  file.writeAsStringSync(content);
-  return file;
-}
 
 // We cannot easily mock AppDatabase and its DAOs in a pure unit test
 // without the full Drift setup. Instead, we focus on testing the parsing
@@ -51,10 +8,9 @@ File _createTempFile(String name, String content, {String? subdir}) {
 // parseDirectory stream and verifying the emitted progress events.
 
 void main() {
-  late FakeCryptoService crypto;
-
   setUp(() {
-    crypto = FakeCryptoService();
+    // No-op: FakeCryptoService is only needed for tests that construct
+    // MarkdownImportService directly.
   });
 
   // ===========================================================================
@@ -232,12 +188,14 @@ void main() {
 
   group('ImportStatus enum', () {
     test('has all expected values', () {
-      expect(ImportStatus.values, containsAll([
-        ImportStatus.parsing,
-        ImportStatus.importing,
-        ImportStatus.done,
-        ImportStatus.failed,
-      ]));
+      expect(
+          ImportStatus.values,
+          containsAll([
+            ImportStatus.parsing,
+            ImportStatus.importing,
+            ImportStatus.done,
+            ImportStatus.failed,
+          ]));
     });
   });
 

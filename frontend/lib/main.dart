@@ -13,7 +13,6 @@ import 'core/database/app_database.dart';
 import 'core/deep_link/deep_link_handler.dart';
 import 'core/locale/locale_provider.dart';
 import 'core/monitoring/error_reporter.dart';
-import 'core/providers/app_info_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'core/network/api_client.dart';
 import 'core/notifications/push_service.dart';
@@ -74,23 +73,27 @@ void main() async {
   }
 
   // Initialize API client
-  final apiClient = ApiClient(baseUrl: const String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:8080',
-  ),);
+  final apiClient = ApiClient(
+    baseUrl: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://localhost:8080',
+    ),
+  );
 
   // Load any previously-stored tokens so the auth interceptor has them
   // available on the very first request.
   apiClient.loadStoredTokens();
 
   runZonedGuarded(() {
-    runApp(ProviderScope(
-      overrides: [
-        databaseProvider.overrideWithValue(db),
-        apiClientProvider.overrideWithValue(apiClient),
-      ],
-      child: const AnyNoteApp(),
-    ),);
+    runApp(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          apiClientProvider.overrideWithValue(apiClient),
+        ],
+        child: const AnyNoteApp(),
+      ),
+    );
   }, (error, stackTrace) {
     ErrorReporter.instance.reportError(error, stackTrace, context: 'unhandled');
   });
@@ -176,7 +179,8 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
 
   @override
   Future<bool> didPushRouteInformation(
-      RouteInformation routeInformation,) async {
+    RouteInformation routeInformation,
+  ) async {
     final uri = routeInformation.uri;
     if (uri.scheme == 'anynote') {
       final context = rootNavigatorKey.currentContext;

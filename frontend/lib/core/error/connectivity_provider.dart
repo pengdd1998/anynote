@@ -32,7 +32,8 @@ final connectivityProvider = StreamProvider<ConnectivityState>((ref) {
   controller.add(null);
 
   // Subscribe to the connectivity service's stream for real-time updates.
-  subscription = ref.read(connectivityServiceProvider.notifier).connectivityStream.listen(
+  subscription =
+      ref.read(connectivityServiceProvider.notifier).connectivityStream.listen(
     (isConnected) {
       controller.add(isConnected);
     },
@@ -43,10 +44,10 @@ final connectivityProvider = StreamProvider<ConnectivityState>((ref) {
 
   // Also emit the current state immediately so late subscribers get it.
   // The stream may not re-emit the current value, so we push it once.
+  // connectivityServiceProvider is a NotifierProvider<ConnectivityService, bool>,
+  // so its value is always a non-null bool.
   final current = ref.read(connectivityServiceProvider);
-  if (current != null) {
-    controller.add(current);
-  }
+  controller.add(current);
 
   // Clean up on disposal.
   ref.onDispose(() {

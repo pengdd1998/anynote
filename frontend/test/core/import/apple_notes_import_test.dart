@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/import/apple_notes_import.dart';
-import 'package:anynote/core/import/import_models.dart';
 
 // Helper to create temporary files with content for testing.
 File _createTempFile(String name, String content) {
@@ -185,7 +184,7 @@ void main() {
 
       expect(note, isNotNull);
       expect(note!.body, contains('- First item'));
-      expect(note!.body, contains('- Second item'));
+      expect(note.body, contains('- Second item'));
     });
 
     test('converts ordered list items', () async {
@@ -200,8 +199,8 @@ void main() {
 
       expect(note, isNotNull);
       expect(note!.body, contains('1. First'));
-      expect(note!.body, contains('2. Second'));
-      expect(note!.body, contains('3. Third'));
+      expect(note.body, contains('2. Second'));
+      expect(note.body, contains('3. Third'));
     });
 
     test('handles <br> tags as newlines', () async {
@@ -227,7 +226,7 @@ void main() {
 
       expect(note, isNotNull);
       expect(note!.body, isNot(contains('color: red')));
-      expect(note!.body, contains('Visible content'));
+      expect(note.body, contains('Visible content'));
     });
 
     test('strips <script> blocks', () async {
@@ -241,7 +240,7 @@ void main() {
 
       expect(note, isNotNull);
       expect(note!.body, isNot(contains('alert')));
-      expect(note!.body, contains('Clean content'));
+      expect(note.body, contains('Clean content'));
     });
 
     test('decodes HTML entities', () async {
@@ -293,7 +292,8 @@ void main() {
     });
 
     test('handles HTML with no body tag', () async {
-      final file = _createTempFile('nobody.html', '<html><p>No body tag</html>');
+      final file =
+          _createTempFile('nobody.html', '<html><p>No body tag</html>');
       addTearDown(() => file.parent.delete(recursive: true));
 
       final note = await importer.parseHtmlFile(file);
@@ -308,7 +308,7 @@ void main() {
       addTearDown(() => dir.delete(recursive: true));
 
       // Should not throw -- returns null if decoding fails.
-      final note = await importer.parseHtmlFile(file);
+      final _ = await importer.parseHtmlFile(file);
       // May or may not be null depending on whether the bytes form valid UTF-8,
       // but it must not throw.
       expect(() => importer.parseHtmlFile(file), returnsNormally);

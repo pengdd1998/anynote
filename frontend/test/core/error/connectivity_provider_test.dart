@@ -8,8 +8,6 @@ import 'package:anynote/core/network/connectivity_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:anynote/core/sync/sync_queue_manager.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
-import 'package:anynote/main.dart';
-
 // ---------------------------------------------------------------------------
 // Mock: ConnectivityService
 // ---------------------------------------------------------------------------
@@ -49,9 +47,8 @@ class MockConnectivityService extends ConnectivityService {
 
   @override
   Stream<List<ConnectivityResult>> get onConnectivityChanged =>
-      _streamController.stream.map((connected) => connected
-          ? [ConnectivityResult.wifi]
-          : [ConnectivityResult.none]);
+      _streamController.stream.map((connected) =>
+          connected ? [ConnectivityResult.wifi] : [ConnectivityResult.none]);
 
   @override
   Future<void> recheck() async {}
@@ -307,11 +304,4 @@ void main() {
       expect(true, isTrue);
     });
   });
-}
-
-/// Extension to pump a ProviderContainer, allowing microtasks to complete.
-extension on ProviderContainer {
-  Future<void> pump() async {
-    await Future<void>.delayed(Duration.zero);
-  }
 }

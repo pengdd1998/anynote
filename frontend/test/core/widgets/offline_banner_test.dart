@@ -59,7 +59,7 @@ void main() {
         connectivityStream: Stream.value(false),
       );
 
-      final animatedContainer = tester.widget<AnimatedContainer>(
+      final _ = tester.widget<AnimatedContainer>(
         find.byType(AnimatedContainer),
       );
       // The height should be 32 when offline.

@@ -17,13 +17,13 @@ import 'package:flutter/foundation.dart';
 ///     return syncEngine.pull();
 ///   });
 class PerformanceMonitor {
-  PerformanceMonitor._({this.slowThreshold = const Duration(milliseconds: 500)});
+  PerformanceMonitor._();
 
   /// Singleton instance.
   static final PerformanceMonitor instance = PerformanceMonitor._();
 
   /// Operations taking longer than this threshold are logged as slow in debug.
-  final Duration slowThreshold;
+  final Duration slowThreshold = const Duration(milliseconds: 500);
 
   /// Active named timers: operation name -> start timestamp.
   final Map<String, Stopwatch> _timers = {};

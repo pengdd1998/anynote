@@ -102,7 +102,8 @@ void main() {
 
     // -- Action button ------------------------------------------------
 
-    testWidgets('renders action button when actionLabel and onAction are provided',
+    testWidgets(
+        'renders action button when actionLabel and onAction are provided',
         (tester) async {
       var pressed = false;
       await pumpEmptyState(
@@ -115,6 +116,8 @@ void main() {
 
       expect(find.text('New Note'), findsOneWidget);
       expect(find.byType(FilledButton), findsOneWidget);
+      // Prevent unused variable warning.
+      expect(pressed, isFalse);
     });
 
     testWidgets('action button callback is invoked on tap', (tester) async {

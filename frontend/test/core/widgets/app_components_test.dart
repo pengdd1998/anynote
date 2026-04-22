@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/error/exceptions.dart';
-import 'package:anynote/core/error/error_display.dart';
-import 'package:anynote/core/theme/app_theme.dart';
 import 'package:anynote/core/widgets/app_components.dart';
 
 void main() {
@@ -69,7 +67,8 @@ void main() {
       expect(find.byType(Text), findsOneWidget);
     });
 
-    testWidgets('shows action button when both actionLabel and onAction are provided',
+    testWidgets(
+        'shows action button when both actionLabel and onAction are provided',
         (tester) async {
       await pumpEmptyState(
         tester,
@@ -83,7 +82,8 @@ void main() {
       expect(find.text('Create'), findsOneWidget);
     });
 
-    testWidgets('does not show action button when actionLabel is null', (tester) async {
+    testWidgets('does not show action button when actionLabel is null',
+        (tester) async {
       await pumpEmptyState(
         tester,
         icon: Icons.note_add,
@@ -94,7 +94,8 @@ void main() {
       expect(find.byType(FilledButton), findsNothing);
     });
 
-    testWidgets('does not show action button when onAction is null', (tester) async {
+    testWidgets('does not show action button when onAction is null',
+        (tester) async {
       await pumpEmptyState(
         tester,
         icon: Icons.note_add,
@@ -315,7 +316,8 @@ void main() {
       expect(find.byType(FilledButton), findsOneWidget);
     });
 
-    testWidgets('does not show retry button when onRetry is null', (tester) async {
+    testWidgets('does not show retry button when onRetry is null',
+        (tester) async {
       const error = NetworkException(message: 'No connection');
 
       await tester.pumpWidget(
@@ -349,7 +351,8 @@ void main() {
       expect(retryPressed, isTrue);
     });
 
-    testWidgets('renders different icons for different error types', (tester) async {
+    testWidgets('renders different icons for different error types',
+        (tester) async {
       const authError = AuthException(message: 'Expired');
 
       await tester.pumpWidget(
@@ -439,20 +442,24 @@ void main() {
       expect(find.byIcon(Icons.cloud_done), findsNothing);
     });
 
-    testWidgets('shows label text when showLabel is true (synced)', (tester) async {
+    testWidgets('shows label text when showLabel is true (synced)',
+        (tester) async {
       await pumpBadge(tester, isSynced: true, showLabel: true);
 
       expect(find.text('Synced'), findsOneWidget);
     });
 
-    testWidgets('shows label text when showLabel is true (pending)', (tester) async {
+    testWidgets('shows label text when showLabel is true (pending)',
+        (tester) async {
       await pumpBadge(tester, isSynced: false, showLabel: true);
 
       expect(find.text('Pending'), findsOneWidget);
     });
 
-    testWidgets('shows label text when showLabel is true (conflict)', (tester) async {
-      await pumpBadge(tester, isSynced: false, hasConflict: true, showLabel: true);
+    testWidgets('shows label text when showLabel is true (conflict)',
+        (tester) async {
+      await pumpBadge(tester,
+          isSynced: false, hasConflict: true, showLabel: true);
 
       expect(find.text('Conflict'), findsOneWidget);
     });

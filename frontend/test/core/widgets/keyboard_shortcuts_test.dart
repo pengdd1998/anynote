@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/widgets/keyboard_shortcuts.dart';
-import 'package:anynote/core/widgets/sidebar_provider.dart';
 
 void main() {
   group('Intents', () {

@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/network/api_client.dart';
@@ -128,7 +127,8 @@ void main() {
 
       expect(response.accessToken, equals('at_123'));
       expect(response.refreshToken, equals('rt_456'));
-      expect(response.expiresAt, equals(DateTime.parse('2025-12-31T23:59:59.000Z')));
+      expect(response.expiresAt,
+          equals(DateTime.parse('2025-12-31T23:59:59.000Z')));
       expect(response.user['id'], equals('uid-1'));
       expect(response.user['email'], equals('test@example.com'));
     });
