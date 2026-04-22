@@ -161,10 +161,10 @@ void main() {
 
     testWidgets('renders multiple CachedImage instances', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
-              children: const [
+              children: [
                 CachedImage(url: 'https://example.com/a.jpg'),
                 CachedImage(url: 'https://example.com/b.jpg'),
               ],
@@ -180,7 +180,7 @@ void main() {
 
     testWidgets('preserves maxWidth and maxHeight', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CachedImage(
               url: 'https://example.com/photo.jpg',

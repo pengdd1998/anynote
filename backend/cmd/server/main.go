@@ -132,7 +132,11 @@ func main() {
 
 	defaultLLMCfg := llm.LoadDefaultConfig(cfg)
 
-	masterKey := []byte(cfg.Auth.MasterEncryptionKey)
+	masterKey, err := cfg.Auth.MasterKeyBytes()
+	if err != nil {
+		slog.Error("invalid master encryption key", "error", err)
+		os.Exit(1)
+	}
 
 	// Use the fallback constructor when a fallback LLM provider is configured.
 	// This enables automatic failover in shared mode when the default provider

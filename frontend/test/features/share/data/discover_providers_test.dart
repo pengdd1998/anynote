@@ -43,7 +43,7 @@ class _FakeApiClient extends ApiClient {
 
   @override
   Future<Map<String, dynamic>> toggleReaction(
-      String shareId, String reactionType) async {
+      String shareId, String reactionType,) async {
     if (_onToggleReaction != null) {
       return _onToggleReaction(shareId, reactionType);
     }
@@ -57,7 +57,7 @@ void main() {
       final container = ProviderContainer(overrides: [
         apiClientProvider
             .overrideWithValue(_FakeApiClient(feed: [])),
-      ]);
+      ],);
 
       final result = await container.read(discoverFeedProvider(0).future);
       expect(result, isEmpty);
@@ -90,7 +90,7 @@ void main() {
       final container = ProviderContainer(overrides: [
         apiClientProvider
             .overrideWithValue(_FakeApiClient(feed: feedItems)),
-      ]);
+      ],);
 
       final result = await container.read(discoverFeedProvider(0).future);
       expect(result.length, 2);
@@ -117,7 +117,7 @@ void main() {
       final container = ProviderContainer(overrides: [
         apiClientProvider
             .overrideWithValue(_FakeApiClient(feed: feedItems)),
-      ]);
+      ],);
 
       // Offset 0 should return the first 20 items (default limit).
       final firstPage = await container.read(discoverFeedProvider(0).future);
@@ -148,8 +148,8 @@ void main() {
       final container = ProviderContainer(overrides: [
         apiClientProvider.overrideWithValue(_FakeApiClient(
           feed: feedItems,
-        )),
-      ]);
+        ),),
+      ],);
 
       // Read the same offset twice.
       final result1 = await container.read(discoverFeedProvider(0).future);
@@ -177,7 +177,7 @@ void main() {
       final container = ProviderContainer(overrides: [
         apiClientProvider
             .overrideWithValue(_FakeApiClient(feed: feedItems)),
-      ]);
+      ],);
 
       final page0 = await container.read(discoverFeedProvider(0).future);
       final page10 = await container.read(discoverFeedProvider(10).future);
@@ -254,14 +254,14 @@ void main() {
             (state) => {...state, 'share-1:heart': true},
           );
       expect(container.read(reactionStateProvider('share-1'))['share-1:heart'],
-          isTrue);
+          isTrue,);
 
       // Toggle back to false.
       container.read(reactionStateProvider('share-1').notifier).update(
             (state) => {...state, 'share-1:heart': false},
           );
       expect(container.read(reactionStateProvider('share-1'))['share-1:heart'],
-          isFalse);
+          isFalse,);
 
       container.dispose();
     });

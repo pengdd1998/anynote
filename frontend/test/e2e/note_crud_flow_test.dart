@@ -133,7 +133,7 @@ void main() {
 
       // Simulate encrypted save via FakeCryptoService prefix.
       const content = 'Secret note content';
-      final encrypted = 'enc_$content';
+      const encrypted = 'enc_$content';
 
       await db.notesDao.createNote(
         id: 'crypto-test-note',
@@ -174,7 +174,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Verify original note exists.
-      var note = await db.notesDao.getNoteById(noteId);
+      final note = await db.notesDao.getNoteById(noteId);
       expect(note, isNotNull);
       expect(note!.plainTitle, equals('Original Title'));
 

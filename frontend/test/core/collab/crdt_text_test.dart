@@ -630,7 +630,7 @@ void main() {
         siteId: 'x',
         clock: 1,
         value: 'y',
-      )), throwsUnsupportedError);
+      ),), throwsUnsupportedError,);
     });
 
     test('getOpsSince returns nodes with clock greater than threshold', () {
@@ -974,7 +974,7 @@ void main() {
 
   group('stress convergence', () {
     test('10 sites all inserting at position 0 converge', () {
-      final siteCount = 10;
+      const siteCount = 10;
       final sites = List.generate(siteCount, (i) => CRDTText('site-$i'));
 
       final allOps = <RGANode>[];
@@ -998,7 +998,7 @@ void main() {
     test('interleaved insert and delete across many sites converges', () {
       // Use a simpler approach: each site makes concurrent inserts only,
       // after a shared base. Then verify all converge.
-      final siteCount = 5;
+      const siteCount = 5;
       final sites = List.generate(siteCount, (i) => CRDTText('site-$i'));
 
       // All sites start with a shared base "XX".
@@ -1075,7 +1075,7 @@ void main() {
 
     test('long text insert and partial delete', () {
       final crdt = CRDTText('site-A');
-      final text = 'The quick brown fox jumps over the lazy dog';
+      const text = 'The quick brown fox jumps over the lazy dog';
       crdt.localInsert(0, text);
 
       // Delete "brown ".

@@ -459,7 +459,7 @@ void main() {
     testWidgets('shows label text when showLabel is true (conflict)',
         (tester) async {
       await pumpBadge(tester,
-          isSynced: false, hasConflict: true, showLabel: true);
+          isSynced: false, hasConflict: true, showLabel: true,);
 
       expect(find.text('Conflict'), findsOneWidget);
     });
@@ -565,13 +565,13 @@ void main() {
   group('SettingsGroup', () {
     testWidgets('renders children with dividers between them', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SettingsGroup(
               children: [
-                const Text('Item 1'),
-                const Text('Item 2'),
-                const Text('Item 3'),
+                Text('Item 1'),
+                Text('Item 2'),
+                Text('Item 3'),
               ],
             ),
           ),
@@ -588,11 +588,11 @@ void main() {
 
     testWidgets('renders single child without divider', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SettingsGroup(
               children: [
-                const Text('Only item'),
+                Text('Only item'),
               ],
             ),
           ),
@@ -618,10 +618,10 @@ void main() {
 
     testWidgets('has rounded container with border', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SettingsGroup(
-              children: [const Text('Item')],
+              children: [Text('Item')],
             ),
           ),
         ),
@@ -641,7 +641,7 @@ void main() {
   group('SettingsItem', () {
     testWidgets('renders icon, title, and subtitle', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SettingsItem(
               icon: Icons.person,
@@ -659,7 +659,7 @@ void main() {
 
     testWidgets('renders without subtitle when null', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SettingsItem(
               icon: Icons.person,
@@ -674,12 +674,12 @@ void main() {
 
     testWidgets('renders trailing widget when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SettingsItem(
               icon: Icons.person,
               title: 'Email',
-              trailing: const Icon(Icons.chevron_right),
+              trailing: Icon(Icons.chevron_right),
             ),
           ),
         ),
@@ -708,7 +708,7 @@ void main() {
 
     testWidgets('icon is rendered inside a circle container', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SettingsItem(
               icon: Icons.person,
@@ -730,7 +730,7 @@ void main() {
   group('DestructiveSettingsItem', () {
     testWidgets('renders title with error color', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DestructiveSettingsItem(
               icon: Icons.delete,
@@ -751,7 +751,7 @@ void main() {
 
     testWidgets('renders subtitle when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DestructiveSettingsItem(
               icon: Icons.delete,
@@ -785,7 +785,7 @@ void main() {
 
     testWidgets('icon circle uses error color', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DestructiveSettingsItem(
               icon: Icons.logout,

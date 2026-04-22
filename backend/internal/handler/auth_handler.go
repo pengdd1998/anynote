@@ -46,6 +46,10 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "recovery_key must be at most 1024 bytes")
 		return
 	}
+	if len(req.RecoverySalt) > 64 {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "recovery_salt must be at most 64 bytes")
+		return
+	}
 
 	resp, err := h.authService.Register(r.Context(), req)
 	if err != nil {
@@ -161,4 +165,29 @@ func (h *AuthHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+// GetRecoverySalt handles GET /api/v1/auth/recovery-salt?email=...
+// This is a public endpoint (rate limited) because the user is not yet
+// authenticated during account recovery.
+func (h *AuthHandler) GetRecoverySalt(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
+	if email == "" {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "email query parameter is required")
+		return
+	}
+	if err := validateEmail(email); err != nil {
+		writeValidationError(w, err.(*ValidationError))
+		return
+	}
+
+	resp, err := h.authService.GetRecoverySaltByEmail(r.Context(), email)
+	if err != nil {
+		if !writeErrorFromSentinel(w, r, err) {
+			writeError(w, r, http.StatusInternalServerError, "internal_error", "Failed to retrieve recovery salt")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
 }

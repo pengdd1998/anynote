@@ -49,7 +49,7 @@ void main() {
   });
 
   // -- Helper to build a backup JSON envelope --
-  String _writeBackupFile(Map<String, dynamic> envelope) {
+  String writeBackupFile(Map<String, dynamic> envelope) {
     final path =
         '${tempDir.path}/backup_${DateTime.now().microsecondsSinceEpoch}.json';
     File(path).writeAsStringSync(jsonEncode(envelope));
@@ -57,11 +57,11 @@ void main() {
   }
 
   // Use the real crypto service to encrypt so verify() can decrypt.
-  Future<String> _realEncryptBackup(Map<String, dynamic> innerData) async {
-    final backupKeyId = 'real-backup-key';
+  Future<String> realEncryptBackup(Map<String, dynamic> innerData) async {
+    const backupKeyId = 'real-backup-key';
     final plaintext = jsonEncode(innerData);
     final encrypted = await crypto.encryptForItem(backupKeyId, plaintext);
-    return _writeBackupFile({
+    return writeBackupFile({
       'format': 'anynote-backup-v1',
       'backup_key_id': backupKeyId,
       'encrypted_data': encrypted,
@@ -165,7 +165,7 @@ void main() {
     });
 
     test('returns error for invalid JSON', () async {
-      final path = _writeBackupFile({'not': 'valid envelope'});
+      final path = writeBackupFile({'not': 'valid envelope'});
 
       final verifier = BackupVerifier(crypto);
       final result = await verifier.verify(path);
@@ -176,7 +176,7 @@ void main() {
     });
 
     test('returns error for unsupported format', () async {
-      final path = _writeBackupFile({
+      final path = writeBackupFile({
         'format': 'unknown-format-v99',
         'backup_key_id': 'key-1',
         'encrypted_data': 'data',
@@ -190,7 +190,7 @@ void main() {
     });
 
     test('returns error for missing backup_key_id', () async {
-      final path = _writeBackupFile({
+      final path = writeBackupFile({
         'format': 'anynote-backup-v1',
         'encrypted_data': 'some-data',
       });
@@ -200,11 +200,11 @@ void main() {
 
       expect(result.isValid, isFalse);
       expect(
-          result.errors, contains('Missing backup_key_id in backup envelope'));
+          result.errors, contains('Missing backup_key_id in backup envelope'),);
     });
 
     test('returns error for missing encrypted_data', () async {
-      final path = _writeBackupFile({
+      final path = writeBackupFile({
         'format': 'anynote-backup-v1',
         'backup_key_id': 'key-1',
       });
@@ -214,13 +214,13 @@ void main() {
 
       expect(result.isValid, isFalse);
       expect(
-          result.errors, contains('Missing encrypted_data in backup envelope'));
+          result.errors, contains('Missing encrypted_data in backup envelope'),);
     });
 
     test(
         'returns both errors when backup_key_id and encrypted_data are missing',
         () async {
-      final path = _writeBackupFile({
+      final path = writeBackupFile({
         'format': 'anynote-backup-v1',
       });
 
@@ -236,7 +236,7 @@ void main() {
       final lockedCrypto = CryptoService();
       final verifier = BackupVerifier(lockedCrypto);
 
-      final path = _writeBackupFile({
+      final path = writeBackupFile({
         'format': 'anynote-backup-v1',
         'backup_key_id': 'key-1',
         'encrypted_data': 'data',
@@ -249,7 +249,7 @@ void main() {
           result.errors,
           contains(
             'Encryption keys not unlocked. Cannot verify backup contents.',
-          ));
+          ),);
     });
 
     test('reports decryption failure when key does not match', () async {
@@ -259,11 +259,11 @@ void main() {
       wrongCrypto.injectEncryptKey(wrongKey);
 
       // Create a backup encrypted with the real crypto
-      final backupPath = await _realEncryptBackup({
+      final backupPath = await realEncryptBackup({
         'version': 1,
         'exported_at': '2026-01-01T00:00:00Z',
         'notes': [
-          {'id': 'n1'}
+          {'id': 'n1'},
         ],
       });
 
@@ -275,7 +275,7 @@ void main() {
     });
 
     test('successfully decrypts and counts items', () async {
-      final backupPath = await _realEncryptBackup({
+      final backupPath = await realEncryptBackup({
         'version': 1,
         'exported_at': '2026-04-15T10:30:00Z',
         'notes': [
@@ -312,7 +312,7 @@ void main() {
     });
 
     test('handles backup with missing optional fields gracefully', () async {
-      final backupPath = await _realEncryptBackup({
+      final backupPath = await realEncryptBackup({
         // No version, exported_at, or content arrays
         'notes': [],
       });
@@ -350,7 +350,7 @@ void main() {
           Uint8List.fromList(List.generate(32, (i) => (i * 7 + 11) % 256));
       wrongCrypto.injectEncryptKey(wrongKey);
 
-      final backupPath = await _realEncryptBackup({
+      final backupPath = await realEncryptBackup({
         'version': 1,
         'notes': [],
       });
@@ -363,7 +363,7 @@ void main() {
     });
 
     test('returns correct counts for empty backup', () async {
-      final backupPath = await _realEncryptBackup({
+      final backupPath = await realEncryptBackup({
         'version': 1,
         'notes': [],
         'tags': [],
@@ -383,7 +383,7 @@ void main() {
     });
 
     test('extracts note titles and date ranges', () async {
-      final backupPath = await _realEncryptBackup({
+      final backupPath = await realEncryptBackup({
         'version': 1,
         'notes': [
           {
@@ -412,7 +412,7 @@ void main() {
     });
 
     test('uses (encrypted) placeholder when plain_title is missing', () async {
-      final backupPath = await _realEncryptBackup({
+      final backupPath = await realEncryptBackup({
         'version': 1,
         'notes': [
           {'id': 'n-no-title'},
@@ -429,7 +429,7 @@ void main() {
     });
 
     test('detects conflicts with existing items', () async {
-      final backupPath = await _realEncryptBackup({
+      final backupPath = await realEncryptBackup({
         'version': 1,
         'notes': [
           {'id': 'n1', 'plain_title': 'Existing'},
@@ -471,7 +471,7 @@ void main() {
     });
 
     test('skips unparseable dates gracefully', () async {
-      final backupPath = await _realEncryptBackup({
+      final backupPath = await realEncryptBackup({
         'version': 1,
         'notes': [
           {'id': 'n1', 'plain_title': 'Bad Date', 'created_at': 'not-a-date'},

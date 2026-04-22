@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -204,11 +203,11 @@ void main() {
       final closeTab = find.text('Close Tab');
 
       expect(newNote.evaluate().isNotEmpty, isTrue,
-          reason: 'New Note menu item should exist');
+          reason: 'New Note menu item should exist',);
       expect(save.evaluate().isNotEmpty, isTrue,
-          reason: 'Save menu item should exist');
+          reason: 'Save menu item should exist',);
       expect(closeTab.evaluate().isNotEmpty, isTrue,
-          reason: 'Close Tab menu item should exist');
+          reason: 'Close Tab menu item should exist',);
 
       debugDefaultTargetPlatformOverride = null;
     });
@@ -318,7 +317,7 @@ void main() {
       // Find all MenuItemButton widgets in the rendered tree.
       final menuButtons = find.byType(MenuItemButton);
       expect(menuButtons.evaluate().isNotEmpty, isTrue,
-          reason: 'There should be MenuItemButton widgets in the menu bar');
+          reason: 'There should be MenuItemButton widgets in the menu bar',);
 
       // Verify that at least some buttons have SingleActivator shortcuts.
       int shortcutCount = 0;
@@ -329,7 +328,7 @@ void main() {
         }
       }
       expect(shortcutCount, greaterThan(0),
-          reason: 'Some menu items should have keyboard shortcuts');
+          reason: 'Some menu items should have keyboard shortcuts',);
 
       debugDefaultTargetPlatformOverride = null;
     });

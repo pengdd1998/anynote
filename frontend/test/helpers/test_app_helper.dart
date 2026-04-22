@@ -163,7 +163,7 @@ Future<TestAppHandle> pumpScreen(
         builder: (context) {
           container = ProviderScope.containerOf(context);
           return MaterialApp(
-            localizationsDelegates: [
+            localizationsDelegates: const [
               ...AppLocalizations.localizationsDelegates,
               quill.FlutterQuillLocalizations.delegate,
             ],

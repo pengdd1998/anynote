@@ -173,14 +173,14 @@ void main() {
     }
 
     test('parses single SSE data line with content', () {
-      final sse = 'data: {"content":"Hello"}\n\n';
+      const sse = 'data: {"content":"Hello"}\n\n';
       final results = parseSSE(sse);
 
       expect(results, ['Hello']);
     });
 
     test('parses multiple SSE data lines', () {
-      final sse = ''
+      const sse = ''
           'data: {"content":"Hello "}\n'
           'data: {"content":"world"}\n'
           '\n';
@@ -190,7 +190,7 @@ void main() {
     });
 
     test('stops at [DONE] sentinel', () {
-      final sse = ''
+      const sse = ''
           'data: {"content":"part one"}\n'
           'data: [DONE]\n'
           'data: {"content":"should not appear"}\n'
@@ -201,7 +201,7 @@ void main() {
     });
 
     test('skips lines that do not start with "data: "', () {
-      final sse = ''
+      const sse = ''
           ': this is a comment\n'
           'data: {"content":"visible"}\n'
           'event: ping\n'
@@ -212,7 +212,7 @@ void main() {
     });
 
     test('skips malformed JSON in data line', () {
-      final sse = ''
+      const sse = ''
           'data: {invalid json}\n'
           'data: {"content":"valid"}\n'
           '\n';
@@ -222,7 +222,7 @@ void main() {
     });
 
     test('skips data line without content field', () {
-      final sse = ''
+      const sse = ''
           'data: {"type":"ping"}\n'
           'data: {"content":"actual content"}\n'
           '\n';
@@ -237,8 +237,8 @@ void main() {
     });
 
     test('handles unicode content in SSE', () {
-      final content = '\u4f60\u597d\u4e16\u754c';
-      final sse = 'data: {"content":"$content"}\n\n';
+      const content = '\u4f60\u597d\u4e16\u754c';
+      const sse = 'data: {"content":"$content"}\n\n';
       final results = parseSSE(sse);
 
       expect(results, [content]);

@@ -23,11 +23,13 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockAuthService struct {
-	registerFn       func(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error)
-	loginFn          func(ctx context.Context, req domain.LoginRequest) (*domain.AuthResponse, error)
-	refreshTokenFn   func(ctx context.Context, refreshToken string) (*domain.AuthResponse, error)
-	getCurrentUserFn func(ctx context.Context, userID uuid.UUID) (*domain.User, error)
-	deleteAccountFn  func(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error
+	registerFn             func(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error)
+	loginFn                func(ctx context.Context, req domain.LoginRequest) (*domain.AuthResponse, error)
+	refreshTokenFn         func(ctx context.Context, refreshToken string) (*domain.AuthResponse, error)
+	getCurrentUserFn       func(ctx context.Context, userID uuid.UUID) (*domain.User, error)
+	deleteAccountFn        func(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error
+	getRecoverySaltFn      func(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error)
+	getRecoverySaltByEmail func(ctx context.Context, email string) (*domain.RecoverySaltResponse, error)
 }
 
 func (m *mockAuthService) Register(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error) {
@@ -65,6 +67,20 @@ func (m *mockAuthService) DeleteAccount(ctx context.Context, userID uuid.UUID, a
 	return errors.New("not implemented")
 }
 
+func (m *mockAuthService) GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error) {
+	if m.getRecoverySaltFn != nil {
+		return m.getRecoverySaltFn(ctx, userID)
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (m *mockAuthService) GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
+	if m.getRecoverySaltByEmail != nil {
+		return m.getRecoverySaltByEmail(ctx, email)
+	}
+	return nil, errors.New("not implemented")
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -83,6 +99,7 @@ func setupAuthRouter(svc *mockAuthService) *chi.Mux {
 		r.Post("/register", h.Register)
 		r.Post("/login", h.Login)
 		r.Post("/refresh", h.RefreshToken)
+		r.Get("/recovery-salt", h.GetRecoverySalt)
 	})
 
 	// Authenticated routes
@@ -997,4 +1014,124 @@ func TestAuthHandler_DeleteAccount_InternalError(t *testing.T) {
 	if errResp.Error.Code != "internal_error" {
 		t.Errorf("error type = %q, want %q", errResp.Error.Code, "internal_error")
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: GET /api/v1/auth/recovery-salt
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_GetRecoverySalt_Success(t *testing.T) {
+	salt := []byte{0x01, 0x02, 0x03, 0x04}
+	svc := &mockAuthService{
+		getRecoverySaltByEmail: func(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
+			if email != "alice@example.com" {
+				t.Errorf("email = %q, want %q", email, "alice@example.com")
+			}
+			return &domain.RecoverySaltResponse{RecoverySalt: salt}, nil
+		},
+	}
+
+	router := setupAuthRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/recovery-salt?email=alice@example.com", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	var resp domain.RecoverySaltResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if len(resp.RecoverySalt) != len(salt) {
+		t.Fatalf("RecoverySalt length = %d, want %d", len(resp.RecoverySalt), len(salt))
+	}
+	for i, b := range resp.RecoverySalt {
+		if b != salt[i] {
+			t.Errorf("RecoverySalt[%d] = %d, want %d", i, b, salt[i])
+		}
+	}
+}
+
+func TestAuthHandler_GetRecoverySalt_MissingEmail(t *testing.T) {
+	svc := &mockAuthService{}
+	router := setupAuthRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/recovery-salt", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+
+	var errResp domain.ErrorResponse
+	json.NewDecoder(rec.Body).Decode(&errResp)
+	if errResp.Error.Code != "validation_error" {
+		t.Errorf("error type = %q, want %q", errResp.Error.Code, "validation_error")
+	}
+}
+
+func TestAuthHandler_GetRecoverySalt_InvalidEmail(t *testing.T) {
+	svc := &mockAuthService{}
+	router := setupAuthRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/recovery-salt?email=not-an-email", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusUnprocessableEntity, rec.Body.String())
+	}
+}
+
+func TestAuthHandler_GetRecoverySalt_UserNotFound(t *testing.T) {
+	svc := &mockAuthService{
+		getRecoverySaltByEmail: func(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
+			return nil, service.ErrUserNotFound
+		},
+	}
+
+	router := setupAuthRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/recovery-salt?email=nobody@example.com", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusNotFound, rec.Body.String())
+	}
+}
+
+func TestAuthHandler_GetRecoverySalt_NilSalt(t *testing.T) {
+	// Legacy user: recovery_salt is nil (not yet set).
+	svc := &mockAuthService{
+		getRecoverySaltByEmail: func(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
+			return &domain.RecoverySaltResponse{RecoverySalt: nil}, nil
+		},
+	}
+
+	router := setupAuthRouter(svc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/recovery-salt?email=legacy@example.com", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	var resp domain.RecoverySaltResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	// nil RecoverySalt is valid for legacy accounts.
 }

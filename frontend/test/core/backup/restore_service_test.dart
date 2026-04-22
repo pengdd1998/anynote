@@ -40,15 +40,15 @@ void main() {
   });
 
   // Helper: build encrypted backup bytes from inner data map.
-  Future<Uint8List> _buildBackup(Map<String, dynamic> innerData) async {
-    final backupKeyId = 'restore-test-key';
+  Future<Uint8List> buildBackup(Map<String, dynamic> innerData) async {
+    const backupKeyId = 'restore-test-key';
     final plaintext = jsonEncode(innerData);
     final encrypted = await crypto.encryptForItem(backupKeyId, plaintext);
     return Uint8List.fromList(utf8.encode(jsonEncode({
       'format': 'anynote-backup-v1',
       'backup_key_id': backupKeyId,
       'encrypted_data': encrypted,
-    })));
+    }),),);
   }
 
   group('restore', () {
@@ -68,7 +68,7 @@ void main() {
         'format': 'bad-format',
         'backup_key_id': 'k',
         'encrypted_data': 'd',
-      })));
+      }),),);
 
       expect(
         () => service.restore(badData, ConflictStrategy.skip),
@@ -95,7 +95,7 @@ void main() {
       wrongCrypto.injectEncryptKey(wrongKey);
 
       final service = RestoreService(db, wrongCrypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [],
         'tags': [],
         'collections': [],
@@ -110,7 +110,7 @@ void main() {
 
     test('restores notes into empty database', () async {
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [
           {
             'id': 'note-r1',
@@ -140,7 +140,7 @@ void main() {
 
     test('restores tags into empty database', () async {
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [],
         'tags': [
           {
@@ -165,7 +165,7 @@ void main() {
 
     test('restores collections into empty database', () async {
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [],
         'tags': [],
         'collections': [
@@ -189,7 +189,7 @@ void main() {
 
     test('restores AI-generated contents', () async {
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [],
         'tags': [],
         'collections': [],
@@ -222,7 +222,7 @@ void main() {
       );
 
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [
           {
             'id': 'note-conflict',
@@ -256,7 +256,7 @@ void main() {
       );
 
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [
           {
             'id': 'note-overwrite',
@@ -290,7 +290,7 @@ void main() {
       );
 
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [
           {
             'id': 'note-both',
@@ -331,7 +331,7 @@ void main() {
       );
 
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [
           {
             'id': 'note-both-nopl',
@@ -358,13 +358,13 @@ void main() {
       );
 
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [],
         'tags': [
           {
             'id': 'tag-conflict',
             'encrypted_name': 'enc-new-tag',
-            'plain_name': 'NewTag'
+            'plain_name': 'NewTag',
           },
         ],
         'collections': [],
@@ -388,13 +388,13 @@ void main() {
       );
 
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [],
         'tags': [
           {
             'id': 'tag-overwrite',
             'encrypted_name': 'enc-new',
-            'plain_name': 'NewTag'
+            'plain_name': 'NewTag',
           },
         ],
         'collections': [],
@@ -418,13 +418,13 @@ void main() {
       );
 
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [],
         'tags': [
           {
             'id': 'tag-both',
             'encrypted_name': 'enc-new',
-            'plain_name': 'NewTag'
+            'plain_name': 'NewTag',
           },
         ],
         'collections': [],
@@ -450,14 +450,14 @@ void main() {
       );
 
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [],
         'tags': [],
         'collections': [
           {
             'id': 'col-overwrite',
             'encrypted_title': 'enc-new',
-            'plain_title': 'New Collection'
+            'plain_title': 'New Collection',
           },
         ],
         'contents': [],
@@ -482,7 +482,7 @@ void main() {
       );
 
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [],
         'tags': [],
         'collections': [],
@@ -506,12 +506,12 @@ void main() {
 
     test('restores mixed item types in one operation', () async {
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [
           {
             'id': 'n1',
             'encrypted_content': 'enc-n1',
-            'plain_content': 'Note 1'
+            'plain_content': 'Note 1',
           },
         ],
         'tags': [
@@ -539,12 +539,12 @@ void main() {
 
       // Pre-create a note that will conflict with skip strategy (no error)
       // And include a note with no 'id' key to cause a type cast error
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [
           {
             'id': 'n-good',
             'encrypted_content': 'enc-good',
-            'plain_content': 'Good'
+            'plain_content': 'Good',
           },
           // This will cause a crash because 'id' is missing -> cast to String fails
           {'encrypted_content': 'enc-bad'},
@@ -563,7 +563,7 @@ void main() {
 
     test('calls progress callback for each item', () async {
       final service = RestoreService(db, crypto);
-      final backupData = await _buildBackup({
+      final backupData = await buildBackup({
         'notes': [
           {'id': 'n1', 'encrypted_content': 'enc1', 'plain_content': 'A'},
           {'id': 'n2', 'encrypted_content': 'enc2', 'plain_content': 'B'},

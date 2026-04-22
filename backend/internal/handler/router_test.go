@@ -36,6 +36,12 @@ func (s *routerStubAuthService) GetCurrentUser(ctx context.Context, userID uuid.
 func (s *routerStubAuthService) DeleteAccount(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error {
 	return nil
 }
+func (s *routerStubAuthService) GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error) {
+	return nil, nil
+}
+func (s *routerStubAuthService) GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
+	return nil, nil
+}
 
 // routerStubSyncService implements service.SyncService.
 type routerStubSyncService struct{}
@@ -228,7 +234,7 @@ func newTestRouterServices() (*config.Config, *Services, *HealthHandler) {
 		Server: config.ServerConfig{AllowOrigins: []string{"*"}},
 		Auth: config.AuthConfig{
 			JWTSecret:           testJWTSecret,
-			MasterEncryptionKey: "0123456789abcdef0123456789abcdef",
+			MasterEncryptionKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
 		},
 	}
 	services := &Services{

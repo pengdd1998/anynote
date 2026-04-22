@@ -420,7 +420,7 @@ void main() {
         SyncErrorKind.network,
         SyncErrorKind.auth,
         SyncErrorKind.unknown,
-      ]));
+      ]),);
     });
   });
 }

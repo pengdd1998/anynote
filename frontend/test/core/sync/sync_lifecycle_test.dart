@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -114,7 +113,7 @@ void main() {
       // Wire providers into mock ref.
       ref.setOverride<SyncEngine>(syncEngineProvider, mockEngine);
       ref.setOverride<SyncQueueManager>(
-          syncQueueManagerProvider, mockQueueManager);
+          syncQueueManagerProvider, mockQueueManager,);
     });
 
     group('start / stop lifecycle', () {
@@ -298,12 +297,12 @@ void main() {
         // The timestamp should be between before and after.
         expect(
           lifecycle.lastSyncAt!.isAfter(
-              before.subtract(const Duration(milliseconds: 1))),
+              before.subtract(const Duration(milliseconds: 1)),),
           isTrue,
         );
         expect(
           lifecycle.lastSyncAt!.isBefore(
-              after.add(const Duration(milliseconds: 1))),
+              after.add(const Duration(milliseconds: 1)),),
           isTrue,
         );
       });

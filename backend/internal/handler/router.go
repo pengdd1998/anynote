@@ -50,7 +50,13 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	aiH := &AIHandler{aiService: services.AIProxy, quotaSvc: services.Quota}
 	llmH := &LLMConfigHandler{llmService: services.LLMConfig}
 	publishH := &PublishHandler{publishService: services.Publish}
-	platformH := NewPlatformHandler(services.Platform, []byte(cfg.Auth.MasterEncryptionKey))
+	masterKey, err := cfg.Auth.MasterKeyBytes()
+	if err != nil {
+		// MasterKeyBytes should never fail after config.Validate(), but handle
+		// it defensively to avoid silently using a nil key.
+		panic("router: invalid master encryption key: " + err.Error())
+	}
+	platformH := NewPlatformHandler(services.Platform, masterKey)
 	shareH := &ShareHandler{shareService: services.Share}
 	pushH := &PushHandler{pushService: services.Push}
 	commentH := &CommentHandler{commentService: services.Comment}
@@ -70,6 +76,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/register", authH.Register)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/login", authH.Login)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/refresh", authH.RefreshToken)
+			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Get("/recovery-salt", authH.GetRecoverySalt)
 		})
 
 		// Public share retrieval (no auth required)

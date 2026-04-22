@@ -35,7 +35,7 @@ void main() {
     );
   });
 
-  Widget _buildTestApp() {
+  Widget buildTestApp() {
     return MaterialApp.router(
       routerConfig: goRouter,
     );
@@ -48,7 +48,7 @@ void main() {
   group('DeepLinkHandler - note links', () {
     testWidgets('navigates to /notes/new for anynote://notes/new',
         (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       // BuildContext is available after pumping
@@ -65,7 +65,7 @@ void main() {
 
     testWidgets('navigates to /notes/new for anynote://notes (single segment)',
         (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -80,7 +80,7 @@ void main() {
     });
 
     testWidgets('navigates to specific note with valid UUID', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -98,7 +98,7 @@ void main() {
     });
 
     testWidgets('navigates to note with short hex id', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -113,7 +113,7 @@ void main() {
     });
 
     testWidgets('rejects note id with uppercase letters', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -131,7 +131,7 @@ void main() {
     });
 
     testWidgets('rejects note id with special characters', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -146,7 +146,7 @@ void main() {
     });
 
     testWidgets('rejects note id with path traversal', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -161,7 +161,7 @@ void main() {
     });
 
     testWidgets('rejects overly long note id', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -180,7 +180,7 @@ void main() {
   group('DeepLinkHandler - share links', () {
     testWidgets('navigates to /share/received for anynote://share/received',
         (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -195,7 +195,7 @@ void main() {
     });
 
     testWidgets('navigates to share with valid UUID id', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -210,7 +210,7 @@ void main() {
     });
 
     testWidgets('rejects share id with invalid characters', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -226,7 +226,7 @@ void main() {
 
     testWidgets('does nothing for share with wrong segment count',
         (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -244,7 +244,7 @@ void main() {
 
   group('DeepLinkHandler - edge cases', () {
     testWidgets('does nothing for empty path segments', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -259,7 +259,7 @@ void main() {
     });
 
     testWidgets('does nothing for unknown first segment', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -275,7 +275,7 @@ void main() {
 
     testWidgets('does nothing for first segment with special characters',
         (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -292,7 +292,7 @@ void main() {
 
     testWidgets('handles notes with three segments (ignores extra)',
         (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);
@@ -310,7 +310,7 @@ void main() {
     });
 
     testWidgets('handles notes with empty second segment', (tester) async {
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(SizedBox).first);

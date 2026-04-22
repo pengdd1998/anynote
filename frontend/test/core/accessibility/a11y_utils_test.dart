@@ -137,7 +137,7 @@ void main() {
 
       final constrainedBox = tester.widget<ConstrainedBox>(
         find.byWidgetPredicate(
-            (w) => w is ConstrainedBox && w.constraints.minWidth == 48.0),
+            (w) => w is ConstrainedBox && w.constraints.minWidth == 48.0,),
       );
       final constraints = constrainedBox.constraints;
       expect(constraints.minWidth, 48.0);
@@ -158,7 +158,7 @@ void main() {
 
       final constrainedBox = tester.widget<ConstrainedBox>(
         find.byWidgetPredicate(
-            (w) => w is ConstrainedBox && w.constraints.minWidth == 64.0),
+            (w) => w is ConstrainedBox && w.constraints.minWidth == 64.0,),
       );
       expect(constrainedBox.constraints.minWidth, 64.0);
       expect(constrainedBox.constraints.minHeight, 64.0);
@@ -246,7 +246,7 @@ void main() {
 
       final semantics = tester.widget<Semantics>(
         find.byWidgetPredicate(
-            (w) => w is Semantics && w.properties.label == 'Sync status'),
+            (w) => w is Semantics && w.properties.label == 'Sync status',),
       );
       expect(semantics.properties.label, 'Sync status');
     });
@@ -293,7 +293,7 @@ void main() {
 
       final semantics = tester.widget<Semantics>(
         find.byWidgetPredicate(
-            (w) => w is Semantics && w.properties.label == 'Title'),
+            (w) => w is Semantics && w.properties.label == 'Title',),
       );
       expect(semantics.properties.textField, isTrue);
       expect(semantics.properties.label, 'Title');
@@ -322,7 +322,7 @@ void main() {
       final semantics = tester.widget<Semantics>(
         find.byWidgetPredicate((w) =>
             w is Semantics &&
-            w.properties.label == 'Note: Shopping list, updated 2h ago'),
+            w.properties.label == 'Note: Shopping list, updated 2h ago',),
       );
       expect(semantics.properties.button, isTrue);
       expect(semantics.properties.label, 'Note: Shopping list, updated 2h ago');
@@ -343,7 +343,7 @@ void main() {
 
       final semantics = tester.widget<Semantics>(
         find.byWidgetPredicate(
-            (w) => w is Semantics && w.properties.label == 'Info card'),
+            (w) => w is Semantics && w.properties.label == 'Info card',),
       );
       expect(semantics.properties.button, isFalse);
     });
@@ -372,7 +372,7 @@ void main() {
         find.byWidgetPredicate((w) =>
             w is Semantics &&
             w.properties.button == true &&
-            w.properties.enabled == true),
+            w.properties.enabled == true,),
       );
       expect(semantics.properties.button, isTrue);
       expect(semantics.properties.enabled, isTrue);
@@ -402,7 +402,7 @@ void main() {
         find.byWidgetPredicate((w) =>
             w is Semantics &&
             w.properties.button == true &&
-            w.properties.enabled == false),
+            w.properties.enabled == false,),
       );
       expect(semantics.properties.enabled, isFalse);
 
@@ -450,7 +450,7 @@ void main() {
     });
 
     test('includes prefixIcon when provided', () {
-      final icon = const Icon(Icons.search);
+      const icon = Icon(Icons.search);
       final decoration = A11yUtils.focusBorderDecoration(
         prefixIcon: icon,
       );

@@ -264,8 +264,7 @@ void main() {
   group('ErrorReporterCallback typedef', () {
     test('callback signature accepts optional named context', () {
       // Verify the typedef signature compiles and works correctly
-      void Function(Object, StackTrace, {String? context}) callback =
-          (error, stackTrace, {context}) {};
+      void callback(Object error, StackTrace stackTrace, {String? context}) {}
 
       // Should not throw
       callback(Exception('test'), StackTrace.empty);

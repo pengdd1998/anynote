@@ -24,7 +24,7 @@ void main() {
       final names = SeedTemplates.builtIn.map((t) => t.name).toList();
       final uniqueNames = names.toSet();
       expect(names.length, uniqueNames.length,
-          reason: 'All template names should be unique');
+          reason: 'All template names should be unique',);
     });
 
     test('specific templates contain {{date}} placeholder where applicable', () {
@@ -33,7 +33,7 @@ void main() {
           .where((t) => t.name == 'Meeting Notes' || t.name == 'Daily Journal' || t.name == 'Weekly Review');
       for (final template in dateTemplates) {
         expect(template.content, contains('{{date}}'),
-            reason: '${template.name} should contain {{date}} placeholder');
+            reason: '${template.name} should contain {{date}} placeholder',);
       }
 
       // Project Notes and Reading Notes do not use {{date}}.
@@ -41,14 +41,14 @@ void main() {
           .where((t) => t.name == 'Project Notes' || t.name == 'Reading Notes');
       for (final template in noDateTemplates) {
         expect(template.content, isNot(contains('{{date}}')),
-            reason: '${template.name} should not contain {{date}} placeholder');
+            reason: '${template.name} should not contain {{date}} placeholder',);
       }
     });
 
     test('content starts with # (markdown heading)', () {
       for (final template in SeedTemplates.builtIn) {
         expect(template.content, startsWith('#'),
-            reason: '${template.name} content should start with a markdown heading');
+            reason: '${template.name} content should start with a markdown heading',);
       }
     });
 
@@ -67,7 +67,7 @@ void main() {
         'Project Notes',
         'Reading Notes',
         'Weekly Review',
-      ]));
+      ]),);
     });
 
     test('Meeting Notes template contains key sections', () {

@@ -133,7 +133,7 @@ void main() {
         find.byWidgetPredicate((w) =>
             w is Semantics &&
             w.properties.label != null &&
-            w.properties.label!.isNotEmpty),
+            w.properties.label!.isNotEmpty,),
       );
       expect(semantics.properties.label, 'Synced');
     });
@@ -149,7 +149,7 @@ void main() {
         find.byWidgetPredicate((w) =>
             w is Semantics &&
             w.properties.label != null &&
-            w.properties.label!.isNotEmpty),
+            w.properties.label!.isNotEmpty,),
       );
       expect(semantics.properties.label, 'Note is synced to server');
     });
@@ -168,7 +168,7 @@ void main() {
         find.byWidgetPredicate((w) =>
             w is Semantics &&
             w.properties.label != null &&
-            w.properties.label!.isNotEmpty),
+            w.properties.label!.isNotEmpty,),
         findsOneWidget,
       );
       expect(find.byType(Icon), findsOneWidget);

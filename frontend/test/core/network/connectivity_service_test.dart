@@ -125,7 +125,7 @@ void main() {
         ConnectivityResult.vpn,
         ConnectivityResult.bluetooth,
         ConnectivityResult.other,
-      ]));
+      ]),);
     });
   });
 

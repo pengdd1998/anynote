@@ -144,7 +144,7 @@ void main() {
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u1',
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state, isNotEmpty);
@@ -159,7 +159,7 @@ void main() {
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u1',
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state, contains('u1'));
@@ -173,7 +173,7 @@ void main() {
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u1',
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state, contains('u1'));
@@ -184,7 +184,7 @@ void main() {
       notifier.joinRoom('room-1');
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state, isEmpty);
@@ -194,7 +194,7 @@ void main() {
       notifier.joinRoom('room-1');
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u2',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state['u2']!.displayName, 'Unknown');
@@ -207,14 +207,14 @@ void main() {
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u1',
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(notifier.state, contains('u1'));
 
       // Then remove them.
       fakeClient.controller.add(WSMessage(WSMessageType.leave, {
         'user_id': 'u1',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state, isNot(contains('u1')));
@@ -225,7 +225,7 @@ void main() {
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u1',
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(notifier.state, contains('u1'));
 
@@ -243,7 +243,7 @@ void main() {
           {'user_id': 'u1', 'display_name': 'Alice'},
           {'user_id': 'u2', 'display_name': 'Bob'},
         ],
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state.length, 2);
@@ -256,7 +256,7 @@ void main() {
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u1',
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(notifier.state, contains('u1'));
 
@@ -276,7 +276,7 @@ void main() {
           {'display_name': 'No ID'},
           {'user_id': 'u3', 'display_name': 'Charlie'},
         ],
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state.length, 2);
@@ -289,12 +289,12 @@ void main() {
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u1',
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       fakeClient.controller.add(WSMessage(WSMessageType.typing, {
         'user_id': 'u1',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state['u1']!.isTyping, isTrue);
@@ -305,7 +305,7 @@ void main() {
 
       fakeClient.controller.add(WSMessage(WSMessageType.typing, {
         'user_id': 'u-unknown',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(notifier.state, isNot(contains('u-unknown')));
@@ -316,12 +316,12 @@ void main() {
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u1',
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       fakeClient.controller.add(WSMessage(WSMessageType.typing, {
         'user_id': 'u1',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(notifier.state['u1']!.isTyping, isTrue);
 
@@ -335,7 +335,7 @@ void main() {
       fakeClient.controller.add(WSMessage(WSMessageType.join, {
         'user_id': 'u1',
         'display_name': 'Alice',
-      }));
+      }),);
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(notifier.state.length, 1);
 
@@ -498,7 +498,7 @@ void main() {
       );
 
       expect(
-          find.textContaining('Alice and 2 others are typing'), findsOneWidget);
+          find.textContaining('Alice and 2 others are typing'), findsOneWidget,);
     });
 
     testWidgets('shows "N others" for many users', (tester) async {
@@ -514,7 +514,7 @@ void main() {
       );
 
       expect(
-          find.textContaining('Alice and 4 others are typing'), findsOneWidget);
+          find.textContaining('Alice and 4 others are typing'), findsOneWidget,);
     });
 
     testWidgets('typing text is in a Row widget', (tester) async {

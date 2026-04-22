@@ -23,7 +23,7 @@ import (
 func TestUserRepository_DocumentsExpectedBehavior(t *testing.T) {
 	t.Run("Create_hashes_auth_key_and_inserts", func(t *testing.T) {
 		// Expected behavior:
-		//   1. bcrypt.GenerateFromPassword(user.AuthKeyHash, bcrypt.DefaultCost)
+		//   1. bcrypt.GenerateFromPassword(user.AuthKeyHash, bcryptCost)
 		//   2. INSERT INTO users (id, email, username, auth_key_hash, salt, recovery_key, plan)
 		//      VALUES ($1, $2, $3, $4, $5, $6, $7)
 		//
@@ -59,7 +59,7 @@ func TestUserRepository_BCryptHashing(t *testing.T) {
 	// Verify that the bcrypt hashing used in Create works correctly.
 	authKey := []byte("test-auth-key-123")
 
-	hashed, err := bcrypt.GenerateFromPassword(authKey, bcrypt.DefaultCost)
+	hashed, err := bcrypt.GenerateFromPassword(authKey, bcryptCost)
 	if err != nil {
 		t.Fatalf("bcrypt.GenerateFromPassword: %v", err)
 	}
@@ -113,6 +113,22 @@ func (m *mockUserRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User,
 		return nil, errors.New("user not found")
 	}
 	return u, nil
+}
+
+func (m *mockUserRepo) GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]byte, error) {
+	u, ok := m.usersByID[id]
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	return u.RecoverySalt, nil
+}
+
+func (m *mockUserRepo) GetRecoverySaltByEmail(ctx context.Context, email string) ([]byte, error) {
+	u, ok := m.usersByEmail[email]
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	return u.RecoverySalt, nil
 }
 
 func TestMockUserRepo_Create(t *testing.T) {

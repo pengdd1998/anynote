@@ -75,7 +75,7 @@ void main() {
       expect(json['recovery_key'], equals('recovery789'));
     });
 
-    test('toJson has exactly 5 keys', () {
+    test('toJson has exactly 5 keys without recoverySalt', () {
       final req = RegisterRequest(
         email: 'a@b.com',
         username: 'u',
@@ -84,6 +84,20 @@ void main() {
         recoveryKey: 'r',
       );
       expect(req.toJson().length, equals(5));
+    });
+
+    test('toJson includes recovery_salt when provided', () {
+      final req = RegisterRequest(
+        email: 'a@b.com',
+        username: 'u',
+        authKeyHash: 'h',
+        salt: 's',
+        recoveryKey: 'r',
+        recoverySalt: 'base64salt==',
+      );
+      final json = req.toJson();
+      expect(json.length, equals(6));
+      expect(json['recovery_salt'], equals('base64salt=='));
     });
   });
 
@@ -127,8 +141,10 @@ void main() {
 
       expect(response.accessToken, equals('at_123'));
       expect(response.refreshToken, equals('rt_456'));
-      expect(response.expiresAt,
-          equals(DateTime.parse('2025-12-31T23:59:59.000Z')));
+      expect(
+        response.expiresAt,
+        equals(DateTime.parse('2025-12-31T23:59:59.000Z')),
+      );
       expect(response.user['id'], equals('uid-1'));
       expect(response.user['email'], equals('test@example.com'));
     });

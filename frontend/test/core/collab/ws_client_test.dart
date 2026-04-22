@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -110,7 +109,7 @@ void main() {
         WSMessageType.cursor,
         WSMessageType.ping,
         WSMessageType.pong,
-      ]));
+      ]),);
     });
 
     test('name property matches expected strings', () {
@@ -141,7 +140,7 @@ void main() {
         WSConnectionState.connecting,
         WSConnectionState.connected,
         WSConnectionState.error,
-      ]));
+      ]),);
     });
 
     test('values has 4 entries', () {

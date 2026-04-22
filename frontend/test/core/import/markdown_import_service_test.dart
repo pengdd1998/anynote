@@ -117,11 +117,11 @@ void main() {
     });
 
     test('hasErrors is true when errors present', () {
-      final result = ImportResult(
+      const result = ImportResult(
         importedCount: 3,
         skippedCount: 1,
         errors: [
-          const ImportError(filePath: '/bad.md', message: 'decode failed'),
+          ImportError(filePath: '/bad.md', message: 'decode failed'),
         ],
       );
       expect(result.hasErrors, isTrue);
@@ -195,7 +195,7 @@ void main() {
             ImportStatus.importing,
             ImportStatus.done,
             ImportStatus.failed,
-          ]));
+          ]),);
     });
   });
 

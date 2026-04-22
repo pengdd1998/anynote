@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -176,6 +178,20 @@ class ApiClient {
   Future<Map<String, dynamic>> getMe() async {
     final res = await _dio.get('/api/v1/auth/me');
     return res.data as Map<String, dynamic>;
+  }
+
+  /// Fetch the per-user recovery salt from the server.
+  /// No authentication required (public endpoint, rate-limited by IP).
+  /// Returns null if the user has no recovery salt (legacy accounts).
+  Future<Uint8List?> getRecoverySalt(String email) async {
+    final res = await _dio.get(
+      '/api/v1/auth/recovery-salt',
+      queryParameters: {'email': email},
+    );
+    final data = res.data as Map<String, dynamic>;
+    final saltBase64 = data['recovery_salt'] as String?;
+    if (saltBase64 == null || saltBase64.isEmpty) return null;
+    return base64Decode(saltBase64);
   }
 
   // ── Sync API ──────────────────────────────────────
@@ -447,6 +463,7 @@ class RegisterRequest {
   final String authKeyHash;
   final String salt;
   final String recoveryKey;
+  final String? recoverySalt;
 
   RegisterRequest({
     required this.email,
@@ -454,6 +471,7 @@ class RegisterRequest {
     required this.authKeyHash,
     required this.salt,
     required this.recoveryKey,
+    this.recoverySalt,
   });
 
   Map<String, dynamic> toJson() => {
@@ -462,6 +480,7 @@ class RegisterRequest {
         'auth_key_hash': authKeyHash,
         'salt': salt,
         'recovery_key': recoveryKey,
+        if (recoverySalt != null) 'recovery_salt': recoverySalt,
       };
 }
 

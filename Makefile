@@ -1,4 +1,4 @@
-.PHONY: help dev build test migrate clean
+.PHONY: help dev build test migrate clean test-integration test-backend-all
 
 # Go parameters
 GOCMD  := go
@@ -72,6 +72,11 @@ test-backend: ## Run backend tests
 
 test-frontend: ## Run frontend tests
 	cd $(FRONTEND_DIR) && flutter test
+
+test-integration: ## Run integration tests (requires Docker)
+	cd $(BACKEND_DIR) && $(GOTEST) -tags=integration -v -count=1 ./internal/repository/ ./internal/handler/
+
+test-backend-all: test-backend test-integration ## Run all backend tests (unit + integration)
 
 # ── Coverage ─────────────────────────────────────────
 

@@ -20,7 +20,7 @@ Future<void> pumpEditor(
   await tester.pumpWidget(
     MaterialApp(
       theme: theme ?? ThemeData.light(),
-      localizationsDelegates: [
+      localizationsDelegates: const [
         quill.FlutterQuillLocalizations.delegate,
       ],
       home: Scaffold(

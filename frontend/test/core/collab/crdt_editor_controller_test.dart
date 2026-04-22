@@ -560,7 +560,7 @@ void main() {
 
       // Cursor should be clamped to the new text length.
       expect(controller.textController.selection.baseOffset,
-          lessThanOrEqualTo(4));
+          lessThanOrEqualTo(4),);
 
       controller.dispose();
     });
@@ -606,19 +606,19 @@ void main() {
 
   group('CrdtEditorOp', () {
     test('insert op isInsert is true and isDelete is false', () {
-      final op = CrdtEditorOp(insertedNodes: []);
+      const op = CrdtEditorOp(insertedNodes: []);
       expect(op.isInsert, isTrue);
       expect(op.isDelete, isFalse);
     });
 
     test('delete op isDelete is true and isInsert is false', () {
-      final op = CrdtEditorOp(deletedNodeIds: []);
+      const op = CrdtEditorOp(deletedNodeIds: []);
       expect(op.isDelete, isTrue);
       expect(op.isInsert, isFalse);
     });
 
     test('op with no arguments has both false', () {
-      final op = const CrdtEditorOp();
+      const op = CrdtEditorOp();
       expect(op.isInsert, isFalse);
       expect(op.isDelete, isFalse);
     });
@@ -640,7 +640,7 @@ void main() {
     });
 
     test('deletedNodeIds can contain multiple IDs', () {
-      final op = CrdtEditorOp(deletedNodeIds: ['s:1', 's:2', 's:3']);
+      const op = CrdtEditorOp(deletedNodeIds: ['s:1', 's:2', 's:3']);
       expect(op.deletedNodeIds!.length, equals(3));
     });
   });

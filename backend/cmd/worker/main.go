@@ -78,7 +78,11 @@ func main() {
 	// Initialize services
 	quotaSvc := service.NewQuotaService(quotaRepo)
 	defaultLLMCfg := llm.LoadDefaultConfig(cfg)
-	masterKey := []byte(cfg.Auth.MasterEncryptionKey)
+	masterKey, err := cfg.Auth.MasterKeyBytes()
+	if err != nil {
+		slog.Error("invalid master encryption key", "error", err)
+		os.Exit(1)
+	}
 
 	// Initialize push notification service.
 	// When Firebase credentials are configured, push notifications are delivered

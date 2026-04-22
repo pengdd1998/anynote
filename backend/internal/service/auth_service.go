@@ -30,6 +30,8 @@ type AuthService interface {
 	RefreshToken(ctx context.Context, refreshToken string) (*domain.AuthResponse, error)
 	GetCurrentUser(ctx context.Context, userID uuid.UUID) (*domain.User, error)
 	DeleteAccount(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error
+	GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error)
+	GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error)
 }
 
 type UserRepository interface {
@@ -37,6 +39,8 @@ type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*domain.User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]byte, error)
+	GetRecoverySaltByEmail(ctx context.Context, email string) ([]byte, error)
 }
 
 // deviceTokenDeleter removes device tokens for a user.
@@ -101,15 +105,16 @@ func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) 
 	}
 
 	user := &domain.User{
-		ID:          uuid.New(),
-		Email:       req.Email,
-		Username:    req.Username,
-		AuthKeyHash: req.AuthKeyHash,
-		Salt:        req.Salt,
-		RecoveryKey: req.RecoveryKey,
-		Plan:        "free",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:           uuid.New(),
+		Email:        req.Email,
+		Username:     req.Username,
+		AuthKeyHash:  req.AuthKeyHash,
+		Salt:         req.Salt,
+		RecoveryKey:  req.RecoveryKey,
+		RecoverySalt: req.RecoverySalt,
+		Plan:         "free",
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	if err := s.userRepo.Create(ctx, user); err != nil {
@@ -272,6 +277,27 @@ func (s *authService) DeleteAccount(ctx context.Context, userID uuid.UUID, authK
 	}
 
 	return nil
+}
+
+// GetRecoverySalt returns the per-user random recovery salt.  Returns nil
+// RecoverySalt for legacy accounts that were created before this field
+// existed -- the client will fall back to deterministic derivation.
+func (s *authService) GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error) {
+	salt, err := s.userRepo.GetRecoverySalt(ctx, userID)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+	return &domain.RecoverySaltResponse{RecoverySalt: salt}, nil
+}
+
+// GetRecoverySaltByEmail returns the per-user random recovery salt by email.
+// This is used during account recovery when the user is not authenticated.
+func (s *authService) GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
+	salt, err := s.userRepo.GetRecoverySaltByEmail(ctx, email)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+	return &domain.RecoverySaltResponse{RecoverySalt: salt}, nil
 }
 
 func (s *authService) generateAuthResponse(user *domain.User) (*domain.AuthResponse, error) {

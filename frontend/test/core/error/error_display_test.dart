@@ -13,7 +13,7 @@ void main() {
 
   /// Build a [MaterialApp] with localization delegates so that
   /// [AppLocalizations.of] returns a non-null instance in widget tests.
-  Widget _buildTestApp(Widget home) {
+  Widget buildTestApp(Widget home) {
     return ProviderScope(
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -243,7 +243,7 @@ void main() {
       const error = NetworkException(message: 'No connection');
 
       await tester.pumpWidget(
-        _buildTestApp(
+        buildTestApp(
           Scaffold(
             body: Builder(
               builder: (context) {
@@ -282,7 +282,7 @@ void main() {
       const error = ServerException(message: 'Server down');
 
       await tester.pumpWidget(
-        _buildTestApp(
+        buildTestApp(
           Scaffold(
             body: Builder(
               builder: (context) {
@@ -310,7 +310,7 @@ void main() {
       bool retryCalled = false;
 
       await tester.pumpWidget(
-        _buildTestApp(
+        buildTestApp(
           Scaffold(
             body: Builder(
               builder: (context) {
@@ -348,7 +348,7 @@ void main() {
       const error = AuthException(message: 'expired');
 
       await tester.pumpWidget(
-        _buildTestApp(
+        buildTestApp(
           Scaffold(
             body: Builder(
               builder: (context) {
@@ -384,7 +384,7 @@ void main() {
       const error = ServerException(message: 'Server error');
 
       await tester.pumpWidget(
-        _buildTestApp(
+        buildTestApp(
           Scaffold(
             body: Builder(
               builder: (context) {
@@ -415,7 +415,7 @@ void main() {
       const error = NetworkException(message: 'No internet');
 
       await tester.pumpWidget(
-        _buildTestApp(
+        buildTestApp(
           Scaffold(
             body: Builder(
               builder: (context) {
@@ -448,7 +448,7 @@ void main() {
       bool retryCalled = false;
 
       await tester.pumpWidget(
-        _buildTestApp(
+        buildTestApp(
           Scaffold(
             body: Builder(
               builder: (context) {
@@ -487,7 +487,7 @@ void main() {
       bool retryCalled = false;
 
       await tester.pumpWidget(
-        _buildTestApp(
+        buildTestApp(
           Scaffold(
             body: Builder(
               builder: (context) {
@@ -536,7 +536,7 @@ void main() {
 
       for (final entry in errorTitles.entries) {
         await tester.pumpWidget(
-          _buildTestApp(
+          buildTestApp(
             Scaffold(
               body: Builder(
                 builder: (context) {

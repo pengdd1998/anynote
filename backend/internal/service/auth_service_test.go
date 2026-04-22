@@ -65,6 +65,22 @@ func (m *mockUserRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+func (m *mockUserRepo) GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]byte, error) {
+	u, ok := m.usersByID[id]
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	return u.RecoverySalt, nil
+}
+
+func (m *mockUserRepo) GetRecoverySaltByEmail(ctx context.Context, email string) ([]byte, error) {
+	u, ok := m.users[email]
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	return u.RecoverySalt, nil
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -80,7 +96,7 @@ func mustHashAuthKey(plain string) []byte {
 	// The server compares this with bcrypt.CompareHashAndPassword, so we
 	// generate a bcrypt hash here and use that as both the stored hash and
 	// the login credential.
-	hash, err := bcrypt.GenerateFromPassword([]byte(plain), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(plain), 12)
 	if err != nil {
 		panic(err)
 	}

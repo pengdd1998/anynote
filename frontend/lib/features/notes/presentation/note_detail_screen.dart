@@ -118,8 +118,11 @@ class NoteDetailScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(ErrorDisplay.errorIcon(appError),
-                        size: 48, color: Colors.red.shade300),
+                    Icon(
+                      ErrorDisplay.errorIcon(appError),
+                      size: 48,
+                      color: Colors.red.shade300,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       l10n.failedToLoadNote,
@@ -170,26 +173,35 @@ class NoteDetailScreen extends ConsumerWidget {
                       '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))}${data.isSynced ? '' : ', ${l10n.notSynced}'}',
                   child: Row(
                     children: [
-                      Icon(Icons.access_time,
-                          size: 14, color: Colors.grey.shade500),
+                      Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Colors.grey.shade500,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        l10n.updatedDate(data.updatedAt
-                            .toLocal()
-                            .toString()
-                            .substring(0, 16)),
+                        l10n.updatedDate(
+                          data.updatedAt.toLocal().toString().substring(0, 16),
+                        ),
                         style: TextStyle(
-                            fontSize: 12, color: Colors.grey.shade500),
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
                       ),
                       if (!data.isSynced) ...[
                         const SizedBox(width: 12),
-                        Icon(Icons.cloud_off,
-                            size: 14, color: Colors.orange.shade300),
+                        Icon(
+                          Icons.cloud_off,
+                          size: 14,
+                          color: Colors.orange.shade300,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           l10n.notSynced,
                           style: TextStyle(
-                              fontSize: 12, color: Colors.orange.shade300),
+                            fontSize: 12,
+                            color: Colors.orange.shade300,
+                          ),
                         ),
                       ],
                     ],

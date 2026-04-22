@@ -239,7 +239,7 @@ void main() {
       notifier.setDateRange(DateTimeRange(
         start: now,
         end: now.add(const Duration(days: 1)),
-      ));
+      ),);
       notifier.clearDateRange();
       expect(notifier.state.dateRange, isNull);
     });
@@ -317,7 +317,7 @@ void main() {
       notifier.setDateRange(DateTimeRange(
         start: now,
         end: now.add(const Duration(days: 1)),
-      ));
+      ),);
 
       notifier.clearAll();
 
@@ -422,7 +422,7 @@ void main() {
     test('preview centers around query match at position 100', () {
       final prefix = 'a' * 100;
       final suffix = 'b' * 100;
-      final content = '${prefix}target word${suffix}';
+      final content = '${prefix}target word$suffix';
 
       final preview = buildPreview(content, 'target');
       expect(preview.toLowerCase(), contains('target'));

@@ -297,6 +297,31 @@ func (c *Config) Warn() {
 	}
 }
 
+// MasterKeyBytes decodes the master encryption key into raw bytes suitable for
+// AES-256. If the key string is a valid hex-encoded sequence of 64+ hex
+// characters, it is hex-decoded to produce 32+ bytes. Otherwise the raw UTF-8
+// bytes are returned (for backward compatibility with non-hex key strings).
+// The result is validated to be exactly 32 bytes; an error is returned if the
+// decoded length does not match.
+func (a AuthConfig) MasterKeyBytes() ([]byte, error) {
+	raw := a.MasterEncryptionKey
+
+	// Try hex decoding: a 64-char hex string decodes to 32 bytes.
+	if decoded, err := hex.DecodeString(raw); err == nil && len(decoded) >= 32 {
+		if len(decoded) != 32 {
+			return nil, fmt.Errorf("MASTER_ENCRYPTION_KEY hex-decoded to %d bytes, need exactly 32 bytes for AES-256", len(decoded))
+		}
+		return decoded, nil
+	}
+
+	// Not valid hex; treat as raw string. Must be exactly 32 bytes.
+	b := []byte(raw)
+	if len(b) != 32 {
+		return nil, fmt.Errorf("MASTER_ENCRYPTION_KEY must be exactly 32 bytes (got %d); AES-256 requires a 32-byte key. Alternatively provide a 64-character hex-encoded string", len(b))
+	}
+	return b, nil
+}
+
 // validateMasterKey ensures the master encryption key provides at least 32 bytes
 // of key material (required for AES-256). Accepts either:
 //   - A raw string of 32+ characters

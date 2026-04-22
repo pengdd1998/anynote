@@ -48,7 +48,7 @@ class MockConnectivityService extends ConnectivityService {
   @override
   Stream<List<ConnectivityResult>> get onConnectivityChanged =>
       _streamController.stream.map((connected) =>
-          connected ? [ConnectivityResult.wifi] : [ConnectivityResult.none]);
+          connected ? [ConnectivityResult.wifi] : [ConnectivityResult.none],);
 
   @override
   Future<void> recheck() async {}

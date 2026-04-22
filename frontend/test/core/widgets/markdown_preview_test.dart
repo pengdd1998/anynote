@@ -16,11 +16,11 @@ void main() {
   group('MarkdownPreview', () {
     testWidgets('renders plain text content', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: 'Hello world'),
           ),
         ),
@@ -31,11 +31,11 @@ void main() {
 
     testWidgets('renders empty content without crashing', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: ''),
           ),
         ),
@@ -47,11 +47,11 @@ void main() {
 
     testWidgets('renders heading text', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: '# Main Title'),
           ),
         ),
@@ -64,11 +64,11 @@ void main() {
 
     testWidgets('renders bold text', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: 'This is **bold** text'),
           ),
         ),
@@ -80,11 +80,11 @@ void main() {
 
     testWidgets('renders italic text', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: 'This is *italic* text'),
           ),
         ),
@@ -96,11 +96,11 @@ void main() {
 
     testWidgets('renders inline code', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: 'Use `print()` to debug'),
           ),
         ),
@@ -112,11 +112,11 @@ void main() {
 
     testWidgets('renders code block', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: '```dart\nprint("hello");\n```'),
           ),
         ),
@@ -128,11 +128,11 @@ void main() {
 
     testWidgets('renders unordered list', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: '- Item one\n- Item two\n- Item three',
             ),
@@ -147,11 +147,11 @@ void main() {
 
     testWidgets('renders blockquote', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: '> This is a quote'),
           ),
         ),
@@ -162,11 +162,11 @@ void main() {
 
     testWidgets('renders link', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: 'Visit [Flutter](https://flutter.dev)',
             ),
@@ -181,11 +181,11 @@ void main() {
 
     testWidgets('renders multiple headings', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: '# H1\n## H2\n### H3\n#### H4',
             ),
@@ -201,11 +201,11 @@ void main() {
 
     testWidgets('renders horizontal rule', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: 'Above\n---\nBelow'),
           ),
         ),
@@ -218,11 +218,11 @@ void main() {
     testWidgets('renders mixed content with headings and paragraphs',
         (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: '# Title\n\nFirst paragraph.\n\nSecond paragraph.',
             ),
@@ -363,11 +363,11 @@ void main() {
   group('MarkdownPreview LaTeX', () {
     testWidgets('showLaTeX=false skips LaTeX processing', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: 'Inline \$x^2\$ math',
               showLaTeX: false,
@@ -383,11 +383,11 @@ void main() {
     testWidgets('showLaTeX=true (default) handles block LaTeX',
         (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: 'Some text\n\n\$\$E = mc^2\$\$\n\nMore text',
             ),
@@ -401,11 +401,11 @@ void main() {
 
     testWidgets('handles content with only inline LaTeX', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: 'The equation \$a + b = c\$ is simple.',
             ),
@@ -418,11 +418,11 @@ void main() {
 
     testWidgets('handles content with no LaTeX gracefully', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: 'Just a regular paragraph with no math.',
             ),
@@ -441,11 +441,11 @@ void main() {
   group('MarkdownPreview edge cases', () {
     testWidgets('renders content with only whitespace', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(content: '   \n\n   '),
           ),
         ),
@@ -456,11 +456,11 @@ void main() {
 
     testWidgets('renders content with special characters', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: "Special chars: < > & \" ' / \\",
             ),
@@ -473,11 +473,11 @@ void main() {
 
     testWidgets('renders nested formatting', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: '**Bold and *italic* together**',
             ),
@@ -490,11 +490,11 @@ void main() {
 
     testWidgets('renders numbered list', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: '1. First\n2. Second\n3. Third',
             ),
@@ -509,11 +509,11 @@ void main() {
 
     testWidgets('renders image markdown without crashing', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: '![Alt text](https://example.com/image.png)',
             ),
@@ -528,11 +528,11 @@ void main() {
 
     testWidgets('renders table without crashing', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: '| A | B |\n|---|---|\n| 1 | 2 |',
             ),
@@ -545,11 +545,11 @@ void main() {
 
     testWidgets('renders HTML-like content in markdown', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const Scaffold(
+          locale: Locale('en'),
+          home: Scaffold(
             body: MarkdownPreview(
               content: '<br>\n<hr>',
             ),

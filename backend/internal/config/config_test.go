@@ -556,3 +556,76 @@ func TestSplitCSV(t *testing.T) {
 		})
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Tests: MasterKeyBytes
+// ---------------------------------------------------------------------------
+
+func TestMasterKeyBytes_HexEncoded64Chars(t *testing.T) {
+	// A 64-char hex string must decode to exactly 32 bytes.
+	hexKey := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	cfg := AuthConfig{MasterEncryptionKey: hexKey}
+
+	b, err := cfg.MasterKeyBytes()
+	if err != nil {
+		t.Fatalf("MasterKeyBytes() returned error: %v", err)
+	}
+	if len(b) != 32 {
+		t.Errorf("len(MasterKeyBytes()) = %d, want 32", len(b))
+	}
+	// Verify first byte decoded correctly: "01" -> 0x01.
+	if b[0] != 0x01 {
+		t.Errorf("first byte = %#x, want 0x01", b[0])
+	}
+}
+
+func TestMasterKeyBytes_RawString32Chars(t *testing.T) {
+	// A non-hex 32-char string returns raw UTF-8 bytes.
+	// Using non-hex characters to ensure hex decoding does not apply.
+	rawKey := "a!b@c#d$e%f^g&h*i(j)k_l+m-n=o?qZ"
+	if len(rawKey) != 32 {
+		t.Fatalf("test key must be exactly 32 bytes, got %d", len(rawKey))
+	}
+	cfg := AuthConfig{MasterEncryptionKey: rawKey}
+
+	b, err := cfg.MasterKeyBytes()
+	if err != nil {
+		t.Fatalf("MasterKeyBytes() returned error: %v", err)
+	}
+	if len(b) != 32 {
+		t.Errorf("len(MasterKeyBytes()) = %d, want 32", len(b))
+	}
+	if string(b) != rawKey {
+		t.Errorf("MasterKeyBytes() = %q, want %q", string(b), rawKey)
+	}
+}
+
+func TestMasterKeyBytes_ShortRawString(t *testing.T) {
+	// A raw string shorter than 32 bytes should return an error.
+	cfg := AuthConfig{MasterEncryptionKey: "short"}
+	_, err := cfg.MasterKeyBytes()
+	if err == nil {
+		t.Fatal("expected error for short raw key, got nil")
+	}
+}
+
+func TestMasterKeyBytes_ShortHexString(t *testing.T) {
+	// A 16-char hex string decodes to 8 bytes, and the raw string is only 16
+	// bytes -- both are under 32, so this must fail.
+	cfg := AuthConfig{MasterEncryptionKey: "0123456789abcdef"}
+	_, err := cfg.MasterKeyBytes()
+	if err == nil {
+		t.Fatal("expected error for short key, got nil")
+	}
+}
+
+func TestMasterKeyBytes_LongHexString(t *testing.T) {
+	// A hex string longer than 64 chars (e.g. 128 hex = 64 bytes) should fail
+	// because we require exactly 32 bytes after decoding.
+	longHex := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	cfg := AuthConfig{MasterEncryptionKey: longHex}
+	_, err := cfg.MasterKeyBytes()
+	if err == nil {
+		t.Fatal("expected error for hex-decoded key over 32 bytes, got nil")
+	}
+}

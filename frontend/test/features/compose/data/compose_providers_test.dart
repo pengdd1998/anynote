@@ -176,7 +176,7 @@ void main() {
 
     test('copyWith can set outline', () {
       const state = ComposeSessionState(sessionId: 's1');
-      final outline = OutlineModel(
+      const outline = OutlineModel(
         title: 'Test',
         sections: [
           OutlineSection(heading: 'H1', points: ['p1']),
@@ -200,7 +200,7 @@ void main() {
       const state = ComposeSessionState(sessionId: 's1');
       final clusters = [
         const ClusterModel(
-            name: 'A', theme: 't', noteIndices: [0], summary: 's'),
+            name: 'A', theme: 't', noteIndices: [0], summary: 's',),
       ];
       final updated = state.copyWith(
         clusters: clusters,
@@ -541,9 +541,9 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's'),
+              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
           const ClusterModel(
-              name: 'B', theme: 't', noteIndices: [1], summary: 's'),
+              name: 'B', theme: 't', noteIndices: [1], summary: 's',),
         ],
         selectedClusterIndices: {0},
       );
@@ -561,7 +561,7 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's'),
+              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
         ],
         selectedClusterIndices: {0},
       );
@@ -594,7 +594,7 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's'),
+              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
         ],
         selectedClusterIndices: {0},
       );
@@ -615,7 +615,7 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's'),
+              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
         ],
         selectedClusterIndices: {0},
       );
@@ -638,7 +638,7 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's'),
+              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
         ],
         selectedClusterIndices: {0},
       );
@@ -664,7 +664,7 @@ void main() {
     test('updateOutline replaces the outline', () {
       final notifier = container.read(composeSessionProvider.notifier);
 
-      final outline = OutlineModel(
+      const outline = OutlineModel(
         title: 'Updated',
         sections: [
           OutlineSection(heading: 'New Section', points: ['a', 'b']),
@@ -684,7 +684,7 @@ void main() {
       final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
-        outline: OutlineModel(
+        outline: const OutlineModel(
           title: 'Test',
           sections: [
             OutlineSection(heading: 'A', points: []),
@@ -787,7 +787,7 @@ void main() {
 
       notifier.state = notifier.state.copyWith(
         draft: 'This is a draft.',
-        outline: OutlineModel(title: 'Draft Title', sections: []),
+        outline: const OutlineModel(title: 'Draft Title', sections: []),
       );
 
       final result = await notifier.saveDraftAsNote();
@@ -798,7 +798,7 @@ void main() {
         result,
         matches(RegExp(
           r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-        )),
+        ),),
       );
     });
 
@@ -831,7 +831,7 @@ void main() {
       final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
-        outline: OutlineModel(title: 'Test', sections: []),
+        outline: const OutlineModel(title: 'Test', sections: []),
         selectedClusterIndices: {},
       );
 
@@ -849,7 +849,7 @@ void main() {
       final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
-        outline: OutlineModel(title: 'Test', sections: []),
+        outline: const OutlineModel(title: 'Test', sections: []),
         selectedClusterIndices: {},
       );
 
@@ -866,7 +866,7 @@ void main() {
       final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.state = notifier.state.copyWith(
-        outline: OutlineModel(title: 'Test', sections: []),
+        outline: const OutlineModel(title: 'Test', sections: []),
         selectedClusterIndices: {},
       );
 
@@ -980,14 +980,14 @@ void main() {
     });
 
     test('handles limit smaller than truncation suffix', () {
-      final text = 'ABCDEFGHIJ';
+      const text = 'ABCDEFGHIJ';
       // Limit of 5 is less than the suffix "... (truncated)" length (16).
       final result = PromptBuilder.truncateToLimit(text, 5);
       expect(result, '... (truncated)');
     });
 
     test('preserves content within the cutoff', () {
-      final text = 'ABCDEFGHIJ';
+      const text = 'ABCDEFGHIJ';
       final result = PromptBuilder.truncateToLimit(text, 10);
       // Exactly at limit, no truncation.
       expect(result, 'ABCDEFGHIJ');
@@ -1013,7 +1013,7 @@ void main() {
         sessionId,
         matches(RegExp(
           r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-        )),
+        ),),
       );
     });
 

@@ -473,8 +473,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     onSelectionChanged: (id) {
                       setState(() => _selectedNoteId = id);
                     },
-                    sidebarVisible:
-                        ref.watch(sidebarVisibleProvider),
+                    sidebarVisible: ref.watch(sidebarVisibleProvider),
                     masterPane: _isSearching && _searchQuery.isNotEmpty
                         ? _buildSearchBody(db)
                         : _buildNotesBody(db),
@@ -579,7 +578,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   }
 
   Widget _buildNotesList(
-      List<Note> notes, AppDatabase db, {required bool isSearchMode,}) {
+    List<Note> notes,
+    AppDatabase db, {
+    required bool isSearchMode,
+  }) {
     final showLoader =
         (isSearchMode && (_hasMoreSearchResults || _isLoadingMoreSearch)) ||
             (!isSearchMode && (_hasMore || _isLoadingPage));
@@ -625,7 +627,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   }
 
   Widget _buildNotesGrid(
-      List<Note> notes, AppDatabase db, {required bool isSearchMode,}) {
+    List<Note> notes,
+    AppDatabase db, {
+    required bool isSearchMode,
+  }) {
     final showLoader =
         (isSearchMode && (_hasMoreSearchResults || _isLoadingMoreSearch)) ||
             (!isSearchMode && (_hasMore || _isLoadingPage));
@@ -789,10 +794,12 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 onPressed: () async {
                   await (db.update(db.notes)
                         ..where((n) => n.id.equals(note.id)))
-                      .write(const NotesCompanion(
-                    deletedAt: Value(null),
-                    isSynced: Value(false),
-                  ),);
+                      .write(
+                    const NotesCompanion(
+                      deletedAt: Value(null),
+                      isSynced: Value(false),
+                    ),
+                  );
                 },
               ),
             ),
@@ -882,7 +889,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
+                      color:
+                          colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
                     ),
                   ),
                   if (tags.isNotEmpty)
@@ -895,7 +903,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                   Text(
                     time,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withAlpha(AppAlpha.prominent),
+                      color:
+                          colorScheme.onSurface.withAlpha(AppAlpha.prominent),
                     ),
                   ),
                 ],
@@ -977,7 +986,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
+                      color:
+                          colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
                     ),
                   ),
                 ),
@@ -1014,22 +1024,23 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         return Semantics(
           label: A11yUtils.semanticLabelForTag(name: tag.plainName ?? '...'),
           child: Chip(
-          label: Text(
-            tag.plainName ?? '...',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
+            label: Text(
+              tag.plainName ?? '...',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
+              ),
             ),
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            padding: EdgeInsets.zero,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+            side: BorderSide(
+              color: colorScheme.outlineVariant.withAlpha(AppAlpha.heavy),
+              width: 0.5,
+            ),
+            backgroundColor:
+                colorScheme.surfaceContainerHighest.withAlpha(AppAlpha.bold),
           ),
-          visualDensity: VisualDensity.compact,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          padding: EdgeInsets.zero,
-          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-          side: BorderSide(
-            color: colorScheme.outlineVariant.withAlpha(AppAlpha.heavy),
-            width: 0.5,
-          ),
-          backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(AppAlpha.bold),
-        ),
         );
       }).toList(),
     );
@@ -1052,44 +1063,46 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               button: true,
               label: note.isPinned ? l10n.unpinNote : l10n.pinNote,
               child: ListTile(
-              leading: Icon(
-                note.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-              ),
-              title: Text(note.isPinned ? l10n.unpinNote : l10n.pinNote),
-              onTap: () async {
-                await db.notesDao.togglePin(note.id);
-                if (ctx.mounted) Navigator.of(ctx).pop();
-              },
+                leading: Icon(
+                  note.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                ),
+                title: Text(note.isPinned ? l10n.unpinNote : l10n.pinNote),
+                onTap: () async {
+                  await db.notesDao.togglePin(note.id);
+                  if (ctx.mounted) Navigator.of(ctx).pop();
+                },
               ),
             ),
             Semantics(
               button: true,
               label: l10n.deleteNote,
               child: ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: Text(l10n.deleteNote),
-              onTap: () async {
-                Navigator.of(ctx).pop();
-                await db.notesDao.softDeleteNote(note.id);
-                if (!mounted) return;
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.noteDeleted),
-                    action: SnackBarAction(
-                      label: l10n.undo,
-                      onPressed: () async {
-                        await (db.update(db.notes)
-                              ..where((n) => n.id.equals(note.id)))
-                            .write(const NotesCompanion(
-                          deletedAt: Value(null),
-                          isSynced: Value(false),
-                        ),);
-                      },
+                leading: const Icon(Icons.delete_outline),
+                title: Text(l10n.deleteNote),
+                onTap: () async {
+                  Navigator.of(ctx).pop();
+                  await db.notesDao.softDeleteNote(note.id);
+                  if (!mounted) return;
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.noteDeleted),
+                      action: SnackBarAction(
+                        label: l10n.undo,
+                        onPressed: () async {
+                          await (db.update(db.notes)
+                                ..where((n) => n.id.equals(note.id)))
+                              .write(
+                            const NotesCompanion(
+                              deletedAt: Value(null),
+                              isSynced: Value(false),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
               ),
             ),
           ],
@@ -1129,8 +1142,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 child: Text(
                   l10n.importNotes,
                   style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ),
             ),
@@ -1274,7 +1287,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       // Close progress dialog.
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.importFailed(e.toString()))),
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.importFailed(e.toString())),),
       );
     }
   }
@@ -1340,7 +1355,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         onSelected: (content) {
           // Navigate to the note editor with the template content.
           // We pass the content via the query parameter.
-          context.push('/notes/new?templateContent=${Uri.encodeComponent(content)}');
+          context.push(
+              '/notes/new?templateContent=${Uri.encodeComponent(content)}',);
         },
       ),
     );
@@ -1443,14 +1459,14 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
       String content = note.plainContent ?? '';
 
       if (widget.crypto.isUnlocked) {
-        final decryptedContent =
-            await widget.crypto.decryptForItem(widget.noteId, note.encryptedContent);
+        final decryptedContent = await widget.crypto
+            .decryptForItem(widget.noteId, note.encryptedContent);
         if (decryptedContent != null) {
           content = decryptedContent;
         }
         if (note.encryptedTitle != null) {
-          final decryptedTitle =
-              await widget.crypto.decryptForItem(widget.noteId, note.encryptedTitle!);
+          final decryptedTitle = await widget.crypto
+              .decryptForItem(widget.noteId, note.encryptedTitle!);
           if (decryptedTitle != null) {
             title = decryptedTitle;
           }
@@ -1494,9 +1510,11 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
             children: [
               Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
               const SizedBox(height: 16),
-              Text(l10n.failedToLoadNote, style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n.failedToLoadNote,
+                  style: Theme.of(context).textTheme.titleMedium,),
               const SizedBox(height: 8),
-              Text(_error!, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+              Text(_error!,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),),
               const SizedBox(height: 16),
               FilledButton.tonal(onPressed: _loadNote, child: Text(l10n.retry)),
             ],
@@ -1523,8 +1541,8 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
               IconButton(
@@ -1535,7 +1553,8 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
               IconButton(
                 icon: const Icon(Icons.history, size: 20),
                 tooltip: l10n.versionHistory,
-                onPressed: () => context.push('/notes/${widget.noteId}/history'),
+                onPressed: () =>
+                    context.push('/notes/${widget.noteId}/history'),
               ),
             ],
           ),
@@ -1549,17 +1568,22 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
+                    Icon(Icons.access_time,
+                        size: 14, color: Colors.grey.shade500,),
                     const SizedBox(width: 4),
                     Text(
                       'Updated ${_data!.updatedAt.toLocal().toString().substring(0, 16)}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.grey.shade500),
                     ),
                     if (!_data!.isSynced) ...[
                       const SizedBox(width: 12),
-                      Icon(Icons.cloud_off, size: 14, color: Colors.orange.shade300),
+                      Icon(Icons.cloud_off,
+                          size: 14, color: Colors.orange.shade300,),
                       const SizedBox(width: 4),
-                      Text(l10n.notSynced, style: TextStyle(fontSize: 12, color: Colors.orange.shade300)),
+                      Text(l10n.notSynced,
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.orange.shade300,),),
                     ],
                   ],
                 ),
@@ -1573,21 +1597,29 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
                       return Image.file(
                         File.fromUri(uri),
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 48),
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.broken_image, size: 48),
                       );
                     }
-                    return Image.network(uri.toString(),
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 48));
+                    return Image.network(
+                      uri.toString(),
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.broken_image, size: 48),
+                    );
                   },
                   styleSheet: MarkdownStyleSheet(
                     p: const TextStyle(fontSize: 14, height: 1.6),
-                    h1: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    h2: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    h3: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    h1: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.bold,),
+                    h2: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold,),
+                    h3: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold,),
                     code: TextStyle(
                       fontSize: 13,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                     ),
                     blockquote: TextStyle(
                       color: Colors.grey.shade600,

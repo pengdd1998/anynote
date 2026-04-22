@@ -7,6 +7,14 @@ import 'package:sodium_libs/sodium_libs_sumo.dart';
 ///
 /// Wire format: nonce (24 bytes) || ciphertext + tag (16 bytes).
 
+/// Overwrites each byte with zero so sensitive material does not linger on
+/// the Dart heap until garbage collection.
+void _zeroBytes(Uint8List bytes) {
+  for (var i = 0; i < bytes.length; i++) {
+    bytes[i] = 0;
+  }
+}
+
 Future<String> encryptImpl(String plaintext, Uint8List itemKey) async {
   final sodium = await _getSodium();
   final plaintextBytes = Uint8List.fromList(utf8.encode(plaintext));
@@ -16,20 +24,24 @@ Future<String> encryptImpl(String plaintext, Uint8List itemKey) async {
   final key = SecureKey.fromList(sodium, itemKey);
 
   final nonceBytes = nonce.extractBytes();
-  final ciphertext = sodium.crypto.aeadXChaCha20Poly1305IETF.encrypt(
-    message: plaintextBytes,
-    key: key,
-    nonce: nonceBytes,
-  );
+  try {
+    final ciphertext = sodium.crypto.aeadXChaCha20Poly1305IETF.encrypt(
+      message: plaintextBytes,
+      key: key,
+      nonce: nonceBytes,
+    );
 
-  // Combine: nonce || ciphertext (includes 16-byte tag)
-  final combined = Uint8List(nonceBytes.length + ciphertext.length);
-  combined.setRange(0, nonceBytes.length, nonceBytes);
-  combined.setRange(nonceBytes.length, combined.length, ciphertext);
+    // Combine: nonce || ciphertext (includes 16-byte tag)
+    final combined = Uint8List(nonceBytes.length + ciphertext.length);
+    combined.setRange(0, nonceBytes.length, nonceBytes);
+    combined.setRange(nonceBytes.length, combined.length, ciphertext);
 
-  key.dispose();
-  nonce.dispose();
-  return base64Encode(combined);
+    key.dispose();
+    nonce.dispose();
+    return base64Encode(combined);
+  } finally {
+    _zeroBytes(nonceBytes);
+  }
 }
 
 Future<String> decryptImpl(String encryptedBase64, Uint8List itemKey) async {
@@ -59,22 +71,29 @@ Future<Uint8List> encryptBlobImpl(Uint8List data, Uint8List itemKey) async {
   final key = SecureKey.fromList(sodium, itemKey);
 
   final nonceBytes = nonce.extractBytes();
-  final ciphertext = sodium.crypto.aeadXChaCha20Poly1305IETF.encrypt(
-    message: data,
-    key: key,
-    nonce: nonceBytes,
-  );
+  try {
+    final ciphertext = sodium.crypto.aeadXChaCha20Poly1305IETF.encrypt(
+      message: data,
+      key: key,
+      nonce: nonceBytes,
+    );
 
-  final combined = Uint8List(nonceBytes.length + ciphertext.length);
-  combined.setRange(0, nonceBytes.length, nonceBytes);
-  combined.setRange(nonceBytes.length, combined.length, ciphertext);
+    final combined = Uint8List(nonceBytes.length + ciphertext.length);
+    combined.setRange(0, nonceBytes.length, nonceBytes);
+    combined.setRange(nonceBytes.length, combined.length, ciphertext);
 
-  key.dispose();
-  nonce.dispose();
-  return combined;
+    key.dispose();
+    nonce.dispose();
+    return combined;
+  } finally {
+    _zeroBytes(nonceBytes);
+  }
 }
 
-Future<Uint8List> decryptBlobImpl(Uint8List encrypted, Uint8List itemKey) async {
+Future<Uint8List> decryptBlobImpl(
+  Uint8List encrypted,
+  Uint8List itemKey,
+) async {
   final sodium = await _getSodium();
   final nonceLength = sodium.crypto.aeadXChaCha20Poly1305IETF.nonceBytes;
   final aBytes = sodium.crypto.aeadXChaCha20Poly1305IETF.aBytes;

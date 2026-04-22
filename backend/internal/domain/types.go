@@ -20,6 +20,7 @@ type User struct {
 	AuthKeyHash  []byte    `json:"-"`
 	Salt         []byte    `json:"-"`
 	RecoveryKey  []byte    `json:"-"`
+	RecoverySalt []byte    `json:"-"`
 	Plan         string    `json:"plan"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
@@ -249,16 +250,25 @@ type SyncProgressResponse struct {
 // ── Auth ──────────────────────────────────────────
 
 type RegisterRequest struct {
-	Email       string `json:"email"`
-	Username    string `json:"username"`
-	AuthKeyHash []byte `json:"auth_key_hash"`  // Client-derived: HKDF(master_key, "auth")
-	Salt        []byte `json:"salt"`
-	RecoveryKey []byte `json:"recovery_key"`   // Encrypted recovery key
+	Email        string `json:"email"`
+	Username     string `json:"username"`
+	AuthKeyHash  []byte `json:"auth_key_hash"`   // Client-derived: HKDF(master_key, "auth")
+	Salt         []byte `json:"salt"`
+	RecoveryKey  []byte `json:"recovery_key"`    // Encrypted recovery key
+	RecoverySalt []byte `json:"recovery_salt"`   // Random 32-byte salt for recovery key derivation
 }
 
 type LoginRequest struct {
 	Email       string `json:"email"`
 	AuthKeyHash []byte `json:"auth_key_hash"`
+}
+
+// RecoverySaltResponse is returned by GET /api/v1/auth/recovery-salt.
+// RecoverySalt is nil for legacy accounts that registered before this field
+// was added.  The client falls back to deterministic salt derivation in
+// that case.
+type RecoverySaltResponse struct {
+	RecoverySalt []byte `json:"recovery_salt"`
 }
 
 type AuthResponse struct {

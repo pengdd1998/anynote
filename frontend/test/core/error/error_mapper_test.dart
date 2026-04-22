@@ -35,7 +35,7 @@ void main() {
     });
 
     test('maps FormatException to ValidationException', () {
-      final error = FormatException('Unexpected character');
+      const error = FormatException('Unexpected character');
       final result = ErrorMapper.map(error);
 
       expect(result, isA<ValidationException>());
@@ -71,7 +71,7 @@ void main() {
     // Note: SocketException mapping is guarded by !kIsWeb. In test context
     // kIsWeb is false, so SocketException should be mapped.
     test('maps SocketException to NetworkException', () {
-      final error = SocketException('Connection refused');
+      const error = SocketException('Connection refused');
       final result = ErrorMapper.map(error);
 
       expect(result, isA<NetworkException>());
@@ -81,7 +81,7 @@ void main() {
     });
 
     test('maps SocketException with empty message to NetworkException', () {
-      final error = SocketException('');
+      const error = SocketException('');
       final result = ErrorMapper.map(error);
 
       expect(result, isA<NetworkException>());
