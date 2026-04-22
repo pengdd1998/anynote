@@ -1,0 +1,68 @@
+name: Build Android APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.41.7'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate Drift code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Generate l10n
+        run: flutter gen-l10n
+
+      - name: Build APK (debug-signed release)
+        env:
+          ANDROID_KEYSTORE_PATH: ''
+        run: flutter build apk --release
+
+      - name: Rename APK
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/anynote-${VERSION}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anynote-apk
+          path: frontend/build/app/outputs/flutter-apk/anynote-*.apk
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: frontend/build/app/outputs/flutter-apk/anynote-*.apk
+          generate_release_notes: true
+          body: |
+            ## AnyNote ${{ github.ref_name }}
+
+            ### Installation
+            1. Download `anynote-*.apk` below
+            2. Enable "Install from unknown sources" in Android settings
+            3. Open the APK to install
+            4. Optionally install [Obtainium](https://github.com/ImranR98/Obtainium) for auto-updates

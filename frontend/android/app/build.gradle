@@ -74,7 +74,11 @@ android {
             minifyEnabled false
         }
         release {
-            signingConfig signingConfigs.release
+            // Use release keystore if available, otherwise fall back to debug
+            // signing for CI builds without keystore secrets configured.
+            signingConfig signingConfigs.release.storeFile != null
+                    ? signingConfigs.release
+                    : signingConfigs.debug
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
