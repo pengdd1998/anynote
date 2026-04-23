@@ -10,6 +10,9 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 
+# ── Flutter Play Store Split (optional dependency) ──────────────
+-dontwarn com.google.android.play.core.**
+
 # ── sodium_libs (native crypto) ─────────────────────────────────
 # Sodium JNI bindings must not be stripped or obfuscated
 -keep class com.goterl.lazycode.** { *; }
