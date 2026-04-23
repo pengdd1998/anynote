@@ -24,12 +24,12 @@ if (flutterVersionName == null) {
 
 android {
     namespace 'com.anynote.app'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.anynote.app"
         minSdk 24
-        targetSdk 34
+        targetSdk 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
