@@ -2508,4 +2508,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingCollaborateDesc =>
       'Work together on notes with live updates. Changes sync instantly across all devices.';
+
+  @override
+  String get noteLinks => 'Note Links';
+
+  @override
+  String get backlinks => 'Backlinks';
+
+  @override
+  String get noBacklinks => 'No backlinks found';
+
+  @override
+  String get knowledgeGraph => 'Knowledge Graph';
+
+  @override
+  String get graphEmpty => 'No links to display';
+
+  @override
+  String get aiAgent => 'AI Agent';
+
+  @override
+  String get selectAction => 'Select an action';
+
+  @override
+  String get organizeNotes => 'Organize Notes';
+
+  @override
+  String get summarizeNotes => 'Summarize Notes';
+
+  @override
+  String get createNote => 'Create Note';
+
+  @override
+  String get agentFailed => 'Action failed';
+
+  @override
+  String get agentComplete => 'Action complete';
+
+  @override
+  String get viewBacklinks => 'View backlinks';
 }

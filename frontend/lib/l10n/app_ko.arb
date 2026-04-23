@@ -1391,5 +1391,18 @@
   "onboardingPublishTitle": "어디에나 게시",
   "onboardingPublishDesc": "즐겨 사용하는 플랫폼에 원클릭으로 게시하세요. 아이디어를 즉시 세상과 공유하세요.",
   "onboardingCollaborateTitle": "실시간 협업",
-  "onboardingCollaborateDesc": "노트를 실시간으로 공동 편집하세요. 변경 사항이 모든 기기에 즉시 동기화됩니다."
+  "onboardingCollaborateDesc": "노트를 실시간으로 공동 편집하세요. 변경 사항이 모든 기기에 즉시 동기화됩니다.",
+  "noteLinks": "노트 링크",
+  "backlinks": "백링크",
+  "noBacklinks": "백링크가 없습니다",
+  "knowledgeGraph": "지식 그래프",
+  "graphEmpty": "링크 관계가 없습니다. 노트에 [[링크]]를 추가해 보세요",
+  "viewBacklinks": "백링크 보기",
+  "aiAgent": "AI 에이전트",
+  "selectAction": "작업 선택",
+  "organizeNotes": "노트 정리",
+  "summarizeNotes": "노트 요약",
+  "createNote": "노트 만들기",
+  "agentFailed": "작업 실패",
+  "agentComplete": "작업 완료"
 }

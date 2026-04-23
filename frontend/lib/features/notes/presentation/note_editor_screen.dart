@@ -24,7 +24,9 @@ import '../../../core/performance/performance_monitor.dart';
 import '../../../core/storage/image_storage.dart';
 import '../../../core/widgets/markdown_preview.dart';
 import '../../collab/providers/collab_provider.dart';
+import 'widgets/backlinks_sheet.dart';
 import 'widgets/character_count_bar.dart';
+import 'widgets/collab_cursors_widget.dart';
 import 'widgets/rich_editor_with_shortcuts.dart';
 import 'widgets/tag_picker_sheet.dart';
 import 'widgets/zen_mode_chrome.dart';
@@ -554,6 +556,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   tooltip: l10n.manageTags,
                   onPressed: () => _showTagPicker(context),
                 ),
+                if (!_isNew)
+                  IconButton(
+                    icon: const Icon(Icons.link_outlined),
+                    tooltip: l10n.viewBacklinks,
+                    onPressed: () => _showBacklinks(context),
+                  ),
                 IconButton(
                   icon: const Icon(Icons.image_outlined),
                   tooltip: l10n.addImage,
@@ -673,47 +681,52 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 ),
                 const Divider(),
                 Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    child: _isPreview
-                        ? SingleChildScrollView(
-                            key: const ValueKey('preview'),
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: MarkdownPreview(
-                              content: _extractPlainText(),
-                            ),
-                          )
-                        : _useRichEditor
-                            ? KeyedSubtree(
-                                key: const ValueKey('rich_editor'),
-                                child: RichEditorWithShortcuts(
-                                  quillController: _quillController,
-                                  focusNode: _editorFocusNode,
-                                  onExitZenMode: _exitZenMode,
-                                  onToggleHeading: _toggleHeading,
-                                  onToggleBulletList: _toggleBulletList,
-                                ),
-                              )
-                            : Semantics(
-                                key: const ValueKey('plain_editor'),
-                                label: l10n.noteContent,
-                                child: TextField(
-                                  controller: _effectiveContentController,
-                                  scrollController: _bodyScrollController,
-                                  decoration: InputDecoration(
-                                    hintText: l10n.startWriting,
-                                    border: InputBorder.none,
-                                  ),
-                                  maxLines: null,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    height: 1.6,
-                                  ),
-                                  onChanged: (_) => _scheduleTypewriterScroll(),
-                                ),
+                  child: _buildEditorWithCollabCursors(
+                    context,
+                    l10n,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      child: _isPreview
+                          ? SingleChildScrollView(
+                              key: const ValueKey('preview'),
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: MarkdownPreview(
+                                content: _extractPlainText(),
                               ),
+                            )
+                          : _useRichEditor
+                              ? KeyedSubtree(
+                                  key: const ValueKey('rich_editor'),
+                                  child: RichEditorWithShortcuts(
+                                    quillController: _quillController,
+                                    focusNode: _editorFocusNode,
+                                    onExitZenMode: _exitZenMode,
+                                    onToggleHeading: _toggleHeading,
+                                    onToggleBulletList: _toggleBulletList,
+                                  ),
+                                )
+                              : Semantics(
+                                  key: const ValueKey('plain_editor'),
+                                  label: l10n.noteContent,
+                                  child: TextField(
+                                    controller: _effectiveContentController,
+                                    scrollController: _bodyScrollController,
+                                    decoration: InputDecoration(
+                                      hintText: l10n.startWriting,
+                                      border: InputBorder.none,
+                                    ),
+                                    maxLines: null,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      height: 1.6,
+                                    ),
+                                    onChanged: (_) =>
+                                        _scheduleTypewriterScroll(),
+                                  ),
+                                ),
+                    ),
                   ),
                 ),
               ],
@@ -739,6 +752,33 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onToggleZenMode: _toggleZenMode,
         ),
       ],
+    );
+  }
+
+  // ── Collab cursor wrapper ────────────────────────────
+
+  /// Wraps the editor child with [CollabCursorsWidget] when in collab mode.
+  Widget _buildEditorWithCollabCursors(
+    BuildContext context,
+    AppLocalizations l10n,
+    Widget editorChild,
+  ) {
+    if (_isCollab && _noteId != null) {
+      return CollabCursorsWidget(noteId: _noteId!, child: editorChild);
+    }
+    return editorChild;
+  }
+
+  /// Show backlinks bottom sheet for the current note.
+  void _showBacklinks(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => BacklinksSheet(noteId: _noteId!),
     );
   }
 

@@ -2400,4 +2400,43 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingCollaborateDesc => '与他人实时协作编辑笔记，更改即时同步到所有设备。';
+
+  @override
+  String get noteLinks => '笔记链接';
+
+  @override
+  String get backlinks => '反向链接';
+
+  @override
+  String get noBacklinks => '暂无反向链接';
+
+  @override
+  String get knowledgeGraph => '知识图谱';
+
+  @override
+  String get graphEmpty => '暂无链接关系，请先在笔记中添加 [[链接]]';
+
+  @override
+  String get aiAgent => 'AI 助手';
+
+  @override
+  String get selectAction => '选择操作';
+
+  @override
+  String get organizeNotes => '整理笔记';
+
+  @override
+  String get summarizeNotes => '总结笔记';
+
+  @override
+  String get createNote => '创建笔记';
+
+  @override
+  String get agentFailed => '操作失败';
+
+  @override
+  String get agentComplete => '操作完成';
+
+  @override
+  String get viewBacklinks => '查看反向链接';
 }

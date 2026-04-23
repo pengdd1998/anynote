@@ -1405,5 +1405,18 @@
   "onboardingPublishTitle": "多平台发布",
   "onboardingPublishDesc": "一键发布到您喜爱的平台，将想法分享给全世界。",
   "onboardingCollaborateTitle": "实时协作",
-  "onboardingCollaborateDesc": "与他人实时协作编辑笔记，更改即时同步到所有设备。"
+  "onboardingCollaborateDesc": "与他人实时协作编辑笔记，更改即时同步到所有设备。",
+  "noteLinks": "笔记链接",
+  "backlinks": "反向链接",
+  "noBacklinks": "暂无反向链接",
+  "knowledgeGraph": "知识图谱",
+  "graphEmpty": "暂无链接关系，请先在笔记中添加 [[链接]]",
+  "viewBacklinks": "查看反向链接",
+  "aiAgent": "AI 助手",
+  "selectAction": "选择操作",
+  "organizeNotes": "整理笔记",
+  "summarizeNotes": "总结笔记",
+  "createNote": "创建笔记",
+  "agentFailed": "操作失败",
+  "agentComplete": "操作完成"
 }

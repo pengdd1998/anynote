@@ -84,6 +84,7 @@ func main() {
 	refreshTokenRepo := repository.NewRefreshTokenRepository(pool)
 	planRepo := repository.NewPlanRepository(pool)
 	profileRepo := repository.NewProfileRepository(pool)
+	noteLinkRepo := repository.NewNoteLinkRepository(pool)
 
 	// Start background goroutine to periodically clean up expired shared notes.
 	cleanupCtx, cancelCleanup := context.WithCancel(context.Background())
@@ -168,6 +169,8 @@ func main() {
 	)
 	planSvc := service.NewPlanService(planRepo, quotaRepo)
 	profileSvc := service.NewProfileService(profileRepo)
+	noteLinkSvc := service.NewNoteLinkService(noteLinkRepo)
+	aiAgentSvc := service.NewAIAgentService(aiProxySvc)
 
 	// Initialize Redis client for health checks and presence service.
 	// If Redis URL is not configured, the health handler gracefully reports
@@ -222,6 +225,8 @@ func main() {
 		Presence:  presenceSvc,
 		Plan:      planSvc,
 		Profile:   profileSvc,
+		NoteLink:  noteLinkSvc,
+		AIAgent:   aiAgentSvc,
 	}
 
 	// Health handler: pgxpool.Pool implements the Pinger interface used by

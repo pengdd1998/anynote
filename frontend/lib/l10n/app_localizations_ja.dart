@@ -2413,4 +2413,43 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get onboardingCollaborateDesc =>
       'メモをリアルタイムで共同編集。変更はすべてのデバイスに即座に同期されます。';
+
+  @override
+  String get noteLinks => 'ノートリンク';
+
+  @override
+  String get backlinks => 'バックリンク';
+
+  @override
+  String get noBacklinks => 'バックリンクはありません';
+
+  @override
+  String get knowledgeGraph => 'ナレッジグラフ';
+
+  @override
+  String get graphEmpty => 'リンク関係がありません。ノートに [[リンク]] を追加してください';
+
+  @override
+  String get aiAgent => 'AIエージェント';
+
+  @override
+  String get selectAction => 'アクションを選択';
+
+  @override
+  String get organizeNotes => 'ノートを整理';
+
+  @override
+  String get summarizeNotes => 'ノートを要約';
+
+  @override
+  String get createNote => 'ノートを作成';
+
+  @override
+  String get agentFailed => 'アクション失敗';
+
+  @override
+  String get agentComplete => 'アクション完了';
+
+  @override
+  String get viewBacklinks => 'バックリンクを表示';
 }

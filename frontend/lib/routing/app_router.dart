@@ -54,6 +54,8 @@ import '../features/settings/presentation/profile_screen.dart'
     deferred as profile_screen;
 import '../features/ai_chat/presentation/ai_chat_screen.dart'
     deferred as ai_chat;
+import '../features/ai_chat/presentation/ai_agent_screen.dart';
+import '../features/notes/presentation/widgets/note_graph_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -183,6 +185,18 @@ final appRouter = GoRouter(
           builder: () => ai_chat.AiChatScreen(),
         ),
       ),
+    ),
+
+    // AI Agent (eager, lightweight action screen)
+    GoRoute(
+      path: '/ai-agent',
+      pageBuilder: (context, state) => slideTransition(const AIAgentScreen()),
+    ),
+
+    // Knowledge Graph (eager, CustomPaint-based)
+    GoRoute(
+      path: '/notes/graph',
+      pageBuilder: (context, state) => slideTransition(const NoteGraphScreen()),
     ),
 
     // Main app with bottom navigation shell

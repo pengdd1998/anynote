@@ -1391,5 +1391,18 @@
   "onboardingPublishTitle": "どこでも公開",
   "onboardingPublishDesc": "お気に入りのプラットフォームにワンクリックで公開。アイデアを瞬時に世界と共有。",
   "onboardingCollaborateTitle": "リアルタイムコラボ",
-  "onboardingCollaborateDesc": "メモをリアルタイムで共同編集。変更はすべてのデバイスに即座に同期されます。"
+  "onboardingCollaborateDesc": "メモをリアルタイムで共同編集。変更はすべてのデバイスに即座に同期されます。",
+  "noteLinks": "ノートリンク",
+  "backlinks": "バックリンク",
+  "noBacklinks": "バックリンクはありません",
+  "knowledgeGraph": "ナレッジグラフ",
+  "graphEmpty": "リンク関係がありません。ノートに [[リンク]] を追加してください",
+  "viewBacklinks": "バックリンクを表示",
+  "aiAgent": "AIエージェント",
+  "selectAction": "アクションを選択",
+  "organizeNotes": "ノートを整理",
+  "summarizeNotes": "ノートを要約",
+  "createNote": "ノートを作成",
+  "agentFailed": "アクション失敗",
+  "agentComplete": "アクション完了"
 }

@@ -4503,6 +4503,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Work together on notes with live updates. Changes sync instantly across all devices.'**
   String get onboardingCollaborateDesc;
+
+  /// Title for note links section
+  ///
+  /// In en, this message translates to:
+  /// **'Note Links'**
+  String get noteLinks;
+
+  /// Title for backlinks bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Backlinks'**
+  String get backlinks;
+
+  /// Empty state when no notes link to this note
+  ///
+  /// In en, this message translates to:
+  /// **'No backlinks found'**
+  String get noBacklinks;
+
+  /// Title for the knowledge graph screen
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge Graph'**
+  String get knowledgeGraph;
+
+  /// Empty state when graph has no nodes
+  ///
+  /// In en, this message translates to:
+  /// **'No links to display'**
+  String get graphEmpty;
+
+  /// Title for the AI agent action screen
+  ///
+  /// In en, this message translates to:
+  /// **'AI Agent'**
+  String get aiAgent;
+
+  /// Section header for AI agent actions
+  ///
+  /// In en, this message translates to:
+  /// **'Select an action'**
+  String get selectAction;
+
+  /// AI agent action: organize notes
+  ///
+  /// In en, this message translates to:
+  /// **'Organize Notes'**
+  String get organizeNotes;
+
+  /// AI agent action: summarize notes
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize Notes'**
+  String get summarizeNotes;
+
+  /// AI agent action: create a note
+  ///
+  /// In en, this message translates to:
+  /// **'Create Note'**
+  String get createNote;
+
+  /// Error status for AI agent
+  ///
+  /// In en, this message translates to:
+  /// **'Action failed'**
+  String get agentFailed;
+
+  /// Success status for AI agent
+  ///
+  /// In en, this message translates to:
+  /// **'Action complete'**
+  String get agentComplete;
+
+  /// Tooltip for backlinks button in editor
+  ///
+  /// In en, this message translates to:
+  /// **'View backlinks'**
+  String get viewBacklinks;
 }
 
 class _AppLocalizationsDelegate

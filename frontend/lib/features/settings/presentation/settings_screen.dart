@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/crypto/crypto_service.dart';
-import '../../../core/error/error.dart';
 import '../../../core/export/export_service.dart';
 import '../../../core/locale/locale_provider.dart';
-import '../../../core/notifications/push_service.dart';
-import '../../../core/providers/app_info_provider.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/settings_providers.dart';
+import 'widgets/about_section.dart';
+import 'widgets/account_section.dart';
+import 'widgets/sign_out_section.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -24,7 +22,6 @@ class SettingsScreen extends ConsumerWidget {
     final accountAsync = ref.watch(accountInfoProvider);
     final aiQuotaAsync = ref.watch(aiQuotaProvider);
     final syncStatusAsync = ref.watch(syncStatusProvider);
-    final appInfoAsync = ref.watch(appInfoProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
@@ -40,23 +37,7 @@ class SettingsScreen extends ConsumerWidget {
             // -- Account section ------------------------------------------------
             StaggeredGroup(
               staggerIndex: 0,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsGroupHeader(title: l10n.account),
-                  SettingsGroup(
-                    children: [
-                      accountAsync.when(
-                        data: (account) =>
-                            _accountItems(context, ref, account, l10n),
-                        loading: () => _accountLoadingItems(l10n),
-                        error: (_, __) => _accountErrorItems(l10n),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              child: AccountSection(accountAsync: accountAsync),
             ),
 
             // -- AI section -----------------------------------------------------
@@ -217,139 +198,17 @@ class SettingsScreen extends ConsumerWidget {
             // -- About section --------------------------------------------------
             StaggeredGroup(
               staggerIndex: 7,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsGroupHeader(title: l10n.about),
-                  SettingsGroup(
-                    children: [
-                      SettingsItem(
-                        icon: Icons.info_outline,
-                        title: l10n.version,
-                        subtitle: appInfoAsync.when(
-                          data: (info) =>
-                              '${info.version} (${info.buildNumber})',
-                          loading: () => '...',
-                          error: (_, __) => 'Unknown',
-                        ),
-                      ),
-                      SettingsItem(
-                        icon: Icons.privacy_tip_outlined,
-                        title: l10n.privacyPolicy,
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => _showPrivacyPolicy(context),
-                      ),
-                      SettingsItem(
-                        icon: Icons.description_outlined,
-                        title: l10n.termsOfService,
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => _showTermsOfService(context),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              child: const AboutSection(),
             ),
 
             // -- Sign out (destructive, in its own group) -----------------------
             StaggeredGroup(
               staggerIndex: 8,
-              child: SettingsGroup(
-                children: [
-                  DestructiveSettingsItem(
-                    icon: Icons.logout,
-                    title: l10n.signOut,
-                    onTap: () => _confirmSignOut(context, ref),
-                  ),
-                ],
-              ),
+              child: const SignOutSection(),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Account section builders
-  // ---------------------------------------------------------------------------
-
-  /// Build the account items for the loaded state.
-  Widget _accountItems(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> account,
-    AppLocalizations l10n,
-  ) {
-    // The SettingsGroup expects a flat list of Widget children.
-    // Since _accountItems is placed as a single child in the group,
-    // return a Column that expands into the items.
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SettingsItem(
-          icon: Icons.person_outline,
-          title: l10n.email,
-          subtitle: account['email'] as String? ?? l10n.unknown,
-        ),
-        SettingsItem(
-          icon: Icons.badge_outlined,
-          title: l10n.plan,
-          subtitle: account['plan'] as String? ?? l10n.freePlan,
-          trailing: FilledButton.tonal(
-            onPressed: () => context.push('/settings/plan'),
-            style: FilledButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            child: Text(l10n.upgrade),
-          ),
-        ),
-        SettingsItem(
-          icon: Icons.person_outline,
-          title: l10n.profile,
-          subtitle: l10n.editPublicProfile,
-          trailing: const Icon(Icons.chevron_right, size: 20),
-          onTap: () => context.push('/settings/profile'),
-        ),
-      ],
-    );
-  }
-
-  Widget _accountLoadingItems(AppLocalizations l10n) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SettingsItem(
-          icon: Icons.person_outline,
-          title: l10n.email,
-          subtitle: l10n.loading,
-        ),
-        SettingsItem(
-          icon: Icons.badge_outlined,
-          title: l10n.plan,
-          subtitle: l10n.loading,
-        ),
-      ],
-    );
-  }
-
-  Widget _accountErrorItems(AppLocalizations l10n) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SettingsItem(
-          icon: Icons.person_outline,
-          title: l10n.email,
-          subtitle: l10n.unableToLoadAccountInfo,
-        ),
-        SettingsItem(
-          icon: Icons.badge_outlined,
-          title: l10n.plan,
-          subtitle: '--',
-        ),
-      ],
     );
   }
 
@@ -398,62 +257,13 @@ class SettingsScreen extends ConsumerWidget {
         loading: () => l10n.checking,
         error: (_, __) => l10n.unableToLoadSyncStatus,
       ),
-      trailing: const _SyncButton(),
+      trailing: const SyncButton(),
     );
   }
 
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
-
-  Future<void> _showPrivacyPolicy(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
-    // Load the privacy policy markdown from assets.
-    String content;
-    try {
-      content = await rootBundle.loadString('doc/legal/privacy-policy.md');
-    } catch (_) {
-      content = l10n.privacyPolicy;
-    }
-    if (!context.mounted) return;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.privacyPolicy),
-        scrollable: true,
-        content: SizedBox(
-          width: MediaQuery.of(ctx).size.width * 0.8,
-          child: MarkdownBody(
-            data: content,
-            selectable: true,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.dismiss),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showTermsOfService(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.termsOfService),
-        content: Text(l10n.termsOfServiceContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.dismiss),
-          ),
-        ],
-      ),
-    );
-  }
 
   String _getLanguageDisplayName(Locale locale, AppLocalizations l10n) {
     return switch (locale.languageCode) {
@@ -649,113 +459,6 @@ class SettingsScreen extends ConsumerWidget {
           SnackBar(content: Text(l10n.exportFailed(e.toString()))),
         );
       }
-    }
-  }
-
-  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.signOutConfirmTitle),
-        content: Text(l10n.signOutConfirmMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: Text(l10n.signOut),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !context.mounted) return;
-
-    try {
-      // Unregister device token from push notifications before clearing auth.
-      await ref.read(pushNotificationServiceProvider).dispose();
-
-      // Clear API client tokens (both in-memory and secure storage).
-      final apiClient = ref.read(apiClientProvider);
-      await apiClient.logout();
-
-      // Clear the auth state so the router redirect sends us to login.
-      ref.read(authStateProvider.notifier).state = false;
-
-      // Navigate to login.
-      if (context.mounted) {
-        context.go('/auth/login');
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.signOutFailed(e.toString()))),
-        );
-      }
-    }
-  }
-}
-
-/// Separate widget for the sync button so it can use ConsumerStatefulWidget
-/// to show a loading spinner during sync.
-class _SyncButton extends ConsumerStatefulWidget {
-  const _SyncButton();
-
-  @override
-  ConsumerState<_SyncButton> createState() => _SyncButtonState();
-}
-
-class _SyncButtonState extends ConsumerState<_SyncButton> {
-  bool _isSyncing = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    if (_isSyncing) {
-      return const SizedBox(
-        width: 24,
-        height: 24,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-    }
-
-    return OutlinedButton(
-      onPressed: _triggerSync,
-      style: OutlinedButton.styleFrom(
-        visualDensity: VisualDensity.compact,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-      ),
-      child: Text(l10n.syncNow),
-    );
-  }
-
-  Future<void> _triggerSync() async {
-    setState(() => _isSyncing = true);
-    try {
-      final l10n = AppLocalizations.of(context)!;
-      final notifier = ref.read(syncStatusProvider.notifier);
-      final result = await notifier.sync();
-      if (mounted) {
-        final msg = result.hasConflicts
-            ? l10n.syncCompleteWithConflicts(result.conflicts.length)
-            : l10n.synced(result.pulledCount, result.pushedCount);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        final appError = ErrorMapper.map(e);
-        ErrorDisplay.showSnackBar(context, appError, onRetry: _triggerSync);
-      }
-    } finally {
-      if (mounted) setState(() => _isSyncing = false);
     }
   }
 }

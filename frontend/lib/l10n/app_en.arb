@@ -2561,5 +2561,44 @@
   "@onboardingCollaborateTitle": { "description": "Onboarding page 4 title" },
 
   "onboardingCollaborateDesc": "Work together on notes with live updates. Changes sync instantly across all devices.",
-  "@onboardingCollaborateDesc": { "description": "Onboarding page 4 description" }
+  "@onboardingCollaborateDesc": { "description": "Onboarding page 4 description" },
+
+  "noteLinks": "Note Links",
+  "@noteLinks": { "description": "Title for note links section" },
+
+  "backlinks": "Backlinks",
+  "@backlinks": { "description": "Title for backlinks bottom sheet" },
+
+  "noBacklinks": "No backlinks found",
+  "@noBacklinks": { "description": "Empty state when no notes link to this note" },
+
+  "knowledgeGraph": "Knowledge Graph",
+  "@knowledgeGraph": { "description": "Title for the knowledge graph screen" },
+
+  "graphEmpty": "No links to display",
+  "@graphEmpty": { "description": "Empty state when graph has no nodes" },
+
+  "aiAgent": "AI Agent",
+  "@aiAgent": { "description": "Title for the AI agent action screen" },
+
+  "selectAction": "Select an action",
+  "@selectAction": { "description": "Section header for AI agent actions" },
+
+  "organizeNotes": "Organize Notes",
+  "@organizeNotes": { "description": "AI agent action: organize notes" },
+
+  "summarizeNotes": "Summarize Notes",
+  "@summarizeNotes": { "description": "AI agent action: summarize notes" },
+
+  "createNote": "Create Note",
+  "@createNote": { "description": "AI agent action: create a note" },
+
+  "agentFailed": "Action failed",
+  "@agentFailed": { "description": "Error status for AI agent" },
+
+  "agentComplete": "Action complete",
+  "@agentComplete": { "description": "Success status for AI agent" },
+
+  "viewBacklinks": "View backlinks",
+  "@viewBacklinks": { "description": "Tooltip for backlinks button in editor" }
 }

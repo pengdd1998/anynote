@@ -2415,4 +2415,43 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get onboardingCollaborateDesc =>
       '노트를 실시간으로 공동 편집하세요. 변경 사항이 모든 기기에 즉시 동기화됩니다.';
+
+  @override
+  String get noteLinks => '노트 링크';
+
+  @override
+  String get backlinks => '백링크';
+
+  @override
+  String get noBacklinks => '백링크가 없습니다';
+
+  @override
+  String get knowledgeGraph => '지식 그래프';
+
+  @override
+  String get graphEmpty => '링크 관계가 없습니다. 노트에 [[링크]]를 추가해 보세요';
+
+  @override
+  String get aiAgent => 'AI 에이전트';
+
+  @override
+  String get selectAction => '작업 선택';
+
+  @override
+  String get organizeNotes => '노트 정리';
+
+  @override
+  String get summarizeNotes => '노트 요약';
+
+  @override
+  String get createNote => '노트 만들기';
+
+  @override
+  String get agentFailed => '작업 실패';
+
+  @override
+  String get agentComplete => '작업 완료';
+
+  @override
+  String get viewBacklinks => '백링크 보기';
 }

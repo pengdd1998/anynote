@@ -409,3 +409,63 @@ type ListCommentsResponse struct {
 	Comments []Comment `json:"comments"`
 	Total    int       `json:"total"`
 }
+
+// ── Note Links ──────────────────────────────────────
+
+// NoteLink represents a bidirectional link between two notes.
+// The server stores link metadata; link extraction from encrypted
+// content is performed client-side.
+type NoteLink struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	SourceID  uuid.UUID `json:"source_id"`
+	TargetID  uuid.UUID `json:"target_id"`
+	LinkType  string    `json:"link_type"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// CreateNoteLinksRequest is the payload for batch-creating note links.
+type CreateNoteLinksRequest struct {
+	Links []NoteLinkItem `json:"links"`
+}
+
+// NoteLinkItem represents a single link to create.
+type NoteLinkItem struct {
+	SourceID uuid.UUID `json:"source_id"`
+	TargetID uuid.UUID `json:"target_id"`
+	LinkType string    `json:"link_type"`
+}
+
+// NoteLinksResponse contains a list of note links.
+type NoteLinksResponse struct {
+	Links []NoteLink `json:"links"`
+}
+
+// NoteGraphResponse contains nodes and edges for the user's note graph.
+type NoteGraphResponse struct {
+	Nodes []NoteGraphNode `json:"nodes"`
+	Edges []NoteLink      `json:"edges"`
+}
+
+// NoteGraphNode represents a note in the knowledge graph.
+type NoteGraphNode struct {
+	ItemID uuid.UUID `json:"item_id"`
+}
+
+// ── AI Agent ────────────────────────────────────────
+
+// AIAgentRequest is the payload for requesting an AI agent action.
+type AIAgentRequest struct {
+	Action     string                 `json:"action"`
+	Context    map[string]interface{} `json:"context"`
+	NoteIDs    []uuid.UUID            `json:"note_ids,omitempty"`
+	Parameters map[string]interface{} `json:"parameters,omitempty"`
+}
+
+// AIAgentResponse contains the result of an AI agent action.
+type AIAgentResponse struct {
+	Action  string                 `json:"action"`
+	Status  string                 `json:"status"`
+	Result  map[string]interface{} `json:"result"`
+	Message string                 `json:"message,omitempty"`
+}

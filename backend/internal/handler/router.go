@@ -63,6 +63,8 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	planH := NewPlanHandler(services.Plan, services.Quota)
 	profileH := NewProfileHandler(services.Profile)
 	wsH := NewWSHandler(services.Presence, cfg.Auth.JWTSecret, cfg.Server.AllowOrigins)
+	noteLinkH := NewNoteLinkHandler(services.NoteLink)
+	aiAgentH := NewAIAgentHandler(services.AIAgent)
 
 	// Rate limiters
 	authRateLimiter := service.NewRateLimiter(20, time.Minute)    // 20 req/min per IP
@@ -124,6 +126,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			// AI Proxy (rate limited by user)
 			r.With(RateLimitMiddleware(aiRateLimiter, UserIDKeyFunc, time.Minute)).Post("/ai/proxy", aiH.Proxy)
 			r.With(RateLimitMiddleware(aiRateLimiter, UserIDKeyFunc, time.Minute)).Get("/ai/quota", aiH.GetQuota)
+			r.With(RateLimitMiddleware(aiRateLimiter, UserIDKeyFunc, time.Minute)).Post("/ai/agent", aiAgentH.ExecuteAction)
 
 			// LLM Config (rate limited by user)
 			r.With(RateLimitMiddleware(llmRateLimiter, UserIDKeyFunc, time.Minute)).Get("/llm/configs", llmH.List)
@@ -163,6 +166,13 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 			// Profile management
 			r.Put("/profile", profileH.UpdateProfile)
+
+			// Note links
+			r.Post("/notes/links", noteLinkH.CreateLinks)
+			r.Get("/notes/graph", noteLinkH.GetGraph)
+			r.Get("/notes/{noteId}/backlinks", noteLinkH.GetBacklinks)
+			r.Get("/notes/{noteId}/links", noteLinkH.GetOutboundLinks)
+			r.Delete("/notes/links/{sourceId}/{targetId}", noteLinkH.DeleteLink)
 		})
 	})
 
@@ -187,6 +197,8 @@ type Services struct {
 	Presence  service.PresenceService
 	Plan      service.PlanService
 	Profile   service.ProfileService
+	NoteLink  service.NoteLinkService
+	AIAgent   service.AIAgentService
 }
 
 // registerPprofRoutes mounts /debug/pprof/* endpoints when the PPROF_ENABLED

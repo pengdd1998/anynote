@@ -408,6 +408,52 @@ class ApiClient {
     return res.data as Map<String, dynamic>;
   }
 
+  // ── Note Links API ─────────────────────────────────
+
+  /// Create note links in batch.
+  Future<Map<String, dynamic>> createNoteLinks(
+    List<Map<String, dynamic>> links,
+  ) async {
+    final res = await _dio.post(
+      '/api/v1/notes/links',
+      data: {'links': links},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Get backlinks for a note.
+  Future<Map<String, dynamic>> getNoteBacklinks(String noteId) async {
+    final res = await _dio.get('/api/v1/notes/$noteId/backlinks');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Get outbound links for a note.
+  Future<Map<String, dynamic>> getNoteOutboundLinks(String noteId) async {
+    final res = await _dio.get('/api/v1/notes/$noteId/links');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Get the full note graph for the current user.
+  Future<Map<String, dynamic>> getNoteGraph() async {
+    final res = await _dio.get('/api/v1/notes/graph');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Delete a note link.
+  Future<void> deleteNoteLink(String sourceId, String targetId) async {
+    await _dio.delete('/api/v1/notes/links/$sourceId/$targetId');
+  }
+
+  // ── AI Agent API ───────────────────────────────────
+
+  /// Execute an AI agent action.
+  Future<Map<String, dynamic>> executeAgentAction(
+    Map<String, dynamic> req,
+  ) async {
+    final res = await _dio.post('/api/v1/ai/agent', data: req);
+    return res.data as Map<String, dynamic>;
+  }
+
   // ── Profile API ────────────────────────────────────
 
   /// Get a user's public profile by username.
