@@ -39,7 +39,7 @@
 
 # ── General AndroidX ───────────────────────────────────────────
 -keep class androidx.** { *; }
--keepinterface androidx.** { *; }
+-keep interface androidx.** { *; }
 -dontwarn androidx.**
 
 # ── Kotlin coroutines (used by some plugins) ────────────────────
