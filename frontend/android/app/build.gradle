@@ -50,16 +50,17 @@ android {
 
     signingConfigs {
         debug {
-            storeFile = System.getenv("ANDROID_KEYSTORE_PATH")
-                    ? file(System.getenv("ANDROID_KEYSTORE_PATH"))
+            def ksPath = System.getenv("ANDROID_KEYSTORE_PATH") ?: null
+            storeFile = (ksPath && file(ksPath).exists())
+                    ? file(ksPath)
                     : debugKeystoreFile()
             storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: "android"
             keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "androiddebugkey"
             keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: "android"
         }
         release {
-            def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
-            if (keystorePath != null && file(keystorePath).exists()) {
+            def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH") ?: null
+            if (keystorePath && file(keystorePath).exists()) {
                 storeFile file(keystorePath)
                 storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
                 keyAlias System.getenv("ANDROID_KEY_ALIAS")
