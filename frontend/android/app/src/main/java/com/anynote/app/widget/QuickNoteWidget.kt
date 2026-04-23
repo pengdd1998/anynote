@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.RemoteViews
 import com.anynote.app.MainActivity
+import com.anynote.app.R
 
 class QuickNoteWidget : AppWidgetProvider() {
     override fun onUpdate(
