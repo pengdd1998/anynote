@@ -43,8 +43,8 @@
 -dontwarn androidx.**
 
 # ── Kotlin coroutines (used by some plugins) ────────────────────
--keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
--keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler
 -keepclassmembers class kotlinx.coroutines.** {
-    volatile **;
+    *;
 }
