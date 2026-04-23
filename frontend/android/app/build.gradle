@@ -102,6 +102,6 @@ flutter {
 dependencies {}
 
 // Helper to locate the debug keystore
-static def debugKeystoreFile() {
+def debugKeystoreFile() {
     return file("${System.getProperty('user.home')}/.android/debug.keystore")
 }
