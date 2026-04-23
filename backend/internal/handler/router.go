@@ -60,6 +60,8 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	shareH := &ShareHandler{shareService: services.Share}
 	pushH := &PushHandler{pushService: services.Push}
 	commentH := &CommentHandler{commentService: services.Comment}
+	planH := NewPlanHandler(services.Plan, services.Quota)
+	profileH := NewProfileHandler(services.Profile)
 	wsH := NewWSHandler(services.Presence, cfg.Auth.JWTSecret, cfg.Server.AllowOrigins)
 
 	// Rate limiters
@@ -84,6 +86,9 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 		// Public discovery feed (no auth required, rate limited by IP)
 		r.With(RateLimitMiddleware(discoverRateLimiter, IPKeyFunc, time.Minute)).Get("/share/discover", shareH.DiscoverFeed)
+
+		// Public profile (no auth required)
+		r.Get("/profile/{username}", profileH.GetPublicProfile)
 
 		// WebSocket (auth handled inside handler via query-param token)
 		r.Get("/ws", wsH.HandleConnection)
@@ -151,6 +156,13 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			r.Get("/share/{id}/comments", commentH.ListComments)
 			r.Post("/share/{id}/comments", commentH.CreateComment)
 			r.Delete("/comments/{id}", commentH.DeleteComment)
+
+			// Plan management
+			r.Get("/plan", planH.GetPlan)
+			r.Post("/plan/upgrade", planH.UpgradePlan)
+
+			// Profile management
+			r.Put("/profile", profileH.UpdateProfile)
 		})
 	})
 
@@ -173,6 +185,8 @@ type Services struct {
 	Push      service.PushService
 	Comment   service.CommentService
 	Presence  service.PresenceService
+	Plan      service.PlanService
+	Profile   service.ProfileService
 }
 
 // registerPprofRoutes mounts /debug/pprof/* endpoints when the PPROF_ENABLED

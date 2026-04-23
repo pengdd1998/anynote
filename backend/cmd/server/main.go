@@ -82,6 +82,8 @@ func main() {
 	deviceTokenRepo := repository.NewDeviceTokenRepository(pool)
 	commentRepo := repository.NewCommentRepository(pool)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(pool)
+	planRepo := repository.NewPlanRepository(pool)
+	profileRepo := repository.NewProfileRepository(pool)
 
 	// Start background goroutine to periodically clean up expired shared notes.
 	cleanupCtx, cancelCleanup := context.WithCancel(context.Background())
@@ -164,6 +166,8 @@ func main() {
 		service.WithCommentPushService(pushSvc),
 		service.WithCommentShareRepo(sharedNoteRepo),
 	)
+	planSvc := service.NewPlanService(planRepo, quotaRepo)
+	profileSvc := service.NewProfileService(profileRepo)
 
 	// Initialize Redis client for health checks and presence service.
 	// If Redis URL is not configured, the health handler gracefully reports
@@ -216,6 +220,8 @@ func main() {
 		Push:      pushSvc,
 		Comment:   commentSvc,
 		Presence:  presenceSvc,
+		Plan:      planSvc,
+		Profile:   profileSvc,
 	}
 
 	// Health handler: pgxpool.Pool implements the Pinger interface used by

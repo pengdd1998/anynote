@@ -40,28 +40,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _demoTextInitialized = false;
 
   List<_OnboardingPageData> _buildPages(AppLocalizations l10n) => [
-    _OnboardingPageData(
-      icon: Icons.shield_outlined,
-      title: l10n.onboardingPrivacyTitle,
-      description: l10n.onboardingPrivacyDesc,
-    ),
-    _OnboardingPageData(
-      icon: Icons.lock_outline,
-      title: l10n.onboardingMasterPasswordTitle,
-      description: l10n.onboardingMasterPasswordDesc,
-    ),
-    // Page 3 is the interactive demo -- handled separately in itemBuilder.
-    _OnboardingPageData(
-      icon: Icons.edit_note_outlined,
-      title: l10n.onboardingWriteTitle,
-      description: l10n.onboardingWriteDesc,
-    ),
-    _OnboardingPageData(
-      icon: Icons.auto_awesome_outlined,
-      title: l10n.onboardingAITitle,
-      description: l10n.onboardingAIDesc,
-    ),
-  ];
+        _OnboardingPageData(
+          icon: Icons.shield_outlined,
+          title: l10n.onboardingSecureNotesTitle,
+          description: l10n.onboardingSecureNotesDesc,
+        ),
+        _OnboardingPageData(
+          icon: Icons.auto_awesome_outlined,
+          title: l10n.onboardingAITitle,
+          description: l10n.onboardingAIDesc,
+        ),
+        // Page 3 is the interactive demo -- handled separately in itemBuilder.
+        _OnboardingPageData(
+          icon: Icons.publish_outlined,
+          title: l10n.onboardingPublishTitle,
+          description: l10n.onboardingPublishDesc,
+        ),
+        _OnboardingPageData(
+          icon: Icons.group_outlined,
+          title: l10n.onboardingCollaborateTitle,
+          description: l10n.onboardingCollaborateDesc,
+        ),
+      ];
 
   @override
   void dispose() {
@@ -145,8 +145,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     const scaffoldBgDark = Color(0xFF1A1614);
     final scaffoldBg = isDark ? scaffoldBgDark : scaffoldBgLight;
 
-    final inactiveDotColor =
-        isDark ? const Color(0xFF4A4340) : _warmGreyDot;
+    final inactiveDotColor = isDark ? const Color(0xFF4A4340) : _warmGreyDot;
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -169,9 +168,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         width: isActive ? 24 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: isActive
-                              ? colorScheme.primary
-                              : inactiveDotColor,
+                          color:
+                              isActive ? colorScheme.primary : inactiveDotColor,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );
@@ -358,8 +356,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: inputFill,
-                    borderRadius:
-                        BorderRadius.circular(AppTheme.radiusSmall),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                     border: Border.all(color: borderColor),
                   ),
                   child: Row(
@@ -390,10 +387,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Icons.lock,
                         size: 28,
                         color: colorScheme.primary,
-                      )
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .scale(
+                      ).animate().fadeIn(duration: 400.ms).scale(
                             begin: const Offset(0.5, 0.5),
                             end: const Offset(1.0, 1.0),
                             duration: 400.ms,
@@ -413,10 +407,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Icons.cloud_upload_outlined,
                         size: 28,
                         color: colorScheme.primary,
-                      )
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .scale(
+                      ).animate().fadeIn(duration: 400.ms).scale(
                             begin: const Offset(0.5, 0.5),
                             end: const Offset(1.0, 1.0),
                             duration: 400.ms,

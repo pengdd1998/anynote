@@ -26,12 +26,16 @@ import '../features/search/presentation/advanced_search_screen.dart';
 import '../features/tags/presentation/tags_screen.dart';
 
 // Deferred imports: heavy or rarely visited screens loaded on demand.
-import '../features/compose/presentation/compose_screen.dart' deferred as compose;
-import '../features/compose/presentation/cluster_screen.dart' deferred as cluster;
-import '../features/compose/presentation/outline_screen.dart' deferred as outline;
+import '../features/compose/presentation/compose_screen.dart'
+    deferred as compose;
+import '../features/compose/presentation/cluster_screen.dart'
+    deferred as cluster;
+import '../features/compose/presentation/outline_screen.dart'
+    deferred as outline;
 import '../features/compose/presentation/compose_editor_screen.dart'
     deferred as compose_editor;
-import '../features/publish/presentation/publish_screen.dart' deferred as publish;
+import '../features/publish/presentation/publish_screen.dart'
+    deferred as publish;
 import '../features/publish/presentation/publish_history_screen.dart'
     deferred as publish_history;
 import '../features/settings/presentation/llm_config_screen.dart'
@@ -44,6 +48,12 @@ import '../features/settings/presentation/import_screen.dart'
     deferred as import_screen;
 import '../features/settings/presentation/restore_screen.dart'
     deferred as restore;
+import '../features/settings/presentation/plan_screen.dart'
+    deferred as plan_screen;
+import '../features/settings/presentation/profile_screen.dart'
+    deferred as profile_screen;
+import '../features/ai_chat/presentation/ai_chat_screen.dart'
+    deferred as ai_chat;
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -93,18 +103,15 @@ final appRouter = GoRouter(
     // Auth routes (no shell)
     GoRoute(
       path: '/auth/login',
-      pageBuilder: (context, state) =>
-          slideTransition(const LoginScreen()),
+      pageBuilder: (context, state) => slideTransition(const LoginScreen()),
     ),
     GoRoute(
       path: '/auth/register',
-      pageBuilder: (context, state) =>
-          slideTransition(const RegisterScreen()),
+      pageBuilder: (context, state) => slideTransition(const RegisterScreen()),
     ),
     GoRoute(
       path: '/auth/recover',
-      pageBuilder: (context, state) =>
-          slideTransition(const RecoveryScreen()),
+      pageBuilder: (context, state) => slideTransition(const RecoveryScreen()),
     ),
 
     // Shared note viewer (public, no auth required)
@@ -125,9 +132,8 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => slideTransition(
         SharedNoteViewer(
           shareId: state.pathParameters['id']!,
-          shareKeyFragment: state.uri.fragment.isNotEmpty
-              ? state.uri.fragment
-              : null,
+          shareKeyFragment:
+              state.uri.fragment.isNotEmpty ? state.uri.fragment : null,
         ),
       ),
     ),
@@ -159,15 +165,24 @@ final appRouter = GoRouter(
     // Tags management (pushed from settings, no bottom nav shell)
     GoRoute(
       path: '/tags',
-      pageBuilder: (context, state) =>
-          slideTransition(const TagsScreen()),
+      pageBuilder: (context, state) => slideTransition(const TagsScreen()),
     ),
 
     // Discover feed (public shared notes, accessible with or without auth)
     GoRoute(
       path: '/discover',
-      pageBuilder: (context, state) =>
-          slideTransition(const DiscoverScreen()),
+      pageBuilder: (context, state) => slideTransition(const DiscoverScreen()),
+    ),
+
+    // AI Chat Assistant (deferred, heavy AI dependency tree)
+    GoRoute(
+      path: '/ai-chat',
+      pageBuilder: (context, state) => slideTransition(
+        _DeferredLoader(
+          load: ai_chat.loadLibrary(),
+          builder: () => ai_chat.AiChatScreen(),
+        ),
+      ),
     ),
 
     // Main app with bottom navigation shell
@@ -187,8 +202,7 @@ final appRouter = GoRouter(
               pageBuilder: (context, state) {
                 final templateContent =
                     state.uri.queryParameters['templateContent'];
-                final shareContent =
-                    state.uri.queryParameters['shareContent'];
+                final shareContent = state.uri.queryParameters['shareContent'];
                 return slideTransition(
                   NoteEditorScreen(
                     initialContent: shareContent ?? templateContent,
@@ -356,6 +370,26 @@ final appRouter = GoRouter(
                 ),
               ),
             ),
+            GoRoute(
+              path: 'plan',
+              parentNavigatorKey: rootNavigatorKey,
+              pageBuilder: (context, state) => slideTransition(
+                _DeferredLoader(
+                  load: plan_screen.loadLibrary(),
+                  builder: () => plan_screen.PlanScreen(),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: 'profile',
+              parentNavigatorKey: rootNavigatorKey,
+              pageBuilder: (context, state) => slideTransition(
+                _DeferredLoader(
+                  load: profile_screen.loadLibrary(),
+                  builder: () => profile_screen.ProfileScreen(),
+                ),
+              ),
+            ),
           ],
         ),
       ],
@@ -397,12 +431,29 @@ class _PhoneShell extends StatelessWidget {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex(context),
-        onDestinationSelected: (index) => _onDestinationSelected(context, index),
+        onDestinationSelected: (index) =>
+            _onDestinationSelected(context, index),
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.note_outlined), selectedIcon: const Icon(Icons.note), label: l10n?.notesTabLabel ?? 'Notes'),
-          NavigationDestination(icon: const Icon(Icons.auto_awesome_outlined), selectedIcon: const Icon(Icons.auto_awesome), label: l10n?.composeTabLabel ?? 'Compose'),
-          NavigationDestination(icon: const Icon(Icons.publish_outlined), selectedIcon: const Icon(Icons.publish), label: l10n?.publishTabLabel ?? 'Publish'),
-          NavigationDestination(icon: const Icon(Icons.settings_outlined), selectedIcon: const Icon(Icons.settings), label: l10n?.settingsTabLabel ?? 'Settings'),
+          NavigationDestination(
+            icon: const Icon(Icons.note_outlined),
+            selectedIcon: const Icon(Icons.note),
+            label: l10n?.notesTabLabel ?? 'Notes',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.auto_awesome_outlined),
+            selectedIcon: const Icon(Icons.auto_awesome),
+            label: l10n?.composeTabLabel ?? 'Compose',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.publish_outlined),
+            selectedIcon: const Icon(Icons.publish),
+            label: l10n?.publishTabLabel ?? 'Publish',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: l10n?.settingsTabLabel ?? 'Settings',
+          ),
         ],
       ),
     );

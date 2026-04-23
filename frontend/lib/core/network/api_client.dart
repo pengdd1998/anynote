@@ -384,6 +384,54 @@ class ApiClient {
       },
     );
   }
+
+  // ── Plan API ───────────────────────────────────────
+
+  /// Get the current user's plan, limits, and usage.
+  Future<Map<String, dynamic>> getPlan() async {
+    final res = await _dio.get('/api/v1/plan');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Upgrade the current user's plan.
+  Future<Map<String, dynamic>> upgradePlan(
+    String plan, {
+    String? paymentRef,
+  }) async {
+    final res = await _dio.post(
+      '/api/v1/plan/upgrade',
+      data: {
+        'plan': plan,
+        if (paymentRef != null) 'payment_ref': paymentRef,
+      },
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ── Profile API ────────────────────────────────────
+
+  /// Get a user's public profile by username.
+  Future<Map<String, dynamic>> getPublicProfile(String username) async {
+    final res = await _dio.get('/api/v1/profile/$username');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Update the authenticated user's profile.
+  Future<Map<String, dynamic>> updateProfile({
+    required String displayName,
+    required String bio,
+    required bool publicProfileEnabled,
+  }) async {
+    final res = await _dio.put(
+      '/api/v1/profile',
+      data: {
+        'display_name': displayName,
+        'bio': bio,
+        'public_profile_enabled': publicProfileEnabled,
+      },
+    );
+    return res.data as Map<String, dynamic>;
+  }
 }
 
 // ── Auth Interceptor ─────────────────────────────────

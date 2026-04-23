@@ -48,7 +48,8 @@ class SettingsScreen extends ConsumerWidget {
                   SettingsGroup(
                     children: [
                       accountAsync.when(
-                        data: (account) => _accountItems(context, ref, account, l10n),
+                        data: (account) =>
+                            _accountItems(context, ref, account, l10n),
                         loading: () => _accountLoadingItems(l10n),
                         error: (_, __) => _accountErrorItems(l10n),
                       ),
@@ -227,7 +228,8 @@ class SettingsScreen extends ConsumerWidget {
                         icon: Icons.info_outline,
                         title: l10n.version,
                         subtitle: appInfoAsync.when(
-                          data: (info) => '${info.version} (${info.buildNumber})',
+                          data: (info) =>
+                              '${info.version} (${info.buildNumber})',
                           loading: () => '...',
                           error: (_, __) => 'Unknown',
                         ),
@@ -296,13 +298,20 @@ class SettingsScreen extends ConsumerWidget {
           title: l10n.plan,
           subtitle: account['plan'] as String? ?? l10n.freePlan,
           trailing: FilledButton.tonal(
-            onPressed: () => _showComingSoon(context),
+            onPressed: () => context.push('/settings/plan'),
             style: FilledButton.styleFrom(
               visualDensity: VisualDensity.compact,
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
             child: Text(l10n.upgrade),
           ),
+        ),
+        SettingsItem(
+          icon: Icons.person_outline,
+          title: l10n.profile,
+          subtitle: l10n.editPublicProfile,
+          trailing: const Icon(Icons.chevron_right, size: 20),
+          onTap: () => context.push('/settings/profile'),
         ),
       ],
     );
@@ -348,7 +357,10 @@ class SettingsScreen extends ConsumerWidget {
   // AI quota item
   // ---------------------------------------------------------------------------
 
-  Widget _aiQuotaItem(AppLocalizations l10n, AsyncValue<Map<String, dynamic>> quotaAsync) {
+  Widget _aiQuotaItem(
+    AppLocalizations l10n,
+    AsyncValue<Map<String, dynamic>> quotaAsync,
+  ) {
     return SettingsItem(
       icon: Icons.data_usage_outlined,
       title: l10n.aiQuota,
@@ -393,23 +405,6 @@ class SettingsScreen extends ConsumerWidget {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
-
-  void _showComingSoon(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.comingSoon),
-        content: Text(l10n.comingSoonMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.dismiss),
-          ),
-        ],
-      ),
-    );
-  }
 
   Future<void> _showPrivacyPolicy(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
