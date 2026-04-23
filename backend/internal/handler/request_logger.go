@@ -69,7 +69,7 @@ func RequestLogger(next http.Handler) http.Handler {
 			"path", r.URL.Path,
 			"status", rw.status,
 			"duration_ms", duration.Milliseconds(),
-			"request_id", requestID,
+			"trace_id", requestID,
 		}
 		if userID != "" {
 			attrs = append(attrs, "user_id", userID)

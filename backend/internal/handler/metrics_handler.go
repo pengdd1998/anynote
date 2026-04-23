@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -87,7 +88,7 @@ func MetricsMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		httpRequestsTotal.WithLabelValues(r.Method, routePattern, http.StatusText(rw.status)).Inc()
+		httpRequestsTotal.WithLabelValues(r.Method, routePattern, strconv.Itoa(rw.status)).Inc()
 		httpRequestDuration.WithLabelValues(r.Method, routePattern).Observe(duration)
 	})
 }

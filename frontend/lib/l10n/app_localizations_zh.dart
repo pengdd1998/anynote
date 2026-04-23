@@ -935,7 +935,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get noNotesAvailableCreate => '暂无笔记。\n请先创建一些笔记。';
+  String get noNotesAvailableCreate => '暂无笔记。请先创建一篇笔记。';
 
   @override
   String get contentPreview => '内容预览';
@@ -2145,4 +2145,259 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get termsOfServiceContent => '服务条款正在起草中。目前，我们的隐私政策适用于 AnyNote 服务的使用。';
+
+  @override
+  String get kdfMigrationTitle => '安全升级可用';
+
+  @override
+  String get kdfMigrationMessage =>
+      '您的加密密钥使用了较旧的、较弱的参数。我们建议升级到更强的密钥派生参数以提高安全性。这需要重新派生您的密钥，请稍候。';
+
+  @override
+  String get kdfMigrationUpgrade => '立即升级';
+
+  @override
+  String get kdfMigrationSkip => '暂时跳过';
+
+  @override
+  String get kdfMigrationInProgress => '正在升级加密参数...';
+
+  @override
+  String get kdfMigrationSuccess => '加密参数已成功升级。';
+
+  @override
+  String get kdfMigrationFailed => '迁移失败。您可以继续使用，但您的密钥仍使用较旧的参数。';
+
+  @override
+  String get crossPlatformWarningTitle => '跨平台加密说明';
+
+  @override
+  String get crossPlatformWarningMessage =>
+      '在移动端（Android/iOS）加密的笔记无法在网页端解密，反之亦然。这是因为移动端使用 Argon2id，而网页端使用 PBKDF2 进行密钥派生，即使使用相同密码也会产生不同的加密密钥。';
+
+  @override
+  String get aiChatAssistant => 'AI 聊天助手';
+
+  @override
+  String get aiChatWelcome => '问我任何关于笔记的问题';
+
+  @override
+  String get aiChatWelcomeDesc => '选择笔记作为上下文以获得更相关的回答。';
+
+  @override
+  String get selectContextNotes => '选择上下文笔记';
+
+  @override
+  String contextNotesCount(int count) {
+    return '已选择 $count 篇笔记作为上下文';
+  }
+
+  @override
+  String get newChat => '新对话';
+
+  @override
+  String get typeYourMessage => '输入您的消息...';
+
+  @override
+  String get smartSummary => '智能摘要';
+
+  @override
+  String get summaryPromptDesc => '为您的笔记内容生成简洁的 AI 摘要。';
+
+  @override
+  String get generateSummary => '生成摘要';
+
+  @override
+  String get replace => '替换';
+
+  @override
+  String get aiTagSuggestion => 'AI 标签推荐';
+
+  @override
+  String get suggestTags => '推荐';
+
+  @override
+  String get analyzingContent => '正在分析内容...';
+
+  @override
+  String get tapSuggestTagsDesc => '点击\"推荐\"让 AI 分析您的笔记并推荐标签。';
+
+  @override
+  String get selectTagsToApply => '选择要应用的标签：';
+
+  @override
+  String applyTags(int count) {
+    return '应用 $count 个标签';
+  }
+
+  @override
+  String get aiTranslation => 'AI 翻译';
+
+  @override
+  String get translateTo => '翻译为：';
+
+  @override
+  String get translate => '翻译';
+
+  @override
+  String get translationWillAppear => '翻译结果将显示在此处...';
+
+  @override
+  String get insertBelow => '插入到下方';
+
+  @override
+  String get french => '法语';
+
+  @override
+  String get german => '德语';
+
+  @override
+  String get spanish => '西班牙语';
+
+  @override
+  String get writingPolish => '写作润色';
+
+  @override
+  String get writingPolishDesc => '修复语法、拼写错误，并提升可读性。';
+
+  @override
+  String get checkGrammar => '检查';
+
+  @override
+  String get checkingGrammar => '正在检查语法...';
+
+  @override
+  String get original => '原文';
+
+  @override
+  String get corrected => '已修正';
+
+  @override
+  String get reject => '拒绝';
+
+  @override
+  String get acceptAll => '全部接受';
+
+  @override
+  String get aiFeatures => 'AI 功能';
+
+  @override
+  String get planTitle => '方案';
+
+  @override
+  String currentPlan(String plan) {
+    return '当前方案：$plan';
+  }
+
+  @override
+  String get planNotesCount => '笔记';
+
+  @override
+  String get aiUsage => 'AI 用量';
+
+  @override
+  String get storageUsed => '存储';
+
+  @override
+  String get unlimited => '无限制';
+
+  @override
+  String get comparePlans => '方案对比';
+
+  @override
+  String get maxNotes => '最大笔记数';
+
+  @override
+  String get aiDailyQuota => 'AI 每日配额';
+
+  @override
+  String get storage => '存储空间';
+
+  @override
+  String get maxDevices => '最大设备数';
+
+  @override
+  String get collaboration => '协作';
+
+  @override
+  String get no => '否';
+
+  @override
+  String get yes => '是';
+
+  @override
+  String get restorePurchase => '恢复购买';
+
+  @override
+  String get restorePurchaseComingSoon => '恢复购买功能即将推出。';
+
+  @override
+  String get lifetimeMember => '终身会员 -- 所有功能永久解锁。';
+
+  @override
+  String get selectPlan => '选择方案';
+
+  @override
+  String get proPlanDescription => '无限笔记、每日 500 次 AI 请求、5 GB 存储';
+
+  @override
+  String get lifetimePlanDescription => '所有 Pro 功能，永久有效 -- 一次性付款';
+
+  @override
+  String get unableToLoadPlan => '无法加载方案信息。';
+
+  @override
+  String get profile => '个人资料';
+
+  @override
+  String get editPublicProfile => '编辑显示名称和简介';
+
+  @override
+  String get profileTitle => '编辑资料';
+
+  @override
+  String get displayName => '显示名称';
+
+  @override
+  String get displayNameHint => '他人看到的名称';
+
+  @override
+  String get bio => '简介';
+
+  @override
+  String get bioHint => '介绍一下自己';
+
+  @override
+  String get publicProfile => '公开资料';
+
+  @override
+  String get publicProfileDesc => '允许他人查看您的资料';
+
+  @override
+  String get profileSaved => '资料已保存';
+
+  @override
+  String get profileSaveFailed => '保存资料失败';
+
+  @override
+  String get unableToLoadProfile => '无法加载个人资料。';
+
+  @override
+  String get onboardingSecureNotesTitle => '安全笔记';
+
+  @override
+  String get onboardingSecureNotesDesc =>
+      '每条笔记在到达云端之前都会在您的设备上进行端到端加密。没有人——甚至我们——能读取您的笔记。';
+
+  @override
+  String get onboardingPublishTitle => '多平台发布';
+
+  @override
+  String get onboardingPublishDesc => '一键发布到您喜爱的平台，将想法分享给全世界。';
+
+  @override
+  String get onboardingCollaborateTitle => '实时协作';
+
+  @override
+  String get onboardingCollaborateDesc => '与他人实时协作编辑笔记，更改即时同步到所有设备。';
 }

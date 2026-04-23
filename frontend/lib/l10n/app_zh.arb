@@ -1300,5 +1300,110 @@
 
   "errorTitleStorage": "存储错误",
 
-  "termsOfServiceContent": "服务条款正在起草中。目前，我们的隐私政策适用于 AnyNote 服务的使用。"
+  "termsOfServiceContent": "服务条款正在起草中。目前，我们的隐私政策适用于 AnyNote 服务的使用。",
+
+  "kdfMigrationTitle": "安全升级可用",
+
+  "kdfMigrationMessage": "您的加密密钥使用了较旧的、较弱的参数。我们建议升级到更强的密钥派生参数以提高安全性。这需要重新派生您的密钥，请稍候。",
+
+  "kdfMigrationUpgrade": "立即升级",
+
+  "kdfMigrationSkip": "暂时跳过",
+
+  "kdfMigrationInProgress": "正在升级加密参数...",
+
+  "kdfMigrationSuccess": "加密参数已成功升级。",
+
+  "kdfMigrationFailed": "迁移失败。您可以继续使用，但您的密钥仍使用较旧的参数。",
+
+  "crossPlatformWarningTitle": "跨平台加密说明",
+
+  "crossPlatformWarningMessage": "在移动端（Android/iOS）加密的笔记无法在网页端解密，反之亦然。这是因为移动端使用 Argon2id，而网页端使用 PBKDF2 进行密钥派生，即使使用相同密码也会产生不同的加密密钥。",
+
+  "aiChatAssistant": "AI 聊天助手",
+  "aiChatWelcome": "问我任何关于笔记的问题",
+  "aiChatWelcomeDesc": "选择笔记作为上下文以获得更相关的回答。",
+  "selectContextNotes": "选择上下文笔记",
+  "contextNotesCount": "已选择 {count} 篇笔记作为上下文",
+  "newChat": "新对话",
+  "typeYourMessage": "输入您的消息...",
+  "noNotesAvailableCreate": "暂无笔记。请先创建一篇笔记。",
+  "untitled": "无标题",
+
+  "smartSummary": "智能摘要",
+  "summaryPromptDesc": "为您的笔记内容生成简洁的 AI 摘要。",
+  "generateSummary": "生成摘要",
+  "copiedToClipboard": "已复制到剪贴板",
+  "copy": "复制",
+  "replace": "替换",
+
+  "aiTagSuggestion": "AI 标签推荐",
+  "suggestTags": "推荐",
+  "analyzingContent": "正在分析内容...",
+  "tapSuggestTagsDesc": "点击\"推荐\"让 AI 分析您的笔记并推荐标签。",
+  "selectTagsToApply": "选择要应用的标签：",
+  "applyTags": "应用 {count} 个标签",
+  "retry": "重试",
+
+  "aiTranslation": "AI 翻译",
+  "translateTo": "翻译为：",
+  "translate": "翻译",
+  "translationWillAppear": "翻译结果将显示在此处...",
+  "insertBelow": "插入到下方",
+  "french": "法语",
+  "german": "德语",
+  "spanish": "西班牙语",
+
+  "writingPolish": "写作润色",
+  "writingPolishDesc": "修复语法、拼写错误，并提升可读性。",
+  "checkGrammar": "检查",
+  "checkingGrammar": "正在检查语法...",
+  "original": "原文",
+  "corrected": "已修正",
+  "reject": "拒绝",
+  "acceptAll": "全部接受",
+
+  "aiFeatures": "AI 功能",
+
+  "planTitle": "方案",
+  "currentPlan": "当前方案：{plan}",
+  "planNotesCount": "笔记",
+  "@planNotesCount": { "description": "Label for notes count in plan usage" },
+
+  "aiUsage": "AI 用量",
+  "storageUsed": "存储",
+  "unlimited": "无限制",
+  "comparePlans": "方案对比",
+  "maxNotes": "最大笔记数",
+  "aiDailyQuota": "AI 每日配额",
+  "storage": "存储空间",
+  "maxDevices": "最大设备数",
+  "collaboration": "协作",
+  "no": "否",
+  "yes": "是",
+  "restorePurchase": "恢复购买",
+  "restorePurchaseComingSoon": "恢复购买功能即将推出。",
+  "lifetimeMember": "终身会员 -- 所有功能永久解锁。",
+  "selectPlan": "选择方案",
+  "proPlanDescription": "无限笔记、每日 500 次 AI 请求、5 GB 存储",
+  "lifetimePlanDescription": "所有 Pro 功能，永久有效 -- 一次性付款",
+  "unableToLoadPlan": "无法加载方案信息。",
+  "profile": "个人资料",
+  "editPublicProfile": "编辑显示名称和简介",
+  "profileTitle": "编辑资料",
+  "displayName": "显示名称",
+  "displayNameHint": "他人看到的名称",
+  "bio": "简介",
+  "bioHint": "介绍一下自己",
+  "publicProfile": "公开资料",
+  "publicProfileDesc": "允许他人查看您的资料",
+  "profileSaved": "资料已保存",
+  "profileSaveFailed": "保存资料失败",
+  "unableToLoadProfile": "无法加载个人资料。",
+  "onboardingSecureNotesTitle": "安全笔记",
+  "onboardingSecureNotesDesc": "每条笔记在到达云端之前都会在您的设备上进行端到端加密。没有人——甚至我们——能读取您的笔记。",
+  "onboardingPublishTitle": "多平台发布",
+  "onboardingPublishDesc": "一键发布到您喜爱的平台，将想法分享给全世界。",
+  "onboardingCollaborateTitle": "实时协作",
+  "onboardingCollaborateDesc": "与他人实时协作编辑笔记，更改即时同步到所有设备。"
 }

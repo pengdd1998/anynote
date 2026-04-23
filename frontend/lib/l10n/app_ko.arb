@@ -1286,5 +1286,110 @@
 
   "errorTitleStorage": "저장소 오류",
 
-  "termsOfServiceContent": "이용약관은 현재 작성 중입니다. 현재 AnyNote 서비스 이용에는 개인정보 처리방침이 적용됩니다."
+  "termsOfServiceContent": "이용약관은 현재 작성 중입니다. 현재 AnyNote 서비스 이용에는 개인정보 처리방침이 적용됩니다.",
+
+  "kdfMigrationTitle": "보안 업그레이드 가능",
+
+  "kdfMigrationMessage": "암호화 키가 이전의 약한 매개변수를 사용하고 있습니다. 보안 강화를 위해 더 강력한 키 파생 매개변수로 업그레이드하는 것을 권장합니다. 키 재파생이 필요하므로 잠시 시간이 걸립니다.",
+
+  "kdfMigrationUpgrade": "지금 업그레이드",
+
+  "kdfMigrationSkip": "나중에",
+
+  "kdfMigrationInProgress": "암호화 매개변수 업그레이드 중...",
+
+  "kdfMigrationSuccess": "암호화 매개변수가 성공적으로 업그레이드되었습니다.",
+
+  "kdfMigrationFailed": "마이그레이션에 실패했습니다. 계속 사용할 수 있지만 키가 이전 매개변수를 사용합니다.",
+
+  "crossPlatformWarningTitle": "크로스 플랫폼 암호화 안내",
+
+  "crossPlatformWarningMessage": "모바일(Android/iOS)에서 암호화된 메모는 웹에서 복호화할 수 없으며, 그 반대의 경우도 마찬가지입니다. 모바일은 Argon2id를, 웹은 PBKDF2를 키 파생에 사용하므로 동일한 비밀번호로도 다른 암호화 키가 생성됩니다.",
+
+  "aiChatAssistant": "AI 채팅 어시스턴트",
+  "aiChatWelcome": "메모에 대해 무엇이든 물어보세요",
+  "aiChatWelcomeDesc": "컨텍스트로 메모를 선택하면 더 관련성 높은 답변을 얻을 수 있습니다.",
+  "selectContextNotes": "컨텍스트 메모 선택",
+  "contextNotesCount": "{count}개의 메모가 컨텍스트로 선택됨",
+  "newChat": "새 채팅",
+  "typeYourMessage": "메시지를 입력하세요...",
+  "noNotesAvailableCreate": "사용 가능한 메모가 없습니다. 먼저 메모를 만드세요.",
+  "untitled": "제목 없음",
+
+  "smartSummary": "스마트 요약",
+  "summaryPromptDesc": "메모 내용을 AI로 간결하게 요약합니다.",
+  "generateSummary": "요약 생성",
+  "copiedToClipboard": "클립보드에 복사됨",
+  "copy": "복사",
+  "replace": "바꾸기",
+
+  "aiTagSuggestion": "AI 태그 제안",
+  "suggestTags": "제안",
+  "analyzingContent": "내용 분석 중...",
+  "tapSuggestTagsDesc": "\"제안\"을 탭하여 AI가 메모를 분석하고 태그를 추천하도록 합니다.",
+  "selectTagsToApply": "적용할 태그를 선택하세요:",
+  "applyTags": "{count}개 태그 적용",
+  "retry": "재시도",
+
+  "aiTranslation": "AI 번역",
+  "translateTo": "번역할 언어:",
+  "translate": "번역",
+  "translationWillAppear": "번역 결과가 여기에 표시됩니다...",
+  "insertBelow": "아래에 삽입",
+  "french": "프랑스어",
+  "german": "독일어",
+  "spanish": "스페인어",
+
+  "writingPolish": "글쓰기 교정",
+  "writingPolishDesc": "AI로 문법, 맞춤법을 수정하고 가독성을 향상합니다.",
+  "checkGrammar": "검사",
+  "checkingGrammar": "문법 검사 중...",
+  "original": "원문",
+  "corrected": "수정됨",
+  "reject": "거부",
+  "acceptAll": "모두 적용",
+
+  "aiFeatures": "AI 기능",
+
+  "planTitle": "플랜",
+  "currentPlan": "현재 플랜: {plan}",
+  "planNotesCount": "노트",
+  "@planNotesCount": { "description": "Label for notes count in plan usage" },
+
+  "aiUsage": "AI 사용량",
+  "storageUsed": "저장소",
+  "unlimited": "무제한",
+  "comparePlans": "플랜 비교",
+  "maxNotes": "최대 노트 수",
+  "aiDailyQuota": "AI 일일 할당량",
+  "storage": "저장 공간",
+  "maxDevices": "최대 기기 수",
+  "collaboration": "협업",
+  "no": "아니요",
+  "yes": "예",
+  "restorePurchase": "구매 복원",
+  "restorePurchaseComingSoon": "구매 복원 기능이 곧 제공됩니다.",
+  "lifetimeMember": "평생 회원 -- 모든 기능이 영구적으로 잠금 해제됩니다.",
+  "selectPlan": "플랜 선택",
+  "proPlanDescription": "무제한 노트, 하루 500회 AI 요청, 5 GB 저장소",
+  "lifetimePlanDescription": "모든 Pro 기능을 영구적으로 -- 일시불 결제",
+  "unableToLoadPlan": "플랜 정보를 불러올 수 없습니다.",
+  "profile": "프로필",
+  "editPublicProfile": "표시 이름과 소개 편집",
+  "profileTitle": "프로필 편집",
+  "displayName": "표시 이름",
+  "displayNameHint": "다른 사람에게 보이는 이름",
+  "bio": "소개",
+  "bioHint": "자기소개를 작성해 보세요",
+  "publicProfile": "공개 프로필",
+  "publicProfileDesc": "다른 사람이 프로필을 볼 수 있도록 허용",
+  "profileSaved": "프로필이 저장되었습니다",
+  "profileSaveFailed": "프로필 저장에 실패했습니다",
+  "unableToLoadProfile": "프로필을 불러올 수 없습니다.",
+  "onboardingSecureNotesTitle": "보안 노트",
+  "onboardingSecureNotesDesc": "모든 노트는 클라우드에 도달하기 전에 기기에서 종단 간 암호화됩니다. 누구도 -- 우리조차도 -- 노트를 읽을 수 없습니다.",
+  "onboardingPublishTitle": "어디에나 게시",
+  "onboardingPublishDesc": "즐겨 사용하는 플랫폼에 원클릭으로 게시하세요. 아이디어를 즉시 세상과 공유하세요.",
+  "onboardingCollaborateTitle": "실시간 협업",
+  "onboardingCollaborateDesc": "노트를 실시간으로 공동 편집하세요. 변경 사항이 모든 기기에 즉시 동기화됩니다."
 }

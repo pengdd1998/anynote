@@ -14,7 +14,6 @@ import 'package:uuid/uuid.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/collab/crdt_text.dart';
 import '../../../core/collab/presence_indicator.dart';
 import '../../../core/collab/ws_client.dart';
@@ -25,7 +24,14 @@ import '../../../core/performance/performance_monitor.dart';
 import '../../../core/storage/image_storage.dart';
 import '../../../core/widgets/markdown_preview.dart';
 import '../../collab/providers/collab_provider.dart';
-import 'rich_note_editor.dart';
+import 'widgets/character_count_bar.dart';
+import 'widgets/rich_editor_with_shortcuts.dart';
+import 'widgets/tag_picker_sheet.dart';
+import 'widgets/zen_mode_chrome.dart';
+import 'widgets/summary_sheet.dart';
+import 'widgets/ai_tag_suggestion.dart';
+import 'widgets/translation_sheet.dart';
+import 'widgets/writing_assist_sheet.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   /// Optional initial content to pre-fill the editor (e.g. from a template).
@@ -108,8 +114,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
 
     // Pre-fill with initial content if provided (e.g. from a template).
-    if (widget.initialContent != null &&
-        widget.initialContent!.isNotEmpty) {
+    if (widget.initialContent != null && widget.initialContent!.isNotEmpty) {
       _contentController.text = widget.initialContent!;
       // Also set quill controller content so it is available in rich mode.
       _quillController.document.insert(0, widget.initialContent!);
@@ -152,8 +157,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       CRDTText? existingCrdt;
       if (persisted != null) {
         try {
-          final json = jsonDecode(persisted.documentState)
-              as Map<String, dynamic>;
+          final json =
+              jsonDecode(persisted.documentState) as Map<String, dynamic>;
           existingCrdt = CRDTText.fromJson(json);
         } catch (_) {
           // Corrupted state; start fresh.
@@ -192,10 +197,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _debounce = Timer(const Duration(seconds: 2), _saveNote);
     // Debounce count updates to avoid recalculating on every keystroke.
     _countDebounceTimer?.cancel();
-    _countDebounceTimer = Timer(const Duration(milliseconds: 300), _updateCounts);
+    _countDebounceTimer =
+        Timer(const Duration(milliseconds: 300), _updateCounts);
     // Debounce presence typing indicator (send at most once per second).
     _presenceDebounce?.cancel();
-    _presenceDebounce = Timer(const Duration(seconds: 1), _notifyPresenceTyping);
+    _presenceDebounce =
+        Timer(const Duration(seconds: 1), _notifyPresenceTyping);
   }
 
   /// Send a typing indicator to the presence room.
@@ -210,9 +217,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final text = _extractPlainText();
     final chars = text.length;
     // Word count: split on whitespace, filter empty strings.
-    final words = text.trim().isEmpty
-        ? 0
-        : text.trim().split(_wordSplitRegex).length;
+    final words =
+        text.trim().isEmpty ? 0 : text.trim().split(_wordSplitRegex).length;
 
     if (_wordCount != words || _charCount != chars) {
       setState(() {
@@ -269,8 +275,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       const lineHeight = 16.0 * 1.6; // fontSize * height
       final linesBeforeCursor =
           '\n'.allMatches(text.substring(0, cursorPos)).length;
-      final cursorY =
-          linesBeforeCursor * lineHeight + 16.0; // + padding
+      final cursorY = linesBeforeCursor * lineHeight + 16.0; // + padding
 
       final viewportHeight = _bodyScrollController.position.viewportDimension;
       if (viewportHeight <= 0) return;
@@ -455,8 +460,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   TextEditingController get _effectiveContentController {
     if (_isCollab) {
       final collabState = ref.read(collabProvider);
-      return collabState.editorController?.textController ??
-          _contentController;
+      return collabState.editorController?.textController ?? _contentController;
     }
     return _contentController;
   }
@@ -537,8 +541,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   },
                 ),
                 IconButton(
-                  icon:
-                      Icon(_isPreview ? Icons.edit : Icons.visibility),
+                  icon: Icon(_isPreview ? Icons.edit : Icons.visibility),
                   tooltip: _isPreview ? l10n.edit : l10n.preview,
                   onPressed: () {
                     final newValue = !_isPreview;
@@ -555,6 +558,45 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   icon: const Icon(Icons.image_outlined),
                   tooltip: l10n.addImage,
                   onPressed: () => _pickImage(context),
+                ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.auto_awesome_outlined),
+                  tooltip: l10n.aiFeatures,
+                  onSelected: (value) => _handleAiAction(context, value),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'summary',
+                      child: ListTile(
+                        leading: const Icon(Icons.summarize_outlined),
+                        title: Text(l10n.smartSummary),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'tags',
+                      child: ListTile(
+                        leading: const Icon(Icons.sell_outlined),
+                        title: Text(l10n.aiTagSuggestion),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'translate',
+                      child: ListTile(
+                        leading: const Icon(Icons.translate),
+                        title: Text(l10n.aiTranslation),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'polish',
+                      child: ListTile(
+                        leading: const Icon(Icons.spellcheck),
+                        title: Text(l10n.writingPolish),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
                 ),
                 IconButton(
                   icon: const Icon(Icons.check),
@@ -584,8 +626,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             label: 'Error: $_errorMessage',
             child: Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               color: colorScheme.errorContainer,
               child: Text(
                 _errorMessage!,
@@ -602,15 +643,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               left: 16,
               right: 16,
               // In zen mode, add top padding for status bar area.
-              top: _isZenMode
-                  ? MediaQuery.of(context).padding.top + 8
-                  : 0,
+              top: _isZenMode ? MediaQuery.of(context).padding.top + 8 : 0,
               bottom: 0,
             ),
             child: Column(
               children: [
                 // Zen mode: show a minimal back button + focus icon.
-                if (_isZenMode) _buildZenChrome(context, l10n, colorScheme),
+                if (_isZenMode)
+                  ZenModeChrome(
+                    animation: _zenChromeAnimController!,
+                    onExit: _exitZenMode,
+                    onToggle: _toggleZenMode,
+                  ),
 
                 // Title field.
                 Semantics(
@@ -642,28 +686,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             ),
                           )
                         : _useRichEditor
-                          ? KeyedSubtree(
-                              key: const ValueKey('rich_editor'),
-                              child: _buildRichEditorWithShortcuts(),
-                            )
-                          : Semantics(
-                              key: const ValueKey('plain_editor'),
-                              label: l10n.noteContent,
-                              child: TextField(
-                                controller: _effectiveContentController,
-                                scrollController: _bodyScrollController,
-                                decoration: InputDecoration(
-                                  hintText: l10n.startWriting,
-                                  border: InputBorder.none,
+                            ? KeyedSubtree(
+                                key: const ValueKey('rich_editor'),
+                                child: RichEditorWithShortcuts(
+                                  quillController: _quillController,
+                                  focusNode: _editorFocusNode,
+                                  onExitZenMode: _exitZenMode,
+                                  onToggleHeading: _toggleHeading,
+                                  onToggleBulletList: _toggleBulletList,
                                 ),
-                                maxLines: null,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  height: 1.6,
+                              )
+                            : Semantics(
+                                key: const ValueKey('plain_editor'),
+                                label: l10n.noteContent,
+                                child: TextField(
+                                  controller: _effectiveContentController,
+                                  scrollController: _bodyScrollController,
+                                  decoration: InputDecoration(
+                                    hintText: l10n.startWriting,
+                                    border: InputBorder.none,
+                                  ),
+                                  maxLines: null,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    height: 1.6,
+                                  ),
+                                  onChanged: (_) => _scheduleTypewriterScroll(),
                                 ),
-                                onChanged: (_) => _scheduleTypewriterScroll(),
                               ),
-                            ),
                   ),
                 ),
               ],
@@ -674,125 +724,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // Typing indicator for collaborators.
         if (_noteId != null)
           TypingIndicatorText(
-            typingUsers: ref.watch(presenceProvider).values
+            typingUsers: ref
+                .watch(presenceProvider)
+                .values
                 .where((u) => u.isTyping)
                 .toList(),
           ),
 
         // Animated word / character count bar.
-        _buildCountBar(context, l10n, colorScheme),
-      ],
-    );
-  }
-
-  // ── Zen mode chrome ───────────────────────────────────
-
-  /// Minimal chrome shown at the top of the screen in zen mode:
-  /// a back arrow (to exit) and a focus icon toggle.
-  Widget _buildZenChrome(
-    BuildContext context,
-    AppLocalizations l10n,
-    ColorScheme colorScheme,
-  ) {
-    return FadeTransition(
-      opacity: _zenChromeAnimController!,
-      child: Row(
-        children: [
-          // Back button to exit zen mode.
-          IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-              color: colorScheme.onSurface.withValues(alpha: 0.5),
-              size: 20,
-            ),
-            tooltip: l10n.exitZenMode,
-            onPressed: _exitZenMode,
-          ),
-          const Spacer(),
-          // Toggle button to exit zen mode.
-          IconButton(
-            icon: Icon(
-              Icons.fullscreen_exit,
-              color: colorScheme.onSurface.withValues(alpha: 0.5),
-              size: 20,
-            ),
-            tooltip: l10n.exitZenMode,
-            onPressed: _toggleZenMode,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Animated count bar ────────────────────────────────
-
-  /// Shows word count and character count at the bottom of the editor.
-  /// Animates with a subtle scale+opacity transition when counts change.
-  Widget _buildCountBar(
-    BuildContext context,
-    AppLocalizations l10n,
-    ColorScheme colorScheme,
-  ) {
-    // Use warm secondary color for the caption text.
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final captionColor = isDark
-        ? const Color(0xFFA3988E) // warm medium grey (WCAG AA on dark surface)
-        : const Color(0xFF6B5E54); // warm brown-grey
-
-    return SafeArea(
-      top: false,
-      bottom: true,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // Zen mode toggle button (visible when not in zen mode).
-            if (!_isZenMode)
-              A11yUtils.ensureTouchTarget(
-                child: Semantics(
-                  button: true,
-                  label: l10n.enterZenMode,
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.fullscreen,
-                      size: 18,
-                      color: captionColor,
-                    ),
-                    tooltip: l10n.enterZenMode,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 24,
-                    ),
-                    onPressed: _toggleZenMode,
-                  ),
-                ),
-              ),
-            const Spacer(),
-            // Animated word count.
-            _AnimatedCountChip(
-              text: l10n.wordCount(_wordCount),
-              color: captionColor,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                '|',
-                style: TextStyle(
-                  color: captionColor.withValues(alpha: 0.4),
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            // Animated character count.
-            _AnimatedCountChip(
-              text: l10n.charCount(_charCount),
-              color: captionColor,
-            ),
-          ],
+        CharacterCountBar(
+          wordCount: _wordCount,
+          charCount: _charCount,
+          isZenMode: _isZenMode,
+          onToggleZenMode: _toggleZenMode,
         ),
-      ),
+      ],
     );
   }
 
@@ -806,64 +752,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _scrollToCenterCursor();
       }
     });
-  }
-
-  /// Build the rich text editor wrapped with additional keyboard shortcuts.
-  ///
-  /// flutter_quill handles Ctrl+B/I natively. This widget adds:
-  /// - Ctrl+1: Heading level 1
-  /// - Ctrl+2: Heading level 2
-  /// - Ctrl+3: Heading level 3
-  /// - Ctrl+Shift+L: Toggle bullet list
-  /// - Escape: Exit zen mode
-  Widget _buildRichEditorWithShortcuts() {
-    final isMacOS = Theme.of(context).platform == TargetPlatform.macOS;
-    final primaryModifier =
-        isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control;
-
-    return Shortcuts(
-      shortcuts: <LogicalKeySet, Intent>{
-        // Heading shortcuts
-        LogicalKeySet(primaryModifier, LogicalKeyboardKey.digit1):
-            const _Heading1Intent(),
-        LogicalKeySet(primaryModifier, LogicalKeyboardKey.digit2):
-            const _Heading2Intent(),
-        LogicalKeySet(primaryModifier, LogicalKeyboardKey.digit3):
-            const _Heading3Intent(),
-        // Bullet list shortcut
-        LogicalKeySet(
-          primaryModifier,
-          LogicalKeyboardKey.shift,
-          LogicalKeyboardKey.keyL,
-        ): const _BulletListIntent(),
-        // Escape to exit zen mode
-        LogicalKeySet(LogicalKeyboardKey.escape):
-            const _ExitZenIntent(),
-      },
-      child: Actions(
-        actions: <Type, Action<Intent>>{
-          _Heading1Intent: CallbackAction<_Heading1Intent>(
-            onInvoke: (_) => _toggleHeading(1),
-          ),
-          _Heading2Intent: CallbackAction<_Heading2Intent>(
-            onInvoke: (_) => _toggleHeading(2),
-          ),
-          _Heading3Intent: CallbackAction<_Heading3Intent>(
-            onInvoke: (_) => _toggleHeading(3),
-          ),
-          _BulletListIntent: CallbackAction<_BulletListIntent>(
-            onInvoke: (_) => _toggleBulletList(),
-          ),
-          _ExitZenIntent: CallbackAction<_ExitZenIntent>(
-            onInvoke: (_) => _exitZenMode(),
-          ),
-        },
-        child: RichNoteEditor(
-          controller: _quillController,
-          focusNode: _editorFocusNode,
-        ),
-      ),
-    );
   }
 
   /// Toggle heading level on the current selection.
@@ -902,6 +790,157 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
+  // ── AI Feature Actions ─────────────────────────────
+
+  /// Handle selection from the AI features popup menu.
+  void _handleAiAction(BuildContext context, String action) {
+    final plainText = _extractPlainText();
+    final controller = _effectiveContentController;
+
+    switch (action) {
+      case 'summary':
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (_) => SummarySheet(
+            content: plainText,
+            onReplace: (summary) {
+              controller.text = summary;
+              _saveNote();
+            },
+          ),
+        );
+      case 'tags':
+        // Ensure note is saved before managing tags.
+        _saveNote();
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (_) => AiTagSuggestionSheet(
+            content: plainText,
+            onApply: (acceptedTags) {
+              // Apply accepted tags by saving them to the note.
+              _applySuggestedTags(acceptedTags);
+            },
+          ),
+        );
+      case 'translate':
+        final selectedText = _getSelectedText();
+        final textToTranslate =
+            selectedText.isNotEmpty ? selectedText : plainText;
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (_) => TranslationSheet(
+            text: textToTranslate,
+            onReplace: (translated) {
+              _replaceSelectedOrAllText(translated, selectedText.isEmpty);
+            },
+            onInsertBelow: (translated) {
+              _insertTextBelow(translated);
+            },
+          ),
+        );
+      case 'polish':
+        final selectedText = _getSelectedText();
+        final textToPolish = selectedText.isNotEmpty ? selectedText : plainText;
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (_) => WritingAssistSheet(
+            originalText: textToPolish,
+            onAccept: (corrected) {
+              _replaceSelectedOrAllText(corrected, selectedText.isEmpty);
+            },
+          ),
+        );
+    }
+  }
+
+  /// Get the currently selected text, or empty string if no selection.
+  String _getSelectedText() {
+    if (_useRichEditor) {
+      return _quillController.selection.isCollapsed
+          ? ''
+          : _quillController.document.toPlainText().substring(
+                _quillController.selection.start,
+                _quillController.selection.end,
+              );
+    }
+    final controller = _effectiveContentController;
+    return controller.selection.isCollapsed
+        ? ''
+        : controller.text.substring(
+            controller.selection.start,
+            controller.selection.end,
+          );
+  }
+
+  /// Replace the selected text, or all text if [replaceAll] is true.
+  void _replaceSelectedOrAllText(String newText, bool replaceAll) {
+    final controller = _effectiveContentController;
+    if (replaceAll) {
+      controller.text = newText;
+    } else {
+      final sel = controller.selection;
+      controller.text = controller.text.replaceRange(
+        sel.start,
+        sel.end,
+        newText,
+      );
+    }
+    _saveNote();
+  }
+
+  /// Insert text below the current cursor position.
+  void _insertTextBelow(String text) {
+    final controller = _effectiveContentController;
+    final cursorPos = controller.selection.end;
+    final insertPos = cursorPos >= 0 ? cursorPos : controller.text.length;
+    controller.text =
+        '${controller.text.substring(0, insertPos)}\n$text${controller.text.substring(insertPos)}';
+    _saveNote();
+  }
+
+  /// Apply AI-suggested tags to the current note.
+  Future<void> _applySuggestedTags(Set<String> tags) async {
+    try {
+      final db = ref.read(databaseProvider);
+      final crypto = ref.read(cryptoServiceProvider);
+      for (final tagName in tags) {
+        final tagId = const Uuid().v4();
+        final encryptedName = crypto.isUnlocked
+            ? await crypto.encryptForItem(tagId, tagName)
+            : tagName;
+        await db.tagsDao.createTag(
+          id: tagId,
+          encryptedName: encryptedName,
+          plainName: tagName,
+        );
+        // Link tag to the current note.
+        await db.notesDao.addTagToNote(_noteId!, tagId);
+      }
+    } catch (_) {
+      // Tag application failure should not crash the editor.
+    }
+  }
+
   /// Opens a bottom sheet to pick and manage tags for the current note.
   void _showTagPicker(BuildContext context) {
     // Ensure the note is saved before managing tags.
@@ -913,7 +952,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _TagPickerSheet(
+      builder: (_) => TagPickerSheet(
         noteId: _noteId!,
         db: ref.read(databaseProvider),
         crypto: ref.read(cryptoServiceProvider),
@@ -957,273 +996,4 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
     }
   }
-}
-
-// ── Animated Count Chip ─────────────────────────────────
-
-/// Displays a word or character count string with a subtle scale+opacity
-/// animation when the text changes. This gives a gentle pulse effect that
-/// draws the eye without being distracting.
-class _AnimatedCountChip extends StatelessWidget {
-  final String text;
-  final Color color;
-
-  const _AnimatedCountChip({
-    required this.text,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Use AnimatedSwitcher to cross-fade between old and new count text.
-    // The transition applies a slight scale-up on the incoming text.
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        // Subtle scale from 0.85 to 1.0 combined with opacity fade.
-        final scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-        );
-        return FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(
-            scale: scaleAnimation,
-            child: child,
-          ),
-        );
-      },
-      child: Text(
-        text,
-        key: ValueKey(text), // key change triggers animation
-        style: TextStyle(
-          fontSize: 12,
-          color: color,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-      ),
-    );
-  }
-}
-
-/// Bottom sheet for picking and creating tags for a note.
-class _TagPickerSheet extends ConsumerStatefulWidget {
-  final String noteId;
-  final AppDatabase db;
-  final CryptoService crypto;
-
-  const _TagPickerSheet({
-    required this.noteId,
-    required this.db,
-    required this.crypto,
-  });
-
-  @override
-  ConsumerState<_TagPickerSheet> createState() => _TagPickerSheetState();
-}
-
-class _TagPickerSheetState extends ConsumerState<_TagPickerSheet> {
-  final _newTagController = TextEditingController();
-  List<Tag> _allTags = [];
-  Set<String> _assignedTagIds = {};
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTags();
-  }
-
-  @override
-  void dispose() {
-    _newTagController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadTags() async {
-    final allTags = await widget.db.tagsDao.getAllTags();
-    final noteTags = await widget.db.tagsDao.getTagsForNote(widget.noteId);
-    if (!mounted) return;
-    setState(() {
-      _allTags = allTags;
-      _assignedTagIds = noteTags.map((t) => t.id).toSet();
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _createAndAssignTag() async {
-    final tagName = _newTagController.text.trim();
-    if (tagName.isEmpty) return;
-
-    final tagId = const Uuid().v4();
-    String encryptedName;
-    if (widget.crypto.isUnlocked) {
-      encryptedName = await widget.crypto.encryptForItem(tagId, tagName);
-    } else {
-      encryptedName = tagName;
-    }
-
-    await widget.db.tagsDao.createTag(
-      id: tagId,
-      encryptedName: encryptedName,
-      plainName: tagName,
-    );
-    await widget.db.notesDao.addTagToNote(widget.noteId, tagId);
-
-    _newTagController.clear();
-    await _loadTags();
-  }
-
-  Future<void> _toggleTag(Tag tag, bool isAssigned) async {
-    if (isAssigned) {
-      await widget.db.notesDao.removeTagFromNote(widget.noteId, tag.id);
-    } else {
-      await widget.db.notesDao.addTagToNote(widget.noteId, tag.id);
-    }
-    await _loadTags();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 8, bottom: 4),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-            child: Row(
-              children: [
-                Text(l10n.tags, style: Theme.of(context).textTheme.titleLarge),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: l10n.closeTagPicker,
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-
-          // Inline tag creation
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Semantics(
-                    label: l10n.newTagName,
-                    child: TextField(
-                      controller: _newTagController,
-                      decoration: InputDecoration(
-                        hintText: l10n.newTagName,
-                        border: const OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                      ),
-                      onSubmitted: (_) => _createAndAssignTag(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Semantics(
-                  button: true,
-                  label: 'Create and assign tag',
-                  child: FilledButton(
-                    onPressed: _createAndAssignTag,
-                    child: Text(l10n.add),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Tag list with checkboxes
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(24),
-              child: CircularProgressIndicator(),
-            )
-          else if (_allTags.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                l10n.noTagsYet,
-                style: TextStyle(color: Colors.grey.shade500),
-              ),
-            )
-          else
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.4,
-              ),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: _allTags.length,
-                itemBuilder: (context, index) {
-                  final tag = _allTags[index];
-                  final isAssigned = _assignedTagIds.contains(tag.id);
-                  final displayName =
-                      tag.plainName ?? tag.id.substring(0, 8);
-
-                  return CheckboxListTile(
-                    value: isAssigned,
-                    title: Text(displayName),
-                    onChanged: (checked) => _toggleTag(tag, isAssigned),
-                  );
-                },
-              ),
-            ),
-
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Keyboard Shortcut Intents ───────────────────────────
-
-class _Heading1Intent extends Intent {
-  const _Heading1Intent();
-}
-
-class _Heading2Intent extends Intent {
-  const _Heading2Intent();
-}
-
-class _Heading3Intent extends Intent {
-  const _Heading3Intent();
-}
-
-class _BulletListIntent extends Intent {
-  const _BulletListIntent();
-}
-
-/// Intent to exit zen / focus mode via keyboard.
-class _ExitZenIntent extends Intent {
-  const _ExitZenIntent();
 }

@@ -80,10 +80,16 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 		req.MaxTokens = &capForPlan
 	}
 
+	// Determine mode label from request: stream or sync.
+	mode := aiModeSync
+	if req.Stream {
+		mode = aiModeStream
+	}
+
 	chunkCh, err := h.aiService.Proxy(r.Context(), userID.String(), req)
 	if err != nil {
 		if err == service.ErrQuotaExceeded {
-			IncAIProxyRequest("unknown", "shared", "error")
+			IncAIProxyRequest("", mode, "error")
 			writeJSON(w, http.StatusTooManyRequests, domain.QuotaExceededResponse{
 				Error:         "quota_exceeded",
 				RetryAfter:    30,
@@ -91,7 +97,7 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		IncAIProxyRequest("unknown", "shared", "error")
+		IncAIProxyRequest("", mode, "error")
 		writeError(w, r, http.StatusInternalServerError, "ai_error", "AI proxy failed")
 		return
 	}
@@ -103,7 +109,7 @@ func (h *AIHandler) Proxy(w http.ResponseWriter, r *http.Request) {
 	} else {
 		h.handleNonStream(w, r, chunkCh)
 	}
-	IncAIProxyRequest("unknown", "shared", "success")
+	IncAIProxyRequest("", mode, "success")
 }
 
 func (h *AIHandler) handleStream(w http.ResponseWriter, r *http.Request, chunkCh <-chan domain.StreamChunk) {

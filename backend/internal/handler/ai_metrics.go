@@ -4,6 +4,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// AI proxy mode labels used in Prometheus metrics.
+const (
+	aiModeSync   = "sync"
+	aiModeStream = "stream"
+)
+
 // AI-specific Prometheus metrics. Registered once at package init time.
 var (
 	// aiProxyRequestsTotal counts all AI proxy requests by provider, mode,
@@ -43,7 +49,15 @@ func init() {
 }
 
 // IncAIProxyRequest increments the AI proxy request counter.
+// Empty provider or mode strings are defaulted to "unknown" and "shared"
+// respectively so callers do not need to hardcode these labels.
 func IncAIProxyRequest(provider, mode, status string) {
+	if provider == "" {
+		provider = "unknown"
+	}
+	if mode == "" {
+		mode = "shared"
+	}
 	aiProxyRequestsTotal.WithLabelValues(provider, mode, status).Inc()
 }
 

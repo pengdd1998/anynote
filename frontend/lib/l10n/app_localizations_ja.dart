@@ -941,7 +941,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get noNotesAvailableCreate => 'メモがありません。\n先にメモを作成してください。';
+  String get noNotesAvailableCreate => 'メモがありません。先にメモを作成してください。';
 
   @override
   String get contentPreview => 'コンテンツプレビュー';
@@ -2157,4 +2157,260 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get termsOfServiceContent =>
       '利用規約は現在作成中です。現時点ではプライバシーポリシーがAnyNoteサービスの利用に適用されます。';
+
+  @override
+  String get kdfMigrationTitle => 'セキュリティアップグレード可能';
+
+  @override
+  String get kdfMigrationMessage =>
+      '暗号化キーが古く弱いパラメータを使用しています。セキュリティ向上のため、より強力な鍵導出パラメータへのアップグレードをお勧めします。キーの再導出が必要なため、少し時間がかかります。';
+
+  @override
+  String get kdfMigrationUpgrade => '今すぐアップグレード';
+
+  @override
+  String get kdfMigrationSkip => '後で';
+
+  @override
+  String get kdfMigrationInProgress => '暗号化パラメータをアップグレード中...';
+
+  @override
+  String get kdfMigrationSuccess => '暗号化パラメータが正常にアップグレードされました。';
+
+  @override
+  String get kdfMigrationFailed => '移行に失敗しました。引き続き使用できますが、キーは古いパラメータのままです。';
+
+  @override
+  String get crossPlatformWarningTitle => 'クロスプラットフォーム暗号化に関する注意';
+
+  @override
+  String get crossPlatformWarningMessage =>
+      'モバイル（Android/iOS）で暗号化されたメモはWebで復号できず、その逆も同様です。これは、モバイルではArgon2id、WebではPBKDF2が鍵導出に使用され、同じパスワードでも異なる暗号化キーが生成されるためです。';
+
+  @override
+  String get aiChatAssistant => 'AI チャットアシスタント';
+
+  @override
+  String get aiChatWelcome => 'メモについて何でもお聞きください';
+
+  @override
+  String get aiChatWelcomeDesc => 'コンテキストとしてメモを選択すると、より的確な回答が得られます。';
+
+  @override
+  String get selectContextNotes => 'コンテキストメモを選択';
+
+  @override
+  String contextNotesCount(int count) {
+    return '$count件のメモをコンテキストとして選択';
+  }
+
+  @override
+  String get newChat => '新しいチャット';
+
+  @override
+  String get typeYourMessage => 'メッセージを入力...';
+
+  @override
+  String get smartSummary => 'スマート要約';
+
+  @override
+  String get summaryPromptDesc => 'メモの内容をAIで簡潔に要約します。';
+
+  @override
+  String get generateSummary => '要約を生成';
+
+  @override
+  String get replace => '置換';
+
+  @override
+  String get aiTagSuggestion => 'AI タグ提案';
+
+  @override
+  String get suggestTags => '提案';
+
+  @override
+  String get analyzingContent => '内容を分析中...';
+
+  @override
+  String get tapSuggestTagsDesc => '「提案」をタップしてAIにメモを分析させ、タグを推奨します。';
+
+  @override
+  String get selectTagsToApply => '適用するタグを選択：';
+
+  @override
+  String applyTags(int count) {
+    return '$count件のタグを適用';
+  }
+
+  @override
+  String get aiTranslation => 'AI 翻訳';
+
+  @override
+  String get translateTo => '翻訳先：';
+
+  @override
+  String get translate => '翻訳';
+
+  @override
+  String get translationWillAppear => '翻訳結果がここに表示されます...';
+
+  @override
+  String get insertBelow => '下に挿入';
+
+  @override
+  String get french => 'フランス語';
+
+  @override
+  String get german => 'ドイツ語';
+
+  @override
+  String get spanish => 'スペイン語';
+
+  @override
+  String get writingPolish => '文章の推敲';
+
+  @override
+  String get writingPolishDesc => 'AIで文法やスペルを修正し、読みやすさを向上します。';
+
+  @override
+  String get checkGrammar => 'チェック';
+
+  @override
+  String get checkingGrammar => '文法をチェック中...';
+
+  @override
+  String get original => '原文';
+
+  @override
+  String get corrected => '修正済み';
+
+  @override
+  String get reject => '却下';
+
+  @override
+  String get acceptAll => 'すべて適用';
+
+  @override
+  String get aiFeatures => 'AI 機能';
+
+  @override
+  String get planTitle => 'プラン';
+
+  @override
+  String currentPlan(String plan) {
+    return '現在のプラン：$plan';
+  }
+
+  @override
+  String get planNotesCount => 'メモ';
+
+  @override
+  String get aiUsage => 'AI 使用量';
+
+  @override
+  String get storageUsed => 'ストレージ';
+
+  @override
+  String get unlimited => '無制限';
+
+  @override
+  String get comparePlans => 'プラン比較';
+
+  @override
+  String get maxNotes => 'メモ上限';
+
+  @override
+  String get aiDailyQuota => 'AI 1日枠';
+
+  @override
+  String get storage => 'ストレージ';
+
+  @override
+  String get maxDevices => 'デバイス上限';
+
+  @override
+  String get collaboration => 'コラボレーション';
+
+  @override
+  String get no => 'いいえ';
+
+  @override
+  String get yes => 'はい';
+
+  @override
+  String get restorePurchase => '購入を復元';
+
+  @override
+  String get restorePurchaseComingSoon => '購入の復元は近日公開予定です。';
+
+  @override
+  String get lifetimeMember => 'ライフタイムメンバー -- すべての機能が永久にアンロックされます。';
+
+  @override
+  String get selectPlan => 'プランを選択';
+
+  @override
+  String get proPlanDescription => 'メモ無制限、1日500回AIリクエスト、5 GBストレージ';
+
+  @override
+  String get lifetimePlanDescription => 'すべてのPro機能を永久に利用 -- 一括払い';
+
+  @override
+  String get unableToLoadPlan => 'プラン情報を読み込めません。';
+
+  @override
+  String get profile => 'プロフィール';
+
+  @override
+  String get editPublicProfile => '表示名と自己紹介を編集';
+
+  @override
+  String get profileTitle => 'プロフィール編集';
+
+  @override
+  String get displayName => '表示名';
+
+  @override
+  String get displayNameHint => '他のユーザーに表示される名前';
+
+  @override
+  String get bio => '自己紹介';
+
+  @override
+  String get bioHint => '自分について書きましょう';
+
+  @override
+  String get publicProfile => '公開プロフィール';
+
+  @override
+  String get publicProfileDesc => '他のユーザーがプロフィールを閲覧できるようにする';
+
+  @override
+  String get profileSaved => 'プロフィールを保存しました';
+
+  @override
+  String get profileSaveFailed => 'プロフィールの保存に失敗しました';
+
+  @override
+  String get unableToLoadProfile => 'プロフィールを読み込めません。';
+
+  @override
+  String get onboardingSecureNotesTitle => '安全なメモ';
+
+  @override
+  String get onboardingSecureNotesDesc =>
+      'すべてのメモはクラウドに届く前にデバイス上でエンドツーエンド暗号化されます。誰にも -- 私たちにも -- 読まれることはありません。';
+
+  @override
+  String get onboardingPublishTitle => 'どこでも公開';
+
+  @override
+  String get onboardingPublishDesc => 'お気に入りのプラットフォームにワンクリックで公開。アイデアを瞬時に世界と共有。';
+
+  @override
+  String get onboardingCollaborateTitle => 'リアルタイムコラボ';
+
+  @override
+  String get onboardingCollaborateDesc =>
+      'メモをリアルタイムで共同編集。変更はすべてのデバイスに即座に同期されます。';
 }

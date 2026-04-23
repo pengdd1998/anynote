@@ -11,6 +11,7 @@ import (
 
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
+	"github.com/anynote/backend/internal/platform/httpclient"
 )
 
 // Adapter implements platform publishing via generic webhooks.
@@ -135,7 +136,7 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 		req.Header.Set("X-Webhook-Secret", secret)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("webhook endpoint unreachable: %w", err)
 	}
@@ -212,7 +213,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 		req.Header.Set(k, v)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("webhook request failed: %w", err)
 	}

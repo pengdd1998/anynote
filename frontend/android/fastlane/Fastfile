@@ -1,0 +1,37 @@
+# AnyNote Android Fastfile
+# Usage:
+#   bundle exec fastlane build_release
+#   bundle exec fastlane screenshots
+
+default_platform(:android)
+
+platform :android do
+  desc "Build release APK"
+  lane :build_release do
+    gradle(task: "assembleRelease")
+  end
+
+  desc "Build release AAB (App Bundle) for Play Store upload"
+  lane :build_bundle do
+    gradle(task: "bundleRelease")
+  end
+
+  desc "Take screenshots for Play Store listing"
+  lane :screenshots do
+    capture_screenshots
+  end
+
+  desc "Run tests before building"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Build and deploy to Play Store internal track"
+  lane :deploy_internal do
+    gradle(task: "bundleRelease")
+    upload_to_play_store(
+      track: "internal",
+      aab: "../build/app/outputs/bundle/release/app-release.aab"
+    )
+  end
+end

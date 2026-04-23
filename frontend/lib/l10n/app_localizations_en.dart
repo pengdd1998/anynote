@@ -958,7 +958,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noNotesAvailableCreate =>
-      'No notes available.\nCreate some notes first.';
+      'No notes available. Create a note first.';
 
   @override
   String get contentPreview => 'Content Preview';
@@ -2229,4 +2229,283 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get termsOfServiceContent =>
       'Terms of Service are currently being drafted. For now, our Privacy Policy governs the use of AnyNote services.';
+
+  @override
+  String get kdfMigrationTitle => 'Security Upgrade Available';
+
+  @override
+  String get kdfMigrationMessage =>
+      'Your encryption keys use older, weaker parameters. We recommend upgrading to stronger key derivation parameters for better security. This requires re-deriving your keys and will take a moment.';
+
+  @override
+  String get kdfMigrationUpgrade => 'Upgrade Now';
+
+  @override
+  String get kdfMigrationSkip => 'Skip for Now';
+
+  @override
+  String get kdfMigrationInProgress => 'Upgrading encryption parameters...';
+
+  @override
+  String get kdfMigrationSuccess =>
+      'Encryption parameters upgraded successfully.';
+
+  @override
+  String get kdfMigrationFailed =>
+      'Migration failed. You can continue, but your keys use older parameters.';
+
+  @override
+  String get crossPlatformWarningTitle => 'Cross-Platform Encryption Notice';
+
+  @override
+  String get crossPlatformWarningMessage =>
+      'Notes encrypted on mobile (Android/iOS) cannot be decrypted on web, and vice versa. This is because mobile uses Argon2id while web uses PBKDF2 for key derivation, producing different encryption keys even with the same password.';
+
+  @override
+  String get aiChatAssistant => 'AI Chat Assistant';
+
+  @override
+  String get aiChatWelcome => 'Ask me anything about your notes';
+
+  @override
+  String get aiChatWelcomeDesc =>
+      'Select notes as context for more relevant answers.';
+
+  @override
+  String get selectContextNotes => 'Select Context Notes';
+
+  @override
+  String contextNotesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count note$_temp0 selected as context';
+  }
+
+  @override
+  String get newChat => 'New Chat';
+
+  @override
+  String get typeYourMessage => 'Type your message...';
+
+  @override
+  String get smartSummary => 'Smart Summary';
+
+  @override
+  String get summaryPromptDesc =>
+      'Generate a concise AI summary of your note content.';
+
+  @override
+  String get generateSummary => 'Generate Summary';
+
+  @override
+  String get replace => 'Replace';
+
+  @override
+  String get aiTagSuggestion => 'AI Tag Suggestion';
+
+  @override
+  String get suggestTags => 'Suggest';
+
+  @override
+  String get analyzingContent => 'Analyzing content...';
+
+  @override
+  String get tapSuggestTagsDesc =>
+      'Tap \"Suggest\" to let AI analyze your note and recommend tags.';
+
+  @override
+  String get selectTagsToApply => 'Select the tags you want to apply:';
+
+  @override
+  String applyTags(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return 'Apply $count tag$_temp0';
+  }
+
+  @override
+  String get aiTranslation => 'AI Translation';
+
+  @override
+  String get translateTo => 'Translate to:';
+
+  @override
+  String get translate => 'Translate';
+
+  @override
+  String get translationWillAppear => 'Translation will appear here...';
+
+  @override
+  String get insertBelow => 'Insert Below';
+
+  @override
+  String get french => 'French';
+
+  @override
+  String get german => 'German';
+
+  @override
+  String get spanish => 'Spanish';
+
+  @override
+  String get writingPolish => 'Writing Polish';
+
+  @override
+  String get writingPolishDesc =>
+      'Fix grammar, spelling, and improve readability with AI.';
+
+  @override
+  String get checkGrammar => 'Check';
+
+  @override
+  String get checkingGrammar => 'Checking grammar...';
+
+  @override
+  String get original => 'Original';
+
+  @override
+  String get corrected => 'Corrected';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get acceptAll => 'Accept All';
+
+  @override
+  String get aiFeatures => 'AI Features';
+
+  @override
+  String get planTitle => 'Plan';
+
+  @override
+  String currentPlan(String plan) {
+    return 'Current Plan: $plan';
+  }
+
+  @override
+  String get planNotesCount => 'Notes';
+
+  @override
+  String get aiUsage => 'AI Usage';
+
+  @override
+  String get storageUsed => 'Storage';
+
+  @override
+  String get unlimited => 'Unlimited';
+
+  @override
+  String get comparePlans => 'Compare Plans';
+
+  @override
+  String get maxNotes => 'Max Notes';
+
+  @override
+  String get aiDailyQuota => 'AI Daily Quota';
+
+  @override
+  String get storage => 'Storage';
+
+  @override
+  String get maxDevices => 'Max Devices';
+
+  @override
+  String get collaboration => 'Collaboration';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get restorePurchase => 'Restore Purchase';
+
+  @override
+  String get restorePurchaseComingSoon =>
+      'Restore purchase will be available soon.';
+
+  @override
+  String get lifetimeMember =>
+      'Lifetime Member -- all features unlocked forever.';
+
+  @override
+  String get selectPlan => 'Select a Plan';
+
+  @override
+  String get proPlanDescription =>
+      'Unlimited notes, 500 AI requests/day, 5 GB storage';
+
+  @override
+  String get lifetimePlanDescription =>
+      'All Pro features, forever -- one-time payment';
+
+  @override
+  String get unableToLoadPlan => 'Unable to load plan info.';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get editPublicProfile => 'Edit display name and bio';
+
+  @override
+  String get profileTitle => 'Edit Profile';
+
+  @override
+  String get displayName => 'Display Name';
+
+  @override
+  String get displayNameHint => 'How others see you';
+
+  @override
+  String get bio => 'Bio';
+
+  @override
+  String get bioHint => 'Tell others about yourself';
+
+  @override
+  String get publicProfile => 'Public Profile';
+
+  @override
+  String get publicProfileDesc => 'Allow others to find and view your profile';
+
+  @override
+  String get profileSaved => 'Profile saved';
+
+  @override
+  String get profileSaveFailed => 'Failed to save profile';
+
+  @override
+  String get unableToLoadProfile => 'Unable to load profile.';
+
+  @override
+  String get onboardingSecureNotesTitle => 'Secure Notes';
+
+  @override
+  String get onboardingSecureNotesDesc =>
+      'Every note is encrypted end-to-end on your device before it reaches the cloud. No one -- not even us -- can read your notes.';
+
+  @override
+  String get onboardingPublishTitle => 'Publish Everywhere';
+
+  @override
+  String get onboardingPublishDesc =>
+      'One-click publish to your favorite platforms. Share your ideas with the world instantly.';
+
+  @override
+  String get onboardingCollaborateTitle => 'Collaborate in Real-time';
+
+  @override
+  String get onboardingCollaborateDesc =>
+      'Work together on notes with live updates. Changes sync instantly across all devices.';
 }

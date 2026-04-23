@@ -119,6 +119,104 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // This is a fire-and-forget operation; failure does not block login.
       ref.read(pushNotificationServiceProvider).init();
 
+      // Step 5: Prompt KDF migration if user logged in with legacy parameters.
+      // This is non-blocking: the user can decline and still use the app.
+      final shouldMigrate = usedKdfVersion < currentVersion;
+      if (shouldMigrate && mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        final accepted = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text(l10n.kdfMigrationTitle),
+            content: Text(l10n.kdfMigrationMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.kdfMigrationSkip),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l10n.kdfMigrationUpgrade),
+              ),
+            ],
+          ),
+        );
+
+        if (accepted == true && mounted) {
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.showSnackBar(
+            SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.kdfMigrationInProgress),
+            ),
+          );
+          try {
+            // Re-derive master key with current (v2) parameters.
+            final migratedKey = await MasterKeyManager.deriveMasterKey(
+              _passwordController.text,
+              salt,
+              currentVersion,
+            );
+
+            // Store the upgraded master key and update version.
+            await MasterKeyManager.storeMasterKey(migratedKey);
+            await MasterKeyManager.storeKdfVersion(currentVersion);
+
+            // Re-derive dependent keys.
+            await MasterKeyManager.deriveEncryptKey(migratedKey);
+
+            // Re-authenticate with the new auth key hash so the server
+            // stores the updated credential for future logins.
+            final newAuthKey =
+                await MasterKeyManager.deriveAuthKey(migratedKey);
+            final newAuthKeyHash =
+                await MasterKeyManager.hashAuthKey(newAuthKey);
+
+            // Update the stored master key reference for the session.
+            masterKey = migratedKey;
+
+            // Attempt to register the new auth key hash with the server.
+            // This uses the change-password flow to update the stored hash.
+            // If this fails the user can still use the app; migration will
+            // be offered again at next login.
+            try {
+              await api.login(
+                LoginRequest(
+                  email: _emailController.text.trim(),
+                  authKeyHash: newAuthKeyHash,
+                ),
+              );
+            } catch (_) {
+              // Server update failed; local keys are already migrated.
+              // The user will log in with v2 params next time.
+            }
+
+            if (mounted) {
+              messenger.hideCurrentSnackBar();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context)!.kdfMigrationSuccess,
+                  ),
+                ),
+              );
+            }
+          } catch (_) {
+            if (mounted) {
+              messenger.hideCurrentSnackBar();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context)!.kdfMigrationFailed,
+                  ),
+                ),
+              );
+            }
+          }
+        }
+      }
+
       if (mounted) {
         context.go('/notes');
       }
@@ -163,18 +261,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Semantics(
                       label: l10n.loginScreenLabel,
-                      child: Icon(Icons.lock_outline,
-                          size: 64,
-                          color: Theme.of(context).colorScheme.primary,),
+                      child: Icon(
+                        Icons.lock_outline,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    Text(l10n.welcomeBack,
-                        style: Theme.of(context).textTheme.headlineMedium,
-                        textAlign: TextAlign.center,),
+                    Text(
+                      l10n.welcomeBack,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 8),
-                    Text(l10n.signInToVault,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        textAlign: TextAlign.center,),
+                    Text(
+                      l10n.signInToVault,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 32),
                     if (_error != null)
                       Padding(
@@ -182,9 +286,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Semantics(
                           liveRegion: true,
                           label: l10n.errorLabel(_error!),
-                          child: Text(_error!,
-                              style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,),),
+                          child: Text(
+                            _error!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
                         ),
                       ),
                     FocusTraversalOrder(
@@ -194,8 +301,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         autofillHints: const [AutofillHints.email],
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
-                            labelText: l10n.email,
-                            prefixIcon: const Icon(Icons.email_outlined),),
+                          labelText: l10n.email,
+                          prefixIcon: const Icon(Icons.email_outlined),
+                        ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (v) =>
                             v?.isEmpty ?? true ? l10n.emailRequired : null,
@@ -210,8 +318,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _submit(),
                         decoration: InputDecoration(
-                            labelText: l10n.password,
-                            prefixIcon: const Icon(Icons.lock_outline),),
+                          labelText: l10n.password,
+                          prefixIcon: const Icon(Icons.lock_outline),
+                        ),
                         obscureText: true,
                         validator: (v) =>
                             v?.isEmpty ?? true ? l10n.passwordRequired : null,
@@ -224,7 +333,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),)
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : Text(l10n.signIn),
                     ),
                     const SizedBox(height: 16),

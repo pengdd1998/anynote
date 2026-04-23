@@ -14,6 +14,7 @@ import (
 
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
+	"github.com/anynote/backend/internal/platform/chromedputil"
 )
 
 // XHS creator and publish URLs.
@@ -41,22 +42,6 @@ func NewAdapter(chromeWSURL string) *Adapter {
 }
 
 func (a *Adapter) Name() string { return "xiaohongshu" }
-
-// cookieJar is the JSON structure we use to persist XHS cookies.
-type cookieJar struct {
-	Cookies []httpCookie `json:"cookies"`
-}
-
-type httpCookie struct {
-	Name     string `json:"name"`
-	Value    string `json:"value"`
-	Domain   string `json:"domain"`
-	Path     string `json:"path"`
-	Expires  int64  `json:"expires"`   // Unix seconds; 0 = session
-	HTTPOnly bool   `json:"http_only"`
-	Secure   bool   `json:"secure"`
-	SameSite string `json:"same_site"`
-}
 
 // ---------------------------------------------------------------------------
 // Authentication: QR code flow
@@ -100,34 +85,7 @@ func (a *Adapter) StartAuth(ctx context.Context, masterKey []byte) (*platform.Au
 	// Extract the QR code image as PNG bytes.
 	var pngBytes []byte
 	if err := chromedp.Run(browserCtx,
-		chromedp.Evaluate(`
-			new Promise((resolve, reject) => {
-				const img = document.querySelector('img[src*="qrcode"], .qrcode-img img, .login-container img');
-				if (!img) { reject('QR image not found'); return; }
-				if (img.src.startsWith('data:')) {
-					const byteString = atob(img.src.split(',')[1]);
-					const bytes = new Uint8Array(byteString.length);
-					for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
-					resolve(Array.from(bytes));
-					return;
-				}
-				const canvas = document.createElement('canvas');
-				canvas.width = img.naturalWidth || img.width;
-				canvas.height = img.naturalHeight || img.height;
-				const ctx2d = canvas.getContext('2d');
-				img.crossOrigin = 'anonymous';
-				img.onload = () => {
-					ctx2d.drawImage(img, 0, 0);
-					const dataUrl = canvas.toDataURL('image/png');
-					const byteString = atob(dataUrl.split(',')[1]);
-					const bytes = new Uint8Array(byteString.length);
-					for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
-					resolve(Array.from(bytes));
-				};
-				img.onerror = () => reject('Failed to load QR image');
-				img.src = img.src;
-			})
-		`, &pngBytes),
+		chromedp.Evaluate(chromedputil.QRExtractJS(qrSelector), &pngBytes),
 	); err != nil {
 		cancel()
 		return nil, nil, fmt.Errorf("extract QR code image: %w", err)
@@ -136,7 +94,7 @@ func (a *Adapter) StartAuth(ctx context.Context, masterKey []byte) (*platform.Au
 	authRef := fmt.Sprintf("xhs-%d", time.Now().UnixMilli())
 
 	return &platform.AuthSession{
-		CDPContext: &cdpContextHandle{allocCancel: cancel, browserCtx: browserCtx},
+		CDPContext: &chromedputil.CDPContextHandle{AllocCancel: cancel, BrowserCtx: browserCtx},
 		AuthRef:    authRef,
 	}, pngBytes, nil
 }
@@ -145,7 +103,7 @@ func (a *Adapter) StartAuth(ctx context.Context, masterKey []byte) (*platform.Au
 // On success it extracts cookies from the browser, encrypts them with
 // AES-256-GCM, and returns the encrypted blob.
 func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, masterKey []byte) ([]byte, error) {
-	handle, ok := session.CDPContext.(*cdpContextHandle)
+	handle, ok := session.CDPContext.(*chromedputil.CDPContextHandle)
 	if !ok {
 		return nil, fmt.Errorf("invalid session: wrong context type")
 	}
@@ -155,7 +113,7 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 	var currentURL string
 	var hasAuthCookie bool
 
-	if err := chromedp.Run(handle.browserCtx,
+	if err := chromedp.Run(handle.BrowserCtx,
 		chromedp.Location(&currentURL),
 		chromedp.Evaluate(`
 			document.cookie.includes('web_session') ||
@@ -173,10 +131,10 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 
 	// Auth appears complete.  Wait briefly for the page to settle, then
 	// extract cookies.
-	chromedp.Run(handle.browserCtx, chromedp.Sleep(2*time.Second))
+	chromedp.Run(handle.BrowserCtx, chromedp.Sleep(2*time.Second))
 
 	var cookies []*network.Cookie
-	if err := chromedp.Run(handle.browserCtx,
+	if err := chromedp.Run(handle.BrowserCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var err error
 			cookies, err = network.GetCookies().Do(ctx)
@@ -187,12 +145,12 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 	}
 
 	// Build the cookie jar.
-	jar := cookieJar{Cookies: make([]httpCookie, 0, len(cookies))}
+	jar := chromedputil.CookieJar{Cookies: make([]chromedputil.HTTPCookie, 0, len(cookies))}
 	for _, c := range cookies {
 		if !strings.Contains(c.Domain, "xiaohongshu.com") && !strings.Contains(c.Domain, "xhscdn.com") {
 			continue
 		}
-		jar.Cookies = append(jar.Cookies, httpCookie{
+		jar.Cookies = append(jar.Cookies, chromedputil.HTTPCookie{
 			Name:     c.Name,
 			Value:    c.Value,
 			Domain:   c.Domain,
@@ -200,7 +158,7 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 			Expires:  int64(c.Expires),
 			HTTPOnly: c.HTTPOnly,
 			Secure:   c.Secure,
-			SameSite: sameSiteString(c.SameSite),
+			SameSite: chromedputil.SameSiteString(c.SameSite),
 		})
 	}
 
@@ -220,7 +178,7 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 	}
 
 	// Clean up the browser context.
-	handle.allocCancel()
+	handle.AllocCancel()
 
 	return encrypted, nil
 }
@@ -239,7 +197,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 		return nil, fmt.Errorf("decrypt auth data: %w", err)
 	}
 
-	var jar cookieJar
+	var jar chromedputil.CookieJar
 	if err := json.Unmarshal([]byte(cookieJSON), &jar); err != nil {
 		return nil, fmt.Errorf("unmarshal cookies: %w", err)
 	}
@@ -249,20 +207,6 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	defer cancel()
 
 	browserCtx, _ := chromedp.NewContext(allocCtx)
-
-	// Set cookies via CDP before navigating.
-	cookieActions := make([]chromedp.Action, 0, len(jar.Cookies))
-	for i := range jar.Cookies {
-		c := jar.Cookies[i] // create local copy for closure
-		cookieActions = append(cookieActions, chromedp.ActionFunc(func(ctx context.Context) error {
-			return network.SetCookie(c.Name, c.Value).
-				WithDomain(c.Domain).
-				WithPath(c.Path).
-				WithHTTPOnly(c.HTTPOnly).
-				WithSecure(c.Secure).
-				Do(ctx)
-		}))
-	}
 
 	// Navigate to the publish page.
 	if err := chromedp.Run(browserCtx,
@@ -277,6 +221,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	}
 
 	// Now set cookies and reload so they apply.
+	cookieActions := chromedputil.CookieActions(&jar)
 	if err := chromedp.Run(browserCtx, cookieActions...); err != nil {
 		return nil, fmt.Errorf("set cookies: %w", err)
 	}
@@ -415,7 +360,7 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 		return "unknown", fmt.Errorf("decrypt auth data: %w", err)
 	}
 
-	var jar cookieJar
+	var jar chromedputil.CookieJar
 	if err := json.Unmarshal([]byte(cookieJSON), &jar); err != nil {
 		return "unknown", fmt.Errorf("unmarshal cookies: %w", err)
 	}
@@ -429,20 +374,6 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 	defer cancel()
 
 	browserCtx, _ := chromedp.NewContext(allocCtx)
-
-	// Set cookies.
-	cookieActions := make([]chromedp.Action, 0, len(jar.Cookies))
-	for i := range jar.Cookies {
-		c := jar.Cookies[i] // create local copy for closure
-		cookieActions = append(cookieActions, chromedp.ActionFunc(func(ctx context.Context) error {
-			return network.SetCookie(c.Name, c.Value).
-				WithDomain(c.Domain).
-				WithPath(c.Path).
-				WithHTTPOnly(c.HTTPOnly).
-				WithSecure(c.Secure).
-				Do(ctx)
-		}))
-	}
 
 	var pageContent string
 
@@ -458,6 +389,7 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 	}
 
 	// Set cookies and reload.
+	cookieActions := chromedputil.CookieActions(&jar)
 	if err := chromedp.Run(browserCtx, cookieActions...); err != nil {
 		return "unknown", fmt.Errorf("set cookies: %w", err)
 	}
@@ -506,13 +438,6 @@ func (a *Adapter) RevokeAuth(ctx context.Context, encryptedAuth []byte, masterKe
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-// cdpContextHandle wraps chromedp context references so they can be stored
-// in the AuthSession.CDPContext interface{} field.
-type cdpContextHandle struct {
-	allocCancel context.CancelFunc
-	browserCtx  context.Context
-}
-
 // extractNoteID tries to parse an XHS note ID from a URL.
 // Expected format: https://www.xiaohongshu.com/explore/{noteId}
 func extractNoteID(rawURL string) string {
@@ -538,19 +463,4 @@ func extractNoteID(rawURL string) string {
 		}
 	}
 	return ""
-}
-
-// sameSiteString converts a network.CookieSameSite value to a string
-// suitable for JSON serialization.
-func sameSiteString(ss network.CookieSameSite) string {
-	switch ss {
-	case network.CookieSameSiteStrict:
-		return "strict"
-	case network.CookieSameSiteLax:
-		return "lax"
-	case network.CookieSameSiteNone:
-		return "none"
-	default:
-		return ""
-	}
 }

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:anynote/core/performance/performance_monitor.dart';
+import 'package:anynote/core/monitoring/performance_monitor.dart';
 
 void main() {
   late PerformanceMonitor monitor;

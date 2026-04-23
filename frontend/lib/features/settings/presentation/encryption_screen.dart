@@ -54,9 +54,18 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
             ),
           ),
 
-          // -- Encrypted items -------------------------------------------------
+          // -- Cross-platform encryption warning (web/native incompatibility) ---
           StaggeredGroup(
             staggerIndex: 1,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _CrossPlatformWarningCard(l10n: l10n),
+            ),
+          ),
+
+          // -- Encrypted items -------------------------------------------------
+          StaggeredGroup(
+            staggerIndex: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -81,12 +90,14 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                           SettingsItem(
                             icon: Icons.folder_outlined,
                             title: l10n.collectionsLabel,
-                            subtitle: l10n.itemsCount(counts['collections'] ?? 0),
+                            subtitle:
+                                l10n.itemsCount(counts['collections'] ?? 0),
                           ),
                           SettingsItem(
                             icon: Icons.auto_awesome_outlined,
                             title: l10n.aiContent,
-                            subtitle: l10n.itemsCount(counts['ai_content'] ?? 0),
+                            subtitle:
+                                l10n.itemsCount(counts['ai_content'] ?? 0),
                           ),
                         ],
                       ),
@@ -103,10 +114,26 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                       error: (_, __) => Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SettingsItem(icon: Icons.note_outlined, title: l10n.notes, subtitle: '--'),
-                          SettingsItem(icon: Icons.label_outline, title: l10n.tagsLabel, subtitle: '--'),
-                          SettingsItem(icon: Icons.folder_outlined, title: l10n.collectionsLabel, subtitle: '--'),
-                          SettingsItem(icon: Icons.auto_awesome_outlined, title: l10n.aiContent, subtitle: '--'),
+                          SettingsItem(
+                            icon: Icons.note_outlined,
+                            title: l10n.notes,
+                            subtitle: '--',
+                          ),
+                          SettingsItem(
+                            icon: Icons.label_outline,
+                            title: l10n.tagsLabel,
+                            subtitle: '--',
+                          ),
+                          SettingsItem(
+                            icon: Icons.folder_outlined,
+                            title: l10n.collectionsLabel,
+                            subtitle: '--',
+                          ),
+                          SettingsItem(
+                            icon: Icons.auto_awesome_outlined,
+                            title: l10n.aiContent,
+                            subtitle: '--',
+                          ),
                         ],
                       ),
                     ),
@@ -118,7 +145,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
 
           // -- Recovery key ----------------------------------------------------
           StaggeredGroup(
-            staggerIndex: 2,
+            staggerIndex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -127,7 +154,10 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 SettingsGroup(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -137,9 +167,11 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                           ),
                           const SizedBox(height: 12),
                           if (_showRecoveryKey)
-                            _RecoveryKeyDisplay(onHidden: () {
-                              setState(() => _showRecoveryKey = false);
-                            },)
+                            _RecoveryKeyDisplay(
+                              onHidden: () {
+                                setState(() => _showRecoveryKey = false);
+                              },
+                            )
                           else
                             FilledButton.tonal(
                               onPressed: _verifyAndShowRecoveryKey,
@@ -156,7 +188,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
 
           // -- Password & key management ---------------------------------------
           StaggeredGroup(
-            staggerIndex: 3,
+            staggerIndex: 4,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -169,7 +201,9 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                       title: l10n.changePassword,
                       subtitle: l10n.reEncryptsData,
                       trailing: const Icon(Icons.chevron_right, size: 20),
-                      onTap: _isChangingPassword ? null : _showChangePasswordDialog,
+                      onTap: _isChangingPassword
+                          ? null
+                          : _showChangePasswordDialog,
                     ),
                   ],
                 ),
@@ -179,7 +213,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
 
           // -- Danger zone -----------------------------------------------------
           StaggeredGroup(
-            staggerIndex: 4,
+            staggerIndex: 5,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -211,8 +245,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
         title: Text(l10n.verifyPassword),
         content: TextField(
           controller: passwordCtrl,
-          decoration:
-              InputDecoration(labelText: l10n.enterYourPassword),
+          decoration: InputDecoration(labelText: l10n.enterYourPassword),
           obscureText: true,
         ),
         actions: [
@@ -225,8 +258,8 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
               final nav = Navigator.of(ctx);
               try {
                 final crypto = ref.read(cryptoServiceProvider);
-                final verified = await crypto
-                    .unlockWithPassword(passwordCtrl.text);
+                final verified =
+                    await crypto.unlockWithPassword(passwordCtrl.text);
                 nav.pop();
                 if (verified) {
                   setState(() => _showRecoveryKey = true);
@@ -234,7 +267,8 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text(l10n.incorrectPassword),),
+                        content: Text(l10n.incorrectPassword),
+                      ),
                     );
                   }
                 }
@@ -243,7 +277,8 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(l10n.verificationFailed),),
+                      content: Text(l10n.verificationFailed),
+                    ),
                   );
                 }
               }
@@ -272,21 +307,22 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
             TextField(
               controller: currentCtrl,
               decoration: InputDecoration(
-                  labelText: l10n.currentPassword,),
+                labelText: l10n.currentPassword,
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: newCtrl,
-              decoration:
-                  InputDecoration(labelText: l10n.newPassword),
+              decoration: InputDecoration(labelText: l10n.newPassword),
               obscureText: true,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: confirmCtrl,
               decoration: InputDecoration(
-                  labelText: l10n.confirmNewPassword,),
+                labelText: l10n.confirmNewPassword,
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 8),
@@ -294,7 +330,8 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
               l10n.reEncryptWarning,
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.8),
+                color:
+                    Theme.of(context).colorScheme.error.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -309,15 +346,18 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
               if (newCtrl.text != confirmCtrl.text) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(l10n.passwordsDoNotMatch),),
+                    content: Text(l10n.passwordsDoNotMatch),
+                  ),
                 );
                 return;
               }
               if (newCtrl.text.length < 8) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(
-                          l10n.passwordMinLength,),),
+                    content: Text(
+                      l10n.passwordMinLength,
+                    ),
+                  ),
                 );
                 return;
               }
@@ -329,15 +369,15 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 final crypto = ref.read(cryptoServiceProvider);
 
                 // Verify current password by attempting unlock.
-                final verified = await crypto
-                    .unlockWithPassword(currentCtrl.text);
+                final verified =
+                    await crypto.unlockWithPassword(currentCtrl.text);
                 if (!verified) {
                   nav.pop();
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content:
-                              Text(l10n.currentPasswordIncorrect),),
+                        content: Text(l10n.currentPasswordIncorrect),
+                      ),
                     );
                   }
                   return;
@@ -349,13 +389,11 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 nav.pop();
                 if (mounted) {
                   // Refresh the encryption status.
-                  ref
-                      .read(encryptionStatusProvider.notifier)
-                      .refresh();
+                  ref.read(encryptionStatusProvider.notifier).refresh();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content:
-                            Text(l10n.passwordChangedSuccessfully),),
+                      content: Text(l10n.passwordChangedSuccessfully),
+                    ),
                   );
                 }
               } catch (e) {
@@ -363,8 +401,8 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content:
-                            Text(l10n.failedToChangePassword(e.toString())),),
+                      content: Text(l10n.failedToChangePassword(e.toString())),
+                    ),
                   );
                 }
               } finally {
@@ -458,26 +496,22 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 await db.customStatement('DELETE FROM notes_fts');
                 await db.customStatement('DELETE FROM tags');
                 await db.customStatement('DELETE FROM note_tags');
-                await db
-                    .customStatement('DELETE FROM collections');
+                await db.customStatement('DELETE FROM collections');
                 await db.customStatement(
-                    'DELETE FROM collection_notes',);
-                await db
-                    .customStatement('DELETE FROM generated_contents');
-                await db
-                    .customStatement('DELETE FROM sync_meta');
+                  'DELETE FROM collection_notes',
+                );
+                await db.customStatement('DELETE FROM generated_contents');
+                await db.customStatement('DELETE FROM sync_meta');
 
                 nav.pop();
 
                 if (mounted) {
-                  ref
-                      .read(encryptionStatusProvider.notifier)
-                      .refresh();
+                  ref.read(encryptionStatusProvider.notifier).refresh();
                   ref.invalidate(localItemCountsProvider);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content:
-                            Text(l10n.allLocalDataDeleted),),
+                      content: Text(l10n.allLocalDataDeleted),
+                    ),
                   );
                 }
               } catch (e) {
@@ -485,8 +519,10 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(
-                            l10n.failedToDeleteData(e.toString()),),),
+                      content: Text(
+                        l10n.failedToDeleteData(e.toString()),
+                      ),
+                    ),
                   );
                 }
               } finally {
@@ -661,9 +697,7 @@ class _StatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            isActive
-                ? l10n.e2eEncryptionActiveStatus
-                : l10n.encryptionNotSetUp,
+            isActive ? l10n.e2eEncryptionActiveStatus : l10n.encryptionNotSetUp,
             style: theme.textTheme.titleMedium?.copyWith(
               color: statusColor,
             ),
@@ -671,21 +705,86 @@ class _StatusCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             l10n.encryptionAlgorithm,
-            style: TextStyle(fontSize: 13, color: statusColor.withValues(alpha: 0.8)),
+            style: TextStyle(
+              fontSize: 13,
+              color: statusColor.withValues(alpha: 0.8),
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             l10n.keyDerivation,
-            style: TextStyle(fontSize: 13, color: statusColor.withValues(alpha: 0.7)),
+            style: TextStyle(
+              fontSize: 13,
+              color: statusColor.withValues(alpha: 0.7),
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             isUnlocked ? l10n.masterKeyUnlocked : l10n.masterKeyLocked,
             style: TextStyle(
               fontSize: 13,
-              color: isUnlocked
-                  ? statusColor.withValues(alpha: 0.7)
-                  : statusColor,
+              color:
+                  isUnlocked ? statusColor.withValues(alpha: 0.7) : statusColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Cross-platform encryption warning
+// =============================================================================
+
+/// Warning card explaining that web and native encryption are incompatible.
+/// Notes encrypted on one platform cannot be decrypted on the other because
+/// they use different KDF algorithms (Argon2id vs PBKDF2).
+class _CrossPlatformWarningCard extends StatelessWidget {
+  final AppLocalizations l10n;
+
+  const _CrossPlatformWarningCard({required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final warningColor =
+        isDark ? const Color(0xFFFFA726) : const Color(0xFFE65100);
+    final bgColor = warningColor.withValues(alpha: isDark ? 0.12 : 0.06);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: warningColor.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, size: 20, color: warningColor),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.crossPlatformWarningTitle,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: warningColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.crossPlatformWarningMessage,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -829,7 +928,9 @@ class _RecoveryKeyDisplay extends ConsumerWidget {
               child: SelectableText(
                 recoveryKey,
                 style: const TextStyle(
-                    fontFamily: 'monospace', fontSize: 12,),
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -838,11 +939,14 @@ class _RecoveryKeyDisplay extends ConsumerWidget {
                 OutlinedButton.icon(
                   onPressed: () {
                     Clipboard.setData(
-                        ClipboardData(text: recoveryKey),);
+                      ClipboardData(text: recoveryKey),
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text(
-                              l10n.recoveryKeyCopied,),),
+                        content: Text(
+                          l10n.recoveryKeyCopied,
+                        ),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.copy, size: 16),

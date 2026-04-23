@@ -9,15 +9,12 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/import/apple_notes_import.dart';
 import '../../../core/import/import_models.dart';
 import '../../../core/import/markdown_import_service.dart';
 import '../../../core/import/text_import.dart';
-import '../../../core/theme/alpha_constants.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/adaptive_scaffold.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -25,13 +22,13 @@ import '../../../core/widgets/master_detail_layout.dart';
 import '../../../core/widgets/offline_banner.dart';
 import '../../../core/widgets/sidebar_provider.dart';
 import '../../../core/widgets/pressable_scale.dart';
-import '../../../core/widgets/sync_status_badge.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../settings/data/settings_providers.dart';
 import '../domain/decrypted_note.dart';
 import 'template_picker.dart';
+import 'widgets/dismissible_note_card.dart';
 
 /// Page size for paginated note loading.
 /// 50 items balances smooth scrolling with low memory usage.
@@ -680,133 +677,28 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
   /// Build a note card wrapped in a Dismissible for swipe actions.
   ///
-  /// Swipe right (start-to-end) toggles pin with warm primary background.
-  /// Swipe left (end-to-start) deletes with warm error background.
-  /// Both backgrounds have rounded corners matching the card shape.
+  /// Delegates to the extracted [DismissibleNoteCard] widget.
   Widget _buildDismissibleNoteCard(
     Note note,
     AppDatabase db, {
     required bool isGrid,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final cardRadius = BorderRadius.circular(AppTheme.radiusMedium);
+    final time = _formatTime(note.updatedAt);
+    final tags = _tagsCache[note.id] ?? [];
+    final isSelected = _selectedNoteId == note.id;
 
-    return Dismissible(
-      key: ValueKey(note.id),
-      direction: DismissDirection.horizontal,
-      dismissThresholds: const {
-        DismissDirection.startToEnd: 0.35,
-        DismissDirection.endToStart: 0.4,
-      },
-      // Right swipe: pin/unpin with warm primary color.
-      background: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.primary.withAlpha(AppAlpha.medium),
-          borderRadius: cardRadius,
-        ),
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 24),
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Semantics(
-          label: note.isPinned ? l10n.unpinNote : l10n.pinNote,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                note.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                color: colorScheme.primary,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                note.isPinned ? l10n.unpinNote : l10n.pinNote,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: colorScheme.primary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      // Left swipe: delete with warm error color.
-      secondaryBackground: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.error.withAlpha(AppAlpha.medium),
-          borderRadius: cardRadius,
-        ),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Semantics(
-          label: l10n.deleteNote,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.delete_outline, color: colorScheme.error),
-              const SizedBox(height: 2),
-              Text(
-                l10n.deleteNote,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: colorScheme.error,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.startToEnd) {
-          // Pin/unpin does not dismiss; just toggle and return false.
-          await db.notesDao.togglePin(note.id);
-          return false;
-        }
-        // Delete: confirm via dialog.
-        return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(l10n.deleteNoteQuestion),
-            content: Text(
-              l10n.deleteNoteConfirm(note.plainTitle ?? l10n.untitled),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text(l10n.cancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text(l10n.delete),
-              ),
-            ],
-          ),
-        );
-      },
-      onDismissed: (direction) {
-        if (direction == DismissDirection.endToStart) {
-          db.notesDao.softDeleteNote(note.id);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.noteDeleted),
-              action: SnackBarAction(
-                label: l10n.undo,
-                onPressed: () async {
-                  await (db.update(db.notes)
-                        ..where((n) => n.id.equals(note.id)))
-                      .write(
-                    const NotesCompanion(
-                      deletedAt: Value(null),
-                      isSynced: Value(false),
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        }
-      },
-      child: isGrid ? _buildGridCard(note, db) : _buildListCard(note, db),
+    return DismissibleNoteCard(
+      note: note,
+      db: db,
+      isGrid: isGrid,
+      time: time,
+      tags: tags,
+      isSelected: isSelected,
+      onTap: () => _onNoteTap(note.id),
+      onLongPress: () => _showNoteContextMenu(context, note, db),
+      onDeleted: () {},
+      untitled: l10n.untitled,
     );
   }
 
@@ -817,233 +709,6 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     } else {
       context.push('/notes/$noteId');
     }
-  }
-
-  /// List-view card for a note with warm tap feedback and theme-aware text.
-  Widget _buildListCard(Note note, AppDatabase db) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final title = note.plainTitle ?? l10n.untitled;
-    final preview = note.plainContent != null && note.plainContent!.length > 100
-        ? '${note.plainContent!.substring(0, 100)}...'
-        : note.plainContent ?? '';
-    final time = _formatTime(note.updatedAt);
-    final tags = _tagsCache[note.id] ?? [];
-    final isSelected = _selectedNoteId == note.id;
-
-    return Semantics(
-      label: A11yUtils.noteCardLabel(
-        title: title,
-        timeDescription: time,
-        isPinned: note.isPinned,
-        isSynced: note.isSynced,
-      ),
-      button: true,
-      child: Card(
-        color: isSelected
-            ? colorScheme.primaryContainer.withAlpha(AppAlpha.bold)
-            : null,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _onNoteTap(note.id),
-            onLongPress: () => _showNoteContextMenu(context, note, db),
-            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            splashColor: colorScheme.primary.withAlpha(AppAlpha.light),
-            highlightColor: colorScheme.primary.withAlpha(AppAlpha.subtle),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title row with pin icon and sync badge.
-                  Row(
-                    children: [
-                      if (note.isPinned)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: Icon(
-                            Icons.push_pin,
-                            size: 16,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      SyncStatusBadge(isSynced: note.isSynced),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  // Preview text (max 2 lines, warm secondary color).
-                  Text(
-                    preview,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color:
-                          colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
-                    ),
-                  ),
-                  if (tags.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: _buildTagChips(tags),
-                    ),
-                  const SizedBox(height: 6),
-                  // Date with caption style and warm tertiary color.
-                  Text(
-                    time,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          colorScheme.onSurface.withAlpha(AppAlpha.prominent),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Grid-view card for a note with warm tap feedback and theme-aware text.
-  Widget _buildGridCard(Note note, AppDatabase db) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final title = note.plainTitle ?? l10n.untitled;
-    final preview = note.plainContent != null && note.plainContent!.length > 80
-        ? '${note.plainContent!.substring(0, 80)}...'
-        : note.plainContent ?? '';
-    final time = _formatTime(note.updatedAt);
-    final tags = _tagsCache[note.id] ?? [];
-    final isSelected = _selectedNoteId == note.id;
-
-    return Semantics(
-      label: A11yUtils.noteCardLabel(
-        title: title,
-        timeDescription: time,
-        isPinned: note.isPinned,
-        isSynced: note.isSynced,
-      ),
-      button: true,
-      child: Card(
-        color: isSelected
-            ? colorScheme.primaryContainer.withAlpha(AppAlpha.bold)
-            : null,
-        margin: const EdgeInsets.all(4),
-        child: InkWell(
-          onTap: () => _onNoteTap(note.id),
-          onLongPress: () => _showNoteContextMenu(context, note, db),
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          splashColor: colorScheme.primary.withAlpha(AppAlpha.light),
-          highlightColor: colorScheme.primary.withAlpha(AppAlpha.subtle),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title row with pin icon and sync badge.
-                Row(
-                  children: [
-                    if (note.isPinned)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: Icon(
-                          Icons.push_pin,
-                          size: 14,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                    Expanded(
-                      child: Text(
-                        title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    SyncStatusBadge(isSynced: note.isSynced),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Preview text (max 4 lines, warm secondary color).
-                Expanded(
-                  child: Text(
-                    preview,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
-                    ),
-                  ),
-                ),
-                if (tags.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: _buildTagChips(tags),
-                  ),
-                const SizedBox(height: 4),
-                // Date with warm tertiary color.
-                Text(
-                  time,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurface.withAlpha(AppAlpha.prominent),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Build up to 3 tag chips with warm fill and border styling.
-  Widget _buildTagChips(List<Tag> tags) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final displayTags = tags.take(3).toList();
-    return Wrap(
-      spacing: 4,
-      runSpacing: 2,
-      children: displayTags.map((tag) {
-        return Semantics(
-          label: A11yUtils.semanticLabelForTag(name: tag.plainName ?? '...'),
-          child: Chip(
-            label: Text(
-              tag.plainName ?? '...',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
-              ),
-            ),
-            visualDensity: VisualDensity.compact,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            padding: EdgeInsets.zero,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-            side: BorderSide(
-              color: colorScheme.outlineVariant.withAlpha(AppAlpha.heavy),
-              width: 0.5,
-            ),
-            backgroundColor:
-                colorScheme.surfaceContainerHighest.withAlpha(AppAlpha.bold),
-          ),
-        );
-      }).toList(),
-    );
   }
 
   /// Show a context menu with Pin/Unpin option on long press.
@@ -1288,8 +953,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.importFailed(e.toString())),),
+          content:
+              Text(AppLocalizations.of(context)!.importFailed(e.toString())),
+        ),
       );
     }
   }
@@ -1356,7 +1022,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           // Navigate to the note editor with the template content.
           // We pass the content via the query parameter.
           context.push(
-              '/notes/new?templateContent=${Uri.encodeComponent(content)}',);
+            '/notes/new?templateContent=${Uri.encodeComponent(content)}',
+          );
         },
       ),
     );
@@ -1510,11 +1177,15 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
             children: [
               Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
               const SizedBox(height: 16),
-              Text(l10n.failedToLoadNote,
-                  style: Theme.of(context).textTheme.titleMedium,),
+              Text(
+                l10n.failedToLoadNote,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
-              Text(_error!,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),),
+              Text(
+                _error!,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              ),
               const SizedBox(height: 16),
               FilledButton.tonal(onPressed: _loadNote, child: Text(l10n.retry)),
             ],
@@ -1568,8 +1239,11 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.access_time,
-                        size: 14, color: Colors.grey.shade500,),
+                    Icon(
+                      Icons.access_time,
+                      size: 14,
+                      color: Colors.grey.shade500,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Updated ${_data!.updatedAt.toLocal().toString().substring(0, 16)}',
@@ -1578,12 +1252,19 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
                     ),
                     if (!_data!.isSynced) ...[
                       const SizedBox(width: 12),
-                      Icon(Icons.cloud_off,
-                          size: 14, color: Colors.orange.shade300,),
+                      Icon(
+                        Icons.cloud_off,
+                        size: 14,
+                        color: Colors.orange.shade300,
+                      ),
                       const SizedBox(width: 4),
-                      Text(l10n.notSynced,
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.orange.shade300,),),
+                      Text(
+                        l10n.notSynced,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange.shade300,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -1611,11 +1292,17 @@ class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
                   styleSheet: MarkdownStyleSheet(
                     p: const TextStyle(fontSize: 14, height: 1.6),
                     h1: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold,),
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                     h2: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold,),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                     h3: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold,),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                     code: TextStyle(
                       fontSize: 13,
                       backgroundColor:

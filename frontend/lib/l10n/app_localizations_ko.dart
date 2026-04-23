@@ -308,7 +308,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get failedToLoadNote => '메모를 불러오지 못했습니다';
 
   @override
-  String get retry => '다시 시도';
+  String get retry => '재시도';
 
   @override
   String get noteNotFound => '메모를 찾을 수 없습니다';
@@ -941,7 +941,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get noNotesAvailableCreate => '메모가 없습니다.\n먼저 메모를 만들어 주세요.';
+  String get noNotesAvailableCreate => '사용 가능한 메모가 없습니다. 먼저 메모를 만드세요.';
 
   @override
   String get contentPreview => '콘텐츠 미리보기';
@@ -956,7 +956,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get saveAsNote => '메모로 저장';
 
   @override
-  String get copiedToClipboard => '클립보드에 복사되었습니다';
+  String get copiedToClipboard => '클립보드에 복사됨';
 
   @override
   String get savedAsNote => '메모로 저장되었습니다';
@@ -2157,4 +2157,262 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get termsOfServiceContent =>
       '이용약관은 현재 작성 중입니다. 현재 AnyNote 서비스 이용에는 개인정보 처리방침이 적용됩니다.';
+
+  @override
+  String get kdfMigrationTitle => '보안 업그레이드 가능';
+
+  @override
+  String get kdfMigrationMessage =>
+      '암호화 키가 이전의 약한 매개변수를 사용하고 있습니다. 보안 강화를 위해 더 강력한 키 파생 매개변수로 업그레이드하는 것을 권장합니다. 키 재파생이 필요하므로 잠시 시간이 걸립니다.';
+
+  @override
+  String get kdfMigrationUpgrade => '지금 업그레이드';
+
+  @override
+  String get kdfMigrationSkip => '나중에';
+
+  @override
+  String get kdfMigrationInProgress => '암호화 매개변수 업그레이드 중...';
+
+  @override
+  String get kdfMigrationSuccess => '암호화 매개변수가 성공적으로 업그레이드되었습니다.';
+
+  @override
+  String get kdfMigrationFailed =>
+      '마이그레이션에 실패했습니다. 계속 사용할 수 있지만 키가 이전 매개변수를 사용합니다.';
+
+  @override
+  String get crossPlatformWarningTitle => '크로스 플랫폼 암호화 안내';
+
+  @override
+  String get crossPlatformWarningMessage =>
+      '모바일(Android/iOS)에서 암호화된 메모는 웹에서 복호화할 수 없으며, 그 반대의 경우도 마찬가지입니다. 모바일은 Argon2id를, 웹은 PBKDF2를 키 파생에 사용하므로 동일한 비밀번호로도 다른 암호화 키가 생성됩니다.';
+
+  @override
+  String get aiChatAssistant => 'AI 채팅 어시스턴트';
+
+  @override
+  String get aiChatWelcome => '메모에 대해 무엇이든 물어보세요';
+
+  @override
+  String get aiChatWelcomeDesc => '컨텍스트로 메모를 선택하면 더 관련성 높은 답변을 얻을 수 있습니다.';
+
+  @override
+  String get selectContextNotes => '컨텍스트 메모 선택';
+
+  @override
+  String contextNotesCount(int count) {
+    return '$count개의 메모가 컨텍스트로 선택됨';
+  }
+
+  @override
+  String get newChat => '새 채팅';
+
+  @override
+  String get typeYourMessage => '메시지를 입력하세요...';
+
+  @override
+  String get smartSummary => '스마트 요약';
+
+  @override
+  String get summaryPromptDesc => '메모 내용을 AI로 간결하게 요약합니다.';
+
+  @override
+  String get generateSummary => '요약 생성';
+
+  @override
+  String get replace => '바꾸기';
+
+  @override
+  String get aiTagSuggestion => 'AI 태그 제안';
+
+  @override
+  String get suggestTags => '제안';
+
+  @override
+  String get analyzingContent => '내용 분석 중...';
+
+  @override
+  String get tapSuggestTagsDesc => '\"제안\"을 탭하여 AI가 메모를 분석하고 태그를 추천하도록 합니다.';
+
+  @override
+  String get selectTagsToApply => '적용할 태그를 선택하세요:';
+
+  @override
+  String applyTags(int count) {
+    return '$count개 태그 적용';
+  }
+
+  @override
+  String get aiTranslation => 'AI 번역';
+
+  @override
+  String get translateTo => '번역할 언어:';
+
+  @override
+  String get translate => '번역';
+
+  @override
+  String get translationWillAppear => '번역 결과가 여기에 표시됩니다...';
+
+  @override
+  String get insertBelow => '아래에 삽입';
+
+  @override
+  String get french => '프랑스어';
+
+  @override
+  String get german => '독일어';
+
+  @override
+  String get spanish => '스페인어';
+
+  @override
+  String get writingPolish => '글쓰기 교정';
+
+  @override
+  String get writingPolishDesc => 'AI로 문법, 맞춤법을 수정하고 가독성을 향상합니다.';
+
+  @override
+  String get checkGrammar => '검사';
+
+  @override
+  String get checkingGrammar => '문법 검사 중...';
+
+  @override
+  String get original => '원문';
+
+  @override
+  String get corrected => '수정됨';
+
+  @override
+  String get reject => '거부';
+
+  @override
+  String get acceptAll => '모두 적용';
+
+  @override
+  String get aiFeatures => 'AI 기능';
+
+  @override
+  String get planTitle => '플랜';
+
+  @override
+  String currentPlan(String plan) {
+    return '현재 플랜: $plan';
+  }
+
+  @override
+  String get planNotesCount => '노트';
+
+  @override
+  String get aiUsage => 'AI 사용량';
+
+  @override
+  String get storageUsed => '저장소';
+
+  @override
+  String get unlimited => '무제한';
+
+  @override
+  String get comparePlans => '플랜 비교';
+
+  @override
+  String get maxNotes => '최대 노트 수';
+
+  @override
+  String get aiDailyQuota => 'AI 일일 할당량';
+
+  @override
+  String get storage => '저장 공간';
+
+  @override
+  String get maxDevices => '최대 기기 수';
+
+  @override
+  String get collaboration => '협업';
+
+  @override
+  String get no => '아니요';
+
+  @override
+  String get yes => '예';
+
+  @override
+  String get restorePurchase => '구매 복원';
+
+  @override
+  String get restorePurchaseComingSoon => '구매 복원 기능이 곧 제공됩니다.';
+
+  @override
+  String get lifetimeMember => '평생 회원 -- 모든 기능이 영구적으로 잠금 해제됩니다.';
+
+  @override
+  String get selectPlan => '플랜 선택';
+
+  @override
+  String get proPlanDescription => '무제한 노트, 하루 500회 AI 요청, 5 GB 저장소';
+
+  @override
+  String get lifetimePlanDescription => '모든 Pro 기능을 영구적으로 -- 일시불 결제';
+
+  @override
+  String get unableToLoadPlan => '플랜 정보를 불러올 수 없습니다.';
+
+  @override
+  String get profile => '프로필';
+
+  @override
+  String get editPublicProfile => '표시 이름과 소개 편집';
+
+  @override
+  String get profileTitle => '프로필 편집';
+
+  @override
+  String get displayName => '표시 이름';
+
+  @override
+  String get displayNameHint => '다른 사람에게 보이는 이름';
+
+  @override
+  String get bio => '소개';
+
+  @override
+  String get bioHint => '자기소개를 작성해 보세요';
+
+  @override
+  String get publicProfile => '공개 프로필';
+
+  @override
+  String get publicProfileDesc => '다른 사람이 프로필을 볼 수 있도록 허용';
+
+  @override
+  String get profileSaved => '프로필이 저장되었습니다';
+
+  @override
+  String get profileSaveFailed => '프로필 저장에 실패했습니다';
+
+  @override
+  String get unableToLoadProfile => '프로필을 불러올 수 없습니다.';
+
+  @override
+  String get onboardingSecureNotesTitle => '보안 노트';
+
+  @override
+  String get onboardingSecureNotesDesc =>
+      '모든 노트는 클라우드에 도달하기 전에 기기에서 종단 간 암호화됩니다. 누구도 -- 우리조차도 -- 노트를 읽을 수 없습니다.';
+
+  @override
+  String get onboardingPublishTitle => '어디에나 게시';
+
+  @override
+  String get onboardingPublishDesc =>
+      '즐겨 사용하는 플랫폼에 원클릭으로 게시하세요. 아이디어를 즉시 세상과 공유하세요.';
+
+  @override
+  String get onboardingCollaborateTitle => '실시간 협업';
+
+  @override
+  String get onboardingCollaborateDesc =>
+      '노트를 실시간으로 공동 편집하세요. 변경 사항이 모든 기기에 즉시 동기화됩니다.';
 }

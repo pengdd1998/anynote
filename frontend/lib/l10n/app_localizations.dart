@@ -618,7 +618,7 @@ abstract class AppLocalizations {
   /// **'{count}d ago'**
   String daysAgo(int count);
 
-  /// Placeholder title for notes without a title
+  /// Fallback title for notes without a title
   ///
   /// In en, this message translates to:
   /// **'Untitled'**
@@ -672,7 +672,7 @@ abstract class AppLocalizations {
   /// **'Failed to load note'**
   String get failedToLoadNote;
 
-  /// Retry button label
+  /// Button label to retry a failed operation
   ///
   /// In en, this message translates to:
   /// **'Retry'**
@@ -942,7 +942,7 @@ abstract class AppLocalizations {
   /// **'Unable to load quota'**
   String get unableToLoadQuota;
 
-  /// Settings section header
+  /// Feature row label in plan comparison
   ///
   /// In en, this message translates to:
   /// **'Publishing'**
@@ -1824,10 +1824,10 @@ abstract class AppLocalizations {
   /// **'{count} selected'**
   String selectedCount(int count);
 
-  /// Empty state in note selector
+  /// Empty state in context note selector
   ///
   /// In en, this message translates to:
-  /// **'No notes available.\nCreate some notes first.'**
+  /// **'No notes available. Create a note first.'**
   String get noNotesAvailableCreate;
 
   /// Preview sheet heading
@@ -1854,7 +1854,7 @@ abstract class AppLocalizations {
   /// **'Save as Note'**
   String get saveAsNote;
 
-  /// Snackbar after copying content
+  /// Snackbar after copying text
   ///
   /// In en, this message translates to:
   /// **'Copied to clipboard'**
@@ -4011,6 +4011,498 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Terms of Service are currently being drafted. For now, our Privacy Policy governs the use of AnyNote services.'**
   String get termsOfServiceContent;
+
+  /// Dialog title for KDF parameter migration prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Security Upgrade Available'**
+  String get kdfMigrationTitle;
+
+  /// Body text explaining the KDF migration benefit
+  ///
+  /// In en, this message translates to:
+  /// **'Your encryption keys use older, weaker parameters. We recommend upgrading to stronger key derivation parameters for better security. This requires re-deriving your keys and will take a moment.'**
+  String get kdfMigrationMessage;
+
+  /// Button label to accept KDF migration
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade Now'**
+  String get kdfMigrationUpgrade;
+
+  /// Button label to decline KDF migration
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for Now'**
+  String get kdfMigrationSkip;
+
+  /// Loading message shown during KDF migration
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrading encryption parameters...'**
+  String get kdfMigrationInProgress;
+
+  /// Success message after KDF migration completes
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption parameters upgraded successfully.'**
+  String get kdfMigrationSuccess;
+
+  /// Error message when KDF migration fails
+  ///
+  /// In en, this message translates to:
+  /// **'Migration failed. You can continue, but your keys use older parameters.'**
+  String get kdfMigrationFailed;
+
+  /// Title for the web/native encryption incompatibility warning
+  ///
+  /// In en, this message translates to:
+  /// **'Cross-Platform Encryption Notice'**
+  String get crossPlatformWarningTitle;
+
+  /// Body text explaining why web and native ciphertexts are incompatible
+  ///
+  /// In en, this message translates to:
+  /// **'Notes encrypted on mobile (Android/iOS) cannot be decrypted on web, and vice versa. This is because mobile uses Argon2id while web uses PBKDF2 for key derivation, producing different encryption keys even with the same password.'**
+  String get crossPlatformWarningMessage;
+
+  /// Title of the AI chat screen
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chat Assistant'**
+  String get aiChatAssistant;
+
+  /// Welcome message in empty AI chat
+  ///
+  /// In en, this message translates to:
+  /// **'Ask me anything about your notes'**
+  String get aiChatWelcome;
+
+  /// Subtitle for the AI chat empty state
+  ///
+  /// In en, this message translates to:
+  /// **'Select notes as context for more relevant answers.'**
+  String get aiChatWelcomeDesc;
+
+  /// Tooltip and title for context note selector
+  ///
+  /// In en, this message translates to:
+  /// **'Select Context Notes'**
+  String get selectContextNotes;
+
+  /// Indicator showing how many notes are selected as chat context
+  ///
+  /// In en, this message translates to:
+  /// **'{count} note{count, plural, =1{} other{s}} selected as context'**
+  String contextNotesCount(int count);
+
+  /// Tooltip for starting a new chat session
+  ///
+  /// In en, this message translates to:
+  /// **'New Chat'**
+  String get newChat;
+
+  /// Hint text in the chat input field
+  ///
+  /// In en, this message translates to:
+  /// **'Type your message...'**
+  String get typeYourMessage;
+
+  /// Title of the AI summary bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Summary'**
+  String get smartSummary;
+
+  /// Description shown before generating a summary
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a concise AI summary of your note content.'**
+  String get summaryPromptDesc;
+
+  /// Button to trigger AI summary generation
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Summary'**
+  String get generateSummary;
+
+  /// Replace button label
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replace;
+
+  /// Title of the AI tag suggestion bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'AI Tag Suggestion'**
+  String get aiTagSuggestion;
+
+  /// Button to trigger AI tag suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest'**
+  String get suggestTags;
+
+  /// Loading message while AI analyzes content for tags
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing content...'**
+  String get analyzingContent;
+
+  /// Description before tag suggestions are generated
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \"Suggest\" to let AI analyze your note and recommend tags.'**
+  String get tapSuggestTagsDesc;
+
+  /// Instruction text above suggested tag chips
+  ///
+  /// In en, this message translates to:
+  /// **'Select the tags you want to apply:'**
+  String get selectTagsToApply;
+
+  /// Button to apply selected tags
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {count} tag{count, plural, =1{} other{s}}'**
+  String applyTags(int count);
+
+  /// Title of the AI translation bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'AI Translation'**
+  String get aiTranslation;
+
+  /// Label before the language selector
+  ///
+  /// In en, this message translates to:
+  /// **'Translate to:'**
+  String get translateTo;
+
+  /// Button to trigger translation
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get translate;
+
+  /// Placeholder text before translation
+  ///
+  /// In en, this message translates to:
+  /// **'Translation will appear here...'**
+  String get translationWillAppear;
+
+  /// Button to insert translated text below selection
+  ///
+  /// In en, this message translates to:
+  /// **'Insert Below'**
+  String get insertBelow;
+
+  /// Language option
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get french;
+
+  /// Language option
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get german;
+
+  /// Language option
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get spanish;
+
+  /// Title of the grammar/writing polish bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Writing Polish'**
+  String get writingPolish;
+
+  /// Description before grammar check
+  ///
+  /// In en, this message translates to:
+  /// **'Fix grammar, spelling, and improve readability with AI.'**
+  String get writingPolishDesc;
+
+  /// Button to trigger grammar check
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get checkGrammar;
+
+  /// Loading message during grammar check
+  ///
+  /// In en, this message translates to:
+  /// **'Checking grammar...'**
+  String get checkingGrammar;
+
+  /// Label for the original text in diff view
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get original;
+
+  /// Label for the corrected text in diff view
+  ///
+  /// In en, this message translates to:
+  /// **'Corrected'**
+  String get corrected;
+
+  /// Button to reject the AI suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject;
+
+  /// Button to accept all corrections
+  ///
+  /// In en, this message translates to:
+  /// **'Accept All'**
+  String get acceptAll;
+
+  /// Tooltip for the AI features overflow menu in the editor
+  ///
+  /// In en, this message translates to:
+  /// **'AI Features'**
+  String get aiFeatures;
+
+  /// Plan screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get planTitle;
+
+  /// Current plan display
+  ///
+  /// In en, this message translates to:
+  /// **'Current Plan: {plan}'**
+  String currentPlan(String plan);
+
+  /// Label for notes count in plan usage
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get planNotesCount;
+
+  /// Label for AI usage in plan usage
+  ///
+  /// In en, this message translates to:
+  /// **'AI Usage'**
+  String get aiUsage;
+
+  /// Label for storage used in plan usage
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storageUsed;
+
+  /// Unlimited plan limit display
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get unlimited;
+
+  /// Section header for plan comparison
+  ///
+  /// In en, this message translates to:
+  /// **'Compare Plans'**
+  String get comparePlans;
+
+  /// Feature row label in plan comparison
+  ///
+  /// In en, this message translates to:
+  /// **'Max Notes'**
+  String get maxNotes;
+
+  /// Feature row label in plan comparison
+  ///
+  /// In en, this message translates to:
+  /// **'AI Daily Quota'**
+  String get aiDailyQuota;
+
+  /// Feature row label in plan comparison
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storage;
+
+  /// Feature row label in plan comparison
+  ///
+  /// In en, this message translates to:
+  /// **'Max Devices'**
+  String get maxDevices;
+
+  /// Feature row label in plan comparison
+  ///
+  /// In en, this message translates to:
+  /// **'Collaboration'**
+  String get collaboration;
+
+  /// Negative answer in plan comparison
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
+
+  /// Positive answer in plan comparison
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// Button to restore previous purchase
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Purchase'**
+  String get restorePurchase;
+
+  /// Message when restore purchase is not yet available
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchase will be available soon.'**
+  String get restorePurchaseComingSoon;
+
+  /// Badge text for lifetime plan users
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime Member -- all features unlocked forever.'**
+  String get lifetimeMember;
+
+  /// Upgrade dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Select a Plan'**
+  String get selectPlan;
+
+  /// Pro plan description in upgrade dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited notes, 500 AI requests/day, 5 GB storage'**
+  String get proPlanDescription;
+
+  /// Lifetime plan description in upgrade dialog
+  ///
+  /// In en, this message translates to:
+  /// **'All Pro features, forever -- one-time payment'**
+  String get lifetimePlanDescription;
+
+  /// Error when plan info fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load plan info.'**
+  String get unableToLoadPlan;
+
+  /// Profile settings item title
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// Profile settings item subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Edit display name and bio'**
+  String get editPublicProfile;
+
+  /// Profile screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get profileTitle;
+
+  /// Form field label for display name
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
+  String get displayName;
+
+  /// Hint for display name field
+  ///
+  /// In en, this message translates to:
+  /// **'How others see you'**
+  String get displayNameHint;
+
+  /// Form field label for bio
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
+
+  /// Hint for bio field
+  ///
+  /// In en, this message translates to:
+  /// **'Tell others about yourself'**
+  String get bioHint;
+
+  /// Toggle title for public profile visibility
+  ///
+  /// In en, this message translates to:
+  /// **'Public Profile'**
+  String get publicProfile;
+
+  /// Toggle subtitle for public profile
+  ///
+  /// In en, this message translates to:
+  /// **'Allow others to find and view your profile'**
+  String get publicProfileDesc;
+
+  /// Snackbar after profile save
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved'**
+  String get profileSaved;
+
+  /// Snackbar when profile save fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save profile'**
+  String get profileSaveFailed;
+
+  /// Error when profile fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load profile.'**
+  String get unableToLoadProfile;
+
+  /// Onboarding page 1 title
+  ///
+  /// In en, this message translates to:
+  /// **'Secure Notes'**
+  String get onboardingSecureNotesTitle;
+
+  /// Onboarding page 1 description
+  ///
+  /// In en, this message translates to:
+  /// **'Every note is encrypted end-to-end on your device before it reaches the cloud. No one -- not even us -- can read your notes.'**
+  String get onboardingSecureNotesDesc;
+
+  /// Onboarding page 3 title
+  ///
+  /// In en, this message translates to:
+  /// **'Publish Everywhere'**
+  String get onboardingPublishTitle;
+
+  /// Onboarding page 3 description
+  ///
+  /// In en, this message translates to:
+  /// **'One-click publish to your favorite platforms. Share your ideas with the world instantly.'**
+  String get onboardingPublishDesc;
+
+  /// Onboarding page 4 title
+  ///
+  /// In en, this message translates to:
+  /// **'Collaborate in Real-time'**
+  String get onboardingCollaborateTitle;
+
+  /// Onboarding page 4 description
+  ///
+  /// In en, this message translates to:
+  /// **'Work together on notes with live updates. Changes sync instantly across all devices.'**
+  String get onboardingCollaborateDesc;
 }
 
 class _AppLocalizationsDelegate

@@ -3,9 +3,26 @@ package repository
 import (
 	"log/slog"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const slowQueryThreshold = 100 * time.Millisecond
+
+// dbQueryDuration tracks database query durations in seconds, labelled by
+// the operation name passed to NewQueryTimer / QueryTimerWithCount.
+var dbQueryDuration = prometheus.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Name:    "db_query_duration_seconds",
+		Help:    "Histogram of database query durations in seconds, partitioned by operation.",
+		Buckets: prometheus.DefBuckets,
+	},
+	[]string{"query"},
+)
+
+func init() {
+	prometheus.MustRegister(dbQueryDuration)
+}
 
 // QueryTimer measures the duration of a database query and logs a warning
 // if it exceeds the slow-query threshold (100 ms).
@@ -17,6 +34,7 @@ func NewQueryTimer(label string, logger *slog.Logger) func() {
 	start := time.Now()
 	return func() {
 		elapsed := time.Since(start)
+		dbQueryDuration.WithLabelValues(label).Observe(elapsed.Seconds())
 		if elapsed > slowQueryThreshold {
 			logger.Warn("slow query detected",
 				slog.String("query", label),
@@ -34,6 +52,7 @@ func QueryTimerWithCount(label string, logger *slog.Logger, rowCount int) func()
 	start := time.Now()
 	return func() {
 		elapsed := time.Since(start)
+		dbQueryDuration.WithLabelValues(label).Observe(elapsed.Seconds())
 		if elapsed > slowQueryThreshold {
 			logger.Warn("slow query detected",
 				slog.String("query", label),

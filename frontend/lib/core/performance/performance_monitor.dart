@@ -1,68 +1,37 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 
-/// Lightweight performance timing utility for tracking operation durations.
-///
-/// In debug mode ([kDebugMode] is true), operations that exceed the configured
-/// threshold (default 500ms) are logged to the console with a [SLOW_OP] prefix.
-/// In release mode, all methods are no-ops and the compiler tree-shakes the
-/// entire class body away, adding zero overhead to production builds.
-///
-/// Usage:
-///   PerformanceMonitor.instance.start('note_save');
-///   await doSave();
-///   PerformanceMonitor.instance.end('note_save');
-///
-/// For one-shot async timings:
-///   final duration = await PerformanceMonitor.instance.track('sync_pull', () {
-///     return syncEngine.pull();
-///   });
+/// Simple performance monitor for tracking operation durations.
 class PerformanceMonitor {
-  PerformanceMonitor._();
+  PerformanceMonitor._()
+      : _timers = {},
+        slowThreshold = const Duration(milliseconds: 500);
 
   /// Singleton instance.
   static final PerformanceMonitor instance = PerformanceMonitor._();
 
-  /// Operations taking longer than this threshold are logged as slow in debug.
-  final Duration slowThreshold = const Duration(milliseconds: 500);
+  final Map<String, Stopwatch> _timers;
 
-  /// Active named timers: operation name -> start timestamp.
-  final Map<String, Stopwatch> _timers = {};
+  /// Threshold beyond which an operation is considered slow.
+  final Duration slowThreshold;
 
-  /// Start a named timer. No-op in release mode.
+  /// Start a timer with the given [name].
   void start(String name) {
-    if (kReleaseMode) return;
     _timers[name] = Stopwatch()..start();
   }
 
-  /// End a named timer and return the elapsed duration.
-  ///
-  /// In debug mode, logs the elapsed time. If the operation exceeded
-  /// [slowThreshold], it is additionally logged with a [SLOW_OP] prefix.
-  /// Returns null if no timer with [name] was running.
-  Duration? end(String name) {
-    if (kReleaseMode) return null;
+  /// Whether a timer with [name] is currently running.
+  bool isRunning(String name) => _timers.containsKey(name);
 
+  /// End the timer [name] and return its duration, or null if not running.
+  Duration? end(String name) {
     final sw = _timers.remove(name);
     if (sw == null) return null;
     sw.stop();
-    final duration = sw.elapsed;
-
-    debugPrint('[PERF] $name: ${duration.inMilliseconds}ms');
-    if (duration > slowThreshold) {
-      debugPrint(
-        '[SLOW_OP] $name took ${duration.inMilliseconds}ms '
-        '(threshold: ${slowThreshold.inMilliseconds}ms)',
-      );
-    }
-    return duration;
+    return sw.elapsed;
   }
 
-  /// Measure the duration of an async [action] under the given [name].
-  ///
-  /// Convenience method that wraps [start] and [end] around the action.
-  /// Returns the result of [action].
+  /// Track an async [action] under [name], returning its result.
   Future<T> track<T>(String name, Future<T> Function() action) async {
-    if (kReleaseMode) return action();
     start(name);
     try {
       return await action();
@@ -71,22 +40,13 @@ class PerformanceMonitor {
     }
   }
 
-  /// Whether a timer with the given [name] is currently running.
-  /// Always returns false in release mode.
-  bool isRunning(String name) {
-    if (kReleaseMode) return false;
-    return _timers.containsKey(name);
-  }
-
-  /// Cancel a running timer without logging. No-op if not running.
+  /// Cancel a running timer without logging.
   void cancel(String name) {
-    if (kReleaseMode) return;
     _timers.remove(name);
   }
 
-  /// Remove all running timers. Useful in tests to avoid cross-test leaks.
+  /// Reset all running timers.
   void reset() {
-    if (kReleaseMode) return;
     _timers.clear();
   }
 }

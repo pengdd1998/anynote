@@ -1286,5 +1286,110 @@
 
   "errorTitleStorage": "ストレージエラー",
 
-  "termsOfServiceContent": "利用規約は現在作成中です。現時点ではプライバシーポリシーがAnyNoteサービスの利用に適用されます。"
+  "termsOfServiceContent": "利用規約は現在作成中です。現時点ではプライバシーポリシーがAnyNoteサービスの利用に適用されます。",
+
+  "kdfMigrationTitle": "セキュリティアップグレード可能",
+
+  "kdfMigrationMessage": "暗号化キーが古く弱いパラメータを使用しています。セキュリティ向上のため、より強力な鍵導出パラメータへのアップグレードをお勧めします。キーの再導出が必要なため、少し時間がかかります。",
+
+  "kdfMigrationUpgrade": "今すぐアップグレード",
+
+  "kdfMigrationSkip": "後で",
+
+  "kdfMigrationInProgress": "暗号化パラメータをアップグレード中...",
+
+  "kdfMigrationSuccess": "暗号化パラメータが正常にアップグレードされました。",
+
+  "kdfMigrationFailed": "移行に失敗しました。引き続き使用できますが、キーは古いパラメータのままです。",
+
+  "crossPlatformWarningTitle": "クロスプラットフォーム暗号化に関する注意",
+
+  "crossPlatformWarningMessage": "モバイル（Android/iOS）で暗号化されたメモはWebで復号できず、その逆も同様です。これは、モバイルではArgon2id、WebではPBKDF2が鍵導出に使用され、同じパスワードでも異なる暗号化キーが生成されるためです。",
+
+  "aiChatAssistant": "AI チャットアシスタント",
+  "aiChatWelcome": "メモについて何でもお聞きください",
+  "aiChatWelcomeDesc": "コンテキストとしてメモを選択すると、より的確な回答が得られます。",
+  "selectContextNotes": "コンテキストメモを選択",
+  "contextNotesCount": "{count}件のメモをコンテキストとして選択",
+  "newChat": "新しいチャット",
+  "typeYourMessage": "メッセージを入力...",
+  "noNotesAvailableCreate": "メモがありません。先にメモを作成してください。",
+  "untitled": "無題",
+
+  "smartSummary": "スマート要約",
+  "summaryPromptDesc": "メモの内容をAIで簡潔に要約します。",
+  "generateSummary": "要約を生成",
+  "copiedToClipboard": "クリップボードにコピーしました",
+  "copy": "コピー",
+  "replace": "置換",
+
+  "aiTagSuggestion": "AI タグ提案",
+  "suggestTags": "提案",
+  "analyzingContent": "内容を分析中...",
+  "tapSuggestTagsDesc": "「提案」をタップしてAIにメモを分析させ、タグを推奨します。",
+  "selectTagsToApply": "適用するタグを選択：",
+  "applyTags": "{count}件のタグを適用",
+  "retry": "再試行",
+
+  "aiTranslation": "AI 翻訳",
+  "translateTo": "翻訳先：",
+  "translate": "翻訳",
+  "translationWillAppear": "翻訳結果がここに表示されます...",
+  "insertBelow": "下に挿入",
+  "french": "フランス語",
+  "german": "ドイツ語",
+  "spanish": "スペイン語",
+
+  "writingPolish": "文章の推敲",
+  "writingPolishDesc": "AIで文法やスペルを修正し、読みやすさを向上します。",
+  "checkGrammar": "チェック",
+  "checkingGrammar": "文法をチェック中...",
+  "original": "原文",
+  "corrected": "修正済み",
+  "reject": "却下",
+  "acceptAll": "すべて適用",
+
+  "aiFeatures": "AI 機能",
+
+  "planTitle": "プラン",
+  "currentPlan": "現在のプラン：{plan}",
+  "planNotesCount": "メモ",
+  "@planNotesCount": { "description": "Label for notes count in plan usage" },
+
+  "aiUsage": "AI 使用量",
+  "storageUsed": "ストレージ",
+  "unlimited": "無制限",
+  "comparePlans": "プラン比較",
+  "maxNotes": "メモ上限",
+  "aiDailyQuota": "AI 1日枠",
+  "storage": "ストレージ",
+  "maxDevices": "デバイス上限",
+  "collaboration": "コラボレーション",
+  "no": "いいえ",
+  "yes": "はい",
+  "restorePurchase": "購入を復元",
+  "restorePurchaseComingSoon": "購入の復元は近日公開予定です。",
+  "lifetimeMember": "ライフタイムメンバー -- すべての機能が永久にアンロックされます。",
+  "selectPlan": "プランを選択",
+  "proPlanDescription": "メモ無制限、1日500回AIリクエスト、5 GBストレージ",
+  "lifetimePlanDescription": "すべてのPro機能を永久に利用 -- 一括払い",
+  "unableToLoadPlan": "プラン情報を読み込めません。",
+  "profile": "プロフィール",
+  "editPublicProfile": "表示名と自己紹介を編集",
+  "profileTitle": "プロフィール編集",
+  "displayName": "表示名",
+  "displayNameHint": "他のユーザーに表示される名前",
+  "bio": "自己紹介",
+  "bioHint": "自分について書きましょう",
+  "publicProfile": "公開プロフィール",
+  "publicProfileDesc": "他のユーザーがプロフィールを閲覧できるようにする",
+  "profileSaved": "プロフィールを保存しました",
+  "profileSaveFailed": "プロフィールの保存に失敗しました",
+  "unableToLoadProfile": "プロフィールを読み込めません。",
+  "onboardingSecureNotesTitle": "安全なメモ",
+  "onboardingSecureNotesDesc": "すべてのメモはクラウドに届く前にデバイス上でエンドツーエンド暗号化されます。誰にも -- 私たちにも -- 読まれることはありません。",
+  "onboardingPublishTitle": "どこでも公開",
+  "onboardingPublishDesc": "お気に入りのプラットフォームにワンクリックで公開。アイデアを瞬時に世界と共有。",
+  "onboardingCollaborateTitle": "リアルタイムコラボ",
+  "onboardingCollaborateDesc": "メモをリアルタイムで共同編集。変更はすべてのデバイスに即座に同期されます。"
 }

@@ -1,0 +1,9 @@
+Initial release of AnyNote.
+
+- End-to-end encrypted note-taking with XChaCha20-Poly1305
+- Offline-first architecture with cross-device sync
+- Rich text editor with markdown, code blocks, and math support
+- Tags, collections, and full-text search
+- AI-powered writing assistance
+- One-tap publishing to multiple platforms
+- Cross-platform: Android, iOS, macOS, Windows, Web

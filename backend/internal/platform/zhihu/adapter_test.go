@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/chromedp/cdproto/network"
+
+	"github.com/anynote/backend/internal/platform/chromedputil"
 )
 
 func TestAdapterName(t *testing.T) {
@@ -69,8 +71,8 @@ func TestExtractArticleID(t *testing.T) {
 }
 
 func TestCookieJarRoundTrip(t *testing.T) {
-	jar := cookieJar{
-		Cookies: []httpCookie{
+	jar := chromedputil.CookieJar{
+		Cookies: []chromedputil.HTTPCookie{
 			{
 				Name:     "z_c0",
 				Value:    "session-token-value",
@@ -98,7 +100,7 @@ func TestCookieJarRoundTrip(t *testing.T) {
 	}
 
 	// Unmarshal back.
-	var jar2 cookieJar
+	var jar2 chromedputil.CookieJar
 	if err := json.Unmarshal(data, &jar2); err != nil {
 		t.Fatalf("unmarshal cookie jar: %v", err)
 	}
@@ -148,9 +150,9 @@ func TestSameSiteString(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := sameSiteString(tt.input)
+		got := chromedputil.SameSiteString(tt.input)
 		if got != tt.want {
-			t.Errorf("sameSiteString(%v) = %q, want %q", tt.input, got, tt.want)
+			t.Errorf("SameSiteString(%v) = %q, want %q", tt.input, got, tt.want)
 		}
 	}
 }

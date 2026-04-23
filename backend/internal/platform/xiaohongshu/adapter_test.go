@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/chromedp/cdproto/network"
+
+	"github.com/anynote/backend/internal/platform/chromedputil"
 )
 
 func TestExtractNoteID(t *testing.T) {
@@ -59,8 +61,8 @@ func TestExtractNoteID(t *testing.T) {
 }
 
 func TestCookieJarRoundTrip(t *testing.T) {
-	jar := cookieJar{
-		Cookies: []httpCookie{
+	jar := chromedputil.CookieJar{
+		Cookies: []chromedputil.HTTPCookie{
 			{
 				Name:     "web_session",
 				Value:    "session-token-value",
@@ -88,7 +90,7 @@ func TestCookieJarRoundTrip(t *testing.T) {
 	}
 
 	// Unmarshal back.
-	var jar2 cookieJar
+	var jar2 chromedputil.CookieJar
 	if err := json.Unmarshal(data, &jar2); err != nil {
 		t.Fatalf("unmarshal cookie jar: %v", err)
 	}
@@ -126,8 +128,8 @@ func TestCookieJarRoundTrip(t *testing.T) {
 func TestCookieJarEncryptDecryptRoundTrip(t *testing.T) {
 	// This test verifies the full cookie jar encryption/decryption pipeline
 	// that the adapter uses for storing and retrieving auth data.
-	jar := cookieJar{
-		Cookies: []httpCookie{
+	jar := chromedputil.CookieJar{
+		Cookies: []chromedputil.HTTPCookie{
 			{
 				Name:   "web_session",
 				Value:  "test-session-token",
@@ -164,7 +166,7 @@ func TestCookieJarEncryptDecryptRoundTrip(t *testing.T) {
 	// encryption round-trip is covered by llm/crypto_test.go.
 
 	// Verify the JSON is well-formed and can be deserialized.
-	var jar2 cookieJar
+	var jar2 chromedputil.CookieJar
 	if err := json.Unmarshal(jarBytes, &jar2); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
@@ -179,7 +181,7 @@ func TestCookieJarEncryptDecryptRoundTrip(t *testing.T) {
 	}
 
 	// Cookie with different domain should be filtered out.
-	mixed := []httpCookie{
+	mixed := []chromedputil.HTTPCookie{
 		{Name: "web_session", Value: "v", Domain: ".xiaohongshu.com"},
 		{Name: "google_analytics", Value: "v", Domain: ".google.com"},
 		{Name: "cdn_cookie", Value: "v", Domain: ".xhscdn.com"},
@@ -192,8 +194,8 @@ func TestCookieJarEncryptDecryptRoundTrip(t *testing.T) {
 
 // filterXHSCookies filters cookies to only include xiaohongshu.com domains.
 // This mirrors the logic in the adapter's PollAuth method.
-func filterXHSCookies(cookies []httpCookie) []httpCookie {
-	var result []httpCookie
+func filterXHSCookies(cookies []chromedputil.HTTPCookie) []chromedputil.HTTPCookie {
+	var result []chromedputil.HTTPCookie
 	for _, c := range cookies {
 		if strings.Contains(c.Domain, "xiaohongshu.com") || strings.Contains(c.Domain, "xhscdn.com") {
 			result = append(result, c)
@@ -214,9 +216,9 @@ func TestSameSiteString(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := sameSiteString(tt.input)
+		got := chromedputil.SameSiteString(tt.input)
 		if got != tt.want {
-			t.Errorf("sameSiteString(%v) = %q, want %q", tt.input, got, tt.want)
+			t.Errorf("SameSiteString(%v) = %q, want %q", tt.input, got, tt.want)
 		}
 	}
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
+	"github.com/anynote/backend/internal/platform/httpclient"
 )
 
 // Medium API URLs.
@@ -126,7 +127,7 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("exchange token: %w", err)
 	}
@@ -233,7 +234,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("publish request: %w", err)
 	}
@@ -316,7 +317,7 @@ func (a *Adapter) fetchUserID(ctx context.Context, accessToken string) (string, 
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("fetch me: %w", err)
 	}
@@ -355,7 +356,7 @@ func (a *Adapter) refreshAccessToken(ctx context.Context, refreshToken string) (
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("refresh token request: %w", err)
 	}

@@ -12,6 +12,7 @@ import (
 
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
+	"github.com/anynote/backend/internal/platform/httpclient"
 )
 
 // Adapter implements platform publishing for WordPress sites via the
@@ -116,7 +117,7 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 	req.SetBasicAuth(username, appPassword)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("validate credentials: %w", err)
 	}
@@ -193,7 +194,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("publish request: %w", err)
 	}
@@ -245,7 +246,7 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 	req.SetBasicAuth(authData.Username, authData.AppPassword)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		return "unknown", fmt.Errorf("status request: %w", err)
 	}
@@ -305,7 +306,7 @@ func (a *Adapter) RevokeAuth(ctx context.Context, encryptedAuth []byte, masterKe
 	req.SetBasicAuth(authData.Username, authData.AppPassword)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpclient.Shared.Do(req)
 	if err != nil {
 		// Non-fatal: if we cannot reach the site, the caller still deletes
 		// the persisted data.
@@ -337,7 +338,7 @@ func (a *Adapter) RevokeAuth(ctx context.Context, encryptedAuth []byte, masterKe
 				continue
 			}
 			delReq.SetBasicAuth(authData.Username, authData.AppPassword)
-			http.DefaultClient.Do(delReq)
+			httpclient.Shared.Do(delReq)
 		}
 	}
 

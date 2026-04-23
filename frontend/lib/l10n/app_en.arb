@@ -2288,5 +2288,278 @@
   "@errorTitleStorage": { "description": "Dialog title for storage errors" },
 
   "termsOfServiceContent": "Terms of Service are currently being drafted. For now, our Privacy Policy governs the use of AnyNote services.",
-  "@termsOfServiceContent": { "description": "Placeholder content shown when Terms of Service is not yet available" }
+  "@termsOfServiceContent": { "description": "Placeholder content shown when Terms of Service is not yet available" },
+
+  "kdfMigrationTitle": "Security Upgrade Available",
+  "@kdfMigrationTitle": { "description": "Dialog title for KDF parameter migration prompt" },
+
+  "kdfMigrationMessage": "Your encryption keys use older, weaker parameters. We recommend upgrading to stronger key derivation parameters for better security. This requires re-deriving your keys and will take a moment.",
+  "@kdfMigrationMessage": { "description": "Body text explaining the KDF migration benefit" },
+
+  "kdfMigrationUpgrade": "Upgrade Now",
+  "@kdfMigrationUpgrade": { "description": "Button label to accept KDF migration" },
+
+  "kdfMigrationSkip": "Skip for Now",
+  "@kdfMigrationSkip": { "description": "Button label to decline KDF migration" },
+
+  "kdfMigrationInProgress": "Upgrading encryption parameters...",
+  "@kdfMigrationInProgress": { "description": "Loading message shown during KDF migration" },
+
+  "kdfMigrationSuccess": "Encryption parameters upgraded successfully.",
+  "@kdfMigrationSuccess": { "description": "Success message after KDF migration completes" },
+
+  "kdfMigrationFailed": "Migration failed. You can continue, but your keys use older parameters.",
+  "@kdfMigrationFailed": { "description": "Error message when KDF migration fails" },
+
+  "crossPlatformWarningTitle": "Cross-Platform Encryption Notice",
+  "@crossPlatformWarningTitle": { "description": "Title for the web/native encryption incompatibility warning" },
+
+  "crossPlatformWarningMessage": "Notes encrypted on mobile (Android/iOS) cannot be decrypted on web, and vice versa. This is because mobile uses Argon2id while web uses PBKDF2 for key derivation, producing different encryption keys even with the same password.",
+  "@crossPlatformWarningMessage": { "description": "Body text explaining why web and native ciphertexts are incompatible" },
+
+  "aiChatAssistant": "AI Chat Assistant",
+  "@aiChatAssistant": { "description": "Title of the AI chat screen" },
+
+  "aiChatWelcome": "Ask me anything about your notes",
+  "@aiChatWelcome": { "description": "Welcome message in empty AI chat" },
+
+  "aiChatWelcomeDesc": "Select notes as context for more relevant answers.",
+  "@aiChatWelcomeDesc": { "description": "Subtitle for the AI chat empty state" },
+
+  "selectContextNotes": "Select Context Notes",
+  "@selectContextNotes": { "description": "Tooltip and title for context note selector" },
+
+  "contextNotesCount": "{count} note{count, plural, =1{} other{s}} selected as context",
+  "@contextNotesCount": {
+    "description": "Indicator showing how many notes are selected as chat context",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "newChat": "New Chat",
+  "@newChat": { "description": "Tooltip for starting a new chat session" },
+
+  "typeYourMessage": "Type your message...",
+  "@typeYourMessage": { "description": "Hint text in the chat input field" },
+
+  "noNotesAvailableCreate": "No notes available. Create a note first.",
+  "@noNotesAvailableCreate": { "description": "Empty state in context note selector" },
+
+  "untitled": "Untitled",
+  "@untitled": { "description": "Fallback title for notes without a title" },
+
+  "smartSummary": "Smart Summary",
+  "@smartSummary": { "description": "Title of the AI summary bottom sheet" },
+
+  "summaryPromptDesc": "Generate a concise AI summary of your note content.",
+  "@summaryPromptDesc": { "description": "Description shown before generating a summary" },
+
+  "generateSummary": "Generate Summary",
+  "@generateSummary": { "description": "Button to trigger AI summary generation" },
+
+  "copiedToClipboard": "Copied to clipboard",
+  "@copiedToClipboard": { "description": "Snackbar after copying text" },
+
+  "copy": "Copy",
+  "@copy": { "description": "Copy button label" },
+
+  "replace": "Replace",
+  "@replace": { "description": "Replace button label" },
+
+  "aiTagSuggestion": "AI Tag Suggestion",
+  "@aiTagSuggestion": { "description": "Title of the AI tag suggestion bottom sheet" },
+
+  "suggestTags": "Suggest",
+  "@suggestTags": { "description": "Button to trigger AI tag suggestion" },
+
+  "analyzingContent": "Analyzing content...",
+  "@analyzingContent": { "description": "Loading message while AI analyzes content for tags" },
+
+  "tapSuggestTagsDesc": "Tap \"Suggest\" to let AI analyze your note and recommend tags.",
+  "@tapSuggestTagsDesc": { "description": "Description before tag suggestions are generated" },
+
+  "selectTagsToApply": "Select the tags you want to apply:",
+  "@selectTagsToApply": { "description": "Instruction text above suggested tag chips" },
+
+  "applyTags": "Apply {count} tag{count, plural, =1{} other{s}}",
+  "@applyTags": {
+    "description": "Button to apply selected tags",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "retry": "Retry",
+  "@retry": { "description": "Button label to retry a failed operation" },
+
+  "aiTranslation": "AI Translation",
+  "@aiTranslation": { "description": "Title of the AI translation bottom sheet" },
+
+  "translateTo": "Translate to:",
+  "@translateTo": { "description": "Label before the language selector" },
+
+  "translate": "Translate",
+  "@translate": { "description": "Button to trigger translation" },
+
+  "translationWillAppear": "Translation will appear here...",
+  "@translationWillAppear": { "description": "Placeholder text before translation" },
+
+  "insertBelow": "Insert Below",
+  "@insertBelow": { "description": "Button to insert translated text below selection" },
+
+  "french": "French",
+  "@french": { "description": "Language option" },
+
+  "german": "German",
+  "@german": { "description": "Language option" },
+
+  "spanish": "Spanish",
+  "@spanish": { "description": "Language option" },
+
+  "writingPolish": "Writing Polish",
+  "@writingPolish": { "description": "Title of the grammar/writing polish bottom sheet" },
+
+  "writingPolishDesc": "Fix grammar, spelling, and improve readability with AI.",
+  "@writingPolishDesc": { "description": "Description before grammar check" },
+
+  "checkGrammar": "Check",
+  "@checkGrammar": { "description": "Button to trigger grammar check" },
+
+  "checkingGrammar": "Checking grammar...",
+  "@checkingGrammar": { "description": "Loading message during grammar check" },
+
+  "original": "Original",
+  "@original": { "description": "Label for the original text in diff view" },
+
+  "corrected": "Corrected",
+  "@corrected": { "description": "Label for the corrected text in diff view" },
+
+  "reject": "Reject",
+  "@reject": { "description": "Button to reject the AI suggestion" },
+
+  "acceptAll": "Accept All",
+  "@acceptAll": { "description": "Button to accept all corrections" },
+
+  "aiFeatures": "AI Features",
+  "@aiFeatures": { "description": "Tooltip for the AI features overflow menu in the editor" },
+
+  "planTitle": "Plan",
+  "@planTitle": { "description": "Plan screen title" },
+
+  "currentPlan": "Current Plan: {plan}",
+  "@currentPlan": {
+    "description": "Current plan display",
+    "placeholders": { "plan": { "type": "String" } }
+  },
+
+  "planNotesCount": "Notes",
+  "@planNotesCount": { "description": "Label for notes count in plan usage" },
+
+  "aiUsage": "AI Usage",
+  "@aiUsage": { "description": "Label for AI usage in plan usage" },
+
+  "storageUsed": "Storage",
+  "@storageUsed": { "description": "Label for storage used in plan usage" },
+
+  "unlimited": "Unlimited",
+  "@unlimited": { "description": "Unlimited plan limit display" },
+
+  "comparePlans": "Compare Plans",
+  "@comparePlans": { "description": "Section header for plan comparison" },
+
+  "maxNotes": "Max Notes",
+  "@maxNotes": { "description": "Feature row label in plan comparison" },
+
+  "aiDailyQuota": "AI Daily Quota",
+  "@aiDailyQuota": { "description": "Feature row label in plan comparison" },
+
+  "storage": "Storage",
+  "@storage": { "description": "Feature row label in plan comparison" },
+
+  "maxDevices": "Max Devices",
+  "@maxDevices": { "description": "Feature row label in plan comparison" },
+
+  "collaboration": "Collaboration",
+  "@collaboration": { "description": "Feature row label in plan comparison" },
+
+  "publishing": "Publishing",
+  "@publishing": { "description": "Feature row label in plan comparison" },
+
+  "no": "No",
+  "@no": { "description": "Negative answer in plan comparison" },
+
+  "yes": "Yes",
+  "@yes": { "description": "Positive answer in plan comparison" },
+
+  "restorePurchase": "Restore Purchase",
+  "@restorePurchase": { "description": "Button to restore previous purchase" },
+
+  "restorePurchaseComingSoon": "Restore purchase will be available soon.",
+  "@restorePurchaseComingSoon": { "description": "Message when restore purchase is not yet available" },
+
+  "lifetimeMember": "Lifetime Member -- all features unlocked forever.",
+  "@lifetimeMember": { "description": "Badge text for lifetime plan users" },
+
+  "selectPlan": "Select a Plan",
+  "@selectPlan": { "description": "Upgrade dialog title" },
+
+  "proPlanDescription": "Unlimited notes, 500 AI requests/day, 5 GB storage",
+  "@proPlanDescription": { "description": "Pro plan description in upgrade dialog" },
+
+  "lifetimePlanDescription": "All Pro features, forever -- one-time payment",
+  "@lifetimePlanDescription": { "description": "Lifetime plan description in upgrade dialog" },
+
+  "unableToLoadPlan": "Unable to load plan info.",
+  "@unableToLoadPlan": { "description": "Error when plan info fails to load" },
+
+  "profile": "Profile",
+  "@profile": { "description": "Profile settings item title" },
+
+  "editPublicProfile": "Edit display name and bio",
+  "@editPublicProfile": { "description": "Profile settings item subtitle" },
+
+  "profileTitle": "Edit Profile",
+  "@profileTitle": { "description": "Profile screen title" },
+
+  "displayName": "Display Name",
+  "@displayName": { "description": "Form field label for display name" },
+
+  "displayNameHint": "How others see you",
+  "@displayNameHint": { "description": "Hint for display name field" },
+
+  "bio": "Bio",
+  "@bio": { "description": "Form field label for bio" },
+
+  "bioHint": "Tell others about yourself",
+  "@bioHint": { "description": "Hint for bio field" },
+
+  "publicProfile": "Public Profile",
+  "@publicProfile": { "description": "Toggle title for public profile visibility" },
+
+  "publicProfileDesc": "Allow others to find and view your profile",
+  "@publicProfileDesc": { "description": "Toggle subtitle for public profile" },
+
+  "profileSaved": "Profile saved",
+  "@profileSaved": { "description": "Snackbar after profile save" },
+
+  "profileSaveFailed": "Failed to save profile",
+  "@profileSaveFailed": { "description": "Snackbar when profile save fails" },
+
+  "unableToLoadProfile": "Unable to load profile.",
+  "@unableToLoadProfile": { "description": "Error when profile fails to load" },
+
+  "onboardingSecureNotesTitle": "Secure Notes",
+  "@onboardingSecureNotesTitle": { "description": "Onboarding page 1 title" },
+
+  "onboardingSecureNotesDesc": "Every note is encrypted end-to-end on your device before it reaches the cloud. No one -- not even us -- can read your notes.",
+  "@onboardingSecureNotesDesc": { "description": "Onboarding page 1 description" },
+
+  "onboardingPublishTitle": "Publish Everywhere",
+  "@onboardingPublishTitle": { "description": "Onboarding page 3 title" },
+
+  "onboardingPublishDesc": "One-click publish to your favorite platforms. Share your ideas with the world instantly.",
+  "@onboardingPublishDesc": { "description": "Onboarding page 3 description" },
+
+  "onboardingCollaborateTitle": "Collaborate in Real-time",
+  "@onboardingCollaborateTitle": { "description": "Onboarding page 4 title" },
+
+  "onboardingCollaborateDesc": "Work together on notes with live updates. Changes sync instantly across all devices.",
+  "@onboardingCollaborateDesc": { "description": "Onboarding page 4 description" }
 }

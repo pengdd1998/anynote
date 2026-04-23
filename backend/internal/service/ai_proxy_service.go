@@ -113,14 +113,27 @@ func (s *aiProxyService) Proxy(ctx context.Context, userID string, req domain.AI
 	// 3. Use server default LLM
 	chatReq := s.toChatRequest(req, s.defaultCfg)
 	ch, err := s.gateway.ChatStream(ctx, s.defaultCfg, chatReq)
-	if err != nil && s.fallbackCfg != nil {
-		slog.Warn("default LLM failed, attempting fallback", "error", err)
-		fallbackReq := s.toChatRequest(req, *s.fallbackCfg)
-		fallbackCh, fallbackErr := s.gateway.ChatStream(ctx, *s.fallbackCfg, fallbackReq)
-		if fallbackErr != nil {
-			return nil, fmt.Errorf("default LLM failed: %w; fallback also failed: %w", err, fallbackErr)
+	if err != nil {
+		// If the error is a circuit breaker trip, log it distinctly.
+		if errors.Is(err, llm.ErrCircuitOpen) {
+			slog.Warn("default LLM circuit breaker is open", "provider", s.defaultCfg.Provider)
 		}
-		return fallbackCh, nil
+
+		// Try fallback provider if configured.
+		if s.fallbackCfg != nil {
+			slog.Warn("default LLM failed, attempting fallback", "error", err)
+			fallbackReq := s.toChatRequest(req, *s.fallbackCfg)
+			fallbackCh, fallbackErr := s.gateway.ChatStream(ctx, *s.fallbackCfg, fallbackReq)
+			if fallbackErr != nil {
+				return nil, fmt.Errorf("default LLM failed: %w; fallback also failed: %w", err, fallbackErr)
+			}
+			return fallbackCh, nil
+		}
+
+		// No fallback configured.
+		if errors.Is(err, llm.ErrCircuitOpen) {
+			return nil, fmt.Errorf("LLM provider temporarily unavailable: %w", err)
+		}
 	}
 	return ch, err
 }
