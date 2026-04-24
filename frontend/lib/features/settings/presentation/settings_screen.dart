@@ -196,15 +196,15 @@ class SettingsScreen extends ConsumerWidget {
             ),
 
             // -- About section --------------------------------------------------
-            StaggeredGroup(
+            const StaggeredGroup(
               staggerIndex: 7,
-              child: const AboutSection(),
+              child: AboutSection(),
             ),
 
             // -- Sign out (destructive, in its own group) -----------------------
-            StaggeredGroup(
+            const StaggeredGroup(
               staggerIndex: 8,
-              child: const SignOutSection(),
+              child: SignOutSection(),
             ),
           ],
         ),

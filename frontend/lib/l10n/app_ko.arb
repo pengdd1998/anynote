@@ -934,6 +934,20 @@
 
   "korean": "한국어",
 
+  "discoverFeed": "발견",
+
+  "noPublicNotes": "공개 메모가 아직 없습니다",
+
+  "noPublicNotesDesc": "공개로 공유된 메모가 여기에 표시됩니다.",
+
+  "failedToLoadDiscoverFeed": "발견 피드를 불러오지 못했습니다",
+
+  "encryptedNote": "암호화된 메모",
+
+  "reactionFailed": "반응에 실패했습니다",
+
+  "monthsAgo": "{count}개월 전",
+
   "menuFile": "파일",
 
   "menuNewNote": "새 메모",

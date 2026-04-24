@@ -26,6 +26,9 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
+      // Let stagger animations and microtasks settle.
+      await tester.pumpAndSettle();
+
       expect(find.byType(Scaffold), findsOneWidget);
     });
   });

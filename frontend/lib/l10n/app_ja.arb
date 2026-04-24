@@ -934,6 +934,20 @@
 
   "korean": "한국어",
 
+  "discoverFeed": "発見",
+
+  "noPublicNotes": "公開メモはまだありません",
+
+  "noPublicNotesDesc": "公開として共有されたメモがここに表示されます。",
+
+  "failedToLoadDiscoverFeed": "発見フィードの読み込みに失敗しました",
+
+  "encryptedNote": "暗号化メモ",
+
+  "reactionFailed": "リアクションに失敗しました",
+
+  "monthsAgo": "{count}ヶ月前",
+
   "menuFile": "ファイル",
 
   "menuNewNote": "新規メモ",

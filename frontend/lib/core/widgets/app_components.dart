@@ -16,6 +16,8 @@
 /// - [StaggeredGroup]         Animated wrapper that fades in a group with stagger delay
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../error/error.dart';
@@ -177,9 +179,7 @@ class _AppLoadingCardState extends State<AppLoadingCard>
             child: child,
           );
         },
-        child: widget.isGrid
-            ? _buildGridSkeleton()
-            : _buildListSkeleton(),
+        child: widget.isGrid ? _buildGridSkeleton() : _buildListSkeleton(),
       ),
     );
   }
@@ -289,7 +289,8 @@ class AppErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final icon = ErrorDisplay.errorIcon(error);
-    final message = ErrorDisplay.userMessage(error, AppLocalizations.of(context));
+    final message =
+        ErrorDisplay.userMessage(error, AppLocalizations.of(context));
 
     return Card(
       child: Padding(
@@ -371,7 +372,8 @@ class AppSyncBadge extends StatelessWidget {
     );
   }
 
-  ({IconData icon, Color color, String tooltip, String label}) _statusProperties() {
+  ({IconData icon, Color color, String tooltip, String label})
+      _statusProperties() {
     if (hasConflict) {
       return (
         icon: Icons.cloud_off,
@@ -523,12 +525,8 @@ class SettingsGroup extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     // Warm card background and border matching the theme card tokens.
-    final cardColor = isDark
-        ? AppTheme.darkCardBg
-        : AppTheme.lightCardBg;
-    final borderColor = isDark
-        ? AppTheme.darkBorder
-        : AppTheme.lightBorder;
+    final cardColor = isDark ? AppTheme.darkCardBg : AppTheme.lightCardBg;
+    final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -709,7 +707,11 @@ class _SettingsItemRaw extends StatelessWidget {
   final String? semanticsLabel;
   final Widget child;
 
-  const _SettingsItemRaw({this.onTap, this.semanticsLabel, required this.child});
+  const _SettingsItemRaw({
+    this.onTap,
+    this.semanticsLabel,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -793,6 +795,7 @@ class _StaggeredGroupState extends State<StaggeredGroup>
   late final AnimationController _controller;
   late final Animation<double> _opacity;
   late final Animation<Offset> _slide;
+  Timer? _delayTimer;
 
   @override
   void initState() {
@@ -809,13 +812,15 @@ class _StaggeredGroupState extends State<StaggeredGroup>
 
     // Stagger: each group waits 50ms * staggerIndex before starting.
     final delay = Duration(milliseconds: 50 * widget.staggerIndex);
-    Future.delayed(delay, () {
+    _delayTimer = Timer(delay, () {
       if (mounted) _controller.forward();
     });
   }
 
   @override
   void dispose() {
+    _delayTimer?.cancel();
+    _delayTimer = null;
     _controller.dispose();
     super.dispose();
   }

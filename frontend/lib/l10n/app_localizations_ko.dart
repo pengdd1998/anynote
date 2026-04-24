@@ -1538,27 +1538,26 @@ class AppLocalizationsKo extends AppLocalizations {
   String get korean => '한국어';
 
   @override
-  String get discoverFeed => 'Discover';
+  String get discoverFeed => '발견';
 
   @override
-  String get noPublicNotes => 'No public notes yet';
+  String get noPublicNotes => '공개 메모가 아직 없습니다';
 
   @override
-  String get noPublicNotesDesc =>
-      'Shared notes marked as public will appear here.';
+  String get noPublicNotesDesc => '공개로 공유된 메모가 여기에 표시됩니다.';
 
   @override
-  String get failedToLoadDiscoverFeed => 'Failed to load discovery feed';
+  String get failedToLoadDiscoverFeed => '발견 피드를 불러오지 못했습니다';
 
   @override
-  String get encryptedNote => 'Encrypted note';
+  String get encryptedNote => '암호화된 메모';
 
   @override
-  String get reactionFailed => 'Failed to react';
+  String get reactionFailed => '반응에 실패했습니다';
 
   @override
   String monthsAgo(int count) {
-    return '${count}mo ago';
+    return '$count개월 전';
   }
 
   @override

@@ -8,6 +8,7 @@
 # ── Claude Code (local only) ─────────────────────────────────
 CLAUDE.md
 .claude/
+.spec-workflow/
 
 # ── IDE / Editor ──────────────────────────────────────────────
 .idea/
@@ -121,10 +122,13 @@ logs/
 minio_data/
 
 # ── Documentation (local only) ────────────────────────────────
-doc/
-!doc/api.md
+doc/*
 *.md
 !README.md
+!CHANGELOG.md
+!doc/api.md
+!doc/development-plan.md
+!doc/work-log-*.md
 
 # ── Deploy configs (contain server-specific values) ───────────
 deploy/

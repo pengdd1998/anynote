@@ -55,8 +55,8 @@ class CursorOverlay extends StatelessWidget {
       children: cursors.map((cursor) {
         // Approximate cursor Y position from character offset.
         // In a real integration, this would use the editor's render box.
-        final lineHeight = 20.0;
-        final charsPerLine = 40;
+        const lineHeight = 20.0;
+        const charsPerLine = 40;
         final line = cursor.position ~/ charsPerLine;
         final yOffset = line * lineHeight;
 

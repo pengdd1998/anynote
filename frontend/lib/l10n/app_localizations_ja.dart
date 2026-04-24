@@ -1538,27 +1538,26 @@ class AppLocalizationsJa extends AppLocalizations {
   String get korean => '한국어';
 
   @override
-  String get discoverFeed => 'Discover';
+  String get discoverFeed => '発見';
 
   @override
-  String get noPublicNotes => 'No public notes yet';
+  String get noPublicNotes => '公開メモはまだありません';
 
   @override
-  String get noPublicNotesDesc =>
-      'Shared notes marked as public will appear here.';
+  String get noPublicNotesDesc => '公開として共有されたメモがここに表示されます。';
 
   @override
-  String get failedToLoadDiscoverFeed => 'Failed to load discovery feed';
+  String get failedToLoadDiscoverFeed => '発見フィードの読み込みに失敗しました';
 
   @override
-  String get encryptedNote => 'Encrypted note';
+  String get encryptedNote => '暗号化メモ';
 
   @override
-  String get reactionFailed => 'Failed to react';
+  String get reactionFailed => 'リアクションに失敗しました';
 
   @override
   String monthsAgo(int count) {
-    return '${count}mo ago';
+    return '$countヶ月前';
   }
 
   @override
