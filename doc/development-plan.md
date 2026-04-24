@@ -30,9 +30,9 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Encryption (server) | AES-256-GCM for API key storage at rest |
 | Infra | Docker Compose (PostgreSQL, Redis, MinIO, Chrome headless) |
 
-### Current State Summary (Updated 2026-04-22)
+### Current State Summary (Updated 2026-04-24)
 
-**All features through Phase 56 are complete.** The app is production-ready with 2656+ tests (700+ Go + 1956+ Flutter).
+**v1.0.0 released.** All 69 phases complete. Production-ready with 2800+ tests (700+ Go + 2093+ Flutter), zero lint issues, full l10n coverage.
 
 | Module | Completeness | Notes |
 |---|---|---|
