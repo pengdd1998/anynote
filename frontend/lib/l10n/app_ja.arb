@@ -1422,5 +1422,87 @@
   "backgroundSync": "バックグラウンド同期",
   "backgroundSyncDesc": "アプリが閉じている間も定期的にノートを同期",
   "on": "オン",
-  "off": "オフ"
+  "off": "オフ",
+
+  "trash": "ゴミ箱",
+  "emptyTrash": "ゴミ箱を空にする",
+  "emptyTrashConfirm": "ゴミ箱のすべてのノートを完全に削除しますか？この操作は元に戻せません。",
+  "emptyTrashDone": "ゴミ箱を空にしました",
+  "noDeletedNotes": "削除されたノートはありません",
+  "restoreNote": "復元",
+  "permanentlyDelete": "完全に削除",
+  "deletedAt": "{date}に削除",
+  "deletedOn": "{date}に削除済み",
+  "trashEmpty": "ゴミ箱は空です",
+  "trashEmptyDesc": "削除したノートがここに表示されます",
+  "permanentlyDeleteNoteConfirm": "\"{title}\"を完全に削除しますか？",
+  "selectAll": "すべて選択",
+  "deselectAll": "すべて解除",
+  "batchPin": "ピン留め",
+  "batchUnpin": "ピン留め解除",
+  "batchDelete": "削除",
+  "batchAddTags": "タグ追加",
+  "selectedNotes": "{count}件選択",
+  "done": "完了",
+  "deleteSelectedNotes": "{count}件のノートを削除しますか？",
+  "deleteSelectedNotesConfirm": "選択したノートを削除しますか？ゴミ箱に移動されます。",
+  "notesDeleted": "{count}件のノートをゴミ箱に移動しました",
+  "notesPinned": "{count}件のノートをピン留めしました",
+  "notesUnpinned": "{count}件のノートのピン留めを解除しました",
+
+  "appearance": "外観",
+  "theme": "テーマ",
+  "themeLight": "ライト",
+  "themeDark": "ダーク",
+  "themeSystem": "システム",
+  "themeHighContrastLight": "高コントラストライト",
+  "themeHighContrastDark": "高コントラストダーク",
+  "reduceMotion": "アニメーションを減らす",
+  "reduceMotionDesc": "アプリ内のアニメーションを最小限にします",
+  "reduceMotionSystem": "システム設定に従う",
+  "reduceMotionOn": "オン（アニメーション無効）",
+  "reduceMotionOff": "オフ（アニメーション有効）",
+
+  "shareNote": "このノートを共有",
+  "@shareNote": { "description": "Title of share dialog and tooltip for share button" },
+
+  "copyInviteCode": "招待コードをコピー",
+  "@copyInviteCode": { "description": "Button label to copy invite code" },
+
+  "inviteCodeCopied": "招待コードをコピーしました！",
+  "@inviteCodeCopied": { "description": "Snackbar message after invite code is copied" },
+
+  "enterInviteCode": "招待コードを入力",
+  "@enterInviteCode": { "description": "Label for text field to enter an invite code" },
+
+  "joinSharedNote": "共有ノートに参加：{code}",
+  "@joinSharedNote": {
+    "description": "Button label and snackbar message to join a shared note",
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+
+  "e2eSharingNotice": "エンドツーエンド暗号化：あなたとコラボレーターのみがこのノートを読めます。",
+  "@e2eSharingNotice": { "description": "Security notice for E2E encrypted sharing" },
+
+  "anyoneWithCode": "招待コードを共有して共同編集：",
+  "@anyoneWithCode": { "description": "Instruction text for sharing invite code" },
+
+  "shareSecurely": "エンドツーエンド暗号化を維持するため、暗号化メッセージアプリなどで安全に招待コードを共有してください。",
+  "@shareSecurely": { "description": "Instruction on how to share the invite code securely" },
+
+  "nooneInRoom": "他に閲覧中はいません",
+  "@nooneInRoom": { "description": "Presence text when only current user is in room" },
+
+  "onePersonInRoom": "1人が閲覧中",
+  "@onePersonInRoom": { "description": "Presence text when one other person is viewing" },
+
+  "multiplePeopleInRoom": "{count}人が閲覧中",
+  "@multiplePeopleInRoom": {
+    "description": "Presence text when multiple people are viewing",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

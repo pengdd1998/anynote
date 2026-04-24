@@ -2612,5 +2612,183 @@
   "@on": { "description": "Toggle state label: enabled" },
 
   "off": "Off",
-  "@off": { "description": "Toggle state label: disabled" }
+  "@off": { "description": "Toggle state label: disabled" },
+
+  "trash": "Trash",
+  "@trash": { "description": "Trash screen title" },
+
+  "emptyTrash": "Empty Trash",
+  "@emptyTrash": { "description": "Action to permanently delete all trashed notes" },
+
+  "emptyTrashConfirm": "Are you sure you want to permanently delete all notes in the trash? This action cannot be undone.",
+  "@emptyTrashConfirm": { "description": "Confirmation message for emptying trash" },
+
+  "emptyTrashDone": "Trash emptied",
+  "@emptyTrashDone": { "description": "Snackbar message after emptying trash" },
+
+  "noDeletedNotes": "No deleted notes",
+  "@noDeletedNotes": { "description": "Empty state title when trash is empty" },
+
+  "restoreNote": "Restore",
+  "@restoreNote": { "description": "Action to restore a note from trash" },
+
+  "permanentlyDelete": "Delete Forever",
+  "@permanentlyDelete": { "description": "Action to permanently delete a note" },
+
+  "deletedAt": "Deleted {date}",
+  "@deletedAt": {
+    "description": "Label showing when a note was deleted",
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "deletedOn": "Deleted on {date}",
+  "@deletedOn": {
+    "description": "Label showing deletion date in trash",
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "trashEmpty": "Trash is empty",
+  "@trashEmpty": { "description": "Empty state title when trash has no notes" },
+
+  "trashEmptyDesc": "Notes you delete will appear here",
+  "@trashEmptyDesc": { "description": "Empty state subtitle for trash" },
+
+  "permanentlyDeleteNoteConfirm": "Permanently delete \"{title}\"?",
+  "@permanentlyDeleteNoteConfirm": {
+    "description": "Confirmation dialog for permanently deleting a note",
+    "placeholders": { "title": { "type": "String" } }
+  },
+
+  "selectAll": "Select All",
+  "@selectAll": { "description": "Action to select all notes in batch mode" },
+
+  "deselectAll": "Deselect All",
+  "@deselectAll": { "description": "Action to deselect all notes in batch mode" },
+
+  "batchPin": "Pin",
+  "@batchPin": { "description": "Batch action to pin selected notes" },
+
+  "batchUnpin": "Unpin",
+  "@batchUnpin": { "description": "Batch action to unpin selected notes" },
+
+  "batchDelete": "Delete",
+  "@batchDelete": { "description": "Batch action to delete selected notes" },
+
+  "batchAddTags": "Add Tags",
+  "@batchAddTags": { "description": "Batch action to add tags to selected notes" },
+
+  "selectedNotes": "{count} selected",
+  "@selectedNotes": {
+    "description": "Label showing count of selected notes",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "done": "Done",
+  "@done": { "description": "Button to exit selection mode" },
+
+  "deleteSelectedNotes": "Delete {count} note{count, plural, =1{} other{s}}?",
+  "@deleteSelectedNotes": {
+    "description": "Confirmation for batch deleting notes",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "deleteSelectedNotesConfirm": "Are you sure you want to delete the selected notes? They will be moved to trash.",
+  "@deleteSelectedNotesConfirm": { "description": "Confirmation message for batch delete" },
+
+  "notesDeleted": "{count} note{count, plural, =1{} other{s}} moved to trash",
+  "@notesDeleted": {
+    "description": "Snackbar message after batch deleting notes",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "notesPinned": "{count} note{count, plural, =1{} other{s}} pinned",
+  "@notesPinned": {
+    "description": "Snackbar message after batch pinning notes",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "notesUnpinned": "{count} note{count, plural, =1{} other{s}} unpinned",
+  "@notesUnpinned": {
+    "description": "Snackbar message after batch unpinning notes",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "appearance": "Appearance",
+  "@appearance": { "description": "Settings section header for appearance settings" },
+
+  "theme": "Theme",
+  "@theme": { "description": "Theme settings item title" },
+
+  "themeLight": "Light",
+  "@themeLight": { "description": "Theme option: light mode" },
+
+  "themeDark": "Dark",
+  "@themeDark": { "description": "Theme option: dark mode" },
+
+  "themeSystem": "System",
+  "@themeSystem": { "description": "Theme option: follow system setting" },
+
+  "themeHighContrastLight": "High Contrast Light",
+  "@themeHighContrastLight": { "description": "Theme option: high contrast light mode (WCAG AAA)" },
+
+  "themeHighContrastDark": "High Contrast Dark",
+  "@themeHighContrastDark": { "description": "Theme option: high contrast dark mode (WCAG AAA)" },
+
+  "reduceMotion": "Reduce Motion",
+  "@reduceMotion": { "description": "Settings toggle title for reduce motion accessibility" },
+
+  "reduceMotionDesc": "Minimize animations throughout the app",
+  "@reduceMotionDesc": { "description": "Settings toggle subtitle for reduce motion" },
+
+  "reduceMotionSystem": "Following system setting",
+  "@reduceMotionSystem": { "description": "Reduce motion subtitle when following system" },
+
+  "reduceMotionOn": "On (animations disabled)",
+  "@reduceMotionOn": { "description": "Reduce motion subtitle when manually enabled" },
+
+  "reduceMotionOff": "Off (animations enabled)",
+  "@reduceMotionOff": { "description": "Reduce motion subtitle when manually disabled" },
+
+  "shareNote": "Share this note",
+  "@shareNote": { "description": "Title of share dialog and tooltip for share button" },
+
+  "copyInviteCode": "Copy Invite Code",
+  "@copyInviteCode": { "description": "Button label to copy invite code" },
+
+  "inviteCodeCopied": "Invite code copied!",
+  "@inviteCodeCopied": { "description": "Snackbar message after invite code is copied" },
+
+  "enterInviteCode": "Enter Invite Code",
+  "@enterInviteCode": { "description": "Label for text field to enter an invite code" },
+
+  "joinSharedNote": "Join shared note: {code}",
+  "@joinSharedNote": {
+    "description": "Button label and snackbar message to join a shared note",
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+
+  "e2eSharingNotice": "End-to-end encrypted: only you and your collaborators can read this note.",
+  "@e2eSharingNotice": { "description": "Security notice for E2E encrypted sharing" },
+
+  "anyoneWithCode": "Share this invite code with others to let them collaborate:",
+  "@anyoneWithCode": { "description": "Instruction text for sharing invite code" },
+
+  "shareSecurely": "Share the code securely (e.g., via encrypted messaging app) to maintain end-to-end encryption.",
+  "@shareSecurely": { "description": "Instruction on how to share the invite code securely" },
+
+  "nooneInRoom": "No one else is viewing",
+  "@nooneInRoom": { "description": "Presence text when only current user is in room" },
+
+  "onePersonInRoom": "1 person viewing",
+  "@onePersonInRoom": { "description": "Presence text when one other person is viewing" },
+
+  "multiplePeopleInRoom": "{count} people viewing",
+  "@multiplePeopleInRoom": {
+    "description": "Presence text when multiple people are viewing",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

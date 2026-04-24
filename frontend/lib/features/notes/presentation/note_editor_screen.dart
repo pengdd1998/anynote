@@ -17,6 +17,7 @@ import '../../../main.dart';
 import '../../../core/collab/crdt_text.dart';
 import '../../../core/collab/presence_indicator.dart';
 import '../../../core/collab/ws_client.dart';
+import '../../../features/collab/presentation/share_dialog.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
@@ -562,6 +563,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     tooltip: l10n.viewBacklinks,
                     onPressed: () => _showBacklinks(context),
                   ),
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  tooltip: l10n.shareNote,
+                  onPressed: () {
+                    if (_noteId != null) {
+                      showShareBottomSheet(context, _noteId!);
+                    }
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.image_outlined),
                   tooltip: l10n.addImage,

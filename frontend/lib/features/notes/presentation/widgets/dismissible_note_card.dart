@@ -33,6 +33,9 @@ class DismissibleNoteCard extends StatelessWidget {
   /// Whether this card is currently selected.
   final bool isSelected;
 
+  /// Whether swipe gestures are disabled (e.g., during batch selection).
+  final bool disableSwipe;
+
   /// Called when the user taps the card.
   final VoidCallback onTap;
 
@@ -53,6 +56,7 @@ class DismissibleNoteCard extends StatelessWidget {
     required this.time,
     required this.tags,
     required this.isSelected,
+    this.disableSwipe = false,
     required this.onTap,
     required this.onLongPress,
     required this.onDeleted,
@@ -64,6 +68,22 @@ class DismissibleNoteCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final cardRadius = BorderRadius.circular(AppTheme.radiusMedium);
+
+    final card = NoteCard(
+      note: note,
+      time: time,
+      tags: tags,
+      isSelected: isSelected,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      untitled: untitled,
+      layout: isGrid ? NoteCardLayout.grid : NoteCardLayout.list,
+    );
+
+    // When swipe is disabled (e.g., selection mode), just return the card.
+    if (disableSwipe) {
+      return card;
+    }
 
     return Dismissible(
       key: ValueKey(note.id),
@@ -180,16 +200,7 @@ class DismissibleNoteCard extends StatelessWidget {
           onDeleted?.call();
         }
       },
-      child: NoteCard(
-        note: note,
-        time: time,
-        tags: tags,
-        isSelected: isSelected,
-        onTap: onTap,
-        onLongPress: onLongPress,
-        untitled: untitled,
-        layout: isGrid ? NoteCardLayout.grid : NoteCardLayout.list,
-      ),
+      child: card,
     );
   }
 }

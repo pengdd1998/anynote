@@ -1256,7 +1256,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectCollections => 'Select collections';
 
   @override
-  String get shareNote => 'Share Note';
+  String get shareNote => 'Share this note';
 
   @override
   String get passwordProtection => 'Password Protection';
@@ -2560,4 +2560,191 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get off => 'Off';
+
+  @override
+  String get trash => 'Trash';
+
+  @override
+  String get emptyTrash => 'Empty Trash';
+
+  @override
+  String get emptyTrashConfirm =>
+      'Are you sure you want to permanently delete all notes in the trash? This action cannot be undone.';
+
+  @override
+  String get emptyTrashDone => 'Trash emptied';
+
+  @override
+  String get noDeletedNotes => 'No deleted notes';
+
+  @override
+  String get restoreNote => 'Restore';
+
+  @override
+  String get permanentlyDelete => 'Delete Forever';
+
+  @override
+  String deletedAt(String date) {
+    return 'Deleted $date';
+  }
+
+  @override
+  String deletedOn(String date) {
+    return 'Deleted on $date';
+  }
+
+  @override
+  String get trashEmpty => 'Trash is empty';
+
+  @override
+  String get trashEmptyDesc => 'Notes you delete will appear here';
+
+  @override
+  String permanentlyDeleteNoteConfirm(String title) {
+    return 'Permanently delete \"$title\"?';
+  }
+
+  @override
+  String get selectAll => 'Select All';
+
+  @override
+  String get deselectAll => 'Deselect All';
+
+  @override
+  String get batchPin => 'Pin';
+
+  @override
+  String get batchUnpin => 'Unpin';
+
+  @override
+  String get batchDelete => 'Delete';
+
+  @override
+  String get batchAddTags => 'Add Tags';
+
+  @override
+  String selectedNotes(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String deleteSelectedNotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return 'Delete $count note$_temp0?';
+  }
+
+  @override
+  String get deleteSelectedNotesConfirm =>
+      'Are you sure you want to delete the selected notes? They will be moved to trash.';
+
+  @override
+  String notesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count note$_temp0 moved to trash';
+  }
+
+  @override
+  String notesPinned(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count note$_temp0 pinned';
+  }
+
+  @override
+  String notesUnpinned(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count note$_temp0 unpinned';
+  }
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeHighContrastLight => 'High Contrast Light';
+
+  @override
+  String get themeHighContrastDark => 'High Contrast Dark';
+
+  @override
+  String get reduceMotion => 'Reduce Motion';
+
+  @override
+  String get reduceMotionDesc => 'Minimize animations throughout the app';
+
+  @override
+  String get reduceMotionSystem => 'Following system setting';
+
+  @override
+  String get reduceMotionOn => 'On (animations disabled)';
+
+  @override
+  String get reduceMotionOff => 'Off (animations enabled)';
+
+  @override
+  String get copyInviteCode => 'Copy Invite Code';
+
+  @override
+  String get inviteCodeCopied => 'Invite code copied!';
+
+  @override
+  String get enterInviteCode => 'Enter Invite Code';
+
+  @override
+  String joinSharedNote(String code) {
+    return 'Join shared note: $code';
+  }
+
+  @override
+  String get e2eSharingNotice =>
+      'End-to-end encrypted: only you and your collaborators can read this note.';
+
+  @override
+  String get anyoneWithCode =>
+      'Share this invite code with others to let them collaborate:';
+
+  @override
+  String get shareSecurely =>
+      'Share the code securely (e.g., via encrypted messaging app) to maintain end-to-end encryption.';
+
+  @override
+  String get nooneInRoom => 'No one else is viewing';
+
+  @override
+  String get onePersonInRoom => '1 person viewing';
+
+  @override
+  String multiplePeopleInRoom(int count) {
+    return '$count people viewing';
+  }
 }

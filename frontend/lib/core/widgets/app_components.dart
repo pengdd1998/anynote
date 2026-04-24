@@ -770,6 +770,9 @@ class _IconCircle extends StatelessWidget {
 /// 50ms delays to add before the animation starts, creating a cascading
 /// reveal effect when multiple groups appear together.
 ///
+/// Respects the reduce motion accessibility setting - when enabled, the child
+/// is rendered immediately without animation.
+///
 /// ```dart
 /// StaggeredGroup(
 ///   staggerIndex: 0,
@@ -810,11 +813,19 @@ class _StaggeredGroupState extends State<StaggeredGroup>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
-    // Stagger: each group waits 50ms * staggerIndex before starting.
-    final delay = Duration(milliseconds: 50 * widget.staggerIndex);
-    _delayTimer = Timer(delay, () {
-      if (mounted) _controller.forward();
-    });
+    // Check if reduce motion is enabled
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    if (reduceMotion) {
+      // Skip animation entirely - show immediately
+      _controller.value = 1.0;
+    } else {
+      // Stagger: each group waits 50ms * staggerIndex before starting.
+      final delay = Duration(milliseconds: 50 * widget.staggerIndex);
+      _delayTimer = Timer(delay, () {
+        if (mounted) _controller.forward();
+      });
+    }
   }
 
   @override

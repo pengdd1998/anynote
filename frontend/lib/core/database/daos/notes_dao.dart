@@ -6,7 +6,8 @@ part 'notes_dao.g.dart';
 
 /// Data access object for notes.
 /// Handles CRUD, FTS5 search, and sync status management.
-@DriftAccessor(tables: [Notes, NotesFts, NoteTags, Tags, Collections, CollectionNotes])
+@DriftAccessor(
+    tables: [Notes, NotesFts, NoteTags, Tags, Collections, CollectionNotes])
 class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   NotesDao(super.db);
 
@@ -57,9 +58,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   /// Count non-deleted notes that belong to a specific tag.
   /// Used for filtered pagination (e.g. "showing 50 of 320 in tag 'work'").
   Future<int> countNotesByTag(String tagId) async {
-    final noteTagRows = await (select(noteTags)
-          ..where((nt) => nt.tagId.equals(tagId)))
-        .get();
+    final noteTagRows =
+        await (select(noteTags)..where((nt) => nt.tagId.equals(tagId))).get();
     final noteIds = noteTagRows.map((nt) => nt.noteId).toList();
     if (noteIds.isEmpty) return 0;
 
@@ -185,17 +185,19 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     String? plainTitle,
   }) async {
     final now = DateTime.now();
-    await into(notes).insert(NotesCompanion.insert(
-      id: id,
-      encryptedContent: encryptedContent,
-      encryptedTitle: Value(encryptedTitle),
-      plainContent: Value(plainContent),
-      plainTitle: Value(plainTitle),
-      createdAt: now,
-      updatedAt: now,
-      version: const Value(0),
-      isSynced: const Value(false),
-    ),);
+    await into(notes).insert(
+      NotesCompanion.insert(
+        id: id,
+        encryptedContent: encryptedContent,
+        encryptedTitle: Value(encryptedTitle),
+        plainContent: Value(plainContent),
+        plainTitle: Value(plainTitle),
+        createdAt: now,
+        updatedAt: now,
+        version: const Value(0),
+        isSynced: const Value(false),
+      ),
+    );
 
     // Update FTS5 index if we have plaintext
     if (plainContent != null) {
@@ -216,15 +218,17 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     final note = await getNoteById(id);
     if (note == null) return;
 
-    await (update(notes)..where((n) => n.id.equals(id))).write(NotesCompanion(
-      encryptedContent: Value(encryptedContent ?? note.encryptedContent),
-      encryptedTitle: Value(encryptedTitle ?? note.encryptedTitle),
-      plainContent: Value(plainContent ?? note.plainContent),
-      plainTitle: Value(plainTitle ?? note.plainTitle),
-      updatedAt: Value(DateTime.now()),
-      version: Value(note.version + 1),
-      isSynced: const Value(false),
-    ),);
+    await (update(notes)..where((n) => n.id.equals(id))).write(
+      NotesCompanion(
+        encryptedContent: Value(encryptedContent ?? note.encryptedContent),
+        encryptedTitle: Value(encryptedTitle ?? note.encryptedTitle),
+        plainContent: Value(plainContent ?? note.plainContent),
+        plainTitle: Value(plainTitle ?? note.plainTitle),
+        updatedAt: Value(DateTime.now()),
+        version: Value(note.version + 1),
+        isSynced: const Value(false),
+      ),
+    );
 
     // Update FTS5 if plaintext changed
     if (plainContent != null) {
@@ -234,11 +238,13 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
 
   /// Soft delete a note.
   Future<void> softDeleteNote(String id) async {
-    await (update(notes)..where((n) => n.id.equals(id))).write(NotesCompanion(
-      deletedAt: Value(DateTime.now()),
-      updatedAt: Value(DateTime.now()),
-      isSynced: const Value(false),
-    ),);
+    await (update(notes)..where((n) => n.id.equals(id))).write(
+      NotesCompanion(
+        deletedAt: Value(DateTime.now()),
+        updatedAt: Value(DateTime.now()),
+        isSynced: const Value(false),
+      ),
+    );
 
     // Remove from FTS5
     await customStatement('DELETE FROM notes_fts WHERE note_id = ?', [id]);
@@ -280,7 +286,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     // FTS5 MATCH is not compatible with Drift's customSelect SQL parser.
     // Use a temp table to bridge the gap: write FTS5 results to a temp table
     // via customStatement, then read from it via customSelect.
-    await customStatement('CREATE TEMP TABLE IF NOT EXISTS _fts_results (note_id TEXT NOT NULL PRIMARY KEY)');
+    await customStatement(
+        'CREATE TEMP TABLE IF NOT EXISTS _fts_results (note_id TEXT NOT NULL PRIMARY KEY)');
     await customStatement('DELETE FROM _fts_results');
     await customStatement(
       'INSERT INTO _fts_results (note_id) SELECT note_id FROM notes_fts WHERE notes_fts MATCH ?',
@@ -292,7 +299,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       readsFrom: {notes},
     ).get();
 
-    final matchingIds = ftsResults.map((r) => r.read<String>('note_id')).toList();
+    final matchingIds =
+        ftsResults.map((r) => r.read<String>('note_id')).toList();
     if (matchingIds.isEmpty) return [];
 
     return (select(notes)
@@ -374,7 +382,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
 
     if (ftsResults.isEmpty) return [];
 
-    final matchingIds = ftsResults.map((r) => r.read<String>('note_id')).toList();
+    final matchingIds =
+        ftsResults.map((r) => r.read<String>('note_id')).toList();
     final noteRows = await (select(notes)
           ..where((n) => n.id.isIn(matchingIds) & n.deletedAt.isNull()))
         .get();
@@ -441,7 +450,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
               ..where((nt) => nt.tagId.equals(tagId)))
             .get();
         final ids = rows.map((nt) => nt.noteId).toSet();
-        intersection = intersection == null ? ids : intersection.intersection(ids);
+        intersection =
+            intersection == null ? ids : intersection.intersection(ids);
       }
       tagFilteredIds = intersection?.toList() ?? [];
       if (tagFilteredIds.isEmpty) return [];
@@ -458,8 +468,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     }
 
     // Build the base query with deletedAt filter.
-    var queryBuilder = select(notes)
-      ..where((n) => n.deletedAt.isNull());
+    var queryBuilder = select(notes)..where((n) => n.deletedAt.isNull());
 
     // Apply date range filter.
     if (startDate != null) {
@@ -483,8 +492,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
 
     // Apply collection ID filter (union -- note in any collection).
     if (collectionFilteredIds != null) {
-      queryBuilder =
-          queryBuilder..where((n) => n.id.isIn(collectionFilteredIds!));
+      queryBuilder = queryBuilder
+        ..where((n) => n.id.isIn(collectionFilteredIds!));
     }
 
     queryBuilder = queryBuilder
@@ -534,7 +543,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
 
     if (ftsResults.isEmpty) return [];
 
-    final matchingIds = ftsResults.map((r) => r.read<String>('note_id')).toList();
+    final matchingIds =
+        ftsResults.map((r) => r.read<String>('note_id')).toList();
     final noteRows = await (select(notes)
           ..where((n) => n.id.isIn(matchingIds) & n.deletedAt.isNull()))
         .get();
@@ -556,9 +566,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
 
   /// Get notes by tag ID.
   Future<List<Note>> getNotesByTag(String tagId) async {
-    final noteTagRows = await (select(noteTags)
-          ..where((nt) => nt.tagId.equals(tagId)))
-        .get();
+    final noteTagRows =
+        await (select(noteTags)..where((nt) => nt.tagId.equals(tagId))).get();
 
     final noteIds = noteTagRows.map((nt) => nt.noteId).toList();
     if (noteIds.isEmpty) return [];
@@ -571,10 +580,12 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
 
   /// Add a tag to a note.
   Future<void> addTagToNote(String noteId, String tagId) async {
-    await into(noteTags).insert(NoteTagsCompanion.insert(
-      noteId: noteId,
-      tagId: tagId,
-    ),);
+    await into(noteTags).insert(
+      NoteTagsCompanion.insert(
+        noteId: noteId,
+        tagId: tagId,
+      ),
+    );
   }
 
   /// Remove a tag from a note.
@@ -591,6 +602,79 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       'INSERT INTO notes_fts (note_id, content, title) VALUES (?, ?, ?)',
       [noteId, content, title ?? ''],
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Trash operations
+  // ---------------------------------------------------------------------------
+
+  /// Get all soft-deleted notes sorted by deletion date (newest first).
+  Future<List<Note>> getDeletedNotes() async {
+    return (select(notes)
+          ..where((n) => n.deletedAt.isNotNull())
+          ..orderBy([(n) => OrderingTerm.desc(n.deletedAt)]))
+        .get();
+  }
+
+  /// Watch deleted notes count for badge display.
+  Stream<int> watchDeletedNotesCount() {
+    final countExpr = notes.id.count();
+    return (selectOnly(notes)
+          ..addColumns([countExpr])
+          ..where(notes.deletedAt.isNotNull()))
+        .map((row) => row.read(countExpr))
+        .watch()
+        .map((list) => list.first ?? 0);
+  }
+
+  /// Restore a single note from trash.
+  Future<void> restoreNote(String id) {
+    return (update(notes)..where((n) => n.id.equals(id))).write(
+      const NotesCompanion(deletedAt: Value(null), isSynced: Value(false)),
+    );
+  }
+
+  /// Permanently delete a note (hard delete).
+  Future<void> permanentlyDeleteNote(String id) {
+    return (delete(notes)..where((n) => n.id.equals(id))).go();
+  }
+
+  /// Empty trash -- permanently delete all trashed notes.
+  Future<void> emptyTrash() {
+    return (delete(notes)..where((n) => n.deletedAt.isNotNull())).go();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Batch operations
+  // ---------------------------------------------------------------------------
+
+  /// Soft delete multiple notes at once.
+  Future<void> bulkSoftDelete(List<String> ids) {
+    return (update(notes)..where((n) => n.id.isIn(ids))).write(
+      NotesCompanion(
+        deletedAt: Value(DateTime.now()),
+        isSynced: const Value(false),
+      ),
+    );
+  }
+
+  /// Restore multiple notes from trash at once.
+  Future<void> bulkRestore(List<String> ids) {
+    return (update(notes)..where((n) => n.id.isIn(ids))).write(
+      const NotesCompanion(deletedAt: Value(null), isSynced: Value(false)),
+    );
+  }
+
+  /// Set pin status on multiple notes at once.
+  Future<void> bulkPin(List<String> ids, bool pinned) {
+    return (update(notes)..where((n) => n.id.isIn(ids))).write(
+      NotesCompanion(isPinned: Value(pinned), isSynced: const Value(false)),
+    );
+  }
+
+  /// Permanently delete multiple notes at once.
+  Future<void> bulkPermanentlyDelete(List<String> ids) {
+    return (delete(notes)..where((n) => n.id.isIn(ids))).go();
   }
 
   /// Sanitize a user query for FTS5 MATCH.
@@ -614,7 +698,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     // Remove FTS5 special operators that could cause parse errors.
     // Keep: letters (including CJK via \p{L}), numbers, spaces.
     // Remove: ^ * OR AND NEAR ( ) { } : "
-    cleaned = cleaned.replaceAll(RegExp(r'[^\p{L}\p{N}\s]', unicode: true), ' ');
+    cleaned =
+        cleaned.replaceAll(RegExp(r'[^\p{L}\p{N}\s]', unicode: true), ' ');
     cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
 
     if (cleaned.isEmpty) return '';

@@ -1229,7 +1229,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get selectCollections => '选择合集';
 
   @override
-  String get shareNote => '分享笔记';
+  String get shareNote => '分享此笔记';
 
   @override
   String get passwordProtection => '密码保护';
@@ -2451,4 +2451,162 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get off => '关';
+
+  @override
+  String get trash => '回收站';
+
+  @override
+  String get emptyTrash => '清空回收站';
+
+  @override
+  String get emptyTrashConfirm => '确定要永久删除回收站中的所有笔记吗？此操作无法撤销。';
+
+  @override
+  String get emptyTrashDone => '回收站已清空';
+
+  @override
+  String get noDeletedNotes => '没有已删除的笔记';
+
+  @override
+  String get restoreNote => '恢复';
+
+  @override
+  String get permanentlyDelete => '永久删除';
+
+  @override
+  String deletedAt(String date) {
+    return '删除于 $date';
+  }
+
+  @override
+  String deletedOn(String date) {
+    return '删除于 $date';
+  }
+
+  @override
+  String get trashEmpty => '回收站为空';
+
+  @override
+  String get trashEmptyDesc => '您删除的笔记将显示在这里';
+
+  @override
+  String permanentlyDeleteNoteConfirm(String title) {
+    return '确定要永久删除「$title」吗？';
+  }
+
+  @override
+  String get selectAll => '全选';
+
+  @override
+  String get deselectAll => '取消全选';
+
+  @override
+  String get batchPin => '置顶';
+
+  @override
+  String get batchUnpin => '取消置顶';
+
+  @override
+  String get batchDelete => '删除';
+
+  @override
+  String get batchAddTags => '添加标签';
+
+  @override
+  String selectedNotes(int count) {
+    return '已选 $count 项';
+  }
+
+  @override
+  String deleteSelectedNotes(int count) {
+    return '删除 $count 条笔记？';
+  }
+
+  @override
+  String get deleteSelectedNotesConfirm => '确定要删除所选笔记吗？它们将被移至回收站。';
+
+  @override
+  String notesDeleted(int count) {
+    return '已将 $count 条笔记移至回收站';
+  }
+
+  @override
+  String notesPinned(int count) {
+    return '已置顶 $count 条笔记';
+  }
+
+  @override
+  String notesUnpinned(int count) {
+    return '已取消置顶 $count 条笔记';
+  }
+
+  @override
+  String get appearance => '外观';
+
+  @override
+  String get theme => '主题';
+
+  @override
+  String get themeLight => '浅色';
+
+  @override
+  String get themeDark => '深色';
+
+  @override
+  String get themeSystem => '跟随系统';
+
+  @override
+  String get themeHighContrastLight => '高对比度浅色';
+
+  @override
+  String get themeHighContrastDark => '高对比度深色';
+
+  @override
+  String get reduceMotion => '减少动画';
+
+  @override
+  String get reduceMotionDesc => '减少应用中的动画效果';
+
+  @override
+  String get reduceMotionSystem => '跟随系统设置';
+
+  @override
+  String get reduceMotionOn => '开（动画已禁用）';
+
+  @override
+  String get reduceMotionOff => '关（动画已启用）';
+
+  @override
+  String get copyInviteCode => '复制邀请码';
+
+  @override
+  String get inviteCodeCopied => '邀请码已复制！';
+
+  @override
+  String get enterInviteCode => '输入邀请码';
+
+  @override
+  String joinSharedNote(String code) {
+    return '加入共享笔记：$code';
+  }
+
+  @override
+  String get e2eSharingNotice => '端到端加密：只有您和您的协作者可以阅读此笔记。';
+
+  @override
+  String get anyoneWithCode => '分享此邀请码给他人以协作：';
+
+  @override
+  String get shareSecurely => '请通过加密消息应用安全地分享邀请码，以保持端到端加密。';
+
+  @override
+  String get nooneInRoom => '没有其他人正在查看';
+
+  @override
+  String get onePersonInRoom => '1人正在查看';
+
+  @override
+  String multiplePeopleInRoom(int count) {
+    return '$count人正在查看';
+  }
 }

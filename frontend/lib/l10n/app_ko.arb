@@ -1422,5 +1422,87 @@
   "backgroundSync": "백그라운드 동기화",
   "backgroundSyncDesc": "앱이 닫혀 있을 때 주기적으로 노트 동기화",
   "on": "켜기",
-  "off": "끄기"
+  "off": "끄기",
+
+  "trash": "휴지통",
+  "emptyTrash": "휴지통 비우기",
+  "emptyTrashConfirm": "휴지통의 모든 노트를 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+  "emptyTrashDone": "휴지통을 비웠습니다",
+  "noDeletedNotes": "삭제된 노트가 없습니다",
+  "restoreNote": "복원",
+  "permanentlyDelete": "영구 삭제",
+  "deletedAt": "{date}에 삭제됨",
+  "deletedOn": "{date}에 삭제됨",
+  "trashEmpty": "휴지통이 비어있습니다",
+  "trashEmptyDesc": "삭제한 노트가 여기에 표시됩니다",
+  "permanentlyDeleteNoteConfirm": "\"{title}\"을(를) 영구 삭제하시겠습니까?",
+  "selectAll": "모두 선택",
+  "deselectAll": "모두 해제",
+  "batchPin": "고정",
+  "batchUnpin": "고정 해제",
+  "batchDelete": "삭제",
+  "batchAddTags": "태그 추가",
+  "selectedNotes": "{count}개 선택됨",
+  "done": "완료",
+  "deleteSelectedNotes": "{count}개의 노트를 삭제하시겠습니까?",
+  "deleteSelectedNotesConfirm": "선택한 노트를 삭제하시겠습니까? 휴지통으로 이동됩니다.",
+  "notesDeleted": "{count}개의 노트를 휴지통으로 이동했습니다",
+  "notesPinned": "{count}개의 노트를 고정했습니다",
+  "notesUnpinned": "{count}개의 노트의 고정을 해제했습니다",
+
+  "appearance": "모양",
+  "theme": "테마",
+  "themeLight": "밝게",
+  "themeDark": "어둡게",
+  "themeSystem": "시스템",
+  "themeHighContrastLight": "고대비 밝은 모드",
+  "themeHighContrastDark": "고대비 어두운 모드",
+  "reduceMotion": "동작 줄이기",
+  "reduceMotionDesc": "앱의 애니메이션을 최소화합니다",
+  "reduceMotionSystem": "시스템 설정 따르기",
+  "reduceMotionOn": "켬(애니메이션 사용 안함)",
+  "reduceMotionOff": "끔(애니메이션 사용)" ,
+
+  "shareNote": "이 노트 공유",
+  "@shareNote": { "description": "Title of share dialog and tooltip for share button" },
+
+  "copyInviteCode": "초대 코드 복사",
+  "@copyInviteCode": { "description": "Button label to copy invite code" },
+
+  "inviteCodeCopied": "초대 코드가 복사되었습니다!",
+  "@inviteCodeCopied": { "description": "Snackbar message after invite code is copied" },
+
+  "enterInviteCode": "초대 코드 입력",
+  "@enterInviteCode": { "description": "Label for text field to enter an invite code" },
+
+  "joinSharedNote": "공유 노트 참가: {code}",
+  "@joinSharedNote": {
+    "description": "Button label and snackbar message to join a shared note",
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+
+  "e2eSharingNotice": "종단 간 암호화: 사용자와 협력자만 이 노트를 읽을 수 있습니다.",
+  "@e2eSharingNotice": { "description": "Security notice for E2E encrypted sharing" },
+
+  "anyoneWithCode": "초대 코드를 공유하여 협업:",
+  "@anyoneWithCode": { "description": "Instruction text for sharing invite code" },
+
+  "shareSecurely": "종단 간 암호화를 유지하려면 암호화된 메시징 앱 등을 통해 안전하게 초대 코드를 공유하세요.",
+  "@shareSecurely": { "description": "Instruction on how to share the invite code securely" },
+
+  "nooneInRoom": "다른 사람이 보고 있지 않습니다",
+  "@nooneInRoom": { "description": "Presence text when only current user is in room" },
+
+  "onePersonInRoom": "1명이 보고 있음",
+  "@onePersonInRoom": { "description": "Presence text when one other person is viewing" },
+
+  "multiplePeopleInRoom": "{count}명이 보고 있음",
+  "@multiplePeopleInRoom": {
+    "description": "Presence text when multiple people are viewing",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

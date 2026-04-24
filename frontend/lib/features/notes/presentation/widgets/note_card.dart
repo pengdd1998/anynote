@@ -65,25 +65,47 @@ class NoteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         splashColor: colorScheme.primary.withAlpha(AppAlpha.light),
         highlightColor: colorScheme.primary.withAlpha(AppAlpha.subtle),
-        child: Padding(
-          padding: _isGrid
-              ? const EdgeInsets.all(12)
-              : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTitleRow(theme, colorScheme),
-              SizedBox(height: _isGrid ? 8 : 6),
-              _buildPreview(theme, colorScheme, preview),
-              if (tags.isNotEmpty)
-                Padding(
-                  padding: EdgeInsets.only(top: _isGrid ? 4 : 6),
-                  child: TagChipsRow(tags: tags),
+        child: Stack(
+          children: [
+            Padding(
+              padding: _isGrid
+                  ? const EdgeInsets.all(12)
+                  : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTitleRow(theme, colorScheme),
+                  SizedBox(height: _isGrid ? 8 : 6),
+                  _buildPreview(theme, colorScheme, preview),
+                  if (tags.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(top: _isGrid ? 4 : 6),
+                      child: TagChipsRow(tags: tags),
+                    ),
+                  SizedBox(height: _isGrid ? 4 : 6),
+                  _buildDate(theme, colorScheme),
+                ],
+              ),
+            ),
+            // Checkbox overlay when selected
+            if (isSelected)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.check,
+                    color: colorScheme.onPrimary,
+                    size: _isGrid ? 16 : 20,
+                  ),
                 ),
-              SizedBox(height: _isGrid ? 4 : 6),
-              _buildDate(theme, colorScheme),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

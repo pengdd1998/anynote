@@ -23,6 +23,8 @@ import 'core/sync/sync_lifecycle.dart';
 import 'core/sync/background_sync_service.dart';
 import 'core/error/connectivity_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
+import 'core/theme/animation_config.dart';
 import 'core/widgets/app_menu_bar.dart';
 import 'core/widgets/keyboard_shortcuts.dart';
 import 'routing/app_router.dart';
@@ -233,23 +235,30 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
+    final themeOption = ref.watch(themeOptionProvider);
 
     return AppKeyboardShortcuts(
-      child: AppMenuBar(
-        child: MediaQuery.withClampedTextScaling(
-          minScaleFactor: 0.8,
-          maxScaleFactor: 2.0,
-          child: MaterialApp.router(
-            title: 'AnyNote',
-            debugShowCheckedModeBanner: false,
-            showSemanticsDebugger: false,
-            theme: AppTheme.lightTheme(),
-            darkTheme: AppTheme.darkTheme(),
-            themeMode: ThemeMode.system,
-            routerConfig: appRouter,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            locale: locale,
+      child: AnimationConfigInjector(
+        child: AppMenuBar(
+          child: MediaQuery.withClampedTextScaling(
+            minScaleFactor: 0.8,
+            maxScaleFactor: 2.0,
+            child: MaterialApp.router(
+              title: 'AnyNote',
+              debugShowCheckedModeBanner: false,
+              showSemanticsDebugger: false,
+              theme: selectThemeData(
+                      themeOption, MediaQuery.platformBrightnessOf(context)) ??
+                  AppTheme.lightTheme(),
+              darkTheme: AppTheme.darkTheme(),
+              highContrastTheme: AppTheme.highContrastLightTheme(),
+              highContrastDarkTheme: AppTheme.highContrastDarkTheme(),
+              themeMode: selectThemeMode(themeOption),
+              routerConfig: appRouter,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: locale,
+            ),
           ),
         ),
       ),

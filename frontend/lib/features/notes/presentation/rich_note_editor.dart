@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
+import 'embeds/table_embed.dart';
+import 'embeds/table_picker_dialog.dart';
+
 /// A rich text editor widget using flutter_quill.
 ///
 /// Wraps a [quill.QuillSimpleToolbar] above a [quill.QuillEditor] with a
@@ -35,6 +38,17 @@ class RichNoteEditor extends StatefulWidget {
 }
 
 class _RichNoteEditorState extends State<RichNoteEditor> {
+  void _insertTable(BuildContext context) async {
+    final tableSize = await showTablePickerDialog(context);
+    if (tableSize == null) return;
+
+    insertTableEmbed(
+      controller: widget.controller,
+      rows: tableSize.rows,
+      cols: tableSize.cols,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -53,7 +67,9 @@ class _RichNoteEditorState extends State<RichNoteEditor> {
       ),
       iconButtonUnselectedData: quill.IconButtonData(
         color: isDark
-            ? const Color(0xFFA3988E) // warm medium grey (WCAG AA on dark theme)
+            ? const Color(
+                0xFFA3988E, // warm medium grey (WCAG AA on dark theme)
+              )
             : const Color(0xFF6B5E54), // warm brown-grey (light theme)
       ),
     );
@@ -111,26 +127,34 @@ class _RichNoteEditorState extends State<RichNoteEditor> {
                 iconTheme: iconTheme,
               ),
             ),
+            // Add custom table button
+            customButtons: [
+              quill.QuillToolbarCustomButtonOptions(
+                icon: const Icon(Icons.table_chart),
+                tooltip: 'Insert table',
+                onPressed: () => _insertTable(context),
+              ),
+            ],
           ),
         ),
         Divider(
           height: 1,
           thickness: 1,
-          color: isDark
-              ? const Color(0xFF332E2B)
-              : const Color(0xFFF0E8DF),
+          color: isDark ? const Color(0xFF332E2B) : const Color(0xFFF0E8DF),
         ),
         // Editor
         Expanded(
-          child: quill.QuillEditor.basic(
+          child: quill.QuillEditor(
             controller: widget.controller,
             focusNode: widget.focusNode,
-            scrollController:
-                widget.scrollController ?? ScrollController(),
-            config: const quill.QuillEditorConfig(
-              padding: EdgeInsets.all(16),
+            scrollController: widget.scrollController ?? ScrollController(),
+            config: quill.QuillEditorConfig(
+              padding: const EdgeInsets.all(16),
               autoFocus: false,
               expands: false,
+              embedBuilders: const [
+                TableEmbedBuilder(),
+              ],
             ),
           ),
         ),

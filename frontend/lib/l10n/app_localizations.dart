@@ -1698,7 +1698,7 @@ abstract class AppLocalizations {
   /// **'Open {platform} app and scan this QR code to login'**
   String scanQRInstructions(String platform);
 
-  /// Done button label
+  /// Button to exit selection mode
   ///
   /// In en, this message translates to:
   /// **'Done'**
@@ -2358,10 +2358,10 @@ abstract class AppLocalizations {
   /// **'Select collections'**
   String get selectCollections;
 
-  /// Share sheet title
+  /// Title of share dialog and tooltip for share button
   ///
   /// In en, this message translates to:
-  /// **'Share Note'**
+  /// **'Share this note'**
   String get shareNote;
 
   /// Section label
@@ -4605,6 +4605,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Off'**
   String get off;
+
+  /// Trash screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get trash;
+
+  /// Action to permanently delete all trashed notes
+  ///
+  /// In en, this message translates to:
+  /// **'Empty Trash'**
+  String get emptyTrash;
+
+  /// Confirmation message for emptying trash
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to permanently delete all notes in the trash? This action cannot be undone.'**
+  String get emptyTrashConfirm;
+
+  /// Snackbar message after emptying trash
+  ///
+  /// In en, this message translates to:
+  /// **'Trash emptied'**
+  String get emptyTrashDone;
+
+  /// Empty state title when trash is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No deleted notes'**
+  String get noDeletedNotes;
+
+  /// Action to restore a note from trash
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restoreNote;
+
+  /// Action to permanently delete a note
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Forever'**
+  String get permanentlyDelete;
+
+  /// Label showing when a note was deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {date}'**
+  String deletedAt(String date);
+
+  /// Label showing deletion date in trash
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted on {date}'**
+  String deletedOn(String date);
+
+  /// Empty state title when trash has no notes
+  ///
+  /// In en, this message translates to:
+  /// **'Trash is empty'**
+  String get trashEmpty;
+
+  /// Empty state subtitle for trash
+  ///
+  /// In en, this message translates to:
+  /// **'Notes you delete will appear here'**
+  String get trashEmptyDesc;
+
+  /// Confirmation dialog for permanently deleting a note
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete \"{title}\"?'**
+  String permanentlyDeleteNoteConfirm(String title);
+
+  /// Action to select all notes in batch mode
+  ///
+  /// In en, this message translates to:
+  /// **'Select All'**
+  String get selectAll;
+
+  /// Action to deselect all notes in batch mode
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect All'**
+  String get deselectAll;
+
+  /// Batch action to pin selected notes
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get batchPin;
+
+  /// Batch action to unpin selected notes
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get batchUnpin;
+
+  /// Batch action to delete selected notes
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get batchDelete;
+
+  /// Batch action to add tags to selected notes
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tags'**
+  String get batchAddTags;
+
+  /// Label showing count of selected notes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedNotes(int count);
+
+  /// Confirmation for batch deleting notes
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} note{count, plural, =1{} other{s}}?'**
+  String deleteSelectedNotes(int count);
+
+  /// Confirmation message for batch delete
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the selected notes? They will be moved to trash.'**
+  String get deleteSelectedNotesConfirm;
+
+  /// Snackbar message after batch deleting notes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} note{count, plural, =1{} other{s}} moved to trash'**
+  String notesDeleted(int count);
+
+  /// Snackbar message after batch pinning notes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} note{count, plural, =1{} other{s}} pinned'**
+  String notesPinned(int count);
+
+  /// Snackbar message after batch unpinning notes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} note{count, plural, =1{} other{s}} unpinned'**
+  String notesUnpinned(int count);
+
+  /// Settings section header for appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// Theme settings item title
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// Theme option: light mode
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// Theme option: dark mode
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// Theme option: follow system setting
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// Theme option: high contrast light mode (WCAG AAA)
+  ///
+  /// In en, this message translates to:
+  /// **'High Contrast Light'**
+  String get themeHighContrastLight;
+
+  /// Theme option: high contrast dark mode (WCAG AAA)
+  ///
+  /// In en, this message translates to:
+  /// **'High Contrast Dark'**
+  String get themeHighContrastDark;
+
+  /// Settings toggle title for reduce motion accessibility
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce Motion'**
+  String get reduceMotion;
+
+  /// Settings toggle subtitle for reduce motion
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize animations throughout the app'**
+  String get reduceMotionDesc;
+
+  /// Reduce motion subtitle when following system
+  ///
+  /// In en, this message translates to:
+  /// **'Following system setting'**
+  String get reduceMotionSystem;
+
+  /// Reduce motion subtitle when manually enabled
+  ///
+  /// In en, this message translates to:
+  /// **'On (animations disabled)'**
+  String get reduceMotionOn;
+
+  /// Reduce motion subtitle when manually disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Off (animations enabled)'**
+  String get reduceMotionOff;
+
+  /// Button label to copy invite code
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Invite Code'**
+  String get copyInviteCode;
+
+  /// Snackbar message after invite code is copied
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code copied!'**
+  String get inviteCodeCopied;
+
+  /// Label for text field to enter an invite code
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Invite Code'**
+  String get enterInviteCode;
+
+  /// Button label and snackbar message to join a shared note
+  ///
+  /// In en, this message translates to:
+  /// **'Join shared note: {code}'**
+  String joinSharedNote(String code);
+
+  /// Security notice for E2E encrypted sharing
+  ///
+  /// In en, this message translates to:
+  /// **'End-to-end encrypted: only you and your collaborators can read this note.'**
+  String get e2eSharingNotice;
+
+  /// Instruction text for sharing invite code
+  ///
+  /// In en, this message translates to:
+  /// **'Share this invite code with others to let them collaborate:'**
+  String get anyoneWithCode;
+
+  /// Instruction on how to share the invite code securely
+  ///
+  /// In en, this message translates to:
+  /// **'Share the code securely (e.g., via encrypted messaging app) to maintain end-to-end encryption.'**
+  String get shareSecurely;
+
+  /// Presence text when only current user is in room
+  ///
+  /// In en, this message translates to:
+  /// **'No one else is viewing'**
+  String get nooneInRoom;
+
+  /// Presence text when one other person is viewing
+  ///
+  /// In en, this message translates to:
+  /// **'1 person viewing'**
+  String get onePersonInRoom;
+
+  /// Presence text when multiple people are viewing
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people viewing'**
+  String multiplePeopleInRoom(int count);
 }
 
 class _AppLocalizationsDelegate

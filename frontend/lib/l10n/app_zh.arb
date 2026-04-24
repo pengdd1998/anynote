@@ -1422,5 +1422,87 @@
   "backgroundSync": "后台同步",
   "backgroundSyncDesc": "在应用关闭时定期同步笔记",
   "on": "开",
-  "off": "关"
+  "off": "关",
+
+  "trash": "回收站",
+  "emptyTrash": "清空回收站",
+  "emptyTrashConfirm": "确定要永久删除回收站中的所有笔记吗？此操作无法撤销。",
+  "emptyTrashDone": "回收站已清空",
+  "noDeletedNotes": "没有已删除的笔记",
+  "restoreNote": "恢复",
+  "permanentlyDelete": "永久删除",
+  "deletedAt": "删除于 {date}",
+  "deletedOn": "删除于 {date}",
+  "trashEmpty": "回收站为空",
+  "trashEmptyDesc": "您删除的笔记将显示在这里",
+  "permanentlyDeleteNoteConfirm": "确定要永久删除「{title}」吗？",
+  "selectAll": "全选",
+  "deselectAll": "取消全选",
+  "batchPin": "置顶",
+  "batchUnpin": "取消置顶",
+  "batchDelete": "删除",
+  "batchAddTags": "添加标签",
+  "selectedNotes": "已选 {count} 项",
+  "done": "完成",
+  "deleteSelectedNotes": "删除 {count} 条笔记？",
+  "deleteSelectedNotesConfirm": "确定要删除所选笔记吗？它们将被移至回收站。",
+  "notesDeleted": "已将 {count} 条笔记移至回收站",
+  "notesPinned": "已置顶 {count} 条笔记",
+  "notesUnpinned": "已取消置顶 {count} 条笔记",
+
+  "appearance": "外观",
+  "theme": "主题",
+  "themeLight": "浅色",
+  "themeDark": "深色",
+  "themeSystem": "跟随系统",
+  "themeHighContrastLight": "高对比度浅色",
+  "themeHighContrastDark": "高对比度深色",
+  "reduceMotion": "减少动画",
+  "reduceMotionDesc": "减少应用中的动画效果",
+  "reduceMotionSystem": "跟随系统设置",
+  "reduceMotionOn": "开（动画已禁用）",
+  "reduceMotionOff": "关（动画已启用）",
+
+  "shareNote": "分享此笔记",
+  "@shareNote": { "description": "Title of share dialog and tooltip for share button" },
+
+  "copyInviteCode": "复制邀请码",
+  "@copyInviteCode": { "description": "Button label to copy invite code" },
+
+  "inviteCodeCopied": "邀请码已复制！",
+  "@inviteCodeCopied": { "description": "Snackbar message after invite code is copied" },
+
+  "enterInviteCode": "输入邀请码",
+  "@enterInviteCode": { "description": "Label for text field to enter an invite code" },
+
+  "joinSharedNote": "加入共享笔记：{code}",
+  "@joinSharedNote": {
+    "description": "Button label and snackbar message to join a shared note",
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+
+  "e2eSharingNotice": "端到端加密：只有您和您的协作者可以阅读此笔记。",
+  "@e2eSharingNotice": { "description": "Security notice for E2E encrypted sharing" },
+
+  "anyoneWithCode": "分享此邀请码给他人以协作：",
+  "@anyoneWithCode": { "description": "Instruction text for sharing invite code" },
+
+  "shareSecurely": "请通过加密消息应用安全地分享邀请码，以保持端到端加密。",
+  "@shareSecurely": { "description": "Instruction on how to share the invite code securely" },
+
+  "nooneInRoom": "没有其他人正在查看",
+  "@nooneInRoom": { "description": "Presence text when only current user is in room" },
+
+  "onePersonInRoom": "1人正在查看",
+  "@onePersonInRoom": { "description": "Presence text when one other person is viewing" },
+
+  "multiplePeopleInRoom": "{count}人正在查看",
+  "@multiplePeopleInRoom": {
+    "description": "Presence text when multiple people are viewing",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

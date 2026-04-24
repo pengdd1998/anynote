@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/export/export_service.dart';
 import '../../../core/locale/locale_provider.dart';
+import '../../../core/theme/theme_provider.dart';
+import '../../../core/theme/animation_config.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -197,15 +200,40 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
 
+            // -- Appearance section ---------------------------------------------
+            StaggeredGroup(
+              staggerIndex: 7,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsGroupHeader(title: l10n.appearance),
+                  SettingsGroup(
+                    children: [
+                      SettingsItem(
+                        icon: Icons.palette_outlined,
+                        title: l10n.theme,
+                        subtitle: _getThemeDisplayName(
+                            ref.watch(themeOptionProvider), l10n),
+                        trailing: const Icon(Icons.chevron_right, size: 20),
+                        onTap: () => _showThemeDialog(context, ref),
+                      ),
+                      _reduceMotionItem(l10n, ref),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
             // -- About section --------------------------------------------------
             const StaggeredGroup(
-              staggerIndex: 7,
+              staggerIndex: 8,
               child: AboutSection(),
             ),
 
             // -- Sign out (destructive, in its own group) -----------------------
             const StaggeredGroup(
-              staggerIndex: 8,
+              staggerIndex: 9,
               child: SignOutSection(),
             ),
           ],
@@ -273,6 +301,16 @@ class SettingsScreen extends ConsumerWidget {
       'ja' => l10n.japanese,
       'ko' => l10n.korean,
       _ => l10n.english,
+    };
+  }
+
+  String _getThemeDisplayName(ThemeOption option, AppLocalizations l10n) {
+    return switch (option) {
+      ThemeOption.light => l10n.themeLight,
+      ThemeOption.dark => l10n.themeDark,
+      ThemeOption.system => l10n.themeSystem,
+      ThemeOption.highContrastLight => l10n.themeHighContrastLight,
+      ThemeOption.highContrastDark => l10n.themeHighContrastDark,
     };
   }
 
@@ -346,6 +384,115 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showThemeDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentOption = ref.read(themeOptionProvider);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.theme),
+        children: [
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.light,
+            currentOption: currentOption,
+            label: l10n.themeLight,
+            ref: ref,
+          ),
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.dark,
+            currentOption: currentOption,
+            label: l10n.themeDark,
+            ref: ref,
+          ),
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.system,
+            currentOption: currentOption,
+            label: l10n.themeSystem,
+            ref: ref,
+          ),
+          const Divider(),
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.highContrastLight,
+            currentOption: currentOption,
+            label: l10n.themeHighContrastLight,
+            ref: ref,
+            isHighContrast: true,
+          ),
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.highContrastDark,
+            currentOption: currentOption,
+            label: l10n.themeHighContrastDark,
+            ref: ref,
+            isHighContrast: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeOption({
+    required BuildContext context,
+    required ThemeOption option,
+    required ThemeOption currentOption,
+    required String label,
+    required WidgetRef ref,
+    bool isHighContrast = false,
+  }) {
+    final isSelected = currentOption == option;
+    return SimpleDialogOption(
+      onPressed: () {
+        ref.read(themeOptionProvider.notifier).setThemeOption(option);
+        Navigator.pop(context);
+      },
+      child: ListTile(
+        leading: Icon(
+          isSelected
+              ? Icons.radio_button_checked
+              : Icons.radio_button_unchecked,
+          color: isHighContrast ? null : null,
+        ),
+        title: Text(
+          label,
+          style: isHighContrast
+              ? const TextStyle(fontWeight: FontWeight.bold)
+              : null,
+        ),
+        contentPadding: EdgeInsets.zero,
+      ),
+    );
+  }
+
+  Widget _reduceMotionItem(AppLocalizations l10n, WidgetRef ref) {
+    final override = ref.watch(reduceMotionOverrideProvider);
+    // Get context through a Builder to access MediaQuery
+    return Builder(
+      builder: (context) {
+        final systemDisabled = MediaQuery.disableAnimationsOf(context);
+        final isEnabled = override ?? systemDisabled;
+
+        return _SettingsItemWithSwitch(
+          icon: Icons.animation_outlined,
+          title: l10n.reduceMotion,
+          subtitle: override == null
+              ? l10n.reduceMotionSystem
+              : isEnabled
+                  ? l10n.reduceMotionOn
+                  : l10n.reduceMotionOff,
+          value: isEnabled,
+          onChanged: (value) {
+            ref.read(reduceMotionOverrideProvider.notifier).state = value;
+          },
+        );
+      },
     );
   }
 
@@ -462,5 +609,103 @@ class SettingsScreen extends ConsumerWidget {
         );
       }
     }
+  }
+}
+
+/// A settings item with an inline switch that doesn't navigate when tapped.
+class _SettingsItemWithSwitch extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SettingsItemWithSwitch({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.brightness == Brightness.dark
+                ? AppTheme.darkBorder
+                : AppTheme.lightBorder,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            children: [
+              _IconCircle(icon: icon),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    if (subtitle != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          subtitle!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.textTheme.bodySmall?.color,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: value,
+                onChanged: onChanged,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Icon circle widget reused from settings item.
+class _IconCircle extends StatelessWidget {
+  final IconData icon;
+
+  const _IconCircle({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: isDark ? 0.15 : 0.12),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 18, color: colorScheme.primary),
+    );
   }
 }

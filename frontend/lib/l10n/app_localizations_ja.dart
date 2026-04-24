@@ -1236,7 +1236,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get selectCollections => 'コレクションを選択';
 
   @override
-  String get shareNote => 'メモを共有';
+  String get shareNote => 'このノートを共有';
 
   @override
   String get passwordProtection => 'パスワード保護';
@@ -2463,4 +2463,163 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get off => 'オフ';
+
+  @override
+  String get trash => 'ゴミ箱';
+
+  @override
+  String get emptyTrash => 'ゴミ箱を空にする';
+
+  @override
+  String get emptyTrashConfirm => 'ゴミ箱のすべてのノートを完全に削除しますか？この操作は元に戻せません。';
+
+  @override
+  String get emptyTrashDone => 'ゴミ箱を空にしました';
+
+  @override
+  String get noDeletedNotes => '削除されたノートはありません';
+
+  @override
+  String get restoreNote => '復元';
+
+  @override
+  String get permanentlyDelete => '完全に削除';
+
+  @override
+  String deletedAt(String date) {
+    return '$dateに削除';
+  }
+
+  @override
+  String deletedOn(String date) {
+    return '$dateに削除済み';
+  }
+
+  @override
+  String get trashEmpty => 'ゴミ箱は空です';
+
+  @override
+  String get trashEmptyDesc => '削除したノートがここに表示されます';
+
+  @override
+  String permanentlyDeleteNoteConfirm(String title) {
+    return '\"$title\"を完全に削除しますか？';
+  }
+
+  @override
+  String get selectAll => 'すべて選択';
+
+  @override
+  String get deselectAll => 'すべて解除';
+
+  @override
+  String get batchPin => 'ピン留め';
+
+  @override
+  String get batchUnpin => 'ピン留め解除';
+
+  @override
+  String get batchDelete => '削除';
+
+  @override
+  String get batchAddTags => 'タグ追加';
+
+  @override
+  String selectedNotes(int count) {
+    return '$count件選択';
+  }
+
+  @override
+  String deleteSelectedNotes(int count) {
+    return '$count件のノートを削除しますか？';
+  }
+
+  @override
+  String get deleteSelectedNotesConfirm => '選択したノートを削除しますか？ゴミ箱に移動されます。';
+
+  @override
+  String notesDeleted(int count) {
+    return '$count件のノートをゴミ箱に移動しました';
+  }
+
+  @override
+  String notesPinned(int count) {
+    return '$count件のノートをピン留めしました';
+  }
+
+  @override
+  String notesUnpinned(int count) {
+    return '$count件のノートのピン留めを解除しました';
+  }
+
+  @override
+  String get appearance => '外観';
+
+  @override
+  String get theme => 'テーマ';
+
+  @override
+  String get themeLight => 'ライト';
+
+  @override
+  String get themeDark => 'ダーク';
+
+  @override
+  String get themeSystem => 'システム';
+
+  @override
+  String get themeHighContrastLight => '高コントラストライト';
+
+  @override
+  String get themeHighContrastDark => '高コントラストダーク';
+
+  @override
+  String get reduceMotion => 'アニメーションを減らす';
+
+  @override
+  String get reduceMotionDesc => 'アプリ内のアニメーションを最小限にします';
+
+  @override
+  String get reduceMotionSystem => 'システム設定に従う';
+
+  @override
+  String get reduceMotionOn => 'オン（アニメーション無効）';
+
+  @override
+  String get reduceMotionOff => 'オフ（アニメーション有効）';
+
+  @override
+  String get copyInviteCode => '招待コードをコピー';
+
+  @override
+  String get inviteCodeCopied => '招待コードをコピーしました！';
+
+  @override
+  String get enterInviteCode => '招待コードを入力';
+
+  @override
+  String joinSharedNote(String code) {
+    return '共有ノートに参加：$code';
+  }
+
+  @override
+  String get e2eSharingNotice => 'エンドツーエンド暗号化：あなたとコラボレーターのみがこのノートを読めます。';
+
+  @override
+  String get anyoneWithCode => '招待コードを共有して共同編集：';
+
+  @override
+  String get shareSecurely =>
+      'エンドツーエンド暗号化を維持するため、暗号化メッセージアプリなどで安全に招待コードを共有してください。';
+
+  @override
+  String get nooneInRoom => '他に閲覧中はいません';
+
+  @override
+  String get onePersonInRoom => '1人が閲覧中';
+
+  @override
+  String multiplePeopleInRoom(int count) {
+    return '$count人が閲覧中';
+  }
 }

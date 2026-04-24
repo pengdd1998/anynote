@@ -6,6 +6,10 @@
 /// - [slideTransition] -- warm slide+fade used for push routes (note detail,
 ///   editor, settings sub-pages). Uses CupertinoPageRoute on iOS for native feel.
 ///
+/// Both transitions respect the reduce motion accessibility setting. When
+/// animations are disabled, they use [ImmediatePageTransitionsBuilder] for
+/// instant transitions without motion.
+///
 /// Usage in a GoRoute:
 /// ```dart
 /// GoRoute(
@@ -22,6 +26,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'animation_config.dart';
+
 /// Duration for forward page transitions.
 const _kForwardDuration = Duration(milliseconds: 300);
 
@@ -31,17 +37,34 @@ const _kReverseDuration = Duration(milliseconds: 250);
 /// Slide offset for warm transitions (30px worth in logical units).
 const _kSlideOffset = 30.0;
 
+/// Returns the appropriate transition duration based on reduce motion setting.
+Duration _forwardDuration(BuildContext context) {
+  final config = AnimationConfig.of(context);
+  return config.duration(_kForwardDuration);
+}
+
+/// Returns the appropriate reverse transition duration based on reduce motion setting.
+Duration _reverseDuration(BuildContext context) {
+  final config = AnimationConfig.of(context);
+  return config.duration(_kReverseDuration);
+}
+
 /// Creates a [CustomTransitionPage] with a FadeThrough (cross-fade) animation.
 ///
 /// The outgoing page fades out while the incoming page fades in, with a brief
 /// overlap. This is the recommended transition for sibling pages within the
 /// same navigation level (e.g. bottom-nav tab switches).
+///
+/// When reduce motion is enabled, uses [ImmediatePageTransitionsBuilder] for
+/// instant transitions.
 CustomTransitionPage<void> fadeThroughTransition(Widget child) {
   return CustomTransitionPage(
-    transitionDuration: _kForwardDuration,
-    reverseTransitionDuration: _kForwardDuration,
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final config = AnimationConfig.of(context);
+      if (config.reduceMotion) {
+        return child;
+      }
       return _FadeThroughTransition(
         animation: animation,
         secondaryAnimation: secondaryAnimation,
@@ -57,6 +80,8 @@ CustomTransitionPage<void> fadeThroughTransition(Widget child) {
 /// On all other platforms, uses a custom [CustomTransitionPage] with:
 /// - Forward: slide from right 30px + fade in (300ms, easeOutCubic)
 /// - Back: slide to right 30px + fade out (250ms, easeInCubic)
+///
+/// When reduce motion is enabled, uses immediate transitions without animation.
 Page<void> slideTransition(Widget child) {
   // Use CupertinoPageRoute on iOS for native platform feel.
   if (!kIsWeb && Platform.isIOS) {
@@ -64,29 +89,34 @@ Page<void> slideTransition(Widget child) {
   }
 
   return CustomTransitionPage(
-    transitionDuration: _kForwardDuration,
-    reverseTransitionDuration: _kReverseDuration,
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final config = AnimationConfig.of(context);
+      if (config.reduceMotion) {
+        return child;
+      }
+
       // Convert 30px logical offset to a fraction of screen width.
       final screenWidth = MediaQuery.sizeOf(context).width;
       final offsetFraction = (_kSlideOffset / screenWidth).clamp(0.0, 1.0);
+
+      final curve = config.curve(Curves.easeOutCubic);
 
       // Incoming page: slide from right + fade in.
       final slideIn = Tween<Offset>(
         begin: Offset(offsetFraction, 0),
         end: Offset.zero,
-      ).chain(CurveTween(curve: Curves.easeOutCubic));
+      ).chain(CurveTween(curve: curve));
 
       final fadeIn = Tween<double>(begin: 0.0, end: 1.0).chain(
-        CurveTween(curve: Curves.easeOutCubic),
+        CurveTween(curve: curve),
       );
 
       // Outgoing page: slide slightly left.
       final slideOut = Tween<Offset>(
         begin: Offset.zero,
         end: Offset(-offsetFraction * 0.5, 0),
-      ).chain(CurveTween(curve: Curves.easeOutCubic));
+      ).chain(CurveTween(curve: curve));
 
       return SlideTransition(
         position: secondaryAnimation.drive(slideOut),

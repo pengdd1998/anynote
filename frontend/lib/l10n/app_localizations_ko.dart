@@ -1236,7 +1236,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get selectCollections => '컬렉션 선택';
 
   @override
-  String get shareNote => '메모 공유';
+  String get shareNote => '이 노트 공유';
 
   @override
   String get passwordProtection => '비밀번호 보호';
@@ -2465,4 +2465,163 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get off => '끄기';
+
+  @override
+  String get trash => '휴지통';
+
+  @override
+  String get emptyTrash => '휴지통 비우기';
+
+  @override
+  String get emptyTrashConfirm => '휴지통의 모든 노트를 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.';
+
+  @override
+  String get emptyTrashDone => '휴지통을 비웠습니다';
+
+  @override
+  String get noDeletedNotes => '삭제된 노트가 없습니다';
+
+  @override
+  String get restoreNote => '복원';
+
+  @override
+  String get permanentlyDelete => '영구 삭제';
+
+  @override
+  String deletedAt(String date) {
+    return '$date에 삭제됨';
+  }
+
+  @override
+  String deletedOn(String date) {
+    return '$date에 삭제됨';
+  }
+
+  @override
+  String get trashEmpty => '휴지통이 비어있습니다';
+
+  @override
+  String get trashEmptyDesc => '삭제한 노트가 여기에 표시됩니다';
+
+  @override
+  String permanentlyDeleteNoteConfirm(String title) {
+    return '\"$title\"을(를) 영구 삭제하시겠습니까?';
+  }
+
+  @override
+  String get selectAll => '모두 선택';
+
+  @override
+  String get deselectAll => '모두 해제';
+
+  @override
+  String get batchPin => '고정';
+
+  @override
+  String get batchUnpin => '고정 해제';
+
+  @override
+  String get batchDelete => '삭제';
+
+  @override
+  String get batchAddTags => '태그 추가';
+
+  @override
+  String selectedNotes(int count) {
+    return '$count개 선택됨';
+  }
+
+  @override
+  String deleteSelectedNotes(int count) {
+    return '$count개의 노트를 삭제하시겠습니까?';
+  }
+
+  @override
+  String get deleteSelectedNotesConfirm => '선택한 노트를 삭제하시겠습니까? 휴지통으로 이동됩니다.';
+
+  @override
+  String notesDeleted(int count) {
+    return '$count개의 노트를 휴지통으로 이동했습니다';
+  }
+
+  @override
+  String notesPinned(int count) {
+    return '$count개의 노트를 고정했습니다';
+  }
+
+  @override
+  String notesUnpinned(int count) {
+    return '$count개의 노트의 고정을 해제했습니다';
+  }
+
+  @override
+  String get appearance => '모양';
+
+  @override
+  String get theme => '테마';
+
+  @override
+  String get themeLight => '밝게';
+
+  @override
+  String get themeDark => '어둡게';
+
+  @override
+  String get themeSystem => '시스템';
+
+  @override
+  String get themeHighContrastLight => '고대비 밝은 모드';
+
+  @override
+  String get themeHighContrastDark => '고대비 어두운 모드';
+
+  @override
+  String get reduceMotion => '동작 줄이기';
+
+  @override
+  String get reduceMotionDesc => '앱의 애니메이션을 최소화합니다';
+
+  @override
+  String get reduceMotionSystem => '시스템 설정 따르기';
+
+  @override
+  String get reduceMotionOn => '켬(애니메이션 사용 안함)';
+
+  @override
+  String get reduceMotionOff => '끔(애니메이션 사용)';
+
+  @override
+  String get copyInviteCode => '초대 코드 복사';
+
+  @override
+  String get inviteCodeCopied => '초대 코드가 복사되었습니다!';
+
+  @override
+  String get enterInviteCode => '초대 코드 입력';
+
+  @override
+  String joinSharedNote(String code) {
+    return '공유 노트 참가: $code';
+  }
+
+  @override
+  String get e2eSharingNotice => '종단 간 암호화: 사용자와 협력자만 이 노트를 읽을 수 있습니다.';
+
+  @override
+  String get anyoneWithCode => '초대 코드를 공유하여 협업:';
+
+  @override
+  String get shareSecurely =>
+      '종단 간 암호화를 유지하려면 암호화된 메시징 앱 등을 통해 안전하게 초대 코드를 공유하세요.';
+
+  @override
+  String get nooneInRoom => '다른 사람이 보고 있지 않습니다';
+
+  @override
+  String get onePersonInRoom => '1명이 보고 있음';
+
+  @override
+  String multiplePeopleInRoom(int count) {
+    return '$count명이 보고 있음';
+  }
 }

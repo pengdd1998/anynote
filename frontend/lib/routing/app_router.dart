@@ -17,6 +17,7 @@ import '../features/notes/presentation/note_detail_screen.dart';
 import '../features/notes/presentation/note_editor_screen.dart';
 import '../features/notes/presentation/version_history_screen.dart';
 import '../features/notes/presentation/markdown_preview_screen.dart';
+import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/collections/presentation/collections_list_screen.dart';
 import '../features/collections/presentation/collection_detail_screen.dart';
@@ -197,6 +198,12 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/notes/graph',
       pageBuilder: (context, state) => slideTransition(const NoteGraphScreen()),
+    ),
+
+    // Trash screen (pushed from notes screen, no bottom nav shell)
+    GoRoute(
+      path: '/trash',
+      pageBuilder: (context, state) => slideTransition(const TrashScreen()),
     ),
 
     // Deep link route for anynote://notes/{id}.
