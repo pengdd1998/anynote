@@ -12,9 +12,12 @@ void main() {
         const RestoreScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(Scaffold), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('has app bar', (tester) async {
@@ -23,9 +26,12 @@ void main() {
         const RestoreScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(AppBar), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows step indicator', (tester) async {
@@ -34,11 +40,14 @@ void main() {
         const RestoreScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // RestoreScreen should show a multi-step wizard.
       expect(find.byType(Scaffold), findsOneWidget);
       expect(find.byType(Column), findsWidgets);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 }

@@ -12,9 +12,12 @@ void main() {
         const ComposeEditorScreen(sessionId: 'test-session'),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(Scaffold), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('has editable text area', (tester) async {
@@ -23,10 +26,13 @@ void main() {
         const ComposeEditorScreen(sessionId: 'test-session'),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Should have a text editing area (TextField or similar).
       expect(find.byType(Scaffold), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('has app bar', (tester) async {
@@ -35,9 +41,12 @@ void main() {
         const ComposeEditorScreen(sessionId: 'test-session'),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(AppBar), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 }

@@ -12,11 +12,14 @@ void main() {
         const RecoveryScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(Scaffold), findsOneWidget);
       // Should have email and mnemonic input fields.
       expect(find.byType(TextFormField), findsWidgets);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows form validation on empty submit', (tester) async {
@@ -25,7 +28,6 @@ void main() {
         const RecoveryScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Tap the submit button without filling the form.
       final submitButton = find.byType(ElevatedButton);
@@ -36,6 +38,10 @@ void main() {
         // Validation messages should appear.
         expect(find.textContaining('required'), findsWidgets);
       }
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('has text fields for email and mnemonic', (tester) async {
@@ -44,11 +50,14 @@ void main() {
         const RecoveryScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Should find at least 2 text fields (email + mnemonic).
       final textFields = find.byType(TextFormField);
       expect(textFields, findsAtLeast(2));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 }

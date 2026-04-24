@@ -12,9 +12,12 @@ void main() {
         const ImportScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(Scaffold), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('has app bar', (tester) async {
@@ -23,9 +26,12 @@ void main() {
         const ImportScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(AppBar), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows import format options', (tester) async {
@@ -34,10 +40,13 @@ void main() {
         const ImportScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Should show the list view with format options.
       expect(find.byType(ListView), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 }

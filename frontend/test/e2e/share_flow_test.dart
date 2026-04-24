@@ -109,7 +109,8 @@ void main() {
     testWidgets('shows decrypted title after successful server decryption',
         (tester) async {
       final service = _FakeShareService(
-        onDecryptServer: ({required String shareId, String? key, String? password}) {
+        onDecryptServer: (
+            {required String shareId, String? key, String? password}) {
           return DecryptedSharedNote(
             title: 'My Shared Note',
             content: '# Hello World\n\nThis is shared.',
@@ -185,7 +186,8 @@ void main() {
     testWidgets('shows error after incorrect password submission',
         (tester) async {
       final service = _FakeShareService(
-        onDecryptServer: ({required String shareId, String? key, String? password}) {
+        onDecryptServer: (
+            {required String shareId, String? key, String? password}) {
           // Always throw to simulate wrong password.
           throw Exception('wrong password');
         },
@@ -210,11 +212,11 @@ void main() {
   });
 
   group('Share flow - self-contained share (payload path)', () {
-    testWidgets('uses payload decryption for non-hex share ID',
-        (tester) async {
+    testWidgets('uses payload decryption for non-hex share ID', (tester) async {
       var payloadCalled = false;
       final service = _FakeShareService(
-        onDecryptPayload: ({required String payload, String? key, String? password}) {
+        onDecryptPayload: (
+            {required String payload, String? key, String? password}) {
           payloadCalled = true;
           return DecryptedSharedNote(
             title: 'Payload Note',
@@ -245,9 +247,14 @@ void main() {
         shareKeyFragment: null,
       );
 
+      // Get localization from the widget context
+      final BuildContext context =
+          tester.element(find.byType(SharedNoteViewer));
+      final l10n = AppLocalizations.of(context)!;
+
       expect(find.byType(Scaffold), findsOneWidget);
       expect(find.byType(AppBar), findsOneWidget);
-      expect(find.text('Share Note'), findsOneWidget);
+      expect(find.text(l10n.shareNote), findsOneWidget);
     });
   });
 }

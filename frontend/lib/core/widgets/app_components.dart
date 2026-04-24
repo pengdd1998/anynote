@@ -799,6 +799,7 @@ class _StaggeredGroupState extends State<StaggeredGroup>
   late final Animation<double> _opacity;
   late final Animation<Offset> _slide;
   Timer? _delayTimer;
+  bool _hasStartedAnimation = false;
 
   @override
   void initState() {
@@ -812,19 +813,26 @@ class _StaggeredGroupState extends State<StaggeredGroup>
       begin: const Offset(0, 0.03),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+  }
 
-    // Check if reduce motion is enabled
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasStartedAnimation) {
+      _hasStartedAnimation = true;
+      // Check if reduce motion is enabled
+      final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
-    if (reduceMotion) {
-      // Skip animation entirely - show immediately
-      _controller.value = 1.0;
-    } else {
-      // Stagger: each group waits 50ms * staggerIndex before starting.
-      final delay = Duration(milliseconds: 50 * widget.staggerIndex);
-      _delayTimer = Timer(delay, () {
-        if (mounted) _controller.forward();
-      });
+      if (reduceMotion) {
+        // Skip animation entirely - show immediately
+        _controller.value = 1.0;
+      } else {
+        // Stagger: each group waits 50ms * staggerIndex before starting.
+        final delay = Duration(milliseconds: 50 * widget.staggerIndex);
+        _delayTimer = Timer(delay, () {
+          if (mounted) _controller.forward();
+        });
+      }
     }
   }
 

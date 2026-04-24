@@ -51,10 +51,13 @@ void main() {
         const SyncStatusWidget(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(SyncStatusWidget), findsOneWidget);
       expect(find.byType(IconButton), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows cloud_done icon when synced (no pending items)',
@@ -64,11 +67,14 @@ void main() {
         const SyncStatusWidget(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // With default overrides (0 pending, online, not syncing),
       // the icon should be cloud_done.
       expect(find.byIcon(Icons.cloud_done), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows cloud_off icon when offline', (tester) async {
@@ -84,10 +90,13 @@ void main() {
         const SyncStatusWidget(),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // When offline, the icon should be cloud_off.
       expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows sync detail bottom sheet on tap', (tester) async {
@@ -96,7 +105,6 @@ void main() {
         const SyncStatusWidget(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Tap the sync status icon button.
       await tester.tap(find.byType(IconButton));
@@ -109,6 +117,10 @@ void main() {
       expect(find.text('Pending operations'), findsOneWidget);
       expect(find.text('Last synced'), findsOneWidget);
       expect(find.text('Sync now'), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('sync detail shows "Never" when no sync has occurred',
@@ -118,7 +130,6 @@ void main() {
         const SyncStatusWidget(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Open the sync details.
       await tester.tap(find.byType(IconButton));
@@ -127,6 +138,10 @@ void main() {
       // Last synced should show "Never" since _FakeSyncLifecycle
       // returns null for lastSyncAt.
       expect(find.text('Never'), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 
@@ -139,10 +154,13 @@ void main() {
         const OfflineBanner(),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // The OfflineBanner widget should be present but collapsed (0 height).
       expect(find.byType(OfflineBanner), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('is expanded when offline', (tester) async {
@@ -156,11 +174,15 @@ void main() {
         const OfflineBanner(),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // The banner should show "No internet connection" text.
-      expect(find.text('You are offline \u2014 changes will sync when connected'), findsOneWidget);
+      expect(find.text('You are offline — changes will sync when connected'),
+          findsOneWidget);
       expect(find.byIcon(Icons.wifi_off), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows wifi icon and message when offline', (tester) async {
@@ -174,11 +196,15 @@ void main() {
         const OfflineBanner(),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // Verify the banner content.
-      expect(find.text('You are offline \u2014 changes will sync when connected'), findsOneWidget);
+      expect(find.text('You are offline — changes will sync when connected'),
+          findsOneWidget);
       expect(find.byType(OfflineBanner), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 
@@ -190,11 +216,14 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // The notes list screen should include the SyncStatusWidget in the
       // app bar actions.
       expect(find.byType(SyncStatusWidget), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('notes list screen contains offline banner', (tester) async {
@@ -203,10 +232,13 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // The OfflineBanner should be present in the widget tree.
       expect(find.byType(OfflineBanner), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('offline banner visible in notes list when offline',
@@ -221,10 +253,14 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // OfflineBanner should display the offline message.
-      expect(find.text('You are offline \u2014 changes will sync when connected'), findsOneWidget);
+      expect(find.text('You are offline — changes will sync when connected'),
+          findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('sync status shows offline icon in notes list when offline',
@@ -239,13 +275,17 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // The sync status icon should be cloud_off when offline.
       expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('notes list has scaffold structure for refresh', (tester) async {
+    testWidgets('notes list has scaffold structure for refresh',
+        (tester) async {
       final db = createTestDatabase();
 
       // Insert a note so the list is not empty.
@@ -262,7 +302,6 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // The Scaffold and scrollable content area should be present.
       expect(find.byType(Scaffold), findsOneWidget);
@@ -270,6 +309,10 @@ void main() {
       final notes = await db.notesDao.getAllNotes();
       expect(notes.length, 1);
       expect(notes.first.plainTitle, 'Sync Test Note');
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 
@@ -287,9 +330,12 @@ void main() {
         const SyncStatusWidget(),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byIcon(Icons.cloud_done), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('sync status widget shows pending badge when items queued',
@@ -317,13 +363,16 @@ void main() {
         const SyncStatusWidget(),
         overrides: fullOverrides,
       );
-      addTearDown(() => handle.dispose());
 
       // When there are pending items, the icon should be cloud_upload.
       expect(find.byIcon(Icons.cloud_upload), findsOneWidget);
 
       // The badge should show the pending count.
       expect(find.text('3'), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 }

@@ -21,12 +21,15 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // The scaffold, app bar, and FAB should be present.
       expect(find.byType(Scaffold), findsOneWidget);
       expect(find.byType(AppBar), findsOneWidget);
       expect(find.byType(FloatingActionButton), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('has floating action button for creating notes',
@@ -36,11 +39,14 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // FAB should be visible with the add icon.
       expect(find.byType(FloatingActionButton), findsOneWidget);
       expect(find.byIcon(Icons.add), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows create options bottom sheet when FAB is tapped',
@@ -50,7 +56,6 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Tap the FAB to open create options.
       await tester.tap(find.byType(FloatingActionButton));
@@ -58,6 +63,10 @@ void main() {
 
       // A bottom sheet should appear with blank note option.
       expect(find.byType(BottomSheet), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('has sort and grid/list toggle buttons', (tester) async {
@@ -66,13 +75,16 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Sort popup menu button.
       expect(find.byType(PopupMenuButton<String>), findsOneWidget);
 
       // Grid/list toggle icon button.
       expect(find.byIcon(Icons.grid_view), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('has search toggle button', (tester) async {
@@ -81,10 +93,13 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Search icon should be visible.
       expect(find.byIcon(Icons.search), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 
@@ -98,7 +113,6 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // Create a note directly via DAO (simulating what the editor would do).
       await db.notesDao.createNote(
@@ -116,6 +130,10 @@ void main() {
       final savedNote = allNotes.first;
       expect(savedNote.plainTitle, equals('E2E Test Note'));
       expect(savedNote.encryptedContent, contains('enc_'));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets(
@@ -129,7 +147,6 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // Simulate encrypted save via FakeCryptoService prefix.
       const content = 'Secret note content';
@@ -150,6 +167,10 @@ void main() {
       final note = savedNote.first;
       expect(note.encryptedContent, isNotEmpty);
       expect(note.encryptedContent, contains('enc_'));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('can edit an existing note', (tester) async {
@@ -171,7 +192,6 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // Verify original note exists.
       final note = await db.notesDao.getNoteById(noteId);
@@ -191,6 +211,10 @@ void main() {
       final updatedNote = await db.notesDao.getNoteById(noteId);
       expect(updatedNote, isNotNull);
       expect(updatedNote!.plainTitle, equals('Updated Title'));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('deleting a note removes it from active list', (tester) async {
@@ -212,7 +236,6 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // Verify the note is in the database.
       final notes = await db.notesDao.getAllNotes();
@@ -225,6 +248,10 @@ void main() {
       // Verify the note is now soft-deleted.
       final activeNotes = await db.notesDao.getAllNotes();
       expect(activeNotes.length, 0);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 
@@ -239,7 +266,6 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: overrides,
       );
-      addTearDown(() => handle.dispose());
 
       // Step 1: Create a note via DAO.
       const noteId = 'cycle-test-note';
@@ -264,6 +290,10 @@ void main() {
       // Step 4: Verify it is gone from active notes.
       final remainingNotes = await db.notesDao.getAllNotes();
       expect(remainingNotes.length, 0);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 }

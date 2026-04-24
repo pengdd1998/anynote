@@ -60,6 +60,8 @@ Duration _reverseDuration(BuildContext context) {
 CustomTransitionPage<void> fadeThroughTransition(Widget child) {
   return CustomTransitionPage(
     child: child,
+    transitionDuration: _kForwardDuration,
+    reverseTransitionDuration: _kForwardDuration,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       final config = AnimationConfig.of(context);
       if (config.reduceMotion) {
@@ -90,6 +92,8 @@ Page<void> slideTransition(Widget child) {
 
   return CustomTransitionPage(
     child: child,
+    transitionDuration: _kForwardDuration,
+    reverseTransitionDuration: _kReverseDuration,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       final config = AnimationConfig.of(context);
       if (config.reduceMotion) {

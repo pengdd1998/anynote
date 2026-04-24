@@ -24,12 +24,15 @@ void main() {
         const EncryptionScreen(),
         overrides: encryptionOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Let stagger animations and microtasks settle.
       await tester.pumpAndSettle();
 
       expect(find.byType(Scaffold), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 }

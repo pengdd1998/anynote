@@ -24,7 +24,6 @@ void main() {
         const LoginScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Verify core widgets are present.
       expect(find.byType(Scaffold), findsOneWidget);
@@ -38,6 +37,10 @@ void main() {
 
       // Two TextButtons: register link and recover link.
       expect(find.byType(TextButton), findsNWidgets(2));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows lock icon on login screen', (tester) async {
@@ -46,9 +49,12 @@ void main() {
         const LoginScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byIcon(Icons.lock_outline), findsAtLeast(1));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows validation errors for empty fields', (tester) async {
@@ -57,7 +63,6 @@ void main() {
         const LoginScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Tap the sign-in button without filling fields.
       await tester.tap(find.byType(FilledButton));
@@ -66,6 +71,10 @@ void main() {
       // Validation messages should appear for both email and password.
       // The l10n keys produce English strings containing "required".
       expect(find.textContaining('required'), findsNWidgets(2));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('email field accepts input', (tester) async {
@@ -74,7 +83,6 @@ void main() {
         const LoginScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Enter text in the email field.
       final emailField = find.widgetWithText(TextFormField, 'Email');
@@ -83,6 +91,10 @@ void main() {
 
       // Verify the text was entered.
       expect(find.text('test@example.com'), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('password field is obscured', (tester) async {
@@ -91,7 +103,6 @@ void main() {
         const LoginScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Find the password field (TextFormField with "Password" label).
       final passwordFields = find.widgetWithText(TextFormField, 'Password');
@@ -106,6 +117,10 @@ void main() {
         ),
       );
       expect(textField.obscureText, isTrue);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('sign in button triggers loading state with valid input',
@@ -115,7 +130,6 @@ void main() {
         const LoginScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Fill in valid-looking credentials.
       final emailField = find.widgetWithText(TextFormField, 'Email');
@@ -131,6 +145,10 @@ void main() {
 
       // The widget tree should still be intact.
       expect(find.byType(LoginScreen), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('login screen does not crash with invalid submission',
@@ -140,7 +158,6 @@ void main() {
         const LoginScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Fill in credentials and submit.
       final emailField = find.widgetWithText(TextFormField, 'Email');
@@ -154,6 +171,10 @@ void main() {
 
       // The widget tree should still be intact after submission.
       expect(find.byType(LoginScreen), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('register and recover links are present', (tester) async {
@@ -162,10 +183,13 @@ void main() {
         const LoginScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // The register TextButton and recover TextButton should be present.
       expect(find.byType(TextButton), findsNWidgets(2));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 
@@ -176,7 +200,6 @@ void main() {
         const RegisterScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(Scaffold), findsOneWidget);
       expect(find.byType(Form), findsOneWidget);
@@ -189,6 +212,10 @@ void main() {
 
       // TextButton for "already have account".
       expect(find.byType(TextButton), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows person_add icon on register screen', (tester) async {
@@ -197,9 +224,12 @@ void main() {
         const RegisterScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byIcon(Icons.person_add_outlined), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows validation errors for empty fields', (tester) async {
@@ -208,7 +238,6 @@ void main() {
         const RegisterScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Tap create account without filling fields.
       await tester.tap(find.byType(FilledButton));
@@ -216,6 +245,10 @@ void main() {
 
       // Multiple fields should show validation errors containing "required".
       expect(find.textContaining('required'), findsAtLeast(2));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows validation error for short password', (tester) async {
@@ -224,13 +257,11 @@ void main() {
         const RegisterScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Fill in all fields but use a short password.
       final emailField = find.widgetWithText(TextFormField, 'Email');
       final usernameField = find.widgetWithText(TextFormField, 'Username');
-      final passwordFields =
-          find.widgetWithText(TextFormField, 'Password');
+      final passwordFields = find.widgetWithText(TextFormField, 'Password');
 
       await tester.enterText(emailField, 'new@test.com');
       await tester.enterText(usernameField, 'newuser');
@@ -243,6 +274,10 @@ void main() {
 
       // The screen should still be rendered (validation failed).
       expect(find.byType(RegisterScreen), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('password fields are obscured', (tester) async {
@@ -251,7 +286,6 @@ void main() {
         const RegisterScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // Find all TextField descendants inside TextFormField widgets and
       // count those with obscureText == true.
@@ -267,6 +301,10 @@ void main() {
 
       // Two password fields: password and confirm password.
       expect(obscuredCount, equals(2));
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('login link is present on register screen', (tester) async {
@@ -275,10 +313,13 @@ void main() {
         const RegisterScreen(),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // There should be a TextButton to navigate back to login.
       expect(find.byType(TextButton), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 }

@@ -12,9 +12,12 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(Scaffold), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('has app bar', (tester) async {
@@ -23,9 +26,12 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       expect(find.byType(AppBar), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('shows floating action button', (tester) async {
@@ -34,10 +40,13 @@ void main() {
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
-      addTearDown(() => handle.dispose());
 
       // NotesListScreen should have a FAB for creating new notes.
       expect(find.byType(FloatingActionButton), findsOneWidget);
+
+      // Manually dispose to avoid Drift timer leaks
+      await handle.dispose();
+      await tester.pump(const Duration(milliseconds: 100));
     });
   });
 }

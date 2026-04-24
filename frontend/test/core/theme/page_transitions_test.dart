@@ -151,7 +151,8 @@ void main() {
       expect(find.text('Home'), findsOneWidget);
     });
 
-    testWidgets('transition produces SlideTransition and FadeTransition during animation',
+    testWidgets(
+        'transition produces SlideTransition and FadeTransition during animation',
         (tester) async {
       final router = GoRouter(
         routes: [
