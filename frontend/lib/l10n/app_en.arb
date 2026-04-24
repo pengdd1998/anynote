@@ -2600,5 +2600,17 @@
   "@agentComplete": { "description": "Success status for AI agent" },
 
   "viewBacklinks": "View backlinks",
-  "@viewBacklinks": { "description": "Tooltip for backlinks button in editor" }
+  "@viewBacklinks": { "description": "Tooltip for backlinks button in editor" },
+
+  "backgroundSync": "Background sync",
+  "@backgroundSync": { "description": "Settings toggle title for periodic background sync" },
+
+  "backgroundSyncDesc": "Sync notes periodically when the app is closed",
+  "@backgroundSyncDesc": { "description": "Settings toggle subtitle for background sync" },
+
+  "on": "On",
+  "@on": { "description": "Toggle state label: enabled" },
+
+  "off": "Off",
+  "@off": { "description": "Toggle state label: disabled" }
 }

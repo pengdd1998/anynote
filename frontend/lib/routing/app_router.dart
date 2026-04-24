@@ -199,6 +199,36 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => slideTransition(const NoteGraphScreen()),
     ),
 
+    // Deep link route for anynote://notes/{id}.
+    //
+    // This route is the go_router integration point for home screen widget
+    // taps and other deep link entry points that target a specific note.
+    // The [DeepLinkHandler] class handles the initial URI parsing and
+    // validation, then navigates to /notes/{id} for valid links or to
+    // /deep-link/notes/{id} for re-validation when the note may not yet
+    // be available locally (e.g. sync-in-progress scenarios).
+    //
+    // When the note is found, this route redirects to the standard note
+    // detail screen. When not found, it redirects to the notes list with
+    // an error SnackBar.
+    GoRoute(
+      path: '/deep-link/notes/:id',
+      redirect: (context, state) {
+        final noteId = state.pathParameters['id'];
+        if (noteId == null || noteId.isEmpty) return '/notes';
+
+        // Return null to let the pageBuilder render the validation screen.
+        // The redirect cannot be async, so we defer the DB lookup to the
+        // page widget itself.
+        return null;
+      },
+      pageBuilder: (context, state) => slideTransition(
+        _DeepLinkNoteScreen(
+          noteId: state.pathParameters['id']!,
+        ),
+      ),
+    ),
+
     // Main app with bottom navigation shell
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
@@ -663,6 +693,72 @@ class _DeferredLoaderState extends State<_DeferredLoader> {
         ),
       );
     }
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// Intermediate screen for deep link note navigation.
+///
+/// Validates that the note referenced by a deep link (e.g. from a home screen
+/// widget or an `anynote://notes/{id}` URL) exists in the local database.
+///
+/// - If the note is found and not soft-deleted, immediately redirects to
+///   `/notes/{id}` (the standard note detail screen).
+/// - If the note is not found, redirects to the notes list and shows an
+///   error SnackBar so the user understands why the link did not work.
+class _DeepLinkNoteScreen extends ConsumerStatefulWidget {
+  final String noteId;
+
+  const _DeepLinkNoteScreen({required this.noteId});
+
+  @override
+  ConsumerState<_DeepLinkNoteScreen> createState() =>
+      _DeepLinkNoteScreenState();
+}
+
+class _DeepLinkNoteScreenState extends ConsumerState<_DeepLinkNoteScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _validateAndNavigate();
+  }
+
+  Future<void> _validateAndNavigate() async {
+    final db = ref.read(databaseProvider);
+    final note = await db.notesDao.getNoteById(widget.noteId);
+
+    if (!mounted) return;
+
+    if (note != null && note.deletedAt == null) {
+      // Note exists: navigate to the standard detail screen.
+      context.go('/notes/${widget.noteId}');
+    } else {
+      // Note not found: redirect to notes list with error feedback.
+      final l10n = AppLocalizations.of(context);
+      context.go('/notes');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        if (messenger != null) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n?.noteNotFound ?? 'Note not found',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Show a loading indicator while the DB lookup is in progress.
+    // The user will only see this briefly (typically < 100ms).
     return const Scaffold(
       body: Center(child: CircularProgressIndicator()),
     );

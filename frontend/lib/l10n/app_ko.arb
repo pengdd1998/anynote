@@ -1418,5 +1418,9 @@
   "summarizeNotes": "노트 요약",
   "createNote": "노트 만들기",
   "agentFailed": "작업 실패",
-  "agentComplete": "작업 완료"
+  "agentComplete": "작업 완료",
+  "backgroundSync": "백그라운드 동기화",
+  "backgroundSyncDesc": "앱이 닫혀 있을 때 주기적으로 노트 동기화",
+  "on": "켜기",
+  "off": "끄기"
 }

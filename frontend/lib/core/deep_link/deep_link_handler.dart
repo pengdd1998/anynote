@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../database/app_database.dart';
+import '../../l10n/app_localizations.dart';
+import '../../main.dart';
+
 /// Regular expression for validating identifiers (UUIDs or similar).
 /// Accepts alphanumeric characters and hyphens, matching standard UUID v4
 /// format like "550e8400-e29b-41d4-a716-446655440000".
@@ -13,9 +17,14 @@ const _maxSegmentLength = 256;
 ///
 /// Supported deep link patterns:
 ///   - anynote://notes/new         -> create a new note
-///   - anynote://notes/{id}        -> open specific note
+///   - anynote://notes/{id}        -> open specific note (validates existence)
 ///   - anynote://share/{id}        -> open shared note
 ///   - anynote://share/received    -> share extension callback
+///
+/// For the `anynote://notes/{id}` pattern, the handler first validates the ID
+/// format, then checks whether the note exists in the local database. If the
+/// note is not found (e.g. it was deleted or never synced to this device), the
+/// user is redirected to the notes list with an error SnackBar.
 class DeepLinkHandler {
   /// Validates a URI path segment.
   ///
@@ -69,6 +78,10 @@ class DeepLinkHandler {
   /// All URI segments are validated before being used in navigation paths.
   /// Invalid or malformed URIs are rejected with a debug log warning and no
   /// navigation occurs.
+  ///
+  /// For note deep links (`anynote://notes/{id}`), the note's existence is
+  /// verified against the local database before navigation. If the note does
+  /// not exist, the user lands on the notes list with an error SnackBar.
   static void handleUri(BuildContext context, Uri uri) {
     // Deep link URIs like "anynote://notes/new" are parsed by Dart's URI
     // parser with "notes" as the host and "new" as the first path segment.
@@ -90,7 +103,7 @@ class DeepLinkHandler {
           context.push('/notes/new');
         } else if (rawSegments.length == 2) {
           if (!_isValidId(rawSegments[1])) return;
-          context.push('/notes/${rawSegments[1]}');
+          _handleNoteDeepLink(context, rawSegments[1]);
         }
         break;
       case 'share':
@@ -106,5 +119,66 @@ class DeepLinkHandler {
         }
         break;
     }
+  }
+
+  /// Handle an `anynote://notes/{id}` deep link by validating the note exists.
+  ///
+  /// Checks the local database for the given [noteId]. If found, navigates
+  /// directly to the note detail screen. If not found (deleted, never synced,
+  /// or invalid), redirects to the notes list and shows an error SnackBar.
+  ///
+  /// Falls back to direct navigation when the database provider is not
+  /// available (e.g. during testing or before the full app initializes).
+  static void _handleNoteDeepLink(BuildContext context, String noteId) {
+    // Perform the database lookup asynchronously, then navigate on the next
+    // frame so that the BuildContext is still valid.
+    () async {
+      // Try to access the database. If globalContainer is not initialized
+      // (test environment, early lifecycle), fall back to direct navigation.
+      // The note detail screen itself handles the "not found" case.
+      AppDatabase? db;
+      try {
+        db = globalContainer.read(databaseProvider);
+      } catch (_) {
+        // globalContainer not initialized or databaseProvider not overridden.
+        // Fall through to direct navigation.
+      }
+
+      if (db == null) {
+        // No database available: navigate directly and let the detail screen
+        // handle missing notes (it shows "Note not found" via FutureBuilder).
+        if (context.mounted) context.push('/notes/$noteId');
+        return;
+      }
+
+      final note = await db.notesDao.getNoteById(noteId);
+
+      if (!context.mounted) return;
+
+      if (note != null && note.deletedAt == null) {
+        // Note exists and is not soft-deleted: navigate to detail screen.
+        context.push('/notes/$noteId');
+      } else {
+        // Note not found or deleted: go to notes list and show error.
+        final l10n = AppLocalizations.of(context);
+        context.go('/notes');
+        // Post-frame callback ensures the Scaffold is mounted before showing
+        // the SnackBar, since context.go rebuilds the widget tree.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          final messenger = ScaffoldMessenger.maybeOf(context);
+          if (messenger != null) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  l10n?.noteNotFound ?? 'Note not found',
+                ),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        });
+      }
+    }();
   }
 }

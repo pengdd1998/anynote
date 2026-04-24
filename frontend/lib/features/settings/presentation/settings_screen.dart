@@ -12,6 +12,7 @@ import '../data/settings_providers.dart';
 import 'widgets/about_section.dart';
 import 'widgets/account_section.dart';
 import 'widgets/sign_out_section.dart';
+import 'widgets/sync_section.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -129,6 +130,7 @@ class SettingsScreen extends ConsumerWidget {
                       _syncStatusItem(l10n, syncStatusAsync),
                     ],
                   ),
+                  const SyncSection(),
                 ],
               ),
             ),

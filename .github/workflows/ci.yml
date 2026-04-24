@@ -48,6 +48,18 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64
+          working-directory: backend
+
+      - name: Security scan (gosec)
+        continue-on-error: true
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          gosec ./...
+
       - name: Test with coverage
         run: |
           go test ./... \
@@ -71,6 +83,12 @@ jobs:
           name: backend-coverage
           path: backend/coverage.out
           retention-days: 14
+
+      - name: Vulnerability check (govulncheck)
+        continue-on-error: true
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
 
   # ── Frontend ─────────────────────────────────────────────────────────────
   frontend:
@@ -127,6 +145,52 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
           retention-days: 14
+
+      - name: Dependency audit
+        continue-on-error: true
+        run: flutter pub outdated
+
+  # ── Integration Tests ────────────────────────────────────────────────────
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: anynote
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: anynote_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U anynote"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DATABASE_URL: "postgres://anynote:test@localhost:5432/anynote_test?sslmode=disable"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go 1.25
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run integration tests
+        run: go test -tags=integration -v -count=1 ./internal/repository/ ./internal/handler/
 
   # ── Database Migrations ──────────────────────────────────────────────────
   migrations:

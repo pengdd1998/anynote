@@ -1418,5 +1418,9 @@
   "summarizeNotes": "总结笔记",
   "createNote": "创建笔记",
   "agentFailed": "操作失败",
-  "agentComplete": "操作完成"
+  "agentComplete": "操作完成",
+  "backgroundSync": "后台同步",
+  "backgroundSyncDesc": "在应用关闭时定期同步笔记",
+  "on": "开",
+  "off": "关"
 }

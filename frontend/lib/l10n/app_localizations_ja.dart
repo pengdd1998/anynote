@@ -2451,4 +2451,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get viewBacklinks => 'バックリンクを表示';
+
+  @override
+  String get backgroundSync => 'バックグラウンド同期';
+
+  @override
+  String get backgroundSyncDesc => 'アプリが閉じている間も定期的にノートを同期';
+
+  @override
+  String get on => 'オン';
+
+  @override
+  String get off => 'オフ';
 }

@@ -20,6 +20,7 @@ import 'core/platform/platform_utils.dart';
 import 'core/share/receive_share_service.dart';
 import 'core/storage/window_state.dart';
 import 'core/sync/sync_lifecycle.dart';
+import 'core/sync/background_sync_service.dart';
 import 'core/error/connectivity_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/app_menu_bar.dart';
@@ -134,6 +135,9 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
         // Initialize connectivity-aware sync trigger so that queued
         // offline operations are flushed when connectivity is restored.
         globalContainer.read(connectivitySyncTriggerProvider);
+        // Initialize background sync (WorkManager on Android, BGTaskScheduler
+        // on iOS). Re-registers the periodic task if the user had enabled it.
+        BackgroundSyncService.initialize();
         // Initialize push notifications (graceful no-op if Firebase is
         // not configured). Only init after auth is confirmed.
         if (globalContainer.read(authStateProvider)) {
@@ -230,7 +234,7 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
 
-    return AppShortcuts(
+    return AppKeyboardShortcuts(
       child: AppMenuBar(
         child: MediaQuery.withClampedTextScaling(
           minScaleFactor: 0.8,

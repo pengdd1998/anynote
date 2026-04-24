@@ -4581,6 +4581,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View backlinks'**
   String get viewBacklinks;
+
+  /// Settings toggle title for periodic background sync
+  ///
+  /// In en, this message translates to:
+  /// **'Background sync'**
+  String get backgroundSync;
+
+  /// Settings toggle subtitle for background sync
+  ///
+  /// In en, this message translates to:
+  /// **'Sync notes periodically when the app is closed'**
+  String get backgroundSyncDesc;
+
+  /// Toggle state label: enabled
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get on;
+
+  /// Toggle state label: disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get off;
 }
 
 class _AppLocalizationsDelegate

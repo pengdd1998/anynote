@@ -2547,4 +2547,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewBacklinks => 'View backlinks';
+
+  @override
+  String get backgroundSync => 'Background sync';
+
+  @override
+  String get backgroundSyncDesc =>
+      'Sync notes periodically when the app is closed';
+
+  @override
+  String get on => 'On';
+
+  @override
+  String get off => 'Off';
 }

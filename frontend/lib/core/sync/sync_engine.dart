@@ -6,6 +6,7 @@ import '../database/app_database.dart';
 import '../performance/performance_monitor.dart';
 import '../network/api_client.dart';
 import 'conflict_resolver.dart';
+import 'sync_progress.dart';
 
 /// Sync engine orchestrates bidirectional sync between client and server
 /// with full E2E encryption.
@@ -25,17 +26,49 @@ class SyncEngine {
   SyncEngine(this._db, this._api, this._crypto);
 
   /// Full sync cycle: pull then push.
+  ///
+  /// Emits progress events via [SyncProgressNotifier] so the UI can display
+  /// a progress bar and current-item label.
   Future<SyncResult> sync() async {
     final pm = PerformanceMonitor.instance;
+    final notifier = SyncProgressNotifier.instance;
     pm.start('sync');
-    final pullResult = await pull();
-    final pushResult = await push();
-    pm.end('sync');
-    return SyncResult(
-      pulledCount: pullResult,
-      pushedCount: pushResult.accepted.length,
-      conflicts: pushResult.conflicts,
-    );
+
+    try {
+      final pullResult = await pull();
+      final pushResult = await push();
+      pm.end('sync');
+
+      notifier.emit(
+        SyncProgress(
+          phase: SyncPhase.done,
+          completedCount: pullResult + pushResult.accepted.length,
+          totalCount: pullResult + pushResult.accepted.length,
+          completedAt: DateTime.now(),
+        ),
+      );
+
+      return SyncResult(
+        pulledCount: pullResult,
+        pushedCount: pushResult.accepted.length,
+        conflicts: pushResult.conflicts,
+      );
+    } catch (e) {
+      pm.end('sync');
+      notifier.emit(
+        SyncProgress(
+          phase: SyncPhase.error,
+          failedItems: [
+            SyncFailedItem(
+              itemId: '',
+              itemType: '',
+              error: e.toString(),
+            ),
+          ],
+        ),
+      );
+      rethrow;
+    }
   }
 
   /// Pull remote changes, decrypt, and apply to local DB.
@@ -47,13 +80,29 @@ class SyncEngine {
   Future<int> pull() async {
     final syncMetaDao = _db.syncMetaDao;
     final sinceVersion = await syncMetaDao.getLastSyncedVersion('all');
+    final notifier = SyncProgressNotifier.instance;
 
     final response = await _api.syncPull(sinceVersion);
+
+    final total = response.blobs.length;
+    notifier.emit(
+      SyncProgress(
+        phase: SyncPhase.pulling,
+        completedCount: 0,
+        totalCount: total,
+      ),
+    );
 
     var count = 0;
     for (final rawBlob in response.blobs) {
       // Parse the raw JSON blob from the API response into a typed SyncBlob.
       final blob = _parseBlob(rawBlob as Map<String, dynamic>);
+      notifier.emit(
+        notifier.current.copyWith(
+          currentItemLabel: '${blob.itemType} ${blob.itemId.substring(0, 8)}',
+          completedCount: count,
+        ),
+      );
       switch (blob.itemType) {
         case 'note':
           await _applyNoteBlob(blob);
@@ -69,6 +118,7 @@ class SyncEngine {
           break;
       }
       count++;
+      notifier.emit(notifier.current.copyWith(completedCount: count));
     }
 
     // Update sync meta with latest version
@@ -87,6 +137,7 @@ class SyncEngine {
       return SyncPushResponse(accepted: [], conflicts: []);
     }
 
+    final notifier = SyncProgressNotifier.instance;
     final items = <SyncPushItem>[];
 
     // Gather and encrypt unsynced notes
@@ -95,13 +146,15 @@ class SyncEngine {
       final encryptedData = await _encryptNoteForPush(note);
       if (encryptedData == null) continue;
 
-      items.add(SyncPushItem(
-        itemId: note.id,
-        itemType: 'note',
-        version: note.version,
-        encryptedData: encryptedData,
-        blobSize: encryptedData.length,
-      ),);
+      items.add(
+        SyncPushItem(
+          itemId: note.id,
+          itemType: 'note',
+          version: note.version,
+          encryptedData: encryptedData,
+          blobSize: encryptedData.length,
+        ),
+      );
     }
 
     // Gather and encrypt unsynced tags
@@ -110,28 +163,33 @@ class SyncEngine {
       final encryptedData = await _encryptTagForPush(tag);
       if (encryptedData == null) continue;
 
-      items.add(SyncPushItem(
-        itemId: tag.id,
-        itemType: 'tag',
-        version: tag.version,
-        encryptedData: encryptedData,
-        blobSize: encryptedData.length,
-      ),);
+      items.add(
+        SyncPushItem(
+          itemId: tag.id,
+          itemType: 'tag',
+          version: tag.version,
+          encryptedData: encryptedData,
+          blobSize: encryptedData.length,
+        ),
+      );
     }
 
     // Gather and encrypt unsynced collections
-    final unsyncedCollections = await _db.collectionsDao.getUnsyncedCollections();
+    final unsyncedCollections =
+        await _db.collectionsDao.getUnsyncedCollections();
     for (final collection in unsyncedCollections) {
       final encryptedData = await _encryptCollectionForPush(collection);
       if (encryptedData == null) continue;
 
-      items.add(SyncPushItem(
-        itemId: collection.id,
-        itemType: 'collection',
-        version: collection.version,
-        encryptedData: encryptedData,
-        blobSize: encryptedData.length,
-      ),);
+      items.add(
+        SyncPushItem(
+          itemId: collection.id,
+          itemType: 'collection',
+          version: collection.version,
+          encryptedData: encryptedData,
+          blobSize: encryptedData.length,
+        ),
+      );
     }
 
     // Gather and encrypt unsynced generated contents
@@ -140,18 +198,29 @@ class SyncEngine {
       final encryptedData = await _encryptContentForPush(content);
       if (encryptedData == null) continue;
 
-      items.add(SyncPushItem(
-        itemId: content.id,
-        itemType: 'content',
-        version: content.version,
-        encryptedData: encryptedData,
-        blobSize: encryptedData.length,
-      ),);
+      items.add(
+        SyncPushItem(
+          itemId: content.id,
+          itemType: 'content',
+          version: content.version,
+          encryptedData: encryptedData,
+          blobSize: encryptedData.length,
+        ),
+      );
     }
 
     if (items.isEmpty) {
       return SyncPushResponse(accepted: [], conflicts: []);
     }
+
+    notifier.emit(
+      SyncProgress(
+        phase: SyncPhase.pushing,
+        completedCount: 0,
+        totalCount: items.length,
+        currentItemLabel: 'Encrypting ${items.length} items',
+      ),
+    );
 
     final rawResponse = await _api.syncPush(
       SyncPushRequest(blobs: items).toJson(),
@@ -359,7 +428,10 @@ class SyncEngine {
 
   /// Attempt to decrypt a blob. Returns null if crypto is not unlocked
   /// or if decryption fails (corrupted blob, wrong key, etc.).
-  Future<String?> _tryDecryptBlob(String itemId, List<int> encryptedData) async {
+  Future<String?> _tryDecryptBlob(
+    String itemId,
+    List<int> encryptedData,
+  ) async {
     if (!_crypto.isUnlocked) return null;
     try {
       final encryptedBase64 = base64Encode(encryptedData);
@@ -400,7 +472,9 @@ class SyncEngine {
     if (data is List) {
       return Uint8List.fromList(data.cast<int>());
     }
-    throw FormatException('Unexpected encrypted_data format: ${data.runtimeType}');
+    throw FormatException(
+      'Unexpected encrypted_data format: ${data.runtimeType}',
+    );
   }
 
   /// Parse the push response JSON from the server.
@@ -411,10 +485,12 @@ class SyncEngine {
     return SyncPushResponse(
       accepted: acceptedRaw.map((e) => e.toString()).toList(),
       conflicts: conflictsRaw
-          .map((e) => SyncConflict(
-                itemId: (e as Map<String, dynamic>)['item_id'] as String,
-                serverVersion: e['server_version'] as int,
-              ),)
+          .map(
+            (e) => SyncConflict(
+              itemId: (e as Map<String, dynamic>)['item_id'] as String,
+              serverVersion: e['server_version'] as int,
+            ),
+          )
           .toList(),
     );
   }

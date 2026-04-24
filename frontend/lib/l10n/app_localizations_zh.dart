@@ -2439,4 +2439,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get viewBacklinks => '查看反向链接';
+
+  @override
+  String get backgroundSync => '后台同步';
+
+  @override
+  String get backgroundSyncDesc => '在应用关闭时定期同步笔记';
+
+  @override
+  String get on => '开';
+
+  @override
+  String get off => '关';
 }

@@ -1,0 +1,152 @@
+name: Build iOS IPA
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: '3.41.7'
+
+jobs:
+  build:
+    name: Build & Upload to TestFlight
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Flutter Setup ─────────────────────────────────────────────────────
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Flutter version
+        run: flutter --version
+
+      # ── Dependencies & Code Generation ────────────────────────────────────
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate Drift code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Generate l10n
+        run: flutter gen-l10n
+
+      # ── iOS Toolchain ─────────────────────────────────────────────────────
+      - name: Install CocoaPods
+        run: gem install cocoapods
+
+      - name: Install iOS pods
+        run: cd ios && pod install && cd ..
+
+      - name: Install Fastlane (bundle install)
+        run: cd ios && bundle install && cd ..
+
+      # ── Code Signing ──────────────────────────────────────────────────────
+      # Decode the P12 certificate and provisioning profile from GitHub Secrets
+      # and import them into a temporary keychain for the Xcode build.
+      - name: Install Apple certificate and provisioning profile
+        env:
+          IOS_P12_BASE64: ${{ secrets.IOS_P12_BASE64 }}
+          IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
+          IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Create temporary files for the decoded secrets
+          P12_PATH="$RUNNER_TEMP/build_certificate.p12"
+          PP_PATH="$RUNNER_TEMP/build_pp.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+
+          # Decode base64 secrets into binary files
+          echo "$IOS_P12_BASE64" | base64 --decode > "$P12_PATH"
+          echo "$IOS_PROVISION_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
+
+          # Create and configure a temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import the P12 certificate into the temporary keychain
+          security import "$P12_PATH" \
+            -P "$IOS_P12_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          # Allow the keychain to be used without prompting
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+
+          # Add the temporary keychain to the search list
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+
+          # Install the provisioning profile
+          PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PP_DIR"
+          cp "$PP_PATH" "$PP_DIR/"
+
+          echo "Code signing setup complete"
+
+      # ── Build & Upload ────────────────────────────────────────────────────
+      # The Fastlane `beta` lane builds the IPA and uploads to TestFlight.
+      # App Store Connect authentication uses the APP_STORE_CONNECT_API_KEY_*
+      # secrets expected by Fastlane's app_store_connect_api_key.
+      - name: Build IPA and upload to TestFlight
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+          FASTLANE_ITC_TEAM_ID: ${{ secrets.FASTLANE_ITC_TEAM_ID }}
+          FASTLANE_TEAM_ID: ${{ secrets.FASTLANE_TEAM_ID }}
+        run: cd ios && bundle exec fastlane beta
+
+      # ── Artifact ──────────────────────────────────────────────────────────
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anynote-ipa
+          path: frontend/ios/build/AnyNote.ipa
+
+      # ── Release ───────────────────────────────────────────────────────────
+      # On tag pushes, attach the IPA to a GitHub Release (same pattern as
+      # build-android.yml).
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: frontend/ios/build/AnyNote.ipa
+          generate_release_notes: true
+          body: |
+            ## AnyNote ${{ github.ref_name }}
+
+            ### iOS Installation
+            1. The IPA is uploaded to TestFlight automatically
+            2. Alternatively, download `AnyNote.ipa` below for sideloading
+
+      # ── Cleanup ───────────────────────────────────────────────────────────
+      # Always remove the temporary keychain and decoded secrets, even if
+      # previous steps failed.
+      - name: Clean up keychain and provisioning profile
+        if: always()
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          if [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH"
+          fi
+          rm -f "$RUNNER_TEMP/build_certificate.p12"
+          rm -f "$RUNNER_TEMP/build_pp.mobileprovision"

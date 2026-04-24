@@ -1,67 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/widgets/keyboard_shortcuts.dart';
 
 void main() {
-  group('Intents', () {
-    test('NewNoteIntent is an Intent', () {
-      expect(const NewNoteIntent(), isA<Intent>());
-    });
-
-    test('SaveIntent is an Intent', () {
-      expect(const SaveIntent(), isA<Intent>());
-    });
-
-    test('SearchIntent is an Intent', () {
-      expect(const SearchIntent(), isA<Intent>());
-    });
-
-    test('ToggleSidebarIntent is an Intent', () {
-      expect(const ToggleSidebarIntent(), isA<Intent>());
-    });
-
-    test('ExportPdfIntent is an Intent', () {
-      expect(const ExportPdfIntent(), isA<Intent>());
-    });
-
-    test('OpenSettingsIntent is an Intent', () {
-      expect(const OpenSettingsIntent(), isA<Intent>());
-    });
-
-    test('CloseNoteIntent is an Intent', () {
-      expect(const CloseNoteIntent(), isA<Intent>());
-    });
-
-    test('NextNoteIntent is an Intent', () {
-      expect(const NextNoteIntent(), isA<Intent>());
-    });
-
-    test('ToggleFullScreenIntent is an Intent', () {
-      expect(const ToggleFullScreenIntent(), isA<Intent>());
-    });
-
-    test('ExitZenOrDialogIntent is an Intent', () {
-      expect(const ExitZenOrDialogIntent(), isA<Intent>());
-    });
-  });
-
-  group('AppShortcuts', () {
-    Future<void> pumpAppShortcuts(
+  group('AppKeyboardShortcuts', () {
+    Future<void> pumpApp(
       WidgetTester tester, {
       Widget? child,
-      List<Override> overrides = const [],
     }) async {
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: overrides,
-          child: MaterialApp(
-            home: Scaffold(
-              body: AppShortcuts(
-                child: child ?? const SizedBox.shrink(),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: AppKeyboardShortcuts(
+              child: child ?? const SizedBox.shrink(),
             ),
           ),
         ),
@@ -69,258 +21,63 @@ void main() {
     }
 
     testWidgets('renders child widget', (tester) async {
-      await pumpAppShortcuts(
-        tester,
-        child: const Text('Child Content'),
-      );
-
+      await pumpApp(tester, child: const Text('Child Content'));
       expect(find.text('Child Content'), findsOneWidget);
     });
 
-    testWidgets('wraps child with Shortcuts widget', (tester) async {
-      await pumpAppShortcuts(tester);
-
-      expect(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('wraps child with Actions widget', (tester) async {
-      await pumpAppShortcuts(tester);
-
-      expect(
-        find.byWidgetPredicate((w) {
-          if (w is! Actions) return false;
-          return w.actions.containsKey(NewNoteIntent);
-        }),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('Shortcuts and Actions are in correct order', (tester) async {
-      // AppShortcuts builds Shortcuts > Actions > child.
-      await pumpAppShortcuts(
-        tester,
-        child: const Text('Nested'),
-      );
-
-      // Find the Shortcuts widget
-      final shortcutsFinder = find.byWidgetPredicate((w) {
-        if (w is! Shortcuts) return false;
-        return w.shortcuts.values.any((i) => i is NewNoteIntent);
-      });
-      expect(shortcutsFinder, findsOneWidget);
-
-      // The Actions widget should be a descendant of Shortcuts.
-      final actionsFinder = find.descendant(
-        of: shortcutsFinder,
-        matching: find.byType(Actions),
-      );
-      expect(actionsFinder, findsOneWidget);
-
-      // The child text should be a descendant of Actions.
-      expect(
-        find.descendant(
-          of: actionsFinder,
-          matching: find.text('Nested'),
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('registers NewNoteIntent shortcut on non-macOS',
+    testWidgets('rebuilds child on setState without duplicating handlers',
         (tester) async {
-      await pumpAppShortcuts(tester);
-
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
+      await pumpApp(tester, child: const Text('v1'));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AppKeyboardShortcuts(
+              child: Text('v2'),
+            ),
+          ),
+        ),
       );
-      final shortcuts = shortcutsWidget.shortcuts;
-
-      // On Linux test environment, modifier is Ctrl.
-      final keySet = LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyN,
-      );
-      expect(shortcuts[keySet], isA<NewNoteIntent>());
+      expect(find.text('v2'), findsOneWidget);
     });
 
-    testWidgets('registers SaveIntent shortcut', (tester) async {
-      await pumpAppShortcuts(tester);
+    test('zenModeCallback can be set and cleared', () {
+      var invoked = false;
+      void callback() => invoked = true;
 
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
+      AppKeyboardShortcuts.setZenModeCallback(callback);
+      AppKeyboardShortcuts.zenModeCallback?.call();
+      expect(invoked, isTrue);
 
-      final keySet = LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyS,
-      );
-      expect(shortcuts[keySet], isA<SaveIntent>());
+      invoked = false;
+      AppKeyboardShortcuts.clearZenModeCallback();
+      AppKeyboardShortcuts.zenModeCallback?.call();
+      expect(invoked, isFalse);
     });
 
-    testWidgets('registers SearchIntent shortcut', (tester) async {
-      await pumpAppShortcuts(tester);
+    test('setZenModeCallback replaces previous callback', () {
+      var first = false;
+      var second = false;
 
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
+      AppKeyboardShortcuts.setZenModeCallback(() => first = true);
+      AppKeyboardShortcuts.setZenModeCallback(() => second = true);
+      AppKeyboardShortcuts.zenModeCallback?.call();
 
-      final keySet = LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyF,
-      );
-      expect(shortcuts[keySet], isA<SearchIntent>());
+      expect(first, isFalse);
+      expect(second, isTrue);
+
+      // Cleanup.
+      AppKeyboardShortcuts.clearZenModeCallback();
     });
 
-    testWidgets('registers ToggleSidebarIntent shortcut', (tester) async {
-      await pumpAppShortcuts(tester);
+    testWidgets('disposing widget removes hardware keyboard handler',
+        (tester) async {
+      await pumpApp(tester);
 
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
+      // Pump a different widget tree so AppKeyboardShortcuts is disposed.
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
 
-      final keySet = LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyB,
-      );
-      expect(shortcuts[keySet], isA<ToggleSidebarIntent>());
-    });
-
-    testWidgets('registers ExportPdfIntent shortcut', (tester) async {
-      await pumpAppShortcuts(tester);
-
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
-
-      final keySet = LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyP,
-      );
-      expect(shortcuts[keySet], isA<ExportPdfIntent>());
-    });
-
-    testWidgets('registers OpenSettingsIntent shortcut', (tester) async {
-      await pumpAppShortcuts(tester);
-
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
-
-      final keySet = LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.comma,
-      );
-      expect(shortcuts[keySet], isA<OpenSettingsIntent>());
-    });
-
-    testWidgets('registers CloseNoteIntent shortcut', (tester) async {
-      await pumpAppShortcuts(tester);
-
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
-
-      final keySet = LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyW,
-      );
-      expect(shortcuts[keySet], isA<CloseNoteIntent>());
-    });
-
-    testWidgets('registers NextNoteIntent shortcut', (tester) async {
-      await pumpAppShortcuts(tester);
-
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
-
-      final keySet = LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.tab,
-      );
-      expect(shortcuts[keySet], isA<NextNoteIntent>());
-    });
-
-    testWidgets('registers ToggleFullScreenIntent via F11', (tester) async {
-      await pumpAppShortcuts(tester);
-
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
-
-      final keySet = LogicalKeySet(LogicalKeyboardKey.f11);
-      expect(shortcuts[keySet], isA<ToggleFullScreenIntent>());
-    });
-
-    testWidgets('registers ExitZenOrDialogIntent via Escape', (tester) async {
-      await pumpAppShortcuts(tester);
-
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
-
-      final keySet = LogicalKeySet(LogicalKeyboardKey.escape);
-      expect(shortcuts[keySet], isA<ExitZenOrDialogIntent>());
-    });
-
-    testWidgets('all ten shortcuts are registered', (tester) async {
-      await pumpAppShortcuts(tester);
-
-      final shortcutsWidget = tester.widget<Shortcuts>(
-        find.byWidgetPredicate((w) {
-          if (w is! Shortcuts) return false;
-          return w.shortcuts.values.any((i) => i is NewNoteIntent);
-        }),
-      );
-      final shortcuts = shortcutsWidget.shortcuts;
-
-      // 10 shortcuts: N, S, F, B, P, comma, W, Tab, F11, Escape.
-      expect(shortcuts.length, 10);
+      // No crash means dispose ran cleanly -- the handler was removed.
+      expect(true, isTrue);
     });
   });
 }

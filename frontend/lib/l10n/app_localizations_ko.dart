@@ -2453,4 +2453,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get viewBacklinks => '백링크 보기';
+
+  @override
+  String get backgroundSync => '백그라운드 동기화';
+
+  @override
+  String get backgroundSyncDesc => '앱이 닫혀 있을 때 주기적으로 노트 동기화';
+
+  @override
+  String get on => '켜기';
+
+  @override
+  String get off => '끄기';
 }

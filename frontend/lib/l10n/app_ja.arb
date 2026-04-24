@@ -1418,5 +1418,9 @@
   "summarizeNotes": "ノートを要約",
   "createNote": "ノートを作成",
   "agentFailed": "アクション失敗",
-  "agentComplete": "アクション完了"
+  "agentComplete": "アクション完了",
+  "backgroundSync": "バックグラウンド同期",
+  "backgroundSyncDesc": "アプリが閉じている間も定期的にノートを同期",
+  "on": "オン",
+  "off": "オフ"
 }

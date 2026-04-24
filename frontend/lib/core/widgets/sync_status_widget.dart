@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/settings/data/settings_providers.dart';
 import '../error/connectivity_provider.dart';
 import '../sync/sync_lifecycle.dart';
+import '../sync/sync_progress.dart';
 
 /// Compact sync status widget for use in the app bar.
 ///
@@ -11,8 +12,9 @@ import '../sync/sync_lifecycle.dart';
 /// pending operations count when there are queued items, and tints the
 /// icon differently when the device is offline.
 ///
-/// Tapping the widget shows a bottom sheet with sync details: pending
-/// count, last sync time, and failed operations.
+/// When a sync is active, the tooltip shows progress details like
+/// "Pulling 3/12 notes...". Tapping the widget shows a bottom sheet
+/// with sync details, a progress bar, and failed-item retry controls.
 class SyncStatusWidget extends ConsumerStatefulWidget {
   const SyncStatusWidget({super.key});
 
@@ -44,8 +46,10 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
     final queueManager = ref.watch(syncQueueManagerProvider);
     final connectivity = ref.watch(connectivityProvider);
     final lifecycle = ref.watch(syncLifecycleProvider);
+    final syncProgressAsync = ref.watch(syncProgressProvider);
     final isOffline = connectivity.valueOrNull == false;
     final isSyncing = lifecycle.isActive && !isOffline;
+    final syncProgress = syncProgressAsync.valueOrNull ?? SyncProgress.idle;
 
     // Animate the sync icon rotation when syncing.
     if (isSyncing) {
@@ -66,6 +70,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
             isOffline,
             lifecycle.lastSyncAt,
             queueManager,
+            syncProgress,
           ),
           icon: Stack(
             clipBehavior: Clip.none,
@@ -107,7 +112,12 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
                 ),
             ],
           ),
-          tooltip: _tooltipForState(isOffline, isSyncing, pendingCount),
+          tooltip: _tooltipForState(
+            isOffline,
+            isSyncing,
+            pendingCount,
+            syncProgress,
+          ),
         );
       },
     );
@@ -126,10 +136,24 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
     return Colors.green;
   }
 
-  String _tooltipForState(bool isOffline, bool isSyncing, int pendingCount) {
+  String _tooltipForState(
+    bool isOffline,
+    bool isSyncing,
+    int pendingCount,
+    SyncProgress progress,
+  ) {
     if (isOffline) return 'Offline -- changes will sync when connected';
+    if (isSyncing && progress.isActive) {
+      final label = progress.phase == SyncPhase.pulling ? 'Pulling' : 'Pushing';
+      if (progress.totalCount > 0) {
+        return '$label ${progress.completedCount}/${progress.totalCount}...';
+      }
+      return '$label...';
+    }
     if (isSyncing) return 'Syncing...';
-    if (pendingCount > 0) return '$pendingCount pending operation${pendingCount == 1 ? '' : 's'}';
+    if (pendingCount > 0) {
+      return '$pendingCount pending operation${pendingCount == 1 ? '' : 's'}';
+    }
     return 'All changes synced';
   }
 
@@ -139,6 +163,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
     bool isOffline,
     DateTime? lastSyncAt,
     dynamic queueManager,
+    SyncProgress progress,
   ) {
     final theme = Theme.of(context);
     final lastSyncText = lastSyncAt != null
@@ -179,12 +204,48 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
                 label: 'Last synced',
                 value: lastSyncText,
               ),
+
+              // Progress bar when sync is active.
+              if (progress.isActive) ...[
+                const SizedBox(height: 16),
+                _buildProgressBar(context, progress),
+              ],
+
+              // Failed items with retry info.
+              if (progress.failedItems.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Failed items',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                ...progress.failedItems.map(
+                  (item) => ListTile(
+                    dense: true,
+                    leading: Icon(
+                      Icons.error_outline,
+                      size: 18,
+                      color: theme.colorScheme.error,
+                    ),
+                    title: Text(
+                      item.error.length > 60
+                          ? '${item.error.substring(0, 60)}...'
+                          : item.error,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.tonal(
                   onPressed: () {
                     Navigator.of(ctx).pop();
+                    SyncProgressNotifier.instance.reset();
                     ref.read(syncLifecycleProvider).syncNow();
                   },
                   child: const Text('Sync now'),
@@ -194,6 +255,63 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
           ),
         ),
       ),
+    );
+  }
+
+  /// Build a linear progress bar with phase label and item counter.
+  Widget _buildProgressBar(BuildContext context, SyncProgress progress) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              progress.phase == SyncPhase.pulling
+                  ? Icons.download
+                  : Icons.upload,
+              size: 16,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              progress.phaseLabel,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            if (progress.totalCount > 0)
+              Text(
+                '${progress.completedCount}/${progress.totalCount}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress.totalCount > 0 ? progress.progress : null,
+            minHeight: 4,
+          ),
+        ),
+        if (progress.currentItemLabel != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            progress.currentItemLabel!,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 11,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ],
     );
   }
 
