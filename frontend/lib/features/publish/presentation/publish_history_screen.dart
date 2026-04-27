@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/publish_providers.dart';
 
@@ -35,7 +36,10 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
               PopupMenuItem(value: null, child: Text(l10n.all)),
               PopupMenuItem(value: 'published', child: Text(l10n.published)),
               PopupMenuItem(value: 'failed', child: Text(l10n.failed)),
-              PopupMenuItem(value: 'publishing', child: Text(l10n.publishingStatus)),
+              PopupMenuItem(
+                value: 'publishing',
+                child: Text(l10n.publishingStatus),
+              ),
               PopupMenuItem(value: 'pending', child: Text(l10n.pending)),
             ],
           ),
@@ -55,8 +59,11 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.filter_list_off,
-                            size: 48, color: Colors.grey.shade400,),
+                        Icon(
+                          Icons.filter_list_off,
+                          size: 48,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           l10n.noPublicationsWithStatus(_statusFilter ?? ''),
@@ -64,8 +71,7 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
                         ),
                         const SizedBox(height: 16),
                         OutlinedButton(
-                          onPressed: () =>
-                              setState(() => _statusFilter = null),
+                          onPressed: () => setState(() => _statusFilter = null),
                           child: Text(l10n.clearFilter),
                         ),
                       ],
@@ -91,25 +97,9 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 12),
-              Text(l10n.failedToLoadPublishHistory),
-              const SizedBox(height: 8),
-              Text('$error',
-                  style:
-                      const TextStyle(fontSize: 12, color: Colors.grey),),
-              const SizedBox(height: 16),
-              FilledButton.tonal(
-                onPressed: () =>
-                    ref.invalidate(publishHistoryProvider),
-                child: Text(l10n.retry),
-              ),
-            ],
-          ),
+        error: (error, _) => ErrorStateWidget(
+          message: '${l10n.failedToLoadPublishHistory}\n$error',
+          onRetry: () => ref.invalidate(publishHistoryProvider),
         ),
       ),
     );
@@ -298,13 +288,19 @@ class _PublishDetailSheet extends ConsumerWidget {
           _detailRow(context, l10n.created, detail['created_at']?.toString()),
           if (detail['published_at'] != null)
             _detailRow(
-                context, l10n.publishedDate, detail['published_at']?.toString(),),
+              context,
+              l10n.publishedDate,
+              detail['published_at']?.toString(),
+            ),
           if (detail['platform_url'] != null)
             _detailRow(context, l10n.url, detail['platform_url']?.toString()),
           if (detail['error_message'] != null &&
               detail['error_message'].toString().isNotEmpty)
             _detailRow(
-                context, l10n.error, detail['error_message']?.toString(),),
+              context,
+              l10n.error,
+              detail['error_message']?.toString(),
+            ),
           const SizedBox(height: 16),
           Text(
             l10n.contentLabel,
@@ -331,18 +327,10 @@ class _PublishDetailSheet extends ConsumerWidget {
           child: CircularProgressIndicator(),
         ),
       ),
-      error: (error, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 36, color: Colors.red),
-              const SizedBox(height: 8),
-              Text(AppLocalizations.of(context)?.failedToLoadDetail('$error') ?? 'Failed to load detail: $error'),
-            ],
-          ),
-        ),
+      error: (error, _) => ErrorStateWidget(
+        message: AppLocalizations.of(context)?.failedToLoadDetail('$error') ??
+            'Failed to load detail: $error',
+        onRetry: () => ref.invalidate(publishDetailProvider(id)),
       ),
     );
   }

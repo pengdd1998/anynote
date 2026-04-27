@@ -42,7 +42,16 @@ void main() {
       );
 
       // NotesListScreen should have a FAB for creating new notes.
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      // Exclude the secondary "Scroll to top" FAB.
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is FloatingActionButton &&
+              w.tooltip != null &&
+              w.tooltip != 'Scroll to top',
+        ),
+        findsOneWidget,
+      );
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();

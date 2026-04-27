@@ -13,6 +13,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:anynote/features/notes/presentation/notes_list_screen.dart';
 import '../helpers/test_app_helper.dart';
 
+/// Finder that matches the main "Create new note" FloatingActionButton,
+/// excluding the secondary "Scroll to top" FAB.
+Finder _mainFabFinder() => find.byWidgetPredicate(
+      (w) =>
+          w is FloatingActionButton &&
+          w.tooltip != null &&
+          w.tooltip != 'Scroll to top',
+    );
+
 void main() {
   group('Note CRUD flow - NotesListScreen', () {
     testWidgets('renders empty state when no notes exist', (tester) async {
@@ -25,7 +34,7 @@ void main() {
       // The scaffold, app bar, and FAB should be present.
       expect(find.byType(Scaffold), findsOneWidget);
       expect(find.byType(AppBar), findsOneWidget);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(_mainFabFinder(), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -41,7 +50,7 @@ void main() {
       );
 
       // FAB should be visible with the add icon.
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(_mainFabFinder(), findsOneWidget);
       expect(find.byIcon(Icons.add), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
@@ -58,7 +67,7 @@ void main() {
       );
 
       // Tap the FAB to open create options.
-      await tester.tap(find.byType(FloatingActionButton));
+      await tester.tap(_mainFabFinder());
       await tester.pumpAndSettle();
 
       // A bottom sheet should appear with blank note option.

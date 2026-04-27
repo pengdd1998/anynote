@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,7 +40,6 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [
-          // -- Status card -----------------------------------------------------
           StaggeredGroup(
             staggerIndex: 0,
             child: Padding(
@@ -53,8 +52,6 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
               ),
             ),
           ),
-
-          // -- Cross-platform encryption warning (web/native incompatibility) ---
           StaggeredGroup(
             staggerIndex: 1,
             child: Padding(
@@ -66,168 +63,44 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
           // -- Encrypted items -------------------------------------------------
           StaggeredGroup(
             staggerIndex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SettingsGroupHeader(title: l10n.encryptedItems),
-                SettingsGroup(
-                  children: [
-                    countsAsync.when(
-                      data: (counts) => Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SettingsItem(
-                            icon: Icons.note_outlined,
-                            title: l10n.notes,
-                            subtitle: l10n.itemsCount(counts['notes'] ?? 0),
-                          ),
-                          SettingsItem(
-                            icon: Icons.label_outline,
-                            title: l10n.tagsLabel,
-                            subtitle: l10n.itemsCount(counts['tags'] ?? 0),
-                          ),
-                          SettingsItem(
-                            icon: Icons.folder_outlined,
-                            title: l10n.collectionsLabel,
-                            subtitle:
-                                l10n.itemsCount(counts['collections'] ?? 0),
-                          ),
-                          SettingsItem(
-                            icon: Icons.auto_awesome_outlined,
-                            title: l10n.aiContent,
-                            subtitle:
-                                l10n.itemsCount(counts['ai_content'] ?? 0),
-                          ),
-                        ],
-                      ),
-                      loading: () => const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                      ),
-                      error: (_, __) => Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SettingsItem(
-                            icon: Icons.note_outlined,
-                            title: l10n.notes,
-                            subtitle: '--',
-                          ),
-                          SettingsItem(
-                            icon: Icons.label_outline,
-                            title: l10n.tagsLabel,
-                            subtitle: '--',
-                          ),
-                          SettingsItem(
-                            icon: Icons.folder_outlined,
-                            title: l10n.collectionsLabel,
-                            subtitle: '--',
-                          ),
-                          SettingsItem(
-                            icon: Icons.auto_awesome_outlined,
-                            title: l10n.aiContent,
-                            subtitle: '--',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            child: _EncryptedItemsGroup(
+              countsAsync: countsAsync,
+              l10n: l10n,
             ),
           ),
 
           // -- Recovery key ----------------------------------------------------
           StaggeredGroup(
             staggerIndex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SettingsGroupHeader(title: l10n.recoveryKeySection),
-                SettingsGroup(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.recoveryKeyUsage,
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 12),
-                          if (_showRecoveryKey)
-                            _RecoveryKeyDisplay(
-                              onHidden: () {
-                                setState(() => _showRecoveryKey = false);
-                              },
-                            )
-                          else
-                            FilledButton.tonal(
-                              onPressed: _verifyAndShowRecoveryKey,
-                              child: Text(l10n.viewRecoveryKey),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            child: _RecoveryKeySection(
+              l10n: l10n,
+              theme: theme,
+              showRecoveryKey: _showRecoveryKey,
+              onVerifyAndShow: _verifyAndShowRecoveryKey,
+              onHideRecoveryKey: () => setState(() => _showRecoveryKey = false),
             ),
           ),
 
           // -- Password & key management ---------------------------------------
           StaggeredGroup(
             staggerIndex: 4,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SettingsGroupHeader(title: l10n.changePassword),
-                SettingsGroup(
-                  children: [
-                    SettingsItem(
-                      icon: Icons.key_outlined,
-                      title: l10n.changePassword,
-                      subtitle: l10n.reEncryptsData,
-                      trailing: const Icon(Icons.chevron_right, size: 20),
-                      onTap: _isChangingPassword
-                          ? null
-                          : _showChangePasswordDialog,
-                    ),
-                  ],
-                ),
-              ],
+            child: _PasswordManagementSection(
+              l10n: l10n,
+              isChangingPassword: _isChangingPassword,
+              onChangePassword: _showChangePasswordDialog,
             ),
           ),
 
           // -- Danger zone -----------------------------------------------------
           StaggeredGroup(
             staggerIndex: 5,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SettingsGroupHeader(title: l10n.dangerZone),
-                _DangerZoneGroup(
-                  isDeleting: _isDeleting,
-                  onDeleteAll: _confirmDeleteAll,
-                  onExportBackup: _exportBackup,
-                  onImportBackup: _importBackup,
-                  l10n: l10n,
-                  colorScheme: colorScheme,
-                ),
-              ],
+            child: _DangerZoneSection(
+              isDeleting: _isDeleting,
+              onDeleteAll: _confirmDeleteAll,
+              onExportBackup: _exportBackup,
+              onImportBackup: _importBackup,
+              l10n: l10n,
+              colorScheme: colorScheme,
             ),
           ),
         ],
@@ -272,7 +145,9 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                     );
                   }
                 }
-              } catch (_) {
+              } catch (e) {
+                debugPrint(
+                    '[EncryptionScreen] password verification failed: $e');
                 nav.pop();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -544,7 +419,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
     if (kIsWeb) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This feature is not available on web')),
+          SnackBar(content: Text(l10n.notSupportedOnWeb)),
         );
       }
       return;
@@ -588,7 +463,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
     if (kIsWeb) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This feature is not available on web')),
+          SnackBar(content: Text(l10n.notSupportedOnWeb)),
         );
       }
       return;
@@ -645,6 +520,238 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
         );
       }
     }
+  }
+}
+
+// =============================================================================
+// Encrypted items group
+// =============================================================================
+
+/// Displays a list of encrypted item counts grouped under a header.
+class _EncryptedItemsGroup extends StatelessWidget {
+  final AsyncValue<Map<String, int>> countsAsync;
+  final AppLocalizations l10n;
+
+  const _EncryptedItemsGroup({
+    required this.countsAsync,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SettingsGroupHeader(title: l10n.encryptedItems),
+        SettingsGroup(
+          children: [
+            countsAsync.when(
+              data: (counts) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsItem(
+                    icon: Icons.note_outlined,
+                    title: l10n.notes,
+                    subtitle: l10n.itemsCount(counts['notes'] ?? 0),
+                  ),
+                  SettingsItem(
+                    icon: Icons.label_outline,
+                    title: l10n.tagsLabel,
+                    subtitle: l10n.itemsCount(counts['tags'] ?? 0),
+                  ),
+                  SettingsItem(
+                    icon: Icons.folder_outlined,
+                    title: l10n.collectionsLabel,
+                    subtitle: l10n.itemsCount(counts['collections'] ?? 0),
+                  ),
+                  SettingsItem(
+                    icon: Icons.auto_awesome_outlined,
+                    title: l10n.aiContent,
+                    subtitle: l10n.itemsCount(counts['ai_content'] ?? 0),
+                  ),
+                ],
+              ),
+              loading: () => const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+              error: (_, __) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsItem(
+                    icon: Icons.note_outlined,
+                    title: l10n.notes,
+                    subtitle: '--',
+                  ),
+                  SettingsItem(
+                    icon: Icons.label_outline,
+                    title: l10n.tagsLabel,
+                    subtitle: '--',
+                  ),
+                  SettingsItem(
+                    icon: Icons.folder_outlined,
+                    title: l10n.collectionsLabel,
+                    subtitle: '--',
+                  ),
+                  SettingsItem(
+                    icon: Icons.auto_awesome_outlined,
+                    title: l10n.aiContent,
+                    subtitle: '--',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// =============================================================================
+// Recovery key section
+// =============================================================================
+
+/// Displays the recovery key section with a verify/show button and key display.
+class _RecoveryKeySection extends StatelessWidget {
+  final AppLocalizations l10n;
+  final ThemeData theme;
+  final bool showRecoveryKey;
+  final VoidCallback onVerifyAndShow;
+  final VoidCallback onHideRecoveryKey;
+
+  const _RecoveryKeySection({
+    required this.l10n,
+    required this.theme,
+    required this.showRecoveryKey,
+    required this.onVerifyAndShow,
+    required this.onHideRecoveryKey,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SettingsGroupHeader(title: l10n.recoveryKeySection),
+        SettingsGroup(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.recoveryKeyUsage,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 12),
+                  if (showRecoveryKey)
+                    _RecoveryKeyDisplay(onHidden: onHideRecoveryKey)
+                  else
+                    FilledButton.tonal(
+                      onPressed: onVerifyAndShow,
+                      child: Text(l10n.viewRecoveryKey),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// =============================================================================
+// Password management section
+// =============================================================================
+
+/// Displays the password change settings item.
+class _PasswordManagementSection extends StatelessWidget {
+  final AppLocalizations l10n;
+  final bool isChangingPassword;
+  final VoidCallback onChangePassword;
+
+  const _PasswordManagementSection({
+    required this.l10n,
+    required this.isChangingPassword,
+    required this.onChangePassword,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SettingsGroupHeader(title: l10n.changePassword),
+        SettingsGroup(
+          children: [
+            SettingsItem(
+              icon: Icons.key_outlined,
+              title: l10n.changePassword,
+              subtitle: l10n.reEncryptsData,
+              trailing: const Icon(Icons.chevron_right, size: 20),
+              onTap: isChangingPassword ? null : onChangePassword,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// =============================================================================
+// Danger zone section (wrapper with header)
+// =============================================================================
+
+/// Wraps the danger zone group with a section header.
+class _DangerZoneSection extends StatelessWidget {
+  final bool isDeleting;
+  final VoidCallback onDeleteAll;
+  final VoidCallback onExportBackup;
+  final VoidCallback onImportBackup;
+  final AppLocalizations l10n;
+  final ColorScheme colorScheme;
+
+  const _DangerZoneSection({
+    required this.isDeleting,
+    required this.onDeleteAll,
+    required this.onExportBackup,
+    required this.onImportBackup,
+    required this.l10n,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SettingsGroupHeader(title: l10n.dangerZone),
+        _DangerZoneGroup(
+          isDeleting: isDeleting,
+          onDeleteAll: onDeleteAll,
+          onExportBackup: onExportBackup,
+          onImportBackup: onImportBackup,
+          l10n: l10n,
+          colorScheme: colorScheme,
+        ),
+      ],
+    );
   }
 }
 

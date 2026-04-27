@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 
 import '../crypto/crypto_service.dart';
 import '../database/app_database.dart';
@@ -274,7 +275,10 @@ class SyncEngine {
         final envelope = jsonDecode(decrypted) as Map<String, dynamic>;
         plainContent = envelope['content'] as String?;
         plainTitle = envelope['title'] as String?;
-      } catch (_) {
+      } catch (e) {
+        debugPrint(
+          '[SyncEngine] Note envelope parse error, using raw content: $e',
+        );
         // Fallback: treat the entire decrypted payload as the note content.
         plainContent = decrypted;
       }
@@ -378,7 +382,8 @@ class SyncEngine {
       final plaintext = jsonEncode(envelope);
       final encrypted = await _crypto.encryptForItem(note.id, plaintext);
       return base64Decode(encrypted);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[SyncEngine] Note encryption for push failed: $e');
       return null;
     }
   }
@@ -391,7 +396,8 @@ class SyncEngine {
         return base64Decode(encrypted);
       }
       return _existingEncryptedData(tag.encryptedName);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[SyncEngine] Tag encryption for push failed: $e');
       return null;
     }
   }
@@ -405,7 +411,8 @@ class SyncEngine {
         return base64Decode(encrypted);
       }
       return _existingEncryptedData(collection.encryptedTitle);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[SyncEngine] Collection encryption for push failed: $e');
       return null;
     }
   }
@@ -419,7 +426,8 @@ class SyncEngine {
         return base64Decode(encrypted);
       }
       return _existingEncryptedData(content.encryptedBody);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[SyncEngine] Content encryption for push failed: $e');
       return null;
     }
   }
@@ -436,7 +444,8 @@ class SyncEngine {
     try {
       final encryptedBase64 = base64Encode(encryptedData);
       return _crypto.decryptForItem(itemId, encryptedBase64);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[SyncEngine] Blob decryption failed for item $itemId: $e');
       return null;
     }
   }
@@ -447,7 +456,10 @@ class SyncEngine {
   Uint8List? _existingEncryptedData(String encryptedBase64) {
     try {
       return base64Decode(encryptedBase64);
-    } catch (_) {
+    } catch (e) {
+      debugPrint(
+        '[SyncEngine] Base64 decode of existing encrypted data failed: $e',
+      );
       return null;
     }
   }

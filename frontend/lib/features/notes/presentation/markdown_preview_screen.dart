@@ -6,10 +6,14 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
+import '../../../core/constants/app_durations.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/toc_extractor.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
+import 'widgets/toc_sheet.dart';
+import 'widgets/print_preview_sheet.dart';
 
 /// Full-screen markdown preview with LaTeX math support.
 ///
@@ -18,7 +22,7 @@ import '../../../main.dart';
 /// parsing, then substituted with [FlutterMath] widgets during rendering:
 /// - `$$...$$` renders as centered block equations
 /// - `$...$` renders as inline math
-class MarkdownPreviewScreen extends ConsumerWidget {
+class MarkdownPreviewScreen extends ConsumerStatefulWidget {
   /// ID of the note to preview.
   final String noteId;
 
@@ -44,13 +48,39 @@ class MarkdownPreviewScreen extends ConsumerWidget {
   static const _inlinePlaceholderPrefix = '\x00LATEX_INLINE_';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MarkdownPreviewScreen> createState() =>
+      _MarkdownPreviewScreenState();
+}
+
+class _MarkdownPreviewScreenState extends ConsumerState<MarkdownPreviewScreen> {
+  /// GlobalKey to access the scroll view state for TOC navigation.
+  final _scrollViewKey = GlobalKey<_MarkdownScrollViewState>();
+
+  /// Opens the TOC bottom sheet and handles heading selection.
+  void _openTocSheet(String content) {
+    final tocEntries = extractToc(content);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => TocSheet(
+        entries: tocEntries,
+        onHeadingSelected: (entry) {
+          _scrollViewKey.currentState?.scrollToHeading(entry);
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final db = ref.read(databaseProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: FutureBuilder<Note?>(
-          future: db.notesDao.getNoteById(noteId),
+          future: db.notesDao.getNoteById(widget.noteId),
           builder: (context, snapshot) {
             if (snapshot.hasData && snapshot.data != null) {
               return Text(snapshot.data!.plainTitle ?? 'Preview');
@@ -59,8 +89,33 @@ class MarkdownPreviewScreen extends ConsumerWidget {
           },
         ),
         actions: [
+          // Table of contents button.
           FutureBuilder<Note?>(
-            future: db.notesDao.getNoteById(noteId),
+            future: db.notesDao.getNoteById(widget.noteId),
+            builder: (context, snapshot) {
+              if (snapshot.hasData &&
+                  snapshot.data != null &&
+                  snapshot.data!.plainContent != null &&
+                  snapshot.data!.plainContent!.isNotEmpty) {
+                return A11yUtils.labeledButton(
+                  label: AppLocalizations.of(context)?.tableOfContents ??
+                      'Table of Contents',
+                  child: IconButton(
+                    icon: const Icon(Icons.list_alt),
+                    tooltip:
+                        AppLocalizations.of(context)?.tableOfContents ?? 'TOC',
+                    onPressed: () {
+                      _openTocSheet(snapshot.data!.plainContent!);
+                    },
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          // Share button.
+          FutureBuilder<Note?>(
+            future: db.notesDao.getNoteById(widget.noteId),
             builder: (context, snapshot) {
               if (snapshot.hasData &&
                   snapshot.data != null &&
@@ -80,10 +135,44 @@ class MarkdownPreviewScreen extends ConsumerWidget {
               return const SizedBox.shrink();
             },
           ),
+          // Print button.
+          FutureBuilder<Note?>(
+            future: db.notesDao.getNoteById(widget.noteId),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data != null) {
+                return A11yUtils.labeledButton(
+                  label: AppLocalizations.of(context)?.printNote ?? 'Print',
+                  child: IconButton(
+                    icon: const Icon(Icons.print_outlined),
+                    tooltip: AppLocalizations.of(context)?.printNote ?? 'Print',
+                    onPressed: () {
+                      final note = snapshot.data!;
+                      final l10n = AppLocalizations.of(context)!;
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20)),
+                        ),
+                        builder: (_) => PrintPreviewSheet(
+                          note: note,
+                          title: note.plainTitle ?? l10n.untitled,
+                          content: note.plainContent ?? '',
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
       ),
       body: FutureBuilder<Note?>(
-        future: db.notesDao.getNoteById(noteId),
+        future: db.notesDao.getNoteById(widget.noteId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -91,9 +180,7 @@ class MarkdownPreviewScreen extends ConsumerWidget {
 
           final l10n = AppLocalizations.of(context);
 
-          if (snapshot.hasError ||
-              !snapshot.hasData ||
-              snapshot.data == null) {
+          if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
@@ -146,7 +233,10 @@ class MarkdownPreviewScreen extends ConsumerWidget {
             );
           }
 
-          return _MarkdownScrollView(content: content);
+          return _MarkdownScrollView(
+            key: _scrollViewKey,
+            content: content,
+          );
         },
       ),
     );
@@ -161,7 +251,7 @@ class MarkdownPreviewScreen extends ConsumerWidget {
 class _MarkdownScrollView extends StatefulWidget {
   final String content;
 
-  const _MarkdownScrollView({required this.content});
+  const _MarkdownScrollView({super.key, required this.content});
 
   @override
   State<_MarkdownScrollView> createState() => _MarkdownScrollViewState();
@@ -174,6 +264,40 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Scrolls to the approximate position of the given [TocEntry] heading.
+  ///
+  /// Since [MarkdownBody] does not expose per-element offsets, we estimate
+  /// the scroll position by calculating the character offset of the heading
+  /// line relative to the total content length, then mapping that proportion
+  /// to the scroll extent.
+  void scrollToHeading(TocEntry entry) {
+    if (!_scrollController.hasClients) return;
+
+    final content = widget.content;
+    final lines = content.split('\n');
+    if (entry.lineIndex >= lines.length) return;
+
+    // Calculate the character offset of the heading line.
+    var charOffset = 0;
+    for (var i = 0; i < entry.lineIndex; i++) {
+      charOffset += lines[i].length + 1; // +1 for the newline character.
+    }
+
+    // Proportional scroll: map character offset to scroll extent.
+    final totalChars = content.length;
+    if (totalChars == 0) return;
+
+    final proportion = charOffset / totalChars;
+    final maxExtent = _scrollController.position.maxScrollExtent;
+    final targetOffset = (proportion * maxExtent).clamp(0.0, maxExtent);
+
+    _scrollController.animateTo(
+      targetOffset,
+      duration: AppDurations.animation,
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
@@ -215,10 +339,8 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
     if (latexExpressions.isNotEmpty) {
       builders['p'] = _LatexParagraphBuilder(
         latexExpressions: latexExpressions,
-        blockPlaceholderPrefix:
-            MarkdownPreviewScreen._blockPlaceholderPrefix,
-        inlinePlaceholderPrefix:
-            MarkdownPreviewScreen._inlinePlaceholderPrefix,
+        blockPlaceholderPrefix: MarkdownPreviewScreen._blockPlaceholderPrefix,
+        inlinePlaceholderPrefix: MarkdownPreviewScreen._inlinePlaceholderPrefix,
         textStyle: theme.textTheme.bodyLarge,
       );
     }
@@ -265,16 +387,12 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
         color: codeBlockBg,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: isDark
-              ? const Color(0xFF3D3835)
-              : const Color(0xFFE8DFD5),
+          color: isDark ? const Color(0xFF3D3835) : const Color(0xFFE8DFD5),
         ),
       ),
       codeblockAlign: WrapAlignment.start,
       blockquote: TextStyle(
-        color: isDark
-            ? const Color(0xFFA3988E)
-            : const Color(0xFF6B5E54),
+        color: isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
         fontStyle: FontStyle.italic,
       ),
       blockquoteDecoration: BoxDecoration(
@@ -282,9 +400,7 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
         borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       listBullet: TextStyle(
-        color: isDark
-            ? const Color(0xFFA3988E)
-            : const Color(0xFF6B5E54),
+        color: isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
       ),
       tableBody: TextStyle(
         fontSize: 14,
@@ -335,8 +451,7 @@ class _CodeBlockBuilder extends MarkdownElementBuilder {
       code = element.textContent;
     }
 
-    final bgColor =
-        isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill;
+    final bgColor = isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill;
     final textColor =
         isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
     final borderColor =

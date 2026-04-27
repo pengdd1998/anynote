@@ -1,34 +1,97 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
+import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import '../crypto/crypto_service.dart';
 import '../database/app_database.dart';
+import '../database/daos/note_properties_dao.dart';
+import '../storage/image_storage.dart';
+import '../../features/notes/domain/markdown_export_service.dart';
 import 'import_models.dart';
+
+/// Configuration options for the import pipeline.
+class ImportOptions {
+  /// Whether to preserve dates from YAML frontmatter.
+  final bool preserveDates;
+
+  /// Whether to import tags from frontmatter.
+  final bool importTags;
+
+  /// Whether to import recognized properties (status, priority, etc.).
+  final bool importProperties;
+
+  /// Whether this is an Obsidian vault import (enables wiki link and
+  /// image handling).
+  final bool isObsidianImport;
+
+  /// Root directory of the Obsidian vault (used for resolving relative image
+  /// paths). Only used when [isObsidianImport] is true.
+  final String? obsidianVaultPath;
+
+  const ImportOptions({
+    this.preserveDates = true,
+    this.importTags = true,
+    this.importProperties = true,
+    this.isObsidianImport = false,
+    this.obsidianVaultPath,
+  });
+}
+
+/// Recognized frontmatter keys that map to [NoteProperties].
+/// Values indicate the property type: 'text' or 'date'.
+const _propertyKeys = <String, String>{
+  'status': 'text',
+  'priority': 'text',
+  'due_date': 'date',
+  'start_date': 'date',
+};
+
+/// Image extensions handled during Obsidian vault import.
+const _imageExtensions = {
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.svg',
+  '.bmp',
+};
 
 /// Service for importing Markdown files into the AnyNote database.
 ///
 /// The import pipeline has two stages:
 ///   1. **Parsing** -- recursively scans a directory for `.md` files and
-///      extracts frontmatter metadata (title, date, tags).
+///      extracts frontmatter metadata (title, date, tags, properties).
 ///   2. **Importing** -- encrypts each parsed note with [CryptoService] and
-///      persists it via [NotesDao], creating tag associations as needed.
+///      persists it via [NotesDao], creating tag associations and note
+///      properties as needed.
 ///
 /// Both stages emit [ImportProgress] events so the UI can display a progress
 /// indicator. The convenience method [importFromDirectory] chains both stages
 /// and returns a final [ImportResult].
+///
+/// When [ImportOptions.isObsidianImport] is true, the service additionally:
+///   - Converts `[[wiki links]]` to the app's internal `[[title]]` format.
+///   - Copies referenced images to the app's image storage.
+///   - Handles `![[image.png]]` embed syntax.
 class MarkdownImportService {
   MarkdownImportService({
     required CryptoService cryptoService,
     required AppDatabase database,
+    ImportOptions options = const ImportOptions(),
   })  : _crypto = cryptoService,
-        _db = database;
+        _db = database,
+        _options = options;
 
   final CryptoService _crypto;
   final AppDatabase _db;
+  final ImportOptions _options;
 
   static const _uuid = Uuid();
 
@@ -111,6 +174,8 @@ class MarkdownImportService {
   ///   - The note row is created via [NotesDao.createNote].
   ///   - Tags are looked up or created and associated via
   ///     [NotesDao.addTagToNote].
+  ///   - Properties from frontmatter are persisted via
+  ///     [NotePropertiesDao].
   Stream<ImportProgress> importNotes(List<ImportedNote> notes) async* {
     final total = notes.length;
     final notesDao = _db.notesDao;
@@ -128,10 +193,13 @@ class MarkdownImportService {
     // Pre-load existing tags so we avoid redundant lookups inside the loop.
     final existingTags = await _loadTagMap();
 
+    // For Obsidian imports, build a title-to-id map so we can resolve
+    // [[wiki links]] to note IDs after all notes are inserted.
+    final titleToId = <String, String>{};
+
     for (var i = 0; i < notes.length; i++) {
       final imported = notes[i];
-      final fileName =
-          imported.sourcePath.split('/').last;
+      final fileName = imported.sourcePath.split('/').last;
 
       yield ImportProgress(
         current: i,
@@ -143,10 +211,18 @@ class MarkdownImportService {
       try {
         final noteId = _uuid.v4();
 
+        // Resolve body content: for Obsidian imports, convert wiki links
+        // and copy referenced images.
+        var body = imported.body;
+        if (_options.isObsidianImport) {
+          body = _convertObsidianWikiLinks(body);
+          await _copyObsidianImages(imported.sourcePath, body, noteId);
+        }
+
         // Encrypt title and body.
         final encryptedContent = await _crypto.encryptForItem(
           noteId,
-          imported.body,
+          body,
         );
         final encryptedTitle = await _crypto.encryptForItem(
           noteId,
@@ -158,26 +234,47 @@ class MarkdownImportService {
           id: noteId,
           encryptedContent: encryptedContent,
           encryptedTitle: encryptedTitle,
-          plainContent: imported.body,
+          plainContent: body,
           plainTitle: imported.title,
         );
 
+        // Track title for wiki link resolution.
+        titleToId[imported.title.toLowerCase()] = noteId;
+
         // Create / resolve tags and associate them with the note.
-        for (final tagName in imported.tags) {
-          final tagId = await _resolveTag(
-            tagName: tagName,
-            existingTags: existingTags,
+        if (_options.importTags) {
+          for (final tagName in imported.tags) {
+            final tagId = await _resolveTag(
+              tagName: tagName,
+              existingTags: existingTags,
+            );
+            await notesDao.addTagToNote(noteId, tagId);
+          }
+        }
+
+        // Create properties from frontmatter.
+        if (_options.importProperties) {
+          await _importProperties(
+            noteId: noteId,
+            frontmatter: imported.frontmatter,
+            isPinned: imported.isPinned,
           );
-          await notesDao.addTagToNote(noteId, tagId);
         }
 
         _importedCount++;
       } catch (e) {
-        _errors.add(ImportError(
-          filePath: imported.sourcePath,
-          message: e.toString(),
-        ),);
+        _errors.add(
+          ImportError(
+            filePath: imported.sourcePath,
+            message: e.toString(),
+          ),
+        );
       }
+    }
+
+    // Second pass for Obsidian imports: create note links.
+    if (_options.isObsidianImport && titleToId.isNotEmpty) {
+      await _createNoteLinks(notes, titleToId);
     }
 
     yield ImportProgress(
@@ -185,6 +282,63 @@ class MarkdownImportService {
       total: total,
       currentFile: '',
       status: ImportStatus.done,
+    );
+  }
+
+  /// Import notes from a ZIP archive containing `.md` files.
+  ///
+  /// Each `.md` file inside the archive is parsed and imported. The ZIP
+  /// may be an AnyNote export or a generic collection of markdown files.
+  Future<ImportResult> importFromZip(Uint8List zipBytes) async {
+    if (kIsWeb) {
+      return const ImportResult(importedCount: 0, skippedCount: 0);
+    }
+
+    // Reset per-batch counters.
+    _importedCount = 0;
+    _skippedCount = 0;
+    _errors.clear();
+    _lastParsedBatch = null;
+
+    final archive = ZipDecoder().decodeBytes(zipBytes);
+    final parsedNotes = <ImportedNote>[];
+
+    for (final file in archive) {
+      final name = file.name;
+      if (!name.endsWith('.md') && !name.endsWith('.markdown')) continue;
+      if (file.isFile) {
+        final content = String.fromCharCodes(file.content as List<int>);
+        if (content.trim().isEmpty) {
+          _skippedCount++;
+          continue;
+        }
+        final note = _parseContent(
+          raw: content,
+          sourcePath: name,
+        );
+        if (note != null) {
+          parsedNotes.add(note);
+        } else {
+          _skippedCount++;
+        }
+      }
+    }
+
+    if (parsedNotes.isEmpty) {
+      return ImportResult(
+        importedCount: 0,
+        skippedCount: _skippedCount,
+        errors: _errors,
+      );
+    }
+
+    // Stage 2: encrypt and persist.
+    await importNotes(parsedNotes).drain<void>();
+
+    return ImportResult(
+      importedCount: _importedCount,
+      skippedCount: _skippedCount,
+      errors: _errors,
     );
   }
 
@@ -249,8 +403,7 @@ class MarkdownImportService {
     final results = <File>[];
     if (!await dir.exists()) return results;
 
-    await for (final entity
-        in dir.list(recursive: true, followLinks: false)) {
+    await for (final entity in dir.list(recursive: true, followLinks: false)) {
       if (entity is File && entity.path.endsWith('.md')) {
         results.add(entity);
       }
@@ -270,10 +423,12 @@ class MarkdownImportService {
     try {
       raw = await file.readAsString(encoding: utf8);
     } catch (e) {
-      _errors.add(ImportError(
-        filePath: file.path,
-        message: 'Failed to decode as UTF-8: $e',
-      ),);
+      _errors.add(
+        ImportError(
+          filePath: file.path,
+          message: 'Failed to decode as UTF-8: $e',
+        ),
+      );
       _skippedCount++;
       return null;
     }
@@ -283,98 +438,69 @@ class MarkdownImportService {
       return null;
     }
 
-    final (:frontmatter, :body) = _parseFrontmatter(raw);
+    return _parseContent(raw: raw, sourcePath: file.path, file: file);
+  }
+
+  /// Parse markdown content into an [ImportedNote].
+  ///
+  /// [file] is optional -- used to read last-modified time. If null, the
+  /// current time is used.
+  ImportedNote? _parseContent({
+    required String raw,
+    required String sourcePath,
+    File? file,
+  }) {
+    if (raw.trim().isEmpty) return null;
+
+    // Use the shared frontmatter parser from markdown_export_service.dart.
+    final (:frontmatter, :body) = parseYamlFrontmatter(raw);
 
     // Title: frontmatter > filename (without .md).
-    final title =
-        (frontmatter['title'] as String?) ?? _filenameWithoutExt(file);
-
-    // Date: frontmatter > file lastModified.
-    DateTime createdAt;
-    final dateValue = frontmatter['date'];
-    if (dateValue is String) {
-      createdAt = DateTime.tryParse(dateValue) ?? await _fileModified(file);
+    String title;
+    if (frontmatter['title'] is String) {
+      title = frontmatter['title'] as String;
+    } else if (file != null) {
+      title = _filenameWithoutExt(file);
     } else {
-      createdAt = await _fileModified(file);
+      // Extract from sourcePath for ZIP entries.
+      final name = sourcePath.split('/').last;
+      title = name.endsWith('.md')
+          ? name.substring(0, name.length - 3)
+          : (name.endsWith('.markdown')
+              ? name.substring(0, name.length - 9)
+              : name);
+    }
+
+    // Date: frontmatter > file lastModified > now.
+    DateTime createdAt = DateTime.now();
+    final dateValue =
+        frontmatter['date'] ?? frontmatter['created'] ?? frontmatter['updated'];
+    if (_options.preserveDates && dateValue is String) {
+      createdAt = DateTime.tryParse(dateValue) ?? createdAt;
+    }
+    if (file != null && !_options.preserveDates) {
+      createdAt = _fileModifiedSync(file);
     }
 
     // Tags.
-    final tags = _parseTagsField(frontmatter['tags']);
+    List<String> tags = const [];
+    if (_options.importTags) {
+      tags = _parseTagsField(frontmatter['tags']);
+    }
+
+    // Pinned status.
+    final isPinned =
+        frontmatter['pinned'] == 'true' || frontmatter['pinned'] == true;
 
     return ImportedNote(
       title: title,
       body: body,
       tags: tags,
       createdAt: createdAt,
-      sourcePath: file.path,
+      sourcePath: sourcePath,
+      frontmatter: Map<String, dynamic>.from(frontmatter),
+      isPinned: isPinned,
     );
-  }
-
-  /// Extract YAML frontmatter delimited by `---` lines.
-  ///
-  /// Supports the common format:
-  /// ```markdown
-  /// ---
-  /// title: My Note
-  /// date: 2025-04-19
-  /// tags: [tag1, tag2]
-  /// ---
-  /// Body content here.
-  /// ```
-  ///
-  /// Returns a record with the parsed frontmatter map and the remaining body.
-  ({Map<String, dynamic> frontmatter, String body}) _parseFrontmatter(
-    String content,
-  ) {
-    final lines = content.split('\n');
-
-    // Frontmatter must start on the very first line.
-    if (lines.isEmpty || lines.first.trim() != '---') {
-      return (frontmatter: {}, body: content);
-    }
-
-    // Find the closing ---.
-    int closingIndex = -1;
-    for (var i = 1; i < lines.length; i++) {
-      if (lines[i].trim() == '---') {
-        closingIndex = i;
-        break;
-      }
-    }
-
-    if (closingIndex < 0) {
-      // No closing delimiter -- treat entire content as body.
-      return (frontmatter: {}, body: content);
-    }
-
-    final yamlLines = lines.sublist(1, closingIndex);
-    final bodyLines = lines.sublist(closingIndex + 1);
-    final body = bodyLines.join('\n');
-
-    final frontmatter = <String, dynamic>{};
-    for (final line in yamlLines) {
-      final colonPos = line.indexOf(':');
-      if (colonPos < 0) continue;
-
-      final key = line.substring(0, colonPos).trim();
-      final value = line.substring(colonPos + 1).trim();
-
-      if (value.isEmpty) continue;
-
-      switch (key) {
-        case 'title':
-          frontmatter['title'] = _stripQuotes(value);
-        case 'date':
-          frontmatter['date'] = value;
-        case 'tags':
-          frontmatter['tags'] = value;
-        default:
-          // Store as-is for forward compatibility.
-          frontmatter[key] = value;
-      }
-    }
-
-    return (frontmatter: frontmatter, body: body);
   }
 
   /// Parse the tags field which may be either a comma-separated string or a
@@ -436,6 +562,172 @@ class MarkdownImportService {
   }
 
   // ---------------------------------------------------------------------------
+  // Property import
+  // ---------------------------------------------------------------------------
+
+  /// Import recognized properties from frontmatter into the database.
+  Future<void> _importProperties({
+    required String noteId,
+    required Map<String, dynamic> frontmatter,
+    required bool isPinned,
+  }) async {
+    final propsDao = _db.notePropertiesDao;
+
+    for (final entry in _propertyKeys.entries) {
+      final key = entry.key;
+      final type = entry.value;
+      final value = frontmatter[key];
+      if (value == null) continue;
+      final strValue = value is String ? _stripQuotes(value) : value.toString();
+      if (strValue.isEmpty) continue;
+
+      final propId = _uuid.v4();
+      if (type == 'date') {
+        final parsed = DateTime.tryParse(strValue);
+        if (parsed != null) {
+          await propsDao.createDateProperty(
+            id: propId,
+            noteId: noteId,
+            key: key,
+            value: parsed,
+          );
+        }
+      } else {
+        await propsDao.createTextProperty(
+          id: propId,
+          noteId: noteId,
+          key: key,
+          value: strValue,
+        );
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Obsidian-specific handling
+  // ---------------------------------------------------------------------------
+
+  /// Convert Obsidian `[[Wiki Links]]` in [content] to the app's internal
+  /// `[[title]]` format.
+  ///
+  /// Obsidian links may include alias syntax: `[[target|display text]]`.
+  /// The alias is stripped, keeping only the target name.
+  /// The `![[image.png]]` embed syntax is preserved as-is for image handling.
+  String _convertObsidianWikiLinks(String content) {
+    // Match [[link target]] and [[link target|display text]]
+    // but NOT ![[(image embeds)]] -- those are handled separately.
+    final wikiLinkRegex = RegExp(r'(?<!!)\[\[([^\]]+)\]\]');
+    return content.replaceAllMapped(wikiLinkRegex, (match) {
+      var target = match.group(1)!.trim();
+      // Strip alias: [[target|display]] -> target
+      final pipeIndex = target.indexOf('|');
+      if (pipeIndex >= 0) {
+        target = target.substring(0, pipeIndex).trim();
+      }
+      // Strip .md extension if present: [[Note.md]] -> [[Note]]
+      if (target.toLowerCase().endsWith('.md')) {
+        target = target.substring(0, target.length - 3);
+      }
+      if (target.toLowerCase().endsWith('.markdown')) {
+        target = target.substring(0, target.length - 9);
+      }
+      return '[[$target]]';
+    });
+  }
+
+  /// Copy images referenced by `![[image.png]]` embeds from the Obsidian vault
+  /// to the app's image storage.
+  ///
+  /// Images are located by searching for the filename within the vault
+  /// directory tree. If the vault path is not set or the image is not found,
+  /// the embed is left as-is in the content.
+  Future<void> _copyObsidianImages(
+    String sourcePath,
+    String content,
+    String noteId,
+  ) async {
+    final vaultPath = _options.obsidianVaultPath;
+    if (vaultPath == null || vaultPath.isEmpty) return;
+
+    // Find all ![[(image)]] embeds.
+    final imageEmbedRegex = RegExp(r'!\[\[([^\]]+)\]\]');
+    final matches = imageEmbedRegex.allMatches(content);
+
+    for (final match in matches) {
+      final fileName = match.group(1)!.trim();
+      final ext = p.extension(fileName).toLowerCase();
+      if (!_imageExtensions.contains(ext)) continue;
+
+      // Search for the image file in the vault.
+      final imageFile = await _findFileInVault(
+        Directory(vaultPath),
+        fileName,
+      );
+      if (imageFile == null) continue;
+
+      try {
+        final bytes = await imageFile.readAsBytes();
+        await ImageStorage.saveImage(bytes, noteId);
+      } catch (_) {
+        // Image copy failure is non-fatal -- the embed remains in the text.
+      }
+    }
+  }
+
+  /// Search for a file by name within the vault directory tree.
+  Future<File?> _findFileInVault(Directory vault, String fileName) async {
+    if (!await vault.exists()) return null;
+
+    await for (final entity
+        in vault.list(recursive: true, followLinks: false)) {
+      if (entity is File && p.basename(entity.path) == fileName) {
+        return entity;
+      }
+    }
+    return null;
+  }
+
+  /// Create [NoteLink] entries for all [[wiki links]] found in imported notes.
+  ///
+  /// Uses [titleToId] to resolve link targets to their note IDs. Links to
+  /// notes that were not imported are silently skipped.
+  Future<void> _createNoteLinks(
+    List<ImportedNote> notes,
+    Map<String, String> titleToId,
+  ) async {
+    final linksDao = _db.noteLinksDao;
+    final wikiLinkRegex = RegExp(r'\[\[([^\]]+)\]\]');
+
+    for (final note in notes) {
+      final sourceId = titleToId[note.title.toLowerCase()];
+      if (sourceId == null) continue;
+
+      final matches = wikiLinkRegex.allMatches(note.body);
+      for (final match in matches) {
+        var target = match.group(1)!.trim();
+        // Strip alias.
+        final pipeIndex = target.indexOf('|');
+        if (pipeIndex >= 0) {
+          target = target.substring(0, pipeIndex).trim();
+        }
+        final targetId = titleToId[target.toLowerCase()];
+        if (targetId == null || targetId == sourceId) continue;
+
+        try {
+          await linksDao.createLink(
+            id: _uuid.v4(),
+            sourceId: sourceId,
+            targetId: targetId,
+            linkType: 'wiki',
+          );
+        } catch (_) {
+          // Link creation failure is non-fatal.
+        }
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Utility helpers
   // ---------------------------------------------------------------------------
 
@@ -458,10 +750,11 @@ class MarkdownImportService {
     return name.endsWith('.md') ? name.substring(0, name.length - 3) : name;
   }
 
-  /// Return the file's last-modified timestamp.
-  Future<DateTime> _fileModified(File file) async {
+  /// Return the file's last-modified timestamp synchronously (used when
+  /// preserve-dates is off and we want the file mtime).
+  DateTime _fileModifiedSync(File file) {
     try {
-      return await file.lastModified();
+      return file.lastModifiedSync();
     } catch (_) {
       return DateTime.now();
     }

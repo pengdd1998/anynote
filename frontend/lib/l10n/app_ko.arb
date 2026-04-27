@@ -120,6 +120,10 @@
 
   "titleAZ": "제목 A-Z",
 
+  "sortCustom": "사용자 지정 순서",
+
+  "reorderModeHint": "드래그하여 순서 변경",
+
   "listView": "목록 보기",
 
   "gridView": "그리드 보기",
@@ -1234,6 +1238,62 @@
 
   "templateDateHint": "[date]를 사용하여 현재 날짜 삽입",
 
+  "templates": "템플릿",
+
+  "templatePicker": "템플릿 선택",
+
+  "createFromTemplate": "템플릿에서 만들기",
+
+  "createFromScratch": "빈 페이지에서 만들기",
+
+  "templateManagement": "템플릿 관리",
+
+  "newTemplate": "새 템플릿",
+
+  "editTemplate": "템플릿 편집",
+
+  "deleteTemplate": "템플릿 삭제",
+
+  "templateName": "템플릿 이름",
+
+  "templateDescription": "설명",
+
+  "templateContent": "내용",
+
+  "templateCategory": "카테고리",
+
+  "categoryWork": "업무",
+
+  "categoryPersonal": "개인",
+
+  "categoryCreative": "창작",
+
+  "builtInTemplates": "기본 템플릿",
+
+  "userTemplates": "내 템플릿",
+
+  "templateUsed": "{count}회 사용",
+
+  "duplicateTemplate": "복제",
+
+  "noTemplates": "템플릿 없음",
+
+  "templateSaved": "템플릿 저장됨",
+
+  "templateMeetingNotes": "회의 노트",
+
+  "templateDailyJournal": "일일 저널",
+
+  "templateProjectPlan": "프로젝트 계획",
+
+  "templateReadingNotes": "독서 노트",
+
+  "templateWeeklyReview": "주간 리뷰",
+
+  "templateBrainstorm": "브레인스토밍",
+
+  "templateBlank": "빈 페이지",
+
   "offlineBanner": "오프라인 상태입니다 \u2014 연결되면 변경사항이 동기화됩니다",
 
   "unlockRequired": "먼저 보관함을 잠금 해제해 주세요",
@@ -1412,6 +1472,12 @@
   "knowledgeGraph": "지식 그래프",
   "graphEmpty": "링크 관계가 없습니다. 노트에 [[링크]]를 추가해 보세요",
   "viewBacklinks": "백링크 보기",
+  "wikiLink": "Wiki 링크",
+  "linkToNote": "노트에 연결",
+  "relatedNotes": "관련 노트",
+  "noRelatedNotes": "관련 노트가 없습니다",
+  "startTypingToSearch": "입력하여 노트 검색",
+  "noNotesFound": "노트를 찾을 수 없습니다",
   "aiAgent": "AI 에이전트",
   "selectAction": "작업 선택",
   "organizeNotes": "노트 정리",
@@ -1504,5 +1570,572 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+
+  "propertiesDashboard": "속성 대시보드",
+  "@propertiesDashboard": { "description": "Title of the properties dashboard screen" },
+
+  "totalNotes": "총 노트 수",
+  "@totalNotes": { "description": "Label for total notes count in dashboard" },
+
+  "withProperties": "속성 있음",
+  "@withProperties": { "description": "Label for notes with properties percentage in dashboard" },
+
+  "priorityDistribution": "우선순위 분포",
+  "@priorityDistribution": { "description": "Section title for priority distribution chart" },
+
+  "noPrioritiesSet": "설정된 우선순위 없음",
+  "@noPrioritiesSet": { "description": "Empty state message when no notes have priority set" },
+
+  "notesByStatus": "상태별 노트",
+  "@notesByStatus": { "description": "Section title for kanban-style status columns" },
+
+  "noNotesYet": "아직 노트가 없습니다",
+  "@noNotesYet": { "description": "Empty state message when there are no notes" },
+
+  "createFirstNoteHint": "대시보드를 보려면 첫 번째 노트를 만드세요",
+  "@createFirstNoteHint": { "description": "Hint text for empty dashboard state" },
+
+  "dailyNotes": "일일 노트",
+  "@dailyNotes": { "description": "Title for the daily notes / journal screen" },
+
+  "dailyNote": "일일 노트",
+  "@dailyNote": { "description": "Label for a single daily note" },
+
+  "todaysNote": "오늘의 노트",
+  "@todaysNote": { "description": "Label for today's daily note" },
+
+  "createTodaysNote": "오늘의 노트 만들기",
+  "@createTodaysNote": { "description": "Button to create a daily note for today" },
+
+  "noDailyNote": "이 날의 노트가 없습니다",
+  "@noDailyNote": { "description": "Message when no daily note exists for a date" },
+
+  "openDailyNote": "일일 노트 열기",
+  "@openDailyNote": { "description": "Button to open an existing daily note" },
+
+  "goToToday": "오늘",
+  "@goToToday": { "description": "Button to jump the calendar to today" },
+
+  "hasNote": "노트 있음",
+  "@hasNote": { "description": "Accessibility label for calendar dot indicator" },
+
+  "calendar": "캘린더",
+  "@calendar": { "description": "Label for calendar navigation" },
+
+  "recentDailyNotes": "최근 일일 노트",
+  "@recentDailyNotes": { "description": "Section header for recent daily notes list" },
+
+  "commandPalette": "명령 팔레트",
+  "@commandPalette": { "description": "Tooltip and title for the command palette feature" },
+
+  "commandSearchHint": "노트 및 명령 검색...",
+  "@commandSearchHint": { "description": "Placeholder text in the command palette search field" },
+
+  "commandRecentNotes": "최근",
+  "@commandRecentNotes": { "description": "Section header for recently opened notes in command palette" },
+
+  "commandNotesSection": "노트",
+  "@commandNotesSection": { "description": "Section header for note results in command palette" },
+
+  "commandActions": "작업",
+  "@commandActions": { "description": "Section header for action results in command palette" },
+
+  "commandCreateNewNote": "새 노트 만들기",
+  "@commandCreateNewNote": { "description": "Command palette action to create a new note" },
+
+  "commandOpenDailyNotes": "일일 노트 열기",
+  "@commandOpenDailyNotes": { "description": "Command palette action to open daily notes" },
+
+  "commandOpenGraph": "그래프 보기 열기",
+  "@commandOpenGraph": { "description": "Command palette action to open the knowledge graph" },
+
+  "commandOpenDashboard": "대시보드 열기",
+  "@commandOpenDashboard": { "description": "Command palette action to open the properties dashboard" },
+
+  "commandOpenTrash": "휴지통 열기",
+  "@commandOpenTrash": { "description": "Command palette action to open the trash screen" },
+
+  "commandOpenSettings": "설정 열기",
+  "@commandOpenSettings": { "description": "Command palette action to open the settings screen" },
+
+  "commandNoResultsFound": "결과 없음",
+  "@commandNoResultsFound": { "description": "Empty state when command palette search has no matches" },
+
+  "slashHeading1": "제목 1",
+  "slashHeading2": "제목 2",
+  "slashHeading3": "제목 3",
+  "slashBulletList": "글머리 기호",
+  "slashNumberedList": "번호 매기기",
+  "slashTodoList": "할 일 목록",
+  "slashCodeBlock": "코드 블록",
+  "slashQuote": "인용",
+  "slashDivider": "구분선",
+  "slashTable": "표",
+  "slashImage": "이미지",
+  "slashWikilink": "위키 링크",
+  "slashTransclusion": "트랜스클루전",
+  "slashCallout": "콜아웃",
+  "slashNoResults": "일치하는 명령 없음",
+
+  "splitView": "분할 보기",
+  "openInSplitView": "분할 보기로 열기",
+  "closeSplitView": "분할 보기 닫기",
+  "selectNoteForSplit": "분할 보기 노트 선택",
+
+  "searchOperators": "검색 연산자",
+  "searchOperatorTag": "tag:이름 -- 태그로 필터",
+  "searchOperatorStatus": "status:todo|in-progress|done|blocked|cancelled",
+  "searchOperatorPriority": "priority:high|medium|low",
+  "searchOperatorDate": "date:YYYY-MM-DD -- 날짜로 필터",
+  "searchOperatorCollection": "collection:이름 -- 컬렉션으로 필터",
+  "searchOperatorLinks": "links:true|false -- 링크 상태로 필터",
+  "searchOperatorsExample": "예: tag:work status:todo 프로젝트 계획",
+  "savedSearches": "저장된 검색",
+  "saveSearch": "검색 저장",
+  "saveSearchName": "검색 이름",
+  "searchSaved": "검색이 저장됨",
+  "deleteSavedSearch": "저장된 검색 삭제",
+  "deleteSavedSearchConfirm": "\"{name}\"을(를) 삭제할까요?",
+  "searchHistory": "최근 검색",
+  "clearSearchHistory": "검색 기록 지우기",
+  "noSavedSearches": "저장된 검색 없음",
+  "saveSearchHint": "검색 후 북마크 아이콘을 탭하여 저장",
+  "noSearchHistory": "검색 기록 없음",
+  "showSearchHints": "검색 힌트 보기",
+  "hideSearchHints": "검색 힌트 숨기기",
+  "searchNotesHint": "연산자로 검색: tag:work status:todo ...",
+  "enterQueryOrOperators": "연산자를 사용하여 노트 검색",
+
+  "imageGallery": "이미지 갤러리",
+  "fromGallery": "갤러리에서",
+  "fromCamera": "카메라에서",
+  "selectImageSource": "이미지 소스 선택",
+  "pasteImage": "이미지 붙여넣기",
+  "deleteImage": "이미지 삭제",
+  "deleteImageConfirm": "이 이미지를 삭제하시겠습니까?",
+  "imageManagement": "이미지 관리",
+  "totalStorage": "총 저장 용량",
+  "imageCount": "{count}개 이미지",
+  "orphanedImages": "고아 이미지",
+  "cleanupOrphaned": "고아 이미지 정리",
+  "cleanupComplete": "고아 이미지 {count}개 정리 완료",
+  "deleteAllImages": "모든 이미지 삭제",
+  "deleteAllImagesConfirm": "모든 저장된 이미지가 삭제됩니다. 복구할 수 없습니다.",
+  "noImagesStored": "저장된 이미지 없음",
+  "imageDeleted": "이미지 삭제됨",
+  "shareImage": "이미지 공유",
+
+  "compareVersions": "버전 비교",
+  "versionDiff": "버전 차이",
+  "versionNumber": "버전 {number}",
+  "linesAdded": "{count}줄 추가",
+  "linesRemoved": "{count}줄 삭제",
+  "noChanges": "변경 없음",
+  "restoreVersion": "이 버전 복원",
+  "restoreVersionConfirm": "버전 {version}(으)로 노트를 복원하시겠습니까? 현재 콘텐츠는 새 버전으로 저장됩니다.",
+  "versionRestored": "버전 복원됨",
+  "selectTwoVersions": "비교할 버전 2개 선택",
+
+  "readingTime": "{minutes}분 읽기",
+  "lessThan1Min": "1분 미만",
+  "lineCount": "{count}줄",
+  "paragraphCount": "{count}단락",
+  "focusMode": "포커스 모드",
+  "typewriterScroll": "타이프라이터 스크롤",
+  "writingStats": "작성 통계",
+  "toggleWritingStats": "작성 통계 토글",
+  "charCountNoSpaces": "{count}자 (공백 제외)",
+
+  "statistics": "통계",
+  "totalWords": "총 단어",
+  "averageWords": "평균 단어/노트",
+  "daysActive": "활동 일수",
+  "last30Days": "최근 30일",
+  "writingStreak": "연속 작성",
+  "currentStreak": "현재: {count}일",
+  "longestStreak": "최장: {count}일",
+  "monthlyActivity": "월간 활동",
+  "topTags": "인기 태그",
+  "topCollections": "인기 컬렉션",
+  "statusDistribution": "상태 분포",
+  "knowledgeGraphStats": "지식 그래프",
+  "totalLinks": "총 링크",
+  "orphanedNotesCount": "고아 노트 {count}개",
+  "mostConnectedNote": "가장 많이 연결된 노트",
+  "noStatistics": "통계 없음",
+  "notesWithProperties": "속성이 있는 노트",
+  "notesWithLinks": "링크가 있는 노트",
+
+  "exportNotes": "노트 내보내기",
+  "exportingNotes": "내보내는 중...",
+  "exportComplete": "내보내기 완료",
+  "exportSelectedNotes": "선택 항목 내보내기",
+  "exportCurrentNote": "현재 노트 내보내기",
+  "exportSelected": "{count}개의 선택된 노트",
+  "exportWithFrontmatter": "메타데이터와 함께 내보내기",
+  "exportAsZip": "ZIP 아카이브로 내보내기",
+  "includeFrontmatter": "메타데이터(프론트매터) 포함",
+  "frontmatterDesc": "태그, 날짜, 속성이 포함된 YAML 메타데이터 헤더 추가",
+  "exportOrganization": "구성",
+  "exportFlat": "평면",
+  "exportByDate": "날짜별",
+  "exportByCollection": "컬렉션별",
+  "exportByTag": "태그별",
+  "notesExported": "노트 {count}개 내보냄",
+
+  "importFromMarkdown": "Markdown에서 가져오기",
+  "importFromZip": "ZIP에서 가져오기",
+  "importFromObsidian": "Obsidian Vault에서 가져오기",
+  "importingNotes": "가져오는 중...",
+  "notesImported": "노트 {count}개 가져옴",
+  "preserveDates": "원본 날짜 유지",
+  "importTags": "태그 가져오기",
+  "importProperties": "속성 가져오기",
+  "noFilesSelected": "선택된 파일 없음",
+  "importOptions": "가져오기 옵션"
+,
+  "quickCapture": "빠른 캡처",
+  "typeSomething": "입력하세요...",
+  "autoSaved": "자동 저장됨",
+  "discardDraft": "초안을 삭제할까요?",
+  "discardDraftMessage": "저장하지 않은 변경 사항이 손실됩니다.",
+  "discard": "삭제",
+  "newNoteShortcut": "새 메모",
+  "newChecklistShortcut": "새 체크리스트",
+  "dailyNoteShortcut": "일일 메모",
+  "sharedToAnynote": "AnyNote로 공유됨",
+  "setPriority": "우선순위 설정",
+  "quickCaptureDesc": "생각을 빠르게 기록",
+  "pendingSync": "{count}개 대기 중",
+  "syncFailedCount": "{count}개 실패",
+  "syncQueue": "동기화 대기열",
+  "pendingOperations": "대기 중인 작업",
+  "failedOperations": "실패한 작업",
+  "retryAll": "모두 재시도",
+  "clearCompleted": "완료 항목 지우기",
+  "operationFailed": "실패: {error}",
+  "retryingSync": "동기화 재시도 중...",
+  "queueCleared": "완료된 작업이 지워졌습니다",
+  "noPendingOperations": "대기 중인 작업 없음",
+
+  "noteSemantics": "노트: {title}",
+
+  "deleteNoteSemantics": "노트 {title} 삭제",
+
+  "archiveNoteSemantics": "노트 {title} 보관",
+
+  "pinNoteSemantics": "노트 {title} 고정",
+
+  "unpinNoteSemantics": "노트 {title} 고정 해제",
+
+  "noteContentEditor": "노트 내용 편집기. 더블 탭하여 편집.",
+
+  "graphSummary": "{nodeCount}개 노트, {linkCount}개 링크",
+
+  "pinnedNote": "고정됨",
+
+  "settingsGroup": "{section} 설정",
+
+  "restoreNoteSemantics": "노트 {title} 복원",
+
+  "permanentlyDeleteNoteSemantics": "노트 {title} 영구 삭제",
+
+  "deleteCollectionSemantics": "컬렉션 {title} 삭제",
+
+  "calendarDaySemantics": "{date}. {hasNote}",
+
+  "noteCountSemantics": "{count}개 노트",
+
+  "reminder": "알림",
+  "setReminder": "알림 설정",
+  "reminderAt": "알림 시간",
+  "removeReminder": "알림 제거",
+  "laterToday": "오늘 나중에",
+  "tomorrowMorning": "내일 아침",
+  "nextWeek": "다음 주",
+  "noReminders": "알림 없음",
+  "recurring": "반복",
+  "daily": "매일",
+  "weekly": "매주",
+  "monthly": "매월",
+  "reminders": "알림 목록",
+  "reminderFired": "알림이 울렸습니다",
+
+  "color": "색상",
+  "selectColor": "색상 선택",
+  "removeColor": "색상 제거",
+  "noteColor": "노트 색상",
+  "customColor": "사용자 지정 색상",
+  "colorFilter": "색상 필터",
+  "searchOperatorColor": "color:#RRGGBB 또는 color:색상명 -- 색상으로 필터",
+
+  "none": "없음",
+
+  "compareNotes": "노트 비교",
+
+  "selectNotesToCompare": "비교할 노트 선택",
+
+  "unifiedView": "통합 보기",
+
+  "sideBySideView": "나란히 보기",
+
+  "additions": "추가",
+
+  "deletions": "삭제",
+
+  "selectTwoNotes": "비교할 노트 2개를 선택하세요",
+
+  "noteDiff": "노트 차이점",
+
+  "linesChanged": "{added}줄 추가, {removed}줄 삭제",
+
+  "mermaidDiagram": "Mermaid 다이어그램",
+
+  "viewDiagram": "다이어그램 보기",
+
+  "copyMermaidCode": "Mermaid 코드 복사",
+
+  "diagramCopied": "다이어그램 코드 복사됨",
+
+  "mermaidTemplate": "Mermaid 템플릿",
+
+  "insertDiagram": "다이어그램 삽입",
+
+  "slashMermaid": "Mermaid 다이어그램",
+
+  "viewSource": "소스 보기",
+
+  "diagramError": "다이어그램 렌더링 실패",
+
+  "copyDiagramSource": "다이어그램 소스 복사",
+
+  "lockNote": "노트 잠금",
+  "unlockNote": "노트 잠금 해제",
+  "noteLocked": "노트가 잠겨 있습니다",
+  "lockedNoteBanner": "이 노트는 잠겨 있습니다. 탭하여 잠금 해제",
+  "notesColored": "노트 {count}개 색상 설정됨",
+  "colorRemovedFromNotes": "노트 {count}개 색상 제거됨",
+  "batchColor": "일괄 색상",
+  "batchLock": "일괄 잠금",
+  "batchUnlock": "일괄 잠금 해제",
+  "notesLocked": "노트 {count}개 잠금",
+  "notesUnlocked": "노트 {count}개 잠금 해제",
+  "moveToCollection": "컬렉션으로 이동",
+  "searchCollections": "컬렉션 검색...",
+  "noCollections": "컬렉션 없음",
+  "notesMovedToCollection": "노트 {count}개를 \"{name}\"(으)로 이동",
+  "noteMovedToCollection": "노트를 \"{name}\"(으)로 이동",
+  "addToCollection": "컬렉션에 추가",
+
+  "scrollToTop": "맨 위로",
+
+  "printNote": "노트 인쇄",
+
+  "printPreview": "인쇄 미리보기",
+
+  "includeMetadata": "메타데이터 포함",
+
+  "includeImages": "이미지 포함",
+
+  "shareAsHtml": "HTML로 공유",
+
+  "exportedAsHtml": "HTML로 내보냄",
+
+  "foldView": "접기 보기",
+  "foldAll": "모두 접기",
+  "unfoldAll": "모두 펼치기",
+  "sectionLines": "{count}줄",
+  "foldedSections": "{count}개 접힌 섹션",
+  "toggleFold": "접기 전환",
+
+  "tableOfContents": "목차",
+  "noHeadings": "제목 없음",
+  "headingLevel": "제목 수준 {level}",
+  "readAloud": "읽어주기",
+  "stopReading": "읽기 중지",
+  "pauseReading": "일시 정지",
+  "resumeReading": "계속",
+  "readingSpeed": "읽기 속도",
+
+  "keyboardShortcuts": "키보드 단축키",
+  "general": "일반",
+  "editor": "편집기",
+  "navigation": "탐색",
+  "shortcutBold": "굵게",
+  "shortcutItalic": "기울임",
+  "shortcutStrikethrough": "취소선",
+  "shortcutUndo": "실행 취소",
+  "shortcutRedo": "다시 실행",
+  "shortcutPrint": "인쇄",
+  "shortcutNewNote": "새 메모",
+  "shortcutSearch": "검색",
+  "shortcutLink": "링크 삽입",
+  "shortcutCode": "인라인 코드",
+  "shortcutHeading": "제목 전환",
+  "shortcutCommandPalette": "명령 팔레트",
+  "shortcutFocusMode": "집중 모드",
+
+  "reminderNotificationTitle": "알림",
+  "reminderNotificationBody": "리뷰 시간입니다: {title}",
+  "notificationChannelName": "노트 알림",
+  "notificationChannelDescription": "노트 알림의 알림 채널",
+
+  "exportPdf": "PDF",
+
+  "generatePdf": "PDF 생성",
+
+  "pdfGenerated": "PDF가 생성되었습니다",
+
+  "sharePdf": "PDF 공유",
+
+  "exportFormatPdf": "PDF 문서",
+
+  "snippets": "코드 스니펫",
+
+  "snippetTitle": "제목",
+
+  "snippetCode": "코드",
+
+  "snippetLanguage": "언어",
+
+  "snippetDescription": "설명",
+
+  "snippetCategory": "카테고리",
+
+  "snippetTags": "태그",
+
+  "newSnippet": "새 스니펫",
+
+  "editSnippet": "스니펫 편집",
+
+  "deleteSnippet": "스니펫 삭제",
+
+  "deleteSnippetConfirm": "이 스니펫을 삭제하시겠습니까?",
+
+  "copyCode": "코드 복사",
+
+  "codeCopied": "코드가 복사되었습니다",
+
+  "insertSnippet": "스니펫 삽입",
+
+  "noSnippets": "스니펫이 없습니다",
+
+  "searchSnippets": "스니펫 검색...",
+
+  "usageCount": "{count}회 사용",
+
+  "allLanguages": "모든 언어",
+
+  "allCategories": "모든 카테고리",
+
+  "tagHierarchy": "태그 계층",
+  "createSubTag": "하위 태그 만들기",
+  "moveToParent": "상위 태그로 이동",
+  "noParent": "상위 없음 (루트)",
+  "selectParentTag": "상위 태그 선택",
+  "expandAll": "모두 펼치기",
+  "collapseAll": "모두 접기",
+
+  "userCursor": "{name}의 커서",
+  "remoteUser": "원격 사용자",
+
+  "dropImageHere": "이미지를 여기에 놓으세요",
+
+  "imageAdded": "이미지가 추가되었습니다",
+
+  "unsupportedFileType": "이미지 파일만 지원됩니다",
+
+  "quickNote": "새 메모",
+
+  "quickChecklist": "새 체크리스트",
+
+  "quickDailyNote": "일일 메모",
+
+  "moreOptions": "더 보기",
+
+  "failedToLoadTrash": "휴지통을 불러오지 못했습니다",
+  "failedToRestoreError": "복원에 실패했습니다: {error}",
+  "failedToDeleteError": "삭제에 실패했습니다: {error}",
+  "deleteProperty": "속성 삭제",
+  "removePropertyConfirm": "이 속성을 노트에서 제거하시겠습니까?",
+  "propertiesTitle": "속성",
+  "noProperties": "속성 없음",
+  "addCustomMetadata": "이 노트에 사용자 지정 메타데이터 추가",
+  "addPropertyButton": "속성 추가",
+  "editProperty": "속성 편집",
+  "customPropertyTitle": "사용자 지정 속성",
+  "propertyLabel": "속성",
+  "valueLabel": "값",
+  "numberLabel": "숫자",
+  "enterValue": "값을 입력하세요",
+  "enterNumber": "숫자를 입력하세요",
+  "selectDateLabel": "날짜 선택",
+  "linkManagementTitle": "링크 관리",
+  "outboundLinks": "아웃바운드 링크",
+  "deleteLinkTitle": "링크 삭제",
+  "removeLinkConfirm": "이 노트 간의 연결을 제거하시겠습니까?",
+  "noLinksToDisplay": "표시할 링크가 없습니다. 필터를 조정하세요.",
+  "linksToThisNote": "이 노트로의 링크",
+  "thisNoteLinksTo": "이 노트에서 링크",
+  "deleteLinkTooltip": "링크 삭제",
+  "insertTable": "표 삽입",
+  "dragToSelectTableSize": "드래그하여 표 크기 선택",
+  "proPlan": "Pro",
+  "lifetimePlan": "Lifetime",
+  "proPrice": "$4.99/월",
+  "lifetimePrice": "$49.99",
+  "priorityHigh": "높음",
+  "priorityMedium": "보통",
+  "priorityLow": "낮음",
+  "tagsCountLabel": "태그 {count}개",
+
+  "orphanedNotes": "고아 노트",
+  "filter": "필터",
+  "priorityLabel": "우선순위: {priority}",
+  "noMatchingNotes": "일치하는 노트가 없습니다",
+  "tryChangingFilters": "필터 조건을 변경해 보세요",
+  "filterByProperties": "속성으로 필터",
+  "priority": "우선순위",
+  "viewProperties": "속성",
+  "noteTitle": "노트 제목",
+
+  "dateLabel": "날짜",
+  "propertyOf": "속성：{name}",
+  "insertLabel": "삽입",
+
+  "failedToLoadMore": "더 불러오기 실패：{error}",
+  "linkCreated": "링크가 생성되었습니다",
+  "failedToCreateLink": "링크 생성 실패：{error}",
+  "suggestedLinks": "추천 링크",
+  "similarContentDesc": "제목이나 내용이 비슷한 노트. 탭하여 링크를 만드세요.",
+  "noSuggestions": "추천 없음",
+  "createMoreNotes": "노트를 더 만들어 추천을 받으세요.",
+  "notAvailableOnWeb": "이 기능은 웹에서 사용할 수 없습니다",
+  "okButton": "확인",
+  "failedToLoadDeferred": "로드 실패",
+  "somethingWentWrong": "문제가 발생했습니다",
+  "syncStatusTitle": "동기화 상태",
+  "offlineLabel": "오프라인",
+  "connectedLabel": "연결됨",
+  "pendingOpsLabel": "대기 중인 작업",
+  "lastSyncedLabel": "마지막 동기화",
+  "failedItemsLabel": "실패한 항목",
+  "offlineSyncTooltip": "오프라인 -- 연결되면 변경사항이 동기화됩니다",
+  "pullingLabel": "가져오는 중",
+  "pushingLabel": "보내는 중",
+  "syncingLabel": "동기화 중...",
+  "allChangesSyncedLabel": "모든 변경사항이 동기화됨",
+  "pendingOpTooltip": "대기 중인 작업 {count}개",
+  "pendingOpsTooltip": "대기 중인 작업 {count}개",
+  "syncConflictBadge": "동기화 충돌",
+  "conflictLabel": "충돌",
+  "syncedLabel": "동기화됨",
+  "pendingSyncLabel": "대기",
+  "pendingSyncBadge": "동기화 대기",
+
+  "barChartSemanticLabel": "월별 노트 수 막대 차트: {entries}",
+  "donutChartSemanticLabel": "분포를 보여주는 도넛 차트: {entries}",
+  "tagItemSemanticLabel": "태그: {name}",
+  "tagItemSemanticHint": "길게 눌러 편집"
 }

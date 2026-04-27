@@ -301,7 +301,9 @@ class AppErrorCard extends StatelessWidget {
             Icon(icon, size: 36, color: theme.colorScheme.error),
             const SizedBox(height: 8),
             Text(
-              title ?? 'Something went wrong',
+              title ??
+                  (AppLocalizations.of(context)?.somethingWentWrong ??
+                      'Something went wrong'),
               style: theme.textTheme.titleSmall,
               textAlign: TextAlign.center,
             ),
@@ -315,7 +317,7 @@ class AppErrorCard extends StatelessWidget {
               const SizedBox(height: 12),
               FilledButton.tonal(
                 onPressed: onRetry,
-                child: const Text('Retry'),
+                child: Text(AppLocalizations.of(context)?.retry ?? 'Retry'),
               ),
             ],
           ],
@@ -352,7 +354,8 @@ class AppSyncBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final props = _statusProperties();
+    final l10n = AppLocalizations.of(context);
+    final props = _statusProperties(l10n);
 
     return Tooltip(
       message: props.tooltip,
@@ -373,28 +376,28 @@ class AppSyncBadge extends StatelessWidget {
   }
 
   ({IconData icon, Color color, String tooltip, String label})
-      _statusProperties() {
+      _statusProperties(AppLocalizations? l10n) {
     if (hasConflict) {
       return (
         icon: Icons.cloud_off,
         color: Colors.red,
-        tooltip: 'Sync conflict',
-        label: 'Conflict',
+        tooltip: l10n?.syncConflictBadge ?? 'Sync conflict',
+        label: l10n?.conflictLabel ?? 'Conflict',
       );
     }
     if (isSynced) {
       return (
         icon: Icons.cloud_done,
         color: Colors.green,
-        tooltip: 'Synced',
-        label: 'Synced',
+        tooltip: l10n?.syncedLabel ?? 'Synced',
+        label: l10n?.syncedLabel ?? 'Synced',
       );
     }
     return (
       icon: Icons.cloud_upload,
       color: Colors.orange,
-      tooltip: 'Pending sync',
-      label: 'Pending',
+      tooltip: l10n?.pendingSyncBadge ?? 'Pending sync',
+      label: l10n?.pendingSyncLabel ?? 'Pending',
     );
   }
 }

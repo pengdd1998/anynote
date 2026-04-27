@@ -2,6 +2,7 @@ package handler
 
 import (
 	"crypto/subtle"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -54,7 +55,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	if err != nil {
 		// MasterKeyBytes should never fail after config.Validate(), but handle
 		// it defensively to avoid silently using a nil key.
-		panic("router: invalid master encryption key: " + err.Error())
+		log.Fatal("router: invalid master encryption key: ", err)
 	}
 	platformH := NewPlatformHandler(services.Platform, masterKey)
 	shareH := &ShareHandler{shareService: services.Share}
@@ -215,6 +216,10 @@ func registerPprofRoutes(r chi.Router) {
 	}
 
 	pprofPassword := os.Getenv("PPROF_PASSWORD")
+
+	if pprofPassword == "" {
+		log.Println("[WARN] pprof endpoints enabled WITHOUT password protection -- this is insecure for production")
+	}
 
 	r.Route("/debug", func(r chi.Router) {
 		if pprofPassword != "" {

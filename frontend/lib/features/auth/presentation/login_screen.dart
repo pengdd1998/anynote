@@ -187,9 +187,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   authKeyHash: newAuthKeyHash,
                 ),
               );
-            } catch (_) {
+            } catch (e) {
               // Server update failed; local keys are already migrated.
               // The user will log in with v2 params next time.
+              debugPrint(
+                  '[LoginScreen] server KDF migration update failed: $e');
             }
 
             if (mounted) {
@@ -202,7 +204,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               );
             }
-          } catch (_) {
+          } catch (e) {
+            debugPrint('[LoginScreen] KDF migration failed: $e');
             if (mounted) {
               messenger.hideCurrentSnackBar();
               messenger.showSnackBar(

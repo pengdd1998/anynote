@@ -1,10 +1,11 @@
-// Tests for the DecryptedNote domain model extracted in Phase 51.
+// Tests for the DecryptedNote domain model.
 //
 // Tests cover:
 // - Construction with required fields
-// - Equality semantics (value-based via const constructor)
-// - Default property access
-// - Immutability of fields
+// - copyWith partial update (only title)
+// - copyWith full update (all fields)
+// - Equality semantics (value-based operator==)
+// - hashCode consistency with equality
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,7 +14,7 @@ import 'package:anynote/features/notes/domain/decrypted_note.dart';
 void main() {
   group('DecryptedNote', () {
     test('stores all provided field values', () {
-      final now = DateTime(2026, 4, 21, 12, 0, 0);
+      final now = DateTime(2026, 4, 26, 12, 0, 0);
       final note = DecryptedNote(
         title: 'Test Note',
         content: '# Hello\n\nWorld',
@@ -21,107 +22,141 @@ void main() {
         isSynced: true,
       );
 
-      expect(note.title, 'Test Note');
-      expect(note.content, '# Hello\n\nWorld');
-      expect(note.updatedAt, now);
+      expect(note.title, equals('Test Note'));
+      expect(note.content, equals('# Hello\n\nWorld'));
+      expect(note.updatedAt, equals(now));
       expect(note.isSynced, isTrue);
     });
 
-    test('can be constructed with const-compatible fields', () {
-      final note = DecryptedNote(
-        title: '',
-        content: '',
+    test('copyWith partial update changes only title', () {
+      final original = DecryptedNote(
+        title: 'Original',
+        content: 'Content stays',
         updatedAt: DateTime(2026, 1, 1),
         isSynced: false,
       );
 
-      expect(note.title, '');
-      expect(note.content, '');
-      expect(note.isSynced, isFalse);
+      final updated = original.copyWith(title: 'New Title');
+
+      expect(updated.title, equals('New Title'));
+      expect(updated.content, equals('Content stays'));
+      expect(updated.updatedAt, equals(original.updatedAt));
+      expect(updated.isSynced, equals(original.isSynced));
     });
 
-    test('supports unsynced notes', () {
-      final note = DecryptedNote(
-        title: 'Draft',
-        content: 'Work in progress',
-        updatedAt: DateTime.now(),
+    test('copyWith full update changes all fields', () {
+      final original = DecryptedNote(
+        title: 'Old Title',
+        content: 'Old content',
+        updatedAt: DateTime(2026, 1, 1),
         isSynced: false,
       );
 
-      expect(note.isSynced, isFalse);
+      final newTime = DateTime(2026, 4, 26, 15, 30);
+      final updated = original.copyWith(
+        title: 'New Title',
+        content: 'New content',
+        updatedAt: newTime,
+        isSynced: true,
+      );
+
+      expect(updated.title, equals('New Title'));
+      expect(updated.content, equals('New content'));
+      expect(updated.updatedAt, equals(newTime));
+      expect(updated.isSynced, isTrue);
     });
 
-    test('supports synced notes', () {
+    test('copyWith with no arguments returns equivalent instance', () {
+      final original = DecryptedNote(
+        title: 'Title',
+        content: 'Content',
+        updatedAt: DateTime(2026, 4, 26),
+        isSynced: true,
+      );
+
+      final copy = original.copyWith();
+
+      expect(copy, equals(original));
+    });
+
+    test('equality: two notes with same fields are equal', () {
+      final dt = DateTime(2026, 4, 26, 12, 0);
+      final a = DecryptedNote(
+        title: 'Same',
+        content: 'Same content',
+        updatedAt: dt,
+        isSynced: true,
+      );
+      final b = DecryptedNote(
+        title: 'Same',
+        content: 'Same content',
+        updatedAt: dt,
+        isSynced: true,
+      );
+
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+    });
+
+    test('equality: different title produces unequal notes', () {
+      final dt = DateTime(2026, 4, 26);
+      final a = DecryptedNote(
+        title: 'Alpha',
+        content: 'Content',
+        updatedAt: dt,
+        isSynced: true,
+      );
+      final b = DecryptedNote(
+        title: 'Beta',
+        content: 'Content',
+        updatedAt: dt,
+        isSynced: true,
+      );
+
+      expect(a, isNot(equals(b)));
+    });
+
+    test('equality: different isSynced produces unequal notes', () {
+      final dt = DateTime(2026, 4, 26);
+      final a = DecryptedNote(
+        title: 'Title',
+        content: 'Content',
+        updatedAt: dt,
+        isSynced: true,
+      );
+      final b = DecryptedNote(
+        title: 'Title',
+        content: 'Content',
+        updatedAt: dt,
+        isSynced: false,
+      );
+
+      expect(a, isNot(equals(b)));
+    });
+
+    test('hashCode is consistent across multiple accesses', () {
       final note = DecryptedNote(
-        title: 'Published',
-        content: 'Already synced',
-        updatedAt: DateTime.now(),
+        title: 'Consistent',
+        content: 'Hash test',
+        updatedAt: DateTime(2026, 4, 26),
         isSynced: true,
       );
 
-      expect(note.isSynced, isTrue);
-    });
-
-    test('two notes with same values are equal instances', () {
-      final now = DateTime(2026, 4, 21);
-      final note1 = DecryptedNote(
-        title: 'Same',
-        content: 'Same content',
-        updatedAt: now,
-        isSynced: true,
-      );
-      final note2 = DecryptedNote(
-        title: 'Same',
-        content: 'Same content',
-        updatedAt: now,
-        isSynced: true,
-      );
-
-      // DecryptedNote does not override ==, so identity comparison applies.
-      // Both are distinct instances with identical field values.
-      expect(note1.title, equals(note2.title));
-      expect(note1.content, equals(note2.content));
-      expect(note1.updatedAt, equals(note2.updatedAt));
-      expect(note1.isSynced, equals(note2.isSynced));
+      final hash1 = note.hashCode;
+      final hash2 = note.hashCode;
+      expect(hash1, equals(hash2));
     });
 
     test('handles empty title and content', () {
       final note = DecryptedNote(
         title: '',
         content: '',
-        updatedAt: DateTime.now(),
+        updatedAt: DateTime(2026, 4, 26),
         isSynced: false,
       );
 
       expect(note.title, isEmpty);
       expect(note.content, isEmpty);
-    });
-
-    test('handles long markdown content', () {
-      final longContent = List.generate(1000, (i) => 'Line $i').join('\n');
-      final note = DecryptedNote(
-        title: 'Long Note',
-        content: longContent,
-        updatedAt: DateTime.now(),
-        isSynced: true,
-      );
-
-      expect(note.content.length, greaterThan(5000));
-      expect(note.content, contains('Line 0'));
-      expect(note.content, contains('Line 999'));
-    });
-
-    test('updatedAt preserves microsecond precision', () {
-      final precise = DateTime(2026, 4, 21, 12, 30, 45, 123, 456);
-      final note = DecryptedNote(
-        title: 'Precise',
-        content: 'time test',
-        updatedAt: precise,
-        isSynced: true,
-      );
-
-      expect(note.updatedAt.microsecond, 456);
-      expect(note.updatedAt.millisecond, 123);
     });
   });
 }

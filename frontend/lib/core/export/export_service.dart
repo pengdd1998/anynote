@@ -1,11 +1,11 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'web_download_stub.dart'
-    if (dart.library.html) 'web_download_web.dart' as web_download;
+import 'web_download_stub.dart' if (dart.library.html) 'web_download_web.dart'
+    as web_download;
 
 /// Supported export formats.
 enum ExportFormat { markdown, html, plainText }
@@ -66,8 +66,7 @@ class ExportService {
     final sanitized = _sanitizeTitle(title);
     final suffix = noteId.length >= 8 ? noteId.substring(0, 8) : noteId;
     final filename = '${sanitized}_$suffix.html';
-    final fullHtml =
-        '<!DOCTYPE html>\n'
+    final fullHtml = '<!DOCTYPE html>\n'
         '<html><head><meta charset="utf-8"><title>$title</title>\n'
         '<style>\n'
         'body{font-family:system-ui,-apple-system,sans-serif;'
@@ -140,62 +139,73 @@ class ExportService {
 
     final (content, filename, mimeType) = switch (format) {
       ExportFormat.markdown => () {
-        final buffer = StringBuffer();
-        for (final note in notes) {
-          buffer.writeln('# ${note.title}');
-          buffer.writeln();
-          buffer.writeln(note.content);
-          buffer.writeln();
-          buffer.writeln('---');
-          buffer.writeln();
-        }
-        return (buffer.toString(), 'anynote_export_$timestamp.md', 'text/markdown;charset=utf-8');
-      }(),
+          final buffer = StringBuffer();
+          for (final note in notes) {
+            buffer.writeln('# ${note.title}');
+            buffer.writeln();
+            buffer.writeln(note.content);
+            buffer.writeln();
+            buffer.writeln('---');
+            buffer.writeln();
+          }
+          return (
+            buffer.toString(),
+            'anynote_export_$timestamp.md',
+            'text/markdown;charset=utf-8'
+          );
+        }(),
       ExportFormat.html => () {
-        final buffer = StringBuffer();
-        for (final note in notes) {
-          buffer.writeln('<article>');
-          buffer.writeln('<h1>${_escapeHtml(note.title)}</h1>');
-          buffer.writeln(_markdownToHtml(note.content));
-          buffer.writeln('</article>');
-          buffer.writeln('<hr>');
-        }
-        final htmlBody = buffer.toString();
-        final fullHtml =
-            '<!DOCTYPE html>\n'
-            '<html><head><meta charset="utf-8"><title>AnyNote Export</title>\n'
-            '<style>\n'
-            'body{font-family:system-ui,-apple-system,sans-serif;'
-            'max-width:800px;margin:0 auto;padding:20px;line-height:1.6;color:#333}\n'
-            'h1{font-size:1.8em;border-bottom:1px solid #eee;padding-bottom:8px}\n'
-            'h2{font-size:1.5em}\n'
-            'h3{font-size:1.2em}\n'
-            'code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em}\n'
-            'pre{background:#f4f4f4;padding:16px;border-radius:8px;overflow-x:auto}\n'
-            'pre code{background:none;padding:0}\n'
-            'blockquote{border-left:3px solid #ccc;padding-left:16px;color:#666;margin:0}\n'
-            'img{max-width:100%}\n'
-            'a{color:#0066cc}\n'
-            'ul,ol{padding-left:24px}\n'
-            'hr{border:none;border-top:1px solid #eee;margin:32px 0}\n'
-            '</style></head>\n'
-            '<body>\n'
-            '$htmlBody\n'
-            '</body></html>';
-        return (fullHtml, 'anynote_export_$timestamp.html', 'text/html;charset=utf-8');
-      }(),
+          final buffer = StringBuffer();
+          for (final note in notes) {
+            buffer.writeln('<article>');
+            buffer.writeln('<h1>${_escapeHtml(note.title)}</h1>');
+            buffer.writeln(_markdownToHtml(note.content));
+            buffer.writeln('</article>');
+            buffer.writeln('<hr>');
+          }
+          final htmlBody = buffer.toString();
+          final fullHtml = '<!DOCTYPE html>\n'
+              '<html><head><meta charset="utf-8"><title>AnyNote Export</title>\n'
+              '<style>\n'
+              'body{font-family:system-ui,-apple-system,sans-serif;'
+              'max-width:800px;margin:0 auto;padding:20px;line-height:1.6;color:#333}\n'
+              'h1{font-size:1.8em;border-bottom:1px solid #eee;padding-bottom:8px}\n'
+              'h2{font-size:1.5em}\n'
+              'h3{font-size:1.2em}\n'
+              'code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em}\n'
+              'pre{background:#f4f4f4;padding:16px;border-radius:8px;overflow-x:auto}\n'
+              'pre code{background:none;padding:0}\n'
+              'blockquote{border-left:3px solid #ccc;padding-left:16px;color:#666;margin:0}\n'
+              'img{max-width:100%}\n'
+              'a{color:#0066cc}\n'
+              'ul,ol{padding-left:24px}\n'
+              'hr{border:none;border-top:1px solid #eee;margin:32px 0}\n'
+              '</style></head>\n'
+              '<body>\n'
+              '$htmlBody\n'
+              '</body></html>';
+          return (
+            fullHtml,
+            'anynote_export_$timestamp.html',
+            'text/html;charset=utf-8'
+          );
+        }(),
       ExportFormat.plainText => () {
-        final buffer = StringBuffer();
-        for (final note in notes) {
-          buffer.writeln(note.title);
-          buffer.writeln();
-          buffer.writeln(note.content);
-          buffer.writeln();
-          buffer.writeln('=' * 40);
-          buffer.writeln();
-        }
-        return (buffer.toString(), 'anynote_export_$timestamp.txt', 'text/plain;charset=utf-8');
-      }(),
+          final buffer = StringBuffer();
+          for (final note in notes) {
+            buffer.writeln(note.title);
+            buffer.writeln();
+            buffer.writeln(note.content);
+            buffer.writeln();
+            buffer.writeln('=' * 40);
+            buffer.writeln();
+          }
+          return (
+            buffer.toString(),
+            'anynote_export_$timestamp.txt',
+            'text/plain;charset=utf-8'
+          );
+        }(),
     };
 
     if (kIsWeb) {

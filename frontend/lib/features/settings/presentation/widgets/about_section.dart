@@ -57,7 +57,8 @@ class AboutSection extends ConsumerWidget {
     String content;
     try {
       content = await rootBundle.loadString('doc/legal/privacy-policy.md');
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[AboutSection] failed to load privacy policy asset: $e');
       content = l10n.privacyPolicy;
     }
     if (!context.mounted) return;

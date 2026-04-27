@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/theme/color_utils.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/widgets/color_picker_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/sync_status_badge.dart';
 import '../../../core/widgets/sync_status_widget.dart';
@@ -59,6 +61,28 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
       body: StreamBuilder(
         stream: db.collectionsDao.watchAllCollections(),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(l10n.failedToLoadCollection),
+                  const SizedBox(height: 16),
+                  FilledButton.tonal(
+                    onPressed: () => setState(() {}),
+                    child: Text(l10n.retry),
+                  ),
+                ],
+              ),
+            );
+          }
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -91,9 +115,14 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateCollectionDialog(context, db),
-        child: const Icon(Icons.add),
+      floatingActionButton: Semantics(
+        button: true,
+        label: l10n.newCollection,
+        child: FloatingActionButton(
+          onPressed: () => _showCreateCollectionDialog(context, db),
+          tooltip: l10n.newCollection,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -130,56 +159,64 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     AppDatabase db, {
     required bool isGrid,
   }) {
-    return Dismissible(
-      key: ValueKey(collection.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        color: Colors.red,
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      confirmDismiss: (direction) async {
-        final l10n = AppLocalizations.of(context)!;
-        return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(l10n.deleteCollectionQuestion),
-            content: Text(
-              l10n.deleteCollectionConfirm(collection.plainTitle ?? l10n.untitledCollection),
+    final l10n = AppLocalizations.of(context)!;
+    final title = collection.plainTitle ?? l10n.untitledCollection;
+    return Semantics(
+      label: l10n.noteSemantics(title),
+      child: Dismissible(
+        key: ValueKey(collection.id),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 24),
+          color: Colors.red,
+          child: const Icon(Icons.delete, color: Colors.white),
+        ),
+        confirmDismiss: (direction) async {
+          final l10n = AppLocalizations.of(context)!;
+          return await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(l10n.deleteCollectionQuestion),
+              content: Text(
+                l10n.deleteCollectionConfirm(
+                  collection.plainTitle ?? l10n.untitledCollection,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(l10n.cancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(l10n.delete),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text(l10n.cancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text(l10n.delete),
-              ),
-            ],
-          ),
-        );
-      },
-      onDismissed: (direction) {
-        final l10n = AppLocalizations.of(context)!;
-        db.collectionsDao.deleteCollection(collection.id);
-        _noteCountCache.remove(collection.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.collectionDeleted)),
-        );
-      },
-      child: isGrid
-          ? _buildGridCard(collection)
-          : _buildListCard(collection),
+          );
+        },
+        onDismissed: (direction) {
+          final l10n = AppLocalizations.of(context)!;
+          db.collectionsDao.deleteCollection(collection.id);
+          _noteCountCache.remove(collection.id);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.collectionDeleted)),
+          );
+        },
+        child: isGrid
+            ? _buildGridCard(collection, db)
+            : _buildListCard(collection, db),
+      ),
     );
   }
 
   /// List-view card for a collection.
-  Widget _buildListCard(Collection collection) {
+  Widget _buildListCard(Collection collection, AppDatabase db) {
     final l10n = AppLocalizations.of(context)!;
     final title = collection.plainTitle ?? l10n.untitledCollection;
     final noteCount = _noteCountCache[collection.id] ?? 0;
+    final colColor = parseHexColor(collection.color);
 
     return Card(
       child: ListTile(
@@ -202,23 +239,48 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
             ],
           ),
         ),
-        trailing: SyncStatusBadge(isSynced: collection.isSynced),
-        leading: const Icon(Icons.folder),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Color edit button.
+            if (colColor != null)
+              IconButton(
+                icon: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: colColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                tooltip: l10n.noteColor,
+                onPressed: () => _editCollectionColor(collection, db),
+              ),
+            SyncStatusBadge(isSynced: collection.isSynced),
+          ],
+        ),
+        leading: Icon(
+          Icons.folder,
+          color: colColor,
+        ),
         onTap: () => context.push('/collections/${collection.id}'),
+        onLongPress: () => _showCollectionEditMenu(collection, db),
       ),
     );
   }
 
   /// Grid-view card for a collection.
-  Widget _buildGridCard(Collection collection) {
+  Widget _buildGridCard(Collection collection, AppDatabase db) {
     final l10n = AppLocalizations.of(context)!;
     final title = collection.plainTitle ?? l10n.untitledCollection;
     final noteCount = _noteCountCache[collection.id] ?? 0;
+    final colColor = parseHexColor(collection.color);
 
     return Card(
       margin: const EdgeInsets.all(4),
       child: InkWell(
         onTap: () => context.push('/collections/${collection.id}'),
+        onLongPress: () => _showCollectionEditMenu(collection, db),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -229,7 +291,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                 children: [
                   Icon(
                     Icons.folder,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: colColor ?? Theme.of(context).colorScheme.primary,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -251,18 +313,130 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
               const Spacer(),
               Row(
                 children: [
-                  Icon(Icons.note_outlined, size: 14, color: Colors.grey.shade500),
+                  Icon(
+                    Icons.note_outlined,
+                    size: 14,
+                    color: Colors.grey.shade500,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     l10n.noteCount(noteCount),
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                   ),
+                  const Spacer(),
+                  // Color indicator dot.
+                  if (colColor != null)
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: colColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                 ],
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  /// Show edit menu with color picker option on long press.
+  void _showCollectionEditMenu(Collection collection, AppDatabase db) {
+    final l10n = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with collection name.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                children: [
+                  if (collection.color != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: parseHexColor(collection.color),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: Text(
+                      collection.plainTitle ?? l10n.untitledCollection,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.palette),
+              title: Text(l10n.noteColor),
+              onTap: () async {
+                Navigator.of(ctx).pop();
+                await _editCollectionColor(collection, db);
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                l10n.delete,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _deleteCollection(collection, db);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Open color picker for a collection.
+  Future<void> _editCollectionColor(
+    Collection collection,
+    AppDatabase db,
+  ) async {
+    final selectedColor = await showColorPickerSheet(
+      context,
+      currentColor: collection.color,
+    );
+    if (selectedColor != null && mounted) {
+      // Empty string means remove color.
+      final newColor = selectedColor.isEmpty ? null : selectedColor;
+      await db.collectionsDao.updateCollectionColor(collection.id, newColor);
+    }
+  }
+
+  /// Delete a collection after confirmation.
+  void _deleteCollection(Collection collection, AppDatabase db) {
+    final l10n = AppLocalizations.of(context)!;
+    db.collectionsDao.deleteCollection(collection.id);
+    _noteCountCache.remove(collection.id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.collectionDeleted)),
     );
   }
 
@@ -302,8 +476,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
               final crypto = ref.read(cryptoServiceProvider);
               String encryptedTitle = title;
               if (crypto.isUnlocked) {
-                encryptedTitle =
-                    await crypto.encryptForItem(id, title);
+                encryptedTitle = await crypto.encryptForItem(id, title);
               }
 
               await db.collectionsDao.createCollection(

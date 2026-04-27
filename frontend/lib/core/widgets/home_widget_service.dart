@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -82,7 +83,8 @@ class HomeWidgetService {
     // Do not attempt platform channel calls on web or desktop.
     // Web has no concept of home screen widgets; desktop platforms
     // (Linux, macOS, Windows) do not implement this channel.
-    if (Platform.environment.containsKey('FLUTTER_WEB') ||
+    if (kIsWeb ||
+        Platform.environment.containsKey('FLUTTER_WEB') ||
         Platform.isLinux ||
         Platform.isWindows) {
       return;
@@ -116,7 +118,8 @@ class HomeWidgetService {
   ///
   /// Silently no-ops on unsupported platforms.
   Future<void> refreshWidget() async {
-    if (Platform.environment.containsKey('FLUTTER_WEB') ||
+    if (kIsWeb ||
+        Platform.environment.containsKey('FLUTTER_WEB') ||
         Platform.isLinux ||
         Platform.isWindows) {
       return;

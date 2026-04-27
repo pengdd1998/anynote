@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 class OutlineSection {
   final String heading;
   final List<String> points;
@@ -8,6 +10,19 @@ class OutlineSection {
     required this.points,
     this.sourceCluster,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OutlineSection &&
+          runtimeType == other.runtimeType &&
+          heading == other.heading &&
+          const DeepCollectionEquality().equals(points, other.points) &&
+          sourceCluster == other.sourceCluster;
+
+  @override
+  int get hashCode =>
+      Object.hash(heading, Object.hashAll(points), sourceCluster);
 
   factory OutlineSection.fromJson(Map<String, dynamic> json) => OutlineSection(
         heading: json['heading'] as String,
@@ -27,6 +42,17 @@ class OutlineModel {
   final List<OutlineSection> sections;
 
   const OutlineModel({required this.title, required this.sections});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OutlineModel &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          const DeepCollectionEquality().equals(sections, other.sections);
+
+  @override
+  int get hashCode => Object.hash(title, Object.hashAll(sections));
 
   factory OutlineModel.fromJson(Map<String, dynamic> json) => OutlineModel(
         title: json['title'] as String,

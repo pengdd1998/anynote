@@ -14,11 +14,13 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../constants/app_durations.dart';
+
 /// Default press scale factor.
 const _kPressScale = 0.95;
 
 /// Default animation duration for press feedback.
-const _kPressDuration = Duration(milliseconds: 100);
+const _kPressDuration = AppDurations.veryShortAnimation;
 
 class PressableScale extends StatefulWidget {
   /// Callback invoked on tap.

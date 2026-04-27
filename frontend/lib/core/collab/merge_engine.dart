@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import 'crdt_text.dart';
 
 /// Encapsulates the result of a merge operation.
@@ -16,6 +18,20 @@ class MergeResult {
     required this.hasChanges,
     required this.newOperations,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MergeResult &&
+          runtimeType == other.runtimeType &&
+          appliedCount == other.appliedCount &&
+          hasChanges == other.hasChanges &&
+          const DeepCollectionEquality()
+              .equals(newOperations, other.newOperations);
+
+  @override
+  int get hashCode =>
+      Object.hash(appliedCount, hasChanges, Object.hashAll(newOperations));
 
   @override
   String toString() =>

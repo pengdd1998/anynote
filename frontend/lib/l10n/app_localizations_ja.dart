@@ -195,6 +195,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get titleAZ => 'タイトル A-Z';
 
   @override
+  String get sortCustom => 'カスタム順序';
+
+  @override
+  String get reorderModeHint => 'ドラッグして並べ替え';
+
+  @override
   String get listView => 'リスト表示';
 
   @override
@@ -213,7 +219,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get createNewNote => '新規メモを作成';
 
   @override
-  String get noNotesYet => 'メモはまだありません';
+  String get noNotesYet => 'まだノートがありません';
 
   @override
   String get tapToCapture => '+ をタップして最初のメモを作成しましょう';
@@ -385,11 +391,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get close => '閉じる';
 
   @override
-  String get restoreVersion => 'バージョンを復元';
+  String get restoreVersion => 'このバージョンを復元';
 
   @override
   String restoreVersionConfirm(int version) {
-    return '現在のメモの内容をバージョン $version に置き換えますか？現在の内容のスナップショットが先に保存されます。';
+    return 'ノートをバージョン$versionに復元しますか？現在の内容は新しいバージョンとして保存されます。';
   }
 
   @override
@@ -2051,6 +2057,92 @@ class AppLocalizationsJa extends AppLocalizations {
   String get templateDateHint => '[date]で現在の日付を挿入';
 
   @override
+  String get templates => 'テンプレート';
+
+  @override
+  String get templatePicker => 'テンプレートを選択';
+
+  @override
+  String get createFromTemplate => 'テンプレートから作成';
+
+  @override
+  String get createFromScratch => '空白から作成';
+
+  @override
+  String get templateManagement => 'テンプレート管理';
+
+  @override
+  String get newTemplate => '新規テンプレート';
+
+  @override
+  String get editTemplate => 'テンプレートを編集';
+
+  @override
+  String get deleteTemplate => 'テンプレートを削除';
+
+  @override
+  String get templateName => 'テンプレート名';
+
+  @override
+  String get templateDescription => '説明';
+
+  @override
+  String get templateContent => '内容';
+
+  @override
+  String get templateCategory => 'カテゴリ';
+
+  @override
+  String get categoryWork => '仕事';
+
+  @override
+  String get categoryPersonal => '個人';
+
+  @override
+  String get categoryCreative => 'クリエイティブ';
+
+  @override
+  String get builtInTemplates => '組み込みテンプレート';
+
+  @override
+  String get userTemplates => 'マイテンプレート';
+
+  @override
+  String templateUsed(int count) {
+    return '$count回使用';
+  }
+
+  @override
+  String get duplicateTemplate => '複製';
+
+  @override
+  String get noTemplates => 'テンプレートなし';
+
+  @override
+  String get templateSaved => 'テンプレート保存済み';
+
+  @override
+  String get templateMeetingNotes => '会議メモ';
+
+  @override
+  String get templateDailyJournal => '日記';
+
+  @override
+  String get templateProjectPlan => 'プロジェクト計画';
+
+  @override
+  String get templateReadingNotes => '読書メモ';
+
+  @override
+  String get templateWeeklyReview => '週次レビュー';
+
+  @override
+  String get templateBrainstorm => 'ブレインストーム';
+
+  @override
+  String get templateBlank => '空白';
+
+  @override
   String get offlineBanner => 'オフラインです — 接続時に変更が同期されます';
 
   @override
@@ -2453,6 +2545,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get viewBacklinks => 'バックリンクを表示';
 
   @override
+  String get wikiLink => 'Wikiリンク';
+
+  @override
+  String get linkToNote => 'ノートにリンク';
+
+  @override
+  String get relatedNotes => '関連ノート';
+
+  @override
+  String get noRelatedNotes => '関連ノートがありません';
+
+  @override
+  String get startTypingToSearch => '入力してノートを検索';
+
+  @override
+  String get noNotesFound => 'ノートが見つかりません';
+
+  @override
   String get backgroundSync => 'バックグラウンド同期';
 
   @override
@@ -2622,4 +2732,1332 @@ class AppLocalizationsJa extends AppLocalizations {
   String multiplePeopleInRoom(int count) {
     return '$count人が閲覧中';
   }
+
+  @override
+  String get propertiesDashboard => 'プロパティダッシュボード';
+
+  @override
+  String get totalNotes => '総ノート数';
+
+  @override
+  String get withProperties => 'プロパティあり';
+
+  @override
+  String get priorityDistribution => '優先度の分布';
+
+  @override
+  String get noPrioritiesSet => '優先度が設定されていません';
+
+  @override
+  String get notesByStatus => 'ステータス別ノート';
+
+  @override
+  String get createFirstNoteHint => 'ダッシュボードを表示するには最初のノートを作成してください';
+
+  @override
+  String get dailyNotes => 'デイリーノート';
+
+  @override
+  String get dailyNote => 'デイリーノート';
+
+  @override
+  String get todaysNote => '今日のノート';
+
+  @override
+  String get createTodaysNote => '今日のノートを作成';
+
+  @override
+  String get noDailyNote => 'この日のノートはありません';
+
+  @override
+  String get openDailyNote => 'デイリーノートを開く';
+
+  @override
+  String get goToToday => '今日';
+
+  @override
+  String get hasNote => 'ノートあり';
+
+  @override
+  String get calendar => 'カレンダー';
+
+  @override
+  String get recentDailyNotes => '最近のデイリーノート';
+
+  @override
+  String get commandPalette => 'コマンドパレット';
+
+  @override
+  String get commandSearchHint => 'ノートやコマンドを検索...';
+
+  @override
+  String get commandRecentNotes => '最近';
+
+  @override
+  String get commandNotesSection => 'ノート';
+
+  @override
+  String get commandActions => 'アクション';
+
+  @override
+  String get commandCreateNewNote => '新規ノートを作成';
+
+  @override
+  String get commandOpenDailyNotes => 'デイリーノートを開く';
+
+  @override
+  String get commandOpenGraph => 'グラフビューを開く';
+
+  @override
+  String get commandOpenDashboard => 'ダッシュボードを開く';
+
+  @override
+  String get commandOpenTrash => 'ゴミ箱を開く';
+
+  @override
+  String get commandOpenSettings => '設定を開く';
+
+  @override
+  String get commandNoResultsFound => '結果が見つかりません';
+
+  @override
+  String get slashHeading1 => '見出し 1';
+
+  @override
+  String get slashHeading2 => '見出し 2';
+
+  @override
+  String get slashHeading3 => '見出し 3';
+
+  @override
+  String get slashBulletList => '箇条書き';
+
+  @override
+  String get slashNumberedList => '番号付きリスト';
+
+  @override
+  String get slashTodoList => 'ToDoリスト';
+
+  @override
+  String get slashCodeBlock => 'コードブロック';
+
+  @override
+  String get slashQuote => '引用';
+
+  @override
+  String get slashDivider => '区切り線';
+
+  @override
+  String get slashTable => 'テーブル';
+
+  @override
+  String get slashImage => '画像';
+
+  @override
+  String get slashWikilink => 'Wikiリンク';
+
+  @override
+  String get slashTransclusion => 'トランスクルージョン';
+
+  @override
+  String get slashCallout => 'コールアウト';
+
+  @override
+  String get slashNoResults => '一致するコマンドなし';
+
+  @override
+  String get splitView => '分割表示';
+
+  @override
+  String get openInSplitView => '分割表示で開く';
+
+  @override
+  String get closeSplitView => '分割表示を閉じる';
+
+  @override
+  String get selectNoteForSplit => '分割表示するノートを選択';
+
+  @override
+  String get searchOperators => '検索演算子';
+
+  @override
+  String get searchOperatorTag => 'tag:名前 -- タグで絞り込み';
+
+  @override
+  String get searchOperatorStatus =>
+      'status:todo|in-progress|done|blocked|cancelled';
+
+  @override
+  String get searchOperatorPriority => 'priority:high|medium|low';
+
+  @override
+  String get searchOperatorDate => 'date:YYYY-MM-DD -- 日付で絞り込み';
+
+  @override
+  String get searchOperatorCollection => 'collection:名前 -- コレクションで絞り込み';
+
+  @override
+  String get searchOperatorLinks => 'links:true|false -- リンク状態で絞り込み';
+
+  @override
+  String get searchOperatorsExample => '例: tag:work status:todo プロジェクト計画';
+
+  @override
+  String get savedSearches => '保存した検索';
+
+  @override
+  String get saveSearch => '検索を保存';
+
+  @override
+  String get saveSearchName => '検索名';
+
+  @override
+  String get searchSaved => '検索を保存しました';
+
+  @override
+  String get deleteSavedSearch => '保存した検索を削除';
+
+  @override
+  String deleteSavedSearchConfirm(String name) {
+    return '\"$name\"を削除しますか？';
+  }
+
+  @override
+  String get searchHistory => '最近の検索';
+
+  @override
+  String get clearSearchHistory => '検索履歴をクリア';
+
+  @override
+  String get noSavedSearches => '保存した検索はまだありません';
+
+  @override
+  String get saveSearchHint => '検索後、ブックマークアイコンをタップして保存';
+
+  @override
+  String get noSearchHistory => '検索履歴なし';
+
+  @override
+  String get showSearchHints => '検索ヒントを表示';
+
+  @override
+  String get hideSearchHints => '検索ヒントを非表示';
+
+  @override
+  String get searchNotesHint => '演算子で検索: tag:work status:todo ...';
+
+  @override
+  String get enterQueryOrOperators => '演算子を使ってノートを検索';
+
+  @override
+  String get imageGallery => '画像ギャラリー';
+
+  @override
+  String get fromGallery => 'ギャラリーから';
+
+  @override
+  String get fromCamera => 'カメラから';
+
+  @override
+  String get selectImageSource => '画像の選択元';
+
+  @override
+  String get pasteImage => '画像を貼り付け';
+
+  @override
+  String get deleteImage => '画像を削除';
+
+  @override
+  String get deleteImageConfirm => 'この画像を削除しますか？';
+
+  @override
+  String get imageManagement => '画像管理';
+
+  @override
+  String get totalStorage => '合計ストレージ';
+
+  @override
+  String imageCount(int count) {
+    return '$count枚の画像';
+  }
+
+  @override
+  String get orphanedImages => '孤立画像';
+
+  @override
+  String get cleanupOrphaned => '孤立画像をクリーンアップ';
+
+  @override
+  String cleanupComplete(int count) {
+    return '$count枚の孤立画像をクリーンアップしました';
+  }
+
+  @override
+  String get deleteAllImages => 'すべての画像を削除';
+
+  @override
+  String get deleteAllImagesConfirm => 'すべての保存画像が削除されます。この操作は元に戻せません。';
+
+  @override
+  String get noImagesStored => '保存された画像はありません';
+
+  @override
+  String get imageDeleted => '画像を削除しました';
+
+  @override
+  String get shareImage => '画像を共有';
+
+  @override
+  String get compareVersions => 'バージョンを比較';
+
+  @override
+  String get versionDiff => 'バージョン差分';
+
+  @override
+  String linesAdded(int count) {
+    return '$count行追加';
+  }
+
+  @override
+  String linesRemoved(int count) {
+    return '$count行削除';
+  }
+
+  @override
+  String get selectTwoVersions => '比較する2つのバージョンを選択';
+
+  @override
+  String get noChanges => '変更なし';
+
+  @override
+  String versionNumber(int number) {
+    return 'バージョン$number';
+  }
+
+  @override
+  String readingTime(int minutes) {
+    return '$minutes分で読める';
+  }
+
+  @override
+  String get lessThan1Min => '1分未満';
+
+  @override
+  String lineCount(int count) {
+    return '$count行';
+  }
+
+  @override
+  String paragraphCount(int count) {
+    return '$count段落';
+  }
+
+  @override
+  String get focusMode => 'フォーカスモード';
+
+  @override
+  String get typewriterScroll => 'タイプライタースクロール';
+
+  @override
+  String get writingStats => '執筆統計';
+
+  @override
+  String get toggleWritingStats => '執筆統計の表示切替';
+
+  @override
+  String charCountNoSpaces(int count) {
+    return '$count文字（スペースなし）';
+  }
+
+  @override
+  String get statistics => '統計';
+
+  @override
+  String get totalWords => '総単語数';
+
+  @override
+  String get averageWords => '平均単語数/ノート';
+
+  @override
+  String get daysActive => '活動日数';
+
+  @override
+  String get last30Days => '過去30日間';
+
+  @override
+  String get writingStreak => '連続執筆';
+
+  @override
+  String currentStreak(int count) {
+    return '現在: $count日';
+  }
+
+  @override
+  String longestStreak(int count) {
+    return '最長: $count日';
+  }
+
+  @override
+  String get monthlyActivity => '月間アクティビティ';
+
+  @override
+  String get topTags => '人気タグ';
+
+  @override
+  String get topCollections => '人気コレクション';
+
+  @override
+  String get statusDistribution => 'ステータス分布';
+
+  @override
+  String get knowledgeGraphStats => 'ナレッジグラフ';
+
+  @override
+  String get totalLinks => '総リンク数';
+
+  @override
+  String orphanedNotesCount(int count) {
+    return '$count件の孤立ノート';
+  }
+
+  @override
+  String get mostConnectedNote => '最も接続の多いノート';
+
+  @override
+  String get noStatistics => '統計データなし';
+
+  @override
+  String get notesWithProperties => 'プロパティ付きノート';
+
+  @override
+  String get notesWithLinks => 'リンク付きノート';
+
+  @override
+  String get exportNotes => 'ノートをエクスポート';
+
+  @override
+  String get exportingNotes => 'エクスポート中...';
+
+  @override
+  String get exportComplete => 'エクスポート完了';
+
+  @override
+  String get exportSelectedNotes => '選択をエクスポート';
+
+  @override
+  String get exportCurrentNote => '現在のノートをエクスポート';
+
+  @override
+  String exportSelected(int count) {
+    return '$count件の選択ノート';
+  }
+
+  @override
+  String get exportWithFrontmatter => 'メタデータ付きエクスポート';
+
+  @override
+  String get exportAsZip => 'ZIPアーカイブでエクスポート';
+
+  @override
+  String get includeFrontmatter => 'メタデータ（フロントマター）を含む';
+
+  @override
+  String get frontmatterDesc => 'タグ、日付、プロパティを含むYAMLメタデータヘッダーを追加';
+
+  @override
+  String get exportOrganization => '構成';
+
+  @override
+  String get exportFlat => 'フラット';
+
+  @override
+  String get exportByDate => '日付別';
+
+  @override
+  String get exportByCollection => 'コレクション別';
+
+  @override
+  String get exportByTag => 'タグ別';
+
+  @override
+  String notesExported(int count) {
+    return '$count件のノートをエクスポートしました';
+  }
+
+  @override
+  String get importFromMarkdown => 'Markdownからインポート';
+
+  @override
+  String get importFromZip => 'ZIPからインポート';
+
+  @override
+  String get importFromObsidian => 'Obsidian Vaultからインポート';
+
+  @override
+  String get importingNotes => 'インポート中...';
+
+  @override
+  String notesImported(int count) {
+    return '$count件のノートをインポート';
+  }
+
+  @override
+  String get preserveDates => '元の日付を保持';
+
+  @override
+  String get importTags => 'タグをインポート';
+
+  @override
+  String get importProperties => 'プロパティをインポート';
+
+  @override
+  String get noFilesSelected => 'ファイルが選択されていません';
+
+  @override
+  String get importOptions => 'インポートオプション';
+
+  @override
+  String get quickCapture => 'クイックキャプチャ';
+
+  @override
+  String get typeSomething => '何か入力...';
+
+  @override
+  String get autoSaved => '自動保存済み';
+
+  @override
+  String get discardDraft => '下書きを破棄？';
+
+  @override
+  String get discardDraftMessage => '保存されていない変更は失われます。';
+
+  @override
+  String get discard => '破棄';
+
+  @override
+  String get newNoteShortcut => '新規メモ';
+
+  @override
+  String get newChecklistShortcut => '新規チェックリスト';
+
+  @override
+  String get dailyNoteShortcut => 'デイリーノート';
+
+  @override
+  String get sharedToAnynote => 'AnyNoteに共有';
+
+  @override
+  String get setPriority => '優先度を設定';
+
+  @override
+  String get quickCaptureDesc => '素早くアイデアを記録';
+
+  @override
+  String pendingSync(int count) {
+    return '$count件保留中';
+  }
+
+  @override
+  String syncFailedCount(int count) {
+    return '$count件失敗';
+  }
+
+  @override
+  String get syncQueue => '同期キュー';
+
+  @override
+  String get pendingOperations => '保留中の操作';
+
+  @override
+  String get failedOperations => '失敗した操作';
+
+  @override
+  String get retryAll => 'すべて再試行';
+
+  @override
+  String get clearCompleted => '完了をクリア';
+
+  @override
+  String operationFailed(String error) {
+    return '失敗: $error';
+  }
+
+  @override
+  String get retryingSync => '再試行中...';
+
+  @override
+  String get queueCleared => '完了した操作をクリアしました';
+
+  @override
+  String get noPendingOperations => '保留中の操作はありません';
+
+  @override
+  String noteSemantics(String title) {
+    return 'ノート：$title';
+  }
+
+  @override
+  String deleteNoteSemantics(String title) {
+    return 'ノート $title を削除';
+  }
+
+  @override
+  String archiveNoteSemantics(String title) {
+    return 'ノート $title をアーカイブ';
+  }
+
+  @override
+  String pinNoteSemantics(String title) {
+    return 'ノート $title をピン留め';
+  }
+
+  @override
+  String unpinNoteSemantics(String title) {
+    return 'ノート $title のピン留めを解除';
+  }
+
+  @override
+  String get noteContentEditor => 'ノート内容エディタ。ダブルタップで編集。';
+
+  @override
+  String graphSummary(int nodeCount, int linkCount) {
+    return '$nodeCount ノート、$linkCount リンク';
+  }
+
+  @override
+  String get pinnedNote => 'ピン留め済み';
+
+  @override
+  String settingsGroup(String section) {
+    return '$section 設定';
+  }
+
+  @override
+  String restoreNoteSemantics(String title) {
+    return 'ノート $title を復元';
+  }
+
+  @override
+  String permanentlyDeleteNoteSemantics(String title) {
+    return 'ノート $title を完全に削除';
+  }
+
+  @override
+  String deleteCollectionSemantics(String title) {
+    return 'コレクション $title を削除';
+  }
+
+  @override
+  String calendarDaySemantics(String date, String hasNote) {
+    return '$date。$hasNote';
+  }
+
+  @override
+  String noteCountSemantics(int count) {
+    return '$count 件のノート';
+  }
+
+  @override
+  String get reminder => 'リマインダー';
+
+  @override
+  String get setReminder => 'リマインダー設定';
+
+  @override
+  String get reminderAt => 'リマインダー時刻';
+
+  @override
+  String get removeReminder => 'リマインダー解除';
+
+  @override
+  String get laterToday => '今日の後ほど';
+
+  @override
+  String get tomorrowMorning => '明日の朝';
+
+  @override
+  String get nextWeek => '来週';
+
+  @override
+  String get noReminders => 'リマインダーなし';
+
+  @override
+  String get recurring => '繰り返し';
+
+  @override
+  String get daily => '毎日';
+
+  @override
+  String get weekly => '毎週';
+
+  @override
+  String get monthly => '毎月';
+
+  @override
+  String get reminders => 'リマインダー一覧';
+
+  @override
+  String get reminderFired => 'リマインダー通知';
+
+  @override
+  String get color => '色';
+
+  @override
+  String get selectColor => '色を選択';
+
+  @override
+  String get removeColor => '色を削除';
+
+  @override
+  String get noteColor => 'ノートの色';
+
+  @override
+  String get customColor => 'カスタムカラー';
+
+  @override
+  String get colorFilter => '色で絞り込み';
+
+  @override
+  String get searchOperatorColor => 'color:#RRGGBB または color:色名 -- 色で絞り込み';
+
+  @override
+  String get none => 'なし';
+
+  @override
+  String get compareNotes => 'ノートを比較';
+
+  @override
+  String get selectNotesToCompare => '比較するノートを選択';
+
+  @override
+  String get unifiedView => '統合ビュー';
+
+  @override
+  String get sideBySideView => '並列ビュー';
+
+  @override
+  String get additions => '追加';
+
+  @override
+  String get deletions => '削除';
+
+  @override
+  String get selectTwoNotes => '比較するノートを2つ選択してください';
+
+  @override
+  String get noteDiff => 'ノート差分';
+
+  @override
+  String linesChanged(int added, int removed) {
+    return '$added 行追加、$removed 行削除';
+  }
+
+  @override
+  String get mermaidDiagram => 'Mermaid ダイアグラム';
+
+  @override
+  String get viewDiagram => 'ダイアグラムを表示';
+
+  @override
+  String get copyMermaidCode => 'Mermaid コードをコピー';
+
+  @override
+  String get diagramCopied => 'ダイアグラムコードをコピーしました';
+
+  @override
+  String get mermaidTemplate => 'Mermaid テンプレート';
+
+  @override
+  String get insertDiagram => 'ダイアグラムを挿入';
+
+  @override
+  String get slashMermaid => 'Mermaid ダイアグラム';
+
+  @override
+  String get viewSource => 'ソースを表示';
+
+  @override
+  String get diagramError => 'ダイアグラムのレンダリングに失敗';
+
+  @override
+  String get copyDiagramSource => 'ダイアグラムのソースをコピー';
+
+  @override
+  String get lockNote => 'ノートをロック';
+
+  @override
+  String get unlockNote => 'ノートのロック解除';
+
+  @override
+  String get noteLocked => 'ノートはロックされています';
+
+  @override
+  String get lockedNoteBanner => 'このノートはロックされています。タップして解除';
+
+  @override
+  String notesColored(int count) {
+    return '$count 件のノートに色を設定';
+  }
+
+  @override
+  String colorRemovedFromNotes(int count) {
+    return '$count 件のノートの色を削除';
+  }
+
+  @override
+  String get batchColor => '一括カラー設定';
+
+  @override
+  String get batchLock => '一括ロック';
+
+  @override
+  String get batchUnlock => '一括ロック解除';
+
+  @override
+  String notesLocked(int count) {
+    return '$count 件のノートをロック';
+  }
+
+  @override
+  String notesUnlocked(int count) {
+    return '$count 件のノートのロック解除';
+  }
+
+  @override
+  String get moveToCollection => 'コレクションに移動';
+
+  @override
+  String get searchCollections => 'コレクションを検索...';
+
+  @override
+  String get noCollections => 'コレクションが見つかりません';
+
+  @override
+  String notesMovedToCollection(int count, String name) {
+    return '$count 件のノートを「$name」に移動';
+  }
+
+  @override
+  String noteMovedToCollection(String name) {
+    return 'ノートを「$name」に移動';
+  }
+
+  @override
+  String get addToCollection => 'コレクションに追加';
+
+  @override
+  String get scrollToTop => '一番上へ';
+
+  @override
+  String get printNote => 'ノートを印刷';
+
+  @override
+  String get printPreview => '印刷プレビュー';
+
+  @override
+  String get includeMetadata => 'メタデータを含む';
+
+  @override
+  String get includeImages => '画像を含む';
+
+  @override
+  String get shareAsHtml => 'HTMLで共有';
+
+  @override
+  String get exportedAsHtml => 'HTML としてエクスポートしました';
+
+  @override
+  String get foldView => '折りたたみビュー';
+
+  @override
+  String get foldAll => 'すべて折りたたむ';
+
+  @override
+  String get unfoldAll => 'すべて展開';
+
+  @override
+  String sectionLines(int count) {
+    return '$count 行';
+  }
+
+  @override
+  String foldedSections(int count) {
+    return '$count 個の折りたたみセクション';
+  }
+
+  @override
+  String get toggleFold => '折りたたみ切替';
+
+  @override
+  String get tableOfContents => '目次';
+
+  @override
+  String get noHeadings => '見出しがありません';
+
+  @override
+  String headingLevel(int level) {
+    return '見出しレベル $level';
+  }
+
+  @override
+  String get readAloud => '読み上げ';
+
+  @override
+  String get stopReading => '読み上げ停止';
+
+  @override
+  String get pauseReading => '一時停止';
+
+  @override
+  String get resumeReading => '再開';
+
+  @override
+  String get readingSpeed => '読み上げ速度';
+
+  @override
+  String get keyboardShortcuts => 'キーボードショートカット';
+
+  @override
+  String get general => '一般';
+
+  @override
+  String get editor => 'エディタ';
+
+  @override
+  String get navigation => 'ナビゲーション';
+
+  @override
+  String get shortcutBold => '太字';
+
+  @override
+  String get shortcutItalic => '斜体';
+
+  @override
+  String get shortcutStrikethrough => '取り消し線';
+
+  @override
+  String get shortcutUndo => '元に戻す';
+
+  @override
+  String get shortcutRedo => 'やり直す';
+
+  @override
+  String get shortcutPrint => '印刷';
+
+  @override
+  String get shortcutLink => 'リンク挿入';
+
+  @override
+  String get shortcutCode => 'インラインコード';
+
+  @override
+  String get shortcutHeading => '見出し切替';
+
+  @override
+  String get shortcutCommandPalette => 'コマンドパレット';
+
+  @override
+  String get shortcutFocusMode => 'フォーカスモード';
+
+  @override
+  String get reminderNotificationTitle => 'リマインダー';
+
+  @override
+  String reminderNotificationBody(String title) {
+    return 'レビューの時間です：$title';
+  }
+
+  @override
+  String get notificationChannelName => 'ノートリマインダー';
+
+  @override
+  String get notificationChannelDescription => 'ノートリマインダーの通知チャンネル';
+
+  @override
+  String get exportPdf => 'PDF';
+
+  @override
+  String get generatePdf => 'PDFを生成';
+
+  @override
+  String get pdfGenerated => 'PDFが生成されました';
+
+  @override
+  String get sharePdf => 'PDFを共有';
+
+  @override
+  String get exportFormatPdf => 'PDF文書';
+
+  @override
+  String get snippets => 'スニペット';
+
+  @override
+  String get snippetTitle => 'タイトル';
+
+  @override
+  String get snippetCode => 'コード';
+
+  @override
+  String get snippetLanguage => '言語';
+
+  @override
+  String get snippetDescription => '説明';
+
+  @override
+  String get snippetCategory => 'カテゴリ';
+
+  @override
+  String get snippetTags => 'タグ';
+
+  @override
+  String get newSnippet => '新規スニペット';
+
+  @override
+  String get editSnippet => 'スニペット編集';
+
+  @override
+  String get deleteSnippet => 'スニペット削除';
+
+  @override
+  String get deleteSnippetConfirm => 'このスニペットを削除しますか？';
+
+  @override
+  String get copyCode => 'コードをコピー';
+
+  @override
+  String get codeCopied => 'コピーしました';
+
+  @override
+  String get insertSnippet => 'スニペット挿入';
+
+  @override
+  String get noSnippets => 'スニペットなし';
+
+  @override
+  String get searchSnippets => 'スニペットを検索...';
+
+  @override
+  String usageCount(int count) {
+    return '$count回使用';
+  }
+
+  @override
+  String get allLanguages => 'すべての言語';
+
+  @override
+  String get allCategories => 'すべてのカテゴリ';
+
+  @override
+  String get tagHierarchy => 'タグ階層';
+
+  @override
+  String get createSubTag => 'サブタグを作成';
+
+  @override
+  String get moveToParent => '親タグに移動';
+
+  @override
+  String get noParent => '親なし（ルート）';
+
+  @override
+  String get selectParentTag => '親タグを選択';
+
+  @override
+  String get expandAll => 'すべて展開';
+
+  @override
+  String get collapseAll => 'すべて折りたたむ';
+
+  @override
+  String userCursor(String name) {
+    return '$nameのカーソル';
+  }
+
+  @override
+  String get remoteUser => 'リモートユーザー';
+
+  @override
+  String get dropImageHere => '画像をドロップ';
+
+  @override
+  String get imageAdded => '画像を追加しました';
+
+  @override
+  String get unsupportedFileType => '画像ファイルのみ対応';
+
+  @override
+  String get quickNote => '新規メモ';
+
+  @override
+  String get quickChecklist => '新規チェックリスト';
+
+  @override
+  String get quickDailyNote => 'デイリーノート';
+
+  @override
+  String get moreOptions => 'その他';
+
+  @override
+  String get failedToLoadTrash => 'ゴミ箱の読み込みに失敗しました';
+
+  @override
+  String failedToRestoreError(String error) {
+    return '復元に失敗しました: $error';
+  }
+
+  @override
+  String failedToDeleteError(String error) {
+    return '削除に失敗しました: $error';
+  }
+
+  @override
+  String get deleteProperty => 'プロパティを削除';
+
+  @override
+  String get removePropertyConfirm => 'このプロパティをノートから削除しますか？';
+
+  @override
+  String get propertiesTitle => 'プロパティ';
+
+  @override
+  String get noProperties => 'プロパティなし';
+
+  @override
+  String get addCustomMetadata => 'このノートにカスタムメタデータを追加';
+
+  @override
+  String get addPropertyButton => 'プロパティを追加';
+
+  @override
+  String get editProperty => 'プロパティを編集';
+
+  @override
+  String get customPropertyTitle => 'カスタムプロパティ';
+
+  @override
+  String get propertyLabel => 'プロパティ';
+
+  @override
+  String get valueLabel => '値';
+
+  @override
+  String get numberLabel => '数値';
+
+  @override
+  String get enterValue => '値を入力してください';
+
+  @override
+  String get enterNumber => '数値を入力してください';
+
+  @override
+  String get selectDateLabel => '日付を選択';
+
+  @override
+  String get linkManagementTitle => 'リンク管理';
+
+  @override
+  String get outboundLinks => '発信リンク';
+
+  @override
+  String get deleteLinkTitle => 'リンクを削除';
+
+  @override
+  String get removeLinkConfirm => 'このノート間の接続を削除しますか？';
+
+  @override
+  String get noLinksToDisplay => '表示するリンクがありません。フィルターを調整してください。';
+
+  @override
+  String get linksToThisNote => 'このノートへのリンク';
+
+  @override
+  String get thisNoteLinksTo => 'このノートからのリンク';
+
+  @override
+  String get deleteLinkTooltip => 'リンクを削除';
+
+  @override
+  String get insertTable => 'テーブルを挿入';
+
+  @override
+  String get dragToSelectTableSize => 'ドラッグしてテーブルサイズを選択';
+
+  @override
+  String get proPlan => 'Pro';
+
+  @override
+  String get lifetimePlan => 'Lifetime';
+
+  @override
+  String get proPrice => '\$4.99/月';
+
+  @override
+  String get lifetimePrice => '\$49.99';
+
+  @override
+  String get priorityHigh => '高';
+
+  @override
+  String get priorityMedium => '中';
+
+  @override
+  String get priorityLow => '低';
+
+  @override
+  String tagsCountLabel(int count) {
+    return '$count件のタグ';
+  }
+
+  @override
+  String get orphanedNotes => '孤立ノート';
+
+  @override
+  String get filter => 'フィルター';
+
+  @override
+  String priorityLabel(String priority) {
+    return '優先度：$priority';
+  }
+
+  @override
+  String get noMatchingNotes => '一致するノートがありません';
+
+  @override
+  String get tryChangingFilters => 'フィルター条件を変更してください';
+
+  @override
+  String get filterByProperties => 'プロパティで絞り込み';
+
+  @override
+  String get priority => '優先度';
+
+  @override
+  String get viewProperties => 'プロパティ';
+
+  @override
+  String get noteTitle => 'ノートタイトル';
+
+  @override
+  String get dateLabel => '日付';
+
+  @override
+  String propertyOf(String name) {
+    return 'プロパティ：$name';
+  }
+
+  @override
+  String get insertLabel => '挿入';
+
+  @override
+  String failedToLoadMore(String error) {
+    return '読み込みに失敗しました：$error';
+  }
+
+  @override
+  String get linkCreated => 'リンクを作成しました';
+
+  @override
+  String failedToCreateLink(String error) {
+    return 'リンクの作成に失敗しました：$error';
+  }
+
+  @override
+  String get suggestedLinks => 'おすすめリンク';
+
+  @override
+  String get similarContentDesc => 'タイトルや内容が似ているノート。タップしてリンクを作成。';
+
+  @override
+  String get noSuggestions => 'おすすめなし';
+
+  @override
+  String get createMoreNotes => 'ノートを追加しておすすめを表示。';
+
+  @override
+  String get notAvailableOnWeb => 'この機能はWebでは利用できません';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get failedToLoadDeferred => '読み込みに失敗しました';
+
+  @override
+  String get somethingWentWrong => '問題が発生しました';
+
+  @override
+  String get syncStatusTitle => '同期ステータス';
+
+  @override
+  String get offlineLabel => 'オフライン';
+
+  @override
+  String get connectedLabel => '接続済み';
+
+  @override
+  String get pendingOpsLabel => '保留中の操作';
+
+  @override
+  String get lastSyncedLabel => '最終同期';
+
+  @override
+  String get failedItemsLabel => '失敗した項目';
+
+  @override
+  String get offlineSyncTooltip => 'オフライン -- 接続時に変更が同期されます';
+
+  @override
+  String get pullingLabel => '取得中';
+
+  @override
+  String get pushingLabel => '送信中';
+
+  @override
+  String get syncingLabel => '同期中...';
+
+  @override
+  String get allChangesSyncedLabel => 'すべての変更が同期されました';
+
+  @override
+  String pendingOpTooltip(int count) {
+    return '$count件の保留中の操作';
+  }
+
+  @override
+  String pendingOpsTooltip(int count) {
+    return '$count件の保留中の操作';
+  }
+
+  @override
+  String get syncConflictBadge => '同期の競合';
+
+  @override
+  String get conflictLabel => '競合';
+
+  @override
+  String get syncedLabel => '同期済み';
+
+  @override
+  String get pendingSyncLabel => '保留中';
+
+  @override
+  String get pendingSyncBadge => '同期待ち';
+
+  @override
+  String barChartSemanticLabel(String entries) {
+    return '月別ノート数の棒グラフ：$entries';
+  }
+
+  @override
+  String donutChartSemanticLabel(String entries) {
+    return '分布を示すドーナツチャート：$entries';
+  }
+
+  @override
+  String tagItemSemanticLabel(String name) {
+    return 'タグ：$name';
+  }
+
+  @override
+  String get tagItemSemanticHint => '長押しで編集';
 }

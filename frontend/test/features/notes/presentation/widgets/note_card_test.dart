@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/native.dart';
 
 import 'package:anynote/core/database/app_database.dart';
 import 'package:anynote/features/notes/presentation/widgets/note_card.dart';
 import 'package:anynote/features/notes/presentation/widgets/tag_chips_row.dart';
 import 'package:anynote/l10n/app_localizations.dart';
+import 'package:anynote/main.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -34,23 +37,37 @@ Future<void> pumpNoteCard(
     onLongPress: onLongPress ?? () {},
     untitled: untitled,
     layout: layout,
+    skipPropertyBadges: true, // Avoid timer leaks in tests
   );
 
   await tester.pumpWidget(
-    MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('en'),
-      home: Scaffold(
-        body: layout == NoteCardLayout.grid
-            ? SizedBox(
-                height: 300,
-                child: card,
-              )
-            : SingleChildScrollView(child: card),
+    ProviderScope(
+      overrides: [
+        databaseProvider.overrideWithValue(_testDb!),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('en'),
+        home: Scaffold(
+          body: layout == NoteCardLayout.grid
+              ? SizedBox(
+                  height: 300,
+                  child: card,
+                )
+              : SingleChildScrollView(child: card),
+        ),
       ),
     ),
   );
+  // Let the stream builders settle
+  await tester.pumpAndSettle(const Duration(milliseconds: 100));
+}
+
+/// Create a test database instance.
+AppDatabase _createTestDatabase() {
+  // Use an in-memory database for testing
+  return AppDatabase.forTesting(NativeDatabase.memory());
 }
 
 // ---------------------------------------------------------------------------
@@ -75,6 +92,7 @@ Note _defaultNote({
       isPinned: isPinned,
       plainContent: plainContent,
       plainTitle: plainTitle,
+      sortOrder: 0,
     );
 
 Tag _makeTag({required String id, String? plainName}) => Tag(
@@ -89,7 +107,23 @@ Tag _makeTag({required String id, String? plainName}) => Tag(
 // Tests — List layout
 // ---------------------------------------------------------------------------
 
+AppDatabase? _testDb;
+
 void main() {
+  setUpAll(() {
+    _testDb = _createTestDatabase();
+  });
+
+  tearDownAll(() async {
+    await _testDb?.close();
+    _testDb = null;
+  });
+
+  tearDown(() async {
+    // Pump any pending microtasks and timers to avoid timer leaks
+    await Future.delayed(const Duration(milliseconds: 200));
+  });
+
   group('NoteCard (list)', () {
     testWidgets('renders note title', (tester) async {
       await pumpNoteCard(

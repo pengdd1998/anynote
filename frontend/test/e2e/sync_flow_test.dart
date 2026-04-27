@@ -18,6 +18,7 @@ import 'package:anynote/core/sync/sync_queue_manager.dart';
 import 'package:anynote/core/widgets/offline_banner.dart';
 import 'package:anynote/core/widgets/sync_status_widget.dart';
 import 'package:anynote/features/notes/presentation/notes_list_screen.dart';
+import 'package:anynote/features/notes/presentation/widgets/sync_status_indicator.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
 import 'package:anynote/main.dart';
 import '../helpers/test_app_helper.dart';
@@ -116,7 +117,7 @@ void main() {
       expect(find.text('Connected'), findsOneWidget);
       expect(find.text('Pending operations'), findsOneWidget);
       expect(find.text('Last synced'), findsOneWidget);
-      expect(find.text('Sync now'), findsOneWidget);
+      expect(find.text('Sync Now'), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -176,8 +177,10 @@ void main() {
       );
 
       // The banner should show "No internet connection" text.
-      expect(find.text('You are offline — changes will sync when connected'),
-          findsOneWidget);
+      expect(
+        find.text('You are offline — changes will sync when connected'),
+        findsOneWidget,
+      );
       expect(find.byIcon(Icons.wifi_off), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
@@ -198,8 +201,10 @@ void main() {
       );
 
       // Verify the banner content.
-      expect(find.text('You are offline — changes will sync when connected'),
-          findsOneWidget);
+      expect(
+        find.text('You are offline — changes will sync when connected'),
+        findsOneWidget,
+      );
       expect(find.byType(OfflineBanner), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
@@ -217,9 +222,9 @@ void main() {
         overrides: defaultProviderOverrides(),
       );
 
-      // The notes list screen should include the SyncStatusWidget in the
+      // The notes list screen should include the SyncStatusIndicator in the
       // app bar actions.
-      expect(find.byType(SyncStatusWidget), findsOneWidget);
+      expect(find.byType(SyncStatusIndicator), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -255,15 +260,17 @@ void main() {
       );
 
       // OfflineBanner should display the offline message.
-      expect(find.text('You are offline — changes will sync when connected'),
-          findsOneWidget);
+      expect(
+        find.text('You are offline — changes will sync when connected'),
+        findsOneWidget,
+      );
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('sync status shows offline icon in notes list when offline',
+    testWidgets('sync status indicator present in notes list when offline',
         (tester) async {
       final overrides = defaultProviderOverrides();
       overrides.add(
@@ -276,8 +283,15 @@ void main() {
         overrides: overrides,
       );
 
-      // The sync status icon should be cloud_off when offline.
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+      // The SyncStatusIndicator should still be present when offline
+      // (shows a colored dot, not an icon).
+      expect(find.byType(SyncStatusIndicator), findsOneWidget);
+
+      // The OfflineBanner should display the offline message.
+      expect(
+        find.text('You are offline — changes will sync when connected'),
+        findsOneWidget,
+      );
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();

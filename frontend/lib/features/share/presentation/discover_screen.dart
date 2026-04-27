@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_durations.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
@@ -70,13 +71,21 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         _hasMore = newItems.length >= 20;
         _isLoadingMore = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoadingMore = false;
         // Don't advance offset on failure so retry can work.
         _currentOffset -= 20;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.failedToLoadMore(e.toString()) ??
+                'Failed to load more: $e',
+          ),
+        ),
+      );
     }
   }
 
@@ -92,8 +101,9 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         _allItems = items;
         _hasMore = items.length >= 20;
       });
-    } catch (_) {
+    } catch (e) {
       // The FutureProvider will surface the error.
+      debugPrint('[DiscoverScreen] failed to refresh feed: $e');
     }
   }
 
@@ -109,8 +119,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         );
 
     // Update local counts optimistically.
-    final itemIndex =
-        _allItems.indexWhere((item) => item['id'] == shareId);
+    final itemIndex = _allItems.indexWhere((item) => item['id'] == shareId);
     if (itemIndex >= 0) {
       final item = Map<String, dynamic>.from(_allItems[itemIndex]);
       final countKey =
@@ -162,7 +171,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           content: Text(
             AppLocalizations.of(context)?.reactionFailed ?? 'Failed to react',
           ),
-          duration: const Duration(seconds: 2),
+          duration: AppDurations.snackbarDuration,
         ),
       );
     }
@@ -313,7 +322,8 @@ class _DiscoverCard extends ConsumerWidget {
         } else {
           timeAgo = l10n.monthsAgo((diff.inDays / 30).round());
         }
-      } catch (_) {
+      } catch (e) {
+        debugPrint('[DiscoverScreen] failed to format time-ago: $e');
         timeAgo = '';
       }
     }
@@ -401,9 +411,7 @@ class _DiscoverCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: 12),
                   _ReactionButton(
-                    icon: isBookmarked
-                        ? Icons.bookmark
-                        : Icons.bookmark_border,
+                    icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                     count: bookmarkCount,
                     isActive: isBookmarked,
                     activeColor: theme.colorScheme.primary,

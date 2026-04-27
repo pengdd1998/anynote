@@ -21,4 +21,31 @@ class DecryptedNote {
     required this.updatedAt,
     required this.isSynced,
   });
+
+  DecryptedNote copyWith({
+    String? title,
+    String? content,
+    DateTime? updatedAt,
+    bool? isSynced,
+  }) {
+    return DecryptedNote(
+      title: title ?? this.title,
+      content: content ?? this.content,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isSynced: isSynced ?? this.isSynced,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DecryptedNote &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          content == other.content &&
+          updatedAt == other.updatedAt &&
+          isSynced == other.isSynced;
+
+  @override
+  int get hashCode => Object.hash(title, content, updatedAt, isSynced);
 }

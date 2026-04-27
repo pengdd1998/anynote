@@ -41,12 +41,21 @@ class Notes extends Table {
   /// Decrypted title cache (local only, never synced)
   TextColumn get plainTitle => text().nullable()();
 
+  /// Note color as hex string (e.g. '#FF5722'). Nullable means no color set.
+  /// Local-only, not synced to server.
+  TextColumn get color => text().nullable()();
+
+  /// Custom sort order for manual drag-and-drop reordering.
+  /// Lower values appear first. Local-only, not synced to server.
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
 
 /// Tags table - stores encrypted tag names.
 @TableIndex(name: 'idx_tags_is_synced', columns: {#isSynced})
+@TableIndex(name: 'idx_tags_parent_id', columns: {#parentId})
 class Tags extends Table {
   TextColumn get id => text()();
 
@@ -55,6 +64,14 @@ class Tags extends Table {
 
   /// Decrypted name cache (local only)
   TextColumn get plainName => text().nullable()();
+
+  /// Tag color as hex string (e.g. '#FF5722'). Nullable means no color set.
+  /// Local-only, not synced to server.
+  TextColumn get color => text().nullable()();
+
+  /// Parent tag ID for hierarchical tags. Nullable means root-level tag.
+  TextColumn get parentId =>
+      text().nullable().withDefault(const Constant(null))();
 
   IntColumn get version => integer().withDefault(const Constant(0))();
 
@@ -75,6 +92,69 @@ class NoteTags extends Table {
   Set<Column> get primaryKey => {noteId, tagId};
 }
 
+/// Note links - bidirectional relationships between notes (wiki-style [[links]]).
+/// Local-only data, never synced to server. The sourceId is the note containing
+/// the [[link]], and targetId is the linked note.
+@TableIndex(name: 'idx_note_links_source_id', columns: {#sourceId})
+@TableIndex(name: 'idx_note_links_target_id', columns: {#targetId})
+class NoteLinks extends Table {
+  /// Client-generated UUID for the link itself
+  TextColumn get id => text()();
+
+  /// ID of the note containing the [[link]] (source)
+  TextColumn get sourceId => text().references(Notes, #id)();
+
+  /// ID of the linked note (target)
+  TextColumn get targetId => text().references(Notes, #id)();
+
+  /// Type of link: 'wiki' for [[syntax]] links
+  TextColumn get linkType => text().withDefault(const Constant('wiki'))();
+
+  /// Creation timestamp
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Note properties - custom key-value metadata for notes.
+/// Supports multiple value types: text, number, date.
+/// Local-only data, never synced to server (properties are user-specific views).
+@TableIndex(name: 'idx_note_properties_note_id', columns: {#noteId})
+@TableIndex(name: 'idx_note_properties_key', columns: {#key})
+class NoteProperties extends Table {
+  /// Client-generated UUID
+  TextColumn get id => text()();
+
+  /// Reference to the note this property belongs to
+  TextColumn get noteId =>
+      text().references(Notes, #id, onDelete: KeyAction.cascade)();
+
+  /// Property key (e.g., 'status', 'priority', 'due_date')
+  TextColumn get key => text()();
+
+  /// Value type: 'text', 'number', 'date'
+  TextColumn get valueType => text().withDefault(const Constant('text'))();
+
+  /// Text value (used when valueType is 'text')
+  TextColumn get valueText => text().nullable()();
+
+  /// Number value (used when valueType is 'number')
+  RealColumn get valueNumber => real().nullable()();
+
+  /// Date value (used when valueType is 'date')
+  DateTimeColumn get valueDate => dateTime().nullable()();
+
+  /// Creation timestamp
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Last update timestamp
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Collections (notebooks/folders) - stores encrypted titles.
 @TableIndex(name: 'idx_collections_is_synced', columns: {#isSynced})
 class Collections extends Table {
@@ -86,6 +166,10 @@ class Collections extends Table {
   /// Decrypted title cache
   TextColumn get plainTitle => text().nullable()();
 
+  /// Collection color as hex string (e.g. '#FF5722'). Nullable means no color set.
+  /// Local-only, not synced to server.
+  TextColumn get color => text().nullable()();
+
   IntColumn get version => integer().withDefault(const Constant(0))();
 
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
@@ -95,7 +179,10 @@ class Collections extends Table {
 }
 
 /// Many-to-many relationship between collections and notes.
-@TableIndex(name: 'idx_collection_notes_collection_id', columns: {#collectionId})
+@TableIndex(
+  name: 'idx_collection_notes_collection_id',
+  columns: {#collectionId},
+)
 @TableIndex(name: 'idx_collection_notes_note_id', columns: {#noteId})
 class CollectionNotes extends Table {
   TextColumn get collectionId => text().references(Collections, #id)();
@@ -117,7 +204,8 @@ class GeneratedContents extends Table {
   TextColumn get plainBody => text().nullable()();
 
   /// Target platform style (not encrypted - will be published publicly)
-  TextColumn get platformStyle => text().withDefault(const Constant('generic'))();
+  TextColumn get platformStyle =>
+      text().withDefault(const Constant('generic'))();
 
   /// AI model used to generate this content
   TextColumn get aiModelUsed => text().withDefault(const Constant(''))();
@@ -186,20 +274,30 @@ class NoteTemplates extends Table {
   /// Template display name (stored encrypted for custom templates)
   TextColumn get name => text()();
 
+  /// What this template is for (nullable, for display in the picker)
+  TextColumn get description => text().nullable()();
+
   /// Encrypted template content blob (base64 encoded)
   TextColumn get encryptedContent => text()();
 
   /// Decrypted content cache (local only, never synced)
   TextColumn get plainContent => text().nullable()();
 
-  /// Category: 'built_in' or 'custom'
+  /// Grouping category: 'work', 'personal', 'creative', or 'custom'.
+  /// Built-in templates are pre-assigned; user templates default to 'custom'.
   TextColumn get category => text().withDefault(const Constant('custom'))();
 
   /// Whether this is a built-in template that cannot be edited/deleted
   BoolColumn get isBuiltIn => boolean().withDefault(const Constant(false))();
 
+  /// How many times this template has been used to create a note
+  IntColumn get usageCount => integer().withDefault(const Constant(0))();
+
   /// Creation timestamp
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Last update timestamp
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -227,7 +325,11 @@ class SyncOperations extends Table {
   TextColumn get payload => text()(); // JSON payload
   IntColumn get retryCount => integer().withDefault(const Constant(0))();
   IntColumn get maxRetries => integer().withDefault(const Constant(5))();
-  TextColumn get status => text().withDefault(const Constant('pending'))(); // 'pending', 'in_progress', 'failed', 'completed'
+  TextColumn get status => text().withDefault(
+        const Constant(
+          'pending',
+        ),
+      )(); // 'pending', 'in_progress', 'failed', 'completed'
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get nextRetryAt => dateTime().nullable()();
   TextColumn get lastError => text().nullable()();
@@ -254,4 +356,67 @@ class CollabStates extends Table {
 
   /// When this state was last updated.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// Code snippets - reusable code fragments organized by language and category.
+/// Local-only data, never synced to server.
+@DataClassName('Snippet')
+@TableIndex(name: 'idx_snippets_language', columns: {#language})
+@TableIndex(name: 'idx_snippets_category', columns: {#category})
+class Snippets extends Table {
+  /// Client-generated UUID.
+  TextColumn get id => text()();
+
+  /// Snippet title / display name.
+  TextColumn get title => text()();
+
+  /// Raw code content.
+  TextColumn get code => text()();
+
+  /// Programming language (e.g. 'Dart', 'Python'). Empty string if unset.
+  TextColumn get language => text().withDefault(const Constant(''))();
+
+  /// Optional human-readable description.
+  TextColumn get description => text().withDefault(const Constant(''))();
+
+  /// Optional grouping category.
+  TextColumn get category => text().withDefault(const Constant(''))();
+
+  /// Comma-separated tag list for search/filter.
+  TextColumn get tags => text().withDefault(const Constant(''))();
+
+  /// How many times this snippet has been inserted into a note.
+  IntColumn get usageCount => integer().withDefault(const Constant(0))();
+
+  /// Creation timestamp.
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Last update timestamp.
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Saved searches - named search queries that users can save and reuse.
+/// Local-only data, never synced to server.
+@DataClassName('SavedSearch')
+class SavedSearches extends Table {
+  /// Client-generated UUID.
+  TextColumn get id => text()();
+
+  /// User-visible name for this saved search.
+  TextColumn get name => text()();
+
+  /// Raw query string (may contain search operators like tag:xxx, status:xxx).
+  TextColumn get query => text()();
+
+  /// Creation timestamp.
+  DateTimeColumn get createdAt => dateTime()();
+
+  /// Last update timestamp.
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

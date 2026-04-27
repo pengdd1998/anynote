@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -589,26 +591,28 @@ func TestSecurity_SpecialCharsInUsername(t *testing.T) {
 // Additional Security Edge Cases
 // ---------------------------------------------------------------------------
 
-// TestSecurity_JWT_ShortSecretPanics verifies that AuthMiddleware panics if
-// initialized with a secret shorter than 16 characters, preventing weak keys.
-func TestSecurity_JWT_ShortSecretPanics(t *testing.T) {
-	defer func() {
-		r := recover()
-		if r == nil {
-			t.Error("expected panic when JWT secret is too short, but did not panic")
-		}
-		msg, ok := r.(string)
-		if !ok {
-			t.Errorf("expected string panic, got %T: %v", r, r)
-			return
-		}
-		if !strings.Contains(msg, "at least 16") {
-			t.Errorf("panic message = %q, want mention of 'at least 16'", msg)
-		}
-	}()
+// TestSecurity_JWT_ShortSecretFatal verifies that AuthMiddleware calls log.Fatal
+// if initialized with a secret shorter than 16 characters, preventing weak keys.
+// Because log.Fatal calls os.Exit, the test runs itself as a subprocess to observe
+// the non-zero exit code and stderr output.
+func TestSecurity_JWT_ShortSecretFatal(t *testing.T) {
+	if os.Getenv("TEST_SHORT_JWT") == "1" {
+		AuthMiddleware("short")
+		return
+	}
 
-	// This should panic.
-	AuthMiddleware("short")
+	cmd := exec.Command(os.Args[0], "-test.run=TestSecurity_JWT_ShortSecretFatal")
+	cmd.Env = append(os.Environ(), "TEST_SHORT_JWT=1")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err == nil {
+		t.Fatal("expected non-zero exit when JWT secret is too short, but process exited 0")
+	}
+	output := stderr.String()
+	if !strings.Contains(output, "at least 16") {
+		t.Errorf("stderr = %q, want mention of 'at least 16'", output)
+	}
 }
 
 // TestSecurity_TestCaseInsensitiveBearer verifies that both "Bearer" and

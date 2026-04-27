@@ -14,26 +14,31 @@ class TemplatesDao extends DatabaseAccessor<AppDatabase>
     required String id,
     required String name,
     required String encryptedContent,
+    String? description,
     String? plainContent,
     String category = 'custom',
     bool isBuiltIn = false,
   }) async {
-    await into(noteTemplates).insert(NoteTemplatesCompanion.insert(
-      id: id,
-      name: name,
-      encryptedContent: encryptedContent,
-      plainContent: Value(plainContent),
-      category: Value(category),
-      isBuiltIn: Value(isBuiltIn),
-    ),);
+    await into(noteTemplates).insert(
+      NoteTemplatesCompanion.insert(
+        id: id,
+        name: name,
+        description: Value(description),
+        encryptedContent: encryptedContent,
+        plainContent: Value(plainContent),
+        category: Value(category),
+        isBuiltIn: Value(isBuiltIn),
+      ),
+    );
     return id;
   }
 
-  /// Get all templates, ordered by built-in first then by name.
+  /// Get all templates ordered by usage count descending.
   Future<List<NoteTemplate>> getAllTemplates() {
     return (select(noteTemplates)
           ..orderBy([
             (t) => OrderingTerm.desc(t.isBuiltIn),
+            (t) => OrderingTerm.desc(t.usageCount),
             (t) => OrderingTerm.asc(t.name),
           ]))
         .get();
@@ -44,15 +49,72 @@ class TemplatesDao extends DatabaseAccessor<AppDatabase>
     return (select(noteTemplates)
           ..orderBy([
             (t) => OrderingTerm.desc(t.isBuiltIn),
+            (t) => OrderingTerm.desc(t.usageCount),
             (t) => OrderingTerm.asc(t.name),
           ]))
         .watch();
   }
 
+  /// Get templates filtered by category.
+  Future<List<NoteTemplate>> getTemplatesByCategory(String category) {
+    return (select(noteTemplates)
+          ..where((t) => t.category.equals(category))
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.usageCount),
+            (t) => OrderingTerm.asc(t.name),
+          ]))
+        .get();
+  }
+
+  /// Get only built-in templates.
+  Future<List<NoteTemplate>> getBuiltInTemplates() {
+    return (select(noteTemplates)
+          ..where((t) => t.isBuiltIn.equals(true))
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.name),
+          ]))
+        .get();
+  }
+
+  /// Get only user-created templates.
+  Future<List<NoteTemplate>> getUserTemplates() {
+    return (select(noteTemplates)
+          ..where((t) => t.isBuiltIn.equals(false))
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.usageCount),
+            (t) => OrderingTerm.asc(t.name),
+          ]))
+        .get();
+  }
+
   /// Get a single template by ID.
-  Future<NoteTemplate> getTemplateById(String id) {
+  Future<NoteTemplate?> getTemplateById(String id) {
     return (select(noteTemplates)..where((t) => t.id.equals(id)))
-        .getSingle();
+        .getSingleOrNull();
+  }
+
+  /// Update an existing template.
+  Future<void> updateTemplate({
+    required String id,
+    String? name,
+    String? description,
+    String? encryptedContent,
+    String? plainContent,
+    String? category,
+  }) async {
+    await (update(noteTemplates)..where((t) => t.id.equals(id))).write(
+      NoteTemplatesCompanion(
+        name: name != null ? Value(name) : const Value.absent(),
+        description:
+            description != null ? Value(description) : const Value.absent(),
+        encryptedContent: encryptedContent != null
+            ? Value(encryptedContent)
+            : const Value.absent(),
+        plainContent: Value(plainContent),
+        category: category != null ? Value(category) : const Value.absent(),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   /// Delete a template by ID.
@@ -60,21 +122,16 @@ class TemplatesDao extends DatabaseAccessor<AppDatabase>
     await (delete(noteTemplates)..where((t) => t.id.equals(id))).go();
   }
 
-  /// Update an existing template.
-  Future<void> updateTemplate({
-    required String id,
-    String? name,
-    String? encryptedContent,
-    String? plainContent,
-  }) async {
-    await (update(noteTemplates)..where((t) => t.id.equals(id)))
-        .write(NoteTemplatesCompanion(
-      name: name != null ? Value(name) : const Value.absent(),
-      encryptedContent: encryptedContent != null
-          ? Value(encryptedContent)
-          : const Value.absent(),
-      plainContent: Value(plainContent),
-    ),);
+  /// Increment the usage count for a template by 1.
+  Future<void> incrementUsageCount(String id) async {
+    final template = await getTemplateById(id);
+    if (template == null) return;
+    await (update(noteTemplates)..where((t) => t.id.equals(id))).write(
+      NoteTemplatesCompanion(
+        usageCount: Value(template.usageCount + 1),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   /// Count total templates.
@@ -85,15 +142,19 @@ class TemplatesDao extends DatabaseAccessor<AppDatabase>
     return query.map((row) => row.read(countExpr)!).getSingle();
   }
 
-  /// Get only built-in templates.
-  Future<List<NoteTemplate>> getBuiltInTemplates() {
-    return (select(noteTemplates)..where((t) => t.isBuiltIn.equals(true)))
-        .get();
-  }
-
-  /// Get only custom templates.
-  Future<List<NoteTemplate>> getCustomTemplates() {
-    return (select(noteTemplates)..where((t) => t.isBuiltIn.equals(false)))
+  /// Search templates by name or description.
+  Future<List<NoteTemplate>> searchTemplates(String query) {
+    final lowerQuery = query.toLowerCase();
+    return (select(noteTemplates)
+          ..where(
+            (t) =>
+                t.name.lower().contains(lowerQuery) |
+                t.description.lower().contains(lowerQuery),
+          )
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.usageCount),
+            (t) => OrderingTerm.asc(t.name),
+          ]))
         .get();
   }
 }

@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
-import '../../domain/note_link.dart';
-import '../../providers/note_link_providers.dart';
 
 /// Bottom sheet displaying backlinks for a note.
+///
+/// Shows notes that link TO this note (inbound links).
+/// Uses local database for fat-client architecture.
 class BacklinksSheet extends ConsumerWidget {
   final String noteId;
 
@@ -17,7 +19,7 @@ class BacklinksSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final backlinksAsync = ref.watch(backlinksProvider(noteId));
+    final db = ref.read(databaseProvider);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.4,
@@ -41,8 +43,20 @@ class BacklinksSheet extends ConsumerWidget {
           ),
           const Divider(height: 1),
           Expanded(
-            child: backlinksAsync.when(
-              data: (links) {
+            child: FutureBuilder(
+              future: db.noteLinksDao.getBacklinks(noteId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return ErrorStateWidget(
+                    message: '${snapshot.error}',
+                    onRetry: () {},
+                  );
+                }
+
+                final links = snapshot.data ?? [];
                 if (links.isEmpty) {
                   return Center(child: Text(l10n.noBacklinks));
                 }
@@ -55,8 +69,6 @@ class BacklinksSheet extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
             ),
           ),
         ],
@@ -105,8 +117,9 @@ class _BacklinkTile extends ConsumerWidget {
           note.plainTitle!.isNotEmpty) {
         return note.plainTitle!;
       }
-    } catch (_) {
+    } catch (e) {
       // Fall through to truncated UUID.
+      debugPrint('[BacklinksSheet] failed to resolve note title: $e');
     }
     return noteId.substring(0, 8);
   }

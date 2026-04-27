@@ -139,9 +139,10 @@ class DeepLinkHandler {
       AppDatabase? db;
       try {
         db = globalContainer.read(databaseProvider);
-      } catch (_) {
+      } catch (e) {
         // globalContainer not initialized or databaseProvider not overridden.
         // Fall through to direct navigation.
+        debugPrint('[DeepLinkHandler] database provider not available: $e');
       }
 
       if (db == null) {

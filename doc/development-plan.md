@@ -30,9 +30,9 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Encryption (server) | AES-256-GCM for API key storage at rest |
 | Infra | Docker Compose (PostgreSQL, Redis, MinIO, Chrome headless) |
 
-### Current State Summary (Updated 2026-04-24)
+### Current State Summary (Updated 2026-04-25)
 
-**v1.0.0 released.** All 69 phases complete. Production-ready with 2800+ tests (700+ Go + 2093+ Flutter), zero lint issues, full l10n coverage.
+**v1.3.0-dev.** All 123 phases complete. Production-ready with zero lint issues, full l10n coverage (EN/ZH/JA/KO), schema v16.
 
 | Module | Completeness | Notes |
 |---|---|---|
@@ -47,10 +47,10 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Backend Security | 100% | Security headers, JWT auth, per-IP/user rate limiting, 19 tests |
 | Backend Tests | 100% | 700+ test functions across 56+ test files, 18 packages |
 | Frontend Crypto | 100% | Native: XChaCha20-Poly1305 + Argon2id; Web: AES-256-GCM + PBKDF2, 100+ tests |
-| Frontend Database | 100% | Drift schema v8, 11 tables, FTS5 with CJK tokenizer, all DAOs tested |
+| Frontend Database | 100% | Drift schema v16, 12 tables, FTS5 with CJK tokenizer, color columns, sort order, snippets, tag hierarchy, all DAOs tested |
 | Frontend Sync Engine | 100% | Pull/push, LWW, version vectors, periodic sync, connectivity-aware |
 | Frontend Auth | 100% | Full crypto key derivation flow, BIP-39 recovery, token refresh |
-| Frontend Notes CRUD | 100% | Rich editor, auto-save, encryption, version history, zen mode, templates |
+| Frontend Notes CRUD | 100% | Rich editor, auto-save, encryption, version history, zen mode, templates, color-coding, reminders, drag-reorder, code snippets |
 | Frontend AI Compose | 100% | 4-stage pipeline (cluster, outline, expand, style-adapt), content limits, CancelToken, ErrorMapper, quota pre-check, concurrency guard |
 | Frontend Publish | 100% | Platform connection, publish form, history, 6 platform adapters |
 | Frontend Settings | 100% | Account, AI, LLM config, platforms, encryption, sync, import/export, language |
@@ -59,7 +59,7 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Frontend Desktop | 100% | Menu bar, window state persistence, keyboard shortcuts, adaptive layout |
 | Frontend Search | 100% | FTS5 with BM25 ranking, CJK tokenizer, advanced search screen |
 | Frontend Localization | 100% | EN + ZH + JA + KO |
-| Frontend Tests | 100% | 1956+ tests (14 skipped, 0 failures) across 55+ test files |
+| Frontend Tests | 100% | 2250+ tests (14 skipped, 0 failures) across 70+ test files |
 
 ### Main Phases
 
@@ -95,6 +95,12 @@ Build a local-first, privacy-first note-taking application where the server neve
 30. **Phase 54: Refresh Token Rotation** — COMPLETED (refresh token rotation, graceful shutdown, test expansion)
 31. **Phase 55: Efficiency Fixes** — COMPLETED (code review efficiency improvements)
 32. **Phase 56: AI Module Hardening** — COMPLETED (shared HTTP client, stream cancellation, fallback LLM, Prometheus metrics, content limits, ErrorMapper, CancelToken, quota pre-check, concurrency guard, field validation, user-scoped delete)
+33. **Phase 100-103: UX & Quality** — COMPLETED (lint cleanup, color-coding, reminders, accessibility)
+34. **Phase 104-107: Power User Features** — COMPLETED (batch color/lock, note compare, Mermaid, collection picker)
+35. **Phase 108-111: Reading & Navigation** — COMPLETED (TOC, section folding, scroll-to-top/print, TTS)
+36. **Phase 112-115: Notifications & Shortcuts** — COMPLETED (local notifications, note reorder, AI chat tests, keyboard shortcuts)
+37. **Phase 116-119: Snippets & Export** — COMPLETED (code snippets, PDF export, Mermaid rendering, widget tests)
+38. **Phase 120-123: Hierarchy & Integration** — COMPLETED (tag hierarchy, collab cursors, quick actions + image DnD, widget tests)
 
 ---
 
@@ -1447,16 +1453,686 @@ Fixed pre-existing compilation errors in:
 
 ---
 
-## Future Considerations (Post-Phase 56)
+## Phase 80: Note Linking (Priority: P2) — COMPLETED
 
-These are optional improvements for after initial release:
+Wiki-style [[note links]] for bidirectional note connections. Pure local data, no server sync.
+
+### 80.1 Wiki Link UI — COMPLETED
+
+- **Description**: Users can type `[[` in the editor to trigger a note picker. Selected notes are embedded as clickable links. Backlinks panel shows which notes link to the current note.
+- **Effort**: M (4-6 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/embeds/wiki_link_embed.dart` (NEW) — Custom Quill embed builder for [[links]]
+  - `frontend/lib/features/notes/presentation/widgets/wiki_link_picker_sheet.dart` (NEW) — Note picker bottom sheet
+  - `frontend/lib/features/notes/presentation/widgets/backlinks_sheet.dart` (NEW) — Inbound links viewer
+  - `frontend/lib/features/notes/presentation/widgets/related_notes_sheet.dart` (NEW) — Outbound links viewer
+  - `frontend/lib/core/database/tables.dart` — Added NoteLinks table
+  - `frontend/lib/core/database/daos/note_links_dao.dart` (NEW) — CRUD operations
+  - `frontend/lib/core/database/app_database.dart` — Schema v9, migration added
+  - `frontend/lib/features/notes/presentation/note_editor_screen.dart` — [[ syntax detection
+  - `frontend/lib/features/notes/presentation/rich_note_editor.dart` — WikiLinkEmbedBuilder integration
+- **Acceptance Criteria**:
+  - Typing `[[` triggers note picker with search
+  - Clicking [[link]] navigates to target note
+  - Backlinks panel shows inbound links
+  - Related notes panel shows outbound links
+  - Local-only storage (no server sync)
+  - Deleting a note cleans up all associated links
+
+---
+
+## Phase 81: Graph View (Priority: P2) — COMPLETED
+
+Interactive force-directed graph visualization for note connections.
+
+### 81.1 Graph Visualization — COMPLETED
+
+- **Description**: Visual graph showing notes as nodes and links as edges using a force-directed layout. Supports pan, zoom, and tap-to-navigate.
+- **Effort**: M (4-6 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/widgets/note_graph_screen.dart` — Complete rewrite with local data provider
+  - `frontend/lib/features/notes/presentation/notes_list_screen.dart` — Added graph button
+- **Acceptance Criteria**:
+  - Force-directed layout algorithm with repulsion and spring forces
+  - Pan and zoom support (0.5x to 3x)
+  - Tap nodes to navigate to note editor
+  - Hover effects for better UX
+  - Empty state with helpful message
+  - Local-only data using NoteLinksDao
+
+### 81.2 Graph Integration — COMPLETED
+
+- **Description**: Added action buttons to graph screen for suggestions, orphaned notes, and link management.
+- **Effort**: S (1-2 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/widgets/note_graph_screen.dart` — Added AppBar actions
+- **Acceptance Criteria**:
+  - Suggestions button opens link suggestions sheet
+  - Orphaned notes button shows disconnected notes
+  - Link management button opens management sheet
+  - Reset view button refreshes the graph
+
+---
+
+## Phase 82: Advanced Link Features (Priority: P2) — COMPLETED
+
+Enhanced link management with content-based suggestions, orphaned notes detection, and unified link management interface.
+
+### 82.1 Link Suggestions — COMPLETED
+
+- **Description**: Suggest potential links based on content similarity using word overlap (Jaccard index).
+- **Effort**: M (3-4 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/widgets/link_suggestions_sheet.dart` — NEW
+- **Acceptance Criteria**:
+  - Analyze note titles and content for similarity
+  - Filter out already-linked notes
+  - One-tap link creation
+  - Show top 10 suggestions with similarity threshold > 0.1
+
+### 82.2 Orphaned Notes — COMPLETED
+
+- **Description**: Identify notes with no connections to help users connect their knowledge graph.
+- **Effort**: S (1-2 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/widgets/orphaned_notes_sheet.dart` — NEW
+- **Acceptance Criteria**:
+  - Detect notes with zero inbound and outbound links
+  - Sort by update date (most recent first)
+  - Tap to navigate and add connections
+  - Empty state when all notes are connected
+
+### 82.3 Link Management — COMPLETED
+
+- **Description**: Unified interface for viewing and deleting both backlinks and outbound links.
+- **Effort**: M (3-4 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/widgets/link_management_sheet.dart` — NEW
+- **Acceptance Criteria**:
+  - Filter chips for backlinks vs outbound
+  - Delete links with confirmation
+  - Navigate to linked notes
+  - Visual indicators for link direction
+
+---
+
+## Phase 83: Note Transclusion (Priority: P2) — COMPLETED
+
+Embed content from one note into another with live preview and sync across linked notes.
+
+### 83.1 Transclusion Syntax — COMPLETED
+
+- **Description**: Add `![[note]]` syntax for embedding note content, similar to Obsidian.
+- **Effort**: M (4-6 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/embeds/transclusion_embed.dart` — NEW
+  - `frontend/lib/features/notes/presentation/rich_note_editor.dart` — Add transclusion embed builder
+  - `frontend/lib/features/notes/presentation/note_editor_screen.dart` — Add `![[` pattern detection
+- **Acceptance Criteria**:
+  - Type `![[` to trigger transclusion picker
+  - Render embedded note content inline
+  - Support nested transclusions (with depth limit)
+  - Prevent circular transclusion loops
+
+### 83.2 Live Sync — COMPLETED
+
+- **Description**: When embedded note changes, update all transclusions automatically.
+- **Effort**: M (4-6 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/embeds/transclusion_embed.dart` — Update mechanism
+  - `frontend/lib/core/database/daos/notes_dao.dart` — Added watchNoteById method
+- **Acceptance Criteria**:
+  - Watch for note updates
+  - Invalidate transclusion cache on change
+  - Update all embedding notes
+  - Handle deleted target notes gracefully
+
+### 83.3 Transclusion UI — COMPLETED
+
+- **Description**: Visual indication and controls for transcluded content blocks.
+- **Effort**: S (2-3 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/embeds/transclusion_embed.dart` — UI components
+- **Acceptance Criteria**:
+  - Visual border/background for embedded content ✓
+  - "Edit original" button to jump to source ✓
+  - Show source note title as caption ✓
+  - Expand/collapse toggle ✓
+  - "Unlink" feature omitted (requires complex Quill embed manipulation, out of scope)
+
+---
+
+## Phase 84: Note Properties/Metadata System — COMPLETED
+
+Custom key-value metadata system for notes with built-in and custom properties.
+
+### 84.1 Database Schema — COMPLETED
+
+- **Description**: Add NoteProperties table for storing custom metadata (status, priority, dates, etc).
+- **Effort**: S (2-3 hours)
+- **Files Involved**:
+  - `frontend/lib/core/database/tables.dart` — Add NoteProperties table
+  - `frontend/lib/core/database/app_database.dart` — Add NotePropertiesDao, migration v9→v10
+- **Acceptance Criteria**:
+  - Support text, number, date property types
+  - Cascade delete when note is deleted
+  - Index on noteId for efficient queries
+
+### 84.2 DAO Layer — COMPLETED
+
+- **Description**: CRUD operations for note properties with type-safe getters.
+- **Effort**: S (2-3 hours)
+- **Files Involved**:
+  - `frontend/lib/core/database/daos/note_properties_dao.dart` — NEW
+- **Acceptance Criteria**:
+  - Create/update/delete properties
+  - Watch properties for note (reactive stream)
+  - Built-in properties: status, priority, due_date, start_date
+  - Type-safe getters for text/number/date values
+
+### 84.3 UI — Properties Panel — COMPLETED
+
+- **Description**: Bottom sheet for viewing and editing note properties.
+- **Effort**: M (4-6 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/widgets/properties_sheet.dart` — NEW
+  - `frontend/lib/features/notes/presentation/note_editor_screen.dart` — Add properties button
+- **Acceptance Criteria**:
+  - Properties button in note editor app bar
+  - List all properties for current note
+  - Add/edit/delete properties
+  - Built-in properties with predefined options (status: Todo/In Progress/Done/Blocked/Cancelled, priority: High/Medium/Low)
+  - Custom properties support (UI placeholder)
+  - Date picker for date properties
+
+### 84.4 Property Display in Notes List — COMPLETED
+
+- **Description**: Show key properties (status, priority, due dates) as badges in notes list.
+- **Effort**: S (2-3 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/widgets/property_badges.dart` — NEW
+  - `frontend/lib/features/notes/presentation/widgets/note_card.dart` — Add PropertyBadges widget
+- **Acceptance Criteria**:
+  - Status badge with color coding
+  - Priority badge with icon
+  - Date badges (due date, start date) with overdue indication
+  - Empty state when no properties set
+
+---
+
+## Phase 85: Properties Filtering & Quick Actions — COMPLETED
+
+Filter and manage note properties directly from the notes list.
+
+### 85.1 Filter UI — COMPLETED
+
+- **Description**: Add filter chips to notes list for filtering by status, priority, date range.
+- **Effort**: M (4-6 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/notes_list_screen.dart` — Add filter chips and state
+  - `frontend/lib/features/notes/presentation/widgets/property_filter_chips.dart` — NEW
+- **Acceptance Criteria**:
+  - Filter chips shown below search bar
+  - Filter by status (Todo, In Progress, Done, Blocked, Cancelled)
+  - Filter by priority (High, Medium, Low)
+  - Multiple filters can be active (AND logic)
+  - Clear all filters button
+  - Filter state persists across navigation
+
+### 85.2 Quick Actions — COMPLETED
+
+- **Description**: Long-press or swipe actions to quickly set status/priority.
+- **Effort**: S (2-3 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/notes_list_screen.dart` — Add quick action menu
+  - `frontend/lib/features/notes/presentation/widgets/note_card.dart` — Add quick action buttons
+- **Acceptance Criteria**:
+  - Tap status badge to cycle through statuses
+  - Long-press note to show quick actions menu
+  - Set status from quick actions
+  - Set priority from quick actions
+
+### 85.3 Properties Dashboard — COMPLETED
+
+- **Description**: Screen showing statistics and grouped views by properties.
+- **Effort**: S (2-3 hours)
+- **Files Involved**:
+  - `frontend/lib/features/notes/presentation/widgets/properties_dashboard.dart` — NEW
+  - `frontend/lib/features/notes/presentation/notes_list_screen.dart` — Add dashboard button
+  - `frontend/lib/routing/app_router.dart` — Add /notes/dashboard route
+  - `frontend/lib/core/database/daos/note_properties_dao.dart` — Add getAllProperties()
+  - `frontend/lib/l10n/app_*.arb` — Add localization strings
+- **Acceptance Criteria**:
+  - Show notes grouped by status (kanban-style columns)
+  - Show priority distribution chart with color-coded bars
+  - Tap a group to show status filter hint
+  - Route: `/notes/dashboard` accessible from notes list app bar
+  - Empty state when no notes exist
+  - Full localization support (EN, ZH, JA, KO)
+
+---
+
+## Phase 86: Daily Notes / Journal System — COMPLETED
+
+Date-based daily notes with calendar navigation and automatic naming.
+
+### 86.1 Database & DAO — COMPLETED
+
+- **Description**: Use existing NoteProperties table with `key='daily_note_date'` to mark daily notes. Added DAO queries for finding/creating daily notes.
+- **Files Modified**: `frontend/lib/core/database/daos/note_properties_dao.dart`
+
+### 86.2 Daily Notes Screen — COMPLETED
+
+- **Description**: Calendar-based daily notes screen with month navigation, dot indicators, and quick-create.
+- **Files Created**: `frontend/lib/features/notes/presentation/daily_notes_screen.dart`
+- **Files Modified**: `frontend/lib/routing/app_router.dart`, `frontend/lib/features/notes/presentation/notes_list_screen.dart`
+
+### 86.3 Localization — COMPLETED
+
+- 11 new strings across EN, ZH, JA, KO
+
+---
+
+## Phase 87: Command Palette & Quick Navigation — COMPLETED
+
+Ctrl/Cmd+K command palette for quick search, actions, and navigation.
+
+### 87.1 Command Palette Overlay — COMPLETED
+
+- **Files Created**: `frontend/lib/features/notes/presentation/widgets/command_palette.dart`
+- **Features**: Full-screen overlay, fuzzy search, keyboard navigation, recently opened notes, action shortcuts
+
+### 87.2 Keyboard Shortcut Integration — COMPLETED
+
+- **Files Modified**: `frontend/lib/core/widgets/keyboard_shortcuts.dart`, `frontend/lib/main.dart`
+
+### 87.3 Localization — COMPLETED
+
+- 13 new strings across EN, ZH, JA, KO
+
+---
+
+## Phase 88: Slash Commands & Block Shortcuts — COMPLETED
+
+Slash commands in the rich text editor for inserting blocks.
+
+### 88.1 Slash Command Menu — COMPLETED
+
+- **Files Created**: `frontend/lib/features/notes/presentation/widgets/slash_command_menu.dart`
+- **Features**: 14 block types (headings, lists, code, quote, divider, table, image, wiki link, transclusion, callout), keyboard navigation, fuzzy filtering
+
+### 88.2 Editor Integration — COMPLETED
+
+- **Files Modified**: `frontend/lib/features/notes/presentation/rich_note_editor.dart`, `frontend/lib/features/notes/presentation/note_editor_screen.dart`
+
+### 88.3 Localization — COMPLETED
+
+- 16 new strings across EN, ZH, JA, KO
+
+---
+
+## Phase 89: Split View / Multi-pane Editing — COMPLETED
+
+Side-by-side note editing on wide screens.
+
+### 89.1 Split View Pane — COMPLETED
+
+- **Files Created**: `frontend/lib/features/notes/presentation/widgets/split_view_pane.dart`, `frontend/lib/features/notes/presentation/widgets/split_note_picker_sheet.dart`
+- **Features**: Draggable divider (min 300px/pane), secondary pane header with close button, 50/50 default split
+
+### 89.2 Integration — COMPLETED
+
+- **Files Modified**: `frontend/lib/features/notes/presentation/notes_list_screen.dart`
+- **Features**: Split view toggle in detail pane toolbar, note picker for secondary pane
+
+### 89.3 Localization — COMPLETED
+
+- 4 new strings across EN, ZH, JA, KO
+
+---
+
+## Phase 90: Advanced Search with Search Operators — COMPLETED
+
+Structured search operators, saved searches, and search history.
+
+### 90.1 Search Query Parser — COMPLETED
+
+- **Files Created**: `frontend/lib/features/notes/domain/search_query_parser.dart`
+- **Supported operators**: `tag:`, `status:`, `priority:`, `date:`, `collection:`, `links:`
+
+### 90.2 Enhanced DAO Queries — COMPLETED
+
+- **Files Modified**: `frontend/lib/core/database/daos/notes_dao.dart`
+- **Features**: `advancedSearch()` method with multi-table joins and FTS5
+
+### 90.3 Saved Searches — COMPLETED
+
+- **Files Modified**: `frontend/lib/core/database/tables.dart` (SavedSearches table), `frontend/lib/core/database/app_database.dart` (schema v11, migration v10→v11)
+- **Files Created**: `frontend/lib/core/database/daos/saved_searches_dao.dart`
+
+### 90.4 Search History — COMPLETED
+
+- **Files Created**: `frontend/lib/features/notes/domain/search_history.dart`
+- **Features**: SharedPreferences-backed, max 20 entries, deduped
+
+### 90.5 Advanced Search Screen — COMPLETED
+
+- **Files Created**: `frontend/lib/features/search/presentation/advanced_search_screen.dart`, `frontend/lib/features/search/data/search_providers.dart`
+- **Features**: Tabbed operator hints, search history chips, saved searches, result highlighting
+
+### 90.6 Localization — COMPLETED
+
+- 20 new strings across EN, ZH, JA, KO
+
+---
+
+## Phase 91: Image & Attachment Management — COMPLETED
+
+- **Image gallery viewer** with pinch-zoom, swipe, share, delete
+- **Image management screen** in settings (total storage, orphaned image cleanup)
+- **Enhanced image picker** with gallery/camera/paste-from-clipboard options
+- **Note card thumbnails** in grid view
+- Route: `/settings/images`
+
+## Phase 92: Focus Mode & Writing Experience — COMPLETED
+
+- **WritingStats** data class with CJK-aware word/char/line/paragraph counting
+- **WritingStatsBar** compact overlay showing live stats during editing
+- **FocusHighlight** spotlight overlay that dims non-current lines
+- **Typewriter scrolling** mode to keep cursor centered
+- Integrated with Zen mode chrome for unified distraction-free experience
+
+## Phase 93: Note Version Diffing — COMPLETED
+
+- **LCS-based text diff algorithm** (`text_diff.dart`) for comparing note versions
+- **Version diff screen** with color-coded unified diff view (green additions, red deletions)
+- **Multi-select version comparison** from version history screen
+- **Restore actions** with automatic pre-restore snapshot
+- Route: `/notes/:id/diff?older=xxx&newer=yyy`
+
+## Phase 94: Markdown Export & Interop — COMPLETED
+
+- **MarkdownExportService** with YAML frontmatter generation
+- **ExportOrganization** modes: flat, by date, by collection, by tag
+- **ZIP archive export** for batch note exports
+- **ExportSheet** bottom sheet for configuring export options
+- **YAML frontmatter parser** for round-trip import support
+- Single note share as `.md`, multiple notes as `.zip`
+
+## Phase 95: Note Statistics & Writing Insights — COMPLETED
+
+- **NoteStatistics** with SQL aggregation (word counts, activity, streaks)
+- **StatisticsScreen** with overview cards, streak calendar, monthly activity chart
+- **Top tags/collections** rankings, status/priority distribution charts
+- **Knowledge graph stats** (total links, orphaned notes, most connected)
+- CustomPaint-based charts (no external chart dependencies)
+- Route: `/notes/statistics`
+
+## Phase 96: Markdown Import & Obsidian Vault Import — COMPLETED
+
+- **MarkdownImportService** with frontmatter parsing (reuses `parseYamlFrontmatter`)
+- **ImportSheet** bottom sheet with file/ZIP/folder picker
+- **Obsidian vault import**: `[[wiki links]]` conversion, `![[image]]` embed handling, image copy
+- **ZIP import** for batch `.md` file imports
+- Property extraction from frontmatter (status, priority, dates)
+
+## Phase 97: Note Templates Library — COMPLETED
+
+- **NoteTemplates table** (schema v12) with name, description, content, category, usage tracking
+- **7 built-in templates**: Meeting Notes, Daily Journal, Project Plan, Reading Notes, Weekly Review, Brainstorm, Blank
+- **TemplatePickerSheet** with search, category filters, 2-column grid
+- **TemplateManagementScreen** for CRUD on user templates, duplicate built-in
+- Route: `/settings/templates`
+
+## Phase 98: Quick Capture — COMPLETED
+
+- **QuickCaptureScreen** minimal full-screen overlay with auto-save debounce
+- **Quick actions** (home screen shortcuts): New Note, New Checklist, Daily Note
+- Priority selector, tag picker in bottom toolbar
+- Swipe-to-dismiss with draft confirmation
+- Route: `/quick-capture`
+
+## Phase 99: Offline Queue & Sync Resilience — COMPLETED
+
+- **SyncOperations table** with retry tracking, exponential backoff, nextRetryAt
+- **SyncOperationsDao** with enqueue, process, retry, clear operations
+- **OfflineQueueService** Riverpod notifier with reactive queue status
+- **SyncStatusIndicator** compact app bar dot (green/yellow/red)
+- **SyncQueueSheet** bottom sheet with pending/failed counts, retry/clear actions
+
+## Phase 100: Lint Cleanup — COMPLETED
+
+- Fixed 4 lint issues: 3 trailing commas, 1 deprecated `value` → `initialValue` API
+- Files: quick_capture_screen.dart, template_picker.dart, sync_queue_sheet.dart
+
+## Phase 101: Note Color-Coding System — COMPLETED
+
+- **Database v13**: Added `color TEXT` column to Notes, Tags, Collections tables
+- **ColorPickerSheet**: Bottom sheet with 18 predefined Material colors + custom hex input
+- **Note cards**: Colored left border (list) / top border (grid), color dot indicator
+- **Tags**: Color dot avatar, long-press edit menu with color picker
+- **Collections**: Colored folder icons, long-press edit menu with color picker
+- **Search**: `color:#FF5722` or `color:red` operator in search query parser
+- **Advanced search**: Color filter chip integration
+- 7 l10n keys added across EN/ZH/JA/KO
+
+## Phase 102: Note Reminders — COMPLETED
+
+- **ReminderService**: Polling-based (60s Timer) reminder checker with Riverpod provider
+- **NoteProperties storage**: `reminder_at`, `reminder_title`, `reminder_recurring`, `reminder_fired_at` keys
+- **ReminderPickerSheet**: Preset options (later today, tomorrow, next week), custom date/time, recurring selector
+- **RemindersScreen**: List of upcoming reminders sorted by time, tap-to-open, swipe-to-cancel
+- **Note editor**: Bell icon in app bar with badge indicator for active reminders
+- **Notes list**: Notification icon navigating to reminders screen
+- **Route**: `/notes/reminders`
+- 15 l10n keys added across EN/ZH/JA/KO
+
+## Phase 103: Accessibility Improvements — COMPLETED
+
+- **SemanticOrder**: Focus traversal utility with `OrderedTraversalPolicy` for logical tab order
+- **Note cards**: Full Semantics wrapper with localized labels, pin indicator, decorative exclusion
+- **Dismissible cards**: Semantics labels for swipe actions (delete, archive, restore)
+- **Rich editor**: Semantics label + hint on QuillEditor area
+- **Graph view**: Text alternative summary with node/link counts
+- **Settings**: Section grouping with `Semantics(container: true)`, toggle switch hints
+- **Collections/Tags**: FAB semantic labels, dismissible card labels
+- **Daily notes**: Calendar day cell semantic labels
+- **Quick capture**: TextField semantic label
+- **Routing**: `_PhoneShell` wrapped in `FocusTraversalGroup` with ordered traversal
+- 16 l10n keys added across EN/ZH/JA/KO
+
+## Phase 104: Batch Color + Note Locking — COMPLETED
+
+- **Batch color**: Palette icon in multi-select toolbar opens ColorPickerSheet, applies to all selected notes
+- **Note locking**: `is_locked` key in NoteProperties, lock/unlock in editor AppBar, read-only mode with banner
+- **NoteCard**: Lock icon indicator on locked cards
+- **Rich editor**: `readOnly` parameter hides toolbar, disables editing
+- **Long-press menu**: Lock/unlock options in context menu
+- **Batch lock**: Lock/unlock button in multi-select toolbar
+- 11 l10n keys added across EN/ZH/JA/KO
+
+## Phase 105: Note Comparison Diff — COMPLETED
+
+- **NoteCompareScreen**: Side-by-side and unified diff views using TextDiff LCS algorithm
+- **NoteComparePicker**: Bottom sheet to select exactly 2 notes for comparison
+- **Batch integration**: Compare button visible when exactly 2 notes selected
+- **Route**: `/notes/compare?left={id1}&right={id2}`
+- **Color-coded**: Green additions, red deletions, synchronized scrolling
+- 9 l10n keys added across EN/ZH/JA/KO
+
+## Phase 106: Mermaid Diagram Rendering — COMPLETED
+
+- **MermaidRenderer**: Styled code block with copy-to-clipboard for mermaid diagrams (fallback without WebView)
+- **MarkdownPreview**: Intercepts ` ```mermaid ` blocks before standard rendering
+- **Slash commands**: Mermaid diagram entry with template insertion
+- 7 l10n keys added across EN/ZH/JA/KO
+
+## Phase 107: Drag-and-Drop to Collections — COMPLETED
+
+- **CollectionPickerSheet**: Bottom sheet with search, lists all collections, supports single and batch move
+- **Batch action**: Folder icon in multi-select toolbar opens picker
+- **Context menu**: "Add to Collection" in long-press context menu
+- **Move method**: `_moveToCollection()` adds notes to selected collection with snackbar confirmation
+- 7 l10n keys added across EN/ZH/JA/KO
+
+## Phase 108: Table of Contents — COMPLETED
+
+- **TocExtractor**: Parses ATX and Setext headings, skips code blocks, assigns sequential IDs
+- **TocSheet**: DraggableScrollableSheet with hierarchical heading list, tap-to-scroll
+- **Markdown preview**: TOC button in AppBar, scrolls to heading via character offset mapping
+- 3 l10n keys added across EN/ZH/JA/KO
+
+## Phase 109: Section Folding — COMPLETED
+
+- **SectionFoldController**: ChangeNotifier tracking fold state as Set<int> of heading line indices
+- **FoldedOutlineView**: Collapsible sections with content preview, animated expand/collapse
+- **SectionFoldBar**: "Fold All" / "Unfold All" toolbar with count badge
+- **Editor integration**: Fold view toggle in AppBar, switches between rich editor and outline
+- 6 l10n keys added across EN/ZH/JA/KO
+
+## Phase 110: Scroll-to-Top FAB + Print — COMPLETED
+
+- **Scroll-to-top**: AnimatedOpacity/AnimatedSlide FAB in notes list, appears after 1000px scroll
+- **PrintPreviewSheet**: Bottom sheet with metadata/image toggles, HTML export with print CSS
+- **Editor/Detail/Preview**: Print button in AppBar across all note viewing screens
+- **Share as HTML**: Generates styled HTML, shares via share_plus
+- 7 l10n keys added across EN/ZH/JA/KO
+
+## Phase 111: Text-to-Speech Read Aloud — COMPLETED
+
+- **SpeechService**: Riverpod provider, paragraph-by-paragraph playback, state tracking
+- **TtsPlayerBar**: Compact bottom bar with play/pause, stop, speed selector, progress indicator
+- **Editor integration**: Volume icon in AppBar toggles TTS, player bar at bottom of editor
+- 5 l10n keys added across EN/ZH/JA/KO
+
+## Phase 112: Local Notifications for Reminders — COMPLETED
+
+- **LocalNotificationService**: Wraps flutter_local_notifications for system tray notifications
+- **ReminderService integration**: Schedules/cancels system notifications alongside polling
+- **Startup init**: Notification permissions requested, channel configured
+- **Recurring support**: Daily/weekly/monthly scheduled notifications
+- **Platform guards**: kIsWeb + Platform checks for graceful no-op on unsupported platforms
+- 4 l10n keys added across EN/ZH/JA/KO
+- Dependencies: flutter_local_notifications ^18.0.0, timezone ^0.9.4
+
+## Phase 113: Note List Reordering — COMPLETED
+
+- **Database migration v13→v14**: Added `sort_order` INTEGER column to notes table
+- **DAO methods**: `updateNoteSortOrder()`, `reorderNotes()`, `getNotesSortedByCustomOrder()`
+- **Custom sort mode**: New "Custom Order" option in sort popup
+- **ReorderableListView**: Drag handles visible when custom sort active
+- **Info banner**: Shows reorder hint when in custom sort mode
+- **DismissibleNoteCard**: Optional trailing widget for drag handle
+- 2 l10n keys added across EN/ZH/JA/KO
+
+## Phase 114: AI Chat Tests — COMPLETED
+
+- **chat_message_test.dart**: 17 tests (construction, copyWith, toApiMap, equality)
+- **chat_session_test.dart**: 23 tests (defaults, copyWith, immutability, const construction)
+- **chat_session_notifier_test.dart**: 30 tests (send, stream, error, cancel, context, providers)
+- **agent_notifier_test.dart**: 15 tests (states, execute, reset, provider)
+- **ai_agent_screen_test.dart**: 19 widget tests (render, tap, loading, error, success)
+- Total: 96 new tests, all passing
+
+## Phase 115: Keyboard Shortcuts Enhancement — COMPLETED
+
+- **New shortcuts**: Ctrl+P (print), Ctrl+H (heading cycle), Ctrl+` (inline code), Ctrl+Shift+K (link), Ctrl+Shift+S (strikethrough)
+- **Rich editor**: Explicit undo/redo Shortcuts/Actions, strikethrough/inline code/heading/link toggles
+- **Toolbar tooltips**: Shortcut hints shown in toolbar button tooltips
+- **KeyboardShortcutsScreen**: Settings page listing all shortcuts by category
+- **Route**: `/settings/shortcuts`
+- **Settings**: Added "Keyboard Shortcuts" tile
+- 18 l10n keys added across EN/ZH/JA/KO
+
+## Phase 116: Code Snippet Management — COMPLETED
+
+- **Snippets table**: DB v15, new table with id/title/code/language/description/category/tags/usageCount
+- **SnippetsDao**: 11 methods (watch, search, CRUD, categories, languages, usage tracking)
+- **SnippetsScreen**: Search bar, language/category filters, snippet cards, FAB, context menu
+- **SnippetEditorSheet**: Create/edit with 17 language options, description, category, tags
+- **SnippetDetailSheet**: Read-only view with copy, edit, delete actions
+- **Slash command**: `/snippet` shows searchable picker, inserts code fence
+- **Route**: `/snippets`
+- 19 l10n keys added across EN/ZH/JA/KO
+
+## Phase 117: PDF Export — COMPLETED
+
+- **PdfExportService**: A4 layout, CJK font (Noto Sans SC), page numbers, markdown formatting
+- **System print dialog**: Via `printing` package's `Printing.layoutPdf()`
+- **PDF share**: Via `share_plus` platform sheet
+- **ExportSheet update**: PDF format option alongside Markdown/HTML/Plain Text
+- **PrintPreviewSheet update**: Generate PDF + Print buttons (non-web only)
+- **Ctrl+P shortcut**: Wired to open print preview sheet
+- **Bundled font**: `assets/fonts/NotoSansSC-Regular.ttf` (2MB, covers CJK)
+- Dependencies: printing ^5.12.0, pdf ^3.10.0
+- 5 l10n keys added across EN/ZH/JA/KO
+
+## Phase 118: Mermaid Diagram Rendering — COMPLETED
+
+- **WebView rendering**: Loads mermaid.js v11 via CDN, renders actual SVG diagrams
+- **Theme-aware**: Matches app brightness (light/dark mermaid themes)
+- **Auto-height**: JavaScript channel reports rendered height (100-800px range)
+- **View Source toggle**: Switch between rendered diagram and raw code
+- **Graceful fallback**: kIsWeb or WebView failure → source code display with copy
+- **Loading state**: Spinner while mermaid.js loads from CDN
+- Dependency: webview_flutter ^4.10.0
+- 3 l10n keys added across EN/ZH/JA/KO
+
+## Phase 119: Critical Widget Tests — COMPLETED
+
+- **export_sheet_test.dart**: 11 tests (format options, scope, frontmatter toggle, organization)
+- **print_preview_sheet_test.dart**: 12 tests (content rendering, toggles, clipboard, actions)
+- **version_diff_screen_test.dart**: 17 tests (14 TextDiff LCS algorithm + 3 widget tests)
+- **home_widget_service_test.dart**: 12 tests (NoteSummary, JSON serialization, no-op platform)
+- **tts_player_bar_test.dart**: 13 tests (state icons, callbacks, speed selector, progress)
+- Total: 65 new tests, all passing
+
+## Phase 120: Tag Hierarchy — COMPLETED
+
+- **DB migration v15→v16**: Added `parent_id` column to Tags table with index
+- **TagsDao additions**: `watchAllTagsOrdered`, `getChildTags`, `getDescendantTagIds`, `reparentTag` (circular ref guard), `getTagPath`
+- **TagTreeItem model**: `buildTagTree` and `flattenTagTree` utilities for client-side tree construction
+- **TagsScreen tree view**: Hierarchical ListView replacing flat Wrap, expand/collapse state, indented levels
+- **TagReparentSheet**: Searchable bottom sheet for selecting new parent with circular reference prevention
+- **Long-press context menu**: Create sub-tag, reparent, color, delete options
+- 8 l10n keys added across EN/ZH/JA/KO
+
+## Phase 121: Collab Cursor Precision — COMPLETED
+
+- **CursorPositionCalculator**: Static utility using TextPainter + RenderBox for accurate cursor positioning
+- **CursorOverlay update**: Animated cursors (AnimatedPositioned, 150ms easeOutCubic), selection range highlights
+- **CursorData extension**: `selectionEnd` for range selections, equality/hashCode overrides
+- **CollabCursorsWidget update**: GlobalKey captures editor RenderBox each frame for precise positioning
+- **User labels**: Colored username badges with theme-adaptive text, tooltips on hover
+- 2 l10n keys added across EN/ZH/JA/KO
+
+## Phase 122: Quick Actions + Image Drag-and-Drop — COMPLETED
+
+- **QuickActionsManager rewrite**: Actual `QuickActions().initialize()` + `.setShortcutItems()` calls
+- **Main.dart integration**: Register on startup, unregister on dispose, navigator key binding
+- **EditorDropTarget**: `desktop_drop` DropTarget wrapping editor, image validation, visual drag feedback
+- **Image drop handling**: Validates jpg/png/gif/webp, saves via ImageStorage, inserts markdown reference
+- **Platform guards**: kIsWeb checks, desktop-only drop, mobile-only quick actions
+- Dependencies: quick_actions ^1.1.0, desktop_drop ^0.5.0
+- 6 l10n keys added across EN/ZH/JA/KO
+
+## Phase 123: Widget Tests Batch 2 — COMPLETED
+
+- **command_palette_test.dart**: 13 tests (search, filter, keyboard, empty state, recent notes, provider)
+- **properties_sheet_test.dart**: 15 tests (CRUD, property types, built-in properties, dialog, empty state)
+- **slash_command_menu_test.dart**: 10 tests (16 enum types, buildSlashCommands, filter, data class)
+- **note_graph_screen_test.dart**: 10 tests (AppBar, empty state, loading, error, GraphData model, provider)
+- **translation_sheet_test.dart**: 14 tests (language selector, translate, loading, error, callbacks)
+- Total: 62 new tests, all passing
+
+## Future Considerations (Post-Phase 123)
 
 | Area | Description | Priority |
 |------|-------------|----------|
 | Integration Test Harness | testcontainers-go with real PostgreSQL for repo integration tests | P2 |
-| Pre-existing Test Fixes | 108 Flutter test failures (Iterable.single pattern, a11y utils) | P2 |
+| Pre-existing Test Fixes | 11 Flutter test failures (pre-existing) | P2 |
 | Performance Profiling | Memory profiling, startup time optimization | P3 |
-| Offline-First Enhancement | Queue operations offline, sync on reconnect | P3 |
 | Multi-Device Sync | Cross-device session management, conflict UI | P3 |
 | Internationalization | RTL language support, plural rules, date formatting | P3 |
 | Analytics (Privacy-Preserving) | Opt-in, anonymized usage telemetry | P3 |
+| Collaborative Editing | Real-time multi-user cursor display, presence awareness | P2 |

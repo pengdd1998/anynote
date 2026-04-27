@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 /// Model for an AI chat session.
 ///
 /// Tracks the in-memory conversation history and optional context notes
@@ -33,6 +35,32 @@ class ChatSession {
     this.isLoading = false,
     this.error,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ChatSession &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          title == other.title &&
+          const DeepCollectionEquality()
+              .equals(contextNoteIds, other.contextNoteIds) &&
+          const DeepCollectionEquality()
+              .equals(contextNoteContents, other.contextNoteContents) &&
+          const DeepCollectionEquality().equals(messages, other.messages) &&
+          isLoading == other.isLoading &&
+          error == other.error;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        title,
+        Object.hashAll(contextNoteIds),
+        Object.hashAllUnordered(contextNoteContents.entries),
+        Object.hashAll(messages),
+        isLoading,
+        error,
+      );
 
   ChatSession copyWith({
     String? title,

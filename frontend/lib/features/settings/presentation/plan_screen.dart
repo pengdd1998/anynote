@@ -168,18 +168,18 @@ class _PlanContent extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text('Pro'),
+              title: Text(l10n.proPlan),
               subtitle: Text(l10n.proPlanDescription),
-              trailing: const Text('\$4.99/mo'),
+              trailing: Text(l10n.proPrice),
               onTap: () {
                 Navigator.pop(ctx);
                 ref.read(planInfoProvider.notifier).upgrade(PlanType.pro);
               },
             ),
             ListTile(
-              title: const Text('Lifetime'),
+              title: Text(l10n.lifetimePlan),
               subtitle: Text(l10n.lifetimePlanDescription),
-              trailing: const Text('\$49.99'),
+              trailing: Text(l10n.lifetimePrice),
               onTap: () {
                 Navigator.pop(ctx);
                 ref.read(planInfoProvider.notifier).upgrade(PlanType.lifetime);
@@ -278,10 +278,11 @@ class _PlanComparisonCard extends StatelessWidget {
             decoration: BoxDecoration(color: colorScheme.surfaceContainerHigh),
             children: [
               const _HeaderCell(''),
-              _HeaderCell('Free', highlight: currentPlan == PlanType.free),
-              _HeaderCell('Pro', highlight: currentPlan == PlanType.pro),
+              _HeaderCell(l10n.freePlan,
+                  highlight: currentPlan == PlanType.free),
+              _HeaderCell(l10n.proPlan, highlight: currentPlan == PlanType.pro),
               _HeaderCell(
-                'Lifetime',
+                l10n.lifetimePlan,
                 highlight: currentPlan == PlanType.lifetime,
               ),
             ],

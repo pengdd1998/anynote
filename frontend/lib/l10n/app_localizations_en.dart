@@ -203,6 +203,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get titleAZ => 'Title A-Z';
 
   @override
+  String get sortCustom => 'Custom Order';
+
+  @override
+  String get reorderModeHint => 'Drag notes to reorder';
+
+  @override
   String get listView => 'List view';
 
   @override
@@ -2112,6 +2118,92 @@ class AppLocalizationsEn extends AppLocalizations {
   String get templateDateHint => 'Use [date] for current date';
 
   @override
+  String get templates => 'Templates';
+
+  @override
+  String get templatePicker => 'Choose a Template';
+
+  @override
+  String get createFromTemplate => 'Create from Template';
+
+  @override
+  String get createFromScratch => 'Create from Scratch';
+
+  @override
+  String get templateManagement => 'Template Management';
+
+  @override
+  String get newTemplate => 'New Template';
+
+  @override
+  String get editTemplate => 'Edit Template';
+
+  @override
+  String get deleteTemplate => 'Delete Template';
+
+  @override
+  String get templateName => 'Template Name';
+
+  @override
+  String get templateDescription => 'Description';
+
+  @override
+  String get templateContent => 'Content';
+
+  @override
+  String get templateCategory => 'Category';
+
+  @override
+  String get categoryWork => 'Work';
+
+  @override
+  String get categoryPersonal => 'Personal';
+
+  @override
+  String get categoryCreative => 'Creative';
+
+  @override
+  String get builtInTemplates => 'Built-in Templates';
+
+  @override
+  String get userTemplates => 'My Templates';
+
+  @override
+  String templateUsed(int count) {
+    return 'Used $count times';
+  }
+
+  @override
+  String get duplicateTemplate => 'Duplicate';
+
+  @override
+  String get noTemplates => 'No templates yet';
+
+  @override
+  String get templateSaved => 'Template saved';
+
+  @override
+  String get templateMeetingNotes => 'Meeting Notes';
+
+  @override
+  String get templateDailyJournal => 'Daily Journal';
+
+  @override
+  String get templateProjectPlan => 'Project Plan';
+
+  @override
+  String get templateReadingNotes => 'Reading Notes';
+
+  @override
+  String get templateWeeklyReview => 'Weekly Review';
+
+  @override
+  String get templateBrainstorm => 'Brainstorm';
+
+  @override
+  String get templateBlank => 'Blank';
+
+  @override
   String get offlineBanner =>
       'You are offline — changes will sync when connected';
 
@@ -2549,6 +2641,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewBacklinks => 'View backlinks';
 
   @override
+  String get wikiLink => 'Wiki Link';
+
+  @override
+  String get linkToNote => 'Link to Note';
+
+  @override
+  String get relatedNotes => 'Related Notes';
+
+  @override
+  String get noRelatedNotes => 'No related notes';
+
+  @override
+  String get startTypingToSearch => 'Start typing to search notes';
+
+  @override
+  String get noNotesFound => 'No notes found';
+
+  @override
   String get backgroundSync => 'Background sync';
 
   @override
@@ -2747,4 +2857,1415 @@ class AppLocalizationsEn extends AppLocalizations {
   String multiplePeopleInRoom(int count) {
     return '$count people viewing';
   }
+
+  @override
+  String get propertiesDashboard => 'Properties Dashboard';
+
+  @override
+  String get totalNotes => 'Total Notes';
+
+  @override
+  String get withProperties => 'With Properties';
+
+  @override
+  String get priorityDistribution => 'Priority Distribution';
+
+  @override
+  String get noPrioritiesSet => 'No priorities set';
+
+  @override
+  String get notesByStatus => 'Notes by Status';
+
+  @override
+  String get createFirstNoteHint =>
+      'Create your first note to see the dashboard';
+
+  @override
+  String get dailyNotes => 'Daily Notes';
+
+  @override
+  String get dailyNote => 'Daily Note';
+
+  @override
+  String get todaysNote => 'Today\'s Note';
+
+  @override
+  String get createTodaysNote => 'Create today\'s note';
+
+  @override
+  String get noDailyNote => 'No note for this day';
+
+  @override
+  String get openDailyNote => 'Open daily note';
+
+  @override
+  String get goToToday => 'Today';
+
+  @override
+  String get hasNote => 'Has note';
+
+  @override
+  String get calendar => 'Calendar';
+
+  @override
+  String get recentDailyNotes => 'Recent Daily Notes';
+
+  @override
+  String get commandPalette => 'Command Palette';
+
+  @override
+  String get commandSearchHint => 'Type to search notes and commands...';
+
+  @override
+  String get commandRecentNotes => 'Recent';
+
+  @override
+  String get commandNotesSection => 'Notes';
+
+  @override
+  String get commandActions => 'Actions';
+
+  @override
+  String get commandCreateNewNote => 'Create New Note';
+
+  @override
+  String get commandOpenDailyNotes => 'Open Daily Notes';
+
+  @override
+  String get commandOpenGraph => 'Open Graph View';
+
+  @override
+  String get commandOpenDashboard => 'Open Dashboard';
+
+  @override
+  String get commandOpenTrash => 'Open Trash';
+
+  @override
+  String get commandOpenSettings => 'Open Settings';
+
+  @override
+  String get commandNoResultsFound => 'No results found';
+
+  @override
+  String get slashHeading1 => 'Heading 1';
+
+  @override
+  String get slashHeading2 => 'Heading 2';
+
+  @override
+  String get slashHeading3 => 'Heading 3';
+
+  @override
+  String get slashBulletList => 'Bullet List';
+
+  @override
+  String get slashNumberedList => 'Numbered List';
+
+  @override
+  String get slashTodoList => 'To-do List';
+
+  @override
+  String get slashCodeBlock => 'Code Block';
+
+  @override
+  String get slashQuote => 'Quote';
+
+  @override
+  String get slashDivider => 'Divider';
+
+  @override
+  String get slashTable => 'Table';
+
+  @override
+  String get slashImage => 'Image';
+
+  @override
+  String get slashWikilink => 'Wiki Link';
+
+  @override
+  String get slashTransclusion => 'Transclusion';
+
+  @override
+  String get slashCallout => 'Callout';
+
+  @override
+  String get slashNoResults => 'No matching commands';
+
+  @override
+  String get splitView => 'Split View';
+
+  @override
+  String get openInSplitView => 'Open in Split View';
+
+  @override
+  String get closeSplitView => 'Close Split View';
+
+  @override
+  String get selectNoteForSplit => 'Select note for split view';
+
+  @override
+  String get searchOperators => 'Search operators';
+
+  @override
+  String get searchOperatorTag => 'tag:name -- Filter by tag';
+
+  @override
+  String get searchOperatorStatus =>
+      'status:todo|in-progress|done|blocked|cancelled';
+
+  @override
+  String get searchOperatorPriority => 'priority:high|medium|low';
+
+  @override
+  String get searchOperatorDate => 'date:YYYY-MM-DD -- Filter by date';
+
+  @override
+  String get searchOperatorCollection =>
+      'collection:name -- Filter by collection';
+
+  @override
+  String get searchOperatorLinks => 'links:true|false -- Filter by link status';
+
+  @override
+  String get searchOperatorsExample =>
+      'Example: tag:work status:todo project plan';
+
+  @override
+  String get savedSearches => 'Saved Searches';
+
+  @override
+  String get saveSearch => 'Save Search';
+
+  @override
+  String get saveSearchName => 'Search name';
+
+  @override
+  String get searchSaved => 'Search saved';
+
+  @override
+  String get deleteSavedSearch => 'Delete saved search';
+
+  @override
+  String deleteSavedSearchConfirm(String name) {
+    return 'Delete \"$name\"?';
+  }
+
+  @override
+  String get searchHistory => 'Recent Searches';
+
+  @override
+  String get clearSearchHistory => 'Clear search history';
+
+  @override
+  String get noSavedSearches => 'No saved searches yet';
+
+  @override
+  String get saveSearchHint =>
+      'Search for something, then tap the bookmark icon to save it';
+
+  @override
+  String get noSearchHistory => 'No search history';
+
+  @override
+  String get showSearchHints => 'Show search hints';
+
+  @override
+  String get hideSearchHints => 'Hide search hints';
+
+  @override
+  String get searchNotesHint =>
+      'Search with operators: tag:work status:todo ...';
+
+  @override
+  String get enterQueryOrOperators =>
+      'Enter a query with operators to find notes';
+
+  @override
+  String get imageGallery => 'Image Gallery';
+
+  @override
+  String get fromGallery => 'From Gallery';
+
+  @override
+  String get fromCamera => 'From Camera';
+
+  @override
+  String get selectImageSource => 'Select Image Source';
+
+  @override
+  String get pasteImage => 'Paste Image';
+
+  @override
+  String get deleteImage => 'Delete Image';
+
+  @override
+  String get deleteImageConfirm =>
+      'Are you sure you want to delete this image?';
+
+  @override
+  String get imageManagement => 'Image Management';
+
+  @override
+  String get totalStorage => 'Total Storage';
+
+  @override
+  String imageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count image$_temp0';
+  }
+
+  @override
+  String get orphanedImages => 'Orphaned Images';
+
+  @override
+  String get cleanupOrphaned => 'Clean up orphaned images';
+
+  @override
+  String cleanupComplete(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return 'Cleaned up $count orphaned image$_temp0';
+  }
+
+  @override
+  String get deleteAllImages => 'Delete all images';
+
+  @override
+  String get deleteAllImagesConfirm =>
+      'This will delete all stored images. This cannot be undone.';
+
+  @override
+  String get noImagesStored => 'No images stored';
+
+  @override
+  String get imageDeleted => 'Image deleted';
+
+  @override
+  String get shareImage => 'Share Image';
+
+  @override
+  String get compareVersions => 'Compare Versions';
+
+  @override
+  String get versionDiff => 'Version Diff';
+
+  @override
+  String linesAdded(int count) {
+    return '$count lines added';
+  }
+
+  @override
+  String linesRemoved(int count) {
+    return '$count lines removed';
+  }
+
+  @override
+  String get selectTwoVersions => 'Select two versions to compare';
+
+  @override
+  String get noChanges => 'No changes';
+
+  @override
+  String versionNumber(int number) {
+    return 'Version $number';
+  }
+
+  @override
+  String readingTime(int minutes) {
+    return '$minutes min read';
+  }
+
+  @override
+  String get lessThan1Min => 'Less than 1 min read';
+
+  @override
+  String lineCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines',
+      one: '1 line',
+      zero: '0 lines',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paragraphCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count paragraphs',
+      one: '1 paragraph',
+      zero: '0 paragraphs',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get focusMode => 'Focus Mode';
+
+  @override
+  String get typewriterScroll => 'Typewriter Scroll';
+
+  @override
+  String get writingStats => 'Writing Stats';
+
+  @override
+  String get toggleWritingStats => 'Toggle writing stats';
+
+  @override
+  String charCountNoSpaces(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chars (no spaces)',
+      one: '1 char (no spaces)',
+      zero: '0 chars (no spaces)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get totalWords => 'Total Words';
+
+  @override
+  String get averageWords => 'Avg Words/Note';
+
+  @override
+  String get daysActive => 'Days Active';
+
+  @override
+  String get last30Days => 'last 30 days';
+
+  @override
+  String get writingStreak => 'Writing Streak';
+
+  @override
+  String currentStreak(int count) {
+    return 'Current: $count days';
+  }
+
+  @override
+  String longestStreak(int count) {
+    return 'Longest: $count days';
+  }
+
+  @override
+  String get monthlyActivity => 'Monthly Activity';
+
+  @override
+  String get topTags => 'Top Tags';
+
+  @override
+  String get topCollections => 'Top Collections';
+
+  @override
+  String get statusDistribution => 'Status Distribution';
+
+  @override
+  String get knowledgeGraphStats => 'Knowledge Graph';
+
+  @override
+  String get totalLinks => 'Total Links';
+
+  @override
+  String orphanedNotesCount(int count) {
+    return '$count orphaned notes';
+  }
+
+  @override
+  String get mostConnectedNote => 'Most Connected';
+
+  @override
+  String get noStatistics => 'No statistics yet';
+
+  @override
+  String get notesWithProperties => 'Notes with properties';
+
+  @override
+  String get notesWithLinks => 'Notes with links';
+
+  @override
+  String get exportNotes => 'Export Notes';
+
+  @override
+  String get exportingNotes => 'Exporting notes...';
+
+  @override
+  String get exportComplete => 'Export complete';
+
+  @override
+  String get exportSelectedNotes => 'Export Selected';
+
+  @override
+  String get exportCurrentNote => 'Export Current Note';
+
+  @override
+  String exportSelected(int count) {
+    return '$count selected notes';
+  }
+
+  @override
+  String get exportWithFrontmatter => 'Export with metadata';
+
+  @override
+  String get exportAsZip => 'Export as ZIP archive';
+
+  @override
+  String get includeFrontmatter => 'Include metadata (frontmatter)';
+
+  @override
+  String get frontmatterDesc =>
+      'Add YAML metadata header with tags, dates, and properties';
+
+  @override
+  String get exportOrganization => 'Organization';
+
+  @override
+  String get exportFlat => 'Flat';
+
+  @override
+  String get exportByDate => 'By Date';
+
+  @override
+  String get exportByCollection => 'By Collection';
+
+  @override
+  String get exportByTag => 'By Tag';
+
+  @override
+  String notesExported(int count) {
+    return '$count notes exported';
+  }
+
+  @override
+  String get importFromMarkdown => 'Import from Markdown';
+
+  @override
+  String get importFromZip => 'Import from ZIP';
+
+  @override
+  String get importFromObsidian => 'Import from Obsidian Vault';
+
+  @override
+  String get importingNotes => 'Importing notes...';
+
+  @override
+  String notesImported(int count) {
+    return '$count notes imported';
+  }
+
+  @override
+  String get preserveDates => 'Preserve original dates';
+
+  @override
+  String get importTags => 'Import tags';
+
+  @override
+  String get importProperties => 'Import properties';
+
+  @override
+  String get noFilesSelected => 'No files selected';
+
+  @override
+  String get importOptions => 'Import Options';
+
+  @override
+  String get quickCapture => 'Quick Capture';
+
+  @override
+  String get typeSomething => 'Type something...';
+
+  @override
+  String get autoSaved => 'Auto-saved';
+
+  @override
+  String get discardDraft => 'Discard draft?';
+
+  @override
+  String get discardDraftMessage => 'Your unsaved changes will be lost.';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get newNoteShortcut => 'New Note';
+
+  @override
+  String get newChecklistShortcut => 'New Checklist';
+
+  @override
+  String get dailyNoteShortcut => 'Daily Note';
+
+  @override
+  String get sharedToAnynote => 'Shared to AnyNote';
+
+  @override
+  String get setPriority => 'Set Priority';
+
+  @override
+  String get quickCaptureDesc => 'Quickly capture a thought';
+
+  @override
+  String pendingSync(int count) {
+    return '$count pending';
+  }
+
+  @override
+  String syncFailedCount(int count) {
+    return '$count failed';
+  }
+
+  @override
+  String get syncQueue => 'Sync Queue';
+
+  @override
+  String get pendingOperations => 'Pending Operations';
+
+  @override
+  String get failedOperations => 'Failed Operations';
+
+  @override
+  String get retryAll => 'Retry All';
+
+  @override
+  String get clearCompleted => 'Clear Completed';
+
+  @override
+  String operationFailed(String error) {
+    return 'Failed: $error';
+  }
+
+  @override
+  String get retryingSync => 'Retrying sync...';
+
+  @override
+  String get queueCleared => 'Completed operations cleared';
+
+  @override
+  String get noPendingOperations => 'No pending operations';
+
+  @override
+  String noteSemantics(String title) {
+    return 'Note: $title';
+  }
+
+  @override
+  String deleteNoteSemantics(String title) {
+    return 'Delete note $title';
+  }
+
+  @override
+  String archiveNoteSemantics(String title) {
+    return 'Archive note $title';
+  }
+
+  @override
+  String pinNoteSemantics(String title) {
+    return 'Pin note $title';
+  }
+
+  @override
+  String unpinNoteSemantics(String title) {
+    return 'Unpin note $title';
+  }
+
+  @override
+  String get noteContentEditor => 'Note content editor. Double-tap to edit.';
+
+  @override
+  String graphSummary(int nodeCount, int linkCount) {
+    return '$nodeCount notes with $linkCount links';
+  }
+
+  @override
+  String get pinnedNote => 'Pinned';
+
+  @override
+  String settingsGroup(String section) {
+    return '$section settings';
+  }
+
+  @override
+  String restoreNoteSemantics(String title) {
+    return 'Restore note $title';
+  }
+
+  @override
+  String permanentlyDeleteNoteSemantics(String title) {
+    return 'Permanently delete note $title';
+  }
+
+  @override
+  String deleteCollectionSemantics(String title) {
+    return 'Delete collection $title';
+  }
+
+  @override
+  String calendarDaySemantics(String date, String hasNote) {
+    return '$date. $hasNote';
+  }
+
+  @override
+  String noteCountSemantics(int count) {
+    return '$count notes';
+  }
+
+  @override
+  String get reminder => 'Reminder';
+
+  @override
+  String get setReminder => 'Set Reminder';
+
+  @override
+  String get reminderAt => 'Reminder Time';
+
+  @override
+  String get removeReminder => 'Remove Reminder';
+
+  @override
+  String get laterToday => 'Later Today';
+
+  @override
+  String get tomorrowMorning => 'Tomorrow Morning';
+
+  @override
+  String get nextWeek => 'Next Week';
+
+  @override
+  String get noReminders => 'No Reminders';
+
+  @override
+  String get recurring => 'Recurring';
+
+  @override
+  String get daily => 'Daily';
+
+  @override
+  String get weekly => 'Weekly';
+
+  @override
+  String get monthly => 'Monthly';
+
+  @override
+  String get reminders => 'Reminders';
+
+  @override
+  String get reminderFired => 'Reminder Fired';
+
+  @override
+  String get color => 'Color';
+
+  @override
+  String get selectColor => 'Select Color';
+
+  @override
+  String get removeColor => 'Remove Color';
+
+  @override
+  String get noteColor => 'Note Color';
+
+  @override
+  String get customColor => 'Custom Color';
+
+  @override
+  String get colorFilter => 'Color Filter';
+
+  @override
+  String get searchOperatorColor =>
+      'color:#RRGGBB or color:name -- Filter by color';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get compareNotes => 'Compare';
+
+  @override
+  String get selectNotesToCompare => 'Select Notes to Compare';
+
+  @override
+  String get unifiedView => 'Unified';
+
+  @override
+  String get sideBySideView => 'Side-by-side';
+
+  @override
+  String get additions => 'Additions';
+
+  @override
+  String get deletions => 'Deletions';
+
+  @override
+  String get selectTwoNotes => 'Select exactly 2 notes to compare';
+
+  @override
+  String get noteDiff => 'Note Diff';
+
+  @override
+  String linesChanged(int added, int removed) {
+    return '$added lines added, $removed lines removed';
+  }
+
+  @override
+  String get mermaidDiagram => 'Mermaid Diagram';
+
+  @override
+  String get viewDiagram => 'View Diagram';
+
+  @override
+  String get copyMermaidCode => 'Copy Mermaid Code';
+
+  @override
+  String get diagramCopied => 'Diagram code copied';
+
+  @override
+  String get mermaidTemplate => 'Mermaid Template';
+
+  @override
+  String get insertDiagram => 'Insert Diagram';
+
+  @override
+  String get slashMermaid => 'Mermaid Diagram';
+
+  @override
+  String get viewSource => 'View Source';
+
+  @override
+  String get diagramError => 'Failed to render diagram';
+
+  @override
+  String get copyDiagramSource => 'Copy Diagram Source';
+
+  @override
+  String get lockNote => 'Lock Note';
+
+  @override
+  String get unlockNote => 'Unlock Note';
+
+  @override
+  String get noteLocked => 'Note Locked';
+
+  @override
+  String get lockedNoteBanner => 'This note is locked. Tap to unlock.';
+
+  @override
+  String notesColored(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count note$_temp0 colored';
+  }
+
+  @override
+  String colorRemovedFromNotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return 'Color removed from $count note$_temp0';
+  }
+
+  @override
+  String get batchColor => 'Color';
+
+  @override
+  String get batchLock => 'Lock';
+
+  @override
+  String get batchUnlock => 'Unlock';
+
+  @override
+  String notesLocked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count note$_temp0 locked';
+  }
+
+  @override
+  String notesUnlocked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count note$_temp0 unlocked';
+  }
+
+  @override
+  String get moveToCollection => 'Move to Collection';
+
+  @override
+  String get searchCollections => 'Search collections...';
+
+  @override
+  String get noCollections => 'No collections found';
+
+  @override
+  String notesMovedToCollection(int count, String name) {
+    return '$count notes moved to \"$name\"';
+  }
+
+  @override
+  String noteMovedToCollection(String name) {
+    return 'Note moved to \"$name\"';
+  }
+
+  @override
+  String get addToCollection => 'Add to Collection';
+
+  @override
+  String get scrollToTop => 'Scroll to top';
+
+  @override
+  String get printNote => 'Print note';
+
+  @override
+  String get printPreview => 'Print preview';
+
+  @override
+  String get includeMetadata => 'Include metadata';
+
+  @override
+  String get includeImages => 'Include images';
+
+  @override
+  String get shareAsHtml => 'Share as HTML';
+
+  @override
+  String get exportedAsHtml => 'Exported as HTML';
+
+  @override
+  String get foldView => 'Fold View';
+
+  @override
+  String get foldAll => 'Fold All';
+
+  @override
+  String get unfoldAll => 'Unfold All';
+
+  @override
+  String sectionLines(int count) {
+    return '$count lines';
+  }
+
+  @override
+  String foldedSections(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count folded section$_temp0';
+  }
+
+  @override
+  String get toggleFold => 'Toggle fold';
+
+  @override
+  String get tableOfContents => 'Table of Contents';
+
+  @override
+  String get noHeadings => 'No headings found';
+
+  @override
+  String headingLevel(int level) {
+    return 'Heading level $level';
+  }
+
+  @override
+  String get readAloud => 'Read Aloud';
+
+  @override
+  String get stopReading => 'Stop Reading';
+
+  @override
+  String get pauseReading => 'Pause';
+
+  @override
+  String get resumeReading => 'Resume';
+
+  @override
+  String get readingSpeed => 'Reading Speed';
+
+  @override
+  String get keyboardShortcuts => 'Keyboard Shortcuts';
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get editor => 'Editor';
+
+  @override
+  String get navigation => 'Navigation';
+
+  @override
+  String get shortcutBold => 'Bold';
+
+  @override
+  String get shortcutItalic => 'Italic';
+
+  @override
+  String get shortcutStrikethrough => 'Strikethrough';
+
+  @override
+  String get shortcutUndo => 'Undo';
+
+  @override
+  String get shortcutRedo => 'Redo';
+
+  @override
+  String get shortcutPrint => 'Print';
+
+  @override
+  String get shortcutLink => 'Insert Link';
+
+  @override
+  String get shortcutCode => 'Inline Code';
+
+  @override
+  String get shortcutHeading => 'Toggle Heading';
+
+  @override
+  String get shortcutCommandPalette => 'Command Palette';
+
+  @override
+  String get shortcutFocusMode => 'Focus Mode';
+
+  @override
+  String get reminderNotificationTitle => 'Reminder';
+
+  @override
+  String reminderNotificationBody(String title) {
+    return 'Time to review: $title';
+  }
+
+  @override
+  String get notificationChannelName => 'Note Reminders';
+
+  @override
+  String get notificationChannelDescription =>
+      'Notifications for note reminders';
+
+  @override
+  String get exportPdf => 'PDF';
+
+  @override
+  String get generatePdf => 'Generate PDF';
+
+  @override
+  String get pdfGenerated => 'PDF generated';
+
+  @override
+  String get sharePdf => 'Share PDF';
+
+  @override
+  String get exportFormatPdf => 'PDF Document';
+
+  @override
+  String get snippets => 'Snippets';
+
+  @override
+  String get snippetTitle => 'Title';
+
+  @override
+  String get snippetCode => 'Code';
+
+  @override
+  String get snippetLanguage => 'Language';
+
+  @override
+  String get snippetDescription => 'Description';
+
+  @override
+  String get snippetCategory => 'Category';
+
+  @override
+  String get snippetTags => 'Tags';
+
+  @override
+  String get newSnippet => 'New Snippet';
+
+  @override
+  String get editSnippet => 'Edit Snippet';
+
+  @override
+  String get deleteSnippet => 'Delete Snippet';
+
+  @override
+  String get deleteSnippetConfirm => 'Delete this snippet?';
+
+  @override
+  String get copyCode => 'Copy Code';
+
+  @override
+  String get codeCopied => 'Code copied';
+
+  @override
+  String get insertSnippet => 'Insert Snippet';
+
+  @override
+  String get noSnippets => 'No snippets yet';
+
+  @override
+  String get searchSnippets => 'Search snippets...';
+
+  @override
+  String usageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return 'Used $count time$_temp0';
+  }
+
+  @override
+  String get allLanguages => 'All Languages';
+
+  @override
+  String get allCategories => 'All Categories';
+
+  @override
+  String get tagHierarchy => 'Tag Hierarchy';
+
+  @override
+  String get createSubTag => 'Create Sub-tag';
+
+  @override
+  String get moveToParent => 'Move to Parent';
+
+  @override
+  String get noParent => 'No Parent (Root)';
+
+  @override
+  String get selectParentTag => 'Select Parent Tag';
+
+  @override
+  String get expandAll => 'Expand All';
+
+  @override
+  String get collapseAll => 'Collapse All';
+
+  @override
+  String userCursor(String name) {
+    return '$name\'s cursor';
+  }
+
+  @override
+  String get remoteUser => 'Remote user';
+
+  @override
+  String get dropImageHere => 'Drop image here';
+
+  @override
+  String get imageAdded => 'Image added';
+
+  @override
+  String get unsupportedFileType => 'Only image files are supported';
+
+  @override
+  String get quickNote => 'New Note';
+
+  @override
+  String get quickChecklist => 'New Checklist';
+
+  @override
+  String get quickDailyNote => 'Daily Note';
+
+  @override
+  String get moreOptions => 'More options';
+
+  @override
+  String get failedToLoadTrash => 'Failed to load trash';
+
+  @override
+  String failedToRestoreError(String error) {
+    return 'Failed to restore: $error';
+  }
+
+  @override
+  String failedToDeleteError(String error) {
+    return 'Failed to delete: $error';
+  }
+
+  @override
+  String get deleteProperty => 'Delete Property';
+
+  @override
+  String get removePropertyConfirm => 'Remove this property from the note?';
+
+  @override
+  String get propertiesTitle => 'Properties';
+
+  @override
+  String get noProperties => 'No properties';
+
+  @override
+  String get addCustomMetadata => 'Add custom metadata to this note';
+
+  @override
+  String get addPropertyButton => 'Add Property';
+
+  @override
+  String get editProperty => 'Edit Property';
+
+  @override
+  String get customPropertyTitle => 'Custom Property';
+
+  @override
+  String get propertyLabel => 'Property';
+
+  @override
+  String get valueLabel => 'Value';
+
+  @override
+  String get numberLabel => 'Number';
+
+  @override
+  String get enterValue => 'Enter a value';
+
+  @override
+  String get enterNumber => 'Enter a number';
+
+  @override
+  String get selectDateLabel => 'Select a date';
+
+  @override
+  String get linkManagementTitle => 'Link Management';
+
+  @override
+  String get outboundLinks => 'Outbound Links';
+
+  @override
+  String get deleteLinkTitle => 'Delete Link';
+
+  @override
+  String get removeLinkConfirm => 'Remove this connection between notes?';
+
+  @override
+  String get noLinksToDisplay =>
+      'No links to display. Adjust filters to see more.';
+
+  @override
+  String get linksToThisNote => 'Links to this note';
+
+  @override
+  String get thisNoteLinksTo => 'This note links to';
+
+  @override
+  String get deleteLinkTooltip => 'Delete link';
+
+  @override
+  String get insertTable => 'Insert Table';
+
+  @override
+  String get dragToSelectTableSize => 'Drag to select table size';
+
+  @override
+  String get proPlan => 'Pro';
+
+  @override
+  String get lifetimePlan => 'Lifetime';
+
+  @override
+  String get proPrice => '\$4.99/mo';
+
+  @override
+  String get lifetimePrice => '\$49.99';
+
+  @override
+  String get priorityHigh => 'High';
+
+  @override
+  String get priorityMedium => 'Medium';
+
+  @override
+  String get priorityLow => 'Low';
+
+  @override
+  String tagsCountLabel(int count) {
+    return '$count tags';
+  }
+
+  @override
+  String get orphanedNotes => 'Orphaned notes';
+
+  @override
+  String get filter => 'Filter';
+
+  @override
+  String priorityLabel(String priority) {
+    return 'Priority: $priority';
+  }
+
+  @override
+  String get noMatchingNotes => 'No matching notes';
+
+  @override
+  String get tryChangingFilters => 'Try changing your filters';
+
+  @override
+  String get filterByProperties => 'Filter by Properties';
+
+  @override
+  String get priority => 'Priority';
+
+  @override
+  String get viewProperties => 'Properties';
+
+  @override
+  String get noteTitle => 'Note title';
+
+  @override
+  String get dateLabel => 'Date';
+
+  @override
+  String propertyOf(String name) {
+    return 'Property: $name';
+  }
+
+  @override
+  String get insertLabel => 'Insert';
+
+  @override
+  String failedToLoadMore(String error) {
+    return 'Failed to load more: $error';
+  }
+
+  @override
+  String get linkCreated => 'Link created';
+
+  @override
+  String failedToCreateLink(String error) {
+    return 'Failed to create link: $error';
+  }
+
+  @override
+  String get suggestedLinks => 'Suggested Links';
+
+  @override
+  String get similarContentDesc =>
+      'Notes with similar titles or content. Tap to create a link.';
+
+  @override
+  String get noSuggestions => 'No Suggestions';
+
+  @override
+  String get createMoreNotes => 'Create more notes to get suggestions.';
+
+  @override
+  String get notAvailableOnWeb => 'This feature is not available on web';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get failedToLoadDeferred => 'Failed to load';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get syncStatusTitle => 'Sync Status';
+
+  @override
+  String get offlineLabel => 'Offline';
+
+  @override
+  String get connectedLabel => 'Connected';
+
+  @override
+  String get pendingOpsLabel => 'Pending operations';
+
+  @override
+  String get lastSyncedLabel => 'Last synced';
+
+  @override
+  String get failedItemsLabel => 'Failed items';
+
+  @override
+  String get offlineSyncTooltip =>
+      'Offline -- changes will sync when connected';
+
+  @override
+  String get pullingLabel => 'Pulling';
+
+  @override
+  String get pushingLabel => 'Pushing';
+
+  @override
+  String get syncingLabel => 'Syncing...';
+
+  @override
+  String get allChangesSyncedLabel => 'All changes synced';
+
+  @override
+  String pendingOpTooltip(int count) {
+    return '$count pending operation';
+  }
+
+  @override
+  String pendingOpsTooltip(int count) {
+    return '$count pending operations';
+  }
+
+  @override
+  String get syncConflictBadge => 'Sync conflict';
+
+  @override
+  String get conflictLabel => 'Conflict';
+
+  @override
+  String get syncedLabel => 'Synced';
+
+  @override
+  String get pendingSyncLabel => 'Pending';
+
+  @override
+  String get pendingSyncBadge => 'Pending sync';
+
+  @override
+  String barChartSemanticLabel(String entries) {
+    return 'Bar chart showing notes by month: $entries';
+  }
+
+  @override
+  String donutChartSemanticLabel(String entries) {
+    return 'Donut chart showing distribution: $entries';
+  }
+
+  @override
+  String tagItemSemanticLabel(String name) {
+    return 'Tag: $name';
+  }
+
+  @override
+  String get tagItemSemanticHint => 'Long press to edit';
 }

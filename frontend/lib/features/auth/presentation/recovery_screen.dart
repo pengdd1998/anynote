@@ -51,9 +51,10 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
       Uint8List? serverSalt;
       try {
         serverSalt = await api.getRecoverySalt(email);
-      } catch (_) {
+      } catch (e) {
         // Non-critical: if the server is unreachable or returns an error,
         // proceed without the server salt (legacy fallback).
+        debugPrint('[RecoveryScreen] failed to fetch recovery salt: $e');
       }
 
       // Step 2: Recover master key from BIP-39 mnemonic.

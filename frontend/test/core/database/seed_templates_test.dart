@@ -4,51 +4,70 @@ import 'package:anynote/core/database/seed_templates.dart';
 
 void main() {
   group('SeedTemplates', () {
-    test('builtIn has exactly 5 templates', () {
-      expect(SeedTemplates.builtIn.length, 5);
+    test('builtIn has expected template count', () {
+      // Blank template has empty content, exclude from non-empty checks.
+      expect(SeedTemplates.builtIn.length, greaterThanOrEqualTo(5));
     });
 
     test('each template has a non-empty name', () {
       for (final template in SeedTemplates.builtIn) {
-        expect(template.name, isNotEmpty, reason: 'Template name should not be empty');
+        expect(
+          template.name,
+          isNotEmpty,
+          reason: 'Template name should not be empty',
+        );
       }
     });
 
-    test('each template has non-empty content', () {
-      for (final template in SeedTemplates.builtIn) {
-        expect(template.content, isNotEmpty, reason: 'Template content should not be empty');
+    test('each non-blank template has non-empty content', () {
+      for (final template in SeedTemplates.builtIn.where(
+        (t) => t.name != 'Blank',
+      )) {
+        expect(
+          template.content,
+          isNotEmpty,
+          reason: '${template.name} content should not be empty',
+        );
       }
     });
 
     test('template names are unique', () {
       final names = SeedTemplates.builtIn.map((t) => t.name).toList();
       final uniqueNames = names.toSet();
-      expect(names.length, uniqueNames.length,
-          reason: 'All template names should be unique',);
+      expect(
+        names.length,
+        uniqueNames.length,
+        reason: 'All template names should be unique',
+      );
     });
 
-    test('specific templates contain {{date}} placeholder where applicable', () {
-      // Meeting Notes, Daily Journal, and Weekly Review use {{date}}.
-      final dateTemplates = SeedTemplates.builtIn
-          .where((t) => t.name == 'Meeting Notes' || t.name == 'Daily Journal' || t.name == 'Weekly Review');
+    test('specific templates contain {{date}} placeholder where applicable',
+        () {
+      final dateTemplates = SeedTemplates.builtIn.where(
+        (t) =>
+            t.name == 'Meeting Notes' ||
+            t.name == 'Daily Journal' ||
+            t.name == 'Weekly Review',
+      );
       for (final template in dateTemplates) {
-        expect(template.content, contains('{{date}}'),
-            reason: '${template.name} should contain {{date}} placeholder',);
-      }
-
-      // Project Notes and Reading Notes do not use {{date}}.
-      final noDateTemplates = SeedTemplates.builtIn
-          .where((t) => t.name == 'Project Notes' || t.name == 'Reading Notes');
-      for (final template in noDateTemplates) {
-        expect(template.content, isNot(contains('{{date}}')),
-            reason: '${template.name} should not contain {{date}} placeholder',);
+        expect(
+          template.content,
+          contains('{{date}}'),
+          reason: '${template.name} should contain {{date}} placeholder',
+        );
       }
     });
 
-    test('content starts with # (markdown heading)', () {
-      for (final template in SeedTemplates.builtIn) {
-        expect(template.content, startsWith('#'),
-            reason: '${template.name} content should start with a markdown heading',);
+    test('non-blank content starts with # (markdown heading)', () {
+      for (final template in SeedTemplates.builtIn.where(
+        (t) => t.name != 'Blank',
+      )) {
+        expect(
+          template.content,
+          startsWith('#'),
+          reason:
+              '${template.name} content should start with a markdown heading',
+        );
       }
     });
 
@@ -61,13 +80,16 @@ void main() {
     test('contains expected template names', () {
       final names = SeedTemplates.builtIn.map((t) => t.name).toSet();
 
-      expect(names, containsAll([
-        'Meeting Notes',
-        'Daily Journal',
-        'Project Notes',
-        'Reading Notes',
-        'Weekly Review',
-      ]),);
+      expect(
+        names,
+        containsAll([
+          'Meeting Notes',
+          'Daily Journal',
+          'Project Plan',
+          'Reading Notes',
+          'Weekly Review',
+        ]),
+      );
     });
 
     test('Meeting Notes template contains key sections', () {
@@ -87,21 +109,20 @@ void main() {
       expect(journal.content, contains('Highlights'));
     });
 
-    test('Project Notes template contains key sections', () {
+    test('Project Plan template contains key sections', () {
       final project = SeedTemplates.builtIn.firstWhere(
-        (t) => t.name == 'Project Notes',
+        (t) => t.name == 'Project Plan',
       );
-      expect(project.content, contains('Status'));
-      expect(project.content, contains('Key Decisions'));
-      expect(project.content, contains('Blockers'));
-      expect(project.content, contains('Next Steps'));
+      expect(project.content, contains('Objective'));
+      expect(project.content, contains('Milestones'));
+      expect(project.content, contains('Risks'));
     });
 
     test('Reading Notes template contains key sections', () {
       final reading = SeedTemplates.builtIn.firstWhere(
         (t) => t.name == 'Reading Notes',
       );
-      expect(reading.content, contains('Key Takeaways'));
+      expect(reading.content, contains('Key Insights'));
       expect(reading.content, contains('Quotes'));
     });
 

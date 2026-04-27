@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../core/constants/app_durations.dart';
 import '../../../core/share/share_service.dart';
 
 /// Bottom sheet for creating a shared note link.
@@ -90,7 +91,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.linkCopiedToClipboard),
-        duration: const Duration(seconds: 2),
+        duration: AppDurations.snackbarDuration,
       ),
     );
   }
@@ -268,10 +269,12 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           items: expiryOptions
-              .map((opt) => DropdownMenuItem(
-                    value: opt.value,
-                    child: Text(opt.label),
-                  ),)
+              .map(
+                (opt) => DropdownMenuItem(
+                  value: opt.value,
+                  child: Text(opt.label),
+                ),
+              )
               .toList(),
           onChanged: (v) {
             if (v != null) setState(() => _expiresHours = v);

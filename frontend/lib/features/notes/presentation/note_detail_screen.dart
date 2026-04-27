@@ -13,6 +13,8 @@ import '../../../core/export/export_service.dart';
 import '../../../core/widgets/markdown_preview.dart';
 import '../domain/decrypted_note.dart';
 import 'share_sheet.dart';
+import 'widgets/export_sheet.dart';
+import 'widgets/print_preview_sheet.dart';
 
 class NoteDetailScreen extends ConsumerWidget {
   final String noteId;
@@ -95,6 +97,30 @@ class NoteDetailScreen extends ConsumerWidget {
                   child: ListTile(
                     leading: const Icon(Icons.text_snippet_outlined),
                     title: Text(l10n.exportAsPlainText),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'markdown_frontmatter',
+                  child: ListTile(
+                    leading: const Icon(Icons.description_outlined),
+                    title: Text(l10n.exportWithFrontmatter),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'export_zip',
+                  child: ListTile(
+                    leading: const Icon(Icons.folder_zip_outlined),
+                    title: Text(l10n.exportAsZip),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'print',
+                  child: ListTile(
+                    leading: const Icon(Icons.print_outlined),
+                    title: Text(l10n.printNote),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
@@ -273,6 +299,56 @@ class NoteDetailScreen extends ConsumerWidget {
   ) async {
     if (action == 'share_link') {
       _openShareSheet(context, ref);
+      return;
+    }
+
+    // Handle the new frontmatter and ZIP export actions via the export sheet.
+    if (action == 'markdown_frontmatter') {
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (_) => ExportSheet(
+          currentNoteId: noteId,
+          scope: ExportScope.currentNote,
+        ),
+      );
+      return;
+    }
+
+    if (action == 'export_zip') {
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (_) => const ExportSheet(
+          scope: ExportScope.allNotes,
+        ),
+      );
+      return;
+    }
+
+    if (action == 'print') {
+      final db = ref.read(databaseProvider);
+      final crypto = ref.read(cryptoServiceProvider);
+      final l10n = AppLocalizations.of(context)!;
+      final noteData = await _loadNote(db, crypto, l10n);
+      if (!context.mounted || noteData == null) return;
+      final note = await db.notesDao.getNoteById(noteId);
+      if (!context.mounted || note == null) return;
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => PrintPreviewSheet(
+          note: note,
+          title: noteData.title,
+          content: noteData.content,
+        ),
+      );
       return;
     }
 

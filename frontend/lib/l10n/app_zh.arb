@@ -120,6 +120,10 @@
 
   "titleAZ": "按标题 A-Z",
 
+  "sortCustom": "自定义排序",
+
+  "reorderModeHint": "拖拽笔记以重新排序",
+
   "listView": "列表视图",
 
   "gridView": "网格视图",
@@ -1234,6 +1238,62 @@
 
   "templateDateHint": "使用 [date] 插入当前日期",
 
+  "templates": "模板",
+
+  "templatePicker": "选择模板",
+
+  "createFromTemplate": "从模板创建",
+
+  "createFromScratch": "空白创建",
+
+  "templateManagement": "模板管理",
+
+  "newTemplate": "新建模板",
+
+  "editTemplate": "编辑模板",
+
+  "deleteTemplate": "删除模板",
+
+  "templateName": "模板名称",
+
+  "templateDescription": "描述",
+
+  "templateContent": "内容",
+
+  "templateCategory": "分类",
+
+  "categoryWork": "工作",
+
+  "categoryPersonal": "个人",
+
+  "categoryCreative": "创意",
+
+  "builtInTemplates": "内置模板",
+
+  "userTemplates": "我的模板",
+
+  "templateUsed": "使用 {count} 次",
+
+  "duplicateTemplate": "复制",
+
+  "noTemplates": "暂无模板",
+
+  "templateSaved": "模板已保存",
+
+  "templateMeetingNotes": "会议笔记",
+
+  "templateDailyJournal": "每日日志",
+
+  "templateProjectPlan": "项目计划",
+
+  "templateReadingNotes": "阅读笔记",
+
+  "templateWeeklyReview": "每周回顾",
+
+  "templateBrainstorm": "头脑风暴",
+
+  "templateBlank": "空白",
+
   "offlineBanner": "您当前离线 \u2014 恢复连接后将自动同步更改",
 
   "unlockRequired": "请先解锁您的保险库",
@@ -1412,6 +1472,12 @@
   "knowledgeGraph": "知识图谱",
   "graphEmpty": "暂无链接关系，请先在笔记中添加 [[链接]]",
   "viewBacklinks": "查看反向链接",
+  "wikiLink": "Wiki 链接",
+  "linkToNote": "链接到笔记",
+  "relatedNotes": "相关笔记",
+  "noRelatedNotes": "暂无相关笔记",
+  "startTypingToSearch": "输入以搜索笔记",
+  "noNotesFound": "未找到笔记",
   "aiAgent": "AI 助手",
   "selectAction": "选择操作",
   "organizeNotes": "整理笔记",
@@ -1504,5 +1570,572 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+
+  "propertiesDashboard": "属性仪表板",
+  "@propertiesDashboard": { "description": "Title of the properties dashboard screen" },
+
+  "totalNotes": "总笔记数",
+  "@totalNotes": { "description": "Label for total notes count in dashboard" },
+
+  "withProperties": "有属性",
+  "@withProperties": { "description": "Label for notes with properties percentage in dashboard" },
+
+  "priorityDistribution": "优先级分布",
+  "@priorityDistribution": { "description": "Section title for priority distribution chart" },
+
+  "noPrioritiesSet": "未设置优先级",
+  "@noPrioritiesSet": { "description": "Empty state message when no notes have priority set" },
+
+  "notesByStatus": "按状态分组的笔记",
+  "@notesByStatus": { "description": "Section title for kanban-style status columns" },
+
+  "noNotesYet": "还没有笔记",
+  "@noNotesYet": { "description": "Empty state message when there are no notes" },
+
+  "createFirstNoteHint": "创建您的第一条笔记以查看仪表板",
+  "@createFirstNoteHint": { "description": "Hint text for empty dashboard state" },
+
+  "dailyNotes": "日记",
+  "@dailyNotes": { "description": "Title for the daily notes / journal screen" },
+
+  "dailyNote": "日记",
+  "@dailyNote": { "description": "Label for a single daily note" },
+
+  "todaysNote": "今天的日记",
+  "@todaysNote": { "description": "Label for today's daily note" },
+
+  "createTodaysNote": "创建今天的日记",
+  "@createTodaysNote": { "description": "Button to create a daily note for today" },
+
+  "noDailyNote": "这天没有日记",
+  "@noDailyNote": { "description": "Message when no daily note exists for a date" },
+
+  "openDailyNote": "打开日记",
+  "@openDailyNote": { "description": "Button to open an existing daily note" },
+
+  "goToToday": "今天",
+  "@goToToday": { "description": "Button to jump the calendar to today" },
+
+  "hasNote": "有笔记",
+  "@hasNote": { "description": "Accessibility label for calendar dot indicator" },
+
+  "calendar": "日历",
+  "@calendar": { "description": "Label for calendar navigation" },
+
+  "recentDailyNotes": "最近的日记",
+  "@recentDailyNotes": { "description": "Section header for recent daily notes list" },
+
+  "commandPalette": "命令面板",
+  "@commandPalette": { "description": "Tooltip and title for the command palette feature" },
+
+  "commandSearchHint": "输入以搜索笔记和命令...",
+  "@commandSearchHint": { "description": "Placeholder text in the command palette search field" },
+
+  "commandRecentNotes": "最近",
+  "@commandRecentNotes": { "description": "Section header for recently opened notes in command palette" },
+
+  "commandNotesSection": "笔记",
+  "@commandNotesSection": { "description": "Section header for note results in command palette" },
+
+  "commandActions": "操作",
+  "@commandActions": { "description": "Section header for action results in command palette" },
+
+  "commandCreateNewNote": "创建新笔记",
+  "@commandCreateNewNote": { "description": "Command palette action to create a new note" },
+
+  "commandOpenDailyNotes": "打开日记",
+  "@commandOpenDailyNotes": { "description": "Command palette action to open daily notes" },
+
+  "commandOpenGraph": "打开图谱视图",
+  "@commandOpenGraph": { "description": "Command palette action to open the knowledge graph" },
+
+  "commandOpenDashboard": "打开仪表盘",
+  "@commandOpenDashboard": { "description": "Command palette action to open the properties dashboard" },
+
+  "commandOpenTrash": "打开回收站",
+  "@commandOpenTrash": { "description": "Command palette action to open the trash screen" },
+
+  "commandOpenSettings": "打开设置",
+  "@commandOpenSettings": { "description": "Command palette action to open the settings screen" },
+
+  "commandNoResultsFound": "没有找到结果",
+  "@commandNoResultsFound": { "description": "Empty state when command palette search has no matches" },
+
+  "slashHeading1": "标题 1",
+  "slashHeading2": "标题 2",
+  "slashHeading3": "标题 3",
+  "slashBulletList": "无序列表",
+  "slashNumberedList": "有序列表",
+  "slashTodoList": "待办列表",
+  "slashCodeBlock": "代码块",
+  "slashQuote": "引用",
+  "slashDivider": "分割线",
+  "slashTable": "表格",
+  "slashImage": "图片",
+  "slashWikilink": "Wiki 链接",
+  "slashTransclusion": "内容嵌入",
+  "slashCallout": "标注",
+  "slashNoResults": "没有匹配的命令",
+
+  "splitView": "分屏视图",
+  "openInSplitView": "在分屏中打开",
+  "closeSplitView": "关闭分屏",
+  "selectNoteForSplit": "选择分屏笔记",
+
+  "searchOperators": "搜索操作符",
+  "searchOperatorTag": "tag:名称 -- 按标签筛选",
+  "searchOperatorStatus": "status:todo|in-progress|done|blocked|cancelled",
+  "searchOperatorPriority": "priority:high|medium|low",
+  "searchOperatorDate": "date:YYYY-MM-DD -- 按日期筛选",
+  "searchOperatorCollection": "collection:名称 -- 按集合筛选",
+  "searchOperatorLinks": "links:true|false -- 按链接状态筛选",
+  "searchOperatorsExample": "示例: tag:work status:todo 项目计划",
+  "savedSearches": "保存的搜索",
+  "saveSearch": "保存搜索",
+  "saveSearchName": "搜索名称",
+  "searchSaved": "搜索已保存",
+  "deleteSavedSearch": "删除保存的搜索",
+  "deleteSavedSearchConfirm": "删除\"{name}\"？",
+  "searchHistory": "最近搜索",
+  "clearSearchHistory": "清除搜索历史",
+  "noSavedSearches": "还没有保存的搜索",
+  "saveSearchHint": "搜索后点击书签图标保存",
+  "noSearchHistory": "没有搜索历史",
+  "showSearchHints": "显示搜索提示",
+  "hideSearchHints": "隐藏搜索提示",
+  "searchNotesHint": "使用操作符搜索: tag:work status:todo ...",
+  "enterQueryOrOperators": "输入带操作符的查询以查找笔记",
+
+  "imageGallery": "图片画廊",
+  "fromGallery": "从相册选择",
+  "fromCamera": "拍照",
+  "selectImageSource": "选择图片来源",
+  "pasteImage": "粘贴图片",
+  "deleteImage": "删除图片",
+  "deleteImageConfirm": "确定要删除此图片吗？",
+  "imageManagement": "图片管理",
+  "totalStorage": "总存储",
+  "imageCount": "{count} 张图片",
+  "orphanedImages": "孤立图片",
+  "cleanupOrphaned": "清理孤立图片",
+  "cleanupComplete": "已清理 {count} 张孤立图片",
+  "deleteAllImages": "删除所有图片",
+  "deleteAllImagesConfirm": "这将删除所有存储的图片。此操作不可撤销。",
+  "noImagesStored": "没有存储的图片",
+  "imageDeleted": "图片已删除",
+  "shareImage": "分享图片",
+
+  "compareVersions": "比较版本",
+  "versionDiff": "版本差异",
+  "versionNumber": "版本 {number}",
+  "linesAdded": "{count} 行新增",
+  "linesRemoved": "{count} 行删除",
+  "noChanges": "无变化",
+  "restoreVersion": "恢复此版本",
+  "restoreVersionConfirm": "恢复笔记到版本 {version}？当前内容将保存为新版本。",
+  "versionRestored": "版本已恢复",
+  "selectTwoVersions": "选择两个版本进行比较",
+
+  "readingTime": "{minutes} 分钟阅读",
+  "lessThan1Min": "不到1分钟",
+  "lineCount": "{count} 行",
+  "paragraphCount": "{count} 段落",
+  "focusMode": "专注模式",
+  "typewriterScroll": "打字机滚动",
+  "writingStats": "写作统计",
+  "toggleWritingStats": "切换写作统计",
+  "charCountNoSpaces": "{count} 字符（不含空格）",
+
+  "statistics": "统计",
+  "totalWords": "总字数",
+  "averageWords": "平均字数/笔记",
+  "daysActive": "活跃天数",
+  "last30Days": "近30天",
+  "writingStreak": "连续写作",
+  "currentStreak": "当前: {count} 天",
+  "longestStreak": "最长: {count} 天",
+  "monthlyActivity": "每月活动",
+  "topTags": "热门标签",
+  "topCollections": "热门集合",
+  "statusDistribution": "状态分布",
+  "knowledgeGraphStats": "知识图谱",
+  "totalLinks": "总链接",
+  "orphanedNotesCount": "{count} 篇孤立笔记",
+  "mostConnectedNote": "最连接的笔记",
+  "noStatistics": "暂无统计",
+  "notesWithProperties": "有属性的笔记",
+  "notesWithLinks": "有链接的笔记",
+
+  "exportNotes": "导出笔记",
+  "exportingNotes": "正在导出...",
+  "exportComplete": "导出完成",
+  "exportSelectedNotes": "导出选中",
+  "exportCurrentNote": "导出当前笔记",
+  "exportSelected": "{count} 篇选中的笔记",
+  "exportWithFrontmatter": "带元数据导出",
+  "exportAsZip": "导出为 ZIP 压缩包",
+  "includeFrontmatter": "包含元数据（前置信息）",
+  "frontmatterDesc": "添加包含标签、日期和属性的 YAML 元数据头",
+  "exportOrganization": "组织方式",
+  "exportFlat": "平铺",
+  "exportByDate": "按日期",
+  "exportByCollection": "按集合",
+  "exportByTag": "按标签",
+  "notesExported": "{count} 篇笔记已导出",
+
+  "importFromMarkdown": "从 Markdown 导入",
+  "importFromZip": "从 ZIP 导入",
+  "importFromObsidian": "从 Obsidian 库导入",
+  "importingNotes": "正在导入笔记...",
+  "notesImported": "已导入 {count} 篇笔记",
+  "preserveDates": "保留原始日期",
+  "importTags": "导入标签",
+  "importProperties": "导入属性",
+  "noFilesSelected": "未选择文件",
+  "importOptions": "导入选项"
+,
+  "quickCapture": "快速记录",
+  "typeSomething": "输入内容...",
+  "autoSaved": "已自动保存",
+  "discardDraft": "丢弃草稿？",
+  "discardDraftMessage": "未保存的更改将丢失。",
+  "discard": "丢弃",
+  "newNoteShortcut": "新建笔记",
+  "newChecklistShortcut": "新建清单",
+  "dailyNoteShortcut": "每日笔记",
+  "sharedToAnynote": "已分享到 AnyNote",
+  "setPriority": "设置优先级",
+  "quickCaptureDesc": "快速记录想法",
+  "pendingSync": "{count} 待同步",
+  "syncFailedCount": "{count} 失败",
+  "syncQueue": "同步队列",
+  "pendingOperations": "待处理操作",
+  "failedOperations": "失败操作",
+  "retryAll": "全部重试",
+  "clearCompleted": "清除已完成",
+  "operationFailed": "失败: {error}",
+  "retryingSync": "正在重试同步...",
+  "queueCleared": "已完成操作已清除",
+  "noPendingOperations": "没有待处理操作",
+
+  "noteSemantics": "笔记：{title}",
+
+  "deleteNoteSemantics": "删除笔记 {title}",
+
+  "archiveNoteSemantics": "归档笔记 {title}",
+
+  "pinNoteSemantics": "置顶笔记 {title}",
+
+  "unpinNoteSemantics": "取消置顶笔记 {title}",
+
+  "noteContentEditor": "笔记内容编辑器。双击以编辑。",
+
+  "graphSummary": "{nodeCount} 个笔记，{linkCount} 个链接",
+
+  "pinnedNote": "已置顶",
+
+  "settingsGroup": "{section} 设置",
+
+  "restoreNoteSemantics": "恢复笔记 {title}",
+
+  "permanentlyDeleteNoteSemantics": "永久删除笔记 {title}",
+
+  "deleteCollectionSemantics": "删除集合 {title}",
+
+  "calendarDaySemantics": "{date}。{hasNote}",
+
+  "noteCountSemantics": "{count} 条笔记",
+
+  "reminder": "提醒",
+  "setReminder": "设置提醒",
+  "reminderAt": "提醒时间",
+  "removeReminder": "取消提醒",
+  "laterToday": "今天稍后",
+  "tomorrowMorning": "明天早上",
+  "nextWeek": "下周",
+  "noReminders": "暂无提醒",
+  "recurring": "重复",
+  "daily": "每天",
+  "weekly": "每周",
+  "monthly": "每月",
+  "reminders": "提醒列表",
+  "reminderFired": "提醒已触发",
+
+  "color": "颜色",
+  "selectColor": "选择颜色",
+  "removeColor": "移除颜色",
+  "noteColor": "笔记颜色",
+  "customColor": "自定义颜色",
+  "colorFilter": "按颜色筛选",
+  "searchOperatorColor": "color:#RRGGBB 或 color:颜色名 -- 按颜色筛选",
+
+  "none": "无",
+
+  "compareNotes": "比较笔记",
+
+  "selectNotesToCompare": "选择要比较的笔记",
+
+  "unifiedView": "统一视图",
+
+  "sideBySideView": "并排视图",
+
+  "additions": "新增",
+
+  "deletions": "删除",
+
+  "selectTwoNotes": "请选择两个笔记进行比较",
+
+  "noteDiff": "笔记差异",
+
+  "linesChanged": "{added} 行新增，{removed} 行删除",
+
+  "mermaidDiagram": "Mermaid 图表",
+
+  "viewDiagram": "查看图表",
+
+  "copyMermaidCode": "复制 Mermaid 代码",
+
+  "diagramCopied": "图表代码已复制",
+
+  "mermaidTemplate": "Mermaid 模板",
+
+  "insertDiagram": "插入图表",
+
+  "slashMermaid": "Mermaid 图表",
+
+  "viewSource": "查看源码",
+
+  "diagramError": "图表渲染失败",
+
+  "copyDiagramSource": "复制图表源码",
+
+  "lockNote": "锁定笔记",
+  "unlockNote": "解锁笔记",
+  "noteLocked": "笔记已锁定",
+  "lockedNoteBanner": "此笔记已锁定，点击解锁",
+  "notesColored": "{count} 个笔记已着色",
+  "colorRemovedFromNotes": "{count} 个笔记已移除颜色",
+  "batchColor": "批量着色",
+  "batchLock": "批量锁定",
+  "batchUnlock": "批量解锁",
+  "notesLocked": "{count} 个笔记已锁定",
+  "notesUnlocked": "{count} 个笔记已解锁",
+  "moveToCollection": "移至笔记本",
+  "searchCollections": "搜索笔记本...",
+  "noCollections": "未找到笔记本",
+  "notesMovedToCollection": "{count} 个笔记已移至「{name}」",
+  "noteMovedToCollection": "笔记已移至「{name}」",
+  "addToCollection": "添加到笔记本",
+
+  "scrollToTop": "回到顶部",
+
+  "printNote": "打印笔记",
+
+  "printPreview": "打印预览",
+
+  "includeMetadata": "包含元数据",
+
+  "includeImages": "包含图片",
+
+  "shareAsHtml": "分享为 HTML",
+
+  "exportedAsHtml": "已导出为 HTML",
+
+  "foldView": "折叠视图",
+  "foldAll": "全部折叠",
+  "unfoldAll": "全部展开",
+  "sectionLines": "{count} 行",
+  "foldedSections": "{count} 个折叠段落",
+  "toggleFold": "切换折叠",
+
+  "tableOfContents": "目录",
+  "noHeadings": "暂无标题",
+  "headingLevel": "标题级别 {level}",
+  "readAloud": "朗读",
+  "stopReading": "停止朗读",
+  "pauseReading": "暂停",
+  "resumeReading": "继续",
+  "readingSpeed": "朗读速度",
+
+  "keyboardShortcuts": "键盘快捷键",
+  "general": "通用",
+  "editor": "编辑器",
+  "navigation": "导航",
+  "shortcutBold": "加粗",
+  "shortcutItalic": "斜体",
+  "shortcutStrikethrough": "删除线",
+  "shortcutUndo": "撤销",
+  "shortcutRedo": "重做",
+  "shortcutPrint": "打印",
+  "shortcutNewNote": "新建笔记",
+  "shortcutSearch": "搜索",
+  "shortcutLink": "插入链接",
+  "shortcutCode": "行内代码",
+  "shortcutHeading": "切换标题",
+  "shortcutCommandPalette": "命令面板",
+  "shortcutFocusMode": "专注模式",
+
+  "reminderNotificationTitle": "提醒",
+  "reminderNotificationBody": "该复习了：{title}",
+  "notificationChannelName": "笔记提醒",
+  "notificationChannelDescription": "笔记提醒的通知渠道",
+
+  "exportPdf": "PDF",
+
+  "generatePdf": "生成 PDF",
+
+  "pdfGenerated": "PDF 已生成",
+
+  "sharePdf": "分享 PDF",
+
+  "exportFormatPdf": "PDF 文档",
+
+  "snippets": "代码片段",
+
+  "snippetTitle": "标题",
+
+  "snippetCode": "代码",
+
+  "snippetLanguage": "语言",
+
+  "snippetDescription": "描述",
+
+  "snippetCategory": "分类",
+
+  "snippetTags": "标签",
+
+  "newSnippet": "新建片段",
+
+  "editSnippet": "编辑片段",
+
+  "deleteSnippet": "删除片段",
+
+  "deleteSnippetConfirm": "确定删除此片段？",
+
+  "copyCode": "复制代码",
+
+  "codeCopied": "已复制",
+
+  "insertSnippet": "插入代码片段",
+
+  "noSnippets": "暂无代码片段",
+
+  "searchSnippets": "搜索代码片段...",
+
+  "usageCount": "已使用 {count} 次",
+
+  "allLanguages": "所有语言",
+
+  "allCategories": "所有分类",
+
+  "tagHierarchy": "标签层级",
+  "createSubTag": "创建子标签",
+  "moveToParent": "移动到父标签",
+  "noParent": "无父标签（根级）",
+  "selectParentTag": "选择父标签",
+  "expandAll": "全部展开",
+  "collapseAll": "全部折叠",
+
+  "userCursor": "{name} 的光标",
+  "remoteUser": "远程用户",
+
+  "dropImageHere": "拖放图片到此处",
+
+  "imageAdded": "图片已添加",
+
+  "unsupportedFileType": "仅支持图片文件",
+
+  "quickNote": "新建笔记",
+
+  "quickChecklist": "新建清单",
+
+  "quickDailyNote": "每日笔记",
+
+  "moreOptions": "更多选项",
+
+  "failedToLoadTrash": "加载回收站失败",
+  "failedToRestoreError": "恢复失败：{error}",
+  "failedToDeleteError": "删除失败：{error}",
+  "deleteProperty": "删除属性",
+  "removePropertyConfirm": "确定要从此笔记中移除此属性吗？",
+  "propertiesTitle": "属性",
+  "noProperties": "暂无属性",
+  "addCustomMetadata": "为此笔记添加自定义元数据",
+  "addPropertyButton": "添加属性",
+  "editProperty": "编辑属性",
+  "customPropertyTitle": "自定义属性",
+  "propertyLabel": "属性",
+  "valueLabel": "值",
+  "numberLabel": "数字",
+  "enterValue": "请输入一个值",
+  "enterNumber": "请输入一个数字",
+  "selectDateLabel": "选择日期",
+  "linkManagementTitle": "链接管理",
+  "outboundLinks": "出站链接",
+  "deleteLinkTitle": "删除链接",
+  "removeLinkConfirm": "确定要移除此笔记间的连接吗？",
+  "noLinksToDisplay": "没有链接可显示。调整筛选条件以查看更多。",
+  "linksToThisNote": "链接到此笔记",
+  "thisNoteLinksTo": "此笔记链接到",
+  "deleteLinkTooltip": "删除链接",
+  "insertTable": "插入表格",
+  "dragToSelectTableSize": "拖动以选择表格大小",
+  "proPlan": "专业版",
+  "lifetimePlan": "终身版",
+  "proPrice": "$4.99/月",
+  "lifetimePrice": "$49.99",
+  "priorityHigh": "高",
+  "priorityMedium": "中",
+  "priorityLow": "低",
+  "tagsCountLabel": "{count} 个标签",
+
+  "orphanedNotes": "孤立笔记",
+  "filter": "筛选",
+  "priorityLabel": "优先级：{priority}",
+  "noMatchingNotes": "没有匹配的笔记",
+  "tryChangingFilters": "尝试更改筛选条件",
+  "filterByProperties": "按属性筛选",
+  "priority": "优先级",
+  "viewProperties": "属性",
+  "noteTitle": "笔记标题",
+
+  "dateLabel": "日期",
+  "propertyOf": "属性：{name}",
+  "insertLabel": "插入",
+
+  "failedToLoadMore": "加载更多失败：{error}",
+  "linkCreated": "链接已创建",
+  "failedToCreateLink": "创建链接失败：{error}",
+  "suggestedLinks": "推荐链接",
+  "similarContentDesc": "标题或内容相似的笔记。点击创建链接。",
+  "noSuggestions": "暂无推荐",
+  "createMoreNotes": "创建更多笔记以获取推荐。",
+  "notAvailableOnWeb": "此功能在网页端不可用",
+  "okButton": "确定",
+  "failedToLoadDeferred": "加载失败",
+  "somethingWentWrong": "出了点问题",
+  "syncStatusTitle": "同步状态",
+  "offlineLabel": "离线",
+  "connectedLabel": "已连接",
+  "pendingOpsLabel": "待处理操作",
+  "lastSyncedLabel": "上次同步",
+  "failedItemsLabel": "失败项目",
+  "offlineSyncTooltip": "离线 -- 恢复连接后将自动同步",
+  "pullingLabel": "拉取中",
+  "pushingLabel": "推送中",
+  "syncingLabel": "同步中...",
+  "allChangesSyncedLabel": "所有更改已同步",
+  "pendingOpTooltip": "{count} 个待处理操作",
+  "pendingOpsTooltip": "{count} 个待处理操作",
+  "syncConflictBadge": "同步冲突",
+  "conflictLabel": "冲突",
+  "syncedLabel": "已同步",
+  "pendingSyncLabel": "待同步",
+  "pendingSyncBadge": "待同步",
+
+  "barChartSemanticLabel": "条形图，按月显示笔记数量：{entries}",
+  "donutChartSemanticLabel": "环形图，显示分布情况：{entries}",
+  "tagItemSemanticLabel": "标签：{name}",
+  "tagItemSemanticHint": "长按以编辑"
 }

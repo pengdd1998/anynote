@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 import '../crypto/crypto_service.dart';
 
@@ -221,18 +221,15 @@ class BackupVerifier {
             await _crypto.decryptForItem(backupKeyId, encryptedData);
         if (decrypted != null) {
           canDecrypt = true;
-          final backupData =
-              jsonDecode(decrypted) as Map<String, dynamic>;
+          final backupData = jsonDecode(decrypted) as Map<String, dynamic>;
 
           version = backupData['version'] as int? ?? 0;
           exportedAt = backupData['exported_at'] as String?;
 
           noteCount = (backupData['notes'] as List?)?.length ?? 0;
           tagCount = (backupData['tags'] as List?)?.length ?? 0;
-          collectionCount =
-              (backupData['collections'] as List?)?.length ?? 0;
-          contentCount =
-              (backupData['contents'] as List?)?.length ?? 0;
+          collectionCount = (backupData['collections'] as List?)?.length ?? 0;
+          contentCount = (backupData['contents'] as List?)?.length ?? 0;
         } else {
           errors.add('Decryption failed: returned null. '
               'The encryption key may not match the backup.');
@@ -242,7 +239,8 @@ class BackupVerifier {
       }
     } else {
       // Cannot verify inner contents without encryption key.
-      errors.add('Encryption keys not unlocked. Cannot verify backup contents.');
+      errors
+          .add('Encryption keys not unlocked. Cannot verify backup contents.');
     }
 
     return BackupInfo(
@@ -324,8 +322,10 @@ class BackupVerifier {
           if (latestDate == null || dt.isAfter(latestDate)) {
             latestDate = dt;
           }
-        } catch (_) {
+        } catch (e) {
           // Skip unparseable dates.
+          debugPrint(
+              '[BackupVerifier] skipped unparseable date "$createdAt": $e');
         }
       }
     }
@@ -347,16 +347,14 @@ class BackupVerifier {
 
     var existingCollectionCount = 0;
     for (final c in collections) {
-      if (existingCollectionIds
-          .contains((c as Map<String, dynamic>)['id'])) {
+      if (existingCollectionIds.contains((c as Map<String, dynamic>)['id'])) {
         existingCollectionCount++;
       }
     }
 
     var existingContentCount = 0;
     for (final c in contents) {
-      if (existingContentIds
-          .contains((c as Map<String, dynamic>)['id'])) {
+      if (existingContentIds.contains((c as Map<String, dynamic>)['id'])) {
         existingContentCount++;
       }
     }

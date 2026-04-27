@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
@@ -65,7 +66,9 @@ class AIRepository {
             if (json['content'] != null) {
               yield json['content'] as String;
             }
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[AIRepository] SSE parse error: $e');
+          }
         }
       }
     }

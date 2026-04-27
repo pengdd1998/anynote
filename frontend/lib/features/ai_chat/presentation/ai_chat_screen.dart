@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/app_durations.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/chat_message.dart';
 import '../providers/ai_chat_providers.dart';
@@ -31,7 +32,14 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
-    ref.read(chatSessionProvider.notifier).cancel();
+    // Cancel any in-flight AI operation. Use a try-catch because ref may
+    // already be disposed if the widget tree is being torn down (e.g. during
+    // pumpWidget(Container()) in tests).
+    try {
+      ref.read(chatSessionProvider.notifier).cancel();
+    } catch (_) {
+      // Ref is no longer available -- nothing to cancel.
+    }
     super.dispose();
   }
 
@@ -40,7 +48,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
+          duration: AppDurations.shortAnimation,
           curve: Curves.easeOut,
         );
       }

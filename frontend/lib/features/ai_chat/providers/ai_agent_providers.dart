@@ -10,6 +10,18 @@ class AgentState {
 
   const AgentState({this.isLoading = false, this.result, this.error});
 
+  AgentState copyWith({
+    bool? isLoading,
+    Map<String, dynamic>? result,
+    String? error,
+  }) {
+    return AgentState(
+      isLoading: isLoading ?? this.isLoading,
+      result: result ?? this.result,
+      error: error ?? this.error,
+    );
+  }
+
   bool get isIdle => !isLoading && result == null && error == null;
 }
 

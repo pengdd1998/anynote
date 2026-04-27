@@ -57,12 +57,11 @@ class ConnectivityService extends Notifier<bool> {
       if (state != connected) {
         state = connected;
       }
-    } catch (_) {
+    } catch (e) {
       // If the check itself throws (rare), assume disconnected.
-      if (kDebugMode) {
-        // ignore: avoid_print
-        print('ConnectivityService: checkConnectivity() threw, assuming offline');
-      }
+      debugPrint(
+        '[ConnectivityService] checkConnectivity() threw, assuming offline: $e',
+      );
       state = false;
     }
   }
@@ -70,7 +69,8 @@ class ConnectivityService extends Notifier<bool> {
   /// Returns true if any of the connectivity results indicate an active
   /// network connection (i.e. not "none").
   static bool _anyConnected(List<ConnectivityResult> results) {
-    return results.isNotEmpty && !results.every((r) => r == ConnectivityResult.none);
+    return results.isNotEmpty &&
+        !results.every((r) => r == ConnectivityResult.none);
   }
 
   /// Expose the raw connectivity stream for consumers that need to know

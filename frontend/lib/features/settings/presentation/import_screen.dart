@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -163,8 +163,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             ],
           ),
         ),
-        if (_markdownState.hasResult)
-          _buildResultSection(_markdownState),
+        if (_markdownState.hasResult) _buildResultSection(_markdownState),
       ],
     );
   }
@@ -173,7 +172,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     if (kIsWeb) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
         );
       }
       return;
@@ -190,15 +190,15 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         .where((f) => f.path != null)
         .map((f) => f.path!)
         .where((p) {
-          final lower = p.toLowerCase();
-          return lower.endsWith('.md') || lower.endsWith('.markdown');
-        })
-        .toList();
+      final lower = p.toLowerCase();
+      return lower.endsWith('.md') || lower.endsWith('.markdown');
+    }).toList();
 
     if (filePaths.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.noMdFilesSelected)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.noMdFilesSelected)),
         );
       }
       return;
@@ -261,7 +261,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     if (kIsWeb) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
         );
       }
       return;
@@ -283,8 +284,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         database: db,
       );
 
-      final importResult =
-          await service.importFromDirectory(Directory(result));
+      final importResult = await service.importFromDirectory(Directory(result));
 
       if (mounted) {
         setState(() {
@@ -360,8 +360,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
     try {
       createdAt = await file.lastModified();
-    } catch (_) {
+    } catch (e) {
       // Keep default.
+      debugPrint('[ImportScreen] failed to read file lastModified: $e');
     }
 
     return ImportedNote(
@@ -446,8 +447,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             ],
           ),
         ),
-        if (_appleNotesState.hasResult)
-          _buildResultSection(_appleNotesState),
+        if (_appleNotesState.hasResult) _buildResultSection(_appleNotesState),
       ],
     );
   }
@@ -456,7 +456,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     if (kIsWeb) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
         );
       }
       return;
@@ -555,9 +556,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.chevron_right, size: 20),
-                    onTap: _plainTextState.isImporting
-                        ? null
-                        : _importTextFiles,
+                    onTap:
+                        _plainTextState.isImporting ? null : _importTextFiles,
                   ),
                   SettingsItem(
                     icon: Icons.folder_open_outlined,
@@ -570,17 +570,15 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.chevron_right, size: 20),
-                    onTap: _plainTextState.isImporting
-                        ? null
-                        : _importTextFolder,
+                    onTap:
+                        _plainTextState.isImporting ? null : _importTextFolder,
                   ),
                 ],
               ),
             ],
           ),
         ),
-        if (_plainTextState.hasResult)
-          _buildResultSection(_plainTextState),
+        if (_plainTextState.hasResult) _buildResultSection(_plainTextState),
       ],
     );
   }
@@ -589,7 +587,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     if (kIsWeb) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
         );
       }
       return;
@@ -613,7 +612,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     if (filePaths.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.noTxtFilesSelected)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.noTxtFilesSelected)),
         );
       }
       return;
@@ -677,7 +677,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     if (kIsWeb) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
         );
       }
       return;
@@ -744,11 +745,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         String encryptedTitle = '';
         String encryptedContent = '';
         if (crypto.isUnlocked) {
-          encryptedContent =
-              await crypto.encryptForItem(id, note.body);
+          encryptedContent = await crypto.encryptForItem(id, note.body);
           if (note.title.isNotEmpty) {
-            encryptedTitle =
-                await crypto.encryptForItem(id, note.title);
+            encryptedTitle = await crypto.encryptForItem(id, note.title);
           }
         } else {
           // If crypto is not unlocked, store plaintext directly (should not
@@ -769,23 +768,24 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         for (final tagName in note.tags) {
           try {
             final tagId = uuid.v4();
-            final encryptedName =
-                await crypto.encryptForItem(tagId, tagName);
+            final encryptedName = await crypto.encryptForItem(tagId, tagName);
             await db.tagsDao.createTag(
               id: tagId,
               encryptedName: encryptedName,
               plainName: tagName,
             );
             await db.notesDao.addTagToNote(id, tagId);
-          } catch (_) {
+          } catch (e) {
             // Tag creation failure should not abort the note import.
+            debugPrint('[ImportScreen] tag creation failed for "$tagName": $e');
           }
         }
 
         count++;
-      } catch (_) {
+      } catch (e) {
         // Individual note insertion failures are silently skipped.
         // They will be reflected in the importedCount vs total count difference.
+        debugPrint('[ImportScreen] note insertion failed: $e');
       }
     }
 

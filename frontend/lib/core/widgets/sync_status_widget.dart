@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/settings/data/settings_providers.dart';
+import '../../l10n/app_localizations.dart';
 import '../error/connectivity_provider.dart';
+import '../constants/app_durations.dart';
 import '../sync/sync_lifecycle.dart';
 import '../sync/sync_progress.dart';
 
@@ -31,7 +33,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
     super.initState();
     _syncIconController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 1),
+      duration: AppDurations.autoSaveDelay,
     );
   }
 
@@ -113,6 +115,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
             ],
           ),
           tooltip: _tooltipForState(
+            context,
             isOffline,
             isSyncing,
             pendingCount,
@@ -137,24 +140,34 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
   }
 
   String _tooltipForState(
+    BuildContext context,
     bool isOffline,
     bool isSyncing,
     int pendingCount,
     SyncProgress progress,
   ) {
-    if (isOffline) return 'Offline -- changes will sync when connected';
+    final l10n = AppLocalizations.of(context);
+    if (isOffline)
+      return l10n?.offlineSyncTooltip ??
+          'Offline -- changes will sync when connected';
     if (isSyncing && progress.isActive) {
-      final label = progress.phase == SyncPhase.pulling ? 'Pulling' : 'Pushing';
+      final label = progress.phase == SyncPhase.pulling
+          ? (l10n?.pullingLabel ?? 'Pulling')
+          : (l10n?.pushingLabel ?? 'Pushing');
       if (progress.totalCount > 0) {
         return '$label ${progress.completedCount}/${progress.totalCount}...';
       }
       return '$label...';
     }
-    if (isSyncing) return 'Syncing...';
+    if (isSyncing) return l10n?.syncingLabel ?? 'Syncing...';
     if (pendingCount > 0) {
-      return '$pendingCount pending operation${pendingCount == 1 ? '' : 's'}';
+      return pendingCount == 1
+          ? (l10n?.pendingOpTooltip(pendingCount) ??
+              '$pendingCount pending operation')
+          : (l10n?.pendingOpsTooltip(pendingCount) ??
+              '$pendingCount pending operations');
     }
-    return 'All changes synced';
+    return l10n?.allChangesSyncedLabel ?? 'All changes synced';
   }
 
   void _showSyncDetails(
@@ -166,9 +179,10 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
     SyncProgress progress,
   ) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final lastSyncText = lastSyncAt != null
         ? '${lastSyncAt.hour.toString().padLeft(2, '0')}:${lastSyncAt.minute.toString().padLeft(2, '0')}'
-        : 'Never';
+        : l10n?.never ?? 'Never';
 
     showModalBottomSheet(
       context: context,
@@ -180,28 +194,30 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Sync Status',
+                l10n?.syncStatusTitle ?? 'Sync Status',
                 style: theme.textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
               _buildDetailRow(
                 context,
                 icon: isOffline ? Icons.wifi_off : Icons.wifi,
-                label: isOffline ? 'Offline' : 'Connected',
+                label: isOffline
+                    ? (l10n?.offlineLabel ?? 'Offline')
+                    : (l10n?.connectedLabel ?? 'Connected'),
                 valueColor: isOffline ? theme.colorScheme.error : Colors.green,
               ),
               const SizedBox(height: 8),
               _buildDetailRow(
                 context,
                 icon: Icons.cloud_upload_outlined,
-                label: 'Pending operations',
+                label: l10n?.pendingOpsLabel ?? 'Pending operations',
                 value: '$pendingCount',
               ),
               const SizedBox(height: 8),
               _buildDetailRow(
                 context,
                 icon: Icons.access_time,
-                label: 'Last synced',
+                label: l10n?.lastSyncedLabel ?? 'Last synced',
                 value: lastSyncText,
               ),
 
@@ -215,7 +231,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
               if (progress.failedItems.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(
-                  'Failed items',
+                  l10n?.failedItemsLabel ?? 'Failed items',
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: theme.colorScheme.error,
                   ),
@@ -248,7 +264,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
                     SyncProgressNotifier.instance.reset();
                     ref.read(syncLifecycleProvider).syncNow();
                   },
-                  child: const Text('Sync now'),
+                  child: Text(l10n?.syncNow ?? 'Sync now'),
                 ),
               ),
             ],

@@ -15,6 +15,7 @@ import (
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
 	"github.com/anynote/backend/internal/platform/chromedputil"
+	"github.com/anynote/backend/internal/platform/common"
 )
 
 // Zhihu platform URLs.
@@ -194,15 +195,9 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 // sets cookies in a fresh browser tab, navigates to the writing page, fills
 // in the form fields, and submits.
 func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey []byte, params platform.PublishParams) (*platform.PublishResult, error) {
-	// Decrypt cookies.
-	cookieJSON, err := llm.DecryptAPIKey(encryptedAuth, masterKey)
+	jar, err := common.DecryptCookieJar(ctx, encryptedAuth, masterKey)
 	if err != nil {
-		return nil, fmt.Errorf("decrypt auth data: %w", err)
-	}
-
-	var jar chromedputil.CookieJar
-	if err := json.Unmarshal([]byte(cookieJSON), &jar); err != nil {
-		return nil, fmt.Errorf("unmarshal cookies: %w", err)
+		return nil, err
 	}
 
 	// Create a browser context and set cookies before navigating.
@@ -341,15 +336,9 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 // CheckStatus navigates to the published article URL and checks whether
 // the article is still accessible.
 func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterKey []byte, platformID string) (string, error) {
-	// Decrypt cookies.
-	cookieJSON, err := llm.DecryptAPIKey(encryptedAuth, masterKey)
+	jar, err := common.DecryptCookieJar(ctx, encryptedAuth, masterKey)
 	if err != nil {
-		return "unknown", fmt.Errorf("decrypt auth data: %w", err)
-	}
-
-	var jar chromedputil.CookieJar
-	if err := json.Unmarshal([]byte(cookieJSON), &jar); err != nil {
-		return "unknown", fmt.Errorf("unmarshal cookies: %w", err)
+		return "unknown", err
 	}
 
 	postURL := columnBaseURL + platformID

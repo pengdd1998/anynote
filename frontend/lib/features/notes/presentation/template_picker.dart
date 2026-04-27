@@ -32,6 +32,10 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
   bool _isLoading = true;
   bool _isSeeded = false;
 
+  // Search and category filter state.
+  String _searchQuery = '';
+  String _categoryFilter = 'all';
+
   @override
   void initState() {
     super.initState();
@@ -55,7 +59,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
     }
 
     final builtIn = await db.templatesDao.getBuiltInTemplates();
-    final custom = await db.templatesDao.getCustomTemplates();
+    final custom = await db.templatesDao.getUserTemplates();
 
     if (!mounted) return;
     setState(() {
@@ -76,9 +80,10 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
       await db.templatesDao.createTemplate(
         id: id,
         name: template.name,
+        description: template.description,
         encryptedContent: template.content,
         plainContent: template.content,
-        category: 'built_in',
+        category: template.category,
         isBuiltIn: true,
       );
     }
@@ -95,14 +100,65 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
   /// Extract the first two non-empty lines for a preview.
   String _preview(String? plainContent) {
     if (plainContent == null || plainContent.isEmpty) return '';
-    final lines = plainContent.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    final lines =
+        plainContent.split('\n').where((l) => l.trim().isNotEmpty).toList();
     if (lines.isEmpty) return '';
     if (lines.length == 1) return lines.first;
     return '${lines[0]}\n${lines[1]}';
   }
 
+  /// Filter templates by search query and category.
+  List<NoteTemplate> _filterTemplates(List<NoteTemplate> templates) {
+    var filtered = templates;
+
+    if (_categoryFilter != 'all') {
+      filtered = filtered.where((t) => t.category == _categoryFilter).toList();
+    }
+
+    if (_searchQuery.isNotEmpty) {
+      final lower = _searchQuery.toLowerCase();
+      filtered = filtered.where((t) {
+        final nameMatch = t.name.toLowerCase().contains(lower);
+        final descMatch = (t.description ?? '').toLowerCase().contains(lower);
+        return nameMatch || descMatch;
+      }).toList();
+    }
+
+    return filtered;
+  }
+
+  /// Category color for badges.
+  Color _categoryColor(String category) {
+    switch (category) {
+      case 'work':
+        return Colors.blue;
+      case 'personal':
+        return Colors.green;
+      case 'creative':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  /// Category display name from l10n.
+  String _categoryLabel(String category, AppLocalizations l10n) {
+    switch (category) {
+      case 'work':
+        return l10n.categoryWork;
+      case 'personal':
+        return l10n.categoryPersonal;
+      case 'creative':
+        return l10n.categoryCreative;
+      default:
+        return category;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -124,8 +180,10 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
           child: Row(
             children: [
-              Text(AppLocalizations.of(context)!.fromTemplate,
-                  style: Theme.of(context).textTheme.titleLarge,),
+              Text(
+                l10n.templatePicker,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close),
@@ -135,12 +193,52 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
           ),
         ),
 
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: l10n.searchNotes,
+              prefixIcon: const Icon(Icons.search, size: 20),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onChanged: (value) {
+              setState(() => _searchQuery = value);
+            },
+          ),
+        ),
+
+        // Category filter chips
+        SizedBox(
+          height: 44,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            children: [
+              _buildCategoryChip('all', l10n.all),
+              const SizedBox(width: 6),
+              _buildCategoryChip('work', l10n.categoryWork),
+              const SizedBox(width: 6),
+              _buildCategoryChip('personal', l10n.categoryPersonal),
+              const SizedBox(width: 6),
+              _buildCategoryChip('creative', l10n.categoryCreative),
+            ],
+          ),
+        ),
+
         // Tabs
         TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: AppLocalizations.of(context)!.builtInTab),
-            Tab(text: AppLocalizations.of(context)!.myTemplatesTab),
+            Tab(text: l10n.builtInTab),
+            Tab(text: l10n.myTemplatesTab),
           ],
         ),
 
@@ -148,13 +246,16 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
 
         // Tab content
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.45,
+          height: MediaQuery.of(context).size.height * 0.40,
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildTemplateGrid(_builtInTemplates, canDelete: false),
+                    _buildTemplateGrid(
+                      _filterTemplates(_builtInTemplates),
+                      canDelete: false,
+                    ),
                     _buildCustomTemplatesTab(),
                   ],
                 ),
@@ -165,12 +266,28 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
     );
   }
 
-  Widget _buildTemplateGrid(List<NoteTemplate> templates,
-      {required bool canDelete,}) {
+  Widget _buildCategoryChip(String value, String label) {
+    final isSelected = _categoryFilter == value;
+    return FilterChip(
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() => _categoryFilter = value);
+      },
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  Widget _buildTemplateGrid(
+    List<NoteTemplate> templates, {
+    required bool canDelete,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (templates.isEmpty) {
       return Center(
         child: Text(
-          AppLocalizations.of(context)!.noNotesYet,
+          l10n.noTemplates,
           style: TextStyle(color: Colors.grey.shade500),
         ),
       );
@@ -180,7 +297,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
       padding: const EdgeInsets.symmetric(horizontal: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.85,
+        childAspectRatio: 0.80,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
       ),
@@ -188,12 +305,16 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
       itemBuilder: (context, index) {
         final template = templates[index];
         final preview = _preview(template.plainContent);
+        final catLabel = _categoryLabel(template.category, l10n);
+        final catColor = _categoryColor(template.category);
 
         return GestureDetector(
-          onTap: () {
+          onTap: () async {
+            final db = ref.read(databaseProvider);
+            await db.templatesDao.incrementUsageCount(template.id);
             final resolved = _resolveContent(template.plainContent ?? '');
             widget.onSelected(resolved);
-            Navigator.pop(context);
+            if (context.mounted) Navigator.pop(context);
           },
           onLongPress: canDelete ? () => _confirmDelete(template) : null,
           child: Card(
@@ -215,10 +336,10 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
                         template.isBuiltIn
                             ? Icons.bookmark_outlined
                             : Icons.description_outlined,
-                        size: 18,
+                        size: 16,
                         color: Theme.of(context).colorScheme.primary,
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           template.name,
@@ -226,20 +347,53 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  if (template.description != null &&
+                      template.description!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      template.description!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  // Category badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: catColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      catLabel,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: catColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   Expanded(
                     child: Text(
                       preview,
-                      maxLines: 4,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         color: Colors.grey.shade600,
                         height: 1.4,
                       ),
@@ -257,7 +411,12 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
   Widget _buildCustomTemplatesTab() {
     return Column(
       children: [
-        Expanded(child: _buildTemplateGrid(_customTemplates, canDelete: true)),
+        Expanded(
+          child: _buildTemplateGrid(
+            _filterTemplates(_customTemplates),
+            canDelete: true,
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: SizedBox(
@@ -265,7 +424,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
             child: OutlinedButton.icon(
               onPressed: _showCreateTemplateDialog,
               icon: const Icon(Icons.add),
-              label: Text(AppLocalizations.of(context)!.create),
+              label: Text(AppLocalizations.of(context)!.newTemplate),
             ),
           ),
         ),
@@ -279,7 +438,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteTemplateConfirm),
+        title: Text(l10n.deleteTemplate),
         content: Text(l10n.deleteTemplateMessage(template.name)),
         actions: [
           TextButton(
@@ -302,77 +461,121 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
 
   void _showCreateTemplateDialog() {
     final nameController = TextEditingController();
+    final descController = TextEditingController();
     final contentController = TextEditingController();
+    String selectedCategory = 'personal';
     final l10n = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.create),
-        content: SizedBox(
-          width: MediaQuery.of(ctx).size.width * 0.85,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.templateNameLabel,
-                  border: const OutlineInputBorder(),
-                ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(l10n.newTemplate),
+          content: SizedBox(
+            width: MediaQuery.of(ctx).size.width * 0.85,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.templateName,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descController,
+                    decoration: InputDecoration(
+                      labelText: l10n.templateDescription,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Category selector
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedCategory,
+                    decoration: InputDecoration(
+                      labelText: l10n.templateCategory,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'work',
+                        child: Text(l10n.categoryWork),
+                      ),
+                      DropdownMenuItem(
+                        value: 'personal',
+                        child: Text(l10n.categoryPersonal),
+                      ),
+                      DropdownMenuItem(
+                        value: 'creative',
+                        child: Text(l10n.categoryCreative),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() => selectedCategory = value);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: contentController,
+                    decoration: InputDecoration(
+                      labelText: l10n.templateContent,
+                      hintText: l10n.templateDateHint,
+                      border: const OutlineInputBorder(),
+                      alignLabelWithHint: true,
+                    ),
+                    maxLines: 8,
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: contentController,
-                decoration: InputDecoration(
-                  labelText: l10n.contentLabel,
-                  hintText: l10n.templateDateHint,
-                  border: const OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 8,
-              ),
-            ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+                final content = contentController.text.trim();
+                if (name.isEmpty || content.isEmpty) return;
+
+                final db = ref.read(databaseProvider);
+                final crypto = ref.read(cryptoServiceProvider);
+                final id = const Uuid().v4();
+
+                String encryptedContent;
+                if (crypto.isUnlocked) {
+                  encryptedContent = await crypto.encryptForItem(id, content);
+                } else {
+                  encryptedContent = content;
+                }
+
+                await db.templatesDao.createTemplate(
+                  id: id,
+                  name: name,
+                  description: descController.text.trim().isEmpty
+                      ? null
+                      : descController.text.trim(),
+                  encryptedContent: encryptedContent,
+                  plainContent: content,
+                  category: selectedCategory,
+                  isBuiltIn: false,
+                );
+
+                if (ctx.mounted) Navigator.pop(ctx);
+                await _loadTemplates();
+              },
+              child: Text(l10n.create),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              final content = contentController.text.trim();
-              if (name.isEmpty || content.isEmpty) return;
-
-              final db = ref.read(databaseProvider);
-              final crypto = ref.read(cryptoServiceProvider);
-              final id = const Uuid().v4();
-
-              String encryptedContent;
-              if (crypto.isUnlocked) {
-                encryptedContent =
-                    await crypto.encryptForItem(id, content);
-              } else {
-                encryptedContent = content;
-              }
-
-              await db.templatesDao.createTemplate(
-                id: id,
-                name: name,
-                encryptedContent: encryptedContent,
-                plainContent: content,
-                category: 'custom',
-                isBuiltIn: false,
-              );
-
-              if (ctx.mounted) Navigator.pop(ctx);
-              await _loadTemplates();
-            },
-            child: Text(l10n.create),
-          ),
-        ],
       ),
     );
   }

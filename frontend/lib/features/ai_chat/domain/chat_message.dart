@@ -19,6 +19,19 @@ class ChatMessage {
     this.isStreaming = false,
   });
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ChatMessage &&
+          runtimeType == other.runtimeType &&
+          role == other.role &&
+          content == other.content &&
+          timestamp == other.timestamp &&
+          isStreaming == other.isStreaming;
+
+  @override
+  int get hashCode => Object.hash(role, content, timestamp, isStreaming);
+
   ChatMessage copyWith({
     String? role,
     String? content,

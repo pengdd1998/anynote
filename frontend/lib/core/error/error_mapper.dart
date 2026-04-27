@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 import 'exceptions.dart';
 
@@ -127,7 +127,8 @@ class ErrorMapper {
           originalError: e,
         ),
       403 => ForbiddenException(
-          message: serverMessage ?? 'You do not have permission for this action.',
+          message:
+              serverMessage ?? 'You do not have permission for this action.',
           originalError: e,
         ),
       404 => NotFoundException(
@@ -135,7 +136,8 @@ class ErrorMapper {
           originalError: e,
         ),
       409 => ConflictException(
-          message: serverMessage ?? 'A conflict occurred. Please refresh and try again.',
+          message: serverMessage ??
+              'A conflict occurred. Please refresh and try again.',
           originalError: e,
         ),
       429 => RateLimitException(
@@ -144,7 +146,8 @@ class ErrorMapper {
           originalError: e,
         ),
       _ when statusCode >= 500 && statusCode < 600 => ServerException(
-          message: serverMessage ?? 'Server error ($statusCode). Please try again later.',
+          message: serverMessage ??
+              'Server error ($statusCode). Please try again later.',
           statusCode: statusCode,
           code: 'server/$statusCode',
           originalError: e,
@@ -168,7 +171,8 @@ class ErrorMapper {
         return data['error'] as String? ?? data['message'] as String?;
       }
       return null;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[ErrorMapper] failed to extract server message: $e');
       return null;
     }
   }
@@ -179,7 +183,8 @@ class ErrorMapper {
       final value = e.response?.headers.value('retry-after');
       if (value != null) return int.tryParse(value);
       return null;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[ErrorMapper] failed to parse retry-after header: $e');
       return null;
     }
   }

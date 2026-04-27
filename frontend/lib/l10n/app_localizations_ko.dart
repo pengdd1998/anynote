@@ -195,6 +195,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get titleAZ => '제목 A-Z';
 
   @override
+  String get sortCustom => '사용자 지정 순서';
+
+  @override
+  String get reorderModeHint => '드래그하여 순서 변경';
+
+  @override
   String get listView => '목록 보기';
 
   @override
@@ -213,7 +219,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get createNewNote => '새 메모 만들기';
 
   @override
-  String get noNotesYet => '메모가 없습니다';
+  String get noNotesYet => '아직 노트가 없습니다';
 
   @override
   String get tapToCapture => '+ 를 눌러 첫 번째 메모를 작성하세요';
@@ -385,15 +391,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get close => '닫기';
 
   @override
-  String get restoreVersion => '버전 복원';
+  String get restoreVersion => '이 버전 복원';
 
   @override
   String restoreVersionConfirm(int version) {
-    return '현재 메모 내용을 버전 $version(으)로 교체하시겠습니까? 현재 내용의 스냅샷이 먼저 저장됩니다.';
+    return '버전 $version(으)로 노트를 복원하시겠습니까? 현재 콘텐츠는 새 버전으로 저장됩니다.';
   }
 
   @override
-  String get versionRestored => '버전이 복원되었습니다';
+  String get versionRestored => '버전 복원됨';
 
   @override
   String failedToRestore(String error) {
@@ -2051,6 +2057,92 @@ class AppLocalizationsKo extends AppLocalizations {
   String get templateDateHint => '[date]를 사용하여 현재 날짜 삽입';
 
   @override
+  String get templates => '템플릿';
+
+  @override
+  String get templatePicker => '템플릿 선택';
+
+  @override
+  String get createFromTemplate => '템플릿에서 만들기';
+
+  @override
+  String get createFromScratch => '빈 페이지에서 만들기';
+
+  @override
+  String get templateManagement => '템플릿 관리';
+
+  @override
+  String get newTemplate => '새 템플릿';
+
+  @override
+  String get editTemplate => '템플릿 편집';
+
+  @override
+  String get deleteTemplate => '템플릿 삭제';
+
+  @override
+  String get templateName => '템플릿 이름';
+
+  @override
+  String get templateDescription => '설명';
+
+  @override
+  String get templateContent => '내용';
+
+  @override
+  String get templateCategory => '카테고리';
+
+  @override
+  String get categoryWork => '업무';
+
+  @override
+  String get categoryPersonal => '개인';
+
+  @override
+  String get categoryCreative => '창작';
+
+  @override
+  String get builtInTemplates => '기본 템플릿';
+
+  @override
+  String get userTemplates => '내 템플릿';
+
+  @override
+  String templateUsed(int count) {
+    return '$count회 사용';
+  }
+
+  @override
+  String get duplicateTemplate => '복제';
+
+  @override
+  String get noTemplates => '템플릿 없음';
+
+  @override
+  String get templateSaved => '템플릿 저장됨';
+
+  @override
+  String get templateMeetingNotes => '회의 노트';
+
+  @override
+  String get templateDailyJournal => '일일 저널';
+
+  @override
+  String get templateProjectPlan => '프로젝트 계획';
+
+  @override
+  String get templateReadingNotes => '독서 노트';
+
+  @override
+  String get templateWeeklyReview => '주간 리뷰';
+
+  @override
+  String get templateBrainstorm => '브레인스토밍';
+
+  @override
+  String get templateBlank => '빈 페이지';
+
+  @override
   String get offlineBanner => '오프라인 상태입니다 — 연결되면 변경사항이 동기화됩니다';
 
   @override
@@ -2455,6 +2547,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get viewBacklinks => '백링크 보기';
 
   @override
+  String get wikiLink => 'Wiki 링크';
+
+  @override
+  String get linkToNote => '노트에 연결';
+
+  @override
+  String get relatedNotes => '관련 노트';
+
+  @override
+  String get noRelatedNotes => '관련 노트가 없습니다';
+
+  @override
+  String get startTypingToSearch => '입력하여 노트 검색';
+
+  @override
+  String get noNotesFound => '노트를 찾을 수 없습니다';
+
+  @override
   String get backgroundSync => '백그라운드 동기화';
 
   @override
@@ -2624,4 +2734,1332 @@ class AppLocalizationsKo extends AppLocalizations {
   String multiplePeopleInRoom(int count) {
     return '$count명이 보고 있음';
   }
+
+  @override
+  String get propertiesDashboard => '속성 대시보드';
+
+  @override
+  String get totalNotes => '총 노트 수';
+
+  @override
+  String get withProperties => '속성 있음';
+
+  @override
+  String get priorityDistribution => '우선순위 분포';
+
+  @override
+  String get noPrioritiesSet => '설정된 우선순위 없음';
+
+  @override
+  String get notesByStatus => '상태별 노트';
+
+  @override
+  String get createFirstNoteHint => '대시보드를 보려면 첫 번째 노트를 만드세요';
+
+  @override
+  String get dailyNotes => '일일 노트';
+
+  @override
+  String get dailyNote => '일일 노트';
+
+  @override
+  String get todaysNote => '오늘의 노트';
+
+  @override
+  String get createTodaysNote => '오늘의 노트 만들기';
+
+  @override
+  String get noDailyNote => '이 날의 노트가 없습니다';
+
+  @override
+  String get openDailyNote => '일일 노트 열기';
+
+  @override
+  String get goToToday => '오늘';
+
+  @override
+  String get hasNote => '노트 있음';
+
+  @override
+  String get calendar => '캘린더';
+
+  @override
+  String get recentDailyNotes => '최근 일일 노트';
+
+  @override
+  String get commandPalette => '명령 팔레트';
+
+  @override
+  String get commandSearchHint => '노트 및 명령 검색...';
+
+  @override
+  String get commandRecentNotes => '최근';
+
+  @override
+  String get commandNotesSection => '노트';
+
+  @override
+  String get commandActions => '작업';
+
+  @override
+  String get commandCreateNewNote => '새 노트 만들기';
+
+  @override
+  String get commandOpenDailyNotes => '일일 노트 열기';
+
+  @override
+  String get commandOpenGraph => '그래프 보기 열기';
+
+  @override
+  String get commandOpenDashboard => '대시보드 열기';
+
+  @override
+  String get commandOpenTrash => '휴지통 열기';
+
+  @override
+  String get commandOpenSettings => '설정 열기';
+
+  @override
+  String get commandNoResultsFound => '결과 없음';
+
+  @override
+  String get slashHeading1 => '제목 1';
+
+  @override
+  String get slashHeading2 => '제목 2';
+
+  @override
+  String get slashHeading3 => '제목 3';
+
+  @override
+  String get slashBulletList => '글머리 기호';
+
+  @override
+  String get slashNumberedList => '번호 매기기';
+
+  @override
+  String get slashTodoList => '할 일 목록';
+
+  @override
+  String get slashCodeBlock => '코드 블록';
+
+  @override
+  String get slashQuote => '인용';
+
+  @override
+  String get slashDivider => '구분선';
+
+  @override
+  String get slashTable => '표';
+
+  @override
+  String get slashImage => '이미지';
+
+  @override
+  String get slashWikilink => '위키 링크';
+
+  @override
+  String get slashTransclusion => '트랜스클루전';
+
+  @override
+  String get slashCallout => '콜아웃';
+
+  @override
+  String get slashNoResults => '일치하는 명령 없음';
+
+  @override
+  String get splitView => '분할 보기';
+
+  @override
+  String get openInSplitView => '분할 보기로 열기';
+
+  @override
+  String get closeSplitView => '분할 보기 닫기';
+
+  @override
+  String get selectNoteForSplit => '분할 보기 노트 선택';
+
+  @override
+  String get searchOperators => '검색 연산자';
+
+  @override
+  String get searchOperatorTag => 'tag:이름 -- 태그로 필터';
+
+  @override
+  String get searchOperatorStatus =>
+      'status:todo|in-progress|done|blocked|cancelled';
+
+  @override
+  String get searchOperatorPriority => 'priority:high|medium|low';
+
+  @override
+  String get searchOperatorDate => 'date:YYYY-MM-DD -- 날짜로 필터';
+
+  @override
+  String get searchOperatorCollection => 'collection:이름 -- 컬렉션으로 필터';
+
+  @override
+  String get searchOperatorLinks => 'links:true|false -- 링크 상태로 필터';
+
+  @override
+  String get searchOperatorsExample => '예: tag:work status:todo 프로젝트 계획';
+
+  @override
+  String get savedSearches => '저장된 검색';
+
+  @override
+  String get saveSearch => '검색 저장';
+
+  @override
+  String get saveSearchName => '검색 이름';
+
+  @override
+  String get searchSaved => '검색이 저장됨';
+
+  @override
+  String get deleteSavedSearch => '저장된 검색 삭제';
+
+  @override
+  String deleteSavedSearchConfirm(String name) {
+    return '\"$name\"을(를) 삭제할까요?';
+  }
+
+  @override
+  String get searchHistory => '최근 검색';
+
+  @override
+  String get clearSearchHistory => '검색 기록 지우기';
+
+  @override
+  String get noSavedSearches => '저장된 검색 없음';
+
+  @override
+  String get saveSearchHint => '검색 후 북마크 아이콘을 탭하여 저장';
+
+  @override
+  String get noSearchHistory => '검색 기록 없음';
+
+  @override
+  String get showSearchHints => '검색 힌트 보기';
+
+  @override
+  String get hideSearchHints => '검색 힌트 숨기기';
+
+  @override
+  String get searchNotesHint => '연산자로 검색: tag:work status:todo ...';
+
+  @override
+  String get enterQueryOrOperators => '연산자를 사용하여 노트 검색';
+
+  @override
+  String get imageGallery => '이미지 갤러리';
+
+  @override
+  String get fromGallery => '갤러리에서';
+
+  @override
+  String get fromCamera => '카메라에서';
+
+  @override
+  String get selectImageSource => '이미지 소스 선택';
+
+  @override
+  String get pasteImage => '이미지 붙여넣기';
+
+  @override
+  String get deleteImage => '이미지 삭제';
+
+  @override
+  String get deleteImageConfirm => '이 이미지를 삭제하시겠습니까?';
+
+  @override
+  String get imageManagement => '이미지 관리';
+
+  @override
+  String get totalStorage => '총 저장 용량';
+
+  @override
+  String imageCount(int count) {
+    return '$count개 이미지';
+  }
+
+  @override
+  String get orphanedImages => '고아 이미지';
+
+  @override
+  String get cleanupOrphaned => '고아 이미지 정리';
+
+  @override
+  String cleanupComplete(int count) {
+    return '고아 이미지 $count개 정리 완료';
+  }
+
+  @override
+  String get deleteAllImages => '모든 이미지 삭제';
+
+  @override
+  String get deleteAllImagesConfirm => '모든 저장된 이미지가 삭제됩니다. 복구할 수 없습니다.';
+
+  @override
+  String get noImagesStored => '저장된 이미지 없음';
+
+  @override
+  String get imageDeleted => '이미지 삭제됨';
+
+  @override
+  String get shareImage => '이미지 공유';
+
+  @override
+  String get compareVersions => '버전 비교';
+
+  @override
+  String get versionDiff => '버전 차이';
+
+  @override
+  String linesAdded(int count) {
+    return '$count줄 추가';
+  }
+
+  @override
+  String linesRemoved(int count) {
+    return '$count줄 삭제';
+  }
+
+  @override
+  String get selectTwoVersions => '비교할 버전 2개 선택';
+
+  @override
+  String get noChanges => '변경 없음';
+
+  @override
+  String versionNumber(int number) {
+    return '버전 $number';
+  }
+
+  @override
+  String readingTime(int minutes) {
+    return '$minutes분 읽기';
+  }
+
+  @override
+  String get lessThan1Min => '1분 미만';
+
+  @override
+  String lineCount(int count) {
+    return '$count줄';
+  }
+
+  @override
+  String paragraphCount(int count) {
+    return '$count단락';
+  }
+
+  @override
+  String get focusMode => '포커스 모드';
+
+  @override
+  String get typewriterScroll => '타이프라이터 스크롤';
+
+  @override
+  String get writingStats => '작성 통계';
+
+  @override
+  String get toggleWritingStats => '작성 통계 토글';
+
+  @override
+  String charCountNoSpaces(int count) {
+    return '$count자 (공백 제외)';
+  }
+
+  @override
+  String get statistics => '통계';
+
+  @override
+  String get totalWords => '총 단어';
+
+  @override
+  String get averageWords => '평균 단어/노트';
+
+  @override
+  String get daysActive => '활동 일수';
+
+  @override
+  String get last30Days => '최근 30일';
+
+  @override
+  String get writingStreak => '연속 작성';
+
+  @override
+  String currentStreak(int count) {
+    return '현재: $count일';
+  }
+
+  @override
+  String longestStreak(int count) {
+    return '최장: $count일';
+  }
+
+  @override
+  String get monthlyActivity => '월간 활동';
+
+  @override
+  String get topTags => '인기 태그';
+
+  @override
+  String get topCollections => '인기 컬렉션';
+
+  @override
+  String get statusDistribution => '상태 분포';
+
+  @override
+  String get knowledgeGraphStats => '지식 그래프';
+
+  @override
+  String get totalLinks => '총 링크';
+
+  @override
+  String orphanedNotesCount(int count) {
+    return '고아 노트 $count개';
+  }
+
+  @override
+  String get mostConnectedNote => '가장 많이 연결된 노트';
+
+  @override
+  String get noStatistics => '통계 없음';
+
+  @override
+  String get notesWithProperties => '속성이 있는 노트';
+
+  @override
+  String get notesWithLinks => '링크가 있는 노트';
+
+  @override
+  String get exportNotes => '노트 내보내기';
+
+  @override
+  String get exportingNotes => '내보내는 중...';
+
+  @override
+  String get exportComplete => '내보내기 완료';
+
+  @override
+  String get exportSelectedNotes => '선택 항목 내보내기';
+
+  @override
+  String get exportCurrentNote => '현재 노트 내보내기';
+
+  @override
+  String exportSelected(int count) {
+    return '$count개의 선택된 노트';
+  }
+
+  @override
+  String get exportWithFrontmatter => '메타데이터와 함께 내보내기';
+
+  @override
+  String get exportAsZip => 'ZIP 아카이브로 내보내기';
+
+  @override
+  String get includeFrontmatter => '메타데이터(프론트매터) 포함';
+
+  @override
+  String get frontmatterDesc => '태그, 날짜, 속성이 포함된 YAML 메타데이터 헤더 추가';
+
+  @override
+  String get exportOrganization => '구성';
+
+  @override
+  String get exportFlat => '평면';
+
+  @override
+  String get exportByDate => '날짜별';
+
+  @override
+  String get exportByCollection => '컬렉션별';
+
+  @override
+  String get exportByTag => '태그별';
+
+  @override
+  String notesExported(int count) {
+    return '노트 $count개 내보냄';
+  }
+
+  @override
+  String get importFromMarkdown => 'Markdown에서 가져오기';
+
+  @override
+  String get importFromZip => 'ZIP에서 가져오기';
+
+  @override
+  String get importFromObsidian => 'Obsidian Vault에서 가져오기';
+
+  @override
+  String get importingNotes => '가져오는 중...';
+
+  @override
+  String notesImported(int count) {
+    return '노트 $count개 가져옴';
+  }
+
+  @override
+  String get preserveDates => '원본 날짜 유지';
+
+  @override
+  String get importTags => '태그 가져오기';
+
+  @override
+  String get importProperties => '속성 가져오기';
+
+  @override
+  String get noFilesSelected => '선택된 파일 없음';
+
+  @override
+  String get importOptions => '가져오기 옵션';
+
+  @override
+  String get quickCapture => '빠른 캡처';
+
+  @override
+  String get typeSomething => '입력하세요...';
+
+  @override
+  String get autoSaved => '자동 저장됨';
+
+  @override
+  String get discardDraft => '초안을 삭제할까요?';
+
+  @override
+  String get discardDraftMessage => '저장하지 않은 변경 사항이 손실됩니다.';
+
+  @override
+  String get discard => '삭제';
+
+  @override
+  String get newNoteShortcut => '새 메모';
+
+  @override
+  String get newChecklistShortcut => '새 체크리스트';
+
+  @override
+  String get dailyNoteShortcut => '일일 메모';
+
+  @override
+  String get sharedToAnynote => 'AnyNote로 공유됨';
+
+  @override
+  String get setPriority => '우선순위 설정';
+
+  @override
+  String get quickCaptureDesc => '생각을 빠르게 기록';
+
+  @override
+  String pendingSync(int count) {
+    return '$count개 대기 중';
+  }
+
+  @override
+  String syncFailedCount(int count) {
+    return '$count개 실패';
+  }
+
+  @override
+  String get syncQueue => '동기화 대기열';
+
+  @override
+  String get pendingOperations => '대기 중인 작업';
+
+  @override
+  String get failedOperations => '실패한 작업';
+
+  @override
+  String get retryAll => '모두 재시도';
+
+  @override
+  String get clearCompleted => '완료 항목 지우기';
+
+  @override
+  String operationFailed(String error) {
+    return '실패: $error';
+  }
+
+  @override
+  String get retryingSync => '동기화 재시도 중...';
+
+  @override
+  String get queueCleared => '완료된 작업이 지워졌습니다';
+
+  @override
+  String get noPendingOperations => '대기 중인 작업 없음';
+
+  @override
+  String noteSemantics(String title) {
+    return '노트: $title';
+  }
+
+  @override
+  String deleteNoteSemantics(String title) {
+    return '노트 $title 삭제';
+  }
+
+  @override
+  String archiveNoteSemantics(String title) {
+    return '노트 $title 보관';
+  }
+
+  @override
+  String pinNoteSemantics(String title) {
+    return '노트 $title 고정';
+  }
+
+  @override
+  String unpinNoteSemantics(String title) {
+    return '노트 $title 고정 해제';
+  }
+
+  @override
+  String get noteContentEditor => '노트 내용 편집기. 더블 탭하여 편집.';
+
+  @override
+  String graphSummary(int nodeCount, int linkCount) {
+    return '$nodeCount개 노트, $linkCount개 링크';
+  }
+
+  @override
+  String get pinnedNote => '고정됨';
+
+  @override
+  String settingsGroup(String section) {
+    return '$section 설정';
+  }
+
+  @override
+  String restoreNoteSemantics(String title) {
+    return '노트 $title 복원';
+  }
+
+  @override
+  String permanentlyDeleteNoteSemantics(String title) {
+    return '노트 $title 영구 삭제';
+  }
+
+  @override
+  String deleteCollectionSemantics(String title) {
+    return '컬렉션 $title 삭제';
+  }
+
+  @override
+  String calendarDaySemantics(String date, String hasNote) {
+    return '$date. $hasNote';
+  }
+
+  @override
+  String noteCountSemantics(int count) {
+    return '$count개 노트';
+  }
+
+  @override
+  String get reminder => '알림';
+
+  @override
+  String get setReminder => '알림 설정';
+
+  @override
+  String get reminderAt => '알림 시간';
+
+  @override
+  String get removeReminder => '알림 제거';
+
+  @override
+  String get laterToday => '오늘 나중에';
+
+  @override
+  String get tomorrowMorning => '내일 아침';
+
+  @override
+  String get nextWeek => '다음 주';
+
+  @override
+  String get noReminders => '알림 없음';
+
+  @override
+  String get recurring => '반복';
+
+  @override
+  String get daily => '매일';
+
+  @override
+  String get weekly => '매주';
+
+  @override
+  String get monthly => '매월';
+
+  @override
+  String get reminders => '알림 목록';
+
+  @override
+  String get reminderFired => '알림이 울렸습니다';
+
+  @override
+  String get color => '색상';
+
+  @override
+  String get selectColor => '색상 선택';
+
+  @override
+  String get removeColor => '색상 제거';
+
+  @override
+  String get noteColor => '노트 색상';
+
+  @override
+  String get customColor => '사용자 지정 색상';
+
+  @override
+  String get colorFilter => '색상 필터';
+
+  @override
+  String get searchOperatorColor => 'color:#RRGGBB 또는 color:색상명 -- 색상으로 필터';
+
+  @override
+  String get none => '없음';
+
+  @override
+  String get compareNotes => '노트 비교';
+
+  @override
+  String get selectNotesToCompare => '비교할 노트 선택';
+
+  @override
+  String get unifiedView => '통합 보기';
+
+  @override
+  String get sideBySideView => '나란히 보기';
+
+  @override
+  String get additions => '추가';
+
+  @override
+  String get deletions => '삭제';
+
+  @override
+  String get selectTwoNotes => '비교할 노트 2개를 선택하세요';
+
+  @override
+  String get noteDiff => '노트 차이점';
+
+  @override
+  String linesChanged(int added, int removed) {
+    return '$added줄 추가, $removed줄 삭제';
+  }
+
+  @override
+  String get mermaidDiagram => 'Mermaid 다이어그램';
+
+  @override
+  String get viewDiagram => '다이어그램 보기';
+
+  @override
+  String get copyMermaidCode => 'Mermaid 코드 복사';
+
+  @override
+  String get diagramCopied => '다이어그램 코드 복사됨';
+
+  @override
+  String get mermaidTemplate => 'Mermaid 템플릿';
+
+  @override
+  String get insertDiagram => '다이어그램 삽입';
+
+  @override
+  String get slashMermaid => 'Mermaid 다이어그램';
+
+  @override
+  String get viewSource => '소스 보기';
+
+  @override
+  String get diagramError => '다이어그램 렌더링 실패';
+
+  @override
+  String get copyDiagramSource => '다이어그램 소스 복사';
+
+  @override
+  String get lockNote => '노트 잠금';
+
+  @override
+  String get unlockNote => '노트 잠금 해제';
+
+  @override
+  String get noteLocked => '노트가 잠겨 있습니다';
+
+  @override
+  String get lockedNoteBanner => '이 노트는 잠겨 있습니다. 탭하여 잠금 해제';
+
+  @override
+  String notesColored(int count) {
+    return '노트 $count개 색상 설정됨';
+  }
+
+  @override
+  String colorRemovedFromNotes(int count) {
+    return '노트 $count개 색상 제거됨';
+  }
+
+  @override
+  String get batchColor => '일괄 색상';
+
+  @override
+  String get batchLock => '일괄 잠금';
+
+  @override
+  String get batchUnlock => '일괄 잠금 해제';
+
+  @override
+  String notesLocked(int count) {
+    return '노트 $count개 잠금';
+  }
+
+  @override
+  String notesUnlocked(int count) {
+    return '노트 $count개 잠금 해제';
+  }
+
+  @override
+  String get moveToCollection => '컬렉션으로 이동';
+
+  @override
+  String get searchCollections => '컬렉션 검색...';
+
+  @override
+  String get noCollections => '컬렉션 없음';
+
+  @override
+  String notesMovedToCollection(int count, String name) {
+    return '노트 $count개를 \"$name\"(으)로 이동';
+  }
+
+  @override
+  String noteMovedToCollection(String name) {
+    return '노트를 \"$name\"(으)로 이동';
+  }
+
+  @override
+  String get addToCollection => '컬렉션에 추가';
+
+  @override
+  String get scrollToTop => '맨 위로';
+
+  @override
+  String get printNote => '노트 인쇄';
+
+  @override
+  String get printPreview => '인쇄 미리보기';
+
+  @override
+  String get includeMetadata => '메타데이터 포함';
+
+  @override
+  String get includeImages => '이미지 포함';
+
+  @override
+  String get shareAsHtml => 'HTML로 공유';
+
+  @override
+  String get exportedAsHtml => 'HTML로 내보냄';
+
+  @override
+  String get foldView => '접기 보기';
+
+  @override
+  String get foldAll => '모두 접기';
+
+  @override
+  String get unfoldAll => '모두 펼치기';
+
+  @override
+  String sectionLines(int count) {
+    return '$count줄';
+  }
+
+  @override
+  String foldedSections(int count) {
+    return '$count개 접힌 섹션';
+  }
+
+  @override
+  String get toggleFold => '접기 전환';
+
+  @override
+  String get tableOfContents => '목차';
+
+  @override
+  String get noHeadings => '제목 없음';
+
+  @override
+  String headingLevel(int level) {
+    return '제목 수준 $level';
+  }
+
+  @override
+  String get readAloud => '읽어주기';
+
+  @override
+  String get stopReading => '읽기 중지';
+
+  @override
+  String get pauseReading => '일시 정지';
+
+  @override
+  String get resumeReading => '계속';
+
+  @override
+  String get readingSpeed => '읽기 속도';
+
+  @override
+  String get keyboardShortcuts => '키보드 단축키';
+
+  @override
+  String get general => '일반';
+
+  @override
+  String get editor => '편집기';
+
+  @override
+  String get navigation => '탐색';
+
+  @override
+  String get shortcutBold => '굵게';
+
+  @override
+  String get shortcutItalic => '기울임';
+
+  @override
+  String get shortcutStrikethrough => '취소선';
+
+  @override
+  String get shortcutUndo => '실행 취소';
+
+  @override
+  String get shortcutRedo => '다시 실행';
+
+  @override
+  String get shortcutPrint => '인쇄';
+
+  @override
+  String get shortcutLink => '링크 삽입';
+
+  @override
+  String get shortcutCode => '인라인 코드';
+
+  @override
+  String get shortcutHeading => '제목 전환';
+
+  @override
+  String get shortcutCommandPalette => '명령 팔레트';
+
+  @override
+  String get shortcutFocusMode => '집중 모드';
+
+  @override
+  String get reminderNotificationTitle => '알림';
+
+  @override
+  String reminderNotificationBody(String title) {
+    return '리뷰 시간입니다: $title';
+  }
+
+  @override
+  String get notificationChannelName => '노트 알림';
+
+  @override
+  String get notificationChannelDescription => '노트 알림의 알림 채널';
+
+  @override
+  String get exportPdf => 'PDF';
+
+  @override
+  String get generatePdf => 'PDF 생성';
+
+  @override
+  String get pdfGenerated => 'PDF가 생성되었습니다';
+
+  @override
+  String get sharePdf => 'PDF 공유';
+
+  @override
+  String get exportFormatPdf => 'PDF 문서';
+
+  @override
+  String get snippets => '코드 스니펫';
+
+  @override
+  String get snippetTitle => '제목';
+
+  @override
+  String get snippetCode => '코드';
+
+  @override
+  String get snippetLanguage => '언어';
+
+  @override
+  String get snippetDescription => '설명';
+
+  @override
+  String get snippetCategory => '카테고리';
+
+  @override
+  String get snippetTags => '태그';
+
+  @override
+  String get newSnippet => '새 스니펫';
+
+  @override
+  String get editSnippet => '스니펫 편집';
+
+  @override
+  String get deleteSnippet => '스니펫 삭제';
+
+  @override
+  String get deleteSnippetConfirm => '이 스니펫을 삭제하시겠습니까?';
+
+  @override
+  String get copyCode => '코드 복사';
+
+  @override
+  String get codeCopied => '코드가 복사되었습니다';
+
+  @override
+  String get insertSnippet => '스니펫 삽입';
+
+  @override
+  String get noSnippets => '스니펫이 없습니다';
+
+  @override
+  String get searchSnippets => '스니펫 검색...';
+
+  @override
+  String usageCount(int count) {
+    return '$count회 사용';
+  }
+
+  @override
+  String get allLanguages => '모든 언어';
+
+  @override
+  String get allCategories => '모든 카테고리';
+
+  @override
+  String get tagHierarchy => '태그 계층';
+
+  @override
+  String get createSubTag => '하위 태그 만들기';
+
+  @override
+  String get moveToParent => '상위 태그로 이동';
+
+  @override
+  String get noParent => '상위 없음 (루트)';
+
+  @override
+  String get selectParentTag => '상위 태그 선택';
+
+  @override
+  String get expandAll => '모두 펼치기';
+
+  @override
+  String get collapseAll => '모두 접기';
+
+  @override
+  String userCursor(String name) {
+    return '$name의 커서';
+  }
+
+  @override
+  String get remoteUser => '원격 사용자';
+
+  @override
+  String get dropImageHere => '이미지를 여기에 놓으세요';
+
+  @override
+  String get imageAdded => '이미지가 추가되었습니다';
+
+  @override
+  String get unsupportedFileType => '이미지 파일만 지원됩니다';
+
+  @override
+  String get quickNote => '새 메모';
+
+  @override
+  String get quickChecklist => '새 체크리스트';
+
+  @override
+  String get quickDailyNote => '일일 메모';
+
+  @override
+  String get moreOptions => '더 보기';
+
+  @override
+  String get failedToLoadTrash => '휴지통을 불러오지 못했습니다';
+
+  @override
+  String failedToRestoreError(String error) {
+    return '복원에 실패했습니다: $error';
+  }
+
+  @override
+  String failedToDeleteError(String error) {
+    return '삭제에 실패했습니다: $error';
+  }
+
+  @override
+  String get deleteProperty => '속성 삭제';
+
+  @override
+  String get removePropertyConfirm => '이 속성을 노트에서 제거하시겠습니까?';
+
+  @override
+  String get propertiesTitle => '속성';
+
+  @override
+  String get noProperties => '속성 없음';
+
+  @override
+  String get addCustomMetadata => '이 노트에 사용자 지정 메타데이터 추가';
+
+  @override
+  String get addPropertyButton => '속성 추가';
+
+  @override
+  String get editProperty => '속성 편집';
+
+  @override
+  String get customPropertyTitle => '사용자 지정 속성';
+
+  @override
+  String get propertyLabel => '속성';
+
+  @override
+  String get valueLabel => '값';
+
+  @override
+  String get numberLabel => '숫자';
+
+  @override
+  String get enterValue => '값을 입력하세요';
+
+  @override
+  String get enterNumber => '숫자를 입력하세요';
+
+  @override
+  String get selectDateLabel => '날짜 선택';
+
+  @override
+  String get linkManagementTitle => '링크 관리';
+
+  @override
+  String get outboundLinks => '아웃바운드 링크';
+
+  @override
+  String get deleteLinkTitle => '링크 삭제';
+
+  @override
+  String get removeLinkConfirm => '이 노트 간의 연결을 제거하시겠습니까?';
+
+  @override
+  String get noLinksToDisplay => '표시할 링크가 없습니다. 필터를 조정하세요.';
+
+  @override
+  String get linksToThisNote => '이 노트로의 링크';
+
+  @override
+  String get thisNoteLinksTo => '이 노트에서 링크';
+
+  @override
+  String get deleteLinkTooltip => '링크 삭제';
+
+  @override
+  String get insertTable => '표 삽입';
+
+  @override
+  String get dragToSelectTableSize => '드래그하여 표 크기 선택';
+
+  @override
+  String get proPlan => 'Pro';
+
+  @override
+  String get lifetimePlan => 'Lifetime';
+
+  @override
+  String get proPrice => '\$4.99/월';
+
+  @override
+  String get lifetimePrice => '\$49.99';
+
+  @override
+  String get priorityHigh => '높음';
+
+  @override
+  String get priorityMedium => '보통';
+
+  @override
+  String get priorityLow => '낮음';
+
+  @override
+  String tagsCountLabel(int count) {
+    return '태그 $count개';
+  }
+
+  @override
+  String get orphanedNotes => '고아 노트';
+
+  @override
+  String get filter => '필터';
+
+  @override
+  String priorityLabel(String priority) {
+    return '우선순위: $priority';
+  }
+
+  @override
+  String get noMatchingNotes => '일치하는 노트가 없습니다';
+
+  @override
+  String get tryChangingFilters => '필터 조건을 변경해 보세요';
+
+  @override
+  String get filterByProperties => '속성으로 필터';
+
+  @override
+  String get priority => '우선순위';
+
+  @override
+  String get viewProperties => '속성';
+
+  @override
+  String get noteTitle => '노트 제목';
+
+  @override
+  String get dateLabel => '날짜';
+
+  @override
+  String propertyOf(String name) {
+    return '속성：$name';
+  }
+
+  @override
+  String get insertLabel => '삽입';
+
+  @override
+  String failedToLoadMore(String error) {
+    return '더 불러오기 실패：$error';
+  }
+
+  @override
+  String get linkCreated => '링크가 생성되었습니다';
+
+  @override
+  String failedToCreateLink(String error) {
+    return '링크 생성 실패：$error';
+  }
+
+  @override
+  String get suggestedLinks => '추천 링크';
+
+  @override
+  String get similarContentDesc => '제목이나 내용이 비슷한 노트. 탭하여 링크를 만드세요.';
+
+  @override
+  String get noSuggestions => '추천 없음';
+
+  @override
+  String get createMoreNotes => '노트를 더 만들어 추천을 받으세요.';
+
+  @override
+  String get notAvailableOnWeb => '이 기능은 웹에서 사용할 수 없습니다';
+
+  @override
+  String get okButton => '확인';
+
+  @override
+  String get failedToLoadDeferred => '로드 실패';
+
+  @override
+  String get somethingWentWrong => '문제가 발생했습니다';
+
+  @override
+  String get syncStatusTitle => '동기화 상태';
+
+  @override
+  String get offlineLabel => '오프라인';
+
+  @override
+  String get connectedLabel => '연결됨';
+
+  @override
+  String get pendingOpsLabel => '대기 중인 작업';
+
+  @override
+  String get lastSyncedLabel => '마지막 동기화';
+
+  @override
+  String get failedItemsLabel => '실패한 항목';
+
+  @override
+  String get offlineSyncTooltip => '오프라인 -- 연결되면 변경사항이 동기화됩니다';
+
+  @override
+  String get pullingLabel => '가져오는 중';
+
+  @override
+  String get pushingLabel => '보내는 중';
+
+  @override
+  String get syncingLabel => '동기화 중...';
+
+  @override
+  String get allChangesSyncedLabel => '모든 변경사항이 동기화됨';
+
+  @override
+  String pendingOpTooltip(int count) {
+    return '대기 중인 작업 $count개';
+  }
+
+  @override
+  String pendingOpsTooltip(int count) {
+    return '대기 중인 작업 $count개';
+  }
+
+  @override
+  String get syncConflictBadge => '동기화 충돌';
+
+  @override
+  String get conflictLabel => '충돌';
+
+  @override
+  String get syncedLabel => '동기화됨';
+
+  @override
+  String get pendingSyncLabel => '대기';
+
+  @override
+  String get pendingSyncBadge => '동기화 대기';
+
+  @override
+  String barChartSemanticLabel(String entries) {
+    return '월별 노트 수 막대 차트: $entries';
+  }
+
+  @override
+  String donutChartSemanticLabel(String entries) {
+    return '분포를 보여주는 도넛 차트: $entries';
+  }
+
+  @override
+  String tagItemSemanticLabel(String name) {
+    return '태그: $name';
+  }
+
+  @override
+  String get tagItemSemanticHint => '길게 눌러 편집';
 }

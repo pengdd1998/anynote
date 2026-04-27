@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/app_durations.dart';
+
 /// A reusable image widget that fetches and caches network images.
 ///
 /// Wraps [CachedNetworkImage] with consistent placeholder, error, and cache
@@ -83,8 +85,8 @@ class CachedImage extends StatelessWidget {
       fit: fit,
       memCacheWidth: maxWidth,
       memCacheHeight: maxHeight,
-      fadeOutDuration: const Duration(milliseconds: 300),
-      fadeInDuration: const Duration(milliseconds: 300),
+      fadeOutDuration: AppDurations.animation,
+      fadeInDuration: AppDurations.animation,
       placeholder: (context, url) =>
           loadingWidget ?? const _DefaultLoadingWidget(),
       errorWidget: (context, url, error) =>

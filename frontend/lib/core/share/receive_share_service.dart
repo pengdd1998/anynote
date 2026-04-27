@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -142,7 +142,8 @@ class ReceiveShareService {
     } else if (Platform.isIOS) {
       // iOS: read from shared App Group UserDefaults.
       try {
-        final result = await _methodChannel.invokeMethod<Map>('getPendingShare');
+        final result =
+            await _methodChannel.invokeMethod<Map>('getPendingShare');
         if (result != null && result.containsKey('data')) {
           pendingData = result['data'] as String?;
         }

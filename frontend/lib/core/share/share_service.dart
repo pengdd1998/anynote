@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
 
@@ -46,6 +47,50 @@ class ShareResult {
     required this.hasPassword,
     this.isServerStored = false,
   });
+
+  ShareResult copyWith({
+    String? id,
+    String? shareLink,
+    String? payload,
+    String? shareKey,
+    DateTime? expiresAt,
+    bool? hasPassword,
+    bool? isServerStored,
+  }) {
+    return ShareResult(
+      id: id ?? this.id,
+      shareLink: shareLink ?? this.shareLink,
+      payload: payload ?? this.payload,
+      shareKey: shareKey ?? this.shareKey,
+      expiresAt: expiresAt ?? this.expiresAt,
+      hasPassword: hasPassword ?? this.hasPassword,
+      isServerStored: isServerStored ?? this.isServerStored,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ShareResult &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          shareLink == other.shareLink &&
+          payload == other.payload &&
+          shareKey == other.shareKey &&
+          expiresAt == other.expiresAt &&
+          hasPassword == other.hasPassword &&
+          isServerStored == other.isServerStored;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        shareLink,
+        payload,
+        shareKey,
+        expiresAt,
+        hasPassword,
+        isServerStored,
+      );
 }
 
 /// A decrypted shared note ready for display.
@@ -57,6 +102,27 @@ class DecryptedSharedNote {
     required this.title,
     required this.content,
   });
+
+  DecryptedSharedNote copyWith({
+    String? title,
+    String? content,
+  }) {
+    return DecryptedSharedNote(
+      title: title ?? this.title,
+      content: content ?? this.content,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DecryptedSharedNote &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          content == other.content;
+
+  @override
+  int get hashCode => Object.hash(title, content);
 }
 
 /// Service for creating and consuming shared notes.
@@ -109,8 +175,9 @@ class ShareService {
     final sodium = await SodiumSumoInit.init();
 
     // Generate a random share ID (16 bytes).
-    final shareId =
-        base64Url.encode(sodium.secureRandom(16).extractBytes()).replaceAll('=', '');
+    final shareId = base64Url
+        .encode(sodium.secureRandom(16).extractBytes())
+        .replaceAll('=', '');
 
     // Generate or derive the share key.
     final Uint8List shareKeyBytes;
@@ -119,9 +186,11 @@ class ShareService {
     if (hasPassword) {
       shareKeyBytes = await _deriveKeyFromPassword(sodium, password, shareId);
     } else {
-      shareKeyBytes = sodium.secureRandom(
-        sodium.crypto.aeadXChaCha20Poly1305IETF.keyBytes,
-      ).extractBytes();
+      shareKeyBytes = sodium
+          .secureRandom(
+            sodium.crypto.aeadXChaCha20Poly1305IETF.keyBytes,
+          )
+          .extractBytes();
     }
 
     // Encrypt title and content together as JSON with XChaCha20-Poly1305.
@@ -132,8 +201,7 @@ class ShareService {
     final encryptedBase64 = await Encryptor.encrypt(plaintext, shareKeyBytes);
 
     // Encode the share key.
-    final shareKeyB64 =
-        base64Url.encode(shareKeyBytes).replaceAll('=', '');
+    final shareKeyB64 = base64Url.encode(shareKeyBytes).replaceAll('=', '');
 
     // For password-protected shares, the fragment is "pwd" (no key included).
     final fragment = hasPassword ? 'pwd' : shareKeyB64;
@@ -182,8 +250,10 @@ class ShareService {
           hasPassword: hasPassword,
           isServerStored: true,
         );
-      } catch (_) {
+      } catch (e) {
         // Server unavailable -- fall through to self-contained mode.
+        debugPrint(
+            '[ShareService] server share creation failed, falling back to local mode: $e');
       }
     }
 
@@ -245,11 +315,9 @@ class ShareService {
     // Determine the key.
     final Uint8List shareKeyBytes;
     if (key != null && key.isNotEmpty && key != 'pwd') {
-      shareKeyBytes =
-          base64Url.decode(base64Url.normalize(key));
+      shareKeyBytes = base64Url.decode(base64Url.normalize(key));
     } else if (password != null && password.isNotEmpty) {
-      shareKeyBytes =
-          await _deriveKeyFromPassword(sodium, password, shareId);
+      shareKeyBytes = await _deriveKeyFromPassword(sodium, password, shareId);
     } else {
       throw ArgumentError(
         'Either a key or a password must be provided to decrypt the shared note.',
@@ -288,8 +356,7 @@ class ShareService {
       shareKeyBytes = base64Url.decode(base64Url.normalize(key));
     } else if (password != null && password.isNotEmpty) {
       final sodium = await SodiumSumoInit.init();
-      shareKeyBytes =
-          await _deriveKeyFromPassword(sodium, password, shareId);
+      shareKeyBytes = await _deriveKeyFromPassword(sodium, password, shareId);
     } else {
       throw ArgumentError(
         'Either a key or a password must be provided to decrypt the shared note.',
@@ -423,6 +490,24 @@ class ParsedShareLink {
     required this.isPasswordProtected,
     this.isServerShare = false,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ParsedShareLink &&
+          runtimeType == other.runtimeType &&
+          payload == other.payload &&
+          keyFragment == other.keyFragment &&
+          isPasswordProtected == other.isPasswordProtected &&
+          isServerShare == other.isServerShare;
+
+  @override
+  int get hashCode => Object.hash(
+        payload,
+        keyFragment,
+        isPasswordProtected,
+        isServerShare,
+      );
 }
 
 /// Metadata for a server-stored share (before decryption).
@@ -442,6 +527,28 @@ class ServerShareInfo {
     required this.viewCount,
     this.maxViews,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ServerShareInfo &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          encryptedContent == other.encryptedContent &&
+          hasPassword == other.hasPassword &&
+          expiresAt == other.expiresAt &&
+          viewCount == other.viewCount &&
+          maxViews == other.maxViews;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        encryptedContent,
+        hasPassword,
+        expiresAt,
+        viewCount,
+        maxViews,
+      );
 }
 
 /// Encode a byte list as a hex string.

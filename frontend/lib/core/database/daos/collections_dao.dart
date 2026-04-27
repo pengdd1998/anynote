@@ -11,13 +11,15 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
 
   /// Get all collections.
   Future<List<Collection>> getAllCollections() {
-    return (select(collections)..orderBy([(c) => OrderingTerm.asc(c.plainTitle)]))
+    return (select(collections)
+          ..orderBy([(c) => OrderingTerm.asc(c.plainTitle)]))
         .get();
   }
 
   /// Watch all collections (reactive).
   Stream<List<Collection>> watchAllCollections() {
-    return (select(collections)..orderBy([(c) => OrderingTerm.asc(c.plainTitle)]))
+    return (select(collections)
+          ..orderBy([(c) => OrderingTerm.asc(c.plainTitle)]))
         .watch();
   }
 
@@ -27,11 +29,13 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
     required String encryptedTitle,
     String? plainTitle,
   }) async {
-    await into(collections).insert(CollectionsCompanion.insert(
-      id: id,
-      encryptedTitle: encryptedTitle,
-      plainTitle: Value(plainTitle),
-    ),);
+    await into(collections).insert(
+      CollectionsCompanion.insert(
+        id: id,
+        encryptedTitle: encryptedTitle,
+        plainTitle: Value(plainTitle),
+      ),
+    );
     return id;
   }
 
@@ -41,17 +45,21 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
     String? encryptedTitle,
     String? plainTitle,
   }) async {
-    await (update(collections)..where((c) => c.id.equals(id)))
-        .write(CollectionsCompanion(
-      encryptedTitle: encryptedTitle != null ? Value(encryptedTitle) : const Value.absent(),
-      plainTitle: Value(plainTitle),
-      isSynced: const Value(false),
-    ),);
+    await (update(collections)..where((c) => c.id.equals(id))).write(
+      CollectionsCompanion(
+        encryptedTitle: encryptedTitle != null
+            ? Value(encryptedTitle)
+            : const Value.absent(),
+        plainTitle: Value(plainTitle),
+        isSynced: const Value(false),
+      ),
+    );
   }
 
   /// Delete a collection and its note associations.
   Future<void> deleteCollection(String id) async {
-    await (delete(collectionNotes)..where((cn) => cn.collectionId.equals(id))).go();
+    await (delete(collectionNotes)..where((cn) => cn.collectionId.equals(id)))
+        .go();
     await (delete(collections)..where((c) => c.id.equals(id))).go();
   }
 
@@ -61,18 +69,25 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
     required String noteId,
     int sortOrder = 0,
   }) async {
-    await into(collectionNotes).insert(CollectionNotesCompanion.insert(
-      collectionId: collectionId,
-      noteId: noteId,
-      sortOrder: Value(sortOrder),
-    ),);
+    await into(collectionNotes).insert(
+      CollectionNotesCompanion.insert(
+        collectionId: collectionId,
+        noteId: noteId,
+        sortOrder: Value(sortOrder),
+      ),
+    );
   }
 
   /// Remove a note from a collection.
-  Future<void> removeNoteFromCollection(String collectionId, String noteId) async {
+  Future<void> removeNoteFromCollection(
+    String collectionId,
+    String noteId,
+  ) async {
     await (delete(collectionNotes)
-          ..where((cn) =>
-              cn.collectionId.equals(collectionId) & cn.noteId.equals(noteId),))
+          ..where(
+            (cn) =>
+                cn.collectionId.equals(collectionId) & cn.noteId.equals(noteId),
+          ))
         .go();
   }
 
@@ -93,5 +108,11 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
   Future<void> markSynced(String id) async {
     await (update(collections)..where((c) => c.id.equals(id)))
         .write(const CollectionsCompanion(isSynced: Value(true)));
+  }
+
+  /// Update the color of a collection. Pass null to remove the color.
+  Future<void> updateCollectionColor(String id, String? color) async {
+    await (update(collections)..where((c) => c.id.equals(id)))
+        .write(CollectionsCompanion(color: Value(color)));
   }
 }

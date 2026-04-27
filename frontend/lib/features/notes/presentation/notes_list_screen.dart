@@ -2,35 +2,45 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
-import 'package:drift/drift.dart' hide Column;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../../core/constants/app_durations.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/database/daos/note_properties_dao.dart';
 import '../../../core/import/apple_notes_import.dart';
 import '../../../core/import/import_models.dart';
 import '../../../core/import/markdown_import_service.dart';
 import '../../../core/import/text_import.dart';
 import '../../../core/widgets/adaptive_scaffold.dart';
+import '../../../core/widgets/color_picker_sheet.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/master_detail_layout.dart';
 import '../../../core/widgets/offline_banner.dart';
 import '../../../core/widgets/sidebar_provider.dart';
 import '../../../core/widgets/pressable_scale.dart';
-import '../../../core/widgets/sync_status_widget.dart';
+import 'widgets/sync_status_indicator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../settings/data/settings_providers.dart';
-import '../domain/decrypted_note.dart';
-import 'template_picker.dart';
+import 'widgets/command_palette.dart';
+import 'widgets/template_picker_sheet.dart';
+import 'widgets/collection_picker_sheet.dart';
 import 'widgets/dismissible_note_card.dart';
-import 'widgets/note_card.dart';
+import 'widgets/export_sheet.dart';
+import 'widgets/orphaned_notes_sheet.dart';
+import 'widgets/split_note_picker_sheet.dart';
+import 'widgets/split_view_pane.dart';
+import 'widgets/inline_note_detail.dart';
+import 'widgets/notes_batch_actions.dart';
+import 'widgets/notes_filter_sheet.dart';
+import 'widgets/staggered_card_entrance.dart';
 
 /// Page size for paginated note loading.
 /// 50 items balances smooth scrolling with low memory usage.
@@ -64,6 +74,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   bool _isGridView = false;
   String _sortOption = 'updated_newest';
 
+  /// Whether the current sort mode is custom (drag-and-drop reorder).
+  bool get _isCustomSort => _sortOption == 'custom';
+
   /// Accumulated list of notes loaded so far for infinite scroll.
   List<Note> _notes = [];
 
@@ -85,8 +98,14 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   /// Maximum number of entries in [_tagsCache] before eviction.
   static const int _maxTagsCacheSize = 200;
 
+  /// Cache of note ID -> locked state for displaying lock icons.
+  final Map<String, bool> _lockedCache = {};
+
   /// Scroll controller for detecting near-bottom in infinite scroll.
   final ScrollController _scrollController = ScrollController();
+
+  /// Whether the scroll-to-top FAB should be visible.
+  bool _showScrollToTop = false;
 
   /// Selected note ID for the master-detail layout on desktop.
   /// Null on phone layout.
@@ -122,6 +141,29 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   /// Set of note IDs currently selected in selection mode.
   Set<String> _selectedNoteIds = {};
 
+  // --- Property filter state ---
+
+  /// Active status filter (null = no filter).
+  String? _statusFilter;
+
+  /// Active priority filter (null = no filter).
+  String? _priorityFilter;
+
+  /// Cache of note ID -> properties for filtering.
+  final Map<String, List<NoteProperty>> _propertiesCache = {};
+
+  /// Maximum number of entries in [_propertiesCache] before eviction.
+  static const int _maxPropertiesCacheSize = 200;
+
+  // --- Split view state ---
+
+  /// Note ID displayed in the secondary (right) pane during split view.
+  /// Null means split view is not active.
+  String? _splitViewNoteId;
+
+  /// Title of the note in the secondary pane (for the header bar).
+  String? _splitViewNoteTitle;
+
   @override
   void initState() {
     super.initState();
@@ -139,6 +181,72 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     _scrollController.dispose();
     _pageSubscription?.cancel();
     super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Property filtering
+  // ---------------------------------------------------------------------------
+
+  /// Apply property filters to the notes list.
+  Future<List<Note>> _applyPropertyFilters(
+    List<Note> notes,
+    AppDatabase db,
+  ) async {
+    if (_statusFilter == null && _priorityFilter == null) {
+      return notes;
+    }
+
+    final filtered = <Note>[];
+
+    for (final note in notes) {
+      // Load properties for this note (use cache if available)
+      List<NoteProperty>? properties = _propertiesCache[note.id];
+      if (properties == null) {
+        properties = await db.notePropertiesDao.getPropertiesForNote(note.id);
+        if (_propertiesCache.length >= _maxPropertiesCacheSize) {
+          _propertiesCache.remove(_propertiesCache.keys.first);
+        }
+        _propertiesCache[note.id] = properties;
+      }
+
+      bool matchesStatus = true;
+      bool matchesPriority = true;
+
+      for (final property in properties) {
+        if (property.key == BuiltInProperties.status &&
+            property.valueText == _statusFilter) {
+          matchesStatus = true;
+        }
+        if (property.key == BuiltInProperties.priority &&
+            property.valueText == _priorityFilter) {
+          matchesPriority = true;
+        }
+      }
+
+      // If filter is set and property doesn't match, exclude
+      if (_statusFilter != null) {
+        final hasStatus = properties.any(
+          (p) =>
+              p.key == BuiltInProperties.status && p.valueText == _statusFilter,
+        );
+        matchesStatus = hasStatus;
+      }
+
+      if (_priorityFilter != null) {
+        final hasPriority = properties.any(
+          (p) =>
+              p.key == BuiltInProperties.priority &&
+              p.valueText == _priorityFilter,
+        );
+        matchesPriority = hasPriority;
+      }
+
+      if (matchesStatus && matchesPriority) {
+        filtered.add(note);
+      }
+    }
+
+    return filtered;
   }
 
   // ---------------------------------------------------------------------------
@@ -172,6 +280,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
         for (final note in firstPage) {
           _loadTagsForNote(note.id, db);
+          _loadLockForNote(note.id, db);
         }
       });
     });
@@ -203,6 +312,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     for (final note in uniqueNewNotes) {
       _loadTagsForNote(note.id, db);
+      _loadLockForNote(note.id, db);
     }
   }
 
@@ -211,6 +321,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   void _resetAndReload() {
     _pageSubscription?.cancel();
     _tagsCache.clear();
+    _lockedCache.clear();
     _loadInitialNotes();
   }
 
@@ -230,7 +341,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     if (query.isEmpty) return;
 
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+    _debounceTimer = Timer(AppDurations.debounce, () {
       if (!mounted) return;
       final db = ref.read(databaseProvider);
 
@@ -242,6 +353,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         });
         for (final note in results) {
           _loadTagsForNote(note.id, db);
+          _loadLockForNote(note.id, db);
         }
       });
     });
@@ -278,6 +390,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     for (final note in uniqueNew) {
       _loadTagsForNote(note.id, db);
+      _loadLockForNote(note.id, db);
     }
   }
 
@@ -286,12 +399,19 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   // ---------------------------------------------------------------------------
 
   /// Scroll listener: load more when user is near the bottom (80%).
+  /// Also toggles the scroll-to-top FAB based on scroll offset.
   void _onScroll() {
+    // Update scroll-to-top visibility.
+    final currentOffset = _scrollController.position.pixels;
+    final shouldShow = currentOffset > 1000;
+    if (shouldShow != _showScrollToTop) {
+      setState(() => _showScrollToTop = shouldShow);
+    }
+
     if (_isLoadingPage && _isLoadingMoreSearch) return;
 
     final maxScroll = _scrollController.position.maxScrollExtent;
-    final currentScroll = _scrollController.position.pixels;
-    final nearBottom = currentScroll >= maxScroll * 0.8;
+    final nearBottom = currentOffset >= maxScroll * 0.8;
 
     if (!nearBottom) return;
 
@@ -317,6 +437,17 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         while (_tagsCache.length > _maxTagsCacheSize) {
           _tagsCache.remove(_tagsCache.keys.first);
         }
+      });
+    }
+  }
+
+  /// Load lock state for a single note and cache it.
+  Future<void> _loadLockForNote(String noteId, AppDatabase db) async {
+    if (_lockedCache.containsKey(noteId)) return;
+    final locked = await db.notePropertiesDao.isNoteLocked(noteId);
+    if (mounted) {
+      setState(() {
+        _lockedCache[noteId] = locked;
       });
     }
   }
@@ -348,6 +479,14 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           return ta.toLowerCase().compareTo(tb.toLowerCase());
         });
         break;
+      case 'custom':
+        // For custom sort, order by sortOrder field then by updatedAt as tiebreaker.
+        sorted.sort((a, b) {
+          final cmp = a.sortOrder.compareTo(b.sortOrder);
+          if (cmp != 0) return cmp;
+          return b.updatedAt.compareTo(a.updatedAt);
+        });
+        break;
     }
 
     // Always move pinned notes to the top.
@@ -357,6 +496,23 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     });
 
     return sorted;
+  }
+
+  /// Handle reorder in custom sort mode.
+  /// Updates the local list immediately and persists sort orders to the DB.
+  Future<void> _onReorder(List<Note> notes, int oldIndex, int newIndex) async {
+    // Adjust newIndex when moving downward because the list shrinks by one.
+    if (oldIndex < newIndex) newIndex -= 1;
+
+    setState(() {
+      final note = notes.removeAt(oldIndex);
+      notes.insert(newIndex, note);
+    });
+
+    // Persist the new order to the database.
+    final db = ref.read(databaseProvider);
+    final reorderedIds = notes.map((n) => n.id).toList();
+    await db.notesDao.reorderNotes(reorderedIds);
   }
 
   // ---------------------------------------------------------------------------
@@ -394,9 +550,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               onPressed: _selectedNoteIds.length == _notes.length
                   ? _deselectAllNotes
                   : _selectAllNotes,
-              child: Text(_selectedNoteIds.length == _notes.length
-                  ? l10n.deselectAll
-                  : l10n.selectAll),
+              child: Text(
+                _selectedNoteIds.length == _notes.length
+                    ? l10n.deselectAll
+                    : l10n.selectAll,
+              ),
             ),
             // Done button to exit selection mode
             IconButton(
@@ -405,8 +563,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               onPressed: _exitSelectionMode,
             ),
           ] else ...[
-            // Sync status with pending count badge
-            const SyncStatusWidget(),
+            // Sync status indicator (green/yellow/red dot + label)
+            const SyncStatusIndicator(),
             // Trash icon with badge count
             StreamBuilder<int>(
               stream: db.notesDao.watchDeletedNotesCount(),
@@ -461,6 +619,54 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               tooltip: l10n.collections,
               onPressed: () => context.push('/collections'),
             ),
+            // Knowledge Graph
+            IconButton(
+              icon: const Icon(Icons.account_tree_outlined),
+              tooltip: l10n.knowledgeGraph,
+              onPressed: () => context.push('/notes/graph'),
+            ),
+            // Properties Dashboard
+            IconButton(
+              icon: const Icon(Icons.dashboard_outlined),
+              tooltip: l10n.propertiesDashboard,
+              onPressed: () => context.push('/notes/dashboard'),
+            ),
+            // Statistics
+            IconButton(
+              icon: const Icon(Icons.bar_chart_outlined),
+              tooltip: l10n.statistics,
+              onPressed: () => context.push('/notes/statistics'),
+            ),
+            // Daily Notes (Calendar)
+            IconButton(
+              icon: const Icon(Icons.calendar_today_outlined),
+              tooltip: l10n.dailyNotes,
+              onPressed: () => context.push('/notes/daily'),
+            ),
+            // Reminders
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined),
+              tooltip: l10n.reminders,
+              onPressed: () => context.push('/notes/reminders'),
+            ),
+            // Orphaned Notes
+            IconButton(
+              icon: const Icon(Icons.scatter_plot_outlined),
+              tooltip: l10n.orphanedNotes,
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (ctx) => const OrphanedNotesSheet(),
+                );
+              },
+            ),
+            // Code Snippets
+            IconButton(
+              icon: const Icon(Icons.code_outlined),
+              tooltip: l10n.snippets,
+              onPressed: () => context.push('/snippets'),
+            ),
             // Sort menu
             PopupMenuButton<String>(
               icon: const Icon(Icons.sort),
@@ -489,6 +695,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                   value: 'title_az',
                   child: Text(l10n.titleAZ),
                 ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'custom',
+                  child: Text(l10n.sortCustom),
+                ),
               ],
             ),
             // Grid/List toggle
@@ -505,6 +716,13 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 icon: const Icon(Icons.tune),
                 tooltip: l10n.advancedSearch,
                 onPressed: () => context.push('/search'),
+              ),
+            // Command palette trigger
+            if (!_isSelectionMode)
+              IconButton(
+                icon: const Icon(Icons.keyboard_command_key),
+                tooltip: l10n.commandPalette,
+                onPressed: showCommandPalette,
               ),
             // Search toggle
             IconButton(
@@ -536,7 +754,42 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           // Offline banner at the top
           const OfflineBanner(),
           // Batch action bar (shown when in selection mode)
-          if (_isSelectionMode) _buildBatchActionBar(db, l10n),
+          if (_isSelectionMode)
+            NotesBatchActionBar(
+              selectedNoteIds: _selectedNoteIds,
+              notes: _notes,
+              onTogglePin: () => _batchTogglePin(db, l10n),
+              onColor: () => _batchColor(db, l10n),
+              onLock: () => _batchLock(db, l10n),
+              onDelete: () => _batchDelete(db, l10n),
+              onExport: _showExportSheet,
+              onCompare:
+                  _selectedNoteIds.length == 2 ? _compareSelectedNotes : null,
+              onMoveToCollection: () =>
+                  _moveToCollection(db, l10n, _selectedNoteIds.toList()),
+              onAddTags: () => _batchAddTags(db, l10n),
+            ),
+          // Property filter bar
+          if (!_isSearching)
+            NotesFilterBar(
+              statusFilter: _statusFilter,
+              priorityFilter: _priorityFilter,
+              onFilterTap: () => NotesFilterSheet.show(
+                context: context,
+                statusFilter: _statusFilter,
+                priorityFilter: _priorityFilter,
+                onStatusChanged: (status) =>
+                    setState(() => _statusFilter = status),
+                onPriorityChanged: (priority) =>
+                    setState(() => _priorityFilter = priority),
+              ),
+              onStatusCleared: () => setState(() => _statusFilter = null),
+              onPriorityCleared: () => setState(() => _priorityFilter = null),
+              onClearAll: () => setState(() {
+                _statusFilter = null;
+                _priorityFilter = null;
+              }),
+            ),
           // Main content
           Expanded(
             child: wideScreen
@@ -551,13 +804,34 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                         : _buildNotesBody(db),
                     detailPaneBuilder: (selectedId) {
                       if (selectedId == null) {
-                        return const _InlineDetailPlaceholder();
+                        return const InlineDetailPlaceholder();
                       }
-                      return _InlineNoteDetail(
+
+                      // Primary detail widget
+                      final primaryDetail = InlineNoteDetail(
                         noteId: selectedId,
                         db: db,
                         crypto: ref.read(cryptoServiceProvider),
+                        onSplitViewToggle: _splitViewNoteId == null
+                            ? () => _showSplitNotePicker(context)
+                            : null,
                       );
+
+                      // If split view is active, wrap in SplitViewPane
+                      if (_splitViewNoteId != null) {
+                        return SplitViewPane(
+                          primaryChild: primaryDetail,
+                          secondaryChild: InlineNoteDetail(
+                            noteId: _splitViewNoteId!,
+                            db: db,
+                            crypto: ref.read(cryptoServiceProvider),
+                          ),
+                          secondaryTitle: _splitViewNoteTitle ?? l10n.untitled,
+                          onClose: _closeSplitView,
+                        );
+                      }
+
+                      return primaryDetail;
                     },
                   )
                 : _isSearching && _searchQuery.isNotEmpty
@@ -568,81 +842,54 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       ),
       floatingActionButton: _isSelectionMode
           ? null
-          : PressableScale(
-              onPressed: () => _showCreateOptions(context),
-              child: Semantics(
-                button: true,
-                label: l10n.createNewNote,
-                child: FloatingActionButton(
-                  onPressed: () => _showCreateOptions(context),
-                  tooltip: l10n.createNewNote,
-                  child: const Icon(Icons.add),
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Scroll-to-top FAB with fade animation.
+                AnimatedOpacity(
+                  opacity: _showScrollToTop ? 1.0 : 0.0,
+                  duration: AppDurations.mediumAnimation,
+                  child: AnimatedSlide(
+                    offset:
+                        _showScrollToTop ? Offset.zero : const Offset(0, 0.5),
+                    duration: AppDurations.mediumAnimation,
+                    curve: Curves.easeOutCubic,
+                    child: IgnorePointer(
+                      ignoring: !_showScrollToTop,
+                      child: Semantics(
+                        button: true,
+                        label: l10n.scrollToTop,
+                        child: FloatingActionButton.small(
+                          onPressed: () {
+                            _scrollController.animateTo(
+                              0,
+                              duration: AppDurations.longAnimation,
+                              curve: Curves.easeOutCubic,
+                            );
+                          },
+                          tooltip: l10n.scrollToTop,
+                          child: const Icon(Icons.arrow_upward),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                // Create new note FAB.
+                PressableScale(
+                  onPressed: () => _showCreateOptions(context),
+                  child: Semantics(
+                    button: true,
+                    label: l10n.createNewNote,
+                    child: FloatingActionButton(
+                      onPressed: () => _showCreateOptions(context),
+                      tooltip: l10n.createNewNote,
+                      child: const Icon(Icons.add),
+                    ),
+                  ),
+                ),
+              ],
             ),
-    );
-  }
-
-  /// Build the batch action bar shown at the bottom during selection mode.
-  Widget _buildBatchActionBar(AppDatabase db, AppLocalizations l10n) {
-    final hasPinned = _selectedNoteIds.any((id) {
-      final note = _notes.firstWhereOrNull((n) => n.id == id);
-      return note?.isPinned ?? false;
-    });
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              // Pin/Unpin button
-              IconButton(
-                icon:
-                    Icon(hasPinned ? Icons.push_pin : Icons.push_pin_outlined),
-                tooltip: hasPinned ? l10n.batchUnpin : l10n.batchPin,
-                onPressed: _selectedNoteIds.isEmpty
-                    ? null
-                    : () => _batchTogglePin(db, l10n),
-              ),
-              // Delete button
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: l10n.batchDelete,
-                onPressed: _selectedNoteIds.isEmpty
-                    ? null
-                    : () => _batchDelete(db, l10n),
-              ),
-              const Spacer(),
-              // Add Tags button
-              FilledButton.tonalIcon(
-                icon: const Icon(Icons.add_circle),
-                label: Text(l10n.batchAddTags),
-                onPressed: _selectedNoteIds.isEmpty
-                    ? null
-                    : () => _batchAddTags(db, l10n),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -669,17 +916,75 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       );
     }
 
-    final sorted = _sortNotes(_notes);
+    // Use FutureBuilder for async property filtering
+    return FutureBuilder<List<Note>>(
+      future: _applyPropertyFilters(_notes, db),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+                _statusFilter != null ||
+            _priorityFilter != null) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        final notifier = ref.read(syncStatusProvider.notifier);
-        await notifier.sync();
-        _resetAndReload();
+        final filtered = snapshot.data ?? _notes;
+        final sorted = _sortNotes(filtered);
+
+        if (filtered.isEmpty &&
+            (_statusFilter != null || _priorityFilter != null)) {
+          return EmptyState(
+            icon: Icons.filter_list_off,
+            title: l10n.noMatchingNotes,
+            subtitle: l10n.tryChangingFilters,
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            final notifier = ref.read(syncStatusProvider.notifier);
+            await notifier.sync();
+            _resetAndReload();
+          },
+          child: Column(
+            children: [
+              // Show reorder hint when in custom sort mode.
+              if (_isCustomSort && !_isGridView)
+                Material(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.reorderModeHint,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSecondaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: _isGridView
+                    ? _buildNotesGrid(sorted, db, isSearchMode: false)
+                    : _buildNotesList(sorted, db, isSearchMode: false),
+              ),
+            ],
+          ),
+        );
       },
-      child: _isGridView
-          ? _buildNotesGrid(sorted, db, isSearchMode: false)
-          : _buildNotesList(sorted, db, isSearchMode: false),
     );
   }
 
@@ -704,9 +1009,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       );
     }
 
-    // Trigger tag loading for visible search results.
+    // Trigger tag and lock loading for visible search results.
     for (final note in _searchResults) {
       _loadTagsForNote(note.id, db);
+      _loadLockForNote(note.id, db);
     }
 
     return _isGridView
@@ -732,6 +1038,48 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       });
     }
 
+    // Use ReorderableListView in custom sort mode for drag-and-drop.
+    if (_isCustomSort && !isSearchMode && !_isSelectionMode) {
+      return ReorderableListView.builder(
+        buildDefaultDragHandles: false,
+        itemCount: notes.length,
+        padding: const EdgeInsets.only(bottom: 80),
+        onReorder: (oldIndex, newIndex) {
+          _onReorder(notes, oldIndex, newIndex);
+        },
+        itemBuilder: (context, index) {
+          final note = notes[index];
+          return DismissibleNoteCard(
+            key: ValueKey(note.id),
+            note: note,
+            db: db,
+            isGrid: false,
+            time: _formatTime(note.updatedAt),
+            tags: _tagsCache[note.id] ?? [],
+            isSelected: false,
+            disableSwipe: true,
+            onTap: () => _onNoteTap(note.id),
+            onLongPress: () => _onNoteLongPress(note.id),
+            onDeleted: () {},
+            untitled: AppLocalizations.of(context)!.untitled,
+            onStatusTap: () => _cycleStatus(note.id, db),
+            onPriorityTap: () => _cyclePriority(note.id, db),
+            isLocked: _lockedCache[note.id] ?? false,
+            trailing: ReorderableDragStartListener(
+              index: index,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Icon(
+                  Icons.drag_handle,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
     return ListView.builder(
       controller: _scrollController,
       itemCount: notes.length + (showLoader ? 1 : 0),
@@ -751,7 +1099,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
         // Staggered entrance: animate first N cards on initial load only.
         if (shouldAnimate && index < _kMaxAnimatedCards) {
-          return _StaggeredCardEntrance(
+          return StaggeredCardEntrance(
             index: index,
             staggerDelay: _kStaggerDelayMs,
             child: _buildDismissibleNoteCard(note, db, isGrid: false),
@@ -803,7 +1151,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
         // Staggered entrance for grid view too.
         if (shouldAnimate && index < _kMaxAnimatedCards) {
-          return _StaggeredCardEntrance(
+          return StaggeredCardEntrance(
             index: index,
             staggerDelay: _kStaggerDelayMs,
             child: _buildDismissibleNoteCard(note, db, isGrid: true),
@@ -826,6 +1174,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     final l10n = AppLocalizations.of(context)!;
     final time = _formatTime(note.updatedAt);
     final tags = _tagsCache[note.id] ?? [];
+    final isLocked = _lockedCache[note.id] ?? false;
     final isSelected = _isSelectionMode
         ? _selectedNoteIds.contains(note.id)
         : _selectedNoteId == note.id;
@@ -842,7 +1191,70 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       onLongPress: () => _onNoteLongPress(note.id),
       onDeleted: () {},
       untitled: l10n.untitled,
+      onStatusTap: () => _cycleStatus(note.id, db),
+      onPriorityTap: () => _cyclePriority(note.id, db),
+      isLocked: isLocked,
     );
+  }
+
+  /// Cycle through status options for a note.
+  Future<void> _cycleStatus(String noteId, AppDatabase db) async {
+    const statuses = ['Todo', 'In Progress', 'Done', 'Blocked', 'Cancelled'];
+    final current = await db.notePropertiesDao.getProperty(
+      noteId,
+      BuiltInProperties.status,
+    );
+    final currentIndex =
+        current != null ? statuses.indexOf(current.valueText ?? '') : -1;
+    final nextIndex = (currentIndex + 1) % statuses.length;
+    final nextStatus = statuses[nextIndex];
+
+    if (current != null) {
+      await db.notePropertiesDao.updateTextProperty(
+        id: current.id,
+        value: nextStatus,
+      );
+    } else {
+      await db.notePropertiesDao.createTextProperty(
+        id: const Uuid().v4(),
+        noteId: noteId,
+        key: BuiltInProperties.status,
+        value: nextStatus,
+      );
+    }
+    // Invalidate properties cache
+    _propertiesCache.remove(noteId);
+    setState(() {});
+  }
+
+  /// Cycle through priority options for a note.
+  Future<void> _cyclePriority(String noteId, AppDatabase db) async {
+    const priorities = ['High', 'Medium', 'Low'];
+    final current = await db.notePropertiesDao.getProperty(
+      noteId,
+      BuiltInProperties.priority,
+    );
+    final currentIndex =
+        current != null ? priorities.indexOf(current.valueText ?? '') : -1;
+    final nextIndex = (currentIndex + 1) % priorities.length;
+    final nextPriority = priorities[nextIndex];
+
+    if (current != null) {
+      await db.notePropertiesDao.updateTextProperty(
+        id: current.id,
+        value: nextPriority,
+      );
+    } else {
+      await db.notePropertiesDao.createTextProperty(
+        id: const Uuid().v4(),
+        noteId: noteId,
+        key: BuiltInProperties.priority,
+        value: nextPriority,
+      );
+    }
+    // Invalidate properties cache
+    _propertiesCache.remove(noteId);
+    setState(() {});
   }
 
   /// Handle note tap: select in selection mode, otherwise navigate.
@@ -860,13 +1272,18 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         }
       });
     } else if (_isWideScreen) {
-      setState(() => _selectedNoteId = noteId);
+      setState(() {
+        _selectedNoteId = noteId;
+        // Close split view when switching primary notes.
+        _splitViewNoteId = null;
+        _splitViewNoteTitle = null;
+      });
     } else {
       context.push('/notes/$noteId');
     }
   }
 
-  /// Handle note long press: enter selection mode.
+  /// Handle note long press: show context menu and enter selection mode.
   void _onNoteLongPress(String noteId) {
     if (!_isSelectionMode) {
       setState(() {
@@ -874,71 +1291,46 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         _selectedNoteIds.add(noteId);
       });
     }
-  }
 
-  /// Show a context menu with Pin/Unpin option on long press.
-  void _showNoteContextMenu(
-    BuildContext context,
-    Note note,
-    AppDatabase db,
-  ) {
+    // Show a context menu with lock/unlock and move options.
     final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
+    final db = ref.read(databaseProvider);
+    showMenu<String>(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Semantics(
-              button: true,
-              label: note.isPinned ? l10n.unpinNote : l10n.pinNote,
-              child: ListTile(
-                leading: Icon(
-                  note.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                ),
-                title: Text(note.isPinned ? l10n.unpinNote : l10n.pinNote),
-                onTap: () async {
-                  await db.notesDao.togglePin(note.id);
-                  if (ctx.mounted) Navigator.of(ctx).pop();
-                },
-              ),
-            ),
-            Semantics(
-              button: true,
-              label: l10n.deleteNote,
-              child: ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: Text(l10n.deleteNote),
-                onTap: () async {
-                  Navigator.of(ctx).pop();
-                  await db.notesDao.softDeleteNote(note.id);
-                  if (!mounted) return;
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.noteDeleted),
-                      action: SnackBarAction(
-                        label: l10n.undo,
-                        onPressed: () async {
-                          await (db.update(db.notes)
-                                ..where((n) => n.id.equals(note.id)))
-                              .write(
-                            const NotesCompanion(
-                              deletedAt: Value(null),
-                              isSynced: Value(false),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+      position: RelativeRect.fill,
+      items: [
+        PopupMenuItem(
+          value: 'lock',
+          child: ListTile(
+            leading: const Icon(Icons.lock_outline),
+            title: Text(l10n.lockNote),
+            contentPadding: EdgeInsets.zero,
+          ),
         ),
-      ),
-    );
+        PopupMenuItem(
+          value: 'unlock',
+          child: ListTile(
+            leading: const Icon(Icons.lock_open),
+            title: Text(l10n.unlockNote),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'move',
+          child: ListTile(
+            leading: const Icon(Icons.create_new_folder_outlined),
+            title: Text(l10n.addToCollection),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'lock' || value == 'unlock') {
+        _toggleNoteLock(noteId, db, l10n);
+      } else if (value == 'move') {
+        _moveToCollection(db, l10n, [noteId]);
+      }
+    });
   }
 
   /// Show a bottom sheet with import options (Markdown, Text, Apple Notes).
@@ -1015,7 +1407,12 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     // File system APIs are not available on web platform.
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This feature is not available on web')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.notAvailableOnWeb ??
+                'This feature is not available on web',
+          ),
+        ),
       );
       return;
     }
@@ -1166,6 +1563,14 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 _openTemplatePicker(context);
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.calendar_today_outlined),
+              title: Text(l10n.dailyNote),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/notes/daily');
+              },
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -1182,7 +1587,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => TemplatePicker(
+      builder: (_) => TemplatePickerSheet(
         onSelected: (content) {
           // Navigate to the note editor with the template content.
           // We pass the content via the query parameter.
@@ -1192,6 +1597,38 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         },
       ),
     );
+  }
+
+  /// Show the note picker sheet for selecting a note to open in split view.
+  void _showSplitNotePicker(BuildContext context) {
+    final excludeIds = <String>{};
+    if (_selectedNoteId != null) excludeIds.add(_selectedNoteId!);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SplitNotePickerSheet(
+        excludeIds: excludeIds,
+        onSelect: (noteId, title) {
+          setState(() {
+            _splitViewNoteId = noteId;
+            _splitViewNoteTitle = title;
+          });
+        },
+      ),
+    );
+  }
+
+  /// Close the split view and clear the secondary note.
+  void _closeSplitView() {
+    setState(() {
+      _splitViewNoteId = null;
+      _splitViewNoteTitle = null;
+    });
   }
 
   /// Select all notes in the current list.
@@ -1299,7 +1736,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     final selectedTags = await showDialog<List<String>>(
       context: context,
-      builder: (ctx) => _TagPickerDialog(
+      builder: (ctx) => TagPickerDialog(
         existingTags: allTags,
       ),
     );
@@ -1328,6 +1765,156 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     }
   }
 
+  /// Show the export bottom sheet for selected notes.
+  void _showExportSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => ExportSheet(
+        selectedNoteIds: _selectedNoteIds,
+        scope: ExportScope.selectedNotes,
+      ),
+    );
+  }
+
+  /// Compare the two currently selected notes by navigating to the diff screen.
+  void _compareSelectedNotes() {
+    if (_selectedNoteIds.length != 2) return;
+    final ids = _selectedNoteIds.toList();
+    _exitSelectionMode();
+    context.push('/notes/compare?left=${ids[0]}&right=${ids[1]}');
+  }
+
+  /// Show color picker and apply selected color to all selected notes.
+  Future<void> _batchColor(AppDatabase db, AppLocalizations l10n) async {
+    if (_selectedNoteIds.isEmpty) return;
+
+    final selectedColor = await showColorPickerSheet(context);
+    if (selectedColor == null) return; // User dismissed the sheet.
+
+    final ids = _selectedNoteIds.toList();
+    if (selectedColor.isEmpty) {
+      // Empty string means "remove color".
+      for (final id in ids) {
+        await db.notesDao.updateNoteColor(id, null);
+      }
+    } else {
+      for (final id in ids) {
+        await db.notesDao.updateNoteColor(id, selectedColor);
+      }
+    }
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          selectedColor.isEmpty
+              ? l10n.colorRemovedFromNotes(ids.length)
+              : l10n.notesColored(ids.length),
+        ),
+      ),
+    );
+
+    _exitSelectionMode();
+  }
+
+  /// Batch lock all selected notes. Shows a confirmation and locks them.
+  Future<void> _batchLock(AppDatabase db, AppLocalizations l10n) async {
+    if (_selectedNoteIds.isEmpty) return;
+
+    // Check if any are already locked to determine action (lock vs unlock).
+    final propsDao = db.notePropertiesDao;
+    final ids = _selectedNoteIds.toList();
+    bool anyLocked = false;
+    for (final id in ids) {
+      if (await propsDao.isNoteLocked(id)) {
+        anyLocked = true;
+        break;
+      }
+    }
+
+    final shouldLock = !anyLocked;
+    await propsDao.bulkSetLocked(ids, shouldLock);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          shouldLock
+              ? l10n.notesLocked(ids.length)
+              : l10n.notesUnlocked(ids.length),
+        ),
+      ),
+    );
+
+    _exitSelectionMode();
+  }
+
+  /// Toggle lock state for a single note (called from long-press menu).
+  Future<void> _toggleNoteLock(
+    String noteId,
+    AppDatabase db,
+    AppLocalizations l10n,
+  ) async {
+    final propsDao = db.notePropertiesDao;
+    final isLocked = await propsDao.isNoteLocked(noteId);
+    await propsDao.setNoteLocked(noteId, !isLocked);
+
+    // Invalidate the cache for this note so the lock icon updates.
+    _lockedCache.remove(noteId);
+    _loadLockForNote(noteId, db);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isLocked ? l10n.unlockNote : l10n.lockNote,
+        ),
+      ),
+    );
+  }
+
+  /// Move notes to a collection via the collection picker sheet.
+  Future<void> _moveToCollection(
+    AppDatabase db,
+    AppLocalizations l10n,
+    List<String> noteIds,
+  ) async {
+    final collection = await showCollectionPickerSheet(
+      context,
+      noteIds: noteIds,
+    );
+    if (collection == null || !mounted) return;
+
+    for (final noteId in noteIds) {
+      await db.collectionsDao.addNoteToCollection(
+        collectionId: collection.id,
+        noteId: noteId,
+      );
+    }
+
+    if (!mounted) return;
+
+    final message = noteIds.length == 1
+        ? l10n.noteMovedToCollection(
+            collection.plainTitle ?? l10n.untitledCollection,
+          )
+        : l10n.notesMovedToCollection(
+            noteIds.length,
+            collection.plainTitle ?? l10n.untitledCollection,
+          );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+
+    if (_isSelectionMode) _exitSelectionMode();
+  }
+
   String _formatTime(DateTime dt) {
     final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
@@ -1337,415 +1924,5 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
     if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
     return '${dt.month}/${dt.day}';
-  }
-}
-
-/// Placeholder shown in the detail pane when no note is selected on desktop.
-class _InlineDetailPlaceholder extends StatelessWidget {
-  const _InlineDetailPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.article_outlined, size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          Text(
-            AppLocalizations.of(context)!.selectNoteToView,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(color: Colors.grey.shade500),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Inline note detail widget for the master-detail layout on desktop.
-///
-/// Loads and decrypts the note content, then renders it as Markdown
-/// (similar to NoteDetailScreen but without its own Scaffold).
-class _InlineNoteDetail extends ConsumerStatefulWidget {
-  final String noteId;
-  final AppDatabase db;
-  final CryptoService crypto;
-
-  const _InlineNoteDetail({
-    required this.noteId,
-    required this.db,
-    required this.crypto,
-  });
-
-  @override
-  ConsumerState<_InlineNoteDetail> createState() => _InlineNoteDetailState();
-}
-
-class _InlineNoteDetailState extends ConsumerState<_InlineNoteDetail> {
-  DecryptedNote? _data;
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadNote();
-  }
-
-  @override
-  void didUpdateWidget(_InlineNoteDetail oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.noteId != widget.noteId) {
-      _loadNote();
-    }
-  }
-
-  Future<void> _loadNote() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final note = await widget.db.notesDao.getNoteById(widget.noteId);
-      if (!mounted) return;
-      if (note == null) {
-        setState(() {
-          _data = null;
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final l10n = AppLocalizations.of(context)!;
-      String title = note.plainTitle ?? l10n.untitled;
-      String content = note.plainContent ?? '';
-
-      if (widget.crypto.isUnlocked) {
-        final decryptedContent = await widget.crypto
-            .decryptForItem(widget.noteId, note.encryptedContent);
-        if (decryptedContent != null) {
-          content = decryptedContent;
-        }
-        if (note.encryptedTitle != null) {
-          final decryptedTitle = await widget.crypto
-              .decryptForItem(widget.noteId, note.encryptedTitle!);
-          if (decryptedTitle != null) {
-            title = decryptedTitle;
-          }
-        }
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _data = DecryptedNote(
-          title: title,
-          content: content,
-          updatedAt: note.updatedAt,
-          isSynced: note.isSynced,
-        );
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
-              const SizedBox(height: 16),
-              Text(
-                l10n.failedToLoadNote,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _error!,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.tonal(onPressed: _loadNote, child: Text(l10n.retry)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_data == null) {
-      return Center(child: Text(l10n.noteNotFound));
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Mini toolbar for the detail pane
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _data!.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 20),
-                tooltip: l10n.editNote,
-                onPressed: () => context.push('/notes/${widget.noteId}'),
-              ),
-              IconButton(
-                icon: const Icon(Icons.history, size: 20),
-                tooltip: l10n.versionHistory,
-                onPressed: () =>
-                    context.push('/notes/${widget.noteId}/history'),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 14,
-                      color: Colors.grey.shade500,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Updated ${_data!.updatedAt.toLocal().toString().substring(0, 16)}',
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                    ),
-                    if (!_data!.isSynced) ...[
-                      const SizedBox(width: 12),
-                      Icon(
-                        Icons.cloud_off,
-                        size: 14,
-                        color: Colors.orange.shade300,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        l10n.notSynced,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange.shade300,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 16),
-                MarkdownBody(
-                  data: _data!.content,
-                  selectable: true,
-                  sizedImageBuilder: (config) {
-                    final uri = config.uri;
-                    if (!kIsWeb && uri.scheme == 'file') {
-                      return Image.file(
-                        File.fromUri(uri),
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.broken_image, size: 48),
-                      );
-                    }
-                    return Image.network(
-                      uri.toString(),
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.broken_image, size: 48),
-                    );
-                  },
-                  styleSheet: MarkdownStyleSheet(
-                    p: const TextStyle(fontSize: 14, height: 1.6),
-                    h1: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    h2: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    h3: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    code: TextStyle(
-                      fontSize: 13,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
-                    ),
-                    blockquote: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Staggered entrance animation for note cards.
-///
-/// Each card fades in and slides up slightly with a delay proportional to its
-/// [index], creating a cascading reveal effect when the list first loads.
-class _StaggeredCardEntrance extends StatefulWidget {
-  final int index;
-  final int staggerDelay;
-  final Widget child;
-
-  const _StaggeredCardEntrance({
-    required this.index,
-    required this.staggerDelay,
-    required this.child,
-  });
-
-  @override
-  State<_StaggeredCardEntrance> createState() => _StaggeredCardEntranceState();
-}
-
-class _StaggeredCardEntranceState extends State<_StaggeredCardEntrance>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _opacity;
-  late final Animation<Offset> _slide;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _slide = Tween<Offset>(
-      begin: const Offset(0, 0.05),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    // Stagger delay based on index.
-    final delay = Duration(milliseconds: widget.staggerDelay * widget.index);
-    Future.delayed(delay, () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _opacity,
-      child: SlideTransition(
-        position: _slide,
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-/// Dialog for selecting tags to add to notes in batch mode.
-class _TagPickerDialog extends StatefulWidget {
-  final List<Tag> existingTags;
-
-  const _TagPickerDialog({required this.existingTags});
-
-  @override
-  State<_TagPickerDialog> createState() => _TagPickerDialogState();
-}
-
-class _TagPickerDialogState extends State<_TagPickerDialog> {
-  final Set<String> _selectedTagIds = {};
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return AlertDialog(
-      title: Text(l10n.batchAddTags),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: widget.existingTags.isEmpty
-            ? Text(l10n.noTagsYet)
-            : ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.existingTags.length,
-                itemBuilder: (context, index) {
-                  final tag = widget.existingTags[index];
-                  final tagId = tag.id;
-                  final isSelected = _selectedTagIds.contains(tagId);
-                  final tagName = tag.plainName ?? l10n.encrypted;
-
-                  return CheckboxListTile(
-                    value: isSelected,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        if (value == true) {
-                          _selectedTagIds.add(tagId);
-                        } else {
-                          _selectedTagIds.remove(tagId);
-                        }
-                      });
-                    },
-                    title: Text(tagName),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  );
-                },
-              ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        TextButton(
-          onPressed: _selectedTagIds.isEmpty
-              ? null
-              : () => Navigator.of(context).pop(_selectedTagIds.toList()),
-          child: Text(l10n.add),
-        ),
-      ],
-    );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../main.dart';
@@ -73,14 +74,16 @@ class SyncLifecycle {
       await queueManager.processQueue();
 
       return result;
-    } catch (_) {
+    } catch (e) {
       // Even if the main sync fails, try to process any retryable
       // operations in case the network issue was transient.
+      debugPrint('[SyncLifecycle] sync cycle failed: $e');
       try {
         final queueManager = _ref.read(syncQueueManagerProvider);
         await queueManager.processQueue();
-      } catch (_) {
+      } catch (e2) {
         // Queue processing failure is non-fatal.
+        debugPrint('[SyncLifecycle] queue processing failed: $e2');
       }
       return null;
     }

@@ -192,6 +192,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get titleAZ => '按标题 A-Z';
 
   @override
+  String get sortCustom => '自定义排序';
+
+  @override
+  String get reorderModeHint => '拖拽笔记以重新排序';
+
+  @override
   String get listView => '列表视图';
 
   @override
@@ -382,11 +388,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get close => '关闭';
 
   @override
-  String get restoreVersion => '恢复版本';
+  String get restoreVersion => '恢复此版本';
 
   @override
   String restoreVersionConfirm(int version) {
-    return '用版本 $version 替换当前笔记内容？当前内容将先保存一个快照。';
+    return '恢复笔记到版本 $version？当前内容将保存为新版本。';
   }
 
   @override
@@ -2041,6 +2047,92 @@ class AppLocalizationsZh extends AppLocalizations {
   String get templateDateHint => '使用 [date] 插入当前日期';
 
   @override
+  String get templates => '模板';
+
+  @override
+  String get templatePicker => '选择模板';
+
+  @override
+  String get createFromTemplate => '从模板创建';
+
+  @override
+  String get createFromScratch => '空白创建';
+
+  @override
+  String get templateManagement => '模板管理';
+
+  @override
+  String get newTemplate => '新建模板';
+
+  @override
+  String get editTemplate => '编辑模板';
+
+  @override
+  String get deleteTemplate => '删除模板';
+
+  @override
+  String get templateName => '模板名称';
+
+  @override
+  String get templateDescription => '描述';
+
+  @override
+  String get templateContent => '内容';
+
+  @override
+  String get templateCategory => '分类';
+
+  @override
+  String get categoryWork => '工作';
+
+  @override
+  String get categoryPersonal => '个人';
+
+  @override
+  String get categoryCreative => '创意';
+
+  @override
+  String get builtInTemplates => '内置模板';
+
+  @override
+  String get userTemplates => '我的模板';
+
+  @override
+  String templateUsed(int count) {
+    return '使用 $count 次';
+  }
+
+  @override
+  String get duplicateTemplate => '复制';
+
+  @override
+  String get noTemplates => '暂无模板';
+
+  @override
+  String get templateSaved => '模板已保存';
+
+  @override
+  String get templateMeetingNotes => '会议笔记';
+
+  @override
+  String get templateDailyJournal => '每日日志';
+
+  @override
+  String get templateProjectPlan => '项目计划';
+
+  @override
+  String get templateReadingNotes => '阅读笔记';
+
+  @override
+  String get templateWeeklyReview => '每周回顾';
+
+  @override
+  String get templateBrainstorm => '头脑风暴';
+
+  @override
+  String get templateBlank => '空白';
+
+  @override
   String get offlineBanner => '您当前离线 — 恢复连接后将自动同步更改';
 
   @override
@@ -2441,6 +2533,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get viewBacklinks => '查看反向链接';
 
   @override
+  String get wikiLink => 'Wiki 链接';
+
+  @override
+  String get linkToNote => '链接到笔记';
+
+  @override
+  String get relatedNotes => '相关笔记';
+
+  @override
+  String get noRelatedNotes => '暂无相关笔记';
+
+  @override
+  String get startTypingToSearch => '输入以搜索笔记';
+
+  @override
+  String get noNotesFound => '未找到笔记';
+
+  @override
   String get backgroundSync => '后台同步';
 
   @override
@@ -2609,4 +2719,1332 @@ class AppLocalizationsZh extends AppLocalizations {
   String multiplePeopleInRoom(int count) {
     return '$count人正在查看';
   }
+
+  @override
+  String get propertiesDashboard => '属性仪表板';
+
+  @override
+  String get totalNotes => '总笔记数';
+
+  @override
+  String get withProperties => '有属性';
+
+  @override
+  String get priorityDistribution => '优先级分布';
+
+  @override
+  String get noPrioritiesSet => '未设置优先级';
+
+  @override
+  String get notesByStatus => '按状态分组的笔记';
+
+  @override
+  String get createFirstNoteHint => '创建您的第一条笔记以查看仪表板';
+
+  @override
+  String get dailyNotes => '日记';
+
+  @override
+  String get dailyNote => '日记';
+
+  @override
+  String get todaysNote => '今天的日记';
+
+  @override
+  String get createTodaysNote => '创建今天的日记';
+
+  @override
+  String get noDailyNote => '这天没有日记';
+
+  @override
+  String get openDailyNote => '打开日记';
+
+  @override
+  String get goToToday => '今天';
+
+  @override
+  String get hasNote => '有笔记';
+
+  @override
+  String get calendar => '日历';
+
+  @override
+  String get recentDailyNotes => '最近的日记';
+
+  @override
+  String get commandPalette => '命令面板';
+
+  @override
+  String get commandSearchHint => '输入以搜索笔记和命令...';
+
+  @override
+  String get commandRecentNotes => '最近';
+
+  @override
+  String get commandNotesSection => '笔记';
+
+  @override
+  String get commandActions => '操作';
+
+  @override
+  String get commandCreateNewNote => '创建新笔记';
+
+  @override
+  String get commandOpenDailyNotes => '打开日记';
+
+  @override
+  String get commandOpenGraph => '打开图谱视图';
+
+  @override
+  String get commandOpenDashboard => '打开仪表盘';
+
+  @override
+  String get commandOpenTrash => '打开回收站';
+
+  @override
+  String get commandOpenSettings => '打开设置';
+
+  @override
+  String get commandNoResultsFound => '没有找到结果';
+
+  @override
+  String get slashHeading1 => '标题 1';
+
+  @override
+  String get slashHeading2 => '标题 2';
+
+  @override
+  String get slashHeading3 => '标题 3';
+
+  @override
+  String get slashBulletList => '无序列表';
+
+  @override
+  String get slashNumberedList => '有序列表';
+
+  @override
+  String get slashTodoList => '待办列表';
+
+  @override
+  String get slashCodeBlock => '代码块';
+
+  @override
+  String get slashQuote => '引用';
+
+  @override
+  String get slashDivider => '分割线';
+
+  @override
+  String get slashTable => '表格';
+
+  @override
+  String get slashImage => '图片';
+
+  @override
+  String get slashWikilink => 'Wiki 链接';
+
+  @override
+  String get slashTransclusion => '内容嵌入';
+
+  @override
+  String get slashCallout => '标注';
+
+  @override
+  String get slashNoResults => '没有匹配的命令';
+
+  @override
+  String get splitView => '分屏视图';
+
+  @override
+  String get openInSplitView => '在分屏中打开';
+
+  @override
+  String get closeSplitView => '关闭分屏';
+
+  @override
+  String get selectNoteForSplit => '选择分屏笔记';
+
+  @override
+  String get searchOperators => '搜索操作符';
+
+  @override
+  String get searchOperatorTag => 'tag:名称 -- 按标签筛选';
+
+  @override
+  String get searchOperatorStatus =>
+      'status:todo|in-progress|done|blocked|cancelled';
+
+  @override
+  String get searchOperatorPriority => 'priority:high|medium|low';
+
+  @override
+  String get searchOperatorDate => 'date:YYYY-MM-DD -- 按日期筛选';
+
+  @override
+  String get searchOperatorCollection => 'collection:名称 -- 按集合筛选';
+
+  @override
+  String get searchOperatorLinks => 'links:true|false -- 按链接状态筛选';
+
+  @override
+  String get searchOperatorsExample => '示例: tag:work status:todo 项目计划';
+
+  @override
+  String get savedSearches => '保存的搜索';
+
+  @override
+  String get saveSearch => '保存搜索';
+
+  @override
+  String get saveSearchName => '搜索名称';
+
+  @override
+  String get searchSaved => '搜索已保存';
+
+  @override
+  String get deleteSavedSearch => '删除保存的搜索';
+
+  @override
+  String deleteSavedSearchConfirm(String name) {
+    return '删除\"$name\"？';
+  }
+
+  @override
+  String get searchHistory => '最近搜索';
+
+  @override
+  String get clearSearchHistory => '清除搜索历史';
+
+  @override
+  String get noSavedSearches => '还没有保存的搜索';
+
+  @override
+  String get saveSearchHint => '搜索后点击书签图标保存';
+
+  @override
+  String get noSearchHistory => '没有搜索历史';
+
+  @override
+  String get showSearchHints => '显示搜索提示';
+
+  @override
+  String get hideSearchHints => '隐藏搜索提示';
+
+  @override
+  String get searchNotesHint => '使用操作符搜索: tag:work status:todo ...';
+
+  @override
+  String get enterQueryOrOperators => '输入带操作符的查询以查找笔记';
+
+  @override
+  String get imageGallery => '图片画廊';
+
+  @override
+  String get fromGallery => '从相册选择';
+
+  @override
+  String get fromCamera => '拍照';
+
+  @override
+  String get selectImageSource => '选择图片来源';
+
+  @override
+  String get pasteImage => '粘贴图片';
+
+  @override
+  String get deleteImage => '删除图片';
+
+  @override
+  String get deleteImageConfirm => '确定要删除此图片吗？';
+
+  @override
+  String get imageManagement => '图片管理';
+
+  @override
+  String get totalStorage => '总存储';
+
+  @override
+  String imageCount(int count) {
+    return '$count 张图片';
+  }
+
+  @override
+  String get orphanedImages => '孤立图片';
+
+  @override
+  String get cleanupOrphaned => '清理孤立图片';
+
+  @override
+  String cleanupComplete(int count) {
+    return '已清理 $count 张孤立图片';
+  }
+
+  @override
+  String get deleteAllImages => '删除所有图片';
+
+  @override
+  String get deleteAllImagesConfirm => '这将删除所有存储的图片。此操作不可撤销。';
+
+  @override
+  String get noImagesStored => '没有存储的图片';
+
+  @override
+  String get imageDeleted => '图片已删除';
+
+  @override
+  String get shareImage => '分享图片';
+
+  @override
+  String get compareVersions => '比较版本';
+
+  @override
+  String get versionDiff => '版本差异';
+
+  @override
+  String linesAdded(int count) {
+    return '$count 行新增';
+  }
+
+  @override
+  String linesRemoved(int count) {
+    return '$count 行删除';
+  }
+
+  @override
+  String get selectTwoVersions => '选择两个版本进行比较';
+
+  @override
+  String get noChanges => '无变化';
+
+  @override
+  String versionNumber(int number) {
+    return '版本 $number';
+  }
+
+  @override
+  String readingTime(int minutes) {
+    return '$minutes 分钟阅读';
+  }
+
+  @override
+  String get lessThan1Min => '不到1分钟';
+
+  @override
+  String lineCount(int count) {
+    return '$count 行';
+  }
+
+  @override
+  String paragraphCount(int count) {
+    return '$count 段落';
+  }
+
+  @override
+  String get focusMode => '专注模式';
+
+  @override
+  String get typewriterScroll => '打字机滚动';
+
+  @override
+  String get writingStats => '写作统计';
+
+  @override
+  String get toggleWritingStats => '切换写作统计';
+
+  @override
+  String charCountNoSpaces(int count) {
+    return '$count 字符（不含空格）';
+  }
+
+  @override
+  String get statistics => '统计';
+
+  @override
+  String get totalWords => '总字数';
+
+  @override
+  String get averageWords => '平均字数/笔记';
+
+  @override
+  String get daysActive => '活跃天数';
+
+  @override
+  String get last30Days => '近30天';
+
+  @override
+  String get writingStreak => '连续写作';
+
+  @override
+  String currentStreak(int count) {
+    return '当前: $count 天';
+  }
+
+  @override
+  String longestStreak(int count) {
+    return '最长: $count 天';
+  }
+
+  @override
+  String get monthlyActivity => '每月活动';
+
+  @override
+  String get topTags => '热门标签';
+
+  @override
+  String get topCollections => '热门集合';
+
+  @override
+  String get statusDistribution => '状态分布';
+
+  @override
+  String get knowledgeGraphStats => '知识图谱';
+
+  @override
+  String get totalLinks => '总链接';
+
+  @override
+  String orphanedNotesCount(int count) {
+    return '$count 篇孤立笔记';
+  }
+
+  @override
+  String get mostConnectedNote => '最连接的笔记';
+
+  @override
+  String get noStatistics => '暂无统计';
+
+  @override
+  String get notesWithProperties => '有属性的笔记';
+
+  @override
+  String get notesWithLinks => '有链接的笔记';
+
+  @override
+  String get exportNotes => '导出笔记';
+
+  @override
+  String get exportingNotes => '正在导出...';
+
+  @override
+  String get exportComplete => '导出完成';
+
+  @override
+  String get exportSelectedNotes => '导出选中';
+
+  @override
+  String get exportCurrentNote => '导出当前笔记';
+
+  @override
+  String exportSelected(int count) {
+    return '$count 篇选中的笔记';
+  }
+
+  @override
+  String get exportWithFrontmatter => '带元数据导出';
+
+  @override
+  String get exportAsZip => '导出为 ZIP 压缩包';
+
+  @override
+  String get includeFrontmatter => '包含元数据（前置信息）';
+
+  @override
+  String get frontmatterDesc => '添加包含标签、日期和属性的 YAML 元数据头';
+
+  @override
+  String get exportOrganization => '组织方式';
+
+  @override
+  String get exportFlat => '平铺';
+
+  @override
+  String get exportByDate => '按日期';
+
+  @override
+  String get exportByCollection => '按集合';
+
+  @override
+  String get exportByTag => '按标签';
+
+  @override
+  String notesExported(int count) {
+    return '$count 篇笔记已导出';
+  }
+
+  @override
+  String get importFromMarkdown => '从 Markdown 导入';
+
+  @override
+  String get importFromZip => '从 ZIP 导入';
+
+  @override
+  String get importFromObsidian => '从 Obsidian 库导入';
+
+  @override
+  String get importingNotes => '正在导入笔记...';
+
+  @override
+  String notesImported(int count) {
+    return '已导入 $count 篇笔记';
+  }
+
+  @override
+  String get preserveDates => '保留原始日期';
+
+  @override
+  String get importTags => '导入标签';
+
+  @override
+  String get importProperties => '导入属性';
+
+  @override
+  String get noFilesSelected => '未选择文件';
+
+  @override
+  String get importOptions => '导入选项';
+
+  @override
+  String get quickCapture => '快速记录';
+
+  @override
+  String get typeSomething => '输入内容...';
+
+  @override
+  String get autoSaved => '已自动保存';
+
+  @override
+  String get discardDraft => '丢弃草稿？';
+
+  @override
+  String get discardDraftMessage => '未保存的更改将丢失。';
+
+  @override
+  String get discard => '丢弃';
+
+  @override
+  String get newNoteShortcut => '新建笔记';
+
+  @override
+  String get newChecklistShortcut => '新建清单';
+
+  @override
+  String get dailyNoteShortcut => '每日笔记';
+
+  @override
+  String get sharedToAnynote => '已分享到 AnyNote';
+
+  @override
+  String get setPriority => '设置优先级';
+
+  @override
+  String get quickCaptureDesc => '快速记录想法';
+
+  @override
+  String pendingSync(int count) {
+    return '$count 待同步';
+  }
+
+  @override
+  String syncFailedCount(int count) {
+    return '$count 失败';
+  }
+
+  @override
+  String get syncQueue => '同步队列';
+
+  @override
+  String get pendingOperations => '待处理操作';
+
+  @override
+  String get failedOperations => '失败操作';
+
+  @override
+  String get retryAll => '全部重试';
+
+  @override
+  String get clearCompleted => '清除已完成';
+
+  @override
+  String operationFailed(String error) {
+    return '失败: $error';
+  }
+
+  @override
+  String get retryingSync => '正在重试同步...';
+
+  @override
+  String get queueCleared => '已完成操作已清除';
+
+  @override
+  String get noPendingOperations => '没有待处理操作';
+
+  @override
+  String noteSemantics(String title) {
+    return '笔记：$title';
+  }
+
+  @override
+  String deleteNoteSemantics(String title) {
+    return '删除笔记 $title';
+  }
+
+  @override
+  String archiveNoteSemantics(String title) {
+    return '归档笔记 $title';
+  }
+
+  @override
+  String pinNoteSemantics(String title) {
+    return '置顶笔记 $title';
+  }
+
+  @override
+  String unpinNoteSemantics(String title) {
+    return '取消置顶笔记 $title';
+  }
+
+  @override
+  String get noteContentEditor => '笔记内容编辑器。双击以编辑。';
+
+  @override
+  String graphSummary(int nodeCount, int linkCount) {
+    return '$nodeCount 个笔记，$linkCount 个链接';
+  }
+
+  @override
+  String get pinnedNote => '已置顶';
+
+  @override
+  String settingsGroup(String section) {
+    return '$section 设置';
+  }
+
+  @override
+  String restoreNoteSemantics(String title) {
+    return '恢复笔记 $title';
+  }
+
+  @override
+  String permanentlyDeleteNoteSemantics(String title) {
+    return '永久删除笔记 $title';
+  }
+
+  @override
+  String deleteCollectionSemantics(String title) {
+    return '删除集合 $title';
+  }
+
+  @override
+  String calendarDaySemantics(String date, String hasNote) {
+    return '$date。$hasNote';
+  }
+
+  @override
+  String noteCountSemantics(int count) {
+    return '$count 条笔记';
+  }
+
+  @override
+  String get reminder => '提醒';
+
+  @override
+  String get setReminder => '设置提醒';
+
+  @override
+  String get reminderAt => '提醒时间';
+
+  @override
+  String get removeReminder => '取消提醒';
+
+  @override
+  String get laterToday => '今天稍后';
+
+  @override
+  String get tomorrowMorning => '明天早上';
+
+  @override
+  String get nextWeek => '下周';
+
+  @override
+  String get noReminders => '暂无提醒';
+
+  @override
+  String get recurring => '重复';
+
+  @override
+  String get daily => '每天';
+
+  @override
+  String get weekly => '每周';
+
+  @override
+  String get monthly => '每月';
+
+  @override
+  String get reminders => '提醒列表';
+
+  @override
+  String get reminderFired => '提醒已触发';
+
+  @override
+  String get color => '颜色';
+
+  @override
+  String get selectColor => '选择颜色';
+
+  @override
+  String get removeColor => '移除颜色';
+
+  @override
+  String get noteColor => '笔记颜色';
+
+  @override
+  String get customColor => '自定义颜色';
+
+  @override
+  String get colorFilter => '按颜色筛选';
+
+  @override
+  String get searchOperatorColor => 'color:#RRGGBB 或 color:颜色名 -- 按颜色筛选';
+
+  @override
+  String get none => '无';
+
+  @override
+  String get compareNotes => '比较笔记';
+
+  @override
+  String get selectNotesToCompare => '选择要比较的笔记';
+
+  @override
+  String get unifiedView => '统一视图';
+
+  @override
+  String get sideBySideView => '并排视图';
+
+  @override
+  String get additions => '新增';
+
+  @override
+  String get deletions => '删除';
+
+  @override
+  String get selectTwoNotes => '请选择两个笔记进行比较';
+
+  @override
+  String get noteDiff => '笔记差异';
+
+  @override
+  String linesChanged(int added, int removed) {
+    return '$added 行新增，$removed 行删除';
+  }
+
+  @override
+  String get mermaidDiagram => 'Mermaid 图表';
+
+  @override
+  String get viewDiagram => '查看图表';
+
+  @override
+  String get copyMermaidCode => '复制 Mermaid 代码';
+
+  @override
+  String get diagramCopied => '图表代码已复制';
+
+  @override
+  String get mermaidTemplate => 'Mermaid 模板';
+
+  @override
+  String get insertDiagram => '插入图表';
+
+  @override
+  String get slashMermaid => 'Mermaid 图表';
+
+  @override
+  String get viewSource => '查看源码';
+
+  @override
+  String get diagramError => '图表渲染失败';
+
+  @override
+  String get copyDiagramSource => '复制图表源码';
+
+  @override
+  String get lockNote => '锁定笔记';
+
+  @override
+  String get unlockNote => '解锁笔记';
+
+  @override
+  String get noteLocked => '笔记已锁定';
+
+  @override
+  String get lockedNoteBanner => '此笔记已锁定，点击解锁';
+
+  @override
+  String notesColored(int count) {
+    return '$count 个笔记已着色';
+  }
+
+  @override
+  String colorRemovedFromNotes(int count) {
+    return '$count 个笔记已移除颜色';
+  }
+
+  @override
+  String get batchColor => '批量着色';
+
+  @override
+  String get batchLock => '批量锁定';
+
+  @override
+  String get batchUnlock => '批量解锁';
+
+  @override
+  String notesLocked(int count) {
+    return '$count 个笔记已锁定';
+  }
+
+  @override
+  String notesUnlocked(int count) {
+    return '$count 个笔记已解锁';
+  }
+
+  @override
+  String get moveToCollection => '移至笔记本';
+
+  @override
+  String get searchCollections => '搜索笔记本...';
+
+  @override
+  String get noCollections => '未找到笔记本';
+
+  @override
+  String notesMovedToCollection(int count, String name) {
+    return '$count 个笔记已移至「$name」';
+  }
+
+  @override
+  String noteMovedToCollection(String name) {
+    return '笔记已移至「$name」';
+  }
+
+  @override
+  String get addToCollection => '添加到笔记本';
+
+  @override
+  String get scrollToTop => '回到顶部';
+
+  @override
+  String get printNote => '打印笔记';
+
+  @override
+  String get printPreview => '打印预览';
+
+  @override
+  String get includeMetadata => '包含元数据';
+
+  @override
+  String get includeImages => '包含图片';
+
+  @override
+  String get shareAsHtml => '分享为 HTML';
+
+  @override
+  String get exportedAsHtml => '已导出为 HTML';
+
+  @override
+  String get foldView => '折叠视图';
+
+  @override
+  String get foldAll => '全部折叠';
+
+  @override
+  String get unfoldAll => '全部展开';
+
+  @override
+  String sectionLines(int count) {
+    return '$count 行';
+  }
+
+  @override
+  String foldedSections(int count) {
+    return '$count 个折叠段落';
+  }
+
+  @override
+  String get toggleFold => '切换折叠';
+
+  @override
+  String get tableOfContents => '目录';
+
+  @override
+  String get noHeadings => '暂无标题';
+
+  @override
+  String headingLevel(int level) {
+    return '标题级别 $level';
+  }
+
+  @override
+  String get readAloud => '朗读';
+
+  @override
+  String get stopReading => '停止朗读';
+
+  @override
+  String get pauseReading => '暂停';
+
+  @override
+  String get resumeReading => '继续';
+
+  @override
+  String get readingSpeed => '朗读速度';
+
+  @override
+  String get keyboardShortcuts => '键盘快捷键';
+
+  @override
+  String get general => '通用';
+
+  @override
+  String get editor => '编辑器';
+
+  @override
+  String get navigation => '导航';
+
+  @override
+  String get shortcutBold => '加粗';
+
+  @override
+  String get shortcutItalic => '斜体';
+
+  @override
+  String get shortcutStrikethrough => '删除线';
+
+  @override
+  String get shortcutUndo => '撤销';
+
+  @override
+  String get shortcutRedo => '重做';
+
+  @override
+  String get shortcutPrint => '打印';
+
+  @override
+  String get shortcutLink => '插入链接';
+
+  @override
+  String get shortcutCode => '行内代码';
+
+  @override
+  String get shortcutHeading => '切换标题';
+
+  @override
+  String get shortcutCommandPalette => '命令面板';
+
+  @override
+  String get shortcutFocusMode => '专注模式';
+
+  @override
+  String get reminderNotificationTitle => '提醒';
+
+  @override
+  String reminderNotificationBody(String title) {
+    return '该复习了：$title';
+  }
+
+  @override
+  String get notificationChannelName => '笔记提醒';
+
+  @override
+  String get notificationChannelDescription => '笔记提醒的通知渠道';
+
+  @override
+  String get exportPdf => 'PDF';
+
+  @override
+  String get generatePdf => '生成 PDF';
+
+  @override
+  String get pdfGenerated => 'PDF 已生成';
+
+  @override
+  String get sharePdf => '分享 PDF';
+
+  @override
+  String get exportFormatPdf => 'PDF 文档';
+
+  @override
+  String get snippets => '代码片段';
+
+  @override
+  String get snippetTitle => '标题';
+
+  @override
+  String get snippetCode => '代码';
+
+  @override
+  String get snippetLanguage => '语言';
+
+  @override
+  String get snippetDescription => '描述';
+
+  @override
+  String get snippetCategory => '分类';
+
+  @override
+  String get snippetTags => '标签';
+
+  @override
+  String get newSnippet => '新建片段';
+
+  @override
+  String get editSnippet => '编辑片段';
+
+  @override
+  String get deleteSnippet => '删除片段';
+
+  @override
+  String get deleteSnippetConfirm => '确定删除此片段？';
+
+  @override
+  String get copyCode => '复制代码';
+
+  @override
+  String get codeCopied => '已复制';
+
+  @override
+  String get insertSnippet => '插入代码片段';
+
+  @override
+  String get noSnippets => '暂无代码片段';
+
+  @override
+  String get searchSnippets => '搜索代码片段...';
+
+  @override
+  String usageCount(int count) {
+    return '已使用 $count 次';
+  }
+
+  @override
+  String get allLanguages => '所有语言';
+
+  @override
+  String get allCategories => '所有分类';
+
+  @override
+  String get tagHierarchy => '标签层级';
+
+  @override
+  String get createSubTag => '创建子标签';
+
+  @override
+  String get moveToParent => '移动到父标签';
+
+  @override
+  String get noParent => '无父标签（根级）';
+
+  @override
+  String get selectParentTag => '选择父标签';
+
+  @override
+  String get expandAll => '全部展开';
+
+  @override
+  String get collapseAll => '全部折叠';
+
+  @override
+  String userCursor(String name) {
+    return '$name 的光标';
+  }
+
+  @override
+  String get remoteUser => '远程用户';
+
+  @override
+  String get dropImageHere => '拖放图片到此处';
+
+  @override
+  String get imageAdded => '图片已添加';
+
+  @override
+  String get unsupportedFileType => '仅支持图片文件';
+
+  @override
+  String get quickNote => '新建笔记';
+
+  @override
+  String get quickChecklist => '新建清单';
+
+  @override
+  String get quickDailyNote => '每日笔记';
+
+  @override
+  String get moreOptions => '更多选项';
+
+  @override
+  String get failedToLoadTrash => '加载回收站失败';
+
+  @override
+  String failedToRestoreError(String error) {
+    return '恢复失败：$error';
+  }
+
+  @override
+  String failedToDeleteError(String error) {
+    return '删除失败：$error';
+  }
+
+  @override
+  String get deleteProperty => '删除属性';
+
+  @override
+  String get removePropertyConfirm => '确定要从此笔记中移除此属性吗？';
+
+  @override
+  String get propertiesTitle => '属性';
+
+  @override
+  String get noProperties => '暂无属性';
+
+  @override
+  String get addCustomMetadata => '为此笔记添加自定义元数据';
+
+  @override
+  String get addPropertyButton => '添加属性';
+
+  @override
+  String get editProperty => '编辑属性';
+
+  @override
+  String get customPropertyTitle => '自定义属性';
+
+  @override
+  String get propertyLabel => '属性';
+
+  @override
+  String get valueLabel => '值';
+
+  @override
+  String get numberLabel => '数字';
+
+  @override
+  String get enterValue => '请输入一个值';
+
+  @override
+  String get enterNumber => '请输入一个数字';
+
+  @override
+  String get selectDateLabel => '选择日期';
+
+  @override
+  String get linkManagementTitle => '链接管理';
+
+  @override
+  String get outboundLinks => '出站链接';
+
+  @override
+  String get deleteLinkTitle => '删除链接';
+
+  @override
+  String get removeLinkConfirm => '确定要移除此笔记间的连接吗？';
+
+  @override
+  String get noLinksToDisplay => '没有链接可显示。调整筛选条件以查看更多。';
+
+  @override
+  String get linksToThisNote => '链接到此笔记';
+
+  @override
+  String get thisNoteLinksTo => '此笔记链接到';
+
+  @override
+  String get deleteLinkTooltip => '删除链接';
+
+  @override
+  String get insertTable => '插入表格';
+
+  @override
+  String get dragToSelectTableSize => '拖动以选择表格大小';
+
+  @override
+  String get proPlan => '专业版';
+
+  @override
+  String get lifetimePlan => '终身版';
+
+  @override
+  String get proPrice => '\$4.99/月';
+
+  @override
+  String get lifetimePrice => '\$49.99';
+
+  @override
+  String get priorityHigh => '高';
+
+  @override
+  String get priorityMedium => '中';
+
+  @override
+  String get priorityLow => '低';
+
+  @override
+  String tagsCountLabel(int count) {
+    return '$count 个标签';
+  }
+
+  @override
+  String get orphanedNotes => '孤立笔记';
+
+  @override
+  String get filter => '筛选';
+
+  @override
+  String priorityLabel(String priority) {
+    return '优先级：$priority';
+  }
+
+  @override
+  String get noMatchingNotes => '没有匹配的笔记';
+
+  @override
+  String get tryChangingFilters => '尝试更改筛选条件';
+
+  @override
+  String get filterByProperties => '按属性筛选';
+
+  @override
+  String get priority => '优先级';
+
+  @override
+  String get viewProperties => '属性';
+
+  @override
+  String get noteTitle => '笔记标题';
+
+  @override
+  String get dateLabel => '日期';
+
+  @override
+  String propertyOf(String name) {
+    return '属性：$name';
+  }
+
+  @override
+  String get insertLabel => '插入';
+
+  @override
+  String failedToLoadMore(String error) {
+    return '加载更多失败：$error';
+  }
+
+  @override
+  String get linkCreated => '链接已创建';
+
+  @override
+  String failedToCreateLink(String error) {
+    return '创建链接失败：$error';
+  }
+
+  @override
+  String get suggestedLinks => '推荐链接';
+
+  @override
+  String get similarContentDesc => '标题或内容相似的笔记。点击创建链接。';
+
+  @override
+  String get noSuggestions => '暂无推荐';
+
+  @override
+  String get createMoreNotes => '创建更多笔记以获取推荐。';
+
+  @override
+  String get notAvailableOnWeb => '此功能在网页端不可用';
+
+  @override
+  String get okButton => '确定';
+
+  @override
+  String get failedToLoadDeferred => '加载失败';
+
+  @override
+  String get somethingWentWrong => '出了点问题';
+
+  @override
+  String get syncStatusTitle => '同步状态';
+
+  @override
+  String get offlineLabel => '离线';
+
+  @override
+  String get connectedLabel => '已连接';
+
+  @override
+  String get pendingOpsLabel => '待处理操作';
+
+  @override
+  String get lastSyncedLabel => '上次同步';
+
+  @override
+  String get failedItemsLabel => '失败项目';
+
+  @override
+  String get offlineSyncTooltip => '离线 -- 恢复连接后将自动同步';
+
+  @override
+  String get pullingLabel => '拉取中';
+
+  @override
+  String get pushingLabel => '推送中';
+
+  @override
+  String get syncingLabel => '同步中...';
+
+  @override
+  String get allChangesSyncedLabel => '所有更改已同步';
+
+  @override
+  String pendingOpTooltip(int count) {
+    return '$count 个待处理操作';
+  }
+
+  @override
+  String pendingOpsTooltip(int count) {
+    return '$count 个待处理操作';
+  }
+
+  @override
+  String get syncConflictBadge => '同步冲突';
+
+  @override
+  String get conflictLabel => '冲突';
+
+  @override
+  String get syncedLabel => '已同步';
+
+  @override
+  String get pendingSyncLabel => '待同步';
+
+  @override
+  String get pendingSyncBadge => '待同步';
+
+  @override
+  String barChartSemanticLabel(String entries) {
+    return '条形图，按月显示笔记数量：$entries';
+  }
+
+  @override
+  String donutChartSemanticLabel(String entries) {
+    return '环形图，显示分布情况：$entries';
+  }
+
+  @override
+  String tagItemSemanticLabel(String name) {
+    return '标签：$name';
+  }
+
+  @override
+  String get tagItemSemanticHint => '长按以编辑';
 }

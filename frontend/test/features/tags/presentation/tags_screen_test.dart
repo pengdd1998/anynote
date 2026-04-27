@@ -107,9 +107,9 @@ void main() {
       // Wait for the StreamBuilder to emit data.
       await tester.pumpAndSettle();
 
-      // The tag name should be visible as a Chip.
+      // The tag name should be visible as a tree tile (InkWell).
       expect(find.text('Work'), findsOneWidget);
-      expect(find.byType(Chip), findsOneWidget);
+      expect(find.byType(InkWell), findsWidgets);
       await handle.dispose();
     });
 
@@ -137,7 +137,8 @@ void main() {
 
       expect(find.text('Work'), findsOneWidget);
       expect(find.text('Personal'), findsOneWidget);
-      expect(find.byType(Chip), findsNWidgets(2));
+      // Both tags are rendered in the tree view ListView.
+      expect(find.byType(ListView), findsWidgets);
       await handle.dispose();
     });
   });

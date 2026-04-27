@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/app_durations.dart';
 import '../../../core/widgets/pressable_scale.dart';
 
 /// Four-page onboarding screen with interactive guided walkthrough.
@@ -91,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       } else {
         timer.cancel();
         // After typing finishes, show lock icon.
-        Future.delayed(const Duration(milliseconds: 300), () {
+        Future.delayed(AppDurations.animation, () {
           if (!mounted) return;
           setState(() => _demoLockVisible = true);
           // Then show sync icon.
@@ -163,7 +164,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: List.generate(_totalPages, (index) {
                       final isActive = index == _currentPage;
                       return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
+                        duration: AppDurations.shortAnimation,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         width: isActive ? 24 : 8,
                         height: 8,
@@ -225,7 +226,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           _markSeenAndGo('/auth/register');
                         } else {
                           _controller.nextPage(
-                            duration: const Duration(milliseconds: 300),
+                            duration: AppDurations.animation,
                             curve: Curves.easeInOut,
                           );
                         }

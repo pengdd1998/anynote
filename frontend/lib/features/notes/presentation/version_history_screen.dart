@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
 import '../../../l10n/app_localizations.dart';
@@ -8,7 +9,12 @@ import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error.dart';
 
 /// Screen that displays the version history of a note.
-/// Users can preview any version and restore it to replace the current content.
+///
+/// Users can:
+/// - Tap a version to preview it in a dialog
+/// - Long-press to select versions for comparison
+/// - Compare two versions via the diff screen
+/// - Restore any previous version
 class VersionHistoryScreen extends ConsumerStatefulWidget {
   final String noteId;
   const VersionHistoryScreen({super.key, required this.noteId});
@@ -22,6 +28,11 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
   List<_DecryptedVersion> _versions = [];
   bool _isLoading = true;
   String? _errorMessage;
+
+  /// IDs of versions currently selected for comparison.
+  final Set<String> _selectedIds = {};
+
+  bool get _isSelecting => _selectedIds.isNotEmpty;
 
   @override
   void initState() {
@@ -65,16 +76,18 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
           }
         }
 
-        decrypted.add(_DecryptedVersion(
-          id: v.id,
-          noteId: v.noteId,
-          versionNumber: v.versionNumber,
-          title: title,
-          content: content,
-          encryptedContent: v.encryptedContent,
-          encryptedTitle: v.encryptedTitle,
-          createdAt: v.createdAt,
-        ),);
+        decrypted.add(
+          _DecryptedVersion(
+            id: v.id,
+            noteId: v.noteId,
+            versionNumber: v.versionNumber,
+            title: title,
+            content: content,
+            encryptedContent: v.encryptedContent,
+            encryptedTitle: v.encryptedTitle,
+            createdAt: v.createdAt,
+          ),
+        );
       }
 
       if (mounted) {
@@ -92,6 +105,43 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         });
       }
     }
+  }
+
+  void _toggleSelection(String versionId) {
+    setState(() {
+      if (_selectedIds.contains(versionId)) {
+        _selectedIds.remove(versionId);
+      } else if (_selectedIds.length < 2) {
+        _selectedIds.add(versionId);
+      } else {
+        // Already have 2 selected: replace the oldest selection.
+        _selectedIds.remove(_selectedIds.first);
+        _selectedIds.add(versionId);
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedIds.clear();
+    });
+  }
+
+  void _navigateToDiff() {
+    if (_selectedIds.length != 2) return;
+
+    // Find the selected versions and sort by version number (older first).
+    final selected = _versions
+        .where((v) => _selectedIds.contains(v.id))
+        .toList()
+      ..sort((a, b) => a.versionNumber.compareTo(b.versionNumber));
+
+    final olderId = selected.first.id;
+    final newerId = selected.last.id;
+
+    context.push(
+      '/notes/${widget.noteId}/diff?older=$olderId&newer=$newerId',
+    );
   }
 
   void _showVersionPreview(_DecryptedVersion version) {
@@ -194,8 +244,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
       // Otherwise, use the existing encrypted blobs (they were encrypted with
       // the same noteId so they remain valid).
       if (crypto.isUnlocked && version.content.isNotEmpty) {
-        encryptedContent =
-            await crypto.encryptForItem(noteId, version.content);
+        encryptedContent = await crypto.encryptForItem(noteId, version.content);
       }
       if (crypto.isUnlocked && version.title != l10n.untitled) {
         encryptedTitle = await crypto.encryptForItem(noteId, version.title);
@@ -231,8 +280,35 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.versionHistory),
+        actions: [
+          if (_isSelecting)
+            IconButton(
+              onPressed: _clearSelection,
+              icon: const Icon(Icons.close),
+              tooltip: l10n.cancel,
+            ),
+        ],
       ),
       body: _buildBody(),
+      bottomNavigationBar: _buildCompareButton(l10n),
+    );
+  }
+
+  Widget? _buildCompareButton(AppLocalizations l10n) {
+    if (!_isSelecting) return null;
+
+    final canCompare = _selectedIds.length == 2;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: FilledButton.icon(
+          onPressed: canCompare ? _navigateToDiff : null,
+          icon: const Icon(Icons.compare_arrows, size: 20),
+          label: Text(
+            canCompare ? l10n.compareVersions : l10n.selectTwoVersions,
+          ),
+        ),
+      ),
     );
   }
 
@@ -251,7 +327,11 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ExcludeSemantics(
-                child: Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+                child: Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: Colors.red.shade300,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -309,6 +389,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         itemBuilder: (context, index) {
           final version = _versions[index];
           final isCurrent = index == 0;
+          final isSelected = _selectedIds.contains(version.id);
 
           return A11yUtils.semanticCard(
             label: l10n.versionSemanticLabel(
@@ -318,66 +399,106 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
               isCurrent ? l10n.currentSuffix : '',
             ),
             child: Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: isCurrent
-                    ? Theme.of(context).colorScheme.primaryContainer
-                    : Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: Text(
-                  'v${version.versionNumber}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isCurrent
-                        ? Theme.of(context).colorScheme.onPrimaryContainer
-                        : Theme.of(context)
-                            .colorScheme
-                            .onSurfaceVariant,
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              color: isSelected
+                  ? Theme.of(context)
+                      .colorScheme
+                      .secondaryContainer
+                      .withValues(alpha: 0.5)
+                  : null,
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: isCurrent
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : isSelected
+                          ? Theme.of(context).colorScheme.secondaryContainer
+                          : Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
+                  child: Text(
+                    'v${version.versionNumber}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isCurrent
+                          ? Theme.of(context).colorScheme.onPrimaryContainer
+                          : isSelected
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .onSecondaryContainer
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
-              ),
-              title: Text(
-                version.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight:
-                      isCurrent ? FontWeight.bold : FontWeight.normal,
+                title: Text(
+                  version.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                  ),
                 ),
+                subtitle: Text(
+                  _buildSubtitle(version, l10n),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                ),
+                trailing: _buildTrailing(isCurrent, isSelected),
+                onTap: () {
+                  if (_isSelecting) {
+                    _toggleSelection(version.id);
+                  } else {
+                    _showVersionPreview(version);
+                  }
+                },
+                onLongPress: () {
+                  _toggleSelection(version.id);
+                },
               ),
-              subtitle: Text(
-                _formatDate(version.createdAt),
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-              ),
-              trailing: isCurrent
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4,),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        l10n.current,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    )
-                  : const ExcludeSemantics(child: Icon(Icons.chevron_right)),
-              onTap: () => _showVersionPreview(version),
-            ),
             ),
           );
         },
       ),
     );
+  }
+
+  String _buildSubtitle(_DecryptedVersion version, AppLocalizations l10n) {
+    final date = _formatDate(version.createdAt);
+    final charCount = version.content.length;
+    return '$date - $charCount chars';
+  }
+
+  Widget _buildTrailing(bool isCurrent, bool isSelected) {
+    if (isCurrent) {
+      final l10n = AppLocalizations.of(context)!;
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          l10n.current,
+          style: TextStyle(
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+
+    if (isSelected) {
+      return Icon(
+        Icons.check_circle,
+        color: Theme.of(context).colorScheme.primary,
+      );
+    }
+
+    if (_isSelecting) {
+      return const ExcludeSemantics(child: Icon(Icons.radio_button_unchecked));
+    }
+
+    return const ExcludeSemantics(child: Icon(Icons.chevron_right));
   }
 
   String _formatDate(DateTime dt) {

@@ -97,13 +97,18 @@ void main() {
       await createTestTemplate(id: 'tpl-byid', name: 'Find Me');
 
       final template = await templatesDao.getTemplateById('tpl-byid');
-      expect(template.id, 'tpl-byid');
+      expect(template, isNotNull);
+      expect(template!.id, 'tpl-byid');
       expect(template.name, 'Find Me');
     });
 
     test('getAllTemplates orders by built-in first, then by name', () async {
       await createTestTemplate(id: 'tpl-c', name: 'Charlie');
-      await createTestTemplate(id: 'tpl-b-builtin', name: 'Bravo', isBuiltIn: true);
+      await createTestTemplate(
+        id: 'tpl-b-builtin',
+        name: 'Bravo',
+        isBuiltIn: true,
+      );
       await createTestTemplate(id: 'tpl-a', name: 'Alpha');
 
       final all = await templatesDao.getAllTemplates();
@@ -128,7 +133,8 @@ void main() {
       );
 
       final template = await templatesDao.getTemplateById('tpl-upd');
-      expect(template.name, 'New Name');
+      expect(template, isNotNull);
+      expect(template!.name, 'New Name');
     });
 
     test('updateTemplate changes encryptedContent and plainContent', () async {
@@ -145,7 +151,8 @@ void main() {
       );
 
       final template = await templatesDao.getTemplateById('tpl-upd-content');
-      expect(template.encryptedContent, 'new-enc');
+      expect(template, isNotNull);
+      expect(template!.encryptedContent, 'new-enc');
       expect(template.plainContent, 'new plain');
     });
 
@@ -161,7 +168,8 @@ void main() {
       );
 
       final template = await templatesDao.getTemplateById('tpl-keep-name');
-      expect(template.name, 'Original Name');
+      expect(template, isNotNull);
+      expect(template!.name, 'Original Name');
       expect(template.plainContent, 'updated content');
     });
   });
@@ -205,7 +213,7 @@ void main() {
       expect(ids, containsAll(['tpl-builtin-1', 'tpl-builtin-2']));
     });
 
-    test('getCustomTemplates returns only custom templates', () async {
+    test('getUserTemplates returns only custom templates', () async {
       await createTestTemplate(id: 'tpl-custom-1', name: 'Custom A');
       await createTestTemplate(
         id: 'tpl-builtin-1',
@@ -213,7 +221,7 @@ void main() {
         isBuiltIn: true,
       );
 
-      final custom = await templatesDao.getCustomTemplates();
+      final custom = await templatesDao.getUserTemplates();
       expect(custom.length, 1);
       expect(custom[0].id, 'tpl-custom-1');
     });

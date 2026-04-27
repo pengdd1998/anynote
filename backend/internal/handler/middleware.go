@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -37,7 +37,7 @@ func MaxBodySize(maxBytes int64) func(http.Handler) http.Handler {
 // AuthMiddleware validates JWT tokens and injects user_id into context.
 func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 	if len(jwtSecret) < 16 {
-		panic(fmt.Sprintf("JWT_SECRET must be at least 16 characters, got %d", len(jwtSecret)))
+		log.Fatalf("JWT_SECRET must be at least 16 characters, got %d", len(jwtSecret))
 	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

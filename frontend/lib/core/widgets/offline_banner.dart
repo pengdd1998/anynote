@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../constants/app_durations.dart';
 import '../error/connectivity_provider.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -20,7 +21,7 @@ class OfflineBanner extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.animation,
       curve: Curves.easeInOut,
       height: isOffline ? 32 : 0,
       clipBehavior: Clip.hardEdge,
@@ -40,7 +41,8 @@ class OfflineBanner extends ConsumerWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    l10n?.offlineBanner ?? 'You are offline \u2014 changes will sync when connected',
+                    l10n?.offlineBanner ??
+                        'You are offline \u2014 changes will sync when connected',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

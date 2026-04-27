@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'import_models.dart';
+import 'import_utils.dart';
 
 /// Importer for plain text (.txt / .text) files as notes.
 ///
@@ -66,14 +67,14 @@ class TextImporter {
         // Body is everything after the first non-empty line.
         body = lines.sublist(firstLineIndex + 1).join('\n').trim();
       } else {
-        title = _filenameToTitle(file.path);
+        title = filenameToTitle(file.path);
         body = content.trim();
       }
 
       if (title.isEmpty && body.isEmpty) return null;
 
       return ImportedNote(
-        title: title.isNotEmpty ? title : _filenameToTitle(file.path),
+        title: title.isNotEmpty ? title : filenameToTitle(file.path),
         body: body,
         tags: const [],
         createdAt: modified,
@@ -120,11 +121,4 @@ class TextImporter {
   // ---------------------------------------------------------------------------
   // Internal helpers
   // ---------------------------------------------------------------------------
-
-  /// Derive a title from a file path by removing the extension.
-  static String _filenameToTitle(String filePath) {
-    final name = filePath.split('/').last;
-    final dotIndex = name.lastIndexOf('.');
-    return dotIndex > 0 ? name.substring(0, dotIndex) : name;
-  }
 }

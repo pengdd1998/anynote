@@ -14,6 +14,20 @@ class NoteLink {
     required this.createdAt,
   });
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NoteLink &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          sourceId == other.sourceId &&
+          targetId == other.targetId &&
+          linkType == other.linkType &&
+          createdAt == other.createdAt;
+
+  @override
+  int get hashCode => Object.hash(id, sourceId, targetId, linkType, createdAt);
+
   factory NoteLink.fromJson(Map<String, dynamic> json) => NoteLink(
         id: json['id'] as String,
         sourceId: json['source_id'] as String,

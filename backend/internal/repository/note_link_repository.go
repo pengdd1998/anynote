@@ -22,18 +22,31 @@ func NewNoteLinkRepository(pool *pgxpool.Pool) *NoteLinkRepository {
 	return &NoteLinkRepository{pool: pool}
 }
 
-// CreateLinks inserts a batch of note links, ignoring duplicates.
+// CreateLinks inserts a batch of note links using pgx.Batch for a single
+// round-trip, ignoring duplicates.
 func (r *NoteLinkRepository) CreateLinks(ctx context.Context, userID uuid.UUID, links []domain.NoteLinkItem) ([]domain.NoteLink, error) {
-	result := make([]domain.NoteLink, 0, len(links))
+	if len(links) == 0 {
+		return []domain.NoteLink{}, nil
+	}
+
+	batch := &pgx.Batch{}
 	for _, l := range links {
-		var nl domain.NoteLink
-		err := r.pool.QueryRow(ctx,
+		batch.Queue(
 			`INSERT INTO note_links (user_id, source_id, target_id, link_type)
 			 VALUES ($1, $2, $3, $4)
 			 ON CONFLICT (user_id, source_id, target_id, link_type) DO NOTHING
 			 RETURNING id, user_id, source_id, target_id, link_type, created_at`,
 			userID, l.SourceID, l.TargetID, l.LinkType,
-		).Scan(&nl.ID, &nl.UserID, &nl.SourceID, &nl.TargetID, &nl.LinkType, &nl.CreatedAt)
+		)
+	}
+
+	br := r.pool.SendBatch(ctx, batch)
+	defer br.Close()
+
+	result := make([]domain.NoteLink, 0, len(links))
+	for range links {
+		var nl domain.NoteLink
+		err := br.QueryRow().Scan(&nl.ID, &nl.UserID, &nl.SourceID, &nl.TargetID, &nl.LinkType, &nl.CreatedAt)
 		if err != nil {
 			// ON CONFLICT DO NOTHING returns no rows; skip.
 			if errors.Is(err, pgx.ErrNoRows) {

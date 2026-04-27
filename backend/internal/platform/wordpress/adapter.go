@@ -12,6 +12,7 @@ import (
 
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
+	"github.com/anynote/backend/internal/platform/common"
 	"github.com/anynote/backend/internal/platform/httpclient"
 )
 
@@ -124,7 +125,10 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, err := io.ReadAll(io.LimitReader(resp.Body, 1*1024*1024))
+		if err != nil {
+			return nil, fmt.Errorf("reading credentials validation error response body: %w", err)
+		}
 		return nil, fmt.Errorf("invalid credentials (status %d): %s", resp.StatusCode, string(body))
 	}
 
@@ -156,15 +160,9 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 // Publish creates a new post on the WordPress site via the REST API.
 // It decrypts the stored auth data and POSTs to the posts endpoint.
 func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey []byte, params platform.PublishParams) (*platform.PublishResult, error) {
-	// Decrypt auth data.
-	authJSON, err := llm.DecryptAPIKey(encryptedAuth, masterKey)
-	if err != nil {
-		return nil, fmt.Errorf("decrypt auth data: %w", err)
-	}
-
 	var authData wpAuthData
-	if err := json.Unmarshal([]byte(authJSON), &authData); err != nil {
-		return nil, fmt.Errorf("unmarshal auth data: %w", err)
+	if err := common.DecryptAuth(ctx, encryptedAuth, masterKey, &authData); err != nil {
+		return nil, err
 	}
 
 	// Build the WordPress post payload.
@@ -201,7 +199,10 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1*1024*1024))
+		if err != nil {
+			return nil, fmt.Errorf("reading publish error response body: %w", err)
+		}
 		return nil, fmt.Errorf("publish failed (status %d): %s", resp.StatusCode, string(respBody))
 	}
 
@@ -227,15 +228,9 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 // CheckStatus checks whether a WordPress post is still live by fetching
 // the post via the REST API.
 func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterKey []byte, platformID string) (string, error) {
-	// Decrypt auth data.
-	authJSON, err := llm.DecryptAPIKey(encryptedAuth, masterKey)
-	if err != nil {
-		return "unknown", fmt.Errorf("decrypt auth data: %w", err)
-	}
-
 	var authData wpAuthData
-	if err := json.Unmarshal([]byte(authJSON), &authData); err != nil {
-		return "unknown", fmt.Errorf("unmarshal auth data: %w", err)
+	if err := common.DecryptAuth(ctx, encryptedAuth, masterKey, &authData); err != nil {
+		return "unknown", err
 	}
 
 	postURL := authData.SiteURL + "/wp-json/wp/v2/posts/" + platformID
@@ -284,15 +279,9 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 // RevokeAuth attempts to revoke the WordPress application password.
 // WordPress supports deleting application passwords via the REST API.
 func (a *Adapter) RevokeAuth(ctx context.Context, encryptedAuth []byte, masterKey []byte) error {
-	// Decrypt auth data.
-	authJSON, err := llm.DecryptAPIKey(encryptedAuth, masterKey)
-	if err != nil {
-		return fmt.Errorf("decrypt auth data: %w", err)
-	}
-
 	var authData wpAuthData
-	if err := json.Unmarshal([]byte(authJSON), &authData); err != nil {
-		return fmt.Errorf("unmarshal auth data: %w", err)
+	if err := common.DecryptAuth(ctx, encryptedAuth, masterKey, &authData); err != nil {
+		return err
 	}
 
 	// WordPress allows listing and deleting application passwords via

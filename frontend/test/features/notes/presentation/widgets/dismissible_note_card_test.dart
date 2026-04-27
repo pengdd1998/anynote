@@ -30,6 +30,7 @@ Note _defaultNote({
       isPinned: isPinned,
       plainContent: plainContent,
       plainTitle: plainTitle,
+      sortOrder: 0,
     );
 
 Tag _makeTag({required String id, String? plainName}) => Tag(
@@ -74,6 +75,7 @@ Future<AppDatabase> pumpDismissibleCard(
           onLongPress: onLongPress ?? () {},
           onDeleted: onDeleted,
           untitled: 'Untitled',
+          skipPropertyBadges: true,
         ),
       ),
     ),

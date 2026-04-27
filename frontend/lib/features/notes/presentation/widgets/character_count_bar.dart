@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_durations.dart';
 import '../../../../core/accessibility/a11y_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -115,7 +116,7 @@ class _AnimatedCountChip extends StatelessWidget {
     // Use AnimatedSwitcher to cross-fade between old and new count text.
     // The transition applies a slight scale-up on the incoming text.
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
+      duration: AppDurations.shortAnimation,
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (Widget child, Animation<double> animation) {

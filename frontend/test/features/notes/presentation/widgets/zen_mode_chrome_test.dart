@@ -12,6 +12,10 @@ Future<void> pumpZenChrome(
   WidgetTester tester, {
   required VoidCallback onExit,
   required VoidCallback onToggle,
+  bool isFocusMode = false,
+  bool isTypewriterScroll = false,
+  VoidCallback? onToggleFocusMode,
+  VoidCallback? onToggleTypewriterScroll,
 }) async {
   final controller = AnimationController(
     vsync: tester,
@@ -29,6 +33,10 @@ Future<void> pumpZenChrome(
           animation: controller,
           onExit: onExit,
           onToggle: onToggle,
+          isFocusMode: isFocusMode,
+          isTypewriterScroll: isTypewriterScroll,
+          onToggleFocusMode: onToggleFocusMode ?? () {},
+          onToggleTypewriterScroll: onToggleTypewriterScroll ?? () {},
         ),
       ),
     ),

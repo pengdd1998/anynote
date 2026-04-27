@@ -120,6 +120,10 @@
 
   "titleAZ": "タイトル A-Z",
 
+  "sortCustom": "カスタム順序",
+
+  "reorderModeHint": "ドラッグして並べ替え",
+
   "listView": "リスト表示",
 
   "gridView": "グリッド表示",
@@ -1234,6 +1238,62 @@
 
   "templateDateHint": "[date]で現在の日付を挿入",
 
+  "templates": "テンプレート",
+
+  "templatePicker": "テンプレートを選択",
+
+  "createFromTemplate": "テンプレートから作成",
+
+  "createFromScratch": "空白から作成",
+
+  "templateManagement": "テンプレート管理",
+
+  "newTemplate": "新規テンプレート",
+
+  "editTemplate": "テンプレートを編集",
+
+  "deleteTemplate": "テンプレートを削除",
+
+  "templateName": "テンプレート名",
+
+  "templateDescription": "説明",
+
+  "templateContent": "内容",
+
+  "templateCategory": "カテゴリ",
+
+  "categoryWork": "仕事",
+
+  "categoryPersonal": "個人",
+
+  "categoryCreative": "クリエイティブ",
+
+  "builtInTemplates": "組み込みテンプレート",
+
+  "userTemplates": "マイテンプレート",
+
+  "templateUsed": "{count}回使用",
+
+  "duplicateTemplate": "複製",
+
+  "noTemplates": "テンプレートなし",
+
+  "templateSaved": "テンプレート保存済み",
+
+  "templateMeetingNotes": "会議メモ",
+
+  "templateDailyJournal": "日記",
+
+  "templateProjectPlan": "プロジェクト計画",
+
+  "templateReadingNotes": "読書メモ",
+
+  "templateWeeklyReview": "週次レビュー",
+
+  "templateBrainstorm": "ブレインストーム",
+
+  "templateBlank": "空白",
+
   "offlineBanner": "オフラインです \u2014 接続時に変更が同期されます",
 
   "unlockRequired": "先に保管庫をロック解除してください",
@@ -1412,6 +1472,12 @@
   "knowledgeGraph": "ナレッジグラフ",
   "graphEmpty": "リンク関係がありません。ノートに [[リンク]] を追加してください",
   "viewBacklinks": "バックリンクを表示",
+  "wikiLink": "Wikiリンク",
+  "linkToNote": "ノートにリンク",
+  "relatedNotes": "関連ノート",
+  "noRelatedNotes": "関連ノートがありません",
+  "startTypingToSearch": "入力してノートを検索",
+  "noNotesFound": "ノートが見つかりません",
   "aiAgent": "AIエージェント",
   "selectAction": "アクションを選択",
   "organizeNotes": "ノートを整理",
@@ -1504,5 +1570,572 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+
+  "propertiesDashboard": "プロパティダッシュボード",
+  "@propertiesDashboard": { "description": "Title of the properties dashboard screen" },
+
+  "totalNotes": "総ノート数",
+  "@totalNotes": { "description": "Label for total notes count in dashboard" },
+
+  "withProperties": "プロパティあり",
+  "@withProperties": { "description": "Label for notes with properties percentage in dashboard" },
+
+  "priorityDistribution": "優先度の分布",
+  "@priorityDistribution": { "description": "Section title for priority distribution chart" },
+
+  "noPrioritiesSet": "優先度が設定されていません",
+  "@noPrioritiesSet": { "description": "Empty state message when no notes have priority set" },
+
+  "notesByStatus": "ステータス別ノート",
+  "@notesByStatus": { "description": "Section title for kanban-style status columns" },
+
+  "noNotesYet": "まだノートがありません",
+  "@noNotesYet": { "description": "Empty state message when there are no notes" },
+
+  "createFirstNoteHint": "ダッシュボードを表示するには最初のノートを作成してください",
+  "@createFirstNoteHint": { "description": "Hint text for empty dashboard state" },
+
+  "dailyNotes": "デイリーノート",
+  "@dailyNotes": { "description": "Title for the daily notes / journal screen" },
+
+  "dailyNote": "デイリーノート",
+  "@dailyNote": { "description": "Label for a single daily note" },
+
+  "todaysNote": "今日のノート",
+  "@todaysNote": { "description": "Label for today's daily note" },
+
+  "createTodaysNote": "今日のノートを作成",
+  "@createTodaysNote": { "description": "Button to create a daily note for today" },
+
+  "noDailyNote": "この日のノートはありません",
+  "@noDailyNote": { "description": "Message when no daily note exists for a date" },
+
+  "openDailyNote": "デイリーノートを開く",
+  "@openDailyNote": { "description": "Button to open an existing daily note" },
+
+  "goToToday": "今日",
+  "@goToToday": { "description": "Button to jump the calendar to today" },
+
+  "hasNote": "ノートあり",
+  "@hasNote": { "description": "Accessibility label for calendar dot indicator" },
+
+  "calendar": "カレンダー",
+  "@calendar": { "description": "Label for calendar navigation" },
+
+  "recentDailyNotes": "最近のデイリーノート",
+  "@recentDailyNotes": { "description": "Section header for recent daily notes list" },
+
+  "commandPalette": "コマンドパレット",
+  "@commandPalette": { "description": "Tooltip and title for the command palette feature" },
+
+  "commandSearchHint": "ノートやコマンドを検索...",
+  "@commandSearchHint": { "description": "Placeholder text in the command palette search field" },
+
+  "commandRecentNotes": "最近",
+  "@commandRecentNotes": { "description": "Section header for recently opened notes in command palette" },
+
+  "commandNotesSection": "ノート",
+  "@commandNotesSection": { "description": "Section header for note results in command palette" },
+
+  "commandActions": "アクション",
+  "@commandActions": { "description": "Section header for action results in command palette" },
+
+  "commandCreateNewNote": "新規ノートを作成",
+  "@commandCreateNewNote": { "description": "Command palette action to create a new note" },
+
+  "commandOpenDailyNotes": "デイリーノートを開く",
+  "@commandOpenDailyNotes": { "description": "Command palette action to open daily notes" },
+
+  "commandOpenGraph": "グラフビューを開く",
+  "@commandOpenGraph": { "description": "Command palette action to open the knowledge graph" },
+
+  "commandOpenDashboard": "ダッシュボードを開く",
+  "@commandOpenDashboard": { "description": "Command palette action to open the properties dashboard" },
+
+  "commandOpenTrash": "ゴミ箱を開く",
+  "@commandOpenTrash": { "description": "Command palette action to open the trash screen" },
+
+  "commandOpenSettings": "設定を開く",
+  "@commandOpenSettings": { "description": "Command palette action to open the settings screen" },
+
+  "commandNoResultsFound": "結果が見つかりません",
+  "@commandNoResultsFound": { "description": "Empty state when command palette search has no matches" },
+
+  "slashHeading1": "見出し 1",
+  "slashHeading2": "見出し 2",
+  "slashHeading3": "見出し 3",
+  "slashBulletList": "箇条書き",
+  "slashNumberedList": "番号付きリスト",
+  "slashTodoList": "ToDoリスト",
+  "slashCodeBlock": "コードブロック",
+  "slashQuote": "引用",
+  "slashDivider": "区切り線",
+  "slashTable": "テーブル",
+  "slashImage": "画像",
+  "slashWikilink": "Wikiリンク",
+  "slashTransclusion": "トランスクルージョン",
+  "slashCallout": "コールアウト",
+  "slashNoResults": "一致するコマンドなし",
+
+  "splitView": "分割表示",
+  "openInSplitView": "分割表示で開く",
+  "closeSplitView": "分割表示を閉じる",
+  "selectNoteForSplit": "分割表示するノートを選択",
+
+  "searchOperators": "検索演算子",
+  "searchOperatorTag": "tag:名前 -- タグで絞り込み",
+  "searchOperatorStatus": "status:todo|in-progress|done|blocked|cancelled",
+  "searchOperatorPriority": "priority:high|medium|low",
+  "searchOperatorDate": "date:YYYY-MM-DD -- 日付で絞り込み",
+  "searchOperatorCollection": "collection:名前 -- コレクションで絞り込み",
+  "searchOperatorLinks": "links:true|false -- リンク状態で絞り込み",
+  "searchOperatorsExample": "例: tag:work status:todo プロジェクト計画",
+  "savedSearches": "保存した検索",
+  "saveSearch": "検索を保存",
+  "saveSearchName": "検索名",
+  "searchSaved": "検索を保存しました",
+  "deleteSavedSearch": "保存した検索を削除",
+  "deleteSavedSearchConfirm": "\"{name}\"を削除しますか？",
+  "searchHistory": "最近の検索",
+  "clearSearchHistory": "検索履歴をクリア",
+  "noSavedSearches": "保存した検索はまだありません",
+  "saveSearchHint": "検索後、ブックマークアイコンをタップして保存",
+  "noSearchHistory": "検索履歴なし",
+  "showSearchHints": "検索ヒントを表示",
+  "hideSearchHints": "検索ヒントを非表示",
+  "searchNotesHint": "演算子で検索: tag:work status:todo ...",
+  "enterQueryOrOperators": "演算子を使ってノートを検索",
+
+  "imageGallery": "画像ギャラリー",
+  "fromGallery": "ギャラリーから",
+  "fromCamera": "カメラから",
+  "selectImageSource": "画像の選択元",
+  "pasteImage": "画像を貼り付け",
+  "deleteImage": "画像を削除",
+  "deleteImageConfirm": "この画像を削除しますか？",
+  "imageManagement": "画像管理",
+  "totalStorage": "合計ストレージ",
+  "imageCount": "{count}枚の画像",
+  "orphanedImages": "孤立画像",
+  "cleanupOrphaned": "孤立画像をクリーンアップ",
+  "cleanupComplete": "{count}枚の孤立画像をクリーンアップしました",
+  "deleteAllImages": "すべての画像を削除",
+  "deleteAllImagesConfirm": "すべての保存画像が削除されます。この操作は元に戻せません。",
+  "noImagesStored": "保存された画像はありません",
+  "imageDeleted": "画像を削除しました",
+  "shareImage": "画像を共有",
+
+  "compareVersions": "バージョンを比較",
+  "versionDiff": "バージョン差分",
+  "versionNumber": "バージョン{number}",
+  "linesAdded": "{count}行追加",
+  "linesRemoved": "{count}行削除",
+  "noChanges": "変更なし",
+  "restoreVersion": "このバージョンを復元",
+  "restoreVersionConfirm": "ノートをバージョン{version}に復元しますか？現在の内容は新しいバージョンとして保存されます。",
+  "versionRestored": "バージョンを復元しました",
+  "selectTwoVersions": "比較する2つのバージョンを選択",
+
+  "readingTime": "{minutes}分で読める",
+  "lessThan1Min": "1分未満",
+  "lineCount": "{count}行",
+  "paragraphCount": "{count}段落",
+  "focusMode": "フォーカスモード",
+  "typewriterScroll": "タイプライタースクロール",
+  "writingStats": "執筆統計",
+  "toggleWritingStats": "執筆統計の表示切替",
+  "charCountNoSpaces": "{count}文字（スペースなし）",
+
+  "statistics": "統計",
+  "totalWords": "総単語数",
+  "averageWords": "平均単語数/ノート",
+  "daysActive": "活動日数",
+  "last30Days": "過去30日間",
+  "writingStreak": "連続執筆",
+  "currentStreak": "現在: {count}日",
+  "longestStreak": "最長: {count}日",
+  "monthlyActivity": "月間アクティビティ",
+  "topTags": "人気タグ",
+  "topCollections": "人気コレクション",
+  "statusDistribution": "ステータス分布",
+  "knowledgeGraphStats": "ナレッジグラフ",
+  "totalLinks": "総リンク数",
+  "orphanedNotesCount": "{count}件の孤立ノート",
+  "mostConnectedNote": "最も接続の多いノート",
+  "noStatistics": "統計データなし",
+  "notesWithProperties": "プロパティ付きノート",
+  "notesWithLinks": "リンク付きノート",
+
+  "exportNotes": "ノートをエクスポート",
+  "exportingNotes": "エクスポート中...",
+  "exportComplete": "エクスポート完了",
+  "exportSelectedNotes": "選択をエクスポート",
+  "exportCurrentNote": "現在のノートをエクスポート",
+  "exportSelected": "{count}件の選択ノート",
+  "exportWithFrontmatter": "メタデータ付きエクスポート",
+  "exportAsZip": "ZIPアーカイブでエクスポート",
+  "includeFrontmatter": "メタデータ（フロントマター）を含む",
+  "frontmatterDesc": "タグ、日付、プロパティを含むYAMLメタデータヘッダーを追加",
+  "exportOrganization": "構成",
+  "exportFlat": "フラット",
+  "exportByDate": "日付別",
+  "exportByCollection": "コレクション別",
+  "exportByTag": "タグ別",
+  "notesExported": "{count}件のノートをエクスポートしました",
+
+  "importFromMarkdown": "Markdownからインポート",
+  "importFromZip": "ZIPからインポート",
+  "importFromObsidian": "Obsidian Vaultからインポート",
+  "importingNotes": "インポート中...",
+  "notesImported": "{count}件のノートをインポート",
+  "preserveDates": "元の日付を保持",
+  "importTags": "タグをインポート",
+  "importProperties": "プロパティをインポート",
+  "noFilesSelected": "ファイルが選択されていません",
+  "importOptions": "インポートオプション"
+,
+  "quickCapture": "クイックキャプチャ",
+  "typeSomething": "何か入力...",
+  "autoSaved": "自動保存済み",
+  "discardDraft": "下書きを破棄？",
+  "discardDraftMessage": "保存されていない変更は失われます。",
+  "discard": "破棄",
+  "newNoteShortcut": "新規メモ",
+  "newChecklistShortcut": "新規チェックリスト",
+  "dailyNoteShortcut": "デイリーノート",
+  "sharedToAnynote": "AnyNoteに共有",
+  "setPriority": "優先度を設定",
+  "quickCaptureDesc": "素早くアイデアを記録",
+  "pendingSync": "{count}件保留中",
+  "syncFailedCount": "{count}件失敗",
+  "syncQueue": "同期キュー",
+  "pendingOperations": "保留中の操作",
+  "failedOperations": "失敗した操作",
+  "retryAll": "すべて再試行",
+  "clearCompleted": "完了をクリア",
+  "operationFailed": "失敗: {error}",
+  "retryingSync": "再試行中...",
+  "queueCleared": "完了した操作をクリアしました",
+  "noPendingOperations": "保留中の操作はありません",
+
+  "noteSemantics": "ノート：{title}",
+
+  "deleteNoteSemantics": "ノート {title} を削除",
+
+  "archiveNoteSemantics": "ノート {title} をアーカイブ",
+
+  "pinNoteSemantics": "ノート {title} をピン留め",
+
+  "unpinNoteSemantics": "ノート {title} のピン留めを解除",
+
+  "noteContentEditor": "ノート内容エディタ。ダブルタップで編集。",
+
+  "graphSummary": "{nodeCount} ノート、{linkCount} リンク",
+
+  "pinnedNote": "ピン留め済み",
+
+  "settingsGroup": "{section} 設定",
+
+  "restoreNoteSemantics": "ノート {title} を復元",
+
+  "permanentlyDeleteNoteSemantics": "ノート {title} を完全に削除",
+
+  "deleteCollectionSemantics": "コレクション {title} を削除",
+
+  "calendarDaySemantics": "{date}。{hasNote}",
+
+  "noteCountSemantics": "{count} 件のノート",
+
+  "reminder": "リマインダー",
+  "setReminder": "リマインダー設定",
+  "reminderAt": "リマインダー時刻",
+  "removeReminder": "リマインダー解除",
+  "laterToday": "今日の後ほど",
+  "tomorrowMorning": "明日の朝",
+  "nextWeek": "来週",
+  "noReminders": "リマインダーなし",
+  "recurring": "繰り返し",
+  "daily": "毎日",
+  "weekly": "毎週",
+  "monthly": "毎月",
+  "reminders": "リマインダー一覧",
+  "reminderFired": "リマインダー通知",
+
+  "color": "色",
+  "selectColor": "色を選択",
+  "removeColor": "色を削除",
+  "noteColor": "ノートの色",
+  "customColor": "カスタムカラー",
+  "colorFilter": "色で絞り込み",
+  "searchOperatorColor": "color:#RRGGBB または color:色名 -- 色で絞り込み",
+
+  "none": "なし",
+
+  "compareNotes": "ノートを比較",
+
+  "selectNotesToCompare": "比較するノートを選択",
+
+  "unifiedView": "統合ビュー",
+
+  "sideBySideView": "並列ビュー",
+
+  "additions": "追加",
+
+  "deletions": "削除",
+
+  "selectTwoNotes": "比較するノートを2つ選択してください",
+
+  "noteDiff": "ノート差分",
+
+  "linesChanged": "{added} 行追加、{removed} 行削除",
+
+  "mermaidDiagram": "Mermaid ダイアグラム",
+
+  "viewDiagram": "ダイアグラムを表示",
+
+  "copyMermaidCode": "Mermaid コードをコピー",
+
+  "diagramCopied": "ダイアグラムコードをコピーしました",
+
+  "mermaidTemplate": "Mermaid テンプレート",
+
+  "insertDiagram": "ダイアグラムを挿入",
+
+  "slashMermaid": "Mermaid ダイアグラム",
+
+  "viewSource": "ソースを表示",
+
+  "diagramError": "ダイアグラムのレンダリングに失敗",
+
+  "copyDiagramSource": "ダイアグラムのソースをコピー",
+
+  "lockNote": "ノートをロック",
+  "unlockNote": "ノートのロック解除",
+  "noteLocked": "ノートはロックされています",
+  "lockedNoteBanner": "このノートはロックされています。タップして解除",
+  "notesColored": "{count} 件のノートに色を設定",
+  "colorRemovedFromNotes": "{count} 件のノートの色を削除",
+  "batchColor": "一括カラー設定",
+  "batchLock": "一括ロック",
+  "batchUnlock": "一括ロック解除",
+  "notesLocked": "{count} 件のノートをロック",
+  "notesUnlocked": "{count} 件のノートのロック解除",
+  "moveToCollection": "コレクションに移動",
+  "searchCollections": "コレクションを検索...",
+  "noCollections": "コレクションが見つかりません",
+  "notesMovedToCollection": "{count} 件のノートを「{name}」に移動",
+  "noteMovedToCollection": "ノートを「{name}」に移動",
+  "addToCollection": "コレクションに追加",
+
+  "scrollToTop": "一番上へ",
+
+  "printNote": "ノートを印刷",
+
+  "printPreview": "印刷プレビュー",
+
+  "includeMetadata": "メタデータを含む",
+
+  "includeImages": "画像を含む",
+
+  "shareAsHtml": "HTMLで共有",
+
+  "exportedAsHtml": "HTML としてエクスポートしました",
+
+  "foldView": "折りたたみビュー",
+  "foldAll": "すべて折りたたむ",
+  "unfoldAll": "すべて展開",
+  "sectionLines": "{count} 行",
+  "foldedSections": "{count} 個の折りたたみセクション",
+  "toggleFold": "折りたたみ切替",
+
+  "tableOfContents": "目次",
+  "noHeadings": "見出しがありません",
+  "headingLevel": "見出しレベル {level}",
+  "readAloud": "読み上げ",
+  "stopReading": "読み上げ停止",
+  "pauseReading": "一時停止",
+  "resumeReading": "再開",
+  "readingSpeed": "読み上げ速度",
+
+  "keyboardShortcuts": "キーボードショートカット",
+  "general": "一般",
+  "editor": "エディタ",
+  "navigation": "ナビゲーション",
+  "shortcutBold": "太字",
+  "shortcutItalic": "斜体",
+  "shortcutStrikethrough": "取り消し線",
+  "shortcutUndo": "元に戻す",
+  "shortcutRedo": "やり直す",
+  "shortcutPrint": "印刷",
+  "shortcutNewNote": "新規メモ",
+  "shortcutSearch": "検索",
+  "shortcutLink": "リンク挿入",
+  "shortcutCode": "インラインコード",
+  "shortcutHeading": "見出し切替",
+  "shortcutCommandPalette": "コマンドパレット",
+  "shortcutFocusMode": "フォーカスモード",
+
+  "reminderNotificationTitle": "リマインダー",
+  "reminderNotificationBody": "レビューの時間です：{title}",
+  "notificationChannelName": "ノートリマインダー",
+  "notificationChannelDescription": "ノートリマインダーの通知チャンネル",
+
+  "exportPdf": "PDF",
+
+  "generatePdf": "PDFを生成",
+
+  "pdfGenerated": "PDFが生成されました",
+
+  "sharePdf": "PDFを共有",
+
+  "exportFormatPdf": "PDF文書",
+
+  "snippets": "スニペット",
+
+  "snippetTitle": "タイトル",
+
+  "snippetCode": "コード",
+
+  "snippetLanguage": "言語",
+
+  "snippetDescription": "説明",
+
+  "snippetCategory": "カテゴリ",
+
+  "snippetTags": "タグ",
+
+  "newSnippet": "新規スニペット",
+
+  "editSnippet": "スニペット編集",
+
+  "deleteSnippet": "スニペット削除",
+
+  "deleteSnippetConfirm": "このスニペットを削除しますか？",
+
+  "copyCode": "コードをコピー",
+
+  "codeCopied": "コピーしました",
+
+  "insertSnippet": "スニペット挿入",
+
+  "noSnippets": "スニペットなし",
+
+  "searchSnippets": "スニペットを検索...",
+
+  "usageCount": "{count}回使用",
+
+  "allLanguages": "すべての言語",
+
+  "allCategories": "すべてのカテゴリ",
+
+  "tagHierarchy": "タグ階層",
+  "createSubTag": "サブタグを作成",
+  "moveToParent": "親タグに移動",
+  "noParent": "親なし（ルート）",
+  "selectParentTag": "親タグを選択",
+  "expandAll": "すべて展開",
+  "collapseAll": "すべて折りたたむ",
+
+  "userCursor": "{name}のカーソル",
+  "remoteUser": "リモートユーザー",
+
+  "dropImageHere": "画像をドロップ",
+
+  "imageAdded": "画像を追加しました",
+
+  "unsupportedFileType": "画像ファイルのみ対応",
+
+  "quickNote": "新規メモ",
+
+  "quickChecklist": "新規チェックリスト",
+
+  "quickDailyNote": "デイリーノート",
+
+  "moreOptions": "その他",
+
+  "failedToLoadTrash": "ゴミ箱の読み込みに失敗しました",
+  "failedToRestoreError": "復元に失敗しました: {error}",
+  "failedToDeleteError": "削除に失敗しました: {error}",
+  "deleteProperty": "プロパティを削除",
+  "removePropertyConfirm": "このプロパティをノートから削除しますか？",
+  "propertiesTitle": "プロパティ",
+  "noProperties": "プロパティなし",
+  "addCustomMetadata": "このノートにカスタムメタデータを追加",
+  "addPropertyButton": "プロパティを追加",
+  "editProperty": "プロパティを編集",
+  "customPropertyTitle": "カスタムプロパティ",
+  "propertyLabel": "プロパティ",
+  "valueLabel": "値",
+  "numberLabel": "数値",
+  "enterValue": "値を入力してください",
+  "enterNumber": "数値を入力してください",
+  "selectDateLabel": "日付を選択",
+  "linkManagementTitle": "リンク管理",
+  "outboundLinks": "発信リンク",
+  "deleteLinkTitle": "リンクを削除",
+  "removeLinkConfirm": "このノート間の接続を削除しますか？",
+  "noLinksToDisplay": "表示するリンクがありません。フィルターを調整してください。",
+  "linksToThisNote": "このノートへのリンク",
+  "thisNoteLinksTo": "このノートからのリンク",
+  "deleteLinkTooltip": "リンクを削除",
+  "insertTable": "テーブルを挿入",
+  "dragToSelectTableSize": "ドラッグしてテーブルサイズを選択",
+  "proPlan": "Pro",
+  "lifetimePlan": "Lifetime",
+  "proPrice": "$4.99/月",
+  "lifetimePrice": "$49.99",
+  "priorityHigh": "高",
+  "priorityMedium": "中",
+  "priorityLow": "低",
+  "tagsCountLabel": "{count}件のタグ",
+
+  "orphanedNotes": "孤立ノート",
+  "filter": "フィルター",
+  "priorityLabel": "優先度：{priority}",
+  "noMatchingNotes": "一致するノートがありません",
+  "tryChangingFilters": "フィルター条件を変更してください",
+  "filterByProperties": "プロパティで絞り込み",
+  "priority": "優先度",
+  "viewProperties": "プロパティ",
+  "noteTitle": "ノートタイトル",
+
+  "dateLabel": "日付",
+  "propertyOf": "プロパティ：{name}",
+  "insertLabel": "挿入",
+
+  "failedToLoadMore": "読み込みに失敗しました：{error}",
+  "linkCreated": "リンクを作成しました",
+  "failedToCreateLink": "リンクの作成に失敗しました：{error}",
+  "suggestedLinks": "おすすめリンク",
+  "similarContentDesc": "タイトルや内容が似ているノート。タップしてリンクを作成。",
+  "noSuggestions": "おすすめなし",
+  "createMoreNotes": "ノートを追加しておすすめを表示。",
+  "notAvailableOnWeb": "この機能はWebでは利用できません",
+  "okButton": "OK",
+  "failedToLoadDeferred": "読み込みに失敗しました",
+  "somethingWentWrong": "問題が発生しました",
+  "syncStatusTitle": "同期ステータス",
+  "offlineLabel": "オフライン",
+  "connectedLabel": "接続済み",
+  "pendingOpsLabel": "保留中の操作",
+  "lastSyncedLabel": "最終同期",
+  "failedItemsLabel": "失敗した項目",
+  "offlineSyncTooltip": "オフライン -- 接続時に変更が同期されます",
+  "pullingLabel": "取得中",
+  "pushingLabel": "送信中",
+  "syncingLabel": "同期中...",
+  "allChangesSyncedLabel": "すべての変更が同期されました",
+  "pendingOpTooltip": "{count}件の保留中の操作",
+  "pendingOpsTooltip": "{count}件の保留中の操作",
+  "syncConflictBadge": "同期の競合",
+  "conflictLabel": "競合",
+  "syncedLabel": "同期済み",
+  "pendingSyncLabel": "保留中",
+  "pendingSyncBadge": "同期待ち",
+
+  "barChartSemanticLabel": "月別ノート数の棒グラフ：{entries}",
+  "donutChartSemanticLabel": "分布を示すドーナツチャート：{entries}",
+  "tagItemSemanticLabel": "タグ：{name}",
+  "tagItemSemanticHint": "長押しで編集"
 }

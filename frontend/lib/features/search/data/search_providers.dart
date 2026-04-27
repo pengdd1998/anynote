@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../main.dart';
 import '../../../core/database/app_database.dart';
+import '../../notes/domain/search_query_parser.dart';
 
 // ── Search Filter State ────────────────────────────────
 
@@ -117,7 +118,7 @@ final searchFiltersProvider =
   (ref) => SearchFiltersNotifier(),
 );
 
-// ── Search Results ─────────────────────────────────────
+// ── Search Results (traditional filter-based) ──────────
 
 /// A single search result with associated metadata.
 class AdvancedSearchResult {
@@ -152,8 +153,6 @@ final searchResultsProvider =
   );
 
   // Store the total count for "showing X of Y" display.
-  // For text queries, use the FTS5 count. For filter-only queries, use the
-  // result length (no FTS5 involved).
   if (filters.query.trim().isNotEmpty) {
     final count = await db.notesDao.countSearchResults(filters.query);
     ref.read(searchResultCountProvider.notifier).state = count;
@@ -167,42 +166,82 @@ final searchResultsProvider =
     final tags = await db.tagsDao.getTagsForNote(note.id);
     final content = note.plainContent ?? '';
     final preview = _buildPreview(content, filters.query);
-    results.add(AdvancedSearchResult(
-      note: note,
-      tags: tags,
-      contentPreview: preview,
-    ),);
+    results.add(
+      AdvancedSearchResult(
+        note: note,
+        tags: tags,
+        contentPreview: preview,
+      ),
+    );
   }
 
   return results;
 });
 
 /// Total match count for the current search query (before pagination).
-/// Used to display "showing X of Y results" in the search UI.
 final searchResultCountProvider = StateProvider<int>((ref) => 0);
 
-/// Build a short preview of the content, trying to center it around
-/// the first occurrence of [query]. Falls back to the first 150 chars.
-String _buildPreview(String content, String query) {
-  const maxLen = 150;
-  if (content.isEmpty) return '';
-  if (content.length <= maxLen) return content;
+// ── Operator-based Search Results ──────────────────────
 
-  if (query.trim().isNotEmpty) {
-    final lowerContent = content.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    final idx = lowerContent.indexOf(lowerQuery);
-    if (idx >= 0) {
-      final start = (idx - 40).clamp(0, content.length);
-      final end = (start + maxLen).clamp(0, content.length);
-      var preview = content.substring(start, end);
-      if (start > 0) preview = '...$preview';
-      if (end < content.length) preview = '$preview...';
-      return preview;
-    }
+/// The current operator-based search query text.
+final operatorSearchQueryProvider = StateProvider<String>((ref) => '');
+
+/// Performs the operator-based advanced search using [parseSearchQuery].
+final operatorSearchResultsProvider =
+    FutureProvider<List<OperatorSearchResult>>((ref) async {
+  final rawQuery = ref.watch(operatorSearchQueryProvider);
+  if (rawQuery.trim().isEmpty) return [];
+
+  final db = ref.read(databaseProvider);
+  final parsed = parseSearchQuery(rawQuery);
+
+  // Add to search history on successful search.
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getStringList('recent_searches') ?? [];
+    final updated = [rawQuery, ...existing.where((q) => q != rawQuery)];
+    final trimmed = updated.take(10).toList();
+    await prefs.setStringList('recent_searches', trimmed);
+  } catch (e) {
+    // Non-critical: history persistence failure should not block search.
+    debugPrint('[SearchProviders] failed to persist search history: $e');
   }
 
-  return '${content.substring(0, maxLen)}...';
+  final results = await db.notesDao.advancedSearch(parsed);
+
+  // Enrich with tags.
+  final enriched = <OperatorSearchResult>[];
+  for (final result in results) {
+    final tags = await db.tagsDao.getTagsForNote(result.note.id);
+    enriched.add(
+      OperatorSearchResult(
+        note: result.note,
+        rank: result.rank,
+        contentSnippet: result.contentSnippet,
+        titleSnippet: result.titleSnippet,
+        tags: tags,
+      ),
+    );
+  }
+
+  return enriched;
+});
+
+/// A search result from operator-based search with tags and highlighting.
+class OperatorSearchResult {
+  final Note note;
+  final double rank;
+  final String contentSnippet;
+  final String titleSnippet;
+  final List<Tag> tags;
+
+  const OperatorSearchResult({
+    required this.note,
+    required this.rank,
+    required this.contentSnippet,
+    required this.titleSnippet,
+    required this.tags,
+  });
 }
 
 // ── Tags & Collections for Filter Pickers ──────────────
@@ -246,4 +285,38 @@ Future<List<String>> addRecentSearch(String query) async {
 Future<void> clearRecentSearches() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove(_recentSearchesKey);
+}
+
+// ── Saved Searches ─────────────────────────────────────
+
+/// All saved searches, watched reactively.
+final savedSearchesProvider = StreamProvider<List<SavedSearch>>((ref) {
+  final db = ref.read(databaseProvider);
+  return db.savedSearchesDao.watchAll();
+});
+
+// ── Helper ─────────────────────────────────────────────
+
+/// Build a short preview of the content, trying to center it around
+/// the first occurrence of [query]. Falls back to the first 150 chars.
+String _buildPreview(String content, String query) {
+  const maxLen = 150;
+  if (content.isEmpty) return '';
+  if (content.length <= maxLen) return content;
+
+  if (query.trim().isNotEmpty) {
+    final lowerContent = content.toLowerCase();
+    final lowerQuery = query.toLowerCase();
+    final idx = lowerContent.indexOf(lowerQuery);
+    if (idx >= 0) {
+      final start = (idx - 40).clamp(0, content.length);
+      final end = (start + maxLen).clamp(0, content.length);
+      var preview = content.substring(start, end);
+      if (start > 0) preview = '...$preview';
+      if (end < content.length) preview = '$preview...';
+      return preview;
+    }
+  }
+
+  return '${content.substring(0, maxLen)}...';
 }

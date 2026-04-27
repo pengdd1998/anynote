@@ -19,35 +19,24 @@
 /// ```
 library;
 
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../constants/app_durations.dart';
 import 'animation_config.dart';
 
 /// Duration for forward page transitions.
 const _kForwardDuration = Duration(milliseconds: 300);
 
 /// Duration for reverse (back) page transitions.
-const _kReverseDuration = Duration(milliseconds: 250);
+const _kReverseDuration = AppDurations.mediumAnimation;
 
 /// Slide offset for warm transitions (30px worth in logical units).
 const _kSlideOffset = 30.0;
-
-/// Returns the appropriate transition duration based on reduce motion setting.
-Duration _forwardDuration(BuildContext context) {
-  final config = AnimationConfig.of(context);
-  return config.duration(_kForwardDuration);
-}
-
-/// Returns the appropriate reverse transition duration based on reduce motion setting.
-Duration _reverseDuration(BuildContext context) {
-  final config = AnimationConfig.of(context);
-  return config.duration(_kReverseDuration);
-}
 
 /// Creates a [CustomTransitionPage] with a FadeThrough (cross-fade) animation.
 ///

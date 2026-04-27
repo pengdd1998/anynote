@@ -3,6 +3,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 import '../theme/app_theme.dart';
+import 'mermaid_renderer.dart' show MermaidRenderer, extractMermaidBlocks;
 
 /// Renders markdown content with code highlighting and optional LaTeX math.
 ///
@@ -44,21 +45,55 @@ class MarkdownPreview extends StatelessWidget {
   /// Unique placeholder prefix for inline LaTeX.
   static const _inlinePlaceholderPrefix = '\x00LATEX_INLINE_';
 
+  /// Unique placeholder prefix for mermaid diagrams.
+  static const _mermaidPlaceholderPrefix = '\x00MERMAID_BLOCK_';
+
   @override
   Widget build(BuildContext context) {
-    if (showLaTeX) {
-      return _buildWithLatex(context);
+    // Always extract mermaid blocks first, regardless of LaTeX setting.
+    final List<String> mermaidCodes = [];
+    String processed = content;
+
+    // Phase 0: Extract ```mermaid ... ``` blocks and replace with placeholders.
+    final mermaidBlocks = extractMermaidBlocks(processed);
+    // Replace from end to start to preserve earlier offsets.
+    for (final block in mermaidBlocks.reversed) {
+      final index = mermaidCodes.length;
+      mermaidCodes.insert(0, block.code);
+      processed = processed.replaceRange(
+        block.start,
+        block.end,
+        '\n$_mermaidPlaceholderPrefix$index\n',
+      );
     }
+
+    if (showLaTeX) {
+      return _buildWithLatex(context, processed, mermaidCodes);
+    }
+
+    if (mermaidCodes.isNotEmpty) {
+      return _buildMermaidColumn(
+        context,
+        processed,
+        const [],
+        mermaidCodes,
+        Theme.of(context).brightness == Brightness.dark,
+      );
+    }
+
     return _buildMarkdownBody(context, content);
   }
 
   /// Pre-processes the markdown to replace LaTeX patterns with placeholders,
   /// then renders markdown and substitutes placeholders with math widgets.
-  Widget _buildWithLatex(BuildContext context) {
+  Widget _buildWithLatex(
+    BuildContext context,
+    String processed,
+    List<String> mermaidCodes,
+  ) {
     final List<String> latexExpressions = [];
 
     // Phase 1: Extract block LaTeX ($$...$$) and replace with placeholders.
-    String processed = content;
     processed = processed.replaceAllMapped(_blockLatexRegex, (match) {
       final index = latexExpressions.length;
       latexExpressions.add(match.group(1)!);
@@ -71,6 +106,16 @@ class MarkdownPreview extends StatelessWidget {
       latexExpressions.add(match.group(1)!);
       return '$_inlinePlaceholderPrefix$index';
     });
+
+    if (mermaidCodes.isNotEmpty || latexExpressions.isNotEmpty) {
+      return _buildMermaidColumn(
+        context,
+        processed,
+        latexExpressions,
+        mermaidCodes,
+        Theme.of(context).brightness == Brightness.dark,
+      );
+    }
 
     return _buildMarkdownBody(context, processed, latexExpressions);
   }
@@ -156,33 +201,148 @@ class MarkdownPreview extends StatelessWidget {
         color: codeBlockBg,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: isDark
-              ? const Color(0xFF3D3835)
-              : const Color(0xFFE8DFD5),
+          color: isDark ? const Color(0xFF3D3835) : const Color(0xFFE8DFD5),
         ),
       ),
       codeblockAlign: WrapAlignment.start,
       blockquote: TextStyle(
-        color: isDark
-            ? const Color(0xFFA3988E)
-            : const Color(0xFF6B5E54),
+        color: isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
         fontStyle: FontStyle.italic,
       ),
       blockquoteDecoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF2C2826)
-            : const Color(0xFFF5F0EB),
+        color: isDark ? const Color(0xFF2C2826) : const Color(0xFFF5F0EB),
         borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       listBullet: TextStyle(
-        color: isDark
-            ? const Color(0xFFA3988E)
-            : const Color(0xFF6B5E54),
+        color: isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
       ),
       tableBody: TextStyle(
         fontSize: 14,
         color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
       ),
+    );
+  }
+
+  /// Builds a Column that interleaves MarkdownBody segments, LaTeX Math
+  /// widgets, and [MermaidRenderer] widgets. Splits the processed markdown
+  /// on all placeholder boundaries.
+  Widget _buildMermaidColumn(
+    BuildContext context,
+    String data,
+    List<String> latexExpressions,
+    List<String> mermaidCodes,
+    bool isDark,
+  ) {
+    final textColor =
+        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+    final codeBlockBg =
+        isDark ? const Color(0xFF1A1614) : const Color(0xFFF5F0EB);
+    final codeBlockText =
+        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+    final styleSheet = _buildStyleSheet(
+      isDark: isDark,
+      codeBlockBg: codeBlockBg,
+      codeBlockText: codeBlockText,
+    );
+
+    // Build a pattern that matches any placeholder (LaTeX or mermaid).
+    final placeholderPattern = RegExp(
+      '(${RegExp.escape(_mermaidPlaceholderPrefix)}\\d+'
+      '|${RegExp.escape(_blockPlaceholderPrefix)}\\d+'
+      '|${RegExp.escape(_inlinePlaceholderPrefix)}\\d+)',
+    );
+
+    final children = <Widget>[];
+    final parts = data.split(placeholderPattern);
+
+    for (final part in parts) {
+      if (part.isEmpty) continue;
+
+      // Check for mermaid placeholder.
+      final mermaidMatch = RegExp(
+        '${RegExp.escape(_mermaidPlaceholderPrefix)}(\\d+)',
+      ).firstMatch(part);
+
+      if (mermaidMatch != null) {
+        final index = int.parse(mermaidMatch.group(1)!);
+        if (index < mermaidCodes.length) {
+          children.add(MermaidRenderer(code: mermaidCodes[index]));
+          continue;
+        }
+      }
+
+      // Check for block LaTeX placeholder.
+      final blockMatch = RegExp(
+        '${RegExp.escape(_blockPlaceholderPrefix)}(\\d+)',
+      ).firstMatch(part);
+      if (blockMatch != null) {
+        final index = int.parse(blockMatch.group(1)!);
+        if (index < latexExpressions.length) {
+          children.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Math.tex(
+                    latexExpressions[index].trim(),
+                    mathStyle: MathStyle.display,
+                    textStyle: TextStyle(fontSize: 18, color: textColor),
+                  ),
+                ),
+              ),
+            ),
+          );
+          continue;
+        }
+      }
+
+      // Check for inline LaTeX placeholder.
+      final inlineMatch = RegExp(
+        '${RegExp.escape(_inlinePlaceholderPrefix)}(\\d+)',
+      ).firstMatch(part);
+      if (inlineMatch != null) {
+        final index = int.parse(inlineMatch.group(1)!);
+        if (index < latexExpressions.length) {
+          children.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Center(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Math.tex(
+                    latexExpressions[index].trim(),
+                    mathStyle: MathStyle.text,
+                    textStyle: TextStyle(fontSize: 16, color: textColor),
+                  ),
+                ),
+              ),
+            ),
+          );
+          continue;
+        }
+      }
+
+      // Regular markdown segment.
+      children.add(
+        MarkdownBody(
+          data: part,
+          selectable: true,
+          styleSheet: styleSheet,
+        ),
+      );
+    }
+
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    if (children.length == 1) {
+      return children.single;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: children,
     );
   }
 
@@ -290,4 +450,3 @@ class MarkdownPreview extends StatelessWidget {
     );
   }
 }
-

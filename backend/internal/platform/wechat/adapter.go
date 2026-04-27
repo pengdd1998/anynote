@@ -15,6 +15,7 @@ import (
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
 	"github.com/anynote/backend/internal/platform/chromedputil"
+	"github.com/anynote/backend/internal/platform/common"
 )
 
 // WeChat Official Account platform URLs.
@@ -203,15 +204,9 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 // navigates to the article creation page, fills in the form fields,
 // and saves as draft.
 func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey []byte, params platform.PublishParams) (*platform.PublishResult, error) {
-	// Decrypt cookies.
-	cookieJSON, err := llm.DecryptAPIKey(encryptedAuth, masterKey)
+	jar, err := common.DecryptCookieJar(ctx, encryptedAuth, masterKey)
 	if err != nil {
-		return nil, fmt.Errorf("decrypt auth data: %w", err)
-	}
-
-	var jar chromedputil.CookieJar
-	if err := json.Unmarshal([]byte(cookieJSON), &jar); err != nil {
-		return nil, fmt.Errorf("unmarshal cookies: %w", err)
+		return nil, err
 	}
 
 	// Create a browser context and set cookies before navigating.
@@ -379,15 +374,9 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 // For draft articles this checks the MP console; for published articles
 // it checks the public-facing URL.
 func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterKey []byte, platformID string) (string, error) {
-	// Decrypt cookies.
-	cookieJSON, err := llm.DecryptAPIKey(encryptedAuth, masterKey)
+	jar, err := common.DecryptCookieJar(ctx, encryptedAuth, masterKey)
 	if err != nil {
-		return "unknown", fmt.Errorf("decrypt auth data: %w", err)
-	}
-
-	var jar chromedputil.CookieJar
-	if err := json.Unmarshal([]byte(cookieJSON), &jar); err != nil {
-		return "unknown", fmt.Errorf("unmarshal cookies: %w", err)
+		return "unknown", err
 	}
 
 	// Build the URL to check.  For drafts, use the MP console;

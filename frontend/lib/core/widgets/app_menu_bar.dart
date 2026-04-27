@@ -88,9 +88,11 @@ class AppMenuBar extends ConsumerWidget {
             shortcut: _shortcut(LogicalKeyboardKey.keyS),
             onSelected: () {},
           ),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(label: '', onSelected: () {}),
-          ],),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(label: '', onSelected: () {}),
+            ],
+          ),
           PlatformMenuItem(
             label: l10n?.menuImport ?? 'Import...',
             onSelected: () => _navigateTo(context, '/settings/import'),
@@ -100,17 +102,21 @@ class AppMenuBar extends ConsumerWidget {
             shortcut: _shortcut(LogicalKeyboardKey.keyP),
             onSelected: () {},
           ),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(label: '', onSelected: () {}),
-          ],),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(label: '', onSelected: () {}),
+            ],
+          ),
           PlatformMenuItem(
             label: l10n?.menuCloseTab ?? 'Close Tab',
             shortcut: _shortcut(LogicalKeyboardKey.keyW),
             onSelected: () => _closeCurrentNote(context),
           ),
-          const PlatformMenuItemGroup(members: [
-            PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
-          ],),
+          const PlatformMenuItemGroup(
+            members: [
+              PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
+            ],
+          ),
         ],
       ),
 
@@ -128,9 +134,11 @@ class AppMenuBar extends ConsumerWidget {
             shortcut: _shortcutShift(LogicalKeyboardKey.keyZ),
             onSelected: null,
           ),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(label: '', onSelected: () {}),
-          ],),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(label: '', onSelected: () {}),
+            ],
+          ),
           PlatformMenuItem(
             label: l10n?.menuCut ?? 'Cut',
             shortcut: _shortcut(LogicalKeyboardKey.keyX),
@@ -146,17 +154,21 @@ class AppMenuBar extends ConsumerWidget {
             shortcut: _shortcut(LogicalKeyboardKey.keyV),
             onSelected: null,
           ),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(label: '', onSelected: () {}),
-          ],),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(label: '', onSelected: () {}),
+            ],
+          ),
           PlatformMenuItem(
             label: l10n?.menuSelectAll ?? 'Select All',
             shortcut: _shortcut(LogicalKeyboardKey.keyA),
             onSelected: null,
           ),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(label: '', onSelected: () {}),
-          ],),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(label: '', onSelected: () {}),
+            ],
+          ),
           PlatformMenuItem(
             label: l10n?.menuFind ?? 'Find...',
             shortcut: _shortcut(LogicalKeyboardKey.keyF),
@@ -184,9 +196,11 @@ class AppMenuBar extends ConsumerWidget {
             label: l10n?.menuZenMode ?? 'Zen Mode',
             onSelected: () {},
           ),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(label: '', onSelected: () {}),
-          ],),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(label: '', onSelected: () {}),
+            ],
+          ),
           PlatformMenuItem(
             label: l10n?.menuFullScreen ?? 'Enter Full Screen',
             shortcut: const SingleActivator(LogicalKeyboardKey.f11),
@@ -305,8 +319,7 @@ class AppMenuBar extends ConsumerWidget {
           MenuItemButton(
             shortcut: _shortcut(LogicalKeyboardKey.keyB),
             child: Text(l10n?.menuToggleSidebar ?? 'Toggle Sidebar'),
-            onPressed: () =>
-                ref.read(sidebarVisibleProvider.notifier).toggle(),
+            onPressed: () => ref.read(sidebarVisibleProvider.notifier).toggle(),
           ),
           MenuItemButton(
             shortcut: _shortcutShift(LogicalKeyboardKey.keyP),
@@ -385,8 +398,9 @@ class AppMenuBar extends ConsumerWidget {
     try {
       final isFullScreen = await windowManager.isFullScreen();
       await windowManager.setFullScreen(!isFullScreen);
-    } catch (_) {
+    } catch (e) {
       // window_manager not available or not initialized.
+      debugPrint('[AppMenuBar] toggle full screen failed: $e');
     }
   }
 
@@ -427,26 +441,40 @@ class AppMenuBar extends ConsumerWidget {
               _shortcutRow('$mod+S', l10n?.shortcutSave ?? 'Save'),
               _shortcutRow('$mod+F', l10n?.shortcutSearch ?? 'Search'),
               _shortcutRow(
-                  '$mod+B', l10n?.shortcutToggleSidebar ?? 'Toggle Sidebar',),
+                '$mod+B',
+                l10n?.shortcutToggleSidebar ?? 'Toggle Sidebar',
+              ),
               _shortcutRow(
-                  '$mod+P', l10n?.shortcutExportPdf ?? 'Export to PDF',),
+                '$mod+P',
+                l10n?.shortcutExportPdf ?? 'Export to PDF',
+              ),
               _shortcutRow(
-                  '$mod+,', l10n?.shortcutSettings ?? 'Open Settings',),
+                '$mod+,',
+                l10n?.shortcutSettings ?? 'Open Settings',
+              ),
               _shortcutRow(
-                  '$mod+W', l10n?.shortcutCloseNote ?? 'Close Note',),
+                '$mod+W',
+                l10n?.shortcutCloseNote ?? 'Close Note',
+              ),
               _shortcutRow(
-                  '$mod+Tab', l10n?.shortcutNextNote ?? 'Next Note',),
+                '$mod+Tab',
+                l10n?.shortcutNextNote ?? 'Next Note',
+              ),
               _shortcutRow(
-                  'F11', l10n?.shortcutFullScreen ?? 'Toggle Full Screen',),
-              _shortcutRow('Esc',
-                  l10n?.shortcutExitZen ?? 'Exit Zen Mode / Close Dialog',),
+                'F11',
+                l10n?.shortcutFullScreen ?? 'Toggle Full Screen',
+              ),
+              _shortcutRow(
+                'Esc',
+                l10n?.shortcutExitZen ?? 'Exit Zen Mode / Close Dialog',
+              ),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
+            child: Text(AppLocalizations.of(context)?.okButton ?? 'OK'),
           ),
         ],
       ),

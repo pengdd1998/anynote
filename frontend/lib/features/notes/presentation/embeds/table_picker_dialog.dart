@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Result returned when user selects a table size.
 class TableSize {
   const TableSize(this.rows, this.cols);
@@ -40,7 +42,7 @@ class _TablePickerDialogState extends State<TablePickerDialog> {
     final isDark = theme.brightness == Brightness.dark;
 
     return AlertDialog(
-      title: const Text('Insert Table'),
+      title: Text(AppLocalizations.of(context)!.insertTable),
       content: SizedBox(
         width: 280,
         height: 300,
@@ -109,7 +111,7 @@ class _TablePickerDialogState extends State<TablePickerDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Drag to select table size',
+              AppLocalizations.of(context)!.dragToSelectTableSize,
               style: theme.textTheme.bodySmall?.copyWith(
                 color:
                     isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
@@ -121,13 +123,13 @@ class _TablePickerDialogState extends State<TablePickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop<TableSize>(null),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop<TableSize>(
             TableSize(_selectedRows, _selectedCols),
           ),
-          child: const Text('Insert'),
+          child: Text(AppLocalizations.of(context)!.insertLabel),
         ),
       ],
     );

@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 
 /// Callback type for integrating a remote error reporting service
@@ -47,16 +49,19 @@ class ErrorReporter {
   void reportError(Object error, StackTrace stackTrace, {String? context}) {
     if (!_enabled) return;
     final prefix = context != null ? '[ERROR] $context' : '[ERROR]';
-    debugPrint('$prefix: $error');
-    debugPrint('[STACK] $stackTrace');
+    developer.log('$prefix: $error', name: 'ErrorReporter');
+    developer.log('[STACK] $stackTrace', name: 'ErrorReporter');
     _callback?.call(error, stackTrace, context: context);
   }
 
   /// Report a Flutter framework error captured by [FlutterError.onError].
   void reportFlutterError(FlutterErrorDetails details) {
     if (!_enabled) return;
-    debugPrint('[FLUTTER_ERROR] ${details.exceptionAsString()}');
-    debugPrint('[STACK] ${details.stack}');
+    developer.log(
+      '[FLUTTER_ERROR] ${details.exceptionAsString()}',
+      name: 'ErrorReporter',
+    );
+    developer.log('[STACK] ${details.stack}', name: 'ErrorReporter');
     _callback?.call(
       details.exception,
       details.stack ?? StackTrace.empty,

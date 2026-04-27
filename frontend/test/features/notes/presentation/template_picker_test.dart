@@ -9,7 +9,7 @@ void main() {
     testWidgets('renders without errors', (tester) async {
       final handle = await pumpScreen(
         tester,
-        TemplatePicker(onSelected: (_) {}),
+        Scaffold(body: TemplatePicker(onSelected: (_) {})),
         overrides: defaultProviderOverrides(),
       );
 
@@ -21,7 +21,7 @@ void main() {
     testWidgets('shows tab labels', (tester) async {
       final handle = await pumpScreen(
         tester,
-        TemplatePicker(onSelected: (_) {}),
+        Scaffold(body: TemplatePicker(onSelected: (_) {})),
         overrides: defaultProviderOverrides(),
       );
 
@@ -33,7 +33,7 @@ void main() {
     testWidgets('shows close button', (tester) async {
       final handle = await pumpScreen(
         tester,
-        TemplatePicker(onSelected: (_) {}),
+        Scaffold(body: TemplatePicker(onSelected: (_) {})),
         overrides: defaultProviderOverrides(),
       );
 

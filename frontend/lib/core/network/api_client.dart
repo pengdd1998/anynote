@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 
@@ -119,8 +120,9 @@ class ApiClient {
 
       _refreshCompleter!.complete(newAccessToken);
       return newAccessToken;
-    } catch (_) {
+    } catch (e) {
       // Refresh failed -- clear all tokens.
+      debugPrint('[ApiClient] token refresh failed: $e');
       await _clearAllTokens();
       _refreshCompleter!.complete(null);
       return null;

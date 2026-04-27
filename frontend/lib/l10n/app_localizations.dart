@@ -462,6 +462,18 @@ abstract class AppLocalizations {
   /// **'Title A-Z'**
   String get titleAZ;
 
+  /// Sort option: manual drag-and-drop reordering
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Order'**
+  String get sortCustom;
+
+  /// Hint shown when custom sort is active
+  ///
+  /// In en, this message translates to:
+  /// **'Drag notes to reorder'**
+  String get reorderModeHint;
+
   /// Tooltip for list view toggle
   ///
   /// In en, this message translates to:
@@ -498,7 +510,7 @@ abstract class AppLocalizations {
   /// **'Create new note'**
   String get createNewNote;
 
-  /// Empty state title for notes list
+  /// Empty state message when there are no notes
   ///
   /// In en, this message translates to:
   /// **'No notes yet'**
@@ -3108,7 +3120,7 @@ abstract class AppLocalizations {
   /// **'Keyboard Shortcuts'**
   String get shortcutsDialogTitle;
 
-  /// Shortcut description for creating a new note
+  /// Keyboard shortcut description for creating a new note
   ///
   /// In en, this message translates to:
   /// **'New Note'**
@@ -3120,7 +3132,7 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get shortcutSave;
 
-  /// Shortcut description for search
+  /// Keyboard shortcut description for opening search
   ///
   /// In en, this message translates to:
   /// **'Search'**
@@ -3807,6 +3819,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use [date] for current date'**
   String get templateDateHint;
+
+  /// Generic label for templates feature
+  ///
+  /// In en, this message translates to:
+  /// **'Templates'**
+  String get templates;
+
+  /// Title of the template picker bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a Template'**
+  String get templatePicker;
+
+  /// Menu option to create a note from a template
+  ///
+  /// In en, this message translates to:
+  /// **'Create from Template'**
+  String get createFromTemplate;
+
+  /// Card option to create a blank note without a template
+  ///
+  /// In en, this message translates to:
+  /// **'Create from Scratch'**
+  String get createFromScratch;
+
+  /// Title of the template management screen
+  ///
+  /// In en, this message translates to:
+  /// **'Template Management'**
+  String get templateManagement;
+
+  /// Button label to create a new template
+  ///
+  /// In en, this message translates to:
+  /// **'New Template'**
+  String get newTemplate;
+
+  /// Button label to edit an existing template
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Template'**
+  String get editTemplate;
+
+  /// Button label to delete a template
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Template'**
+  String get deleteTemplate;
+
+  /// Form field label for template name
+  ///
+  /// In en, this message translates to:
+  /// **'Template Name'**
+  String get templateName;
+
+  /// Form field label for template description
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get templateDescription;
+
+  /// Form field label for template content
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get templateContent;
+
+  /// Form field label for template category
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get templateCategory;
+
+  /// Category label for work templates
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get categoryWork;
+
+  /// Category label for personal templates
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get categoryPersonal;
+
+  /// Category label for creative templates
+  ///
+  /// In en, this message translates to:
+  /// **'Creative'**
+  String get categoryCreative;
+
+  /// Section header for built-in templates
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in Templates'**
+  String get builtInTemplates;
+
+  /// Section header for user-created templates
+  ///
+  /// In en, this message translates to:
+  /// **'My Templates'**
+  String get userTemplates;
+
+  /// Shows how many times a template has been used
+  ///
+  /// In en, this message translates to:
+  /// **'Used {count} times'**
+  String templateUsed(int count);
+
+  /// Button label to duplicate a built-in template
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get duplicateTemplate;
+
+  /// Empty state message when no templates exist
+  ///
+  /// In en, this message translates to:
+  /// **'No templates yet'**
+  String get noTemplates;
+
+  /// Snackbar confirmation after saving a template
+  ///
+  /// In en, this message translates to:
+  /// **'Template saved'**
+  String get templateSaved;
+
+  /// Built-in template name
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting Notes'**
+  String get templateMeetingNotes;
+
+  /// Built-in template name
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Journal'**
+  String get templateDailyJournal;
+
+  /// Built-in template name
+  ///
+  /// In en, this message translates to:
+  /// **'Project Plan'**
+  String get templateProjectPlan;
+
+  /// Built-in template name
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Notes'**
+  String get templateReadingNotes;
+
+  /// Built-in template name
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Review'**
+  String get templateWeeklyReview;
+
+  /// Built-in template name
+  ///
+  /// In en, this message translates to:
+  /// **'Brainstorm'**
+  String get templateBrainstorm;
+
+  /// Built-in template name for empty template
+  ///
+  /// In en, this message translates to:
+  /// **'Blank'**
+  String get templateBlank;
 
   /// Banner text shown when the device is offline
   ///
@@ -4582,6 +4762,42 @@ abstract class AppLocalizations {
   /// **'View backlinks'**
   String get viewBacklinks;
 
+  /// Button tooltip for inserting wiki-style [[links]]
+  ///
+  /// In en, this message translates to:
+  /// **'Wiki Link'**
+  String get wikiLink;
+
+  /// Title for wiki link picker sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Link to Note'**
+  String get linkToNote;
+
+  /// Section header for notes linked from current note
+  ///
+  /// In en, this message translates to:
+  /// **'Related Notes'**
+  String get relatedNotes;
+
+  /// Empty state when no outbound links exist
+  ///
+  /// In en, this message translates to:
+  /// **'No related notes'**
+  String get noRelatedNotes;
+
+  /// Placeholder hint in wiki link picker
+  ///
+  /// In en, this message translates to:
+  /// **'Start typing to search notes'**
+  String get startTypingToSearch;
+
+  /// Empty state message when search returns no results
+  ///
+  /// In en, this message translates to:
+  /// **'No notes found'**
+  String get noNotesFound;
+
   /// Settings toggle title for periodic background sync
   ///
   /// In en, this message translates to:
@@ -4881,6 +5097,2436 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} people viewing'**
   String multiplePeopleInRoom(int count);
+
+  /// Title of the properties dashboard screen
+  ///
+  /// In en, this message translates to:
+  /// **'Properties Dashboard'**
+  String get propertiesDashboard;
+
+  /// Label for total notes count in dashboard
+  ///
+  /// In en, this message translates to:
+  /// **'Total Notes'**
+  String get totalNotes;
+
+  /// Label for notes with properties percentage in dashboard
+  ///
+  /// In en, this message translates to:
+  /// **'With Properties'**
+  String get withProperties;
+
+  /// Section title for priority distribution chart
+  ///
+  /// In en, this message translates to:
+  /// **'Priority Distribution'**
+  String get priorityDistribution;
+
+  /// Empty state message when no notes have priority set
+  ///
+  /// In en, this message translates to:
+  /// **'No priorities set'**
+  String get noPrioritiesSet;
+
+  /// Section title for kanban-style status columns
+  ///
+  /// In en, this message translates to:
+  /// **'Notes by Status'**
+  String get notesByStatus;
+
+  /// Hint text for empty dashboard state
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first note to see the dashboard'**
+  String get createFirstNoteHint;
+
+  /// Title for the daily notes / journal screen
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Notes'**
+  String get dailyNotes;
+
+  /// Label for a single daily note
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Note'**
+  String get dailyNote;
+
+  /// Label for today's daily note
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Note'**
+  String get todaysNote;
+
+  /// Button to create a daily note for today
+  ///
+  /// In en, this message translates to:
+  /// **'Create today\'s note'**
+  String get createTodaysNote;
+
+  /// Message when no daily note exists for a date
+  ///
+  /// In en, this message translates to:
+  /// **'No note for this day'**
+  String get noDailyNote;
+
+  /// Button to open an existing daily note
+  ///
+  /// In en, this message translates to:
+  /// **'Open daily note'**
+  String get openDailyNote;
+
+  /// Button to jump the calendar to today
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get goToToday;
+
+  /// Accessibility label for calendar dot indicator
+  ///
+  /// In en, this message translates to:
+  /// **'Has note'**
+  String get hasNote;
+
+  /// Label for calendar navigation
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendar;
+
+  /// Section header for recent daily notes list
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Daily Notes'**
+  String get recentDailyNotes;
+
+  /// Tooltip and title for the command palette feature
+  ///
+  /// In en, this message translates to:
+  /// **'Command Palette'**
+  String get commandPalette;
+
+  /// Placeholder text in the command palette search field
+  ///
+  /// In en, this message translates to:
+  /// **'Type to search notes and commands...'**
+  String get commandSearchHint;
+
+  /// Section header for recently opened notes in command palette
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get commandRecentNotes;
+
+  /// Section header for note results in command palette
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get commandNotesSection;
+
+  /// Section header for action results in command palette
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get commandActions;
+
+  /// Command palette action to create a new note
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Note'**
+  String get commandCreateNewNote;
+
+  /// Command palette action to open daily notes
+  ///
+  /// In en, this message translates to:
+  /// **'Open Daily Notes'**
+  String get commandOpenDailyNotes;
+
+  /// Command palette action to open the knowledge graph
+  ///
+  /// In en, this message translates to:
+  /// **'Open Graph View'**
+  String get commandOpenGraph;
+
+  /// Command palette action to open the properties dashboard
+  ///
+  /// In en, this message translates to:
+  /// **'Open Dashboard'**
+  String get commandOpenDashboard;
+
+  /// Command palette action to open the trash screen
+  ///
+  /// In en, this message translates to:
+  /// **'Open Trash'**
+  String get commandOpenTrash;
+
+  /// Command palette action to open the settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get commandOpenSettings;
+
+  /// Empty state when command palette search has no matches
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get commandNoResultsFound;
+
+  /// Slash command: insert heading level 1
+  ///
+  /// In en, this message translates to:
+  /// **'Heading 1'**
+  String get slashHeading1;
+
+  /// Slash command: insert heading level 2
+  ///
+  /// In en, this message translates to:
+  /// **'Heading 2'**
+  String get slashHeading2;
+
+  /// Slash command: insert heading level 3
+  ///
+  /// In en, this message translates to:
+  /// **'Heading 3'**
+  String get slashHeading3;
+
+  /// Slash command: insert bullet list
+  ///
+  /// In en, this message translates to:
+  /// **'Bullet List'**
+  String get slashBulletList;
+
+  /// Slash command: insert numbered list
+  ///
+  /// In en, this message translates to:
+  /// **'Numbered List'**
+  String get slashNumberedList;
+
+  /// Slash command: insert to-do / checklist
+  ///
+  /// In en, this message translates to:
+  /// **'To-do List'**
+  String get slashTodoList;
+
+  /// Slash command: insert code block
+  ///
+  /// In en, this message translates to:
+  /// **'Code Block'**
+  String get slashCodeBlock;
+
+  /// Slash command: insert blockquote
+  ///
+  /// In en, this message translates to:
+  /// **'Quote'**
+  String get slashQuote;
+
+  /// Slash command: insert horizontal divider
+  ///
+  /// In en, this message translates to:
+  /// **'Divider'**
+  String get slashDivider;
+
+  /// Slash command: insert table
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get slashTable;
+
+  /// Slash command: insert image
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get slashImage;
+
+  /// Slash command: insert wiki-style [[link]]
+  ///
+  /// In en, this message translates to:
+  /// **'Wiki Link'**
+  String get slashWikilink;
+
+  /// Slash command: insert note transclusion ![[note]]
+  ///
+  /// In en, this message translates to:
+  /// **'Transclusion'**
+  String get slashTransclusion;
+
+  /// Slash command: insert callout block
+  ///
+  /// In en, this message translates to:
+  /// **'Callout'**
+  String get slashCallout;
+
+  /// Empty state when slash command filter has no matches
+  ///
+  /// In en, this message translates to:
+  /// **'No matching commands'**
+  String get slashNoResults;
+
+  /// Button tooltip to activate side-by-side note editing
+  ///
+  /// In en, this message translates to:
+  /// **'Split View'**
+  String get splitView;
+
+  /// Menu item or action to open a note in the secondary split pane
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Split View'**
+  String get openInSplitView;
+
+  /// Tooltip for closing the secondary pane in split view
+  ///
+  /// In en, this message translates to:
+  /// **'Close Split View'**
+  String get closeSplitView;
+
+  /// Title of the note picker sheet for split view
+  ///
+  /// In en, this message translates to:
+  /// **'Select note for split view'**
+  String get selectNoteForSplit;
+
+  /// Section header for search operator hints
+  ///
+  /// In en, this message translates to:
+  /// **'Search operators'**
+  String get searchOperators;
+
+  /// Search operator hint for tag filter
+  ///
+  /// In en, this message translates to:
+  /// **'tag:name -- Filter by tag'**
+  String get searchOperatorTag;
+
+  /// Search operator hint for status filter
+  ///
+  /// In en, this message translates to:
+  /// **'status:todo|in-progress|done|blocked|cancelled'**
+  String get searchOperatorStatus;
+
+  /// Search operator hint for priority filter
+  ///
+  /// In en, this message translates to:
+  /// **'priority:high|medium|low'**
+  String get searchOperatorPriority;
+
+  /// Search operator hint for date filter
+  ///
+  /// In en, this message translates to:
+  /// **'date:YYYY-MM-DD -- Filter by date'**
+  String get searchOperatorDate;
+
+  /// Search operator hint for collection filter
+  ///
+  /// In en, this message translates to:
+  /// **'collection:name -- Filter by collection'**
+  String get searchOperatorCollection;
+
+  /// Search operator hint for links filter
+  ///
+  /// In en, this message translates to:
+  /// **'links:true|false -- Filter by link status'**
+  String get searchOperatorLinks;
+
+  /// Example query showing combined search operators
+  ///
+  /// In en, this message translates to:
+  /// **'Example: tag:work status:todo project plan'**
+  String get searchOperatorsExample;
+
+  /// Tab and section header for saved searches
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Searches'**
+  String get savedSearches;
+
+  /// Button label and dialog title for saving a search
+  ///
+  /// In en, this message translates to:
+  /// **'Save Search'**
+  String get saveSearch;
+
+  /// Label for the search name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Search name'**
+  String get saveSearchName;
+
+  /// Snackbar confirmation after saving a search
+  ///
+  /// In en, this message translates to:
+  /// **'Search saved'**
+  String get searchSaved;
+
+  /// Tooltip and confirmation dialog title for deleting a saved search
+  ///
+  /// In en, this message translates to:
+  /// **'Delete saved search'**
+  String get deleteSavedSearch;
+
+  /// Confirmation body for deleting a saved search
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"?'**
+  String deleteSavedSearchConfirm(String name);
+
+  /// Section header for search history
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Searches'**
+  String get searchHistory;
+
+  /// Button to clear all search history
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search history'**
+  String get clearSearchHistory;
+
+  /// Empty state title for saved searches
+  ///
+  /// In en, this message translates to:
+  /// **'No saved searches yet'**
+  String get noSavedSearches;
+
+  /// Empty state subtitle for saved searches
+  ///
+  /// In en, this message translates to:
+  /// **'Search for something, then tap the bookmark icon to save it'**
+  String get saveSearchHint;
+
+  /// Empty state title for search history
+  ///
+  /// In en, this message translates to:
+  /// **'No search history'**
+  String get noSearchHistory;
+
+  /// Button to expand search operator hints
+  ///
+  /// In en, this message translates to:
+  /// **'Show search hints'**
+  String get showSearchHints;
+
+  /// Button to collapse search operator hints
+  ///
+  /// In en, this message translates to:
+  /// **'Hide search hints'**
+  String get hideSearchHints;
+
+  /// Placeholder hint in the operator search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search with operators: tag:work status:todo ...'**
+  String get searchNotesHint;
+
+  /// Empty state subtitle for operator search
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a query with operators to find notes'**
+  String get enterQueryOrOperators;
+
+  /// Title for the image gallery viewer screen
+  ///
+  /// In en, this message translates to:
+  /// **'Image Gallery'**
+  String get imageGallery;
+
+  /// Option to pick an image from the photo gallery
+  ///
+  /// In en, this message translates to:
+  /// **'From Gallery'**
+  String get fromGallery;
+
+  /// Option to capture an image with the camera
+  ///
+  /// In en, this message translates to:
+  /// **'From Camera'**
+  String get fromCamera;
+
+  /// Title of the bottom sheet for choosing image source
+  ///
+  /// In en, this message translates to:
+  /// **'Select Image Source'**
+  String get selectImageSource;
+
+  /// Tooltip for the paste image from clipboard button
+  ///
+  /// In en, this message translates to:
+  /// **'Paste Image'**
+  String get pasteImage;
+
+  /// Button or dialog title to delete an image
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Image'**
+  String get deleteImage;
+
+  /// Confirmation message when deleting an image
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this image?'**
+  String get deleteImageConfirm;
+
+  /// Title of the image management settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'Image Management'**
+  String get imageManagement;
+
+  /// Label for total image storage used
+  ///
+  /// In en, this message translates to:
+  /// **'Total Storage'**
+  String get totalStorage;
+
+  /// Label showing the number of stored images
+  ///
+  /// In en, this message translates to:
+  /// **'{count} image{count, plural, =1{} other{s}}'**
+  String imageCount(int count);
+
+  /// Label for images whose note has been deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Orphaned Images'**
+  String get orphanedImages;
+
+  /// Button to delete orphaned images
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up orphaned images'**
+  String get cleanupOrphaned;
+
+  /// Snackbar after cleaning up orphaned images
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaned up {count} orphaned image{count, plural, =1{} other{s}}'**
+  String cleanupComplete(int count);
+
+  /// Button to delete all stored images
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all images'**
+  String get deleteAllImages;
+
+  /// Confirmation message when deleting all images
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete all stored images. This cannot be undone.'**
+  String get deleteAllImagesConfirm;
+
+  /// Empty state when no images are stored
+  ///
+  /// In en, this message translates to:
+  /// **'No images stored'**
+  String get noImagesStored;
+
+  /// Snackbar after an image is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Image deleted'**
+  String get imageDeleted;
+
+  /// Tooltip/button to share an image
+  ///
+  /// In en, this message translates to:
+  /// **'Share Image'**
+  String get shareImage;
+
+  /// Button to compare two note versions
+  ///
+  /// In en, this message translates to:
+  /// **'Compare Versions'**
+  String get compareVersions;
+
+  /// Title of version diff screen
+  ///
+  /// In en, this message translates to:
+  /// **'Version Diff'**
+  String get versionDiff;
+
+  /// Summary stat showing how many lines were added
+  ///
+  /// In en, this message translates to:
+  /// **'{count} lines added'**
+  String linesAdded(int count);
+
+  /// Summary stat showing how many lines were removed
+  ///
+  /// In en, this message translates to:
+  /// **'{count} lines removed'**
+  String linesRemoved(int count);
+
+  /// Hint shown when fewer than two versions are selected for comparison
+  ///
+  /// In en, this message translates to:
+  /// **'Select two versions to compare'**
+  String get selectTwoVersions;
+
+  /// Label shown when two versions are identical
+  ///
+  /// In en, this message translates to:
+  /// **'No changes'**
+  String get noChanges;
+
+  /// Label for a specific version number
+  ///
+  /// In en, this message translates to:
+  /// **'Version {number}'**
+  String versionNumber(int number);
+
+  /// Estimated reading time display
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min read'**
+  String readingTime(int minutes);
+
+  /// Reading time when under 1 minute
+  ///
+  /// In en, this message translates to:
+  /// **'Less than 1 min read'**
+  String get lessThan1Min;
+
+  /// Line count display
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 lines} =1{1 line} other{{count} lines}}'**
+  String lineCount(int count);
+
+  /// Paragraph count display
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 paragraphs} =1{1 paragraph} other{{count} paragraphs}}'**
+  String paragraphCount(int count);
+
+  /// Toggle for focus/dim mode in the editor
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Mode'**
+  String get focusMode;
+
+  /// Toggle for typewriter-style scrolling in the editor
+  ///
+  /// In en, this message translates to:
+  /// **'Typewriter Scroll'**
+  String get typewriterScroll;
+
+  /// Label for the writing statistics bar
+  ///
+  /// In en, this message translates to:
+  /// **'Writing Stats'**
+  String get writingStats;
+
+  /// Tooltip for the writing stats visibility toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle writing stats'**
+  String get toggleWritingStats;
+
+  /// Character count without spaces
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 chars (no spaces)} =1{1 char (no spaces)} other{{count} chars (no spaces)}}'**
+  String charCountNoSpaces(int count);
+
+  /// Title of the statistics screen
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statistics;
+
+  /// Label for total word count
+  ///
+  /// In en, this message translates to:
+  /// **'Total Words'**
+  String get totalWords;
+
+  /// Label for average words per note
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Words/Note'**
+  String get averageWords;
+
+  /// Label for number of active days
+  ///
+  /// In en, this message translates to:
+  /// **'Days Active'**
+  String get daysActive;
+
+  /// Subtitle for the 30-day activity period
+  ///
+  /// In en, this message translates to:
+  /// **'last 30 days'**
+  String get last30Days;
+
+  /// Title for the writing streak card
+  ///
+  /// In en, this message translates to:
+  /// **'Writing Streak'**
+  String get writingStreak;
+
+  /// Current writing streak in days
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {count} days'**
+  String currentStreak(int count);
+
+  /// Longest writing streak in days
+  ///
+  /// In en, this message translates to:
+  /// **'Longest: {count} days'**
+  String longestStreak(int count);
+
+  /// Title for the monthly activity chart
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Activity'**
+  String get monthlyActivity;
+
+  /// Title for the top tags section
+  ///
+  /// In en, this message translates to:
+  /// **'Top Tags'**
+  String get topTags;
+
+  /// Title for the top collections section
+  ///
+  /// In en, this message translates to:
+  /// **'Top Collections'**
+  String get topCollections;
+
+  /// Title for the status distribution chart
+  ///
+  /// In en, this message translates to:
+  /// **'Status Distribution'**
+  String get statusDistribution;
+
+  /// Title for the knowledge graph statistics section
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge Graph'**
+  String get knowledgeGraphStats;
+
+  /// Label for total link count
+  ///
+  /// In en, this message translates to:
+  /// **'Total Links'**
+  String get totalLinks;
+
+  /// Label for orphaned note count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} orphaned notes'**
+  String orphanedNotesCount(int count);
+
+  /// Label for the most connected note
+  ///
+  /// In en, this message translates to:
+  /// **'Most Connected'**
+  String get mostConnectedNote;
+
+  /// Empty state when no statistics are available
+  ///
+  /// In en, this message translates to:
+  /// **'No statistics yet'**
+  String get noStatistics;
+
+  /// Label for count of notes that have properties
+  ///
+  /// In en, this message translates to:
+  /// **'Notes with properties'**
+  String get notesWithProperties;
+
+  /// Label for count of notes that have links
+  ///
+  /// In en, this message translates to:
+  /// **'Notes with links'**
+  String get notesWithLinks;
+
+  /// Title for export bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Export Notes'**
+  String get exportNotes;
+
+  /// Loading message during export
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting notes...'**
+  String get exportingNotes;
+
+  /// Snackbar after successful export
+  ///
+  /// In en, this message translates to:
+  /// **'Export complete'**
+  String get exportComplete;
+
+  /// Button to export selected notes
+  ///
+  /// In en, this message translates to:
+  /// **'Export Selected'**
+  String get exportSelectedNotes;
+
+  /// Button to export the current note
+  ///
+  /// In en, this message translates to:
+  /// **'Export Current Note'**
+  String get exportCurrentNote;
+
+  /// Label indicating number of selected notes for export
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected notes'**
+  String exportSelected(int count);
+
+  /// Menu option to export with YAML frontmatter
+  ///
+  /// In en, this message translates to:
+  /// **'Export with metadata'**
+  String get exportWithFrontmatter;
+
+  /// Menu option to export as ZIP
+  ///
+  /// In en, this message translates to:
+  /// **'Export as ZIP archive'**
+  String get exportAsZip;
+
+  /// Toggle for YAML frontmatter in export
+  ///
+  /// In en, this message translates to:
+  /// **'Include metadata (frontmatter)'**
+  String get includeFrontmatter;
+
+  /// Description of frontmatter option
+  ///
+  /// In en, this message translates to:
+  /// **'Add YAML metadata header with tags, dates, and properties'**
+  String get frontmatterDesc;
+
+  /// Label for export organization option
+  ///
+  /// In en, this message translates to:
+  /// **'Organization'**
+  String get exportOrganization;
+
+  /// Flat file organization
+  ///
+  /// In en, this message translates to:
+  /// **'Flat'**
+  String get exportFlat;
+
+  /// Organize exported files by date
+  ///
+  /// In en, this message translates to:
+  /// **'By Date'**
+  String get exportByDate;
+
+  /// Organize exported files by collection
+  ///
+  /// In en, this message translates to:
+  /// **'By Collection'**
+  String get exportByCollection;
+
+  /// Organize exported files by tag
+  ///
+  /// In en, this message translates to:
+  /// **'By Tag'**
+  String get exportByTag;
+
+  /// Snackbar message after export
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes exported'**
+  String notesExported(int count);
+
+  /// Button to import from .md files
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Markdown'**
+  String get importFromMarkdown;
+
+  /// Button to import from a ZIP archive
+  ///
+  /// In en, this message translates to:
+  /// **'Import from ZIP'**
+  String get importFromZip;
+
+  /// Button to import from an Obsidian vault folder
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Obsidian Vault'**
+  String get importFromObsidian;
+
+  /// Progress message during note import
+  ///
+  /// In en, this message translates to:
+  /// **'Importing notes...'**
+  String get importingNotes;
+
+  /// Message showing how many notes were imported
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes imported'**
+  String notesImported(int count);
+
+  /// Toggle to keep dates from frontmatter
+  ///
+  /// In en, this message translates to:
+  /// **'Preserve original dates'**
+  String get preserveDates;
+
+  /// Toggle to import tags from frontmatter
+  ///
+  /// In en, this message translates to:
+  /// **'Import tags'**
+  String get importTags;
+
+  /// Toggle to import properties from frontmatter
+  ///
+  /// In en, this message translates to:
+  /// **'Import properties'**
+  String get importProperties;
+
+  /// Message when no files were selected for import
+  ///
+  /// In en, this message translates to:
+  /// **'No files selected'**
+  String get noFilesSelected;
+
+  /// Header for import options section
+  ///
+  /// In en, this message translates to:
+  /// **'Import Options'**
+  String get importOptions;
+
+  /// Title for quick capture screen
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Capture'**
+  String get quickCapture;
+
+  /// Hint text in quick capture input
+  ///
+  /// In en, this message translates to:
+  /// **'Type something...'**
+  String get typeSomething;
+
+  /// Indicator that note was auto-saved
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-saved'**
+  String get autoSaved;
+
+  /// Confirmation to discard draft
+  ///
+  /// In en, this message translates to:
+  /// **'Discard draft?'**
+  String get discardDraft;
+
+  /// Body of discard confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Your unsaved changes will be lost.'**
+  String get discardDraftMessage;
+
+  /// Button to discard changes
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// Quick action shortcut for new note
+  ///
+  /// In en, this message translates to:
+  /// **'New Note'**
+  String get newNoteShortcut;
+
+  /// Quick action shortcut for new checklist
+  ///
+  /// In en, this message translates to:
+  /// **'New Checklist'**
+  String get newChecklistShortcut;
+
+  /// Quick action shortcut for daily note
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Note'**
+  String get dailyNoteShortcut;
+
+  /// Confirmation when content is shared to app
+  ///
+  /// In en, this message translates to:
+  /// **'Shared to AnyNote'**
+  String get sharedToAnynote;
+
+  /// Tooltip for priority selector in quick capture
+  ///
+  /// In en, this message translates to:
+  /// **'Set Priority'**
+  String get setPriority;
+
+  /// Description for quick capture action
+  ///
+  /// In en, this message translates to:
+  /// **'Quickly capture a thought'**
+  String get quickCaptureDesc;
+
+  /// Label showing pending sync count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending'**
+  String pendingSync(int count);
+
+  /// Label showing failed sync count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} failed'**
+  String syncFailedCount(int count);
+
+  /// Title for sync queue sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Queue'**
+  String get syncQueue;
+
+  /// Label for pending sync operations
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Operations'**
+  String get pendingOperations;
+
+  /// Label for failed sync operations
+  ///
+  /// In en, this message translates to:
+  /// **'Failed Operations'**
+  String get failedOperations;
+
+  /// Button to retry all failed operations
+  ///
+  /// In en, this message translates to:
+  /// **'Retry All'**
+  String get retryAll;
+
+  /// Button to clear completed operations
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Completed'**
+  String get clearCompleted;
+
+  /// Error message for failed operation
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {error}'**
+  String operationFailed(String error);
+
+  /// Loading text during sync retry
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying sync...'**
+  String get retryingSync;
+
+  /// Snackbar after clearing completed ops
+  ///
+  /// In en, this message translates to:
+  /// **'Completed operations cleared'**
+  String get queueCleared;
+
+  /// Empty state when no sync operations pending
+  ///
+  /// In en, this message translates to:
+  /// **'No pending operations'**
+  String get noPendingOperations;
+
+  /// Screen reader label for a note card
+  ///
+  /// In en, this message translates to:
+  /// **'Note: {title}'**
+  String noteSemantics(String title);
+
+  /// Screen reader label for deleting a note via swipe
+  ///
+  /// In en, this message translates to:
+  /// **'Delete note {title}'**
+  String deleteNoteSemantics(String title);
+
+  /// Screen reader label for archiving a note via swipe
+  ///
+  /// In en, this message translates to:
+  /// **'Archive note {title}'**
+  String archiveNoteSemantics(String title);
+
+  /// Screen reader label for pinning a note via swipe
+  ///
+  /// In en, this message translates to:
+  /// **'Pin note {title}'**
+  String pinNoteSemantics(String title);
+
+  /// Screen reader label for unpinning a note via swipe
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin note {title}'**
+  String unpinNoteSemantics(String title);
+
+  /// Screen reader hint for the note editor area
+  ///
+  /// In en, this message translates to:
+  /// **'Note content editor. Double-tap to edit.'**
+  String get noteContentEditor;
+
+  /// Screen reader summary of the knowledge graph
+  ///
+  /// In en, this message translates to:
+  /// **'{nodeCount} notes with {linkCount} links'**
+  String graphSummary(int nodeCount, int linkCount);
+
+  /// Screen reader label indicating a note is pinned
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get pinnedNote;
+
+  /// Screen reader label for a settings section group
+  ///
+  /// In en, this message translates to:
+  /// **'{section} settings'**
+  String settingsGroup(String section);
+
+  /// Screen reader label for restoring a trashed note
+  ///
+  /// In en, this message translates to:
+  /// **'Restore note {title}'**
+  String restoreNoteSemantics(String title);
+
+  /// Screen reader label for permanent delete swipe action
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete note {title}'**
+  String permanentlyDeleteNoteSemantics(String title);
+
+  /// Screen reader label for deleting a collection via swipe
+  ///
+  /// In en, this message translates to:
+  /// **'Delete collection {title}'**
+  String deleteCollectionSemantics(String title);
+
+  /// Screen reader label for a calendar day cell
+  ///
+  /// In en, this message translates to:
+  /// **'{date}. {hasNote}'**
+  String calendarDaySemantics(String date, String hasNote);
+
+  /// Screen reader label for note count in a collection
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes'**
+  String noteCountSemantics(int count);
+
+  /// Label for a single reminder
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder'**
+  String get reminder;
+
+  /// Button and sheet title for setting a reminder
+  ///
+  /// In en, this message translates to:
+  /// **'Set Reminder'**
+  String get setReminder;
+
+  /// Label for the date/time of a reminder
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Time'**
+  String get reminderAt;
+
+  /// Button to remove an existing reminder
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Reminder'**
+  String get removeReminder;
+
+  /// Preset option: remind in 2 hours
+  ///
+  /// In en, this message translates to:
+  /// **'Later Today'**
+  String get laterToday;
+
+  /// Preset option: remind at 9am tomorrow
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow Morning'**
+  String get tomorrowMorning;
+
+  /// Preset option: remind next Monday at 9am
+  ///
+  /// In en, this message translates to:
+  /// **'Next Week'**
+  String get nextWeek;
+
+  /// Empty state when there are no reminders
+  ///
+  /// In en, this message translates to:
+  /// **'No Reminders'**
+  String get noReminders;
+
+  /// Label for recurring reminder selector
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get recurring;
+
+  /// Recurring option: repeat every day
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get daily;
+
+  /// Recurring option: repeat every week
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weekly;
+
+  /// Recurring option: repeat every month
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
+
+  /// Title for the reminders list screen
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get reminders;
+
+  /// Snackbar message when a reminder fires
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Fired'**
+  String get reminderFired;
+
+  /// Generic label for color
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get color;
+
+  /// Title of the color picker sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Select Color'**
+  String get selectColor;
+
+  /// Button to remove the current color
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Color'**
+  String get removeColor;
+
+  /// Label for the note color setting
+  ///
+  /// In en, this message translates to:
+  /// **'Note Color'**
+  String get noteColor;
+
+  /// Toggle label for entering a custom hex color
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Color'**
+  String get customColor;
+
+  /// Label for the color filter in search
+  ///
+  /// In en, this message translates to:
+  /// **'Color Filter'**
+  String get colorFilter;
+
+  /// Search operator hint for color filter
+  ///
+  /// In en, this message translates to:
+  /// **'color:#RRGGBB or color:name -- Filter by color'**
+  String get searchOperatorColor;
+
+  /// Option label for no selection / no recurrence
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// Button label to compare two notes
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get compareNotes;
+
+  /// Title of the note compare picker sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Select Notes to Compare'**
+  String get selectNotesToCompare;
+
+  /// Segmented button label for unified diff view
+  ///
+  /// In en, this message translates to:
+  /// **'Unified'**
+  String get unifiedView;
+
+  /// Segmented button label for side-by-side diff view
+  ///
+  /// In en, this message translates to:
+  /// **'Side-by-side'**
+  String get sideBySideView;
+
+  /// Label for added lines in diff
+  ///
+  /// In en, this message translates to:
+  /// **'Additions'**
+  String get additions;
+
+  /// Label for removed lines in diff
+  ///
+  /// In en, this message translates to:
+  /// **'Deletions'**
+  String get deletions;
+
+  /// Hint when fewer or more than 2 notes are selected for comparison
+  ///
+  /// In en, this message translates to:
+  /// **'Select exactly 2 notes to compare'**
+  String get selectTwoNotes;
+
+  /// Title of the note comparison diff screen
+  ///
+  /// In en, this message translates to:
+  /// **'Note Diff'**
+  String get noteDiff;
+
+  /// Summary stat for diff between two notes
+  ///
+  /// In en, this message translates to:
+  /// **'{added} lines added, {removed} lines removed'**
+  String linesChanged(int added, int removed);
+
+  /// Label for a mermaid diagram code block
+  ///
+  /// In en, this message translates to:
+  /// **'Mermaid Diagram'**
+  String get mermaidDiagram;
+
+  /// Button label to view/copy a mermaid diagram
+  ///
+  /// In en, this message translates to:
+  /// **'View Diagram'**
+  String get viewDiagram;
+
+  /// Tooltip for copying mermaid diagram source code
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Mermaid Code'**
+  String get copyMermaidCode;
+
+  /// Snackbar after copying mermaid diagram code
+  ///
+  /// In en, this message translates to:
+  /// **'Diagram code copied'**
+  String get diagramCopied;
+
+  /// Label for the mermaid diagram template inserted via slash command
+  ///
+  /// In en, this message translates to:
+  /// **'Mermaid Template'**
+  String get mermaidTemplate;
+
+  /// Generic label for inserting a diagram
+  ///
+  /// In en, this message translates to:
+  /// **'Insert Diagram'**
+  String get insertDiagram;
+
+  /// Slash command: insert mermaid diagram block
+  ///
+  /// In en, this message translates to:
+  /// **'Mermaid Diagram'**
+  String get slashMermaid;
+
+  /// Button label to toggle mermaid diagram source code view
+  ///
+  /// In en, this message translates to:
+  /// **'View Source'**
+  String get viewSource;
+
+  /// Error message when mermaid diagram rendering fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to render diagram'**
+  String get diagramError;
+
+  /// Tooltip for copying the mermaid diagram source code
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Diagram Source'**
+  String get copyDiagramSource;
+
+  /// Menu item to lock a note (make it read-only)
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Note'**
+  String get lockNote;
+
+  /// Menu item to unlock a note (allow editing)
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Note'**
+  String get unlockNote;
+
+  /// Label shown when a note is in locked (read-only) state
+  ///
+  /// In en, this message translates to:
+  /// **'Note Locked'**
+  String get noteLocked;
+
+  /// Banner message shown at top of a locked note
+  ///
+  /// In en, this message translates to:
+  /// **'This note is locked. Tap to unlock.'**
+  String get lockedNoteBanner;
+
+  /// Snackbar confirmation after batch coloring notes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} note{count, plural, =1{} other{s}} colored'**
+  String notesColored(int count);
+
+  /// Snackbar confirmation after removing color from notes
+  ///
+  /// In en, this message translates to:
+  /// **'Color removed from {count} note{count, plural, =1{} other{s}}'**
+  String colorRemovedFromNotes(int count);
+
+  /// Batch action to set color on selected notes
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get batchColor;
+
+  /// Batch action to lock selected notes
+  ///
+  /// In en, this message translates to:
+  /// **'Lock'**
+  String get batchLock;
+
+  /// Batch action to unlock selected notes
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get batchUnlock;
+
+  /// Snackbar confirmation after batch locking notes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} note{count, plural, =1{} other{s}} locked'**
+  String notesLocked(int count);
+
+  /// Snackbar confirmation after batch unlocking notes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} note{count, plural, =1{} other{s}} unlocked'**
+  String notesUnlocked(int count);
+
+  /// Title for collection picker sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Collection'**
+  String get moveToCollection;
+
+  /// Search hint in collection picker
+  ///
+  /// In en, this message translates to:
+  /// **'Search collections...'**
+  String get searchCollections;
+
+  /// Empty state in collection picker
+  ///
+  /// In en, this message translates to:
+  /// **'No collections found'**
+  String get noCollections;
+
+  /// Snackbar confirmation after moving notes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes moved to \"{name}\"'**
+  String notesMovedToCollection(int count, String name);
+
+  /// Snackbar confirmation after moving a single note
+  ///
+  /// In en, this message translates to:
+  /// **'Note moved to \"{name}\"'**
+  String noteMovedToCollection(String name);
+
+  /// Context menu item and batch action label
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Collection'**
+  String get addToCollection;
+
+  /// Tooltip for the scroll-to-top FAB on the notes list
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to top'**
+  String get scrollToTop;
+
+  /// Menu item and sheet title for printing a note
+  ///
+  /// In en, this message translates to:
+  /// **'Print note'**
+  String get printNote;
+
+  /// Header for the print preview bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Print preview'**
+  String get printPreview;
+
+  /// Toggle label to include tags, dates, etc. in the printed output
+  ///
+  /// In en, this message translates to:
+  /// **'Include metadata'**
+  String get includeMetadata;
+
+  /// Toggle label to include images in the printed output
+  ///
+  /// In en, this message translates to:
+  /// **'Include images'**
+  String get includeImages;
+
+  /// Button label to share the note as an HTML file
+  ///
+  /// In en, this message translates to:
+  /// **'Share as HTML'**
+  String get shareAsHtml;
+
+  /// Snackbar message after HTML export completes
+  ///
+  /// In en, this message translates to:
+  /// **'Exported as HTML'**
+  String get exportedAsHtml;
+
+  /// Tooltip and label for the fold/outline view toggle in the editor
+  ///
+  /// In en, this message translates to:
+  /// **'Fold View'**
+  String get foldView;
+
+  /// Button label to collapse all heading sections
+  ///
+  /// In en, this message translates to:
+  /// **'Fold All'**
+  String get foldAll;
+
+  /// Button label to expand all heading sections
+  ///
+  /// In en, this message translates to:
+  /// **'Unfold All'**
+  String get unfoldAll;
+
+  /// Label showing how many content lines are hidden under a folded heading
+  ///
+  /// In en, this message translates to:
+  /// **'{count} lines'**
+  String sectionLines(int count);
+
+  /// Label showing the number of currently folded sections
+  ///
+  /// In en, this message translates to:
+  /// **'{count} folded section{count, plural, =1{} other{s}}'**
+  String foldedSections(int count);
+
+  /// Tooltip for the fold/unfold chevron icon on a heading
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle fold'**
+  String get toggleFold;
+
+  /// Title for the TOC bottom sheet and its AppBar button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Table of Contents'**
+  String get tableOfContents;
+
+  /// Empty state message when a note has no headings for the TOC
+  ///
+  /// In en, this message translates to:
+  /// **'No headings found'**
+  String get noHeadings;
+
+  /// Accessibility label describing the heading level in the TOC
+  ///
+  /// In en, this message translates to:
+  /// **'Heading level {level}'**
+  String headingLevel(int level);
+
+  /// Button to start text-to-speech reading of the note
+  ///
+  /// In en, this message translates to:
+  /// **'Read Aloud'**
+  String get readAloud;
+
+  /// Button to stop TTS playback
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Reading'**
+  String get stopReading;
+
+  /// Button to pause TTS playback
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pauseReading;
+
+  /// Button to resume TTS playback
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resumeReading;
+
+  /// Tooltip for the speed selector in the TTS player bar
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Speed'**
+  String get readingSpeed;
+
+  /// Title for the keyboard shortcuts settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard Shortcuts'**
+  String get keyboardShortcuts;
+
+  /// Category label for general keyboard shortcuts
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get general;
+
+  /// Category label for editor keyboard shortcuts
+  ///
+  /// In en, this message translates to:
+  /// **'Editor'**
+  String get editor;
+
+  /// Category label for navigation keyboard shortcuts
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation'**
+  String get navigation;
+
+  /// Keyboard shortcut description for bold text
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get shortcutBold;
+
+  /// Keyboard shortcut description for italic text
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get shortcutItalic;
+
+  /// Keyboard shortcut description for strikethrough text
+  ///
+  /// In en, this message translates to:
+  /// **'Strikethrough'**
+  String get shortcutStrikethrough;
+
+  /// Keyboard shortcut description for undo
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get shortcutUndo;
+
+  /// Keyboard shortcut description for redo
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get shortcutRedo;
+
+  /// Keyboard shortcut description for printing the current note
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get shortcutPrint;
+
+  /// Keyboard shortcut description for inserting a link
+  ///
+  /// In en, this message translates to:
+  /// **'Insert Link'**
+  String get shortcutLink;
+
+  /// Keyboard shortcut description for toggling inline code
+  ///
+  /// In en, this message translates to:
+  /// **'Inline Code'**
+  String get shortcutCode;
+
+  /// Keyboard shortcut description for cycling heading levels
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle Heading'**
+  String get shortcutHeading;
+
+  /// Keyboard shortcut description for opening command palette
+  ///
+  /// In en, this message translates to:
+  /// **'Command Palette'**
+  String get shortcutCommandPalette;
+
+  /// Keyboard shortcut description for toggling focus mode
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Mode'**
+  String get shortcutFocusMode;
+
+  /// Default title for reminder local notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder'**
+  String get reminderNotificationTitle;
+
+  /// Body text for reminder local notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Time to review: {title}'**
+  String reminderNotificationBody(String title);
+
+  /// Android notification channel name for reminder notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Note Reminders'**
+  String get notificationChannelName;
+
+  /// Android notification channel description for reminder notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications for note reminders'**
+  String get notificationChannelDescription;
+
+  /// Label for PDF export format
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get exportPdf;
+
+  /// Button label to generate a PDF from note content
+  ///
+  /// In en, this message translates to:
+  /// **'Generate PDF'**
+  String get generatePdf;
+
+  /// Snackbar confirmation that PDF was generated
+  ///
+  /// In en, this message translates to:
+  /// **'PDF generated'**
+  String get pdfGenerated;
+
+  /// Button label to share a generated PDF
+  ///
+  /// In en, this message translates to:
+  /// **'Share PDF'**
+  String get sharePdf;
+
+  /// Format option label for PDF in export sheet
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Document'**
+  String get exportFormatPdf;
+
+  /// Title for the code snippets screen
+  ///
+  /// In en, this message translates to:
+  /// **'Snippets'**
+  String get snippets;
+
+  /// Label for snippet title field
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get snippetTitle;
+
+  /// Label for snippet code field
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get snippetCode;
+
+  /// Label for snippet language dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get snippetLanguage;
+
+  /// Label for snippet description field
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get snippetDescription;
+
+  /// Label for snippet category field
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get snippetCategory;
+
+  /// Label for snippet tags field
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get snippetTags;
+
+  /// Button to create a new snippet
+  ///
+  /// In en, this message translates to:
+  /// **'New Snippet'**
+  String get newSnippet;
+
+  /// Button to edit an existing snippet
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Snippet'**
+  String get editSnippet;
+
+  /// Button to delete a snippet
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Snippet'**
+  String get deleteSnippet;
+
+  /// Confirmation message for deleting a snippet
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this snippet?'**
+  String get deleteSnippetConfirm;
+
+  /// Button to copy snippet code to clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Code'**
+  String get copyCode;
+
+  /// Snackbar after copying code to clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied'**
+  String get codeCopied;
+
+  /// Slash command and title for snippet picker sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Insert Snippet'**
+  String get insertSnippet;
+
+  /// Empty state when no code snippets exist
+  ///
+  /// In en, this message translates to:
+  /// **'No snippets yet'**
+  String get noSnippets;
+
+  /// Placeholder in snippet search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search snippets...'**
+  String get searchSnippets;
+
+  /// Label showing how many times a snippet has been used
+  ///
+  /// In en, this message translates to:
+  /// **'Used {count} time{count, plural, =1{} other{s}}'**
+  String usageCount(int count);
+
+  /// Dropdown hint for no language filter
+  ///
+  /// In en, this message translates to:
+  /// **'All Languages'**
+  String get allLanguages;
+
+  /// Dropdown hint for no category filter
+  ///
+  /// In en, this message translates to:
+  /// **'All Categories'**
+  String get allCategories;
+
+  /// Title for the tag hierarchy / tree view feature
+  ///
+  /// In en, this message translates to:
+  /// **'Tag Hierarchy'**
+  String get tagHierarchy;
+
+  /// Context menu option to create a child tag under a parent
+  ///
+  /// In en, this message translates to:
+  /// **'Create Sub-tag'**
+  String get createSubTag;
+
+  /// Context menu option to change a tag's parent
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Parent'**
+  String get moveToParent;
+
+  /// Option to set a tag as root-level (no parent)
+  ///
+  /// In en, this message translates to:
+  /// **'No Parent (Root)'**
+  String get noParent;
+
+  /// Title of the parent tag picker bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Select Parent Tag'**
+  String get selectParentTag;
+
+  /// Button to expand all collapsible tag tree nodes
+  ///
+  /// In en, this message translates to:
+  /// **'Expand All'**
+  String get expandAll;
+
+  /// Button to collapse all tag tree nodes
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse All'**
+  String get collapseAll;
+
+  /// Tooltip shown over a remote collaborator's cursor
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s cursor'**
+  String userCursor(String name);
+
+  /// Fallback label when remote user name is unknown
+  ///
+  /// In en, this message translates to:
+  /// **'Remote user'**
+  String get remoteUser;
+
+  /// Hint shown when dragging an image over the editor
+  ///
+  /// In en, this message translates to:
+  /// **'Drop image here'**
+  String get dropImageHere;
+
+  /// Snackbar confirmation after an image is added via drag-and-drop
+  ///
+  /// In en, this message translates to:
+  /// **'Image added'**
+  String get imageAdded;
+
+  /// Snackbar message when a non-image file is dropped on the editor
+  ///
+  /// In en, this message translates to:
+  /// **'Only image files are supported'**
+  String get unsupportedFileType;
+
+  /// Home screen quick action: create a new note
+  ///
+  /// In en, this message translates to:
+  /// **'New Note'**
+  String get quickNote;
+
+  /// Home screen quick action: create a new checklist
+  ///
+  /// In en, this message translates to:
+  /// **'New Checklist'**
+  String get quickChecklist;
+
+  /// Home screen quick action: open today's daily note
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Note'**
+  String get quickDailyNote;
+
+  /// Tooltip for overflow menu button in app bar
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptions;
+
+  /// Error message when trash notes fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load trash'**
+  String get failedToLoadTrash;
+
+  /// Snackbar error when restoring a note from trash fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to restore: {error}'**
+  String failedToRestoreError(String error);
+
+  /// Snackbar error when permanently deleting a note fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete: {error}'**
+  String failedToDeleteError(String error);
+
+  /// Dialog title for deleting a custom property
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Property'**
+  String get deleteProperty;
+
+  /// Confirmation message when deleting a property
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this property from the note?'**
+  String get removePropertyConfirm;
+
+  /// Header title in the properties bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Properties'**
+  String get propertiesTitle;
+
+  /// Empty state when no properties exist on a note
+  ///
+  /// In en, this message translates to:
+  /// **'No properties'**
+  String get noProperties;
+
+  /// Subtitle encouraging users to add properties
+  ///
+  /// In en, this message translates to:
+  /// **'Add custom metadata to this note'**
+  String get addCustomMetadata;
+
+  /// Button label to add a new property
+  ///
+  /// In en, this message translates to:
+  /// **'Add Property'**
+  String get addPropertyButton;
+
+  /// Dialog title for editing an existing property
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Property'**
+  String get editProperty;
+
+  /// Dialog title for creating a custom property
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Property'**
+  String get customPropertyTitle;
+
+  /// Label for the property key selector section
+  ///
+  /// In en, this message translates to:
+  /// **'Property'**
+  String get propertyLabel;
+
+  /// Form field label for a text property value
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get valueLabel;
+
+  /// Form field label for a number property value
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get numberLabel;
+
+  /// Validation error when property value is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value'**
+  String get enterValue;
+
+  /// Validation error when number property is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number'**
+  String get enterNumber;
+
+  /// Placeholder text for date property picker
+  ///
+  /// In en, this message translates to:
+  /// **'Select a date'**
+  String get selectDateLabel;
+
+  /// Header title for the link management bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Link Management'**
+  String get linkManagementTitle;
+
+  /// Filter chip label for outbound links
+  ///
+  /// In en, this message translates to:
+  /// **'Outbound Links'**
+  String get outboundLinks;
+
+  /// Dialog title for confirming link deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Link'**
+  String get deleteLinkTitle;
+
+  /// Confirmation message when deleting a link
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this connection between notes?'**
+  String get removeLinkConfirm;
+
+  /// Empty state when no links match the current filters
+  ///
+  /// In en, this message translates to:
+  /// **'No links to display. Adjust filters to see more.'**
+  String get noLinksToDisplay;
+
+  /// Subtitle for a backlink item
+  ///
+  /// In en, this message translates to:
+  /// **'Links to this note'**
+  String get linksToThisNote;
+
+  /// Subtitle for an outbound link item
+  ///
+  /// In en, this message translates to:
+  /// **'This note links to'**
+  String get thisNoteLinksTo;
+
+  /// Tooltip for the delete button on a link tile
+  ///
+  /// In en, this message translates to:
+  /// **'Delete link'**
+  String get deleteLinkTooltip;
+
+  /// Title of the table picker dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Insert Table'**
+  String get insertTable;
+
+  /// Hint text in the table picker dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to select table size'**
+  String get dragToSelectTableSize;
+
+  /// Pro plan name in upgrade dialog and comparison table
+  ///
+  /// In en, this message translates to:
+  /// **'Pro'**
+  String get proPlan;
+
+  /// Lifetime plan name in upgrade dialog and comparison table
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime'**
+  String get lifetimePlan;
+
+  /// Price display for the Pro plan
+  ///
+  /// In en, this message translates to:
+  /// **'\$4.99/mo'**
+  String get proPrice;
+
+  /// Price display for the Lifetime plan
+  ///
+  /// In en, this message translates to:
+  /// **'\$49.99'**
+  String get lifetimePrice;
+
+  /// High priority label
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get priorityHigh;
+
+  /// Medium priority label
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get priorityMedium;
+
+  /// Low priority label
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get priorityLow;
+
+  /// Label showing the number of selected tags
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tags'**
+  String tagsCountLabel(int count);
+
+  /// Tooltip for orphaned notes button
+  ///
+  /// In en, this message translates to:
+  /// **'Orphaned notes'**
+  String get orphanedNotes;
+
+  /// Filter chip label when no filters are active
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filter;
+
+  /// Filter chip label for active priority filter
+  ///
+  /// In en, this message translates to:
+  /// **'Priority: {priority}'**
+  String priorityLabel(String priority);
+
+  /// Empty state when property filters yield no results
+  ///
+  /// In en, this message translates to:
+  /// **'No matching notes'**
+  String get noMatchingNotes;
+
+  /// Empty state subtitle when property filters yield no results
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing your filters'**
+  String get tryChangingFilters;
+
+  /// Title of the property filter bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Properties'**
+  String get filterByProperties;
+
+  /// Priority section header in filter sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get priority;
+
+  /// Tooltip for the properties button in editor
+  ///
+  /// In en, this message translates to:
+  /// **'Properties'**
+  String get viewProperties;
+
+  /// Semantics label for the note title text field
+  ///
+  /// In en, this message translates to:
+  /// **'Note title'**
+  String get noteTitle;
+
+  /// Label for the date property type section
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get dateLabel;
+
+  /// Display text showing the name of an existing property
+  ///
+  /// In en, this message translates to:
+  /// **'Property: {name}'**
+  String propertyOf(String name);
+
+  /// Insert button label in table picker dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Insert'**
+  String get insertLabel;
+
+  /// SnackBar message when loading more discover feed items fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load more: {error}'**
+  String failedToLoadMore(String error);
+
+  /// SnackBar confirmation after a note link is created
+  ///
+  /// In en, this message translates to:
+  /// **'Link created'**
+  String get linkCreated;
+
+  /// SnackBar error when creating a note link fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create link: {error}'**
+  String failedToCreateLink(String error);
+
+  /// Title of the link suggestions bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested Links'**
+  String get suggestedLinks;
+
+  /// Info banner text in the link suggestions sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Notes with similar titles or content. Tap to create a link.'**
+  String get similarContentDesc;
+
+  /// Empty state title when there are no link suggestions
+  ///
+  /// In en, this message translates to:
+  /// **'No Suggestions'**
+  String get noSuggestions;
+
+  /// Empty state subtitle when there are no link suggestions
+  ///
+  /// In en, this message translates to:
+  /// **'Create more notes to get suggestions.'**
+  String get createMoreNotes;
+
+  /// SnackBar message when a native-only feature is used on web
+  ///
+  /// In en, this message translates to:
+  /// **'This feature is not available on web'**
+  String get notAvailableOnWeb;
+
+  /// OK button label in dialogs
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get okButton;
+
+  /// Error message when a deferred screen fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load'**
+  String get failedToLoadDeferred;
+
+  /// Generic error title in error cards
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get somethingWentWrong;
+
+  /// Title of the sync status bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Status'**
+  String get syncStatusTitle;
+
+  /// Label indicating device is offline in sync status
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offlineLabel;
+
+  /// Label indicating device is connected in sync status
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connectedLabel;
+
+  /// Label for pending sync operations count
+  ///
+  /// In en, this message translates to:
+  /// **'Pending operations'**
+  String get pendingOpsLabel;
+
+  /// Label for last sync timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced'**
+  String get lastSyncedLabel;
+
+  /// Section header for failed sync items
+  ///
+  /// In en, this message translates to:
+  /// **'Failed items'**
+  String get failedItemsLabel;
+
+  /// Tooltip for sync icon when device is offline
+  ///
+  /// In en, this message translates to:
+  /// **'Offline -- changes will sync when connected'**
+  String get offlineSyncTooltip;
+
+  /// Label for sync pull phase
+  ///
+  /// In en, this message translates to:
+  /// **'Pulling'**
+  String get pullingLabel;
+
+  /// Label for sync push phase
+  ///
+  /// In en, this message translates to:
+  /// **'Pushing'**
+  String get pushingLabel;
+
+  /// Tooltip when sync is in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing...'**
+  String get syncingLabel;
+
+  /// Tooltip when all changes are synced
+  ///
+  /// In en, this message translates to:
+  /// **'All changes synced'**
+  String get allChangesSyncedLabel;
+
+  /// Tooltip for pending sync operations count (singular/plural handled by ICU if needed)
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending operation'**
+  String pendingOpTooltip(int count);
+
+  /// Tooltip for pending sync operations count (plural)
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending operations'**
+  String pendingOpsTooltip(int count);
+
+  /// Tooltip for sync badge when there is a conflict
+  ///
+  /// In en, this message translates to:
+  /// **'Sync conflict'**
+  String get syncConflictBadge;
+
+  /// Short label for sync badge conflict state
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict'**
+  String get conflictLabel;
+
+  /// Short label for sync badge synced state
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get syncedLabel;
+
+  /// Short label for sync badge pending state
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pendingSyncLabel;
+
+  /// Tooltip for sync badge when sync is pending
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sync'**
+  String get pendingSyncBadge;
+
+  /// Screen reader label for the monthly activity bar chart
+  ///
+  /// In en, this message translates to:
+  /// **'Bar chart showing notes by month: {entries}'**
+  String barChartSemanticLabel(String entries);
+
+  /// Screen reader label for the priority distribution donut chart
+  ///
+  /// In en, this message translates to:
+  /// **'Donut chart showing distribution: {entries}'**
+  String donutChartSemanticLabel(String entries);
+
+  /// Screen reader label for a tag item in the tags list
+  ///
+  /// In en, this message translates to:
+  /// **'Tag: {name}'**
+  String tagItemSemanticLabel(String name);
+
+  /// Screen reader hint for long-pressing a tag item to open its edit menu
+  ///
+  /// In en, this message translates to:
+  /// **'Long press to edit'**
+  String get tagItemSemanticHint;
 }
 
 class _AppLocalizationsDelegate

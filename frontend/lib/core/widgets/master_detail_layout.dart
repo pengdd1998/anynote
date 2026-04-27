@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../constants/app_durations.dart';
+
 /// Key used for persisting the master pane width.
 const _kMasterWidthKey = 'master_detail_divider_width';
 
@@ -160,7 +162,7 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
       children: [
         // Animated master pane
         AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: AppDurations.shortAnimation,
           curve: Curves.easeInOut,
           width: widget.sidebarVisible ? _masterWidth : 0,
           clipBehavior: Clip.hardEdge,

@@ -50,6 +50,24 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
       body: StreamBuilder<List<Note>>(
         stream: _watchDeletedNotes(db),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: colorScheme.error),
+                  const SizedBox(height: 16),
+                  Text(l10n.failedToLoadTrash),
+                  const SizedBox(height: 16),
+                  FilledButton.tonal(
+                    onPressed: () => setState(() {}),
+                    child: Text(l10n.retry),
+                  ),
+                ],
+              ),
+            );
+          }
+
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -76,146 +94,173 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                       ? '${note.plainContent!.substring(0, 100)}...'
                       : note.plainContent ?? '';
 
-              return Dismissible(
-                key: ValueKey(note.id),
-                confirmDismiss: (direction) async {
-                  if (direction == DismissDirection.startToEnd) {
-                    // Restore
-                    await db.notesDao.restoreNote(note.id);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.restore)),
-                      );
+              return Semantics(
+                label: l10n.noteSemantics(title),
+                child: Dismissible(
+                  key: ValueKey(note.id),
+                  confirmDismiss: (direction) async {
+                    if (direction == DismissDirection.startToEnd) {
+                      // Restore
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        await db.notesDao.restoreNote(note.id);
+                        if (mounted) {
+                          messenger.showSnackBar(
+                            SnackBar(content: Text(l10n.restore)),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    l10n.failedToRestoreError(e.toString()))),
+                          );
+                        }
+                      }
+                      return false;
                     }
-                    return false;
-                  }
-                  // Permanent delete -- confirm
-                  return await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text(l10n.permanentlyDelete),
-                      content: Text(
-                        l10n.permanentlyDeleteNoteConfirm(
-                          note.plainTitle ?? l10n.untitled,
+                    // Permanent delete -- confirm
+                    return await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(l10n.permanentlyDelete),
+                        content: Text(
+                          l10n.permanentlyDeleteNoteConfirm(
+                            note.plainTitle ?? l10n.untitled,
+                          ),
                         ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: Text(l10n.cancel),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: Text(l10n.delete),
+                          ),
+                        ],
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(false),
-                          child: Text(l10n.cancel),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(true),
-                          child: Text(l10n.delete),
+                    );
+                  },
+                  onDismissed: (direction) {
+                    if (direction == DismissDirection.endToStart) {
+                      try {
+                        db.notesDao.permanentlyDeleteNote(note.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.permanentlyDelete)),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                                Text(l10n.failedToDeleteError(e.toString())),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  background: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withAlpha(AppAlpha.medium),
+                      borderRadius: cardRadius,
+                    ),
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.only(left: 24),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.restore, color: colorScheme.primary),
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.restore,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.primary,
+                          ),
                         ),
                       ],
                     ),
-                  );
-                },
-                onDismissed: (direction) {
-                  if (direction == DismissDirection.endToStart) {
-                    db.notesDao.permanentlyDeleteNote(note.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.permanentlyDelete)),
-                    );
-                  }
-                },
-                background: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withAlpha(AppAlpha.medium),
-                    borderRadius: cardRadius,
                   ),
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(left: 24),
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.restore, color: colorScheme.primary),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.restore,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                secondaryBackground: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.error.withAlpha(AppAlpha.medium),
-                    borderRadius: cardRadius,
-                  ),
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 24),
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.delete_forever, color: colorScheme.error),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.permanentlyDelete,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colorScheme.error,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                child: Card(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: InkWell(
-                    borderRadius: cardRadius,
-                    onTap: () => _showNoteActions(context, note, db),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                  secondaryBackground: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.error.withAlpha(AppAlpha.medium),
+                      borderRadius: cardRadius,
+                    ),
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 24),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.delete_forever, color: colorScheme.error),
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.permanentlyDelete,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.error,
                           ),
-                          if (preview.isNotEmpty) ...[
-                            const SizedBox(height: 4),
+                        ),
+                      ],
+                    ),
+                  ),
+                  child: Card(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: InkWell(
+                      borderRadius: cardRadius,
+                      onTap: () => _showNoteActions(context, note, db),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              preview,
-                              maxLines: 2,
+                              title,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context)
                                   .textTheme
-                                  .bodyMedium
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            if (preview.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                preview,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: colorScheme.onSurface
+                                          .withAlpha(AppAlpha.nearOpaque),
+                                    ),
+                              ),
+                            ],
+                            const SizedBox(height: 6),
+                            Text(
+                              note.deletedAt != null
+                                  ? l10n.deletedOn(_formatDate(note.deletedAt!))
+                                  : '',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
                                   ?.copyWith(
                                     color: colorScheme.onSurface
-                                        .withAlpha(AppAlpha.nearOpaque),
+                                        .withAlpha(AppAlpha.prominent),
                                   ),
                             ),
                           ],
-                          const SizedBox(height: 6),
-                          Text(
-                            note.deletedAt != null
-                                ? l10n.deletedOn(_formatDate(note.deletedAt!))
-                                : '',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurface
-                                          .withAlpha(AppAlpha.prominent),
-                                    ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -274,23 +319,40 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               leading: const Icon(Icons.restore),
               title: Text(l10n.restore),
               onTap: () async {
-                await db.notesDao.restoreNote(note.id);
-                if (ctx.mounted) Navigator.of(ctx).pop();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.restore)),
-                  );
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await db.notesDao.restoreNote(note.id);
+                  if (ctx.mounted) Navigator.of(ctx).pop();
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(l10n.restore)),
+                    );
+                  }
+                } catch (e) {
+                  if (ctx.mounted) Navigator.of(ctx).pop();
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.failedToRestoreError(e.toString()),
+                        ),
+                      ),
+                    );
+                  }
                 }
               },
             ),
             ListTile(
-              leading: Icon(Icons.delete_forever,
-                  color: Theme.of(context).colorScheme.error),
+              leading: Icon(
+                Icons.delete_forever,
+                color: Theme.of(context).colorScheme.error,
+              ),
               title: Text(
                 l10n.permanentlyDelete,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               onTap: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 Navigator.of(ctx).pop();
                 final confirmed = await showDialog<bool>(
                   context: context,
@@ -314,11 +376,23 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                   ),
                 );
                 if (confirmed == true) {
-                  await db.notesDao.permanentlyDeleteNote(note.id);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.permanentlyDelete)),
-                    );
+                  try {
+                    await db.notesDao.permanentlyDeleteNote(note.id);
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(l10n.permanentlyDelete)),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            l10n.failedToDeleteError(e.toString()),
+                          ),
+                        ),
+                      );
+                    }
                   }
                 }
               },
@@ -348,10 +422,11 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
           ),
           TextButton(
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               Navigator.of(ctx).pop();
               await db.notesDao.emptyTrash();
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   SnackBar(content: Text(l10n.emptyTrash)),
                 );
               }

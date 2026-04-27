@@ -180,6 +180,12 @@
   "titleAZ": "Title A-Z",
   "@titleAZ": { "description": "Sort option: alphabetical by title" },
 
+  "sortCustom": "Custom Order",
+  "@sortCustom": { "description": "Sort option: manual drag-and-drop reordering" },
+
+  "reorderModeHint": "Drag notes to reorder",
+  "@reorderModeHint": { "description": "Hint shown when custom sort is active" },
+
   "listView": "List view",
   "@listView": { "description": "Tooltip for list view toggle" },
 
@@ -2182,6 +2188,92 @@
   "templateDateHint": "Use [date] for current date",
   "@templateDateHint": { "description": "Hint for the template content text field" },
 
+  "templates": "Templates",
+  "@templates": { "description": "Generic label for templates feature" },
+
+  "templatePicker": "Choose a Template",
+  "@templatePicker": { "description": "Title of the template picker bottom sheet" },
+
+  "createFromTemplate": "Create from Template",
+  "@createFromTemplate": { "description": "Menu option to create a note from a template" },
+
+  "createFromScratch": "Create from Scratch",
+  "@createFromScratch": { "description": "Card option to create a blank note without a template" },
+
+  "templateManagement": "Template Management",
+  "@templateManagement": { "description": "Title of the template management screen" },
+
+  "newTemplate": "New Template",
+  "@newTemplate": { "description": "Button label to create a new template" },
+
+  "editTemplate": "Edit Template",
+  "@editTemplate": { "description": "Button label to edit an existing template" },
+
+  "deleteTemplate": "Delete Template",
+  "@deleteTemplate": { "description": "Button label to delete a template" },
+
+  "templateName": "Template Name",
+  "@templateName": { "description": "Form field label for template name" },
+
+  "templateDescription": "Description",
+  "@templateDescription": { "description": "Form field label for template description" },
+
+  "templateContent": "Content",
+  "@templateContent": { "description": "Form field label for template content" },
+
+  "templateCategory": "Category",
+  "@templateCategory": { "description": "Form field label for template category" },
+
+  "categoryWork": "Work",
+  "@categoryWork": { "description": "Category label for work templates" },
+
+  "categoryPersonal": "Personal",
+  "@categoryPersonal": { "description": "Category label for personal templates" },
+
+  "categoryCreative": "Creative",
+  "@categoryCreative": { "description": "Category label for creative templates" },
+
+  "builtInTemplates": "Built-in Templates",
+  "@builtInTemplates": { "description": "Section header for built-in templates" },
+
+  "userTemplates": "My Templates",
+  "@userTemplates": { "description": "Section header for user-created templates" },
+
+  "templateUsed": "Used {count} times",
+  "@templateUsed": { "description": "Shows how many times a template has been used",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "duplicateTemplate": "Duplicate",
+  "@duplicateTemplate": { "description": "Button label to duplicate a built-in template" },
+
+  "noTemplates": "No templates yet",
+  "@noTemplates": { "description": "Empty state message when no templates exist" },
+
+  "templateSaved": "Template saved",
+  "@templateSaved": { "description": "Snackbar confirmation after saving a template" },
+
+  "templateMeetingNotes": "Meeting Notes",
+  "@templateMeetingNotes": { "description": "Built-in template name" },
+
+  "templateDailyJournal": "Daily Journal",
+  "@templateDailyJournal": { "description": "Built-in template name" },
+
+  "templateProjectPlan": "Project Plan",
+  "@templateProjectPlan": { "description": "Built-in template name" },
+
+  "templateReadingNotes": "Reading Notes",
+  "@templateReadingNotes": { "description": "Built-in template name" },
+
+  "templateWeeklyReview": "Weekly Review",
+  "@templateWeeklyReview": { "description": "Built-in template name" },
+
+  "templateBrainstorm": "Brainstorm",
+  "@templateBrainstorm": { "description": "Built-in template name" },
+
+  "templateBlank": "Blank",
+  "@templateBlank": { "description": "Built-in template name for empty template" },
+
   "offlineBanner": "You are offline \u2014 changes will sync when connected",
   "@offlineBanner": { "description": "Banner text shown when the device is offline" },
 
@@ -2602,6 +2694,24 @@
   "viewBacklinks": "View backlinks",
   "@viewBacklinks": { "description": "Tooltip for backlinks button in editor" },
 
+  "wikiLink": "Wiki Link",
+  "@wikiLink": { "description": "Button tooltip for inserting wiki-style [[links]]" },
+
+  "linkToNote": "Link to Note",
+  "@linkToNote": { "description": "Title for wiki link picker sheet" },
+
+  "relatedNotes": "Related Notes",
+  "@relatedNotes": { "description": "Section header for notes linked from current note" },
+
+  "noRelatedNotes": "No related notes",
+  "@noRelatedNotes": { "description": "Empty state when no outbound links exist" },
+
+  "startTypingToSearch": "Start typing to search notes",
+  "@startTypingToSearch": { "description": "Placeholder hint in wiki link picker" },
+
+  "noNotesFound": "No notes found",
+  "@noNotesFound": { "description": "Empty state message when search returns no results" },
+
   "backgroundSync": "Background sync",
   "@backgroundSync": { "description": "Settings toggle title for periodic background sync" },
 
@@ -2790,5 +2900,1353 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+
+  "propertiesDashboard": "Properties Dashboard",
+  "@propertiesDashboard": { "description": "Title of the properties dashboard screen" },
+
+  "totalNotes": "Total Notes",
+  "@totalNotes": { "description": "Label for total notes count in dashboard" },
+
+  "withProperties": "With Properties",
+  "@withProperties": { "description": "Label for notes with properties percentage in dashboard" },
+
+  "priorityDistribution": "Priority Distribution",
+  "@priorityDistribution": { "description": "Section title for priority distribution chart" },
+
+  "noPrioritiesSet": "No priorities set",
+  "@noPrioritiesSet": { "description": "Empty state message when no notes have priority set" },
+
+  "notesByStatus": "Notes by Status",
+  "@notesByStatus": { "description": "Section title for kanban-style status columns" },
+
+  "noNotesYet": "No notes yet",
+  "@noNotesYet": { "description": "Empty state message when there are no notes" },
+
+  "createFirstNoteHint": "Create your first note to see the dashboard",
+  "@createFirstNoteHint": { "description": "Hint text for empty dashboard state" },
+
+  "dailyNotes": "Daily Notes",
+  "@dailyNotes": { "description": "Title for the daily notes / journal screen" },
+
+  "dailyNote": "Daily Note",
+  "@dailyNote": { "description": "Label for a single daily note" },
+
+  "todaysNote": "Today's Note",
+  "@todaysNote": { "description": "Label for today's daily note" },
+
+  "createTodaysNote": "Create today's note",
+  "@createTodaysNote": { "description": "Button to create a daily note for today" },
+
+  "noDailyNote": "No note for this day",
+  "@noDailyNote": { "description": "Message when no daily note exists for a date" },
+
+  "openDailyNote": "Open daily note",
+  "@openDailyNote": { "description": "Button to open an existing daily note" },
+
+  "goToToday": "Today",
+  "@goToToday": { "description": "Button to jump the calendar to today" },
+
+  "hasNote": "Has note",
+  "@hasNote": { "description": "Accessibility label for calendar dot indicator" },
+
+  "calendar": "Calendar",
+  "@calendar": { "description": "Label for calendar navigation" },
+
+  "recentDailyNotes": "Recent Daily Notes",
+  "@recentDailyNotes": { "description": "Section header for recent daily notes list" },
+
+  "commandPalette": "Command Palette",
+  "@commandPalette": { "description": "Tooltip and title for the command palette feature" },
+
+  "commandSearchHint": "Type to search notes and commands...",
+  "@commandSearchHint": { "description": "Placeholder text in the command palette search field" },
+
+  "commandRecentNotes": "Recent",
+  "@commandRecentNotes": { "description": "Section header for recently opened notes in command palette" },
+
+  "commandNotesSection": "Notes",
+  "@commandNotesSection": { "description": "Section header for note results in command palette" },
+
+  "commandActions": "Actions",
+  "@commandActions": { "description": "Section header for action results in command palette" },
+
+  "commandCreateNewNote": "Create New Note",
+  "@commandCreateNewNote": { "description": "Command palette action to create a new note" },
+
+  "commandOpenDailyNotes": "Open Daily Notes",
+  "@commandOpenDailyNotes": { "description": "Command palette action to open daily notes" },
+
+  "commandOpenGraph": "Open Graph View",
+  "@commandOpenGraph": { "description": "Command palette action to open the knowledge graph" },
+
+  "commandOpenDashboard": "Open Dashboard",
+  "@commandOpenDashboard": { "description": "Command palette action to open the properties dashboard" },
+
+  "commandOpenTrash": "Open Trash",
+  "@commandOpenTrash": { "description": "Command palette action to open the trash screen" },
+
+  "commandOpenSettings": "Open Settings",
+  "@commandOpenSettings": { "description": "Command palette action to open the settings screen" },
+
+  "commandNoResultsFound": "No results found",
+  "@commandNoResultsFound": { "description": "Empty state when command palette search has no matches" },
+
+  "slashHeading1": "Heading 1",
+  "@slashHeading1": { "description": "Slash command: insert heading level 1" },
+
+  "slashHeading2": "Heading 2",
+  "@slashHeading2": { "description": "Slash command: insert heading level 2" },
+
+  "slashHeading3": "Heading 3",
+  "@slashHeading3": { "description": "Slash command: insert heading level 3" },
+
+  "slashBulletList": "Bullet List",
+  "@slashBulletList": { "description": "Slash command: insert bullet list" },
+
+  "slashNumberedList": "Numbered List",
+  "@slashNumberedList": { "description": "Slash command: insert numbered list" },
+
+  "slashTodoList": "To-do List",
+  "@slashTodoList": { "description": "Slash command: insert to-do / checklist" },
+
+  "slashCodeBlock": "Code Block",
+  "@slashCodeBlock": { "description": "Slash command: insert code block" },
+
+  "slashQuote": "Quote",
+  "@slashQuote": { "description": "Slash command: insert blockquote" },
+
+  "slashDivider": "Divider",
+  "@slashDivider": { "description": "Slash command: insert horizontal divider" },
+
+  "slashTable": "Table",
+  "@slashTable": { "description": "Slash command: insert table" },
+
+  "slashImage": "Image",
+  "@slashImage": { "description": "Slash command: insert image" },
+
+  "slashWikilink": "Wiki Link",
+  "@slashWikilink": { "description": "Slash command: insert wiki-style [[link]]" },
+
+  "slashTransclusion": "Transclusion",
+  "@slashTransclusion": { "description": "Slash command: insert note transclusion ![[note]]" },
+
+  "slashCallout": "Callout",
+  "@slashCallout": { "description": "Slash command: insert callout block" },
+
+  "slashNoResults": "No matching commands",
+  "@slashNoResults": { "description": "Empty state when slash command filter has no matches" },
+
+  "splitView": "Split View",
+  "@splitView": { "description": "Button tooltip to activate side-by-side note editing" },
+
+  "openInSplitView": "Open in Split View",
+  "@openInSplitView": { "description": "Menu item or action to open a note in the secondary split pane" },
+
+  "closeSplitView": "Close Split View",
+  "@closeSplitView": { "description": "Tooltip for closing the secondary pane in split view" },
+
+  "selectNoteForSplit": "Select note for split view",
+  "@selectNoteForSplit": { "description": "Title of the note picker sheet for split view" },
+
+  "searchOperators": "Search operators",
+  "@searchOperators": { "description": "Section header for search operator hints" },
+
+  "searchOperatorTag": "tag:name -- Filter by tag",
+  "@searchOperatorTag": { "description": "Search operator hint for tag filter" },
+
+  "searchOperatorStatus": "status:todo|in-progress|done|blocked|cancelled",
+  "@searchOperatorStatus": { "description": "Search operator hint for status filter" },
+
+  "searchOperatorPriority": "priority:high|medium|low",
+  "@searchOperatorPriority": { "description": "Search operator hint for priority filter" },
+
+  "searchOperatorDate": "date:YYYY-MM-DD -- Filter by date",
+  "@searchOperatorDate": { "description": "Search operator hint for date filter" },
+
+  "searchOperatorCollection": "collection:name -- Filter by collection",
+  "@searchOperatorCollection": { "description": "Search operator hint for collection filter" },
+
+  "searchOperatorLinks": "links:true|false -- Filter by link status",
+  "@searchOperatorLinks": { "description": "Search operator hint for links filter" },
+
+  "searchOperatorsExample": "Example: tag:work status:todo project plan",
+  "@searchOperatorsExample": { "description": "Example query showing combined search operators" },
+
+  "savedSearches": "Saved Searches",
+  "@savedSearches": { "description": "Tab and section header for saved searches" },
+
+  "saveSearch": "Save Search",
+  "@saveSearch": { "description": "Button label and dialog title for saving a search" },
+
+  "saveSearchName": "Search name",
+  "@saveSearchName": { "description": "Label for the search name input field" },
+
+  "searchSaved": "Search saved",
+  "@searchSaved": { "description": "Snackbar confirmation after saving a search" },
+
+  "deleteSavedSearch": "Delete saved search",
+  "@deleteSavedSearch": { "description": "Tooltip and confirmation dialog title for deleting a saved search" },
+
+  "deleteSavedSearchConfirm": "Delete \"{name}\"?",
+  "@deleteSavedSearchConfirm": {
+    "description": "Confirmation body for deleting a saved search",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "searchHistory": "Recent Searches",
+  "@searchHistory": { "description": "Section header for search history" },
+
+  "clearSearchHistory": "Clear search history",
+  "@clearSearchHistory": { "description": "Button to clear all search history" },
+
+  "noSavedSearches": "No saved searches yet",
+  "@noSavedSearches": { "description": "Empty state title for saved searches" },
+
+  "saveSearchHint": "Search for something, then tap the bookmark icon to save it",
+  "@saveSearchHint": { "description": "Empty state subtitle for saved searches" },
+
+  "noSearchHistory": "No search history",
+  "@noSearchHistory": { "description": "Empty state title for search history" },
+
+  "showSearchHints": "Show search hints",
+  "@showSearchHints": { "description": "Button to expand search operator hints" },
+
+  "hideSearchHints": "Hide search hints",
+  "@hideSearchHints": { "description": "Button to collapse search operator hints" },
+
+  "searchNotesHint": "Search with operators: tag:work status:todo ...",
+  "@searchNotesHint": { "description": "Placeholder hint in the operator search field" },
+
+  "enterQueryOrOperators": "Enter a query with operators to find notes",
+  "@enterQueryOrOperators": { "description": "Empty state subtitle for operator search" },
+
+  "imageGallery": "Image Gallery",
+  "@imageGallery": { "description": "Title for the image gallery viewer screen" },
+
+  "fromGallery": "From Gallery",
+  "@fromGallery": { "description": "Option to pick an image from the photo gallery" },
+
+  "fromCamera": "From Camera",
+  "@fromCamera": { "description": "Option to capture an image with the camera" },
+
+  "selectImageSource": "Select Image Source",
+  "@selectImageSource": { "description": "Title of the bottom sheet for choosing image source" },
+
+  "pasteImage": "Paste Image",
+  "@pasteImage": { "description": "Tooltip for the paste image from clipboard button" },
+
+  "deleteImage": "Delete Image",
+  "@deleteImage": { "description": "Button or dialog title to delete an image" },
+
+  "deleteImageConfirm": "Are you sure you want to delete this image?",
+  "@deleteImageConfirm": { "description": "Confirmation message when deleting an image" },
+
+  "imageManagement": "Image Management",
+  "@imageManagement": { "description": "Title of the image management settings screen" },
+
+  "totalStorage": "Total Storage",
+  "@totalStorage": { "description": "Label for total image storage used" },
+
+  "imageCount": "{count} image{count, plural, =1{} other{s}}",
+  "@imageCount": {
+    "description": "Label showing the number of stored images",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "orphanedImages": "Orphaned Images",
+  "@orphanedImages": { "description": "Label for images whose note has been deleted" },
+
+  "cleanupOrphaned": "Clean up orphaned images",
+  "@cleanupOrphaned": { "description": "Button to delete orphaned images" },
+
+  "cleanupComplete": "Cleaned up {count} orphaned image{count, plural, =1{} other{s}}",
+  "@cleanupComplete": {
+    "description": "Snackbar after cleaning up orphaned images",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "deleteAllImages": "Delete all images",
+  "@deleteAllImages": { "description": "Button to delete all stored images" },
+
+  "deleteAllImagesConfirm": "This will delete all stored images. This cannot be undone.",
+  "@deleteAllImagesConfirm": { "description": "Confirmation message when deleting all images" },
+
+  "noImagesStored": "No images stored",
+  "@noImagesStored": { "description": "Empty state when no images are stored" },
+
+  "imageDeleted": "Image deleted",
+  "@imageDeleted": { "description": "Snackbar after an image is deleted" },
+
+  "shareImage": "Share Image",
+  "@shareImage": { "description": "Tooltip/button to share an image" },
+
+  "compareVersions": "Compare Versions",
+  "@compareVersions": { "description": "Button label to compare two selected versions" },
+
+  "versionDiff": "Version Diff",
+  "@versionDiff": { "description": "Title of the version diff screen" },
+
+  "linesAdded": "{count} lines added",
+  "@linesAdded": {
+    "description": "Summary stat showing how many lines were added",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "linesRemoved": "{count} lines removed",
+  "@linesRemoved": {
+    "description": "Summary stat showing how many lines were removed",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "selectTwoVersions": "Select two versions to compare",
+  "@selectTwoVersions": { "description": "Hint shown when fewer than two versions are selected for comparison" },
+
+  "noChanges": "No changes",
+  "@noChanges": { "description": "Label shown when two versions are identical" },
+
+  "versionNumber": "Version {number}",
+  "@versionNumber": {
+    "description": "Label for a specific version number",
+    "placeholders": { "number": { "type": "int" } }
+  },
+
+  "compareVersions": "Compare Versions",
+  "@compareVersions": { "description": "Button to compare two note versions" },
+
+  "versionDiff": "Version Diff",
+  "@versionDiff": { "description": "Title of version diff screen" },
+
+  "readingTime": "{minutes} min read",
+  "@readingTime": { "description": "Estimated reading time display", "placeholders": { "minutes": { "type": "int" } } },
+
+  "lessThan1Min": "Less than 1 min read",
+  "@lessThan1Min": { "description": "Reading time when under 1 minute" },
+
+  "lineCount": "{count, plural, =0{0 lines} =1{1 line} other{{count} lines}}",
+  "@lineCount": { "description": "Line count display", "placeholders": { "count": { "type": "int" } } },
+
+  "paragraphCount": "{count, plural, =0{0 paragraphs} =1{1 paragraph} other{{count} paragraphs}}",
+  "@paragraphCount": { "description": "Paragraph count display", "placeholders": { "count": { "type": "int" } } },
+
+  "focusMode": "Focus Mode",
+  "@focusMode": { "description": "Toggle for focus/dim mode in the editor" },
+
+  "typewriterScroll": "Typewriter Scroll",
+  "@typewriterScroll": { "description": "Toggle for typewriter-style scrolling in the editor" },
+
+  "writingStats": "Writing Stats",
+  "@writingStats": { "description": "Label for the writing statistics bar" },
+
+  "toggleWritingStats": "Toggle writing stats",
+  "@toggleWritingStats": { "description": "Tooltip for the writing stats visibility toggle" },
+
+  "charCountNoSpaces": "{count, plural, =0{0 chars (no spaces)} =1{1 char (no spaces)} other{{count} chars (no spaces)}}",
+  "@charCountNoSpaces": { "description": "Character count without spaces", "placeholders": { "count": { "type": "int" } } },
+
+  "statistics": "Statistics",
+  "@statistics": { "description": "Title of the statistics screen" },
+
+  "totalWords": "Total Words",
+  "@totalWords": { "description": "Label for total word count" },
+
+  "averageWords": "Avg Words/Note",
+  "@averageWords": { "description": "Label for average words per note" },
+
+  "daysActive": "Days Active",
+  "@daysActive": { "description": "Label for number of active days" },
+
+  "last30Days": "last 30 days",
+  "@last30Days": { "description": "Subtitle for the 30-day activity period" },
+
+  "writingStreak": "Writing Streak",
+  "@writingStreak": { "description": "Title for the writing streak card" },
+
+  "currentStreak": "Current: {count} days",
+  "@currentStreak": { "description": "Current writing streak in days", "placeholders": { "count": { "type": "int" } } },
+
+  "longestStreak": "Longest: {count} days",
+  "@longestStreak": { "description": "Longest writing streak in days", "placeholders": { "count": { "type": "int" } } },
+
+  "monthlyActivity": "Monthly Activity",
+  "@monthlyActivity": { "description": "Title for the monthly activity chart" },
+
+  "topTags": "Top Tags",
+  "@topTags": { "description": "Title for the top tags section" },
+
+  "topCollections": "Top Collections",
+  "@topCollections": { "description": "Title for the top collections section" },
+
+  "statusDistribution": "Status Distribution",
+  "@statusDistribution": { "description": "Title for the status distribution chart" },
+
+  "knowledgeGraphStats": "Knowledge Graph",
+  "@knowledgeGraphStats": { "description": "Title for the knowledge graph statistics section" },
+
+  "totalLinks": "Total Links",
+  "@totalLinks": { "description": "Label for total link count" },
+
+  "orphanedNotesCount": "{count} orphaned notes",
+  "@orphanedNotesCount": { "description": "Label for orphaned note count", "placeholders": { "count": { "type": "int" } } },
+
+  "mostConnectedNote": "Most Connected",
+  "@mostConnectedNote": { "description": "Label for the most connected note" },
+
+  "noStatistics": "No statistics yet",
+  "@noStatistics": { "description": "Empty state when no statistics are available" },
+
+  "notesWithProperties": "Notes with properties",
+  "@notesWithProperties": { "description": "Label for count of notes that have properties" },
+
+  "notesWithLinks": "Notes with links",
+  "@notesWithLinks": { "description": "Label for count of notes that have links" },
+
+  "exportNotes": "Export Notes",
+  "@exportNotes": { "description": "Title for export bottom sheet" },
+
+  "exportingNotes": "Exporting notes...",
+  "@exportingNotes": { "description": "Loading message during export" },
+
+  "exportComplete": "Export complete",
+  "@exportComplete": { "description": "Snackbar after successful export" },
+
+  "exportSelectedNotes": "Export Selected",
+  "@exportSelectedNotes": { "description": "Button to export selected notes" },
+
+  "exportCurrentNote": "Export Current Note",
+  "@exportCurrentNote": { "description": "Button to export the current note" },
+
+  "exportSelected": "{count} selected notes",
+  "@exportSelected": {
+    "description": "Label indicating number of selected notes for export",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "exportWithFrontmatter": "Export with metadata",
+  "@exportWithFrontmatter": { "description": "Menu option to export with YAML frontmatter" },
+
+  "exportAsZip": "Export as ZIP archive",
+  "@exportAsZip": { "description": "Menu option to export as ZIP" },
+
+  "includeFrontmatter": "Include metadata (frontmatter)",
+  "@includeFrontmatter": { "description": "Toggle for YAML frontmatter in export" },
+
+  "frontmatterDesc": "Add YAML metadata header with tags, dates, and properties",
+  "@frontmatterDesc": { "description": "Description of frontmatter option" },
+
+  "exportOrganization": "Organization",
+  "@exportOrganization": { "description": "Label for export organization option" },
+
+  "exportFlat": "Flat",
+  "@exportFlat": { "description": "Flat file organization" },
+
+  "exportByDate": "By Date",
+  "@exportByDate": { "description": "Organize exported files by date" },
+
+  "exportByCollection": "By Collection",
+  "@exportByCollection": { "description": "Organize exported files by collection" },
+
+  "exportByTag": "By Tag",
+  "@exportByTag": { "description": "Organize exported files by tag" },
+
+  "notesExported": "{count} notes exported",
+  "@notesExported": { "description": "Snackbar message after export", "placeholders": { "count": { "type": "int" } } },
+
+  "importFromMarkdown": "Import from Markdown",
+  "@importFromMarkdown": { "description": "Button to import from .md files" },
+
+  "importFromZip": "Import from ZIP",
+  "@importFromZip": { "description": "Button to import from a ZIP archive" },
+
+  "importFromObsidian": "Import from Obsidian Vault",
+  "@importFromObsidian": { "description": "Button to import from an Obsidian vault folder" },
+
+  "importingNotes": "Importing notes...",
+  "@importingNotes": { "description": "Progress message during note import" },
+
+  "notesImported": "{count} notes imported",
+  "@notesImported": { "description": "Message showing how many notes were imported", "placeholders": { "count": { "type": "int" } } },
+
+  "preserveDates": "Preserve original dates",
+  "@preserveDates": { "description": "Toggle to keep dates from frontmatter" },
+
+  "importTags": "Import tags",
+  "@importTags": { "description": "Toggle to import tags from frontmatter" },
+
+  "importProperties": "Import properties",
+  "@importProperties": { "description": "Toggle to import properties from frontmatter" },
+
+  "noFilesSelected": "No files selected",
+  "@noFilesSelected": { "description": "Message when no files were selected for import" },
+
+  "importOptions": "Import Options",
+  "@importOptions": { "description": "Header for import options section" },
+
+  "quickCapture": "Quick Capture",
+  "@quickCapture": { "description": "Title for quick capture screen" },
+
+  "typeSomething": "Type something...",
+  "@typeSomething": { "description": "Hint text in quick capture input" },
+
+  "autoSaved": "Auto-saved",
+  "@autoSaved": { "description": "Indicator that note was auto-saved" },
+
+  "discardDraft": "Discard draft?",
+  "@discardDraft": { "description": "Confirmation to discard draft" },
+
+  "discardDraftMessage": "Your unsaved changes will be lost.",
+  "@discardDraftMessage": { "description": "Body of discard confirmation dialog" },
+
+  "discard": "Discard",
+  "@discard": { "description": "Button to discard changes" },
+
+  "newNoteShortcut": "New Note",
+  "@newNoteShortcut": { "description": "Quick action shortcut for new note" },
+
+  "newChecklistShortcut": "New Checklist",
+  "@newChecklistShortcut": { "description": "Quick action shortcut for new checklist" },
+
+  "dailyNoteShortcut": "Daily Note",
+  "@dailyNoteShortcut": { "description": "Quick action shortcut for daily note" },
+
+  "sharedToAnynote": "Shared to AnyNote",
+  "@sharedToAnynote": { "description": "Confirmation when content is shared to app" },
+
+  "setPriority": "Set Priority",
+  "@setPriority": { "description": "Tooltip for priority selector in quick capture" },
+
+  "quickCaptureDesc": "Quickly capture a thought",
+  "@quickCaptureDesc": { "description": "Description for quick capture action" },
+
+  "pendingSync": "{count} pending",
+  "@pendingSync": { "description": "Label showing pending sync count", "placeholders": { "count": { "type": "int" } } },
+
+  "syncFailedCount": "{count} failed",
+  "@syncFailedCount": { "description": "Label showing failed sync count", "placeholders": { "count": { "type": "int" } } },
+
+  "syncQueue": "Sync Queue",
+  "@syncQueue": { "description": "Title for sync queue sheet" },
+
+  "pendingOperations": "Pending Operations",
+  "@pendingOperations": { "description": "Label for pending sync operations" },
+
+  "failedOperations": "Failed Operations",
+  "@failedOperations": { "description": "Label for failed sync operations" },
+
+  "retryAll": "Retry All",
+  "@retryAll": { "description": "Button to retry all failed operations" },
+
+  "clearCompleted": "Clear Completed",
+  "@clearCompleted": { "description": "Button to clear completed operations" },
+
+  "operationFailed": "Failed: {error}",
+  "@operationFailed": { "description": "Error message for failed operation", "placeholders": { "error": { "type": "String" } } },
+
+  "retryingSync": "Retrying sync...",
+  "@retryingSync": { "description": "Loading text during sync retry" },
+
+  "queueCleared": "Completed operations cleared",
+  "@queueCleared": { "description": "Snackbar after clearing completed ops" },
+
+  "noPendingOperations": "No pending operations",
+  "@noPendingOperations": { "description": "Empty state when no sync operations pending" },
+
+  "noteSemantics": "Note: {title}",
+  "@noteSemantics": { "description": "Screen reader label for a note card", "placeholders": { "title": { "type": "String" } } },
+
+  "deleteNoteSemantics": "Delete note {title}",
+  "@deleteNoteSemantics": { "description": "Screen reader label for deleting a note via swipe", "placeholders": { "title": { "type": "String" } } },
+
+  "archiveNoteSemantics": "Archive note {title}",
+  "@archiveNoteSemantics": { "description": "Screen reader label for archiving a note via swipe", "placeholders": { "title": { "type": "String" } } },
+
+  "pinNoteSemantics": "Pin note {title}",
+  "@pinNoteSemantics": { "description": "Screen reader label for pinning a note via swipe", "placeholders": { "title": { "type": "String" } } },
+
+  "unpinNoteSemantics": "Unpin note {title}",
+  "@unpinNoteSemantics": { "description": "Screen reader label for unpinning a note via swipe", "placeholders": { "title": { "type": "String" } } },
+
+  "noteContentEditor": "Note content editor. Double-tap to edit.",
+  "@noteContentEditor": { "description": "Screen reader hint for the note editor area" },
+
+  "graphSummary": "{nodeCount} notes with {linkCount} links",
+  "@graphSummary": { "description": "Screen reader summary of the knowledge graph", "placeholders": { "nodeCount": { "type": "int" }, "linkCount": { "type": "int" } } },
+
+  "pinnedNote": "Pinned",
+  "@pinnedNote": { "description": "Screen reader label indicating a note is pinned" },
+
+  "settingsGroup": "{section} settings",
+  "@settingsGroup": { "description": "Screen reader label for a settings section group", "placeholders": { "section": { "type": "String" } } },
+
+  "restoreNoteSemantics": "Restore note {title}",
+  "@restoreNoteSemantics": { "description": "Screen reader label for restoring a trashed note", "placeholders": { "title": { "type": "String" } } },
+
+  "permanentlyDeleteNoteSemantics": "Permanently delete note {title}",
+  "@permanentlyDeleteNoteSemantics": { "description": "Screen reader label for permanent delete swipe action", "placeholders": { "title": { "type": "String" } } },
+
+  "deleteCollectionSemantics": "Delete collection {title}",
+  "@deleteCollectionSemantics": { "description": "Screen reader label for deleting a collection via swipe", "placeholders": { "title": { "type": "String" } } },
+
+  "calendarDaySemantics": "{date}. {hasNote}",
+  "@calendarDaySemantics": { "description": "Screen reader label for a calendar day cell", "placeholders": { "date": { "type": "String" }, "hasNote": { "type": "String" } } },
+
+  "noteCountSemantics": "{count} notes",
+  "@noteCountSemantics": { "description": "Screen reader label for note count in a collection", "placeholders": { "count": { "type": "int" } } },
+
+  "reminder": "Reminder",
+  "@reminder": { "description": "Label for a single reminder" },
+
+  "setReminder": "Set Reminder",
+  "@setReminder": { "description": "Button and sheet title for setting a reminder" },
+
+  "reminderAt": "Reminder Time",
+  "@reminderAt": { "description": "Label for the date/time of a reminder" },
+
+  "removeReminder": "Remove Reminder",
+  "@removeReminder": { "description": "Button to remove an existing reminder" },
+
+  "laterToday": "Later Today",
+  "@laterToday": { "description": "Preset option: remind in 2 hours" },
+
+  "tomorrowMorning": "Tomorrow Morning",
+  "@tomorrowMorning": { "description": "Preset option: remind at 9am tomorrow" },
+
+  "nextWeek": "Next Week",
+  "@nextWeek": { "description": "Preset option: remind next Monday at 9am" },
+
+  "noReminders": "No Reminders",
+  "@noReminders": { "description": "Empty state when there are no reminders" },
+
+  "recurring": "Recurring",
+  "@recurring": { "description": "Label for recurring reminder selector" },
+
+  "daily": "Daily",
+  "@daily": { "description": "Recurring option: repeat every day" },
+
+  "weekly": "Weekly",
+  "@weekly": { "description": "Recurring option: repeat every week" },
+
+  "monthly": "Monthly",
+  "@monthly": { "description": "Recurring option: repeat every month" },
+
+  "reminders": "Reminders",
+  "@reminders": { "description": "Title for the reminders list screen" },
+
+  "reminderFired": "Reminder Fired",
+  "@reminderFired": { "description": "Snackbar message when a reminder fires" },
+
+  "color": "Color",
+  "@color": { "description": "Generic label for color" },
+
+  "selectColor": "Select Color",
+  "@selectColor": { "description": "Title of the color picker sheet" },
+
+  "removeColor": "Remove Color",
+  "@removeColor": { "description": "Button to remove the current color" },
+
+  "noteColor": "Note Color",
+  "@noteColor": { "description": "Label for the note color setting" },
+
+  "customColor": "Custom Color",
+  "@customColor": { "description": "Toggle label for entering a custom hex color" },
+
+  "colorFilter": "Color Filter",
+  "@colorFilter": { "description": "Label for the color filter in search" },
+
+  "searchOperatorColor": "color:#RRGGBB or color:name -- Filter by color",
+  "@searchOperatorColor": { "description": "Search operator hint for color filter" },
+
+  "none": "None",
+  "@none": { "description": "Option label for no selection / no recurrence" },
+
+  "compareNotes": "Compare",
+  "@compareNotes": { "description": "Button label to compare two notes" },
+
+  "selectNotesToCompare": "Select Notes to Compare",
+  "@selectNotesToCompare": { "description": "Title of the note compare picker sheet" },
+
+  "unifiedView": "Unified",
+  "@unifiedView": { "description": "Segmented button label for unified diff view" },
+
+  "sideBySideView": "Side-by-side",
+  "@sideBySideView": { "description": "Segmented button label for side-by-side diff view" },
+
+  "additions": "Additions",
+  "@additions": { "description": "Label for added lines in diff" },
+
+  "deletions": "Deletions",
+  "@deletions": { "description": "Label for removed lines in diff" },
+
+  "selectTwoNotes": "Select exactly 2 notes to compare",
+  "@selectTwoNotes": { "description": "Hint when fewer or more than 2 notes are selected for comparison" },
+
+  "noteDiff": "Note Diff",
+  "@noteDiff": { "description": "Title of the note comparison diff screen" },
+
+  "linesChanged": "{added} lines added, {removed} lines removed",
+  "@linesChanged": {
+    "description": "Summary stat for diff between two notes",
+    "placeholders": {
+      "added": { "type": "int" },
+      "removed": { "type": "int" }
+    }
+  },
+
+  "mermaidDiagram": "Mermaid Diagram",
+  "@mermaidDiagram": { "description": "Label for a mermaid diagram code block" },
+
+  "viewDiagram": "View Diagram",
+  "@viewDiagram": { "description": "Button label to view/copy a mermaid diagram" },
+
+  "copyMermaidCode": "Copy Mermaid Code",
+  "@copyMermaidCode": { "description": "Tooltip for copying mermaid diagram source code" },
+
+  "diagramCopied": "Diagram code copied",
+  "@diagramCopied": { "description": "Snackbar after copying mermaid diagram code" },
+
+  "mermaidTemplate": "Mermaid Template",
+  "@mermaidTemplate": { "description": "Label for the mermaid diagram template inserted via slash command" },
+
+  "insertDiagram": "Insert Diagram",
+  "@insertDiagram": { "description": "Generic label for inserting a diagram" },
+
+  "slashMermaid": "Mermaid Diagram",
+  "@slashMermaid": { "description": "Slash command: insert mermaid diagram block" },
+
+  "viewSource": "View Source",
+  "@viewSource": { "description": "Button label to toggle mermaid diagram source code view" },
+
+  "diagramError": "Failed to render diagram",
+  "@diagramError": { "description": "Error message when mermaid diagram rendering fails" },
+
+  "copyDiagramSource": "Copy Diagram Source",
+  "@copyDiagramSource": { "description": "Tooltip for copying the mermaid diagram source code" },
+
+  "lockNote": "Lock Note",
+  "@lockNote": { "description": "Menu item to lock a note (make it read-only)" },
+
+  "unlockNote": "Unlock Note",
+  "@unlockNote": { "description": "Menu item to unlock a note (allow editing)" },
+
+  "noteLocked": "Note Locked",
+  "@noteLocked": { "description": "Label shown when a note is in locked (read-only) state" },
+
+  "lockedNoteBanner": "This note is locked. Tap to unlock.",
+  "@lockedNoteBanner": { "description": "Banner message shown at top of a locked note" },
+
+  "notesColored": "{count} note{count, plural, =1{} other{s}} colored",
+  "@notesColored": {
+    "description": "Snackbar confirmation after batch coloring notes",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "colorRemovedFromNotes": "Color removed from {count} note{count, plural, =1{} other{s}}",
+  "@colorRemovedFromNotes": {
+    "description": "Snackbar confirmation after removing color from notes",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "batchColor": "Color",
+  "@batchColor": { "description": "Batch action to set color on selected notes" },
+
+  "batchLock": "Lock",
+  "@batchLock": { "description": "Batch action to lock selected notes" },
+
+  "batchUnlock": "Unlock",
+  "@batchUnlock": { "description": "Batch action to unlock selected notes" },
+
+  "notesLocked": "{count} note{count, plural, =1{} other{s}} locked",
+  "@notesLocked": {
+    "description": "Snackbar confirmation after batch locking notes",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "notesUnlocked": "{count} note{count, plural, =1{} other{s}} unlocked",
+  "@notesUnlocked": {
+    "description": "Snackbar confirmation after batch unlocking notes",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "moveToCollection": "Move to Collection",
+  "@moveToCollection": { "description": "Title for collection picker sheet" },
+
+  "searchCollections": "Search collections...",
+  "@searchCollections": { "description": "Search hint in collection picker" },
+
+  "noCollections": "No collections found",
+  "@noCollections": { "description": "Empty state in collection picker" },
+
+  "notesMovedToCollection": "{count} notes moved to \"{name}\"",
+  "@notesMovedToCollection": {
+    "description": "Snackbar confirmation after moving notes",
+    "placeholders": {
+      "count": { "type": "int" },
+      "name": { "type": "String" }
+    }
+  },
+
+  "noteMovedToCollection": "Note moved to \"{name}\"",
+  "@noteMovedToCollection": {
+    "description": "Snackbar confirmation after moving a single note",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "addToCollection": "Add to Collection",
+  "@addToCollection": { "description": "Context menu item and batch action label" },
+
+  "scrollToTop": "Scroll to top",
+  "@scrollToTop": { "description": "Tooltip for the scroll-to-top FAB on the notes list" },
+
+  "printNote": "Print note",
+  "@printNote": { "description": "Menu item and sheet title for printing a note" },
+
+  "printPreview": "Print preview",
+  "@printPreview": { "description": "Header for the print preview bottom sheet" },
+
+  "includeMetadata": "Include metadata",
+  "@includeMetadata": { "description": "Toggle label to include tags, dates, etc. in the printed output" },
+
+  "includeImages": "Include images",
+  "@includeImages": { "description": "Toggle label to include images in the printed output" },
+
+  "shareAsHtml": "Share as HTML",
+  "@shareAsHtml": { "description": "Button label to share the note as an HTML file" },
+
+  "exportedAsHtml": "Exported as HTML",
+  "@exportedAsHtml": { "description": "Snackbar message after HTML export completes" },
+
+  "foldView": "Fold View",
+  "@foldView": { "description": "Tooltip and label for the fold/outline view toggle in the editor" },
+
+  "foldAll": "Fold All",
+  "@foldAll": { "description": "Button label to collapse all heading sections" },
+
+  "unfoldAll": "Unfold All",
+  "@unfoldAll": { "description": "Button label to expand all heading sections" },
+
+  "sectionLines": "{count} lines",
+  "@sectionLines": {
+    "description": "Label showing how many content lines are hidden under a folded heading",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "foldedSections": "{count} folded section{count, plural, =1{} other{s}}",
+  "@foldedSections": {
+    "description": "Label showing the number of currently folded sections",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "toggleFold": "Toggle fold",
+  "@toggleFold": { "description": "Tooltip for the fold/unfold chevron icon on a heading" },
+
+  "tableOfContents": "Table of Contents",
+  "@tableOfContents": { "description": "Title for the TOC bottom sheet and its AppBar button tooltip" },
+
+  "noHeadings": "No headings found",
+  "@noHeadings": { "description": "Empty state message when a note has no headings for the TOC" },
+
+  "headingLevel": "Heading level {level}",
+  "@headingLevel": {
+    "description": "Accessibility label describing the heading level in the TOC",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+
+  "readAloud": "Read Aloud",
+  "@readAloud": { "description": "Button to start text-to-speech reading of the note" },
+
+  "stopReading": "Stop Reading",
+  "@stopReading": { "description": "Button to stop TTS playback" },
+
+  "pauseReading": "Pause",
+  "@pauseReading": { "description": "Button to pause TTS playback" },
+
+  "resumeReading": "Resume",
+  "@resumeReading": { "description": "Button to resume TTS playback" },
+
+  "readingSpeed": "Reading Speed",
+  "@readingSpeed": { "description": "Tooltip for the speed selector in the TTS player bar" },
+
+  "keyboardShortcuts": "Keyboard Shortcuts",
+  "@keyboardShortcuts": { "description": "Title for the keyboard shortcuts settings screen" },
+
+  "general": "General",
+  "@general": { "description": "Category label for general keyboard shortcuts" },
+
+  "editor": "Editor",
+  "@editor": { "description": "Category label for editor keyboard shortcuts" },
+
+  "navigation": "Navigation",
+  "@navigation": { "description": "Category label for navigation keyboard shortcuts" },
+
+  "shortcutBold": "Bold",
+  "@shortcutBold": { "description": "Keyboard shortcut description for bold text" },
+
+  "shortcutItalic": "Italic",
+  "@shortcutItalic": { "description": "Keyboard shortcut description for italic text" },
+
+  "shortcutStrikethrough": "Strikethrough",
+  "@shortcutStrikethrough": { "description": "Keyboard shortcut description for strikethrough text" },
+
+  "shortcutUndo": "Undo",
+  "@shortcutUndo": { "description": "Keyboard shortcut description for undo" },
+
+  "shortcutRedo": "Redo",
+  "@shortcutRedo": { "description": "Keyboard shortcut description for redo" },
+
+  "shortcutPrint": "Print",
+  "@shortcutPrint": { "description": "Keyboard shortcut description for printing the current note" },
+
+  "shortcutNewNote": "New Note",
+  "@shortcutNewNote": { "description": "Keyboard shortcut description for creating a new note" },
+
+  "shortcutSearch": "Search",
+  "@shortcutSearch": { "description": "Keyboard shortcut description for opening search" },
+
+  "shortcutLink": "Insert Link",
+  "@shortcutLink": { "description": "Keyboard shortcut description for inserting a link" },
+
+  "shortcutCode": "Inline Code",
+  "@shortcutCode": { "description": "Keyboard shortcut description for toggling inline code" },
+
+  "shortcutHeading": "Toggle Heading",
+  "@shortcutHeading": { "description": "Keyboard shortcut description for cycling heading levels" },
+
+  "shortcutCommandPalette": "Command Palette",
+  "@shortcutCommandPalette": { "description": "Keyboard shortcut description for opening command palette" },
+
+  "shortcutFocusMode": "Focus Mode",
+  "@shortcutFocusMode": { "description": "Keyboard shortcut description for toggling focus mode" },
+
+  "reminderNotificationTitle": "Reminder",
+  "@reminderNotificationTitle": { "description": "Default title for reminder local notifications" },
+
+  "reminderNotificationBody": "Time to review: {title}",
+  "@reminderNotificationBody": {
+    "description": "Body text for reminder local notifications",
+    "placeholders": { "title": { "type": "String" } }
+  },
+
+  "notificationChannelName": "Note Reminders",
+  "@notificationChannelName": { "description": "Android notification channel name for reminder notifications" },
+
+  "notificationChannelDescription": "Notifications for note reminders",
+  "@notificationChannelDescription": { "description": "Android notification channel description for reminder notifications" },
+
+  "exportPdf": "PDF",
+  "@exportPdf": { "description": "Label for PDF export format" },
+
+  "generatePdf": "Generate PDF",
+  "@generatePdf": { "description": "Button label to generate a PDF from note content" },
+
+  "pdfGenerated": "PDF generated",
+  "@pdfGenerated": { "description": "Snackbar confirmation that PDF was generated" },
+
+  "sharePdf": "Share PDF",
+  "@sharePdf": { "description": "Button label to share a generated PDF" },
+
+  "exportFormatPdf": "PDF Document",
+  "@exportFormatPdf": { "description": "Format option label for PDF in export sheet" },
+
+  "snippets": "Snippets",
+  "@snippets": { "description": "Title for the code snippets screen" },
+
+  "snippetTitle": "Title",
+  "@snippetTitle": { "description": "Label for snippet title field" },
+
+  "snippetCode": "Code",
+  "@snippetCode": { "description": "Label for snippet code field" },
+
+  "snippetLanguage": "Language",
+  "@snippetLanguage": { "description": "Label for snippet language dropdown" },
+
+  "snippetDescription": "Description",
+  "@snippetDescription": { "description": "Label for snippet description field" },
+
+  "snippetCategory": "Category",
+  "@snippetCategory": { "description": "Label for snippet category field" },
+
+  "snippetTags": "Tags",
+  "@snippetTags": { "description": "Label for snippet tags field" },
+
+  "newSnippet": "New Snippet",
+  "@newSnippet": { "description": "Button to create a new snippet" },
+
+  "editSnippet": "Edit Snippet",
+  "@editSnippet": { "description": "Button to edit an existing snippet" },
+
+  "deleteSnippet": "Delete Snippet",
+  "@deleteSnippet": { "description": "Button to delete a snippet" },
+
+  "deleteSnippetConfirm": "Delete this snippet?",
+  "@deleteSnippetConfirm": { "description": "Confirmation message for deleting a snippet" },
+
+  "copyCode": "Copy Code",
+  "@copyCode": { "description": "Button to copy snippet code to clipboard" },
+
+  "codeCopied": "Code copied",
+  "@codeCopied": { "description": "Snackbar after copying code to clipboard" },
+
+  "insertSnippet": "Insert Snippet",
+  "@insertSnippet": { "description": "Slash command and title for snippet picker sheet" },
+
+  "noSnippets": "No snippets yet",
+  "@noSnippets": { "description": "Empty state when no code snippets exist" },
+
+  "searchSnippets": "Search snippets...",
+  "@searchSnippets": { "description": "Placeholder in snippet search field" },
+
+  "usageCount": "Used {count} time{count, plural, =1{} other{s}}",
+  "@usageCount": {
+    "description": "Label showing how many times a snippet has been used",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "allLanguages": "All Languages",
+  "@allLanguages": { "description": "Dropdown hint for no language filter" },
+
+  "allCategories": "All Categories",
+  "@allCategories": { "description": "Dropdown hint for no category filter" },
+
+  "tagHierarchy": "Tag Hierarchy",
+  "@tagHierarchy": { "description": "Title for the tag hierarchy / tree view feature" },
+
+  "createSubTag": "Create Sub-tag",
+  "@createSubTag": { "description": "Context menu option to create a child tag under a parent" },
+
+  "moveToParent": "Move to Parent",
+  "@moveToParent": { "description": "Context menu option to change a tag's parent" },
+
+  "noParent": "No Parent (Root)",
+  "@noParent": { "description": "Option to set a tag as root-level (no parent)" },
+
+  "selectParentTag": "Select Parent Tag",
+  "@selectParentTag": { "description": "Title of the parent tag picker bottom sheet" },
+
+  "expandAll": "Expand All",
+  "@expandAll": { "description": "Button to expand all collapsible tag tree nodes" },
+
+  "collapseAll": "Collapse All",
+  "@collapseAll": { "description": "Button to collapse all tag tree nodes" },
+
+  "userCursor": "{name}'s cursor",
+  "@userCursor": {
+    "description": "Tooltip shown over a remote collaborator's cursor",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "remoteUser": "Remote user",
+  "@remoteUser": { "description": "Fallback label when remote user name is unknown" },
+
+  "dropImageHere": "Drop image here",
+  "@dropImageHere": { "description": "Hint shown when dragging an image over the editor" },
+
+  "imageAdded": "Image added",
+  "@imageAdded": { "description": "Snackbar confirmation after an image is added via drag-and-drop" },
+
+  "unsupportedFileType": "Only image files are supported",
+  "@unsupportedFileType": { "description": "Snackbar message when a non-image file is dropped on the editor" },
+
+  "quickNote": "New Note",
+  "@quickNote": { "description": "Home screen quick action: create a new note" },
+
+  "quickChecklist": "New Checklist",
+  "@quickChecklist": { "description": "Home screen quick action: create a new checklist" },
+
+  "quickDailyNote": "Daily Note",
+  "@quickDailyNote": { "description": "Home screen quick action: open today's daily note" },
+
+  "moreOptions": "More options",
+  "@moreOptions": { "description": "Tooltip for overflow menu button in app bar" },
+
+  "failedToLoadTrash": "Failed to load trash",
+  "@failedToLoadTrash": { "description": "Error message when trash notes fail to load" },
+
+  "failedToRestoreError": "Failed to restore: {error}",
+  "@failedToRestoreError": {
+    "description": "Snackbar error when restoring a note from trash fails",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "failedToDeleteError": "Failed to delete: {error}",
+  "@failedToDeleteError": {
+    "description": "Snackbar error when permanently deleting a note fails",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "deleteProperty": "Delete Property",
+  "@deleteProperty": { "description": "Dialog title for deleting a custom property" },
+
+  "removePropertyConfirm": "Remove this property from the note?",
+  "@removePropertyConfirm": { "description": "Confirmation message when deleting a property" },
+
+  "propertiesTitle": "Properties",
+  "@propertiesTitle": { "description": "Header title in the properties bottom sheet" },
+
+  "noProperties": "No properties",
+  "@noProperties": { "description": "Empty state when no properties exist on a note" },
+
+  "addCustomMetadata": "Add custom metadata to this note",
+  "@addCustomMetadata": { "description": "Subtitle encouraging users to add properties" },
+
+  "addPropertyButton": "Add Property",
+  "@addPropertyButton": { "description": "Button label to add a new property" },
+
+  "editProperty": "Edit Property",
+  "@editProperty": { "description": "Dialog title for editing an existing property" },
+
+  "customPropertyTitle": "Custom Property",
+  "@customPropertyTitle": { "description": "Dialog title for creating a custom property" },
+
+  "propertyLabel": "Property",
+  "@propertyLabel": { "description": "Label for the property key selector section" },
+
+  "valueLabel": "Value",
+  "@valueLabel": { "description": "Form field label for a text property value" },
+
+  "numberLabel": "Number",
+  "@numberLabel": { "description": "Form field label for a number property value" },
+
+  "enterValue": "Enter a value",
+  "@enterValue": { "description": "Validation error when property value is empty" },
+
+  "enterNumber": "Enter a number",
+  "@enterNumber": { "description": "Validation error when number property is empty" },
+
+  "selectDateLabel": "Select a date",
+  "@selectDateLabel": { "description": "Placeholder text for date property picker" },
+
+  "linkManagementTitle": "Link Management",
+  "@linkManagementTitle": { "description": "Header title for the link management bottom sheet" },
+
+  "outboundLinks": "Outbound Links",
+  "@outboundLinks": { "description": "Filter chip label for outbound links" },
+
+  "deleteLinkTitle": "Delete Link",
+  "@deleteLinkTitle": { "description": "Dialog title for confirming link deletion" },
+
+  "removeLinkConfirm": "Remove this connection between notes?",
+  "@removeLinkConfirm": { "description": "Confirmation message when deleting a link" },
+
+  "noLinksToDisplay": "No links to display. Adjust filters to see more.",
+  "@noLinksToDisplay": { "description": "Empty state when no links match the current filters" },
+
+  "linksToThisNote": "Links to this note",
+  "@linksToThisNote": { "description": "Subtitle for a backlink item" },
+
+  "thisNoteLinksTo": "This note links to",
+  "@thisNoteLinksTo": { "description": "Subtitle for an outbound link item" },
+
+  "deleteLinkTooltip": "Delete link",
+  "@deleteLinkTooltip": { "description": "Tooltip for the delete button on a link tile" },
+
+  "insertTable": "Insert Table",
+  "@insertTable": { "description": "Title of the table picker dialog" },
+
+  "dragToSelectTableSize": "Drag to select table size",
+  "@dragToSelectTableSize": { "description": "Hint text in the table picker dialog" },
+
+  "proPlan": "Pro",
+  "@proPlan": { "description": "Pro plan name in upgrade dialog and comparison table" },
+
+  "lifetimePlan": "Lifetime",
+  "@lifetimePlan": { "description": "Lifetime plan name in upgrade dialog and comparison table" },
+
+  "proPrice": "$4.99/mo",
+  "@proPrice": { "description": "Price display for the Pro plan" },
+
+  "lifetimePrice": "$49.99",
+  "@lifetimePrice": { "description": "Price display for the Lifetime plan" },
+
+  "priorityHigh": "High",
+  "@priorityHigh": { "description": "High priority label" },
+
+  "priorityMedium": "Medium",
+  "@priorityMedium": { "description": "Medium priority label" },
+
+  "priorityLow": "Low",
+  "@priorityLow": { "description": "Low priority label" },
+
+  "tagsCountLabel": "{count} tags",
+  "@tagsCountLabel": {
+    "description": "Label showing the number of selected tags",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "orphanedNotes": "Orphaned notes",
+  "@orphanedNotes": { "description": "Tooltip for orphaned notes button" },
+
+  "filter": "Filter",
+  "@filter": { "description": "Filter chip label when no filters are active" },
+
+  "priorityLabel": "Priority: {priority}",
+  "@priorityLabel": {
+    "description": "Filter chip label for active priority filter",
+    "placeholders": { "priority": { "type": "String" } }
+  },
+
+  "noMatchingNotes": "No matching notes",
+  "@noMatchingNotes": { "description": "Empty state when property filters yield no results" },
+
+  "tryChangingFilters": "Try changing your filters",
+  "@tryChangingFilters": { "description": "Empty state subtitle when property filters yield no results" },
+
+  "filterByProperties": "Filter by Properties",
+  "@filterByProperties": { "description": "Title of the property filter bottom sheet" },
+
+  "priority": "Priority",
+  "@priority": { "description": "Priority section header in filter sheet" },
+
+  "viewProperties": "Properties",
+  "@viewProperties": { "description": "Tooltip for the properties button in editor" },
+
+  "noteTitle": "Note title",
+  "@noteTitle": { "description": "Semantics label for the note title text field" },
+
+  "dateLabel": "Date",
+  "@dateLabel": { "description": "Label for the date property type section" },
+
+  "propertyOf": "Property: {name}",
+  "@propertyOf": {
+    "description": "Display text showing the name of an existing property",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "insertLabel": "Insert",
+  "@insertLabel": { "description": "Insert button label in table picker dialog" },
+
+  "failedToLoadMore": "Failed to load more: {error}",
+  "@failedToLoadMore": {
+    "description": "SnackBar message when loading more discover feed items fails",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "linkCreated": "Link created",
+  "@linkCreated": { "description": "SnackBar confirmation after a note link is created" },
+
+  "failedToCreateLink": "Failed to create link: {error}",
+  "@failedToCreateLink": {
+    "description": "SnackBar error when creating a note link fails",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "suggestedLinks": "Suggested Links",
+  "@suggestedLinks": { "description": "Title of the link suggestions bottom sheet" },
+
+  "similarContentDesc": "Notes with similar titles or content. Tap to create a link.",
+  "@similarContentDesc": { "description": "Info banner text in the link suggestions sheet" },
+
+  "noSuggestions": "No Suggestions",
+  "@noSuggestions": { "description": "Empty state title when there are no link suggestions" },
+
+  "createMoreNotes": "Create more notes to get suggestions.",
+  "@createMoreNotes": { "description": "Empty state subtitle when there are no link suggestions" },
+
+  "notAvailableOnWeb": "This feature is not available on web",
+  "@notAvailableOnWeb": { "description": "SnackBar message when a native-only feature is used on web" },
+
+  "okButton": "OK",
+  "@okButton": { "description": "OK button label in dialogs" },
+
+  "failedToLoadDeferred": "Failed to load",
+  "@failedToLoadDeferred": { "description": "Error message when a deferred screen fails to load" },
+
+  "somethingWentWrong": "Something went wrong",
+  "@somethingWentWrong": { "description": "Generic error title in error cards" },
+
+  "syncStatusTitle": "Sync Status",
+  "@syncStatusTitle": { "description": "Title of the sync status bottom sheet" },
+
+  "offlineLabel": "Offline",
+  "@offlineLabel": { "description": "Label indicating device is offline in sync status" },
+
+  "connectedLabel": "Connected",
+  "@connectedLabel": { "description": "Label indicating device is connected in sync status" },
+
+  "pendingOpsLabel": "Pending operations",
+  "@pendingOpsLabel": { "description": "Label for pending sync operations count" },
+
+  "lastSyncedLabel": "Last synced",
+  "@lastSyncedLabel": { "description": "Label for last sync timestamp" },
+
+  "failedItemsLabel": "Failed items",
+  "@failedItemsLabel": { "description": "Section header for failed sync items" },
+
+  "offlineSyncTooltip": "Offline -- changes will sync when connected",
+  "@offlineSyncTooltip": { "description": "Tooltip for sync icon when device is offline" },
+
+  "pullingLabel": "Pulling",
+  "@pullingLabel": { "description": "Label for sync pull phase" },
+
+  "pushingLabel": "Pushing",
+  "@pushingLabel": { "description": "Label for sync push phase" },
+
+  "syncingLabel": "Syncing...",
+  "@syncingLabel": { "description": "Tooltip when sync is in progress" },
+
+  "allChangesSyncedLabel": "All changes synced",
+  "@allChangesSyncedLabel": { "description": "Tooltip when all changes are synced" },
+
+  "pendingOpTooltip": "{count} pending operation",
+  "@pendingOpTooltip": {
+    "description": "Tooltip for pending sync operations count (singular/plural handled by ICU if needed)",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "pendingOpsTooltip": "{count} pending operations",
+  "@pendingOpsTooltip": {
+    "description": "Tooltip for pending sync operations count (plural)",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "syncConflictBadge": "Sync conflict",
+  "@syncConflictBadge": { "description": "Tooltip for sync badge when there is a conflict" },
+
+  "conflictLabel": "Conflict",
+  "@conflictLabel": { "description": "Short label for sync badge conflict state" },
+
+  "syncedLabel": "Synced",
+  "@syncedLabel": { "description": "Short label for sync badge synced state" },
+
+  "pendingSyncLabel": "Pending",
+  "@pendingSyncLabel": { "description": "Short label for sync badge pending state" },
+
+  "pendingSyncBadge": "Pending sync",
+  "@pendingSyncBadge": { "description": "Tooltip for sync badge when sync is pending" },
+
+  "barChartSemanticLabel": "Bar chart showing notes by month: {entries}",
+  "@barChartSemanticLabel": {
+    "description": "Screen reader label for the monthly activity bar chart",
+    "placeholders": { "entries": { "type": "String" } }
+  },
+
+  "donutChartSemanticLabel": "Donut chart showing distribution: {entries}",
+  "@donutChartSemanticLabel": {
+    "description": "Screen reader label for the priority distribution donut chart",
+    "placeholders": { "entries": { "type": "String" } }
+  },
+
+  "tagItemSemanticLabel": "Tag: {name}",
+  "@tagItemSemanticLabel": {
+    "description": "Screen reader label for a tag item in the tags list",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "tagItemSemanticHint": "Long press to edit",
+  "@tagItemSemanticHint": { "description": "Screen reader hint for long-pressing a tag item to open its edit menu" }
 }

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
@@ -19,22 +19,45 @@ import '../../../core/collab/presence_indicator.dart';
 import '../../../core/collab/ws_client.dart';
 import '../../../features/collab/presentation/share_dialog.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/tts/speech_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/performance/performance_monitor.dart';
 import '../../../core/storage/image_storage.dart';
+import '../../../core/widgets/keyboard_shortcuts.dart';
 import '../../../core/widgets/markdown_preview.dart';
 import '../../collab/providers/collab_provider.dart';
 import 'widgets/backlinks_sheet.dart';
 import 'widgets/character_count_bar.dart';
+import 'widgets/command_palette.dart';
+import 'widgets/related_notes_sheet.dart';
 import 'widgets/collab_cursors_widget.dart';
 import 'widgets/rich_editor_with_shortcuts.dart';
 import 'widgets/tag_picker_sheet.dart';
+import 'widgets/tts_player_bar.dart';
+import 'widgets/slash_command_menu.dart';
 import 'widgets/zen_mode_chrome.dart';
 import 'widgets/summary_sheet.dart';
 import 'widgets/ai_tag_suggestion.dart';
 import 'widgets/translation_sheet.dart';
 import 'widgets/writing_assist_sheet.dart';
+import 'widgets/wiki_link_picker_sheet.dart';
+import 'widgets/properties_sheet.dart';
+import 'embeds/transclusion_embed.dart';
+import 'embeds/wiki_link_embed.dart';
+import 'widgets/focus_highlight.dart';
+import 'widgets/folded_outline_view.dart';
+import 'widgets/section_fold_bar.dart';
+import 'widgets/section_fold_controller.dart';
+import 'widgets/writing_stats.dart';
+import 'widgets/writing_stats_bar.dart';
+import 'widgets/reminder_picker_sheet.dart';
+import 'widgets/print_preview_sheet.dart';
+import 'widgets/editor_drop_target.dart';
+import 'widgets/editor_app_bar_actions.dart';
+import '../../../core/notifications/reminder_service.dart';
+import '../../../core/database/daos/note_properties_dao.dart';
+import '../../../core/constants/app_durations.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   /// Optional initial content to pre-fill the editor (e.g. from a template).
@@ -78,6 +101,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _useRichEditor = true;
   String? _errorMessage;
 
+  // Lock state: when true, the note is read-only.
+  bool _isLocked = false;
+
+  // Wiki link detection state
+  Timer? _wikiLinkDebounce;
+
+  // Transclusion detection state
+  Timer? _transclusionDebounce;
+
   // CRDT collab mode state
   bool get _isCollab => widget.isCollab;
 
@@ -85,15 +117,35 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _isZenMode = false;
   AnimationController? _zenChromeAnimController;
 
+  // Typewriter scrolling toggle
+  bool _isTypewriterScroll = false;
+
+  // Focus mode (dim non-current lines)
+  bool _isFocusMode = false;
+
+  // Fold / outline view mode
+  bool _isFoldView = false;
+  final SectionFoldController _foldController = SectionFoldController();
+
+  // Writing stats bar visibility
+  bool _isWritingStatsVisible = true;
+
   // Word / character count
   int _wordCount = 0;
   int _charCount = 0;
+
+  // Computed writing stats (updated with debounce)
+  WritingStats _writingStats = WritingStats.empty;
 
   /// Pre-compiled regex for splitting text into words (avoids recompilation per keystroke).
   static final RegExp _wordSplitRegex = RegExp(r'\s+');
 
   /// Debounce timer for word/character count updates.
   Timer? _countDebounceTimer;
+
+  // Reminder state for the current note.
+  ReminderEntry? _currentReminder;
+  Stream<ReminderEntry?>? _reminderStream;
 
   /// Preference key for storing the last edit/preview mode.
   static const _prefKeyPreviewMode = 'editor_preview_mode';
@@ -112,7 +164,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Zen mode chrome fade animation (300ms).
     _zenChromeAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.animation,
       value: 1.0, // chrome visible by default
     );
 
@@ -134,6 +186,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _joinPresenceRoom();
       if (_isCollab) {
         _initCollabMode();
+      }
+      // Track recently opened notes for the command palette.
+      if (!_isNew && _noteId != null) {
+        addRecentlyOpened(ref, _noteId!);
+      }
+      // Start watching the reminder for this note.
+      _initReminderWatcher();
+      // Check if note is locked and watch for changes.
+      _initLockWatcher();
+      // Wire Ctrl+P to open the print preview sheet.
+      if (!_isNew && _noteId != null) {
+        AppKeyboardShortcuts.setPrintCallback(() => _showPrintPreview(context));
       }
     });
   }
@@ -163,7 +227,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           final json =
               jsonDecode(persisted.documentState) as Map<String, dynamic>;
           existingCrdt = CRDTText.fromJson(json);
-        } catch (_) {
+        } catch (e) {
+          debugPrint('[NoteEditor] Corrupted CRDT state, starting fresh: $e');
           // Corrupted state; start fresh.
         }
       }
@@ -174,7 +239,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             _noteId!,
             existingCrdt: existingCrdt,
           );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NoteEditor] Collab init failure: $e');
       // Collab init failure should not block the editor. The user can still
       // edit locally; changes just will not be synced in real-time.
     }
@@ -200,12 +266,157 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _debounce = Timer(const Duration(seconds: 2), _saveNote);
     // Debounce count updates to avoid recalculating on every keystroke.
     _countDebounceTimer?.cancel();
-    _countDebounceTimer =
-        Timer(const Duration(milliseconds: 300), _updateCounts);
+    _countDebounceTimer = Timer(AppDurations.debounce, _updateCounts);
     // Debounce presence typing indicator (send at most once per second).
     _presenceDebounce?.cancel();
     _presenceDebounce =
-        Timer(const Duration(seconds: 1), _notifyPresenceTyping);
+        Timer(AppDurations.autoSaveDelay, _notifyPresenceTyping);
+    // Check for wiki link [[ pattern in rich editor mode.
+    if (_useRichEditor && !_isCollab) {
+      _checkWikiLinkPattern();
+      _checkTransclusionPattern();
+    }
+    // Schedule typewriter scroll if enabled.
+    if (_isTypewriterScroll) {
+      _scheduleTypewriterScroll();
+    }
+  }
+
+  /// Checks if user just typed [[ and shows the note picker sheet.
+  void _checkWikiLinkPattern() {
+    if (_noteId == null) return;
+
+    final sel = _quillController.selection;
+    if (!sel.isCollapsed) return;
+
+    final cursorPos = sel.baseOffset;
+    final plainText = _quillController.document.toPlainText();
+
+    if (cursorPos < 2) return;
+
+    final lastTwoChars = plainText.substring(cursorPos - 2, cursorPos);
+    if (lastTwoChars == '[[') {
+      _wikiLinkDebounce?.cancel();
+      _wikiLinkDebounce = Timer(AppDurations.debounce, () {
+        if (mounted) {
+          _showWikiLinkPicker();
+        }
+      });
+    }
+  }
+
+  /// Shows the wiki link picker sheet for selecting a note to link.
+  void _showWikiLinkPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => WikiLinkPickerSheet(
+        query: '',
+        sourceNoteId: _noteId!,
+        onSelect: (noteId, title) {
+          _insertWikiLink(noteId, title);
+        },
+      ),
+    );
+  }
+
+  /// Inserts a wiki link embed at the current cursor position.
+  void _insertWikiLink(String noteId, String title) {
+    final sel = _quillController.selection;
+    final cursorPos = sel.baseOffset;
+
+    if (cursorPos >= 2) {
+      final plainText = _quillController.document.toPlainText();
+      final beforeCursor = plainText.substring(cursorPos - 2, cursorPos);
+      if (beforeCursor == '[[') {
+        _quillController.document.delete(cursorPos - 2, 2);
+        _quillController.updateSelection(
+          TextSelection.collapsed(offset: cursorPos - 2),
+          quill.ChangeSource.local,
+        );
+      }
+    }
+
+    insertWikiLinkEmbed(
+      controller: _quillController,
+      noteId: noteId,
+      title: title,
+    );
+
+    _saveNote();
+  }
+
+  /// Checks if user just typed ![[ and shows the note picker sheet for transclusion.
+  void _checkTransclusionPattern() {
+    if (_noteId == null) return;
+
+    final sel = _quillController.selection;
+    if (!sel.isCollapsed) return;
+
+    final cursorPos = sel.baseOffset;
+    final plainText = _quillController.document.toPlainText();
+
+    if (cursorPos < 3) return;
+
+    final lastThreeChars = plainText.substring(cursorPos - 3, cursorPos);
+    if (lastThreeChars == '![[') {
+      _transclusionDebounce?.cancel();
+      _transclusionDebounce = Timer(AppDurations.debounce, () {
+        if (mounted) {
+          _showTransclusionPicker();
+        }
+      });
+    }
+  }
+
+  /// Shows the note picker sheet for selecting a note to transclude.
+  void _showTransclusionPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => WikiLinkPickerSheet(
+        query: '',
+        sourceNoteId: _noteId!,
+        onSelect: (noteId, title) {
+          _insertTransclusion(noteId, title);
+        },
+      ),
+    );
+  }
+
+  /// Inserts a transclusion embed at the current cursor position.
+  void _insertTransclusion(String noteId, String title) {
+    final sel = _quillController.selection;
+    final cursorPos = sel.baseOffset;
+
+    if (cursorPos >= 3) {
+      final plainText = _quillController.document.toPlainText();
+      final beforeCursor = plainText.substring(cursorPos - 3, cursorPos);
+      if (beforeCursor == '![[') {
+        _quillController.document.delete(cursorPos - 3, 3);
+        _quillController.updateSelection(
+          TextSelection.collapsed(offset: cursorPos - 3),
+          quill.ChangeSource.local,
+        );
+      }
+    }
+
+    insertTransclusionEmbed(
+      controller: _quillController,
+      noteId: noteId,
+      title: title,
+      depth: 0,
+    );
+
+    _saveNote();
   }
 
   /// Send a typing indicator to the presence room.
@@ -215,7 +426,62 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
+  /// Start watching the reminder for the current note so the bell icon
+  /// updates reactively when a reminder is set or removed.
+  void _initReminderWatcher() {
+    if (_noteId == null || _isNew) return;
+    final service = ref.read(reminderServiceProvider);
+    _reminderStream = service.watchReminderForNote(_noteId!);
+    _reminderStream?.listen((reminder) {
+      if (mounted) {
+        setState(() => _currentReminder = reminder);
+      }
+    });
+  }
+
+  /// Show the reminder picker bottom sheet for the current note.
+  void _showReminderPicker(BuildContext context) {
+    _saveNote();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => ReminderPickerSheet(
+        noteId: _noteId!,
+        noteTitle: _titleController.text.trim(),
+      ),
+    ).then((result) {
+      // If a reminder was set or removed, reload the current reminder state.
+      if (result == true) {
+        _initReminderWatcher();
+      }
+    });
+  }
+
+  /// Check the lock state for the current note and watch for changes.
+  void _initLockWatcher() {
+    if (_noteId == null || _isNew) return;
+    final db = ref.read(databaseProvider);
+    db.notePropertiesDao.watchNoteLocked(_noteId!).listen((locked) {
+      if (mounted) {
+        setState(() => _isLocked = locked);
+      }
+    });
+  }
+
+  /// Toggle the lock state for the current note.
+  Future<void> _toggleLock() async {
+    if (_noteId == null || _isNew) return;
+    final db = ref.read(databaseProvider);
+    await db.notePropertiesDao.setNoteLocked(_noteId!, !_isLocked);
+    // The watcher will update _isLocked reactively.
+  }
+
   /// Recalculate word and character counts from the current editor content.
+  /// Also computes the full [WritingStats] for the stats bar.
   void _updateCounts() {
     final text = _extractPlainText();
     final chars = text.length;
@@ -223,10 +489,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final words =
         text.trim().isEmpty ? 0 : text.trim().split(_wordSplitRegex).length;
 
+    // Compute full writing stats.
+    final stats = WritingStats.fromText(text);
+
     if (_wordCount != words || _charCount != chars) {
       setState(() {
         _wordCount = words;
         _charCount = chars;
+        _writingStats = stats;
+      });
+    } else if (_writingStats.lineCount != stats.lineCount ||
+        _writingStats.paragraphCount != stats.paragraphCount ||
+        _writingStats.estimatedReadingTime != stats.estimatedReadingTime) {
+      // Even if word/char counts match, line/paragraph/reading time may differ.
+      setState(() {
+        _writingStats = stats;
       });
     }
   }
@@ -236,6 +513,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _toggleZenMode() {
     setState(() {
       _isZenMode = !_isZenMode;
+      if (_isZenMode) {
+        // Auto-enable typewriter scroll and focus mode in zen mode.
+        _isTypewriterScroll = true;
+        _isFocusMode = true;
+      }
     });
     if (_isZenMode) {
       // Hide system UI for a distraction-free experience.
@@ -288,7 +570,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
       _bodyScrollController.animateTo(
         targetOffset,
-        duration: const Duration(milliseconds: 200),
+        duration: AppDurations.shortAnimation,
         curve: Curves.easeOutCubic,
       );
     }
@@ -390,6 +672,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _editorFocusNode.dispose();
     _bodyScrollController.dispose();
     _zenChromeAnimController?.dispose();
+    _foldController.dispose();
 
     // Persist CRDT state and leave collab room if in collab mode.
     if (_isCollab && _noteId != null) {
@@ -399,6 +682,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     // Leave presence room.
     ref.read(presenceProvider.notifier).leaveRoom();
+    // Clear keyboard shortcut callbacks registered by this screen.
+    AppKeyboardShortcuts.clearPrintCallback();
     // Restore system UI when leaving the editor.
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
@@ -421,7 +706,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         documentState: stateJson,
         lastVersion: crdt.clock,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NoteEditor] Collab state persistence failure: $e');
       // Persistence failure should not crash the app on dispose.
     }
   }
@@ -490,7 +776,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
       // Trim old versions, keeping only the last 20.
       await db.noteVersionsDao.deleteVersionsOlderThan(noteId, 20);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NoteEditor] Version snapshot failure: $e');
       // Version snapshot failure should not block the save.
       // The user's content is more important than version history.
     }
@@ -515,116 +802,70 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 tooltip: l10n.saveAndClose,
                 onPressed: () => context.pop(),
               ),
-              actions: [
-                // Presence avatars showing active collaborators.
-                if (_noteId != null)
-                  PresenceAvatarStack(
-                    users: ref.watch(presenceProvider).values.toList(),
-                  ),
-                if (_isSaving)
-                  Semantics(
-                    label: l10n.savingNote,
-                    liveRegion: true,
-                    child: const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                  ),
-                IconButton(
-                  icon: Icon(
-                    _useRichEditor ? Icons.short_text : Icons.text_fields,
-                  ),
-                  tooltip: _useRichEditor ? l10n.plainText : l10n.richText,
-                  onPressed: () {
-                    setState(() => _useRichEditor = !_useRichEditor);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(_isPreview ? Icons.edit : Icons.visibility),
-                  tooltip: _isPreview ? l10n.edit : l10n.preview,
-                  onPressed: () {
-                    final newValue = !_isPreview;
-                    setState(() => _isPreview = newValue);
-                    _savePreviewPreference(newValue);
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.sell_outlined),
-                  tooltip: l10n.manageTags,
-                  onPressed: () => _showTagPicker(context),
-                ),
-                if (!_isNew)
-                  IconButton(
-                    icon: const Icon(Icons.link_outlined),
-                    tooltip: l10n.viewBacklinks,
-                    onPressed: () => _showBacklinks(context),
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.share_outlined),
-                  tooltip: l10n.shareNote,
-                  onPressed: () {
-                    if (_noteId != null) {
-                      showShareBottomSheet(context, _noteId!);
-                    }
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.image_outlined),
-                  tooltip: l10n.addImage,
-                  onPressed: () => _pickImage(context),
-                ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.auto_awesome_outlined),
-                  tooltip: l10n.aiFeatures,
-                  onSelected: (value) => _handleAiAction(context, value),
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'summary',
-                      child: ListTile(
-                        leading: const Icon(Icons.summarize_outlined),
-                        title: Text(l10n.smartSummary),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'tags',
-                      child: ListTile(
-                        leading: const Icon(Icons.sell_outlined),
-                        title: Text(l10n.aiTagSuggestion),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'translate',
-                      child: ListTile(
-                        leading: const Icon(Icons.translate),
-                        title: Text(l10n.aiTranslation),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'polish',
-                      child: ListTile(
-                        leading: const Icon(Icons.spellcheck),
-                        title: Text(l10n.writingPolish),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.check),
-                  tooltip: l10n.saveAndClose,
-                  onPressed: () async {
-                    await _saveNote();
-                    if (context.mounted) context.pop();
-                  },
-                ),
-              ],
+              actions: EditorAppBarActions.buildActions(
+                context: context,
+                ref: ref,
+                noteId: _noteId,
+                isNew: _isNew,
+                isLocked: _isLocked,
+                isSaving: _isSaving,
+                useRichEditor: _useRichEditor,
+                isPreview: _isPreview,
+                isFoldView: _isFoldView,
+                isTypewriterScroll: _isTypewriterScroll,
+                isFocusMode: _isFocusMode,
+                isZenMode: _isZenMode,
+                hasReminder: _currentReminder != null,
+                onToggleLock: _toggleLock,
+                onShowReminderPicker: () => _showReminderPicker(context),
+                onToggleRichEditor: () {
+                  setState(() => _useRichEditor = !_useRichEditor);
+                },
+                onTogglePreview: () {
+                  final newValue = !_isPreview;
+                  setState(() => _isPreview = newValue);
+                  _savePreviewPreference(newValue);
+                },
+                onToggleFoldView: () {
+                  setState(() => _isFoldView = !_isFoldView);
+                },
+                onReadAloud: () {
+                  final speechState =
+                      ref.read(speechStateProvider).valueOrNull ??
+                          SpeechState.stopped;
+                  final service = ref.read(speechServiceProvider);
+                  if (speechState != SpeechState.stopped) {
+                    service.stop();
+                  } else {
+                    final content = _extractPlainText();
+                    if (content.isNotEmpty) service.speak(content);
+                  }
+                },
+                onShowTagPicker: () => _showTagPicker(context),
+                onShowBacklinks: () => _showBacklinks(context),
+                onShowRelatedNotes: () => _showRelatedNotes(context),
+                onShowProperties: () => _showProperties(context),
+                onShare: () {
+                  if (_noteId != null) {
+                    showShareBottomSheet(context, _noteId!);
+                  }
+                },
+                onPrint: () => _showPrintPreview(context),
+                onPickImage: () => _pickImage(context),
+                onPasteImage: () => _pasteImageFromClipboard(context),
+                onAiAction: (value) => _handleAiAction(context, value),
+                onToggleTypewriterScroll: () {
+                  setState(() => _isTypewriterScroll = !_isTypewriterScroll);
+                },
+                onToggleFocusMode: () {
+                  setState(() => _isFocusMode = !_isFocusMode);
+                },
+                onToggleZenMode: _toggleZenMode,
+                onSaveAndClose: () async {
+                  await _saveNote();
+                  if (context.mounted) context.pop();
+                },
+              ),
             ),
       body: _buildBody(context, l10n, colorScheme),
     );
@@ -655,6 +896,40 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ),
             ),
           ),
+        // Lock banner: shown when the note is locked (read-only).
+        if (_isLocked)
+          MaterialBanner(
+            content: GestureDetector(
+              onTap: _toggleLock,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.lock_outline,
+                    size: 18,
+                    color: colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.lockedNoteBanner,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: _toggleLock,
+                child: Text(l10n.unlockNote),
+              ),
+            ],
+            backgroundColor: colorScheme.surfaceContainerHighest,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          ),
         Expanded(
           child: Padding(
             padding: EdgeInsets.only(
@@ -666,19 +941,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ),
             child: Column(
               children: [
-                // Zen mode: show a minimal back button + focus icon.
+                // Zen mode: show a minimal back button + toggles.
                 if (_isZenMode)
                   ZenModeChrome(
                     animation: _zenChromeAnimController!,
                     onExit: _exitZenMode,
                     onToggle: _toggleZenMode,
+                    isFocusMode: _isFocusMode,
+                    isTypewriterScroll: _isTypewriterScroll,
+                    onToggleFocusMode: () {
+                      setState(() => _isFocusMode = !_isFocusMode);
+                    },
+                    onToggleTypewriterScroll: () {
+                      setState(
+                        () => _isTypewriterScroll = !_isTypewriterScroll,
+                      );
+                    },
                   ),
 
                 // Title field.
                 Semantics(
-                  label: 'Note title',
+                  label: l10n.noteTitle,
                   child: TextField(
                     controller: _titleController,
+                    readOnly: _isLocked,
                     decoration: InputDecoration(
                       hintText: l10n.title,
                       border: InputBorder.none,
@@ -691,51 +977,68 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 ),
                 const Divider(),
                 Expanded(
-                  child: _buildEditorWithCollabCursors(
-                    context,
-                    l10n,
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      child: _isPreview
-                          ? SingleChildScrollView(
-                              key: const ValueKey('preview'),
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: MarkdownPreview(
-                                content: _extractPlainText(),
+                  child: EditorDropTarget(
+                    noteId: _noteId!,
+                    onImageDropped: _handleDroppedImage,
+                    child: FocusHighlight(
+                      isActive: _isFocusMode,
+                      child: _isFoldView
+                          ? _buildFoldView(l10n)
+                          : _buildEditorWithCollabCursors(
+                              context,
+                              l10n,
+                              AnimatedSwitcher(
+                                duration: AppDurations.shortAnimation,
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                child: _isPreview
+                                    ? SingleChildScrollView(
+                                        key: const ValueKey('preview'),
+                                        padding:
+                                            const EdgeInsets.only(bottom: 16),
+                                        child: MarkdownPreview(
+                                          content: _extractPlainText(),
+                                        ),
+                                      )
+                                    : _useRichEditor
+                                        ? KeyedSubtree(
+                                            key: const ValueKey('rich_editor'),
+                                            child: RichEditorWithShortcuts(
+                                              quillController: _quillController,
+                                              focusNode: _editorFocusNode,
+                                              onExitZenMode: _exitZenMode,
+                                              onToggleHeading: _toggleHeading,
+                                              onToggleBulletList:
+                                                  _toggleBulletList,
+                                              onSlashCommand:
+                                                  _handleSlashCommand,
+                                              readOnly: _isLocked,
+                                            ),
+                                          )
+                                        : Semantics(
+                                            key: const ValueKey('plain_editor'),
+                                            label: l10n.noteContent,
+                                            child: TextField(
+                                              controller:
+                                                  _effectiveContentController,
+                                              scrollController:
+                                                  _bodyScrollController,
+                                              readOnly: _isLocked,
+                                              decoration: InputDecoration(
+                                                hintText: l10n.startWriting,
+                                                border: InputBorder.none,
+                                              ),
+                                              maxLines: null,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                height: 1.6,
+                                              ),
+                                              onChanged: (_) =>
+                                                  _scheduleTypewriterScroll(),
+                                            ),
+                                          ),
                               ),
-                            )
-                          : _useRichEditor
-                              ? KeyedSubtree(
-                                  key: const ValueKey('rich_editor'),
-                                  child: RichEditorWithShortcuts(
-                                    quillController: _quillController,
-                                    focusNode: _editorFocusNode,
-                                    onExitZenMode: _exitZenMode,
-                                    onToggleHeading: _toggleHeading,
-                                    onToggleBulletList: _toggleBulletList,
-                                  ),
-                                )
-                              : Semantics(
-                                  key: const ValueKey('plain_editor'),
-                                  label: l10n.noteContent,
-                                  child: TextField(
-                                    controller: _effectiveContentController,
-                                    scrollController: _bodyScrollController,
-                                    decoration: InputDecoration(
-                                      hintText: l10n.startWriting,
-                                      border: InputBorder.none,
-                                    ),
-                                    maxLines: null,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      height: 1.6,
-                                    ),
-                                    onChanged: (_) =>
-                                        _scheduleTypewriterScroll(),
-                                  ),
-                                ),
+                            ),
                     ),
                   ),
                 ),
@@ -754,13 +1057,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 .toList(),
           ),
 
-        // Animated word / character count bar.
+        // Writing stats bar (detailed stats: word/char/reading time/lines/paragraphs).
+        WritingStatsBar(
+          stats: _writingStats,
+          isVisible: _isWritingStatsVisible,
+          onToggleVisibility: () {
+            setState(() => _isWritingStatsVisible = !_isWritingStatsVisible);
+          },
+        ),
+
+        // Compact word / character count bar with zen mode toggle.
         CharacterCountBar(
           wordCount: _wordCount,
           charCount: _charCount,
           isZenMode: _isZenMode,
           onToggleZenMode: _toggleZenMode,
         ),
+        // TTS player bar (only visible when speaking).
+        const TtsPlayerBar(),
       ],
     );
   }
@@ -779,6 +1093,46 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     return editorChild;
   }
 
+  // ── Fold / outline view ──────────────────────────────
+
+  /// Builds the fold outline view with a toolbar bar above it.
+  Widget _buildFoldView(AppLocalizations l10n) {
+    return Column(
+      children: [
+        SectionFoldBar(
+          foldController: _foldController,
+        ),
+        Expanded(
+          child: FoldedOutlineView(
+            content: _extractPlainText(),
+            foldController: _foldController,
+            onNavigateToHeading: (offset) {
+              // Switch back to the editor and position the cursor.
+              setState(() => _isFoldView = false);
+              // Set cursor to the heading offset after switching back.
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (_useRichEditor) {
+                  final textLength =
+                      _quillController.document.toPlainText().length;
+                  final pos = offset.clamp(0, textLength);
+                  _quillController.updateSelection(
+                    TextSelection.collapsed(offset: pos),
+                    quill.ChangeSource.local,
+                  );
+                  _editorFocusNode.requestFocus();
+                } else {
+                  final controller = _effectiveContentController;
+                  final pos = offset.clamp(0, controller.text.length);
+                  controller.selection = TextSelection.collapsed(offset: pos);
+                }
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Show backlinks bottom sheet for the current note.
   void _showBacklinks(BuildContext context) {
     showModalBottomSheet(
@@ -789,6 +1143,79 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => BacklinksSheet(noteId: _noteId!),
+    );
+  }
+
+  /// Show related notes (outbound links) bottom sheet for the current note.
+  void _showRelatedNotes(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => RelatedNotesSheet(noteId: _noteId!),
+    );
+  }
+
+  /// Show properties bottom sheet for the current note.
+  void _showProperties(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => PropertiesSheet(noteId: _noteId!),
+    );
+  }
+
+  /// Show the print preview bottom sheet with the current note content.
+  void _showPrintPreview(BuildContext context) async {
+    if (_noteId == null) return;
+
+    final db = ref.read(databaseProvider);
+    final crypto = ref.read(cryptoServiceProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    final note = await db.notesDao.getNoteById(_noteId!);
+    if (!mounted || note == null) return;
+
+    String title = note.plainTitle ?? l10n.untitled;
+    String content = note.plainContent ?? '';
+
+    // Decrypt content if available.
+    if (crypto.isUnlocked) {
+      final decryptedContent = await crypto.decryptForItem(
+        _noteId!,
+        note.encryptedContent,
+      );
+      if (decryptedContent != null) content = decryptedContent;
+      if (note.encryptedTitle != null) {
+        final decryptedTitle = await crypto.decryptForItem(
+          _noteId!,
+          note.encryptedTitle!,
+        );
+        if (decryptedTitle != null) title = decryptedTitle;
+      }
+    }
+
+    if (!context.mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => PrintPreviewSheet(
+        note: note,
+        title: title,
+        content: content,
+      ),
     );
   }
 
@@ -837,6 +1264,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _quillController.formatSelection(quill.Attribute.list);
     } else {
       _quillController.formatSelection(quill.Attribute.ul);
+    }
+  }
+
+  // ── Slash command handler ────────────────────────────
+
+  /// Handles slash command selections that require parent-level actions,
+  /// such as triggering the image picker.
+  void _handleSlashCommand(SlashCommandType type) {
+    switch (type) {
+      case SlashCommandType.image:
+        _pickImage(context);
+      default:
+        break;
     }
   }
 
@@ -986,7 +1426,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // Link tag to the current note.
         await db.notesDao.addTagToNote(_noteId!, tagId);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NoteEditor] Tag application failure: $e');
       // Tag application failure should not crash the editor.
     }
   }
@@ -1010,7 +1451,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  /// Pick an image from the gallery and insert a markdown reference.
+  /// Show a bottom sheet to select image source (gallery or camera).
   Future<void> _pickImage(BuildContext context) async {
     // Image picking via file system is not available on web platform.
     if (kIsWeb) {
@@ -1022,9 +1463,49 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                l10n.selectImageSource,
+                style: Theme.of(ctx).textTheme.titleMedium,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(l10n.fromGallery),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: Text(l10n.fromCamera),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+    if (!context.mounted) return;
+    await _pickImageFromSource(context, source);
+  }
+
+  /// Pick an image from the given [source] and insert a markdown reference.
+  Future<void> _pickImageFromSource(
+    BuildContext context,
+    ImageSource source,
+  ) async {
     try {
       final picker = ImagePicker();
-      final xFile = await picker.pickImage(source: ImageSource.gallery);
+      final xFile = await picker.pickImage(source: source);
       if (xFile == null) return;
 
       final bytes = await File(xFile.path).readAsBytes();
@@ -1045,5 +1526,67 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         SnackBar(content: Text(l10n.failedToAddImage(e.toString()))),
       );
     }
+  }
+
+  /// Attempt to paste an image from the clipboard and insert it into the note.
+  ///
+  /// On desktop platforms, this uses the Clipboard API to check for image data.
+  /// On mobile/web platforms, clipboard image access is not easily supported,
+  /// so this shows a message to the user.
+  Future<void> _pasteImageFromClipboard(BuildContext context) async {
+    if (kIsWeb) {
+      if (!context.mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.failedToAddImage('Not available on web'))),
+      );
+      return;
+    }
+
+    try {
+      // Try to read clipboard image data via platform-specific approach.
+      // The Clipboard API in Flutter does not natively support image data,
+      // so we use a best-effort approach with the image_picker fallback.
+      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+      if (clipboardData?.text != null &&
+          clipboardData!.text!.startsWith('file://')) {
+        // If the clipboard contains a file URI, try to use it as an image.
+        final filePath = clipboardData.text!.replaceFirst('file://', '');
+        final file = File(filePath);
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+          final localPath = await ImageStorage.saveImage(bytes, _noteId!);
+          final controller = _effectiveContentController;
+          final imageRef = '\n![image](file://$localPath)\n';
+          controller.text = controller.text + imageRef;
+          _saveNote();
+          return;
+        }
+      }
+
+      // Could not read an image from clipboard.
+      if (!context.mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.failedToAddImage('No image found in clipboard')),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.failedToAddImage(e.toString()))),
+      );
+    }
+  }
+
+  /// Handle an image that was drag-and-dropped onto the editor.
+  /// Inserts a markdown image reference and triggers auto-save.
+  void _handleDroppedImage(String localPath) {
+    final controller = _effectiveContentController;
+    final imageRef = '\n![image](file://$localPath)\n';
+    controller.text = controller.text + imageRef;
+    _saveNote();
   }
 }

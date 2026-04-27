@@ -15,6 +15,7 @@ import 'core/locale/locale_provider.dart';
 import 'core/monitoring/error_reporter.dart';
 import 'l10n/app_localizations.dart';
 import 'core/network/api_client.dart';
+import 'core/notifications/local_notification_service.dart';
 import 'core/notifications/push_service.dart';
 import 'core/platform/platform_utils.dart';
 import 'core/share/receive_share_service.dart';
@@ -26,7 +27,9 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/theme/animation_config.dart';
 import 'core/widgets/app_menu_bar.dart';
+import 'core/quick_actions/quick_actions_manager.dart';
 import 'core/widgets/keyboard_shortcuts.dart';
+import 'features/notes/presentation/widgets/command_palette.dart';
 import 'routing/app_router.dart';
 
 /// Global reference to the Riverpod container so that non-widget code
@@ -83,6 +86,12 @@ void main() async {
     ),
   );
 
+  // Initialize local notification service for scheduled reminders.
+  // This must happen before the UI loads so the plugin is ready to receive
+  // notification tap events.
+  final localNotificationService = LocalNotificationService();
+  await localNotificationService.init();
+
   // Load any previously-stored tokens so the auth interceptor has them
   // available on the very first request.
   apiClient.loadStoredTokens();
@@ -93,6 +102,8 @@ void main() async {
         overrides: [
           databaseProvider.overrideWithValue(db),
           apiClientProvider.overrideWithValue(apiClient),
+          localNotificationServiceProvider
+              .overrideWithValue(localNotificationService),
         ],
         child: const AnyNoteApp(),
       ),
@@ -150,6 +161,12 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
         final shareService = globalContainer.read(receiveShareServiceProvider);
         shareService.init();
 
+        // Register home screen quick actions (iOS / Android only).
+        // Wire the navigator key getter so the quick action callback can
+        // obtain a valid BuildContext for navigation.
+        QuickActionsManager.setNavigatorKeyGetter(() => rootNavigatorKey);
+        QuickActionsManager.register(context);
+
         // Listen for incoming shares and navigate to the note editor.
         _shareSubscription = shareService.onShareReceived.listen((content) {
           final navContext = rootNavigatorKey.currentContext;
@@ -166,6 +183,7 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
   @override
   void dispose() {
     _shareSubscription?.cancel();
+    QuickActionsManager.unregister();
     if (PlatformUtils.isDesktop) {
       windowManager.removeListener(this);
     }
@@ -227,8 +245,9 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
         height: size.height,
         isMaximized: isMaximized,
       );
-    } catch (_) {
+    } catch (e) {
       // Failed to save window bounds -- non-critical.
+      debugPrint('[AnyNoteApp] failed to save window bounds: $e');
     }
   }
 
@@ -243,21 +262,30 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
           child: MediaQuery.withClampedTextScaling(
             minScaleFactor: 0.8,
             maxScaleFactor: 2.0,
-            child: MaterialApp.router(
-              title: 'AnyNote',
-              debugShowCheckedModeBanner: false,
-              showSemanticsDebugger: false,
-              theme: selectThemeData(
-                      themeOption, MediaQuery.platformBrightnessOf(context)) ??
-                  AppTheme.lightTheme(),
-              darkTheme: AppTheme.darkTheme(),
-              highContrastTheme: AppTheme.highContrastLightTheme(),
-              highContrastDarkTheme: AppTheme.highContrastDarkTheme(),
-              themeMode: selectThemeMode(themeOption),
-              routerConfig: appRouter,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              locale: locale,
+            child: Stack(
+              children: [
+                MaterialApp.router(
+                  title: 'AnyNote',
+                  debugShowCheckedModeBanner: false,
+                  showSemanticsDebugger: false,
+                  theme: selectThemeData(
+                        themeOption,
+                        MediaQuery.platformBrightnessOf(context),
+                      ) ??
+                      AppTheme.lightTheme(),
+                  darkTheme: AppTheme.darkTheme(),
+                  highContrastTheme: AppTheme.highContrastLightTheme(),
+                  highContrastDarkTheme: AppTheme.highContrastDarkTheme(),
+                  themeMode: selectThemeMode(themeOption),
+                  routerConfig: appRouter,
+                  localizationsDelegates:
+                      AppLocalizations.localizationsDelegates,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  locale: locale,
+                ),
+                // Command palette overlay rendered on top of all screens.
+                const CommandPaletteOverlay(),
+              ],
             ),
           ),
         ),

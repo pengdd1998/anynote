@@ -48,6 +48,22 @@ class DismissibleNoteCard extends StatelessWidget {
   /// Localized "untitled" fallback string.
   final String untitled;
 
+  /// Called when status badge is tapped.
+  final VoidCallback? onStatusTap;
+
+  /// Called when priority badge is tapped.
+  final VoidCallback? onPriorityTap;
+
+  /// Whether the note is locked (read-only).
+  final bool isLocked;
+
+  /// Test-only: if true, skips rendering PropertyBadges to avoid timer leaks.
+  final bool skipPropertyBadges;
+
+  /// Optional trailing widget displayed next to the card (e.g. drag handle).
+  /// Only shown when [disableSwipe] is true.
+  final Widget? trailing;
+
   const DismissibleNoteCard({
     super.key,
     required this.note,
@@ -61,6 +77,11 @@ class DismissibleNoteCard extends StatelessWidget {
     required this.onLongPress,
     required this.onDeleted,
     required this.untitled,
+    this.onStatusTap,
+    this.onPriorityTap,
+    this.isLocked = false,
+    this.skipPropertyBadges = false,
+    this.trailing,
   });
 
   @override
@@ -78,129 +99,144 @@ class DismissibleNoteCard extends StatelessWidget {
       onLongPress: onLongPress,
       untitled: untitled,
       layout: isGrid ? NoteCardLayout.grid : NoteCardLayout.list,
+      onStatusTap: onStatusTap,
+      onPriorityTap: onPriorityTap,
+      isLocked: isLocked,
+      skipPropertyBadges: skipPropertyBadges,
     );
 
     // When swipe is disabled (e.g., selection mode), just return the card.
     if (disableSwipe) {
+      if (trailing != null) {
+        return Row(
+          children: [
+            Expanded(child: card),
+            trailing!,
+          ],
+        );
+      }
       return card;
     }
 
-    return Dismissible(
-      key: ValueKey(note.id),
-      direction: DismissDirection.horizontal,
-      dismissThresholds: const {
-        DismissDirection.startToEnd: 0.35,
-        DismissDirection.endToStart: 0.4,
-      },
-      // Right swipe: pin/unpin with warm primary color.
-      background: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.primary.withAlpha(AppAlpha.medium),
-          borderRadius: cardRadius,
-        ),
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 24),
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Semantics(
-          label: note.isPinned ? l10n.unpinNote : l10n.pinNote,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                note.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                color: colorScheme.primary,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                note.isPinned ? l10n.unpinNote : l10n.pinNote,
-                style: TextStyle(
-                  fontSize: 11,
+    return Semantics(
+      label: l10n.noteSemantics(note.plainTitle ?? untitled),
+      child: Dismissible(
+        key: ValueKey(note.id),
+        direction: DismissDirection.horizontal,
+        dismissThresholds: const {
+          DismissDirection.startToEnd: 0.35,
+          DismissDirection.endToStart: 0.4,
+        },
+        // Right swipe: pin/unpin with warm primary color.
+        background: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withAlpha(AppAlpha.medium),
+            borderRadius: cardRadius,
+          ),
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.only(left: 24),
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Semantics(
+            label: note.isPinned ? l10n.unpinNote : l10n.pinNote,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  note.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
                   color: colorScheme.primary,
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      // Left swipe: delete with warm error color.
-      secondaryBackground: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.error.withAlpha(AppAlpha.medium),
-          borderRadius: cardRadius,
-        ),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Semantics(
-          label: l10n.deleteNote,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.delete_outline, color: colorScheme.error),
-              const SizedBox(height: 2),
-              Text(
-                l10n.deleteNote,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: colorScheme.error,
+                const SizedBox(height: 2),
+                Text(
+                  note.isPinned ? l10n.unpinNote : l10n.pinNote,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colorScheme.primary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.startToEnd) {
-          // Pin/unpin does not dismiss; just toggle and return false.
-          await db.notesDao.togglePin(note.id);
-          return false;
-        }
-        // Delete: confirm via dialog.
-        return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(l10n.deleteNoteQuestion),
-            content: Text(
-              l10n.deleteNoteConfirm(note.plainTitle ?? l10n.untitled),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text(l10n.cancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text(l10n.delete),
-              ),
-            ],
+        // Left swipe: delete with warm error color.
+        secondaryBackground: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.error.withAlpha(AppAlpha.medium),
+            borderRadius: cardRadius,
           ),
-        );
-      },
-      onDismissed: (direction) {
-        if (direction == DismissDirection.endToStart) {
-          db.notesDao.softDeleteNote(note.id);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.noteDeleted),
-              action: SnackBarAction(
-                label: l10n.undo,
-                onPressed: () async {
-                  await (db.update(db.notes)
-                        ..where((n) => n.id.equals(note.id)))
-                      .write(
-                    const NotesCompanion(
-                      deletedAt: Value(null),
-                      isSynced: Value(false),
-                    ),
-                  );
-                },
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 24),
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Semantics(
+            label: l10n.deleteNote,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.delete_outline, color: colorScheme.error),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.deleteNote,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        confirmDismiss: (direction) async {
+          if (direction == DismissDirection.startToEnd) {
+            // Pin/unpin does not dismiss; just toggle and return false.
+            await db.notesDao.togglePin(note.id);
+            return false;
+          }
+          // Delete: confirm via dialog.
+          return await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(l10n.deleteNoteQuestion),
+              content: Text(
+                l10n.deleteNoteConfirm(note.plainTitle ?? l10n.untitled),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(l10n.cancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(l10n.delete),
+                ),
+              ],
             ),
           );
-          onDeleted?.call();
-        }
-      },
-      child: card,
+        },
+        onDismissed: (direction) {
+          if (direction == DismissDirection.endToStart) {
+            db.notesDao.softDeleteNote(note.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.noteDeleted),
+                action: SnackBarAction(
+                  label: l10n.undo,
+                  onPressed: () async {
+                    await (db.update(db.notes)
+                          ..where((n) => n.id.equals(note.id)))
+                        .write(
+                      const NotesCompanion(
+                        deletedAt: Value(null),
+                        isSynced: Value(false),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+            onDeleted?.call();
+          }
+        },
+        child: card,
+      ),
     );
   }
 }

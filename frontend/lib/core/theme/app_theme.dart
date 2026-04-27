@@ -786,19 +786,17 @@ class AppTheme {
       onError: surfaceWhite,
       errorContainer: errorRed.withValues(alpha: 0.15),
       onErrorContainer: errorRed,
-      background: surfaceWhite,
-      onBackground: pureBlack,
       surface: surfaceWhite,
       onSurface: pureBlack,
-      surfaceVariant: Color(0xFFE0E0E0),
+      surfaceContainerHighest: const Color(0xFFE0E0E0),
       onSurfaceVariant: pureBlack,
       outline: pureBlack,
-      outlineVariant: Color(0xFF333333),
+      outlineVariant: const Color(0xFF333333),
       shadow: pureBlack,
       scrim: pureBlack.withValues(alpha: 0.5),
       inverseSurface: pureBlack,
       onInverseSurface: surfaceWhite,
-      inversePrimary: Color(0xFF8080FF),
+      inversePrimary: const Color(0xFF8080FF),
     );
 
     return _buildHighContrastTheme(
@@ -806,10 +804,10 @@ class AppTheme {
       scaffoldBg: surfaceWhite,
       cardBg: surfaceWhite,
       border: pureBlack,
-      divider: Color(0xFFE0E0E0),
+      divider: const Color(0xFFE0E0E0),
       textPrimary: pureBlack,
-      textSecondary: Color(0xFF333333),
-      inputFill: Color(0xFFF5F5F5),
+      textSecondary: const Color(0xFF333333),
+      inputFill: const Color(0xFFF5F5F5),
     );
   }
 
@@ -842,19 +840,17 @@ class AppTheme {
       onError: surfaceBlack,
       errorContainer: errorRed.withValues(alpha: 0.2),
       onErrorContainer: errorRed,
-      background: surfaceBlack,
-      onBackground: pureWhite,
       surface: surfaceBlack,
       onSurface: pureWhite,
-      surfaceVariant: Color(0xFF1A1A1A),
+      surfaceContainerHighest: const Color(0xFF1A1A1A),
       onSurfaceVariant: pureWhite,
       outline: pureWhite,
-      outlineVariant: Color(0xFFCCCCCC),
+      outlineVariant: const Color(0xFFCCCCCC),
       shadow: pureBlack,
       scrim: pureWhite.withValues(alpha: 0.5),
       inverseSurface: pureWhite,
       onInverseSurface: surfaceBlack,
-      inversePrimary: Color(0xFF0033CC),
+      inversePrimary: const Color(0xFF0033CC),
     );
 
     return _buildHighContrastTheme(
@@ -862,10 +858,10 @@ class AppTheme {
       scaffoldBg: surfaceBlack,
       cardBg: surfaceBlack,
       border: pureWhite,
-      divider: Color(0xFF333333),
+      divider: const Color(0xFF333333),
       textPrimary: pureWhite,
-      textSecondary: Color(0xFFCCCCCC),
-      inputFill: Color(0xFF1A1A1A),
+      textSecondary: const Color(0xFFCCCCCC),
+      inputFill: const Color(0xFF1A1A1A),
     );
   }
 
@@ -1061,12 +1057,12 @@ class AppTheme {
         unselectedItemColor: textPrimary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: TextStyle(
+        selectedLabelStyle: const TextStyle(
           fontFamily: _fontFamily,
           fontSize: 11,
           fontWeight: FontWeight.w700,
         ),
-        unselectedLabelStyle: TextStyle(
+        unselectedLabelStyle: const TextStyle(
           fontFamily: _fontFamily,
           fontSize: 11,
           fontWeight: FontWeight.w600,
@@ -1147,7 +1143,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius:
-              BorderRadius.vertical(top: Radius.circular(radiusLarge)),
+              const BorderRadius.vertical(top: Radius.circular(radiusLarge)),
           side: BorderSide(color: border, width: 2),
         ),
       ),

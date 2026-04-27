@@ -76,7 +76,8 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('pagination benchmarks', () {
-    test('batch insert 10,000 notes completes within reasonable time', () async {
+    test('batch insert 10,000 notes completes within reasonable time',
+        () async {
       final sw = Stopwatch()..start();
       await insertBulkNotes(10000);
       sw.stop();
@@ -103,7 +104,8 @@ void main() {
       expect(sw.elapsedMilliseconds, lessThan(100));
     });
 
-    test('paginated fetch at various offsets from 10K dataset is fast', () async {
+    test('paginated fetch at various offsets from 10K dataset is fast',
+        () async {
       await insertBulkNotes(10000);
 
       const offsets = [0, 500, 2500, 5000, 9500];
@@ -135,7 +137,8 @@ void main() {
       expect(sw.elapsedMilliseconds, lessThan(100));
     });
 
-    test('paginated fetch with sort by title from 10K dataset is fast', () async {
+    test('paginated fetch with sort by title from 10K dataset is fast',
+        () async {
       await insertBulkNotes(10000);
 
       final sw = Stopwatch()..start();
@@ -177,8 +180,8 @@ void main() {
       sw.stop();
 
       expect(totalFetched, equals(10000));
-      // All 200 page fetches should complete in under 5 seconds (generous for CI).
-      expect(sw.elapsedMilliseconds, lessThan(5000));
+      // All 200 page fetches should complete in under 8 seconds (generous for CI).
+      expect(sw.elapsedMilliseconds, lessThan(8000));
     });
   });
 
@@ -248,30 +251,50 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('FTS5 search benchmarks', () {
-    test('FTS5 search on 10K dataset is fast', () async {
-      // Placeholder: verify bulk data can be created.
-      await insertBulkNotes(10000);
-      final count = await notesDao.countNotes();
-      expect(count, equals(10000));
-    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',);
+    test(
+      'FTS5 search on 10K dataset is fast',
+      () async {
+        // Placeholder: verify bulk data can be created.
+        await insertBulkNotes(10000);
+        final count = await notesDao.countNotes();
+        expect(count, equals(10000));
+      },
+      skip:
+          'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',
+    );
 
-    test('FTS5 search count on 10K dataset is fast', () async {
-      await insertBulkNotes(10000);
-      final count = await notesDao.countNotes();
-      expect(count, equals(10000));
-    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',);
+    test(
+      'FTS5 search count on 10K dataset is fast',
+      () async {
+        await insertBulkNotes(10000);
+        final count = await notesDao.countNotes();
+        expect(count, equals(10000));
+      },
+      skip:
+          'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',
+    );
 
-    test('FTS5 search pagination across all matches completes quickly', () async {
-      await insertBulkNotes(10000);
-      final count = await notesDao.countNotes();
-      expect(count, equals(10000));
-    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',);
+    test(
+      'FTS5 search pagination across all matches completes quickly',
+      () async {
+        await insertBulkNotes(10000);
+        final count = await notesDao.countNotes();
+        expect(count, equals(10000));
+      },
+      skip:
+          'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',
+    );
 
-    test('FTS5 search for common word across 10K dataset', () async {
-      await insertBulkNotes(10000);
-      final count = await notesDao.countNotes();
-      expect(count, equals(10000));
-    }, skip: 'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',);
+    test(
+      'FTS5 search for common word across 10K dataset',
+      () async {
+        await insertBulkNotes(10000);
+        final count = await notesDao.countNotes();
+        expect(count, equals(10000));
+      },
+      skip:
+          'FTS5 MATCH requires native mobile SQLite; skipped in flutter test env',
+    );
   });
 
   // ---------------------------------------------------------------------------

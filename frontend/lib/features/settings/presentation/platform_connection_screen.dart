@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/app_components.dart';
+import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/settings_providers.dart';
 
@@ -41,8 +42,11 @@ class _PlatformConnectionScreenState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.share_outlined,
-                      size: 48, color: Theme.of(context).disabledColor,),
+                  Icon(
+                    Icons.share_outlined,
+                    size: 48,
+                    color: Theme.of(context).disabledColor,
+                  ),
                   const SizedBox(height: 12),
                   Text(l10n.noPlatformsAvailable),
                   const SizedBox(height: 8),
@@ -58,8 +62,7 @@ class _PlatformConnectionScreenState
             );
           }
           return RefreshIndicator(
-            onRefresh: () =>
-                ref.read(platformsProvider.notifier).refresh(),
+            onRefresh: () => ref.read(platformsProvider.notifier).refresh(),
             child: ListView(
               padding: const EdgeInsets.only(top: 8, bottom: 32),
               children: platforms.asMap().entries.map((entry) {
@@ -72,17 +75,27 @@ class _PlatformConnectionScreenState
                     child: _PlatformCard(
                       platform: p,
                       platformIcons: _platformIcons,
-                      isConnecting: _isConnecting && _connectingPlatform == (p['key']?.toString() ?? p['name']?.toString().toLowerCase() ?? ''),
+                      isConnecting: _isConnecting &&
+                          _connectingPlatform ==
+                              (p['key']?.toString() ??
+                                  p['name']?.toString().toLowerCase() ??
+                                  ''),
                       l10n: l10n,
                       onConnect: () => _connect(
-                        p['key']?.toString() ?? p['name']?.toString().toLowerCase() ?? '',
+                        p['key']?.toString() ??
+                            p['name']?.toString().toLowerCase() ??
+                            '',
                         p['name']?.toString() ?? 'Unknown',
                       ),
                       onVerify: () => _verify(
-                        p['key']?.toString() ?? p['name']?.toString().toLowerCase() ?? '',
+                        p['key']?.toString() ??
+                            p['name']?.toString().toLowerCase() ??
+                            '',
                       ),
                       onDisconnect: () => _confirmDisconnect(
-                        p['key']?.toString() ?? p['name']?.toString().toLowerCase() ?? '',
+                        p['key']?.toString() ??
+                            p['name']?.toString().toLowerCase() ??
+                            '',
                         p['name']?.toString() ?? 'Unknown',
                       ),
                     ),
@@ -92,30 +105,12 @@ class _PlatformConnectionScreenState
             ),
           );
         },
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) {
           final l10n = AppLocalizations.of(context)!;
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline,
-                    size: 48, color: Theme.of(context).colorScheme.error,),
-                const SizedBox(height: 12),
-                Text(l10n.failedToLoadPlatforms),
-                const SizedBox(height: 8),
-                Text('$error',
-                    style: TextStyle(
-                        fontSize: 12, color: Theme.of(context).disabledColor,),),
-                const SizedBox(height: 16),
-                FilledButton.tonal(
-                  onPressed: () =>
-                      ref.read(platformsProvider.notifier).refresh(),
-                  child: Text(l10n.retry),
-                ),
-              ],
-            ),
+          return ErrorStateWidget(
+            message: '${l10n.failedToLoadPlatforms}\n$error',
+            onRetry: () => ref.read(platformsProvider.notifier).refresh(),
           );
         },
       ),
@@ -149,8 +144,10 @@ class _PlatformConnectionScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  l10n.failedToConnect(e.message ?? 'Unknown error'),),),
+            content: Text(
+              l10n.failedToConnect(e.message ?? 'Unknown error'),
+            ),
+          ),
         );
       }
     } finally {
@@ -176,9 +173,13 @@ class _PlatformConnectionScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(valid
-                ? l10n.connectionVerified
-                : l10n.connectionInvalid(result['error']?.toString() ?? 'please reconnect'),),
+            content: Text(
+              valid
+                  ? l10n.connectionVerified
+                  : l10n.connectionInvalid(
+                      result['error']?.toString() ?? 'please reconnect',
+                    ),
+            ),
             backgroundColor: valid ? Colors.green : Colors.red,
           ),
         );
@@ -189,8 +190,10 @@ class _PlatformConnectionScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content:
-                  Text(l10n.verificationFailedError(e.message ?? 'Network error')),),
+            content: Text(
+              l10n.verificationFailedError(e.message ?? 'Network error'),
+            ),
+          ),
         );
       }
     }
@@ -213,15 +216,13 @@ class _PlatformConnectionScreenState
             onPressed: () async {
               final nav = Navigator.of(ctx);
               try {
-                await ref
-                    .read(platformsProvider.notifier)
-                    .disconnect(platform);
+                await ref.read(platformsProvider.notifier).disconnect(platform);
                 nav.pop();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content:
-                            Text(l10n.disconnectedFrom(displayName)),),
+                      content: Text(l10n.disconnectedFrom(displayName)),
+                    ),
                   );
                 }
               } on DioException catch (e) {
@@ -229,8 +230,10 @@ class _PlatformConnectionScreenState
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(
-                            l10n.failedToDisconnect(e.message ?? 'Unknown error'),),),
+                      content: Text(
+                        l10n.failedToDisconnect(e.message ?? 'Unknown error'),
+                      ),
+                    ),
                   );
                 }
               }
@@ -264,7 +267,8 @@ class _PlatformConnectionScreenState
               // Display a placeholder icon. In production, decode qrCodeData
               // into an actual QR image using a QR rendering package.
               child: const Center(
-                  child: Icon(Icons.qr_code_2, size: 120),),
+                child: Icon(Icons.qr_code_2, size: 120),
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -339,8 +343,11 @@ class _PlatformCard extends StatelessWidget {
       trailing = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle,
-              color: colorScheme.primary, size: 20,),
+          Icon(
+            Icons.check_circle,
+            color: colorScheme.primary,
+            size: 20,
+          ),
           const SizedBox(width: 4),
           TextButton(
             onPressed: onVerify,

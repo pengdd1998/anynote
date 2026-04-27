@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -181,9 +182,10 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         return false;
       }
       return true;
-    } catch (_) {
+    } catch (e) {
       // If quota check fails, allow the operation to proceed.
       // The server will enforce the limit regardless.
+      debugPrint('[ComposeProviders] quota check failed, proceeding: $e');
       return true;
     }
   }

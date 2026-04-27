@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import '../../../features/notes/domain/search_query_parser.dart';
 import '../tables.dart';
 import '../app_database.dart';
 
@@ -7,7 +8,17 @@ part 'notes_dao.g.dart';
 /// Data access object for notes.
 /// Handles CRUD, FTS5 search, and sync status management.
 @DriftAccessor(
-    tables: [Notes, NotesFts, NoteTags, Tags, Collections, CollectionNotes])
+  tables: [
+    Notes,
+    NotesFts,
+    NoteTags,
+    Tags,
+    Collections,
+    CollectionNotes,
+    NoteLinks,
+    NoteProperties,
+  ],
+)
 class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   NotesDao(super.db);
 
@@ -176,6 +187,12 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     return (select(notes)..where((n) => n.id.equals(id))).getSingleOrNull();
   }
 
+  /// Watch a single note by ID for changes.
+  /// Returns a stream that emits the note whenever it is updated.
+  Stream<Note?> watchNoteById(String id) {
+    return (select(notes)..where((n) => n.id.equals(id))).watchSingle();
+  }
+
   /// Create a new note.
   Future<String> createNote({
     required String id,
@@ -265,6 +282,44 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     );
   }
 
+  /// Update the color of a note. Pass null to remove the color.
+  Future<void> updateNoteColor(String id, String? color) async {
+    await (update(notes)..where((n) => n.id.equals(id))).write(
+      NotesCompanion(color: Value(color)),
+    );
+  }
+
+  /// Update the sort order for a single note.
+  /// Used during drag-and-drop reordering.
+  Future<void> updateNoteSortOrder(String noteId, int order) async {
+    await (update(notes)..where((n) => n.id.equals(noteId))).write(
+      NotesCompanion(sortOrder: Value(order)),
+    );
+  }
+
+  /// Batch update sort orders for multiple notes based on their position
+  /// in [noteIds]. The first element gets order 0, the second gets 1, etc.
+  Future<void> reorderNotes(List<String> noteIds) async {
+    await transaction(() async {
+      for (var i = 0; i < noteIds.length; i++) {
+        await (update(notes)..where((n) => n.id.equals(noteIds[i]))).write(
+          NotesCompanion(sortOrder: Value(i)),
+        );
+      }
+    });
+  }
+
+  /// Get all non-deleted notes sorted by custom sortOrder, then by update time.
+  Future<List<Note>> getNotesSortedByCustomOrder() {
+    return (select(notes)
+          ..where((n) => n.deletedAt.isNull())
+          ..orderBy([
+            (n) => OrderingTerm.asc(n.sortOrder),
+            (n) => OrderingTerm.desc(n.updatedAt),
+          ]))
+        .get();
+  }
+
   /// Get all unsynced notes.
   Future<List<Note>> getUnsyncedNotes() {
     return (select(notes)..where((n) => n.isSynced.equals(false))).get();
@@ -287,7 +342,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     // Use a temp table to bridge the gap: write FTS5 results to a temp table
     // via customStatement, then read from it via customSelect.
     await customStatement(
-        'CREATE TEMP TABLE IF NOT EXISTS _fts_results (note_id TEXT NOT NULL PRIMARY KEY)');
+      'CREATE TEMP TABLE IF NOT EXISTS _fts_results (note_id TEXT NOT NULL PRIMARY KEY)',
+    );
     await customStatement('DELETE FROM _fts_results');
     await customStatement(
       'INSERT INTO _fts_results (note_id) SELECT note_id FROM notes_fts WHERE notes_fts MATCH ?',
@@ -564,6 +620,274 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     }).toList();
   }
 
+  /// Advanced search with operator support.
+  ///
+  /// Uses FTS5 for full-text matching and joins for tag/collection/property
+  /// filtering based on the parsed [SearchQuery]. Returns results with
+  /// highlighting snippets and bm25 ranking when full-text query is present.
+  Future<List<SearchResult>> advancedSearch(
+    SearchQuery query, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    // If there are no filters at all, return empty.
+    if (query.fullTextQuery.isEmpty && !query.hasOperatorFilters) {
+      return [];
+    }
+
+    // Step 1: Resolve tag IDs from tag name filters.
+    List<String>? tagFilteredIds;
+    if (query.tagFilters.isNotEmpty) {
+      final allTags = await (select(tags)).get();
+      final matchingTagIds = <String>{};
+      for (final tagFilter in query.tagFilters) {
+        final lowerFilter = tagFilter.toLowerCase();
+        for (final tag in allTags) {
+          final plainName = tag.plainName?.toLowerCase() ?? '';
+          if (plainName.startsWith(lowerFilter) || plainName == lowerFilter) {
+            matchingTagIds.add(tag.id);
+          }
+        }
+      }
+      if (matchingTagIds.isEmpty) return [];
+
+      // Find notes that have ALL specified tag filters.
+      Set<String>? intersection;
+      for (final tagId in matchingTagIds) {
+        final rows = await (select(noteTags)
+              ..where((nt) => nt.tagId.equals(tagId)))
+            .get();
+        final ids = rows.map((nt) => nt.noteId).toSet();
+        intersection =
+            intersection == null ? ids : intersection.intersection(ids);
+      }
+      tagFilteredIds = intersection?.toList() ?? [];
+      if (tagFilteredIds.isEmpty) return [];
+    }
+
+    // Step 2: Resolve collection IDs from collection name filters.
+    List<String>? collectionFilteredIds;
+    if (query.collectionFilters.isNotEmpty) {
+      final allCollections = await (select(collections)).get();
+      final matchingCollectionIds = <String>{};
+      for (final colFilter in query.collectionFilters) {
+        final lowerFilter = colFilter.toLowerCase();
+        for (final col in allCollections) {
+          final plainTitle = col.plainTitle?.toLowerCase() ?? '';
+          if (plainTitle.startsWith(lowerFilter) || plainTitle == lowerFilter) {
+            matchingCollectionIds.add(col.id);
+          }
+        }
+      }
+      if (matchingCollectionIds.isEmpty) return [];
+
+      final cnRows = await (select(collectionNotes)
+            ..where(
+              (cn) => cn.collectionId.isIn(matchingCollectionIds.toList()),
+            ))
+          .get();
+      collectionFilteredIds = cnRows.map((cn) => cn.noteId).toSet().toList();
+      if (collectionFilteredIds.isEmpty) return [];
+    }
+
+    // Step 3: Resolve status filter from note_properties.
+    List<String>? statusFilteredIds;
+    if (query.statusFilter != null) {
+      final rows = await (select(noteProperties)
+            ..where(
+              (np) =>
+                  np.key.equals('status') &
+                  np.valueText.equals(query.statusFilter!),
+            ))
+          .get();
+      statusFilteredIds = rows.map((np) => np.noteId).toList();
+      if (statusFilteredIds.isEmpty) return [];
+    }
+
+    // Step 4: Resolve priority filter from note_properties.
+    List<String>? priorityFilteredIds;
+    if (query.priorityFilter != null) {
+      final rows = await (select(noteProperties)
+            ..where(
+              (np) =>
+                  np.key.equals('priority') &
+                  np.valueText.equals(query.priorityFilter!),
+            ))
+          .get();
+      priorityFilteredIds = rows.map((np) => np.noteId).toList();
+      if (priorityFilteredIds.isEmpty) return [];
+    }
+
+    // Step 5: Resolve links filter.
+    List<String>? linksFilteredIds;
+    if (query.hasLinks != null) {
+      if (query.hasLinks!) {
+        // Notes with at least one outbound link (sourceId).
+        final allLinks = await (select(noteLinks)).get();
+        final sourceIds = allLinks.map((nl) => nl.sourceId).toSet();
+        linksFilteredIds = sourceIds.toList();
+        if (linksFilteredIds.isEmpty) return [];
+      } else {
+        // Orphaned notes: notes that have no outbound links.
+        // Get all note IDs, subtract those with outbound links.
+        final allNotes =
+            await (select(notes)..where((n) => n.deletedAt.isNull())).get();
+        final allLinks = await (select(noteLinks)).get();
+        final linkedSourceIds = allLinks.map((nl) => nl.sourceId).toSet();
+        linksFilteredIds = allNotes
+            .where((n) => !linkedSourceIds.contains(n.id))
+            .map((n) => n.id)
+            .toList();
+        if (linksFilteredIds.isEmpty) return [];
+      }
+    }
+
+    // Step 5b: Resolve color filter.
+    List<String>? colorFilteredIds;
+    if (query.colorFilter != null) {
+      // Normalize both the query color and stored color to uppercase for
+      // case-insensitive hex matching.
+      final targetColor = query.colorFilter!.toUpperCase();
+      final allNotes =
+          await (select(notes)..where((n) => n.deletedAt.isNull())).get();
+      colorFilteredIds = allNotes
+          .where((n) => n.color?.toUpperCase() == targetColor)
+          .map((n) => n.id)
+          .toList();
+      if (colorFilteredIds.isEmpty) return [];
+    }
+
+    // Step 6: Intersect all filtered ID sets.
+    Set<String>? candidateIds;
+    void intersect(List<String>? ids) {
+      if (ids == null) return;
+      final idSet = ids.toSet();
+      candidateIds =
+          candidateIds == null ? idSet : candidateIds!.intersection(idSet);
+    }
+
+    intersect(tagFilteredIds);
+    intersect(collectionFilteredIds);
+    intersect(statusFilteredIds);
+    intersect(priorityFilteredIds);
+    intersect(linksFilteredIds);
+    intersect(colorFilteredIds);
+
+    if (candidateIds != null && candidateIds!.isEmpty) return [];
+
+    // Step 7: Perform FTS5 search if full-text query is present.
+    List<String>? ftsIds;
+    if (query.fullTextQuery.isNotEmpty) {
+      final sanitized = _sanitizeFtsQuery(query.fullTextQuery);
+      if (sanitized.isEmpty) return [];
+
+      await customStatement(
+        'CREATE TEMP TABLE IF NOT EXISTS _fts_adv_results ('
+        'note_id TEXT NOT NULL PRIMARY KEY, '
+        'rank REAL NOT NULL, '
+        'content_snippet TEXT NOT NULL, '
+        'title_snippet TEXT NOT NULL'
+        ')',
+      );
+      await customStatement('DELETE FROM _fts_adv_results');
+      await customStatement(
+        'INSERT INTO _fts_adv_results (note_id, rank, content_snippet, title_snippet) '
+        'SELECT note_id, bm25(notes_fts), '
+        'highlight(notes_fts, 1, ?, ?), '
+        'highlight(notes_fts, 2, ?, ?) '
+        'FROM notes_fts WHERE notes_fts MATCH ? '
+        'ORDER BY rank',
+        ['**', '**', '**', '**', sanitized],
+      );
+
+      final ftsResults = await customSelect(
+        'SELECT note_id, rank, content_snippet, title_snippet '
+        'FROM _fts_adv_results ORDER BY rank',
+        readsFrom: {notes},
+      ).get();
+
+      ftsIds = ftsResults.map((r) => r.read<String>('note_id')).toList();
+      if (ftsIds.isEmpty) return [];
+
+      // Intersect FTS results with candidate IDs from operator filters.
+      if (candidateIds != null) {
+        final ftsSet = ftsIds.toSet();
+        candidateIds = candidateIds!.intersection(ftsSet);
+        if (candidateIds!.isEmpty) return [];
+      }
+    }
+
+    // Step 8: Build final query with date range filter.
+    final finalCandidateIds = candidateIds?.toList() ?? ftsIds;
+    if (finalCandidateIds == null || finalCandidateIds.isEmpty) {
+      // No operators and no FTS query -- shouldn't reach here but guard.
+      return [];
+    }
+
+    var queryBuilder = select(notes)
+      ..where((n) => n.id.isIn(finalCandidateIds) & n.deletedAt.isNull());
+
+    // Apply date range filter.
+    if (query.dateFilter != null) {
+      final start = query.dateFilter!.startDate;
+      final end = query.dateFilter!.endDate;
+      queryBuilder = queryBuilder
+        ..where((n) => n.updatedAt.isBiggerOrEqualValue(start))
+        ..where((n) => n.updatedAt.isSmallerOrEqualValue(end));
+    }
+
+    queryBuilder = queryBuilder
+      ..orderBy([(n) => OrderingTerm.desc(n.updatedAt)])
+      ..limit(limit, offset: offset);
+
+    final noteRows = await queryBuilder.get();
+
+    // Step 9: Build results with highlights if FTS was used.
+    if (query.fullTextQuery.isNotEmpty && ftsIds != null) {
+      // Retrieve FTS highlight data for the matched notes.
+      final ftsResults = await customSelect(
+        'SELECT note_id, rank, content_snippet, title_snippet '
+        'FROM _fts_adv_results '
+        'WHERE note_id IN (${noteRows.map((_) => '?').join(',')}) '
+        'ORDER BY rank',
+        readsFrom: {notes},
+        variables: noteRows.map((n) => Variable<String>(n.id)).toList(),
+      ).get();
+
+      final ftsMap = <String, _FtsRow>{};
+      for (final r in ftsResults) {
+        ftsMap[r.read<String>('note_id')] = _FtsRow(
+          rank: r.read<double>('rank'),
+          contentSnippet: r.read<String>('content_snippet'),
+          titleSnippet: r.read<String>('title_snippet'),
+        );
+      }
+
+      return noteRows.where((n) => ftsMap.containsKey(n.id)).map((n) {
+        final ftsRow = ftsMap[n.id]!;
+        return SearchResult(
+          note: n,
+          rank: ftsRow.rank,
+          contentSnippet: ftsRow.contentSnippet,
+          titleSnippet: ftsRow.titleSnippet,
+        );
+      }).toList();
+    } else {
+      // No FTS -- just return notes with default snippet from plain content.
+      return noteRows.map((n) {
+        final content = n.plainContent ?? '';
+        final preview =
+            content.length > 150 ? '${content.substring(0, 150)}...' : content;
+        return SearchResult(
+          note: n,
+          rank: 0,
+          contentSnippet: preview,
+          titleSnippet: n.plainTitle ?? '',
+        );
+      }).toList();
+    }
+  }
+
   /// Get notes by tag ID.
   Future<List<Note>> getNotesByTag(String tagId) async {
     final noteTagRows =
@@ -728,6 +1052,19 @@ class SearchResult {
 
   SearchResult({
     required this.note,
+    required this.rank,
+    required this.contentSnippet,
+    required this.titleSnippet,
+  });
+}
+
+/// Internal helper for storing FTS5 row data during advanced search.
+class _FtsRow {
+  final double rank;
+  final String contentSnippet;
+  final String titleSnippet;
+
+  const _FtsRow({
     required this.rank,
     required this.contentSnippet,
     required this.titleSnippet,

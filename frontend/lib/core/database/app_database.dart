@@ -11,6 +11,10 @@ import 'daos/note_versions_dao.dart';
 import 'daos/templates_dao.dart';
 import 'daos/sync_operations_dao.dart';
 import 'daos/collab_dao.dart';
+import 'daos/note_links_dao.dart';
+import 'daos/note_properties_dao.dart';
+import 'daos/saved_searches_dao.dart';
+import 'daos/snippets_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -19,6 +23,8 @@ part 'app_database.g.dart';
     Notes,
     Tags,
     NoteTags,
+    NoteLinks,
+    NoteProperties,
     Collections,
     CollectionNotes,
     GeneratedContents,
@@ -28,6 +34,8 @@ part 'app_database.g.dart';
     SyncMeta,
     SyncOperations,
     CollabStates,
+    SavedSearches,
+    Snippets,
   ],
   daos: [
     NotesDao,
@@ -39,6 +47,10 @@ part 'app_database.g.dart';
     SyncMetaDao,
     SyncOperationsDao,
     CollabDao,
+    NoteLinksDao,
+    NotePropertiesDao,
+    SavedSearchesDao,
+    SnippetsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -47,7 +59,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration {
@@ -133,6 +145,79 @@ class AppDatabase extends _$AppDatabase {
         if (from < 8) {
           // v7 -> v8: Add collab_states table for CRDT persistence.
           await m.createTable(collabStates);
+        }
+        if (from < 9) {
+          // v8 -> v9: Add note_links table for wiki-style [[links]].
+          await m.createTable(noteLinks);
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_note_links_source_id ON note_links (source_id)',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_note_links_target_id ON note_links (target_id)',
+          );
+        }
+        if (from < 10) {
+          // v9 -> v10: Add note_properties table for custom metadata.
+          await m.createTable(noteProperties);
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_note_properties_note_id ON note_properties (note_id)',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_note_properties_key ON note_properties (key)',
+          );
+        }
+        if (from < 11) {
+          // v10 -> v11: Add saved_searches table for named search queries.
+          await m.createTable(savedSearches);
+        }
+        if (from < 12) {
+          // v11 -> v12: Add description, usage_count, updated_at columns to
+          // note_templates and widen the category semantics from 'built_in'/'custom'
+          // to include 'work', 'personal', 'creative'.
+          await customStatement(
+            'ALTER TABLE note_templates ADD COLUMN description TEXT',
+          );
+          await customStatement(
+            'ALTER TABLE note_templates ADD COLUMN usage_count INTEGER NOT NULL DEFAULT 0',
+          );
+          await customStatement(
+            'ALTER TABLE note_templates ADD COLUMN updated_at INTEGER NOT NULL DEFAULT (strftime(\'%s\',\'now\'))',
+          );
+        }
+        if (from < 13) {
+          // v12 -> v13: Add color column to notes, tags, and collections tables.
+          await customStatement(
+            'ALTER TABLE notes ADD COLUMN color TEXT',
+          );
+          await customStatement(
+            'ALTER TABLE tags ADD COLUMN color TEXT',
+          );
+          await customStatement(
+            'ALTER TABLE collections ADD COLUMN color TEXT',
+          );
+        }
+        if (from < 14) {
+          // v13 -> v14: Add sortOrder column to notes for drag-and-drop reordering.
+          await customStatement(
+            'ALTER TABLE notes ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0',
+          );
+        }
+        if (from < 15) {
+          // v14 -> v15: Add snippets table for reusable code fragments.
+          await m.createTable(snippets);
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_snippets_language ON snippets (language)',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_snippets_category ON snippets (category)',
+          );
+        }
+        if (from < 16) {
+          // v15 -> v16: Add parent_id column to tags table for tag hierarchy.
+          await m.addColumn(tags, tags.parentId);
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_tags_parent_id ON tags (parent_id)',
+          );
         }
       },
     );

@@ -73,9 +73,12 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1*1024*1024))
 		resp.Body.Close()
 		cancel()
+		if err != nil {
+			return nil, fmt.Errorf("reading error response body: %w", err)
+		}
 		return nil, fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
@@ -189,10 +192,10 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 			continue
 		}
 
-		respBody, readErr := io.ReadAll(resp.Body)
+		respBody, readErr := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
 		resp.Body.Close()
 		if readErr != nil {
-			lastErr = fmt.Errorf("read response: %w", readErr)
+			lastErr = fmt.Errorf("reading response body: %w", readErr)
 			continue
 		}
 

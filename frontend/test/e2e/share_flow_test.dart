@@ -109,8 +109,11 @@ void main() {
     testWidgets('shows decrypted title after successful server decryption',
         (tester) async {
       final service = _FakeShareService(
-        onDecryptServer: (
-            {required String shareId, String? key, String? password}) {
+        onDecryptServer: ({
+          required String shareId,
+          String? key,
+          String? password,
+        }) {
           return DecryptedSharedNote(
             title: 'My Shared Note',
             content: '# Hello World\n\nThis is shared.',
@@ -186,8 +189,11 @@ void main() {
     testWidgets('shows error after incorrect password submission',
         (tester) async {
       final service = _FakeShareService(
-        onDecryptServer: (
-            {required String shareId, String? key, String? password}) {
+        onDecryptServer: ({
+          required String shareId,
+          String? key,
+          String? password,
+        }) {
           // Always throw to simulate wrong password.
           throw Exception('wrong password');
         },
@@ -215,8 +221,11 @@ void main() {
     testWidgets('uses payload decryption for non-hex share ID', (tester) async {
       var payloadCalled = false;
       final service = _FakeShareService(
-        onDecryptPayload: (
-            {required String payload, String? key, String? password}) {
+        onDecryptPayload: ({
+          required String payload,
+          String? key,
+          String? password,
+        }) {
           payloadCalled = true;
           return DecryptedSharedNote(
             title: 'Payload Note',

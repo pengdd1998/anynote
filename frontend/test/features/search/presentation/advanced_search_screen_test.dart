@@ -20,6 +20,10 @@ void main() {
             (ref) async => <Collection>[],
           ),
           recentSearchesProvider.overrideWith((ref) async => <String>[]),
+          operatorSearchResultsProvider.overrideWith(
+            (ref) async => <OperatorSearchResult>[],
+          ),
+          savedSearchesProvider.overrideWith((ref) => Stream.value([])),
         ];
 
     testWidgets('renders without errors', (tester) async {
@@ -40,7 +44,8 @@ void main() {
         overrides: searchOverrides(),
       );
 
-      expect(find.text('Search'), findsOneWidget);
+      // Tab bar has three tabs: Search, Saved Searches, Search History.
+      expect(find.text('Search'), findsWidgets);
       await handle.dispose();
     });
 
@@ -64,12 +69,13 @@ void main() {
 
       expect(find.text('Search your notes'), findsOneWidget);
       expect(
-          find.text('Enter a query or use filters to find notes'),
-          findsOneWidget,);
+        find.text('Enter a query with operators to find notes'),
+        findsOneWidget,
+      );
       await handle.dispose();
     });
 
-    testWidgets('shows filter chips for date range, tags, collections',
+    testWidgets('shows tabs for Search, Saved Searches, and History',
         (tester) async {
       final handle = await pumpScreen(
         tester,
@@ -77,9 +83,9 @@ void main() {
         overrides: searchOverrides(),
       );
 
-      expect(find.text('Date Range'), findsOneWidget);
-      expect(find.text('Tags'), findsOneWidget);
-      expect(find.text('Collections'), findsOneWidget);
+      expect(find.byType(TabBar), findsOneWidget);
+      expect(find.text('Saved Searches'), findsOneWidget);
+      expect(find.text('Recent Searches'), findsOneWidget);
       await handle.dispose();
     });
   });

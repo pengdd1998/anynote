@@ -16,9 +16,12 @@ import '../features/notes/presentation/notes_list_screen.dart';
 import '../features/notes/presentation/note_detail_screen.dart';
 import '../features/notes/presentation/note_editor_screen.dart';
 import '../features/notes/presentation/version_history_screen.dart';
+import '../features/notes/presentation/widgets/version_diff_screen.dart';
+import '../features/notes/presentation/widgets/note_compare_screen.dart';
 import '../features/notes/presentation/markdown_preview_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/settings/presentation/keyboard_shortcuts_screen.dart';
 import '../features/collections/presentation/collections_list_screen.dart';
 import '../features/collections/presentation/collection_detail_screen.dart';
 import '../features/share/presentation/shared_note_viewer.dart';
@@ -53,10 +56,17 @@ import '../features/settings/presentation/plan_screen.dart'
     deferred as plan_screen;
 import '../features/settings/presentation/profile_screen.dart'
     deferred as profile_screen;
+import '../features/settings/presentation/image_management_screen.dart';
 import '../features/ai_chat/presentation/ai_chat_screen.dart'
     deferred as ai_chat;
 import '../features/ai_chat/presentation/ai_agent_screen.dart';
 import '../features/notes/presentation/widgets/note_graph_screen.dart';
+import '../features/notes/presentation/widgets/properties_dashboard.dart';
+import '../features/notes/presentation/widgets/statistics_screen.dart';
+import '../features/notes/presentation/daily_notes_screen.dart';
+import '../features/notes/presentation/reminders_screen.dart';
+import '../features/notes/presentation/widgets/template_management_screen.dart';
+import '../features/snippets/presentation/snippets_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -171,6 +181,12 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => slideTransition(const TagsScreen()),
     ),
 
+    // Code Snippets management (pushed from notes screen)
+    GoRoute(
+      path: '/snippets',
+      pageBuilder: (context, state) => slideTransition(const SnippetsScreen()),
+    ),
+
     // Discover feed (public shared notes, accessible with or without auth)
     GoRoute(
       path: '/discover',
@@ -194,10 +210,48 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => slideTransition(const AIAgentScreen()),
     ),
 
+    // Note comparison diff (query params: left, right)
+    GoRoute(
+      path: '/notes/compare',
+      pageBuilder: (context, state) => slideTransition(
+        NoteCompareScreen(
+          leftNoteId: state.uri.queryParameters['left']!,
+          rightNoteId: state.uri.queryParameters['right']!,
+        ),
+      ),
+    ),
+
     // Knowledge Graph (eager, CustomPaint-based)
     GoRoute(
       path: '/notes/graph',
       pageBuilder: (context, state) => slideTransition(const NoteGraphScreen()),
+    ),
+
+    // Properties Dashboard (eager, status/priority analytics)
+    GoRoute(
+      path: '/notes/dashboard',
+      pageBuilder: (context, state) =>
+          slideTransition(const PropertiesDashboard()),
+    ),
+
+    // Statistics & Writing Insights (eager, SQL aggregation + CustomPaint charts)
+    GoRoute(
+      path: '/notes/statistics',
+      pageBuilder: (context, state) =>
+          slideTransition(const StatisticsScreen()),
+    ),
+
+    // Daily Notes / Journal (calendar-based daily note management)
+    GoRoute(
+      path: '/notes/daily',
+      pageBuilder: (context, state) =>
+          slideTransition(const DailyNotesScreen()),
+    ),
+
+    // Reminders (list of notes with upcoming reminders)
+    GoRoute(
+      path: '/notes/reminders',
+      pageBuilder: (context, state) => slideTransition(const RemindersScreen()),
     ),
 
     // Trash screen (pushed from notes screen, no bottom nav shell)
@@ -285,6 +339,17 @@ final appRouter = GoRouter(
                   pageBuilder: (context, state) => slideTransition(
                     MarkdownPreviewScreen(
                       noteId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ),
+                GoRoute(
+                  path: 'diff',
+                  parentNavigatorKey: rootNavigatorKey,
+                  pageBuilder: (context, state) => slideTransition(
+                    VersionDiffScreen(
+                      noteId: state.pathParameters['id']!,
+                      olderVersionId: state.uri.queryParameters['older']!,
+                      newerVersionId: state.uri.queryParameters['newer']!,
                     ),
                   ),
                 ),
@@ -441,6 +506,24 @@ final appRouter = GoRouter(
                 ),
               ),
             ),
+            GoRoute(
+              path: 'images',
+              parentNavigatorKey: rootNavigatorKey,
+              pageBuilder: (context, state) =>
+                  slideTransition(const ImageManagementScreen()),
+            ),
+            GoRoute(
+              path: 'templates',
+              parentNavigatorKey: rootNavigatorKey,
+              pageBuilder: (context, state) =>
+                  slideTransition(const TemplateManagementScreen()),
+            ),
+            GoRoute(
+              path: 'shortcuts',
+              parentNavigatorKey: rootNavigatorKey,
+              pageBuilder: (context, state) =>
+                  slideTransition(const KeyboardShortcutsScreen()),
+            ),
           ],
         ),
       ],
@@ -474,38 +557,49 @@ class _PhoneShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      body: Column(
-        children: [
-          const OfflineBanner(),
-          Expanded(child: child),
-        ],
+      body: FocusTraversalGroup(
+        policy: OrderedTraversalPolicy(),
+        child: Column(
+          children: [
+            const OfflineBanner(),
+            Expanded(
+              child: FocusTraversalOrder(
+                order: const NumericFocusOrder(0),
+                child: child,
+              ),
+            ),
+          ],
+        ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex(context),
-        onDestinationSelected: (index) =>
-            _onDestinationSelected(context, index),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.note_outlined),
-            selectedIcon: const Icon(Icons.note),
-            label: l10n?.notesTabLabel ?? 'Notes',
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.auto_awesome_outlined),
-            selectedIcon: const Icon(Icons.auto_awesome),
-            label: l10n?.composeTabLabel ?? 'Compose',
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.publish_outlined),
-            selectedIcon: const Icon(Icons.publish),
-            label: l10n?.publishTabLabel ?? 'Publish',
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.settings_outlined),
-            selectedIcon: const Icon(Icons.settings),
-            label: l10n?.settingsTabLabel ?? 'Settings',
-          ),
-        ],
+      bottomNavigationBar: FocusTraversalOrder(
+        order: const NumericFocusOrder(1),
+        child: NavigationBar(
+          selectedIndex: _selectedIndex(context),
+          onDestinationSelected: (index) =>
+              _onDestinationSelected(context, index),
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.note_outlined),
+              selectedIcon: const Icon(Icons.note),
+              label: l10n?.notesTabLabel ?? 'Notes',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.auto_awesome_outlined),
+              selectedIcon: const Icon(Icons.auto_awesome),
+              label: l10n?.composeTabLabel ?? 'Compose',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.publish_outlined),
+              selectedIcon: const Icon(Icons.publish),
+              label: l10n?.publishTabLabel ?? 'Publish',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.settings_outlined),
+              selectedIcon: const Icon(Icons.settings),
+              label: l10n?.settingsTabLabel ?? 'Settings',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -520,6 +614,10 @@ class _DesktopShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _selectedIndex(context);
     final l10n = AppLocalizations.of(context);
+    final notesLabel = l10n?.notesTabLabel ?? 'Notes';
+    final composeLabel = l10n?.composeTabLabel ?? 'Compose';
+    final publishLabel = l10n?.publishTabLabel ?? 'Publish';
+    final settingsLabel = l10n?.settingsTabLabel ?? 'Settings';
     return Scaffold(
       body: Row(
         children: [
@@ -539,68 +637,56 @@ class _DesktopShell extends ConsumerWidget {
             ),
             destinations: [
               NavigationRailDestination(
-                icon: const Tooltip(
-                  message: 'Notes',
+                icon: Tooltip(
+                  message: notesLabel,
                   preferBelow: false,
-                  child: Icon(Icons.note_outlined),
+                  child: const Icon(Icons.note_outlined),
                 ),
-                selectedIcon: const Tooltip(
-                  message: 'Notes',
+                selectedIcon: Tooltip(
+                  message: notesLabel,
                   preferBelow: false,
-                  child: Icon(Icons.note),
+                  child: const Icon(Icons.note),
                 ),
-                label: Semantics(
-                  label: l10n?.notesTabLabel ?? 'Notes',
-                  child: const Text('Notes'),
-                ),
+                label: Text(notesLabel),
               ),
               NavigationRailDestination(
-                icon: const Tooltip(
-                  message: 'Compose',
+                icon: Tooltip(
+                  message: composeLabel,
                   preferBelow: false,
-                  child: Icon(Icons.auto_awesome_outlined),
+                  child: const Icon(Icons.auto_awesome_outlined),
                 ),
-                selectedIcon: const Tooltip(
-                  message: 'Compose',
+                selectedIcon: Tooltip(
+                  message: composeLabel,
                   preferBelow: false,
-                  child: Icon(Icons.auto_awesome),
+                  child: const Icon(Icons.auto_awesome),
                 ),
-                label: Semantics(
-                  label: l10n?.composeTabLabel ?? 'Compose',
-                  child: const Text('Compose'),
-                ),
+                label: Text(composeLabel),
               ),
               NavigationRailDestination(
-                icon: const Tooltip(
-                  message: 'Publish',
+                icon: Tooltip(
+                  message: publishLabel,
                   preferBelow: false,
-                  child: Icon(Icons.publish_outlined),
+                  child: const Icon(Icons.publish_outlined),
                 ),
-                selectedIcon: const Tooltip(
-                  message: 'Publish',
+                selectedIcon: Tooltip(
+                  message: publishLabel,
                   preferBelow: false,
-                  child: Icon(Icons.publish),
+                  child: const Icon(Icons.publish),
                 ),
-                label: Semantics(
-                  label: l10n?.publishTabLabel ?? 'Publish',
-                  child: const Text('Publish'),
-                ),
+                label: Text(publishLabel),
               ),
               NavigationRailDestination(
-                icon: const Tooltip(
-                  message: 'Settings',
+                icon: Tooltip(
+                  message: settingsLabel,
                   preferBelow: false,
-                  child: Icon(Icons.settings_outlined),
+                  child: const Icon(Icons.settings_outlined),
                 ),
-                selectedIcon: const Tooltip(
-                  message: 'Settings',
+                selectedIcon: Tooltip(
+                  message: settingsLabel,
                   preferBelow: false,
-                  child: Icon(Icons.settings),
+                  child: const Icon(Icons.settings),
                 ),
-                label: Semantics(
-                  label: l10n?.settingsTabLabel ?? 'Settings',
-                  child: const Text('Settings'),
-                ),
+                label: Text(settingsLabel),
               ),
             ],
           ),
@@ -672,6 +758,7 @@ class _DeferredLoaderState extends State<_DeferredLoader> {
   Widget build(BuildContext context) {
     if (_loaded) return widget.builder();
     if (_hasError) {
+      final l10n = AppLocalizations.of(context);
       return Scaffold(
         body: Center(
           child: Column(
@@ -680,7 +767,7 @@ class _DeferredLoaderState extends State<_DeferredLoader> {
               const Icon(Icons.error_outline, size: 48, color: Colors.grey),
               const SizedBox(height: 16),
               Text(
-                'Failed to load',
+                l10n?.failedToLoadDeferred ?? 'Failed to load',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
@@ -693,7 +780,7 @@ class _DeferredLoaderState extends State<_DeferredLoader> {
                     if (mounted) setState(() => _hasError = true);
                   });
                 },
-                child: const Text('Retry'),
+                child: Text(l10n?.retry ?? 'Retry'),
               ),
             ],
           ),
@@ -734,15 +821,35 @@ class _DeepLinkNoteScreenState extends ConsumerState<_DeepLinkNoteScreen> {
 
   Future<void> _validateAndNavigate() async {
     final db = ref.read(databaseProvider);
-    final note = await db.notesDao.getNoteById(widget.noteId);
+    try {
+      final note = await db.notesDao.getNoteById(widget.noteId);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (note != null && note.deletedAt == null) {
-      // Note exists: navigate to the standard detail screen.
-      context.go('/notes/${widget.noteId}');
-    } else {
-      // Note not found: redirect to notes list with error feedback.
+      if (note != null && note.deletedAt == null) {
+        // Note exists: navigate to the standard detail screen.
+        context.go('/notes/${widget.noteId}');
+      } else {
+        // Note not found: redirect to notes list with error feedback.
+        final l10n = AppLocalizations.of(context);
+        context.go('/notes');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          final messenger = ScaffoldMessenger.maybeOf(context);
+          if (messenger != null) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  l10n?.noteNotFound ?? 'Note not found',
+                ),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context);
       context.go('/notes');
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -752,7 +859,7 @@ class _DeepLinkNoteScreenState extends ConsumerState<_DeepLinkNoteScreen> {
           messenger.showSnackBar(
             SnackBar(
               content: Text(
-                l10n?.noteNotFound ?? 'Note not found',
+                l10n?.failedToLoadNote ?? 'Failed to load note',
               ),
               behavior: SnackBarBehavior.floating,
             ),

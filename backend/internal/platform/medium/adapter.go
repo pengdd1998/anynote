@@ -12,6 +12,7 @@ import (
 
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
+	"github.com/anynote/backend/internal/platform/common"
 	"github.com/anynote/backend/internal/platform/httpclient"
 )
 
@@ -134,7 +135,10 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, err := io.ReadAll(io.LimitReader(resp.Body, 1*1024*1024))
+		if err != nil {
+			return nil, fmt.Errorf("reading token error response body: %w", err)
+		}
 		return nil, fmt.Errorf("token exchange failed (status %d): %s", resp.StatusCode, string(body))
 	}
 
@@ -184,15 +188,9 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 // It decrypts the stored auth data and POSTs to the Medium publications
 // endpoint.
 func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey []byte, params platform.PublishParams) (*platform.PublishResult, error) {
-	// Decrypt auth data.
-	authJSON, err := llm.DecryptAPIKey(encryptedAuth, masterKey)
-	if err != nil {
-		return nil, fmt.Errorf("decrypt auth data: %w", err)
-	}
-
 	var authData mediumAuthData
-	if err := json.Unmarshal([]byte(authJSON), &authData); err != nil {
-		return nil, fmt.Errorf("unmarshal auth data: %w", err)
+	if err := common.DecryptAuth(ctx, encryptedAuth, masterKey, &authData); err != nil {
+		return nil, err
 	}
 
 	// Check if the access token is expired and needs refresh.
@@ -241,7 +239,10 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1*1024*1024))
+		if err != nil {
+			return nil, fmt.Errorf("reading publish error response body: %w", err)
+		}
 		return nil, fmt.Errorf("publish failed (status %d): %s", resp.StatusCode, string(respBody))
 	}
 
@@ -271,15 +272,9 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 // Medium articles are published immediately, so we make a HEAD request
 // to the post URL to verify it is still accessible.
 func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterKey []byte, platformID string) (string, error) {
-	// Decrypt auth data.
-	authJSON, err := llm.DecryptAPIKey(encryptedAuth, masterKey)
-	if err != nil {
-		return "unknown", fmt.Errorf("decrypt auth data: %w", err)
-	}
-
 	var authData mediumAuthData
-	if err := json.Unmarshal([]byte(authJSON), &authData); err != nil {
-		return "unknown", fmt.Errorf("unmarshal auth data: %w", err)
+	if err := common.DecryptAuth(ctx, encryptedAuth, masterKey, &authData); err != nil {
+		return "unknown", err
 	}
 
 	// Medium does not have a public API to check post status by ID.
@@ -324,7 +319,10 @@ func (a *Adapter) fetchUserID(ctx context.Context, accessToken string) (string, 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, err := io.ReadAll(io.LimitReader(resp.Body, 1*1024*1024))
+		if err != nil {
+			return "", fmt.Errorf("reading user info error response body: %w", err)
+		}
 		return "", fmt.Errorf("fetch me failed (status %d): %s", resp.StatusCode, string(body))
 	}
 
@@ -363,7 +361,10 @@ func (a *Adapter) refreshAccessToken(ctx context.Context, refreshToken string) (
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, err := io.ReadAll(io.LimitReader(resp.Body, 1*1024*1024))
+		if err != nil {
+			return "", fmt.Errorf("reading refresh token error response body: %w", err)
+		}
 		return "", fmt.Errorf("refresh token failed (status %d): %s", resp.StatusCode, string(body))
 	}
 

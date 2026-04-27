@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'import_models.dart';
+import 'import_utils.dart';
 
 /// Importer for Apple Notes HTML exports.
 ///
@@ -32,7 +33,7 @@ class AppleNotesImporter {
       final modified = await file.lastModified();
 
       final title = _extractTitle(html);
-      final fallbackTitle = _filenameToTitle(file.path);
+      final fallbackTitle = filenameToTitle(file.path);
       final body = _convertHtmlToMarkdown(html);
 
       return ImportedNote(
@@ -138,8 +139,10 @@ class AppleNotesImporter {
 
     // Links: <a href="url">text</a> -> [text](url)
     body = body.replaceAllMapped(
-      RegExp(r'<a\s+[^>]*href=["\x27]([^"\x27]*)["\x27][^>]*>([\s\S]*?)</a>',
-          dotAll: true,),
+      RegExp(
+        r'<a\s+[^>]*href=["\x27]([^"\x27]*)["\x27][^>]*>([\s\S]*?)</a>',
+        dotAll: true,
+      ),
       (m) => '[${_stripHtmlTags(m.group(2)!).trim()}](${m.group(1)!})',
     );
 
@@ -211,9 +214,8 @@ class AppleNotesImporter {
 
   /// Extract the `<title>` content from an HTML string.
   static String _extractTitle(String html) {
-    final match =
-        RegExp(r'<title[^>]*>([\s\S]*?)</title>', dotAll: true)
-            .firstMatch(html);
+    final match = RegExp(r'<title[^>]*>([\s\S]*?)</title>', dotAll: true)
+        .firstMatch(html);
     if (match == null) return '';
     return _decodeHtmlEntities(match.group(1)!.trim());
   }
@@ -228,12 +230,5 @@ class AppleNotesImporter {
         .replaceAll('&#39;', "'")
         .replaceAll('&apos;', "'")
         .replaceAll('&nbsp;', ' ');
-  }
-
-  /// Derive a title from a file path by removing the extension.
-  static String _filenameToTitle(String filePath) {
-    final name = filePath.split('/').last;
-    final dotIndex = name.lastIndexOf('.');
-    return dotIndex > 0 ? name.substring(0, dotIndex) : name;
   }
 }

@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+
+import '../../../../core/constants/app_durations.dart';
 
 const String _tableEmbedKey = 'table';
 
@@ -36,6 +39,7 @@ class TableEmbedBuilder extends quill.EmbedBuilder {
       controller: embedContext.controller,
       readOnly: embedContext.readOnly,
       textStyle: embedContext.textStyle,
+      embedNode: node,
     );
   }
 
@@ -54,7 +58,8 @@ class TableEmbedBuilder extends quill.EmbedBuilder {
         if (decoded is Map<String, dynamic>) {
           return decoded;
         }
-      } catch (_) {
+      } catch (e) {
+        debugPrint('[TableEmbed] failed to parse table data JSON: $e');
         return null;
       }
     }
@@ -72,6 +77,7 @@ class TableBlockWidget extends StatefulWidget {
     required this.controller,
     required this.readOnly,
     required this.textStyle,
+    required this.embedNode,
   });
 
   final int rows;
@@ -81,12 +87,17 @@ class TableBlockWidget extends StatefulWidget {
   final bool readOnly;
   final TextStyle textStyle;
 
+  /// Reference to the embed node in the Quill document tree.
+  /// Used to locate the embed offset when persisting cell changes.
+  final quill.Embed embedNode;
+
   @override
   State<TableBlockWidget> createState() => _TableBlockWidgetState();
 }
 
 class _TableBlockWidgetState extends State<TableBlockWidget> {
   late List<List<TextEditingController>> _cellControllers;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -99,7 +110,7 @@ class _TableBlockWidgetState extends State<TableBlockWidget> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.rows != widget.rows ||
         oldWidget.cols != widget.cols ||
-        oldWidget.cells != widget.cells) {
+        !_cellsEqual(oldWidget.cells, widget.cells)) {
       _disposeControllers();
       _initializeControllers();
     }
@@ -138,15 +149,62 @@ class _TableBlockWidgetState extends State<TableBlockWidget> {
   }
 
   void _onCellChanged() {
-    // TODO: Implement proper document update when cell content changes
-    // This requires tracking the embed position in the document
-    // For now, cell edits are local until the document is saved/reloaded
-    // The cells variable would be used to update the embed data:
-    // final cells = _cellControllers.map((row) => row.map((c) => c.text).toList()).toList();
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(AppDurations.autoSaveDelay, _persistCellChanges);
+  }
+
+  /// Finds the character offset of [widget.embedNode] within the Quill
+  /// document tree by walking root -> lines -> leaves.
+  int? _findEmbedOffset() {
+    var offset = 0;
+    for (final node in widget.controller.document.root.children) {
+      final line = node as quill.Line;
+      for (final child in line.children) {
+        if (identical(child, widget.embedNode)) {
+          return offset;
+        }
+        offset += child.length;
+      }
+      offset += 1; // newline character at end of each line
+    }
+    return null;
+  }
+
+  /// Writes the current cell contents back into the Quill document embed.
+  void _persistCellChanges() {
+    if (widget.readOnly) return;
+    try {
+      final cells = _cellControllers
+          .map((row) => row.map((c) => c.text).toList())
+          .toList();
+      if (_cellsEqual(cells, widget.cells)) return;
+
+      final newData = jsonEncode({
+        'rows': widget.rows,
+        'cols': widget.cols,
+        'cells': cells,
+      });
+
+      final offset = _findEmbedOffset();
+      if (offset == null) return;
+
+      final newEmbed = quill.CustomBlockEmbed(_tableEmbedKey, newData);
+      widget.controller.replaceText(
+        offset,
+        1,
+        newEmbed,
+        widget.controller.selection,
+      );
+    } catch (e) {
+      // Controller may be detached during dispose
+      debugPrint('[TableBlockWidget] failed to persist cell changes: $e');
+    }
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
+    _persistCellChanges();
     _disposeControllers();
     super.dispose();
   }
@@ -217,6 +275,19 @@ class _TableBlockWidgetState extends State<TableBlockWidget> {
       ),
     );
   }
+}
+
+/// Deep equality check for 2D cell arrays. Avoids reference comparison
+/// which would always return false for distinct List instances.
+bool _cellsEqual(List<List<String>> a, List<List<String>> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i].length != b[i].length) return false;
+    for (var j = 0; j < a[i].length; j++) {
+      if (a[i][j] != b[i][j]) return false;
+    }
+  }
+  return true;
 }
 
 /// Creates a table embed data map that can be inserted into a Quill document.

@@ -21,6 +21,50 @@ class PlanLimits {
     required this.canPublish,
   });
 
+  PlanLimits copyWith({
+    int? maxNotes,
+    int? maxCollections,
+    int? aiDailyQuota,
+    int? maxStorageBytes,
+    int? maxDevices,
+    bool? canCollaborate,
+    bool? canPublish,
+  }) {
+    return PlanLimits(
+      maxNotes: maxNotes ?? this.maxNotes,
+      maxCollections: maxCollections ?? this.maxCollections,
+      aiDailyQuota: aiDailyQuota ?? this.aiDailyQuota,
+      maxStorageBytes: maxStorageBytes ?? this.maxStorageBytes,
+      maxDevices: maxDevices ?? this.maxDevices,
+      canCollaborate: canCollaborate ?? this.canCollaborate,
+      canPublish: canPublish ?? this.canPublish,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PlanLimits &&
+          runtimeType == other.runtimeType &&
+          maxNotes == other.maxNotes &&
+          maxCollections == other.maxCollections &&
+          aiDailyQuota == other.aiDailyQuota &&
+          maxStorageBytes == other.maxStorageBytes &&
+          maxDevices == other.maxDevices &&
+          canCollaborate == other.canCollaborate &&
+          canPublish == other.canPublish;
+
+  @override
+  int get hashCode => Object.hash(
+        maxNotes,
+        maxCollections,
+        aiDailyQuota,
+        maxStorageBytes,
+        maxDevices,
+        canCollaborate,
+        canPublish,
+      );
+
   factory PlanLimits.fromJson(Map<String, dynamic> json) => PlanLimits(
         maxNotes: json['max_notes'] as int? ?? 500,
         maxCollections: json['max_collections'] as int? ?? 20,
@@ -47,6 +91,37 @@ class PlanInfo {
     required this.storageBytes,
     required this.noteCount,
   });
+
+  PlanInfo copyWith({
+    PlanType? plan,
+    PlanLimits? limits,
+    int? aiDailyUsed,
+    int? storageBytes,
+    int? noteCount,
+  }) {
+    return PlanInfo(
+      plan: plan ?? this.plan,
+      limits: limits ?? this.limits,
+      aiDailyUsed: aiDailyUsed ?? this.aiDailyUsed,
+      storageBytes: storageBytes ?? this.storageBytes,
+      noteCount: noteCount ?? this.noteCount,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PlanInfo &&
+          runtimeType == other.runtimeType &&
+          plan == other.plan &&
+          limits == other.limits &&
+          aiDailyUsed == other.aiDailyUsed &&
+          storageBytes == other.storageBytes &&
+          noteCount == other.noteCount;
+
+  @override
+  int get hashCode =>
+      Object.hash(plan, limits, aiDailyUsed, storageBytes, noteCount);
 
   factory PlanInfo.fromJson(Map<String, dynamic> json) => PlanInfo(
         plan: _parsePlan(json['plan'] as String? ?? 'free'),

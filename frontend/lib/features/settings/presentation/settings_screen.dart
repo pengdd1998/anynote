@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/crypto/crypto_service.dart';
-import '../../../core/export/export_service.dart';
 import '../../../core/locale/locale_provider.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/theme/animation_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../main.dart';
+import '../../notes/presentation/widgets/export_sheet.dart';
+import '../../notes/presentation/widgets/import_sheet.dart';
 import '../data/settings_providers.dart';
 import 'widgets/about_section.dart';
 import 'widgets/account_section.dart';
@@ -47,193 +46,263 @@ class SettingsScreen extends ConsumerWidget {
             // -- AI section -----------------------------------------------------
             StaggeredGroup(
               staggerIndex: 1,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsGroupHeader(title: l10n.aiSection),
-                  SettingsGroup(
-                    children: [
-                      SettingsItem(
-                        icon: Icons.smart_toy_outlined,
-                        title: l10n.llmConfiguration,
-                        subtitle: l10n.configureAIProviders,
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => context.push('/settings/llm'),
-                      ),
-                      _aiQuotaItem(l10n, aiQuotaAsync),
-                    ],
-                  ),
-                ],
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup(l10n.aiSection),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SettingsGroupHeader(title: l10n.aiSection),
+                    SettingsGroup(
+                      children: [
+                        SettingsItem(
+                          icon: Icons.smart_toy_outlined,
+                          title: l10n.llmConfiguration,
+                          subtitle: l10n.configureAIProviders,
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => context.push('/settings/llm'),
+                        ),
+                        _aiQuotaItem(l10n, aiQuotaAsync),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
 
             // -- Publishing section ---------------------------------------------
             StaggeredGroup(
               staggerIndex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsGroupHeader(title: l10n.publishing),
-                  SettingsGroup(
-                    children: [
-                      SettingsItem(
-                        icon: Icons.share_outlined,
-                        title: l10n.platformConnections,
-                        subtitle: l10n.manageConnectedPlatforms,
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => context.push('/settings/platforms'),
-                      ),
-                    ],
-                  ),
-                ],
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup(l10n.publishing),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SettingsGroupHeader(title: l10n.publishing),
+                    SettingsGroup(
+                      children: [
+                        SettingsItem(
+                          icon: Icons.share_outlined,
+                          title: l10n.platformConnections,
+                          subtitle: l10n.manageConnectedPlatforms,
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => context.push('/settings/platforms'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
 
             // -- Security section -----------------------------------------------
             StaggeredGroup(
               staggerIndex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsGroupHeader(title: l10n.securityPrivacy),
-                  SettingsGroup(
-                    children: [
-                      SettingsItem(
-                        icon: Icons.shield_outlined,
-                        title: l10n.encryptionSettings,
-                        subtitle: l10n.e2eEncryptionActive,
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => context.push('/settings/security'),
-                      ),
-                      SettingsItem(
-                        icon: Icons.label_outline,
-                        title: l10n.manageTags,
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => context.push('/tags'),
-                      ),
-                    ],
-                  ),
-                ],
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup(l10n.securityPrivacy),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SettingsGroupHeader(title: l10n.securityPrivacy),
+                    SettingsGroup(
+                      children: [
+                        SettingsItem(
+                          icon: Icons.shield_outlined,
+                          title: l10n.encryptionSettings,
+                          subtitle: l10n.e2eEncryptionActive,
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => context.push('/settings/security'),
+                        ),
+                        SettingsItem(
+                          icon: Icons.label_outline,
+                          title: l10n.manageTags,
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => context.push('/tags'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
 
             // -- Sync section ---------------------------------------------------
             StaggeredGroup(
               staggerIndex: 4,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsGroupHeader(title: l10n.sync),
-                  SettingsGroup(
-                    children: [
-                      _syncStatusItem(l10n, syncStatusAsync),
-                    ],
-                  ),
-                  const SyncSection(),
-                ],
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup(l10n.sync),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SettingsGroupHeader(title: l10n.sync),
+                    SettingsGroup(
+                      children: [
+                        _syncStatusItem(l10n, syncStatusAsync),
+                      ],
+                    ),
+                    const SyncSection(),
+                  ],
+                ),
               ),
             ),
 
             // -- Data section ---------------------------------------------------
             StaggeredGroup(
               staggerIndex: 5,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsGroupHeader(title: l10n.data),
-                  SettingsGroup(
-                    children: [
-                      SettingsItem(
-                        icon: Icons.file_upload_outlined,
-                        title: l10n.importNotes,
-                        subtitle: l10n.importNotesDesc,
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => context.push('/settings/import'),
-                      ),
-                      SettingsItem(
-                        icon: Icons.file_download_outlined,
-                        title: l10n.exportAllNotes,
-                        subtitle: l10n.exportAllNotesDesc,
-                        onTap: () => _showBatchExportDialog(context, ref),
-                      ),
-                      SettingsItem(
-                        icon: Icons.restore_outlined,
-                        title: l10n.restoreFromBackup,
-                        subtitle: l10n.restoreFromBackupDesc,
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => context.push('/settings/restore'),
-                      ),
-                    ],
-                  ),
-                ],
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup(l10n.data),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SettingsGroupHeader(title: l10n.data),
+                    SettingsGroup(
+                      children: [
+                        SettingsItem(
+                          icon: Icons.file_upload_outlined,
+                          title: l10n.importNotes,
+                          subtitle: l10n.importNotesDesc,
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => _showImportSheet(context),
+                        ),
+                        SettingsItem(
+                          icon: Icons.file_download_outlined,
+                          title: l10n.exportAllNotes,
+                          subtitle: l10n.exportAllNotesDesc,
+                          onTap: () => _showBatchExportDialog(context, ref),
+                        ),
+                        SettingsItem(
+                          icon: Icons.restore_outlined,
+                          title: l10n.restoreFromBackup,
+                          subtitle: l10n.restoreFromBackupDesc,
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => context.push('/settings/restore'),
+                        ),
+                        SettingsItem(
+                          icon: Icons.photo_library_outlined,
+                          title: l10n.imageManagement,
+                          subtitle: l10n.totalStorage,
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => context.push('/settings/images'),
+                        ),
+                        SettingsItem(
+                          icon: Icons.description_outlined,
+                          title: l10n.templateManagement,
+                          subtitle: l10n.templates,
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => context.push('/settings/templates'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
 
             // -- Language section -----------------------------------------------
             StaggeredGroup(
               staggerIndex: 6,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsGroupHeader(title: l10n.language),
-                  SettingsGroup(
-                    children: [
-                      SettingsItem(
-                        icon: Icons.language,
-                        title: l10n.language,
-                        subtitle: _getLanguageDisplayName(
-                          ref.watch(localeProvider),
-                          l10n,
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup(l10n.language),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SettingsGroupHeader(title: l10n.language),
+                    SettingsGroup(
+                      children: [
+                        SettingsItem(
+                          icon: Icons.language,
+                          title: l10n.language,
+                          subtitle: _getLanguageDisplayName(
+                            ref.watch(localeProvider),
+                            l10n,
+                          ),
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => _showLanguageDialog(context, ref),
                         ),
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => _showLanguageDialog(context, ref),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // -- Keyboard shortcuts section -------------------------------------
+            StaggeredGroup(
+              staggerIndex: 7,
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup(l10n.keyboardShortcuts),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SettingsGroupHeader(title: l10n.keyboardShortcuts),
+                    SettingsGroup(
+                      children: [
+                        SettingsItem(
+                          icon: Icons.keyboard_outlined,
+                          title: l10n.keyboardShortcuts,
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => context.push('/settings/shortcuts'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
 
             // -- Appearance section ---------------------------------------------
             StaggeredGroup(
-              staggerIndex: 7,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsGroupHeader(title: l10n.appearance),
-                  SettingsGroup(
-                    children: [
-                      SettingsItem(
-                        icon: Icons.palette_outlined,
-                        title: l10n.theme,
-                        subtitle: _getThemeDisplayName(
-                            ref.watch(themeOptionProvider), l10n),
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () => _showThemeDialog(context, ref),
-                      ),
-                      _reduceMotionItem(l10n, ref),
-                    ],
-                  ),
-                ],
+              staggerIndex: 8,
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup(l10n.appearance),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SettingsGroupHeader(title: l10n.appearance),
+                    SettingsGroup(
+                      children: [
+                        SettingsItem(
+                          icon: Icons.palette_outlined,
+                          title: l10n.theme,
+                          subtitle: _getThemeDisplayName(
+                            ref.watch(themeOptionProvider),
+                            l10n,
+                          ),
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => _showThemeDialog(context, ref),
+                        ),
+                        _reduceMotionItem(l10n, ref),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
 
             // -- About section --------------------------------------------------
             const StaggeredGroup(
-              staggerIndex: 8,
+              staggerIndex: 9,
               child: AboutSection(),
             ),
 
             // -- Sign out (destructive, in its own group) -----------------------
             const StaggeredGroup(
-              staggerIndex: 9,
+              staggerIndex: 10,
               child: SignOutSection(),
             ),
           ],
@@ -500,115 +569,24 @@ class SettingsScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
-    final format = await showDialog<ExportFormat>(
+    // Show the new export sheet with ZIP and frontmatter options.
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text(l10n.exportAllNotes),
-        children: [
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(ctx, ExportFormat.markdown),
-            child: ListTile(
-              leading: const Icon(Icons.description_outlined),
-              title: Text(l10n.markdownFormat),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(ctx, ExportFormat.html),
-            child: ListTile(
-              leading: const Icon(Icons.code),
-              title: Text(l10n.htmlFormat),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(ctx, ExportFormat.plainText),
-            child: ListTile(
-              leading: const Icon(Icons.text_snippet_outlined),
-              title: Text(l10n.plainTextFormat),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-        ],
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => const ExportSheet(
+        scope: ExportScope.allNotes,
       ),
     );
+  }
 
-    if (format == null || !context.mounted) return;
-
-    // Show a loading indicator.
-    showDialog(
+  void _showImportSheet(BuildContext context) {
+    showModalBottomSheet<void>(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => const ImportSheet(),
     );
-
-    try {
-      final db = ref.read(databaseProvider);
-      final crypto = ref.read(cryptoServiceProvider);
-      final notes = await db.notesDao.getAllNotes();
-
-      if (notes.isEmpty) {
-        if (context.mounted) {
-          Navigator.pop(context); // dismiss loading
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.noNotesToExport)),
-          );
-        }
-        return;
-      }
-
-      // Decrypt notes that have encrypted content.
-      final decrypted = <({String title, String content, String id})>[];
-      for (final note in notes) {
-        String title = note.plainTitle ?? l10n.untitled;
-        String content = note.plainContent ?? '';
-
-        if (crypto.isUnlocked) {
-          final decryptedContent =
-              await crypto.decryptForItem(note.id, note.encryptedContent);
-          if (decryptedContent != null) {
-            content = decryptedContent;
-          }
-          if (note.encryptedTitle != null) {
-            final decryptedTitle =
-                await crypto.decryptForItem(note.id, note.encryptedTitle!);
-            if (decryptedTitle != null) {
-              title = decryptedTitle;
-            }
-          }
-        }
-
-        // Skip notes that have no usable content.
-        if (content.trim().isEmpty) continue;
-
-        decrypted.add((title: title, content: content, id: note.id));
-      }
-
-      if (decrypted.isEmpty) {
-        if (context.mounted) {
-          Navigator.pop(context); // dismiss loading
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.noNotesWithContent)),
-          );
-        }
-        return;
-      }
-
-      final file = await ExportService.exportBatch(decrypted, format);
-
-      if (context.mounted) {
-        Navigator.pop(context); // dismiss loading
-        await ExportService.shareFile(file);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context); // dismiss loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportFailed(e.toString()))),
-        );
-      }
-    }
   }
 }
 
@@ -674,9 +652,12 @@ class _SettingsItemWithSwitch extends StatelessWidget {
                   ],
                 ),
               ),
-              Switch(
-                value: value,
-                onChanged: onChanged,
+              Semantics(
+                hint: title,
+                child: Switch(
+                  value: value,
+                  onChanged: onChanged,
+                ),
               ),
             ],
           ),

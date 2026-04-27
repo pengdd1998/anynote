@@ -7,8 +7,7 @@ part 'collab_dao.g.dart';
 /// Data access object for collaboration state persistence.
 /// Stores serialized CRDT document state per note for offline resume.
 @DriftAccessor(tables: [CollabStates])
-class CollabDao extends DatabaseAccessor<AppDatabase>
-    with _$CollabDaoMixin {
+class CollabDao extends DatabaseAccessor<AppDatabase> with _$CollabDaoMixin {
   CollabDao(super.db);
 
   /// Load the serialized CRDT document state for a note.
@@ -19,21 +18,31 @@ class CollabDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Save (upsert) the CRDT document state for a note.
-  /// If a state already exists for [noteId], it is replaced.
+  /// If a state already exists for [noteId], it is updated in place.
   Future<void> saveState({
     required String noteId,
     required String documentState,
     required int lastVersion,
   }) async {
-    await into(collabStates).insert(
-      CollabStatesCompanion.insert(
-        noteId: noteId,
-        documentState: documentState,
-        lastVersion: Value(lastVersion),
-        updatedAt: Value(DateTime.now()),
-      ),
-      mode: InsertMode.replace,
-    );
+    final existing = await loadState(noteId);
+    if (existing != null) {
+      await (update(collabStates)..where((s) => s.noteId.equals(noteId))).write(
+        CollabStatesCompanion(
+          documentState: Value(documentState),
+          lastVersion: Value(lastVersion),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    } else {
+      await into(collabStates).insert(
+        CollabStatesCompanion.insert(
+          noteId: noteId,
+          documentState: documentState,
+          lastVersion: Value(lastVersion),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    }
   }
 
   /// Delete the persisted CRDT state for a note.
