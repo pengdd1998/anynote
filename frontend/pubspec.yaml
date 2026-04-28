@@ -93,7 +93,7 @@ dependencies:
   pdf: ^3.10.0
 
   # Background sync
-  workmanager: ^0.5.2
+  workmanager: ^0.6.0
   archive: ^4.0.9
 
 dev_dependencies:
