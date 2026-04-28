@@ -437,36 +437,43 @@ class AppMenuBar extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _shortcutRow('$mod+N', l10n?.shortcutNewNote ?? 'New Note'),
-              _shortcutRow('$mod+S', l10n?.shortcutSave ?? 'Save'),
-              _shortcutRow('$mod+F', l10n?.shortcutSearch ?? 'Search'),
+              _shortcutRow('$mod+N', l10n?.shortcutNewNote ?? 'New Note', ctx),
+              _shortcutRow('$mod+S', l10n?.shortcutSave ?? 'Save', ctx),
+              _shortcutRow('$mod+F', l10n?.shortcutSearch ?? 'Search', ctx),
               _shortcutRow(
                 '$mod+B',
                 l10n?.shortcutToggleSidebar ?? 'Toggle Sidebar',
+                ctx,
               ),
               _shortcutRow(
                 '$mod+P',
                 l10n?.shortcutExportPdf ?? 'Export to PDF',
+                ctx,
               ),
               _shortcutRow(
                 '$mod+,',
                 l10n?.shortcutSettings ?? 'Open Settings',
+                ctx,
               ),
               _shortcutRow(
                 '$mod+W',
                 l10n?.shortcutCloseNote ?? 'Close Note',
+                ctx,
               ),
               _shortcutRow(
                 '$mod+Tab',
                 l10n?.shortcutNextNote ?? 'Next Note',
+                ctx,
               ),
               _shortcutRow(
                 'F11',
                 l10n?.shortcutFullScreen ?? 'Toggle Full Screen',
+                ctx,
               ),
               _shortcutRow(
                 'Esc',
                 l10n?.shortcutExitZen ?? 'Exit Zen Mode / Close Dialog',
+                ctx,
               ),
             ],
           ),
@@ -481,7 +488,7 @@ class AppMenuBar extends ConsumerWidget {
     );
   }
 
-  Widget _shortcutRow(String keys, String description) {
+  Widget _shortcutRow(String keys, String description, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -492,7 +499,7 @@ class AppMenuBar extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(

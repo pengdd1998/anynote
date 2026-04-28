@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/app_durations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/sync/offline_queue_service.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 
@@ -57,12 +57,7 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.queueCleared),
-        duration: AppDurations.snackbarDuration,
-      ),
-    );
+    AppSnackBar.info(context, message: l10n.queueCleared);
   }
 
   @override
@@ -89,7 +84,10 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

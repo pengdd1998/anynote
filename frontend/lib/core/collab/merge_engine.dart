@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 
 import 'crdt_text.dart';
@@ -93,6 +95,51 @@ class MergeEngine {
   List<RGANode> getOpsSince(String noteId, int sinceClock) {
     final doc = getDocument(noteId);
     return doc.getOpsSince(sinceClock);
+  }
+
+  /// The current Lamport clock value across all documents.
+  ///
+  /// Returns the maximum clock value from all managed documents, or 0 if
+  /// no documents exist. Used when persisting CRDT state to record the
+  /// last known version.
+  int get clock {
+    if (_documents.isEmpty) return 0;
+    return _documents.values
+        .map((d) => d.clock)
+        .fold(0, (a, b) => a > b ? a : b);
+  }
+
+  /// Restore a single document's state from a serialized JSON string.
+  ///
+  /// Accepts either:
+  /// - Engine-level JSON (contains `documents` map): extracts the document
+  ///   for [noteId] from the `documents` map.
+  /// - Document-level JSON (contains `nodes` list): loads it directly as the
+  ///   document for [noteId].
+  ///
+  /// If a document already exists for [noteId], it is replaced.
+  void loadState(String noteId, String jsonState) {
+    final map = jsonDecode(jsonState) as Map<String, dynamic>;
+
+    if (map.containsKey('documents')) {
+      // Engine-level JSON: extract the specific document.
+      final docs = map['documents'] as Map<String, dynamic>;
+      final docJson = docs[noteId];
+      if (docJson != null) {
+        _documents[noteId] = CRDTText.fromJson(docJson as Map<String, dynamic>);
+      }
+    } else {
+      // Document-level JSON: load directly.
+      _documents[noteId] = CRDTText.fromJson(map);
+    }
+  }
+
+  /// Export the full engine state as a JSON string suitable for persistence.
+  ///
+  /// Includes the siteId and all managed documents with their RGA nodes and
+  /// clock values. The output can be passed to [loadState] to restore state.
+  String exportState() {
+    return jsonEncode(toJson());
   }
 
   /// Serialize all managed documents for persistence.

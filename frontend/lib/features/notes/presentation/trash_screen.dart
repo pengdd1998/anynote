@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/alpha_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -101,21 +102,15 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                   confirmDismiss: (direction) async {
                     if (direction == DismissDirection.startToEnd) {
                       // Restore
-                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         await db.notesDao.restoreNote(note.id);
                         if (mounted) {
-                          messenger.showSnackBar(
-                            SnackBar(content: Text(l10n.restore)),
-                          );
+                          AppSnackBar.info(context, message: l10n.restore);
                         }
                       } catch (e) {
                         if (mounted) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                                content: Text(
-                                    l10n.failedToRestoreError(e.toString()))),
-                          );
+                          AppSnackBar.error(context,
+                              message: l10n.failedToRestoreError(e.toString()));
                         }
                       }
                       return false;
@@ -147,16 +142,11 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                     if (direction == DismissDirection.endToStart) {
                       try {
                         db.notesDao.permanentlyDeleteNote(note.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l10n.permanentlyDelete)),
-                        );
+                        AppSnackBar.info(context,
+                            message: l10n.permanentlyDelete);
                       } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text(l10n.failedToDeleteError(e.toString())),
-                          ),
-                        );
+                        AppSnackBar.error(context,
+                            message: l10n.failedToDeleteError(e.toString()));
                       }
                     }
                   },
@@ -319,25 +309,17 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               leading: const Icon(Icons.restore),
               title: Text(l10n.restore),
               onTap: () async {
-                final messenger = ScaffoldMessenger.of(context);
                 try {
                   await db.notesDao.restoreNote(note.id);
                   if (ctx.mounted) Navigator.of(ctx).pop();
                   if (mounted) {
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(l10n.restore)),
-                    );
+                    AppSnackBar.info(context, message: l10n.restore);
                   }
                 } catch (e) {
                   if (ctx.mounted) Navigator.of(ctx).pop();
                   if (mounted) {
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          l10n.failedToRestoreError(e.toString()),
-                        ),
-                      ),
-                    );
+                    AppSnackBar.error(context,
+                        message: l10n.failedToRestoreError(e.toString()));
                   }
                 }
               },
@@ -352,7 +334,6 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               onTap: () async {
-                final messenger = ScaffoldMessenger.of(context);
                 Navigator.of(ctx).pop();
                 final confirmed = await showDialog<bool>(
                   context: context,
@@ -379,19 +360,13 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                   try {
                     await db.notesDao.permanentlyDeleteNote(note.id);
                     if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(content: Text(l10n.permanentlyDelete)),
-                      );
+                      AppSnackBar.info(context,
+                          message: l10n.permanentlyDelete);
                     }
                   } catch (e) {
                     if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l10n.failedToDeleteError(e.toString()),
-                          ),
-                        ),
-                      );
+                      AppSnackBar.error(context,
+                          message: l10n.failedToDeleteError(e.toString()));
                     }
                   }
                 }
@@ -422,13 +397,10 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
           ),
           TextButton(
             onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
               Navigator.of(ctx).pop();
               await db.notesDao.emptyTrash();
               if (mounted) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text(l10n.emptyTrash)),
-                );
+                AppSnackBar.info(context, message: l10n.emptyTrash);
               }
             },
             child: Text(l10n.delete),

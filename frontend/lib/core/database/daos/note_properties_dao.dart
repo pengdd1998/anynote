@@ -519,10 +519,51 @@ class NotePropertiesDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Set the locked state for multiple notes at once (batch operation).
+  ///
+  /// Uses a single query to fetch existing properties and a batch write
+  /// to avoid the N+1 pattern of calling [setNoteLocked] in a loop.
   Future<void> bulkSetLocked(List<String> noteIds, bool locked) async {
-    for (final noteId in noteIds) {
-      await setNoteLocked(noteId, locked);
-    }
+    if (noteIds.isEmpty) return;
+
+    final now = DateTime.now();
+    final value = locked ? 'true' : 'false';
+    final key = BuiltInProperties.isLocked;
+
+    // Fetch all existing is_locked properties for these notes in one query.
+    final existing = await (select(noteProperties)
+          ..where((tbl) => tbl.noteId.isIn(noteIds) & tbl.key.equals(key)))
+        .get();
+    final existingByNoteId = {for (final p in existing) p.noteId: p};
+
+    // Notes that already have a property -> update; others -> insert.
+    final toUpdate = existingByNoteId.keys.toSet();
+    final toInsert = noteIds.where((id) => !toUpdate.contains(id)).toList();
+
+    await batch((b) {
+      for (final noteId in toUpdate) {
+        final prop = existingByNoteId[noteId]!;
+        b.update(
+          noteProperties,
+          NotePropertiesCompanion(
+            valueText: Value(value),
+            updatedAt: Value(now),
+          ),
+          where: (tbl) => tbl.id.equals(prop.id),
+        );
+      }
+      for (final noteId in toInsert) {
+        b.insert(
+          noteProperties,
+          NotePropertiesCompanion.insert(
+            id: const Uuid().v4(),
+            noteId: noteId,
+            key: key,
+            valueType: const Value('text'),
+            valueText: Value(value),
+          ),
+        );
+      }
+    });
   }
 
   /// Get display value as string.

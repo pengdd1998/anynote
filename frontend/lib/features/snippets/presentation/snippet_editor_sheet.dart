@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Common programming languages for the dropdown.
@@ -109,9 +110,7 @@ class _SnippetEditorSheetState extends State<SnippetEditorSheet> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        AppSnackBar.error(context, message: e.toString());
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -178,7 +177,8 @@ class _SheetHandleBar extends StatelessWidget {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color:
+              Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
           borderRadius: BorderRadius.circular(2),
         ),
       ),

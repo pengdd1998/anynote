@@ -5,6 +5,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/error/error.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/text_diff.dart';
 
 /// Decrypted version data used for diff comparison.
@@ -461,14 +462,13 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.versionRestored)),
-        );
+        AppSnackBar.info(context, message: l10n.versionRestored);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.failedToRestore(e.toString()))),
+        AppSnackBar.error(
+          context,
+          message: l10n.failedToRestore(e.toString()),
         );
       }
     }

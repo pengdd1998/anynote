@@ -191,3 +191,43 @@ func (h *AuthHandler) GetRecoverySalt(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, resp)
 }
+
+// Recover handles POST /api/v1/auth/recover.
+// This is a public endpoint (rate limited) because the user is not yet
+// authenticated during account recovery. Validates the recovery key and
+// updates the user's password.
+func (h *AuthHandler) Recover(w http.ResponseWriter, r *http.Request) {
+	var req domain.RecoverRequest
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		return
+	}
+
+	if err := validateEmail(req.Email); err != nil {
+		writeValidationError(w, err.(*ValidationError))
+		return
+	}
+	if req.RecoveryKey == "" {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "recovery_key is required")
+		return
+	}
+	if req.NewPassword == "" {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "new_password is required")
+		return
+	}
+	if len(req.NewPassword) > 128 {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "new_password must be at most 128 bytes")
+		return
+	}
+
+	if err := h.authService.RecoverAccount(r.Context(), &req); err != nil {
+		if !writeErrorFromSentinel(w, r, err) {
+			writeError(w, r, http.StatusInternalServerError, "internal_error", "Account recovery failed")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "recovered"})
+}

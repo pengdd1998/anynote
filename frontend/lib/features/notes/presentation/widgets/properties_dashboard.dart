@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_durations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/daos/note_properties_dao.dart';
 import '../../../../core/widgets/error_state_widget.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 
@@ -437,13 +437,10 @@ class _StatusColumn extends StatelessWidget {
                 // Navigate back to notes list with status filter applied
                 context.pop();
                 // The filter will be applied via the filter state
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
+                AppSnackBar.info(
+                  context,
+                  message:
                       '${l10n?.filterByStatus ?? 'Filter by status'}: $status',
-                    ),
-                    duration: AppDurations.snackbarDuration,
-                  ),
                 );
               },
         borderRadius: BorderRadius.circular(12),

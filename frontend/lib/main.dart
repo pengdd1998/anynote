@@ -29,7 +29,10 @@ import 'core/theme/animation_config.dart';
 import 'core/widgets/app_menu_bar.dart';
 import 'core/quick_actions/quick_actions_manager.dart';
 import 'core/widgets/keyboard_shortcuts.dart';
+import 'core/widgets/error_boundary.dart';
+import 'core/constants/changelog.dart';
 import 'features/notes/presentation/widgets/command_palette.dart';
+import 'features/settings/presentation/whats_new_screen.dart';
 import 'routing/app_router.dart';
 
 /// Global reference to the Riverpod container so that non-widget code
@@ -78,11 +81,14 @@ void main() async {
     ErrorReporter.instance.reportError(e, st, context: 'database_init');
   }
 
-  // Initialize API client
+  // Initialize API client with compile-time base URL.
+  // Release builds MUST pass --dart-define=API_BASE_URL=https://your-server.com
+  // Debug builds default to localhost for convenience.
   final apiClient = ApiClient(
     baseUrl: const String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue: 'http://localhost:8080',
+      defaultValue:
+          kReleaseMode ? 'https://api.anynote.app' : 'http://localhost:8080',
     ),
   );
 
@@ -176,6 +182,11 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
             shareService.markConsumed();
           }
         });
+
+        // Check if this is a first launch or an app update and show
+        // the What's New dialog if the stored version differs from the
+        // current version.
+        _checkAndShowWhatsNew();
       }
     });
   }
@@ -251,6 +262,26 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
     }
   }
 
+  /// Compare the stored app version with the current version. If they
+  /// differ (first launch or update), show the What's New dialog and
+  /// persist the new version to SharedPreferences.
+  Future<void> _checkAndShowWhatsNew() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedVersion = prefs.getString('app_version');
+
+    if (storedVersion != Changelog.kCurrentVersion) {
+      // Wait for the first frame to complete so the navigator is ready.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final navContext = rootNavigatorKey.currentContext;
+        if (navContext != null && navContext.mounted) {
+          WhatsNewDialog.show(navContext);
+        }
+      });
+      await prefs.setString('app_version', Changelog.kCurrentVersion);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
@@ -262,30 +293,32 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
           child: MediaQuery.withClampedTextScaling(
             minScaleFactor: 0.8,
             maxScaleFactor: 2.0,
-            child: Stack(
-              children: [
-                MaterialApp.router(
-                  title: 'AnyNote',
-                  debugShowCheckedModeBanner: false,
-                  showSemanticsDebugger: false,
-                  theme: selectThemeData(
-                        themeOption,
-                        MediaQuery.platformBrightnessOf(context),
-                      ) ??
-                      AppTheme.lightTheme(),
-                  darkTheme: AppTheme.darkTheme(),
-                  highContrastTheme: AppTheme.highContrastLightTheme(),
-                  highContrastDarkTheme: AppTheme.highContrastDarkTheme(),
-                  themeMode: selectThemeMode(themeOption),
-                  routerConfig: appRouter,
-                  localizationsDelegates:
-                      AppLocalizations.localizationsDelegates,
-                  supportedLocales: AppLocalizations.supportedLocales,
-                  locale: locale,
-                ),
-                // Command palette overlay rendered on top of all screens.
-                const CommandPaletteOverlay(),
-              ],
+            child: ErrorBoundary(
+              child: Stack(
+                children: [
+                  MaterialApp.router(
+                    title: 'AnyNote',
+                    debugShowCheckedModeBanner: false,
+                    showSemanticsDebugger: false,
+                    theme: selectThemeData(
+                          themeOption,
+                          MediaQuery.platformBrightnessOf(context),
+                        ) ??
+                        AppTheme.lightTheme(),
+                    darkTheme: AppTheme.darkTheme(),
+                    highContrastTheme: AppTheme.highContrastLightTheme(),
+                    highContrastDarkTheme: AppTheme.highContrastDarkTheme(),
+                    themeMode: selectThemeMode(themeOption),
+                    routerConfig: appRouter,
+                    localizationsDelegates:
+                        AppLocalizations.localizationsDelegates,
+                    supportedLocales: AppLocalizations.supportedLocales,
+                    locale: locale,
+                  ),
+                  // Command palette overlay rendered on top of all screens.
+                  const CommandPaletteOverlay(),
+                ],
+              ),
             ),
           ),
         ),

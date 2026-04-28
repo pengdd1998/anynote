@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../l10n/app_localizations.dart';
 import '../constants/app_durations.dart';
 import '../theme/app_theme.dart';
+import 'app_snackbar.dart';
 import 'mermaid_template.dart';
 
 /// Detects and extracts ```mermaid code blocks from markdown content.
@@ -397,12 +398,7 @@ class _CopyButtonState extends State<_CopyButton> {
         Clipboard.setData(ClipboardData(text: widget.code));
         setState(() => _copied = true);
         ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.diagramCopied),
-            duration: AppDurations.snackbarDuration,
-          ),
-        );
+        AppSnackBar.info(context, message: l10n.diagramCopied);
         // Reset the icon after a short delay.
         Future.delayed(AppDurations.snackbarDuration, () {
           if (mounted) setState(() => _copied = false);

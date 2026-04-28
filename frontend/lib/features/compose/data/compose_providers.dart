@@ -172,9 +172,8 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       final quotaData = quotaState.valueOrNull;
       if (quotaData == null) return true; // No data yet, allow attempt.
 
-      // The quota response typically has 'remaining' and 'limit' fields.
-      final remaining = quotaData['remaining'];
-      if (remaining is int && remaining <= 0) {
+      // The quota response has dailyUsed and dailyLimit fields.
+      if (quotaData.isExhausted) {
         state = state.copyWith(
           isLoading: false,
           error: 'AI quota exceeded. Please wait before trying again.',

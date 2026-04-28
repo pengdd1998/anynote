@@ -35,6 +35,7 @@ type Config struct {
 	Chrome   ChromeConfig   `yaml:"chrome"`
 	Log      LogConfig      `yaml:"log"`
 	Firebase FirebaseConfig `yaml:"firebase"`
+	Stripe   StripeConfig   `yaml:"stripe"`
 }
 
 // MinIOConfig defaults — Bucket defaults to "anynote" when empty.
@@ -105,6 +106,14 @@ type ChromeConfig struct {
 // FirebaseConfig holds Firebase Cloud Messaging credentials.
 type FirebaseConfig struct {
 	CredentialsFile string `yaml:"credentials_file"` // Path to Firebase service account JSON
+}
+
+// StripeConfig holds Stripe payment integration settings.
+type StripeConfig struct {
+	SecretKey      string `yaml:"secret_key"`       // Stripe secret API key
+	WebhookSecret  string `yaml:"webhook_secret"`   // Stripe webhook signing secret
+	ProPriceID     string `yaml:"pro_price_id"`     // Stripe Price ID for Pro plan
+	LifetimePriceID string `yaml:"lifetime_price_id"` // Stripe Price ID for Lifetime plan
 }
 
 // Load reads config from file and environment variables.
@@ -214,6 +223,12 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("WS_ALLOWED_ORIGINS"); v != "" {
 		// Comma-separated list of allowed WebSocket origins, e.g. "https://app.example.com,https://web.example.com"
 		c.Server.AllowOrigins = splitCSV(v)
+	}
+	if v := os.Getenv("STRIPE_SECRET_KEY"); v != "" {
+		c.Stripe.SecretKey = v
+	}
+	if v := os.Getenv("STRIPE_WEBHOOK_SECRET"); v != "" {
+		c.Stripe.WebhookSecret = v
 	}
 }
 

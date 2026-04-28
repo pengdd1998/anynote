@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
+import '../../../../core/platform/platform_utils.dart';
 import '../../../../core/widgets/keyboard_shortcuts.dart';
 import '../rich_note_editor.dart';
 import 'slash_command_menu.dart';
@@ -177,9 +178,7 @@ class _RichEditorWithShortcutsState extends State<RichEditorWithShortcuts> {
 
   @override
   Widget build(BuildContext context) {
-    final isMacOS = Theme.of(context).platform == TargetPlatform.macOS;
-    final primaryModifier =
-        isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control;
+    final primaryModifier = PlatformUtils.primaryModifierKey;
 
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{

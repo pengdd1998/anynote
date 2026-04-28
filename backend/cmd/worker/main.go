@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/anynote/backend/internal/appsetup"
@@ -33,11 +34,31 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Validate critical configuration values.
+	if err := cfg.Validate(); err != nil {
+		slog.Error("invalid configuration", "error", err)
+		os.Exit(1)
+	}
+
 	// Initialize structured logger
 	initWorkerLogger(cfg.LogLevel())
 
-	// Connect to PostgreSQL
-	pool, err := pgxpool.New(context.Background(), cfg.Database.URL)
+	// Connect to PostgreSQL with pool configuration.
+	poolConfig, err := pgxpool.ParseConfig(cfg.Database.URL)
+	if err != nil {
+		slog.Error("failed to parse database config", "error", err)
+		os.Exit(1)
+	}
+	if cfg.Database.MaxOpenConns > 0 {
+		poolConfig.MaxConns = int32(cfg.Database.MaxOpenConns)
+	}
+	if cfg.Database.MaxIdleConns > 0 {
+		poolConfig.MinConns = int32(cfg.Database.MaxIdleConns)
+	}
+	if cfg.Database.ConnMaxLifetime > 0 {
+		poolConfig.MaxConnLifetime = cfg.Database.ConnMaxLifetime
+	}
+	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 	if err != nil {
 		slog.Error("failed to connect to database", "error", err)
 		os.Exit(1)
@@ -74,6 +95,8 @@ func main() {
 	publishLogRepo := repository.NewPublishLogRepository(pool)
 	platformConnRepo := repository.NewPlatformConnectionRepository(pool)
 	deviceTokenRepo := repository.NewDeviceTokenRepository(pool)
+	syncBlobRepo := repository.NewSyncBlobRepository(pool)
+	sharedNoteRepo := repository.NewSharedNoteRepository(pool)
 
 	// Initialize services
 	quotaSvc := service.NewQuotaService(quotaRepo)
@@ -128,6 +151,10 @@ func main() {
 	// Register real handlers (replaces stubs)
 	qSvc.RegisterHandlers(aiHandler, publishHandler)
 
+	// Register cleanup handler for expired shared notes.
+	cleanupHandler := queue.NewCleanupHandler(sharedNoteRepo)
+	qSvc.HandleFunc(queue.TaskCleanupExpiredShares, cleanupHandler.HandleCleanupExpiredShares)
+
 	// Start the asynq worker server. Start runs in the background, so we
 	// block on the signal channel below.
 	slog.Info("worker starting", "queues", []string{"ai", "publish"})
@@ -136,6 +163,41 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Start periodic cleanup of old sync operation logs (default 30-day retention).
+	cleanupCtx, cancelCleanup := context.WithCancel(context.Background())
+	go func() {
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				n, err := syncBlobRepo.CleanOldOperationLogs(cleanupCtx, 30)
+				if err != nil {
+					slog.Error("operation log cleanup failed", "error", err)
+				} else if n > 0 {
+					slog.Info("cleaned up old operation logs", "deleted", n)
+				}
+			case <-cleanupCtx.Done():
+				return
+			}
+		}
+	}()
+
+	// Schedule periodic expired shared notes cleanup via asynq (hourly).
+	go func() {
+		scheduler := asynq.NewScheduler(
+			asynq.RedisClientOpt{Addr: cfg.Redis.URL},
+			&asynq.SchedulerOpts{},
+		)
+		_, schedErr := scheduler.Register("@hourly", asynq.NewTask(queue.TaskCleanupExpiredShares, nil))
+		if schedErr != nil {
+			slog.Error("failed to register expired shares cleanup schedule", "error", schedErr)
+		}
+		if schedErr := scheduler.Run(); schedErr != nil {
+			slog.Error("shared notes cleanup scheduler stopped", "error", schedErr)
+		}
+	}()
+
 	// Graceful shutdown: listen for SIGINT/SIGTERM, then stop the worker server
 	// and close external connections.
 	sigCh := make(chan os.Signal, 1)
@@ -143,6 +205,9 @@ func main() {
 	sig := <-sigCh
 
 	slog.Info("shutting down worker", "signal", sig)
+
+	// Stop background cleanup goroutine.
+	cancelCleanup()
 
 	// Give in-progress tasks up to 5 seconds to complete.
 	done := make(chan struct{})
@@ -191,4 +256,3 @@ func initWorkerLogger(levelStr string) {
 	handler := slog.NewJSONHandler(os.Stdout, opts)
 	slog.SetDefault(slog.New(handler))
 }
-

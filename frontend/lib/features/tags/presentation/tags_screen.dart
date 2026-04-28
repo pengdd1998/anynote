@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/theme/color_utils.dart';
 import '../../../core/widgets/color_picker_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -220,9 +221,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     if (!crypto.isUnlocked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.unlockRequired)),
-      );
+      AppSnackBar.error(context, message: l10n.unlockRequired);
       return;
     }
 
@@ -279,9 +278,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     if (!crypto.isUnlocked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.unlockRequired)),
-      );
+      AppSnackBar.error(context, message: l10n.unlockRequired);
       return;
     }
 
@@ -472,8 +469,9 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                 await db.tagsDao.reparentTag(tag.id, newParentId);
               } on ArgumentError catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.message.toString())),
+                  AppSnackBar.error(
+                    context,
+                    message: e.message.toString(),
                   );
                 }
               }

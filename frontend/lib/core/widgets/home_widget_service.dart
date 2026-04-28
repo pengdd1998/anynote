@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../platform/platform_utils.dart';
 import '../../main.dart';
 
 /// Lightweight note summary for widget display.
@@ -85,8 +86,7 @@ class HomeWidgetService {
     // (Linux, macOS, Windows) do not implement this channel.
     if (kIsWeb ||
         Platform.environment.containsKey('FLUTTER_WEB') ||
-        Platform.isLinux ||
-        Platform.isWindows) {
+        PlatformUtils.isDesktop) {
       return;
     }
 
@@ -120,8 +120,7 @@ class HomeWidgetService {
   Future<void> refreshWidget() async {
     if (kIsWeb ||
         Platform.environment.containsKey('FLUTTER_WEB') ||
-        Platform.isLinux ||
-        Platform.isWindows) {
+        PlatformUtils.isDesktop) {
       return;
     }
 

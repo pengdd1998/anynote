@@ -80,6 +80,11 @@ class MasterDetailLayout extends StatefulWidget {
   /// When false, the master pane collapses with an animation.
   final bool sidebarVisible;
 
+  /// Text shown in the default placeholder when no item is selected.
+  /// Defaults to 'Select an item to view' but can be overridden with
+  /// a localized string.
+  final String placeholderText;
+
   const MasterDetailLayout({
     super.key,
     required this.masterPane,
@@ -93,6 +98,7 @@ class MasterDetailLayout extends StatefulWidget {
     this.masterPaneMaxWidth = 500,
     this.sideBySideThreshold = 600,
     this.sidebarVisible = true,
+    this.placeholderText = 'Select an item to view',
   });
 
   @override
@@ -198,15 +204,23 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
                             Icon(
                               Icons.article_outlined,
                               size: 64,
-                              color: Colors.grey.shade400,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withOpacity(0.4),
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Select an item to view',
+                              widget.placeholderText,
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
-                                  ?.copyWith(color: Colors.grey.shade500),
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                        .withOpacity(0.7),
+                                  ),
                             ),
                           ],
                         ),

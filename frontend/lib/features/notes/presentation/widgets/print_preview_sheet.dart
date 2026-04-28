@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/export/pdf_export_service.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 
 /// A bottom sheet that provides print/share options for a single note.
 ///
@@ -380,9 +381,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
 
     Clipboard.setData(ClipboardData(text: text.toString()));
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.copiedToClipboard)),
-    );
+    AppSnackBar.info(context, message: l10n.copiedToClipboard);
   }
 
   /// Generate a PDF from the note content and share it.
@@ -397,15 +396,11 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
       await PdfExportService.sharePdf(title, widget.content);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.pdfGenerated)),
-        );
+        AppSnackBar.info(context, message: l10n.pdfGenerated);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportFailed(e.toString()))),
-        );
+        AppSnackBar.error(context, message: l10n.exportFailed(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -426,9 +421,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
       await PdfExportService.printPdf(title, widget.content);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportFailed(e.toString()))),
-        );
+        AppSnackBar.error(context, message: l10n.exportFailed(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -459,9 +452,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
         // On web, we cannot use share_plus file share. Just copy HTML.
         Clipboard.setData(ClipboardData(text: htmlContent));
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.copiedToClipboard)),
-          );
+          AppSnackBar.info(context, message: l10n.copiedToClipboard);
         }
         return;
       }
@@ -478,15 +469,11 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportedAsHtml)),
-        );
+        AppSnackBar.info(context, message: l10n.exportedAsHtml);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportFailed(e.toString()))),
-        );
+        AppSnackBar.error(context, message: l10n.exportFailed(e.toString()));
       }
     } finally {
       if (mounted) {

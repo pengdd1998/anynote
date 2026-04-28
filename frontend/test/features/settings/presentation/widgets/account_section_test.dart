@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/features/settings/data/api_models.dart';
 import 'package:anynote/features/settings/presentation/widgets/account_section.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 
@@ -9,10 +10,13 @@ import 'package:anynote/l10n/app_localizations.dart';
 // Test helpers
 // ---------------------------------------------------------------------------
 
+/// A fixed timestamp used for AccountInfo test instances.
+final _testDate = DateTime(2026, 1, 1);
+
 /// Pump the [AccountSection] inside a localized [MaterialApp].
 Future<void> pumpAccountSection(
   WidgetTester tester, {
-  required AsyncValue<Map<String, dynamic>> accountAsync,
+  required AsyncValue<AccountInfo> accountAsync,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -39,10 +43,14 @@ void main() {
       testWidgets('renders Account header', (tester) async {
         await pumpAccountSection(
           tester,
-          accountAsync: AsyncData({
-            'email': 'user@example.com',
-            'plan': 'pro',
-          }),
+          accountAsync: AsyncData(AccountInfo(
+            id: 'user-1',
+            email: 'user@example.com',
+            username: 'testuser',
+            plan: 'pro',
+            createdAt: _testDate,
+            updatedAt: _testDate,
+          )),
         );
 
         expect(find.text('Account'), findsOneWidget);
@@ -51,10 +59,14 @@ void main() {
       testWidgets('renders email from account data', (tester) async {
         await pumpAccountSection(
           tester,
-          accountAsync: AsyncData({
-            'email': 'user@example.com',
-            'plan': 'pro',
-          }),
+          accountAsync: AsyncData(AccountInfo(
+            id: 'user-1',
+            email: 'user@example.com',
+            username: 'testuser',
+            plan: 'pro',
+            createdAt: _testDate,
+            updatedAt: _testDate,
+          )),
         );
 
         expect(find.text('Email'), findsOneWidget);
@@ -64,10 +76,14 @@ void main() {
       testWidgets('renders plan from account data', (tester) async {
         await pumpAccountSection(
           tester,
-          accountAsync: AsyncData({
-            'email': 'user@example.com',
-            'plan': 'pro',
-          }),
+          accountAsync: AsyncData(AccountInfo(
+            id: 'user-1',
+            email: 'user@example.com',
+            username: 'testuser',
+            plan: 'pro',
+            createdAt: _testDate,
+            updatedAt: _testDate,
+          )),
         );
 
         expect(find.text('Plan'), findsOneWidget);
@@ -77,10 +93,14 @@ void main() {
       testWidgets('renders Upgrade button', (tester) async {
         await pumpAccountSection(
           tester,
-          accountAsync: AsyncData({
-            'email': 'user@example.com',
-            'plan': 'free',
-          }),
+          accountAsync: AsyncData(AccountInfo(
+            id: 'user-1',
+            email: 'user@example.com',
+            username: 'testuser',
+            plan: 'free',
+            createdAt: _testDate,
+            updatedAt: _testDate,
+          )),
         );
 
         expect(find.text('Upgrade'), findsOneWidget);
@@ -89,26 +109,18 @@ void main() {
       testWidgets('renders profile row', (tester) async {
         await pumpAccountSection(
           tester,
-          accountAsync: AsyncData({
-            'email': 'user@example.com',
-            'plan': 'free',
-          }),
+          accountAsync: AsyncData(AccountInfo(
+            id: 'user-1',
+            email: 'user@example.com',
+            username: 'testuser',
+            plan: 'free',
+            createdAt: _testDate,
+            updatedAt: _testDate,
+          )),
         );
 
         expect(find.text('Profile'), findsOneWidget);
         expect(find.text('Edit display name and bio'), findsOneWidget);
-      });
-
-      testWidgets('shows Free plan label when plan is null', (tester) async {
-        await pumpAccountSection(
-          tester,
-          accountAsync: AsyncData({
-            'email': 'user@example.com',
-          }),
-        );
-
-        // Falls back to l10n.freePlan which is "Free".
-        expect(find.text('Free'), findsOneWidget);
       });
     });
 

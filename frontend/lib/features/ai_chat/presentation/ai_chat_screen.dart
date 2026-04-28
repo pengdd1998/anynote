@@ -148,6 +148,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, size: 16),
+                    tooltip: 'Dismiss error',
                     onPressed: () =>
                         ref.read(chatSessionProvider.notifier).clearError(),
                   ),
@@ -184,6 +185,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   }
 
   Widget _buildEmptyState(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -191,20 +193,22 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           Icon(
             Icons.chat_bubble_outline,
             size: 64,
-            color: Colors.grey.shade300,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.4),
           ),
           const SizedBox(height: 16),
           Text(
             l10n.aiChatWelcome,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.grey.shade500,
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.7),
                 ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             l10n.aiChatWelcomeDesc,
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+            style: TextStyle(
+                color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                fontSize: 13),
             textAlign: TextAlign.center,
           ),
         ],
@@ -429,7 +433,10 @@ class _ContextNoteSelectorSheetState extends State<_ContextNoteSelectorSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -446,6 +453,7 @@ class _ContextNoteSelectorSheetState extends State<_ContextNoteSelectorSheet> {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
+                    tooltip: l10n.close,
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],

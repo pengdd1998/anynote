@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_durations.dart';
+import '../../../../core/platform/platform_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../routing/app_router.dart';
@@ -434,10 +434,8 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
 
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final isDesktop =
-        !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
-    final shortcutHint =
-        isDesktop ? (Platform.isMacOS ? 'Cmd+K' : 'Ctrl+K') : '';
+    final isDesktop = PlatformUtils.isDesktop;
+    final shortcutHint = isDesktop ? PlatformUtils.modifierLabel + '+K' : '';
 
     return KeyboardListener(
       focusNode: FocusNode(),

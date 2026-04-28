@@ -2137,5 +2137,11 @@
   "barChartSemanticLabel": "월별 노트 수 막대 차트: {entries}",
   "donutChartSemanticLabel": "분포를 보여주는 도넛 차트: {entries}",
   "tagItemSemanticLabel": "태그: {name}",
-  "tagItemSemanticHint": "길게 눌러 편집"
+  "tagItemSemanticHint": "길게 눌러 편집",
+
+  "moreActions": "더 보기",
+  "statusSaved": "저장됨",
+  "statusUnsaved": "저장 안 됨",
+  "statusSaving": "저장 중...",
+  "selectItemToView": "항목을 선택하여 보기"
 }

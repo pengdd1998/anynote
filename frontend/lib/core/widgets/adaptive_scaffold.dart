@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../constants/breakpoints.dart';
+
 /// Responsive layout that shows different UI depending on screen width.
 ///
 /// Three breakpoints are provided:
@@ -39,17 +41,15 @@ class AdaptiveScaffold extends StatelessWidget {
 
   /// Whether the current screen is phone-sized.
   static bool isPhone(BuildContext context) =>
-      MediaQuery.of(context).size.width < 600;
+      Breakpoints.isCompact(MediaQuery.of(context).size.width);
 
   /// Whether the current screen is tablet-sized.
-  static bool isTablet(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    return w >= 600 && w < 1024;
-  }
+  static bool isTablet(BuildContext context) =>
+      Breakpoints.isMedium(MediaQuery.of(context).size.width);
 
   /// Whether the current screen is desktop-sized.
   static bool isDesktop(BuildContext context) =>
-      MediaQuery.of(context).size.width >= 1024;
+      Breakpoints.isExpanded(MediaQuery.of(context).size.width);
 
   @override
   Widget build(BuildContext context) {

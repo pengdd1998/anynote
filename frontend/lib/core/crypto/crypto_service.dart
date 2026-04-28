@@ -217,6 +217,20 @@ class CryptoService {
     }
   }
 
+  /// Derive a domain-separated key for SQLite database encryption.
+  ///
+  /// Uses the same per-item key derivation as other items, but with the
+  /// fixed domain string "anynote-database-key" instead of a UUID.
+  /// Returns the 32-byte key as a hex string suitable for SQLCipher's
+  /// PRAGMA key.
+  ///
+  /// Must only be called after [unlock] or [initialize] (i.e. when the
+  /// encrypt key is available).
+  Future<String> deriveDatabaseKey() async {
+    final key = await _getOrDeriveItemKey('anynote-database-key');
+    return key.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
   /// Encrypt binary blob data for a specific item (used for sync).
   Future<Uint8List> encryptBlobForItem(String itemId, Uint8List data) async {
     final itemKey = await _getOrDeriveItemKey(itemId);

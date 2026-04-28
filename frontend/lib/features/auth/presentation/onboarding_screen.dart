@@ -9,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_durations.dart';
 import '../../../core/widgets/pressable_scale.dart';
+import '../../../core/notifications/local_notification_service.dart';
 
 /// Four-page onboarding screen with interactive guided walkthrough.
 ///
@@ -114,6 +115,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _stopDemo() {
     _demoTimer?.cancel();
     _demoActive = false;
+  }
+
+  /// Request notification permission (mobile only) then navigate to register.
+  Future<void> _requestPermissionsAndContinue() async {
+    // Request notification permission on supported platforms.
+    try {
+      final notifService = LocalNotificationService();
+      await notifService.init();
+    } catch (_) {
+      // Permission denial is non-blocking.
+    }
+    if (mounted) {
+      _markSeenAndGo('/auth/register');
+    }
   }
 
   Future<void> _markSeenAndGo(String route) async {
@@ -223,7 +238,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: PressableScale(
                       onPressed: () {
                         if (isLastPage) {
-                          _markSeenAndGo('/auth/register');
+                          _requestPermissionsAndContinue();
                         } else {
                           _controller.nextPage(
                             duration: AppDurations.animation,

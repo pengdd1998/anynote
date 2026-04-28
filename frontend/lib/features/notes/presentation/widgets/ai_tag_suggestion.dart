@@ -187,7 +187,10 @@ class AiTagSuggestionSheet extends ConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -293,7 +296,10 @@ class AiTagSuggestionSheet extends ConsumerWidget {
               Icon(
                 Icons.label_outline,
                 size: 48,
-                color: Colors.grey.shade300,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.3),
               ),
               const SizedBox(height: 12),
               Text(

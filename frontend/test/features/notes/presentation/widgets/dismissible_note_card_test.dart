@@ -72,7 +72,7 @@ Future<AppDatabase> pumpDismissibleCard(
           tags: [_makeTag(id: 't1', plainName: 'Work')],
           isSelected: false,
           onTap: onTap ?? () {},
-          onLongPress: onLongPress ?? () {},
+          onLongPress: onLongPress != null ? (_) => onLongPress() : null,
           onDeleted: onDeleted,
           untitled: 'Untitled',
           skipPropertyBadges: true,

@@ -1,5 +1,14 @@
+import 'dart:io' show File
+    if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
+
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:sqlite3/sqlite3.dart' as sqlite3_lib;
+import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
+import 'package:drift_flutter/drift_flutter.dart' as drift_flutter;
 
 import 'tables.dart';
 import 'daos/notes_dao.dart';
@@ -15,6 +24,8 @@ import 'daos/note_links_dao.dart';
 import 'daos/note_properties_dao.dart';
 import 'daos/saved_searches_dao.dart';
 import 'daos/snippets_dao.dart';
+import 'daos/images_dao.dart';
+import '../platform/platform_utils.dart';
 
 part 'app_database.g.dart';
 
@@ -36,6 +47,7 @@ part 'app_database.g.dart';
     CollabStates,
     SavedSearches,
     Snippets,
+    NoteImages,
   ],
   daos: [
     NotesDao,
@@ -51,6 +63,7 @@ part 'app_database.g.dart';
     NotePropertiesDao,
     SavedSearchesDao,
     SnippetsDao,
+    ImagesDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -58,8 +71,25 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.e);
 
+  /// Set the SQLCipher encryption key derived from the user's master key.
+  ///
+  /// Call this after the crypto service is unlocked (post-login or post-app-
+  /// launch). The key is a hex string produced by [CryptoService.deriveDatabaseKey].
+  /// On the next database connection, the PRAGMA key will be applied.
+  ///
+  /// For backward compatibility, existing unencrypted databases will continue
+  /// to open without a key until this method is called.
+  static void setEncryptionKey(String hexKey) {
+    _dbEncryptionKey = hexKey;
+  }
+
+  /// Clear the SQLCipher encryption key (e.g. on logout).
+  static void clearEncryptionKey() {
+    _dbEncryptionKey = null;
+  }
+
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration {
@@ -219,6 +249,16 @@ class AppDatabase extends _$AppDatabase {
             'CREATE INDEX IF NOT EXISTS idx_tags_parent_id ON tags (parent_id)',
           );
         }
+        if (from < 17) {
+          // v16 -> v17: Add note_images table for image metadata tracking.
+          await m.createTable(noteImages);
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_note_images_note_id ON note_images (note_id)',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_note_images_is_synced ON note_images (is_synced)',
+          );
+        }
       },
     );
   }
@@ -250,7 +290,46 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-/// Open database connection with SQLCipher support.
+/// Optional SQLCipher encryption key (hex-encoded 32-byte key).
+///
+/// Set by [AppDatabase.setEncryptionKey] after the crypto service is unlocked.
+/// When null, the database opens without encryption (backward-compatible with
+/// existing installations). When set, PRAGMA key is issued on every connection
+/// so that new installations get full-database encryption at rest.
+String? _dbEncryptionKey;
+
+/// Open database connection with optional SQLCipher encryption.
+///
+/// On native platforms, creates a [NativeDatabase] with a [setup] callback
+/// that issues PRAGMA key when an encryption key has been provided.
+/// On web, delegates to [drift_flutter.driftDatabase] (SQLCipher is not
+/// available in the browser; reliance on origin isolation and E2E encryption
+/// of synced content provides the security boundary instead).
 QueryExecutor _openConnection() {
-  return driftDatabase(name: 'anynote.db');
+  // Web: no native SQLite, so use the drift_flutter default (IndexedDB/OPFS).
+  // SQLCipher PRAGMA is not applicable on web.
+  if (kIsWeb) {
+    return drift_flutter.driftDatabase(name: 'anynote.db');
+  }
+
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dbFolder.path, 'anynote.db.sqlite'));
+
+    if (PlatformUtils.isAndroid) {
+      await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
+    }
+
+    final cacheBase = (await getTemporaryDirectory()).path;
+    sqlite3_lib.sqlite3.tempDirectory = cacheBase;
+
+    return NativeDatabase.createInBackground(
+      file,
+      setup: (db) {
+        if (_dbEncryptionKey != null) {
+          db.execute("PRAGMA key = \"$_dbEncryptionKey\"");
+        }
+      },
+    );
+  });
 }

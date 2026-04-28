@@ -7527,6 +7527,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Long press to edit'**
   String get tagItemSemanticHint;
+
+  /// Tooltip for the overflow menu button in the editor AppBar
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get moreActions;
+
+  /// Save status indicator: content is saved
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get statusSaved;
+
+  /// Save status indicator: content has unsaved changes
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved'**
+  String get statusUnsaved;
+
+  /// Save status indicator: content is being saved
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get statusSaving;
+
+  /// Placeholder text in the master-detail layout when no item is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Select an item to view'**
+  String get selectItemToView;
+
+  /// Title of the conflict resolution screen
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Conflicts'**
+  String get syncConflicts;
+
+  /// Empty state when there are no sync conflicts
+  ///
+  /// In en, this message translates to:
+  /// **'No conflicts to resolve'**
+  String get noConflicts;
+
+  /// Label showing the truncated ID of a conflicted item
+  ///
+  /// In en, this message translates to:
+  /// **'Item: {itemId}'**
+  String conflictItem(String itemId);
+
+  /// Label showing the server version number of a conflicted item
+  ///
+  /// In en, this message translates to:
+  /// **'Server version: {version}'**
+  String serverVersion(int version);
+
+  /// Button to resolve conflict by keeping the local version
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Local'**
+  String get keepLocal;
+
+  /// Button to resolve conflict by keeping the server version
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Server'**
+  String get keepServer;
+
+  /// Button to resolve conflict by keeping both versions
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Both'**
+  String get keepBoth;
+
+  /// Placeholder text for the find input field in the editor find/replace bar
+  ///
+  /// In en, this message translates to:
+  /// **'Find in note'**
+  String get findInNote;
+
+  /// Placeholder text for the replace input field in the editor find/replace bar
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with'**
+  String get replaceWith;
+
+  /// Shown when find/replace search has zero results
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get noMatches;
+
+  /// Current match index out of total matches in find/replace bar
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total}'**
+  String matchCount(int current, int total);
+
+  /// Tooltip for find/replace previous match button
+  ///
+  /// In en, this message translates to:
+  /// **'Previous match'**
+  String get findPrevious;
+
+  /// Tooltip for find/replace next match button
+  ///
+  /// In en, this message translates to:
+  /// **'Next match'**
+  String get findNext;
+
+  /// Tooltip for find/replace replace current match button
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replaceMatch;
+
+  /// Tooltip for find/replace replace all matches button
+  ///
+  /// In en, this message translates to:
+  /// **'Replace all'**
+  String get replaceAllMatches;
+
+  /// Tooltip for close button on find/replace bar
+  ///
+  /// In en, this message translates to:
+  /// **'Close find bar'**
+  String get closeFindBar;
+
+  /// Tooltip for code block toolbar button
+  ///
+  /// In en, this message translates to:
+  /// **'Code block'**
+  String get codeBlock;
+
+  /// Tooltip for checklist toolbar button
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get checklist;
+
+  /// Tooltip for indent toolbar button
+  ///
+  /// In en, this message translates to:
+  /// **'Indent'**
+  String get indent;
+
+  /// Tooltip for outdent toolbar button
+  ///
+  /// In en, this message translates to:
+  /// **'Outdent'**
+  String get outdent;
 }
 
 class _AppLocalizationsDelegate

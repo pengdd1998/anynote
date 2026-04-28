@@ -4,12 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/app_components.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../data/api_models.dart';
 
 /// Account section for the settings screen.
 ///
 /// Shows the user's email, plan tier, and a link to edit their profile.
 class AccountSection extends ConsumerWidget {
-  final AsyncValue<Map<String, dynamic>> accountAsync;
+  final AsyncValue<AccountInfo> accountAsync;
 
   const AccountSection({super.key, required this.accountAsync});
 
@@ -36,7 +37,7 @@ class AccountSection extends ConsumerWidget {
 
   Widget _buildItems(
     BuildContext context,
-    Map<String, dynamic> account,
+    AccountInfo account,
     AppLocalizations l10n,
   ) {
     return Column(
@@ -45,12 +46,12 @@ class AccountSection extends ConsumerWidget {
         SettingsItem(
           icon: Icons.person_outline,
           title: l10n.email,
-          subtitle: account['email'] as String? ?? l10n.unknown,
+          subtitle: account.email,
         ),
         SettingsItem(
           icon: Icons.badge_outlined,
           title: l10n.plan,
-          subtitle: account['plan'] as String? ?? l10n.freePlan,
+          subtitle: account.plan,
           trailing: FilledButton.tonal(
             onPressed: () => context.push('/settings/plan'),
             style: FilledButton.styleFrom(

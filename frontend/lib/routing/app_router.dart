@@ -7,6 +7,7 @@ import '../core/widgets/adaptive_scaffold.dart';
 import '../core/widgets/offline_banner.dart';
 import '../l10n/app_localizations.dart';
 import '../main.dart';
+import '../core/sync/sync_engine.dart' show SyncConflict;
 // Eager imports: on the default user path, loaded at startup.
 import '../features/auth/presentation/onboarding_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -22,6 +23,7 @@ import '../features/notes/presentation/markdown_preview_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/keyboard_shortcuts_screen.dart';
+import '../features/settings/presentation/notification_settings_screen.dart';
 import '../features/collections/presentation/collections_list_screen.dart';
 import '../features/collections/presentation/collection_detail_screen.dart';
 import '../features/share/presentation/shared_note_viewer.dart';
@@ -66,6 +68,7 @@ import '../features/notes/presentation/widgets/statistics_screen.dart';
 import '../features/notes/presentation/daily_notes_screen.dart';
 import '../features/notes/presentation/reminders_screen.dart';
 import '../features/notes/presentation/widgets/template_management_screen.dart';
+import '../features/notes/presentation/conflict_resolution_screen.dart';
 import '../features/snippets/presentation/snippets_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -258,6 +261,17 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/trash',
       pageBuilder: (context, state) => slideTransition(const TrashScreen()),
+    ),
+
+    // Sync conflict resolution screen
+    GoRoute(
+      path: '/sync/conflicts',
+      pageBuilder: (context, state) {
+        final conflicts = state.extra as List<SyncConflict>? ?? [];
+        return slideTransition(
+          ConflictResolutionScreen(conflicts: conflicts),
+        );
+      },
     ),
 
     // Deep link route for anynote://notes/{id}.
@@ -524,6 +538,12 @@ final appRouter = GoRouter(
               pageBuilder: (context, state) =>
                   slideTransition(const KeyboardShortcutsScreen()),
             ),
+            GoRoute(
+              path: 'notifications',
+              parentNavigatorKey: rootNavigatorKey,
+              pageBuilder: (context, state) =>
+                  slideTransition(const NotificationSettingsScreen()),
+            ),
           ],
         ),
       ],
@@ -764,7 +784,9 @@ class _DeferredLoaderState extends State<_DeferredLoader> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+              Icon(Icons.error_outline,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
               const SizedBox(height: 16),
               Text(
                 l10n?.failedToLoadDeferred ?? 'Failed to load',

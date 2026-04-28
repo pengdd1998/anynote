@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -10,6 +10,7 @@ import '../../../core/backup/restore_service.dart';
 import '../../../core/backup/restore_strategy.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/widgets/app_components.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/settings_providers.dart';
@@ -80,8 +81,11 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         const SizedBox(height: 24),
-        Icon(Icons.file_open_outlined,
-            size: 64, color: Theme.of(context).disabledColor,),
+        Icon(
+          Icons.file_open_outlined,
+          size: 64,
+          color: Theme.of(context).disabledColor,
+        ),
         const SizedBox(height: 16),
         Text(
           l10n.selectBackupFile,
@@ -309,8 +313,11 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(Icons.check_circle_outline,
-                    color: Colors.green.shade600, size: 20,),
+                Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.green.shade600,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -396,7 +403,9 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
           children: [
             RadioGroup<ConflictStrategy>(
               groupValue: _strategy,
-              onChanged: (v) { if (v != null) setState(() => _strategy = v); },
+              onChanged: (v) {
+                if (v != null) setState(() => _strategy = v);
+              },
               child: Column(
                 children: [
                   _StrategyOption(
@@ -438,8 +447,11 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.info_outline,
-                  size: 20, color: theme.colorScheme.tertiary,),
+              Icon(
+                Icons.info_outline,
+                size: 20,
+                color: theme.colorScheme.tertiary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -566,8 +578,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
               icon: Icons.merge_type,
               title: l10n.conflictsFound,
               subtitle: '${result.conflicts}',
-              iconColor:
-                  result.conflicts > 0 ? Colors.orange : null,
+              iconColor: result.conflicts > 0 ? Colors.orange : null,
             ),
           ],
         ),
@@ -620,8 +631,9 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.filePickerError(e.toString()))),
+        AppSnackBar.error(
+          context,
+          message: l10n.filePickerError(e.toString()),
         );
       }
     }
@@ -647,8 +659,9 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         setState(() => _isProcessing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.verificationFailedError(e.toString()))),
+        AppSnackBar.error(
+          context,
+          message: l10n.verificationFailedError(e.toString()),
         );
       }
     }
@@ -688,8 +701,9 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         setState(() => _isProcessing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.backupImportFailed(e.toString()))),
+        AppSnackBar.error(
+          context,
+          message: l10n.backupImportFailed(e.toString()),
         );
       }
     }
@@ -701,9 +715,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
     if (kIsWeb) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.notSupportedOnWeb)),
-        );
+        AppSnackBar.info(context, message: l10n.notSupportedOnWeb);
       }
       return;
     }
@@ -743,8 +755,9 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         setState(() => _isProcessing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.backupImportFailed(e.toString()))),
+        AppSnackBar.error(
+          context,
+          message: l10n.backupImportFailed(e.toString()),
         );
         // Go back to strategy step so user can retry.
         setState(() => _currentStep = _RestoreStep.strategy);
@@ -848,9 +861,7 @@ class _StepIndicator extends StatelessWidget {
     bool isCompleted,
     bool isCurrent,
   ) {
-    final color = isCompleted
-        ? theme.colorScheme.primary
-        : theme.disabledColor;
+    final color = isCompleted ? theme.colorScheme.primary : theme.disabledColor;
 
     return Container(
       width: 32,
@@ -971,13 +982,17 @@ class _ConflictWarningCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           if (preview.existingNoteCount > 0)
-            _conflictRow(Icons.note_outlined, l10n.existingNotesCount(preview.existingNoteCount)),
+            _conflictRow(Icons.note_outlined,
+                l10n.existingNotesCount(preview.existingNoteCount)),
           if (preview.existingTagCount > 0)
-            _conflictRow(Icons.label_outline, l10n.existingTagsCount(preview.existingTagCount)),
+            _conflictRow(Icons.label_outline,
+                l10n.existingTagsCount(preview.existingTagCount)),
           if (preview.existingCollectionCount > 0)
-            _conflictRow(Icons.folder_outlined, l10n.existingCollectionsCount(preview.existingCollectionCount)),
+            _conflictRow(Icons.folder_outlined,
+                l10n.existingCollectionsCount(preview.existingCollectionCount)),
           if (preview.existingContentCount > 0)
-            _conflictRow(Icons.auto_awesome_outlined, l10n.existingContentsCount(preview.existingContentCount)),
+            _conflictRow(Icons.auto_awesome_outlined,
+                l10n.existingContentsCount(preview.existingContentCount)),
         ],
       ),
     );

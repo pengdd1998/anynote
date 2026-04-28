@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' show Directory, File
+    if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -6,34 +7,49 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'image_compressor.dart';
+import 'web_image_storage.dart';
+
 /// Manages local storage of note images.
 ///
-/// Image storage requires a native filesystem and is not supported on web.
-/// All public methods throw [UnsupportedError] when running on web.
+/// On native platforms, images are stored as files in the application documents
+/// directory under a `note_images` subdirectory. On web, images are stored as
+/// base64 strings in SharedPreferences via [WebImageStorage].
 class ImageStorage {
   static const _imagesDir = 'note_images';
 
-  /// Save image bytes and return the local file path.
-  static Future<String> saveImage(Uint8List bytes, String noteId) async {
+  /// Save image bytes and return the local file path (native) or
+  /// SharedPreferences key (web).
+  ///
+  /// When [compress] is true (the default), images larger than 100 KB are
+  /// compressed to JPEG at 85% quality with a max dimension of 1920px before
+  /// being written to disk. Pass [compress: false] to store the original
+  /// bytes unmodified.
+  static Future<String> saveImage(
+    Uint8List bytes,
+    String noteId, {
+    bool compress = true,
+  }) async {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'Image storage is not supported on web platform',
-      );
+      return WebImageStorage.saveWebImage(bytes, noteId);
     }
+
+    final bytesToSave =
+        compress ? await ImageCompressor.compress(bytes) : bytes;
+
     final dir = await _getImagesDirectory();
-    final hash = md5.convert(bytes).toString().substring(0, 12);
-    final filename = '${noteId}_$hash.png';
+    final hash = md5.convert(bytesToSave).toString().substring(0, 12);
+    final ext = compress && bytesToSave.length != bytes.length ? 'jpg' : 'png';
+    final filename = '${noteId}_$hash.$ext';
     final file = File(p.join(dir.path, filename));
-    await file.writeAsBytes(bytes);
+    await file.writeAsBytes(bytesToSave);
     return file.path;
   }
 
-  /// Load image from local path.
+  /// Load image from local path (native) or SharedPreferences key (web).
   static Future<Uint8List?> loadImage(String path) async {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'Image storage is not supported on web platform',
-      );
+      return WebImageStorage.loadWebImage(path);
     }
     final file = File(path);
     if (await file.exists()) {
@@ -45,9 +61,8 @@ class ImageStorage {
   /// Delete all images for a note.
   static Future<void> deleteImagesForNote(String noteId) async {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'Image storage is not supported on web platform',
-      );
+      await WebImageStorage.deleteWebImagesForNote(noteId);
+      return;
     }
     final dir = await _getImagesDirectory();
     if (!await dir.exists()) return;
@@ -58,7 +73,7 @@ class ImageStorage {
     }
   }
 
-  /// Get/create the images directory.
+  /// Get/create the images directory (native only).
   static Future<Directory> _getImagesDirectory() async {
     final appDir = await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(appDir.path, _imagesDir));

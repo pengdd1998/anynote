@@ -76,6 +76,18 @@ func writeErrorFromSentinel(w http.ResponseWriter, r *http.Request, err error) b
 		writeError(w, r, http.StatusForbidden, "plan_limit_exceeded", "Plan limit exceeded")
 	case service.ErrInvalidPlan:
 		writeError(w, r, http.StatusBadRequest, "invalid_plan", "Invalid plan")
+	case service.ErrInvalidRecoveryKey:
+		writeError(w, r, http.StatusUnauthorized, "invalid_recovery_key", "Invalid recovery key")
+	case service.ErrPaymentNotFound:
+		writeError(w, r, http.StatusNotFound, "not_found", "Payment not found")
+	case service.ErrInvalidStripeSig:
+		writeError(w, r, http.StatusBadRequest, "invalid_signature", "Invalid webhook signature")
+	case service.ErrPaymentAlreadyDone:
+		writeError(w, r, http.StatusOK, "already_processed", "Payment already processed")
+	case service.ErrInvalidPaymentPlan:
+		writeError(w, r, http.StatusBadRequest, "invalid_plan", "Invalid payment plan")
+	case service.ErrNotificationNotFound:
+		writeError(w, r, http.StatusNotFound, "not_found", "Notification not found")
 	default:
 		return false
 	}

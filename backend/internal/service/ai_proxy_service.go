@@ -26,7 +26,7 @@ type aiProxyService struct {
 	gateway       *llm.Gateway
 	llmRepo       LLMConfigRepository
 	quotaSvc      QuotaService
-	rateLimiter   *RateLimiter
+	rateLimiter   RateLimitProvider
 	defaultCfg    llm.GatewayConfig
 	fallbackCfg   *llm.GatewayConfig // nil means no fallback configured
 	encryptionKey []byte
@@ -36,7 +36,7 @@ func NewAIProxyService(
 	gateway *llm.Gateway,
 	llmRepo LLMConfigRepository,
 	quotaSvc QuotaService,
-	rateLimiter *RateLimiter,
+	rateLimiter RateLimitProvider,
 	defaultCfg llm.GatewayConfig,
 	encryptionKey []byte,
 ) AIProxyService {
@@ -57,7 +57,7 @@ func NewAIProxyServiceWithFallback(
 	gateway *llm.Gateway,
 	llmRepo LLMConfigRepository,
 	quotaSvc QuotaService,
-	rateLimiter *RateLimiter,
+	rateLimiter RateLimitProvider,
 	defaultCfg llm.GatewayConfig,
 	fallbackCfg llm.GatewayConfig,
 	encryptionKey []byte,
@@ -76,38 +76,20 @@ func NewAIProxyServiceWithFallback(
 func (s *aiProxyService) Proxy(ctx context.Context, userID string, req domain.AIProxyRequest) (<-chan domain.StreamChunk, error) {
 	uid, _ := uuid.Parse(userID)
 
-	// 1. Check if user has custom LLM configuration
-	userCfg, err := s.llmRepo.GetDefaultByUser(ctx, uid)
-	if err == nil && userCfg != nil {
-		// Decrypt the stored encrypted API key
-		decryptedKey, decErr := llm.DecryptAPIKey(userCfg.EncryptedKey, s.encryptionKey)
-		if decErr != nil {
-			return nil, fmt.Errorf("decrypt api key: %w", decErr)
-		}
-
-		// Dedicated mode: use user's own API key
-		dedicatedCfg := llm.GatewayConfig{
-			Provider:    userCfg.Provider,
-			BaseURL:     userCfg.BaseURL,
-			APIKey:      decryptedKey,
-			Model:       userCfg.Model,
-			MaxTokens:   userCfg.MaxTokens,
-			Temperature: userCfg.Temperature,
-			Timeout:     120 * 1e9, // 120s in nanoseconds
-		}
-
-		chatReq := s.toChatRequest(req, dedicatedCfg)
-		return s.gateway.ChatStream(ctx, dedicatedCfg, chatReq)
+	// 1. Check if user has custom LLM configuration.
+	dedicatedCfg, err := UserLLMConfig(ctx, uid, s.llmRepo, s.encryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("resolve user llm config: %w", err)
+	}
+	if dedicatedCfg != nil {
+		// Dedicated mode: use user's own API key.
+		chatReq := s.toChatRequest(req, *dedicatedCfg)
+		return s.gateway.ChatStream(ctx, *dedicatedCfg, chatReq)
 	}
 
-	// 2. Shared mode: check rate limit and quota
-	if !s.rateLimiter.Allow(userID) {
-		return nil, ErrQuotaExceeded
-	}
-
-	// Increment usage (non-fatal: do not block the request on quota tracking failure).
-	if err := s.quotaSvc.IncrementUsage(ctx, uid); err != nil {
-		slog.Error("failed to increment AI usage", "user_id", userID, "error", err)
+	// 2. Shared mode: check rate limit and quota.
+	if err := CheckSharedModeQuota(ctx, uid, userID, s.rateLimiter, s.quotaSvc); err != nil {
+		return nil, err
 	}
 
 	// 3. Use server default LLM

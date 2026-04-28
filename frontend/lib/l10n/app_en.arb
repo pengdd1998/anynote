@@ -4248,5 +4248,92 @@
   },
 
   "tagItemSemanticHint": "Long press to edit",
-  "@tagItemSemanticHint": { "description": "Screen reader hint for long-pressing a tag item to open its edit menu" }
+  "@tagItemSemanticHint": { "description": "Screen reader hint for long-pressing a tag item to open its edit menu" },
+
+  "moreActions": "More actions",
+  "@moreActions": { "description": "Tooltip for the overflow menu button in the editor AppBar" },
+
+  "statusSaved": "Saved",
+  "@statusSaved": { "description": "Save status indicator: content is saved" },
+
+  "statusUnsaved": "Unsaved",
+  "@statusUnsaved": { "description": "Save status indicator: content has unsaved changes" },
+
+  "statusSaving": "Saving...",
+  "@statusSaving": { "description": "Save status indicator: content is being saved" },
+
+  "selectItemToView": "Select an item to view",
+  "@selectItemToView": { "description": "Placeholder text in the master-detail layout when no item is selected" },
+
+  "syncConflicts": "Sync Conflicts",
+  "@syncConflicts": { "description": "Title of the conflict resolution screen" },
+
+  "noConflicts": "No conflicts to resolve",
+  "@noConflicts": { "description": "Empty state when there are no sync conflicts" },
+
+  "conflictItem": "Item: {itemId}",
+  "@conflictItem": {
+    "description": "Label showing the truncated ID of a conflicted item",
+    "placeholders": { "itemId": { "type": "String" } }
+  },
+
+  "serverVersion": "Server version: {version}",
+  "@serverVersion": {
+    "description": "Label showing the server version number of a conflicted item",
+    "placeholders": { "version": { "type": "int" } }
+  },
+
+  "keepLocal": "Keep Local",
+  "@keepLocal": { "description": "Button to resolve conflict by keeping the local version" },
+
+  "keepServer": "Keep Server",
+  "@keepServer": { "description": "Button to resolve conflict by keeping the server version" },
+
+  "keepBoth": "Keep Both",
+  "@keepBoth": { "description": "Button to resolve conflict by keeping both versions" },
+
+  "findInNote": "Find in note",
+  "@findInNote": { "description": "Placeholder text for the find input field in the editor find/replace bar" },
+
+  "replaceWith": "Replace with",
+  "@replaceWith": { "description": "Placeholder text for the replace input field in the editor find/replace bar" },
+
+  "noMatches": "No matches",
+  "@noMatches": { "description": "Shown when find/replace search has zero results" },
+
+  "matchCount": "{current} of {total}",
+  "@matchCount": {
+    "description": "Current match index out of total matches in find/replace bar",
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "findPrevious": "Previous match",
+  "@findPrevious": { "description": "Tooltip for find/replace previous match button" },
+
+  "findNext": "Next match",
+  "@findNext": { "description": "Tooltip for find/replace next match button" },
+
+  "replaceMatch": "Replace",
+  "@replaceMatch": { "description": "Tooltip for find/replace replace current match button" },
+
+  "replaceAllMatches": "Replace all",
+  "@replaceAllMatches": { "description": "Tooltip for find/replace replace all matches button" },
+
+  "closeFindBar": "Close find bar",
+  "@closeFindBar": { "description": "Tooltip for close button on find/replace bar" },
+
+  "codeBlock": "Code block",
+  "@codeBlock": { "description": "Tooltip for code block toolbar button" },
+
+  "checklist": "Checklist",
+  "@checklist": { "description": "Tooltip for checklist toolbar button" },
+
+  "indent": "Indent",
+  "@indent": { "description": "Tooltip for indent toolbar button" },
+
+  "outdent": "Outdent",
+  "@outdent": { "description": "Tooltip for outdent toolbar button" }
 }

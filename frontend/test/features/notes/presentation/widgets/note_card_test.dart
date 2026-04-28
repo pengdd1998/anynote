@@ -24,7 +24,7 @@ Future<void> pumpNoteCard(
   List<Tag> tags = const [],
   bool isSelected = false,
   VoidCallback? onTap,
-  VoidCallback? onLongPress,
+  ValueChanged<Offset>? onLongPress,
   String untitled = 'Untitled',
   NoteCardLayout layout = NoteCardLayout.list,
 }) async {
@@ -34,7 +34,7 @@ Future<void> pumpNoteCard(
     tags: tags,
     isSelected: isSelected,
     onTap: onTap ?? () {},
-    onLongPress: onLongPress ?? () {},
+    onLongPress: onLongPress,
     untitled: untitled,
     layout: layout,
     skipPropertyBadges: true, // Avoid timer leaks in tests
@@ -202,7 +202,7 @@ void main() {
       var longPressed = false;
       await pumpNoteCard(
         tester,
-        onLongPress: () => longPressed = true,
+        onLongPress: (_) => longPressed = true,
       );
 
       await tester.longPress(find.byType(NoteCard));
@@ -301,7 +301,7 @@ void main() {
       var longPressed = false;
       await pumpNoteCard(
         tester,
-        onLongPress: () => longPressed = true,
+        onLongPress: (_) => longPressed = true,
         layout: NoteCardLayout.grid,
       );
       await tester.longPress(find.byType(NoteCard));

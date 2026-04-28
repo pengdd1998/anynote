@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/error/error.dart';
 import '../../../../core/notifications/push_service.dart';
 import '../../../../core/widgets/app_components.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../data/settings_providers.dart';
@@ -71,9 +72,7 @@ class SignOutSection extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.signOutFailed(e.toString()))),
-        );
+        AppSnackBar.error(context, message: l10n.signOutFailed(e.toString()));
       }
     }
   }
@@ -122,9 +121,7 @@ class _SyncButtonState extends ConsumerState<SyncButton> {
         final msg = result.hasConflicts
             ? l10n.syncCompleteWithConflicts(result.conflicts.length)
             : l10n.synced(result.pulledCount, result.pushedCount);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
-        );
+        AppSnackBar.info(context, message: msg);
       }
     } catch (e) {
       if (mounted) {

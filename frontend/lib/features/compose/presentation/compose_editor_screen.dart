@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/alpha_constants.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
 
@@ -302,19 +303,14 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
 
       final l10n = AppLocalizations.of(context)!;
       if (noteId != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.savedAsNote),
-            action: SnackBarAction(
-              label: l10n.viewAction,
-              onPressed: () => context.push('/notes/$noteId'),
-            ),
-          ),
+        AppSnackBar.info(
+          context,
+          message: l10n.savedAsNote,
+          actionLabel: l10n.viewAction,
+          onAction: () => context.push('/notes/$noteId'),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.failedToSaveNote)),
-        );
+        AppSnackBar.error(context, message: l10n.failedToSaveNote);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

@@ -50,7 +50,8 @@ class _CollectionDetailScreenState
 
       // Load the collection.
       final collections = await db.collectionsDao.getAllCollections();
-      final collection = collections.where((c) => c.id == widget.collectionId).firstOrNull;
+      final collection =
+          collections.where((c) => c.id == widget.collectionId).firstOrNull;
       if (collection == null) {
         if (mounted) {
           setState(() {
@@ -102,9 +103,8 @@ class _CollectionDetailScreenState
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: l10n.renameCollectionTooltip,
-            onPressed: _collection != null
-                ? () => _showRenameDialog(context)
-                : null,
+            onPressed:
+                _collection != null ? () => _showRenameDialog(context) : null,
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
@@ -145,7 +145,9 @@ class _CollectionDetailScreenState
             Text(
               _error!,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 13),
             ),
             const SizedBox(height: 16),
             FilledButton.tonal(
@@ -176,7 +178,8 @@ class _CollectionDetailScreenState
       buildDefaultDragHandles: false,
       padding: const EdgeInsets.only(bottom: 80),
       itemCount: validNotes.length,
-      onReorder: (oldIndex, newIndex) => _onReorder(validNotes, oldIndex, newIndex),
+      onReorder: (oldIndex, newIndex) =>
+          _onReorder(validNotes, oldIndex, newIndex),
       itemBuilder: (context, index) {
         final cn = validNotes[index];
         final note = _notesMap[cn.noteId]!;
@@ -234,7 +237,9 @@ class _CollectionDetailScreenState
                         : note.plainContent!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12),
                   )
                 : null,
             leading: ReorderableDragStartListener(
@@ -420,6 +425,7 @@ class _CollectionDetailScreenState
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.close),
+                        tooltip: l10n.close,
                         onPressed: () => Navigator.of(ctx).pop(),
                       ),
                     ],
@@ -438,8 +444,7 @@ class _CollectionDetailScreenState
                             final note = allNotes[index];
                             final isInCollection =
                                 currentNoteIds.contains(note.id);
-                            final title =
-                                note.plainTitle ?? 'Untitled';
+                            final title = note.plainTitle ?? 'Untitled';
 
                             return CheckboxListTile(
                               value: isInCollection,

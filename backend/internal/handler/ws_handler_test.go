@@ -12,6 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
+	"github.com/anynote/backend/internal/domain"
 	"github.com/anynote/backend/internal/service"
 )
 
@@ -80,13 +81,15 @@ func (m *mockPresenceService) SubscribeRoom(ctx context.Context, room string) <-
 	return ch
 }
 
+func (m *mockPresenceService) Heartbeat(ctx context.Context, room string) error { return nil }
+
 // ---------------------------------------------------------------------------
 // Tests: NewWSHandler
 // ---------------------------------------------------------------------------
 
 func TestNewWSHandler(t *testing.T) {
 	presenceSvc := &mockPresenceService{}
-	h := NewWSHandler(presenceSvc, "jwt-secret", nil)
+	h := NewWSHandler(presenceSvc, nil, nil, "jwt-secret", nil)
 	if h == nil {
 		t.Fatal("NewWSHandler returned nil")
 	}
@@ -99,7 +102,7 @@ func TestNewWSHandler_AllowedOrigins(t *testing.T) {
 	presenceSvc := &mockPresenceService{}
 
 	t.Run("empty origins falls back to wildcard", func(t *testing.T) {
-		h := NewWSHandler(presenceSvc, "jwt-secret", nil)
+		h := NewWSHandler(presenceSvc, nil, nil, "jwt-secret", nil)
 		patterns := h.originPatterns()
 		if len(patterns) != 1 || patterns[0] != "*" {
 			t.Errorf("originPatterns() = %v, want [*]", patterns)
@@ -108,7 +111,7 @@ func TestNewWSHandler_AllowedOrigins(t *testing.T) {
 
 	t.Run("configured origins returned as-is", func(t *testing.T) {
 		origins := []string{"https://app.example.com", "https://web.example.com"}
-		h := NewWSHandler(presenceSvc, "jwt-secret", origins)
+		h := NewWSHandler(presenceSvc, nil, nil, "jwt-secret", origins)
 		patterns := h.originPatterns()
 		if len(patterns) != 2 {
 			t.Fatalf("originPatterns() returned %d patterns, want 2", len(patterns))
@@ -128,7 +131,7 @@ func TestNewWSHandler_AllowedOrigins(t *testing.T) {
 
 func TestWSHandler_HandleConnection_MissingToken(t *testing.T) {
 	presenceSvc := &mockPresenceService{}
-	h := NewWSHandler(presenceSvc, testJWTSecret, nil)
+	h := NewWSHandler(presenceSvc, nil, nil, testJWTSecret, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ws?room=test-room", nil)
 	rec := httptest.NewRecorder()
@@ -142,7 +145,7 @@ func TestWSHandler_HandleConnection_MissingToken(t *testing.T) {
 
 func TestWSHandler_HandleConnection_InvalidToken(t *testing.T) {
 	presenceSvc := &mockPresenceService{}
-	h := NewWSHandler(presenceSvc, testJWTSecret, nil)
+	h := NewWSHandler(presenceSvc, nil, nil, testJWTSecret, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ws?token=invalid-token&room=test-room", nil)
 	rec := httptest.NewRecorder()
@@ -156,7 +159,7 @@ func TestWSHandler_HandleConnection_InvalidToken(t *testing.T) {
 
 func TestWSHandler_HandleConnection_MissingRoom(t *testing.T) {
 	presenceSvc := &mockPresenceService{}
-	h := NewWSHandler(presenceSvc, testJWTSecret, nil)
+	h := NewWSHandler(presenceSvc, nil, nil, testJWTSecret, nil)
 
 	userID := uuid.New().String()
 	token := generateTestWSToken(userID)
@@ -737,5 +740,644 @@ func TestWSMessage_AllTypes(t *testing.T) {
 		if decoded.Type != typ {
 			t.Errorf("Type = %q, want %q", decoded.Type, typ)
 		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Mocks for CollabMembershipChecker and CollabOpsStore
+// ---------------------------------------------------------------------------
+
+type mockCollabMembershipChecker struct {
+	isMemberFn func(ctx context.Context, roomID, userID string) (bool, error)
+}
+
+func (m *mockCollabMembershipChecker) IsMember(ctx context.Context, roomID, userID string) (bool, error) {
+	if m.isMemberFn != nil {
+		return m.isMemberFn(ctx, roomID, userID)
+	}
+	return false, nil
+}
+
+type mockCollabOpsStore struct {
+	storeFn          func(ctx context.Context, op *domain.CollabOperation) error
+	getSinceFn       func(ctx context.Context, roomID string, sinceClock int) ([]domain.CollabOperation, error)
+}
+
+func (m *mockCollabOpsStore) StoreOperation(ctx context.Context, op *domain.CollabOperation) error {
+	if m.storeFn != nil {
+		return m.storeFn(ctx, op)
+	}
+	return nil
+}
+
+func (m *mockCollabOpsStore) GetOperationsSince(ctx context.Context, roomID string, sinceClock int) ([]domain.CollabOperation, error) {
+	if m.getSinceFn != nil {
+		return m.getSinceFn(ctx, roomID, sinceClock)
+	}
+	return nil, nil
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Room Access Control (pre-WebSocket-upgrade HTTP checks)
+// ---------------------------------------------------------------------------
+
+func TestWSHandler_HandleConnection_NonMember(t *testing.T) {
+	presenceSvc := &mockPresenceService{}
+	collabRepo := &mockCollabMembershipChecker{
+		isMemberFn: func(_ context.Context, roomID, userID string) (bool, error) {
+			return false, nil
+		},
+	}
+
+	h := NewWSHandler(presenceSvc, collabRepo, nil, testJWTSecret, nil)
+
+	userID := uuid.New().String()
+	token := generateTestWSToken(userID)
+
+	req := httptest.NewRequest(http.MethodGet, "/ws?token="+token+"&room=room-1", nil)
+	rec := httptest.NewRecorder()
+
+	h.HandleConnection(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusForbidden, rec.Body.String())
+	}
+}
+
+func TestWSHandler_HandleConnection_Member(t *testing.T) {
+	collabRepo := &mockCollabMembershipChecker{
+		isMemberFn: func(_ context.Context, roomID, userID string) (bool, error) {
+			return true, nil
+		},
+	}
+
+	h := NewWSHandler(&mockPresenceService{}, collabRepo, nil, testJWTSecret, nil)
+
+	userID := uuid.New().String()
+	token := generateTestWSToken(userID)
+
+	req := httptest.NewRequest(http.MethodGet, "/ws?token="+token+"&room=room-1", nil)
+	rec := httptest.NewRecorder()
+
+	h.HandleConnection(rec, req)
+
+	// The handler passes the access check and attempts WebSocket upgrade.
+	// The upgrade fails in httptest (returns 200 but no body due to WS protocol),
+	// so we verify the handler did NOT reject with Forbidden or InternalServerError.
+	if rec.Code == http.StatusForbidden {
+		t.Fatal("member should not be forbidden")
+	}
+	if rec.Code == http.StatusInternalServerError {
+		t.Fatal("member should not get internal server error")
+	}
+}
+
+func TestWSHandler_HandleConnection_MembershipCheckError(t *testing.T) {
+	presenceSvc := &mockPresenceService{}
+	collabRepo := &mockCollabMembershipChecker{
+		isMemberFn: func(_ context.Context, _, _ string) (bool, error) {
+			return false, errors.New("database unavailable")
+		},
+	}
+
+	h := NewWSHandler(presenceSvc, collabRepo, nil, testJWTSecret, nil)
+
+	userID := uuid.New().String()
+	token := generateTestWSToken(userID)
+
+	req := httptest.NewRequest(http.MethodGet, "/ws?token="+token+"&room=room-1", nil)
+	rec := httptest.NewRecorder()
+
+	h.HandleConnection(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusInternalServerError, rec.Body.String())
+	}
+}
+
+func TestWSHandler_HandleConnection_NoCollabRepo_SkipsCheck(t *testing.T) {
+	// No collabRepo (nil) -- membership check is skipped entirely.
+	h := NewWSHandler(&mockPresenceService{}, nil, nil, testJWTSecret, nil)
+
+	userID := uuid.New().String()
+	token := generateTestWSToken(userID)
+
+	req := httptest.NewRequest(http.MethodGet, "/ws?token="+token+"&room=room-1", nil)
+	rec := httptest.NewRecorder()
+
+	h.HandleConnection(rec, req)
+
+	// Should not be Forbidden -- membership check was skipped.
+	if rec.Code == http.StatusForbidden {
+		t.Fatal("should not be forbidden when collabRepo is nil")
+	}
+	if rec.Code == http.StatusInternalServerError {
+		t.Fatal("should not get internal server error when collabRepo is nil")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: CRDT operation persistence (handleEdit with opsRepo)
+// ---------------------------------------------------------------------------
+
+func TestWSHandler_HandleEdit_PersistsOperation(t *testing.T) {
+	var storedOp *domain.CollabOperation
+	opsStore := &mockCollabOpsStore{
+		storeFn: func(_ context.Context, op *domain.CollabOperation) error {
+			storedOp = op
+			return nil
+		},
+	}
+
+	presenceSvc := &mockPresenceService{}
+	h := &WSHandler{
+		presenceSvc: presenceSvc,
+		opsRepo:     opsStore,
+		jwtSecret:   testJWTSecret,
+	}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	editData := json.RawMessage(`{"site_id":"site-1","clock":42,"operation_type":"insert","payload":{"ops":[{"type":"insert"}]}}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+
+	if storedOp == nil {
+		t.Fatal("operation should have been persisted")
+	}
+	if storedOp.RoomID != "room-1" {
+		t.Errorf("room_id = %q, want %q", storedOp.RoomID, "room-1")
+	}
+	if storedOp.SiteID != "site-1" {
+		t.Errorf("site_id = %q, want %q", storedOp.SiteID, "site-1")
+	}
+	if storedOp.Clock != 42 {
+		t.Errorf("clock = %d, want 42", storedOp.Clock)
+	}
+	if storedOp.OperationType != "insert" {
+		t.Errorf("operation_type = %q, want %q", storedOp.OperationType, "insert")
+	}
+}
+
+func TestWSHandler_HandleEdit_PersistError(t *testing.T) {
+	opsStore := &mockCollabOpsStore{
+		storeFn: func(_ context.Context, _ *domain.CollabOperation) error {
+			return errors.New("disk full")
+		},
+	}
+
+	presenceSvc := &mockPresenceService{}
+	h := &WSHandler{
+		presenceSvc: presenceSvc,
+		opsRepo:     opsStore,
+		jwtSecret:   testJWTSecret,
+	}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	editData := json.RawMessage(`{"site_id":"site-1","clock":1,"operation_type":"insert","payload":{}}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	// Should not panic on persistence error.
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+}
+
+func TestWSHandler_HandleEdit_SkipsPersistForMissingFields(t *testing.T) {
+	storeCalled := false
+	opsStore := &mockCollabOpsStore{
+		storeFn: func(_ context.Context, _ *domain.CollabOperation) error {
+			storeCalled = true
+			return nil
+		},
+	}
+
+	presenceSvc := &mockPresenceService{}
+	h := &WSHandler{
+		presenceSvc: presenceSvc,
+		opsRepo:     opsStore,
+		jwtSecret:   testJWTSecret,
+	}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	t.Run("missing site_id", func(t *testing.T) {
+		storeCalled = false
+		editData := json.RawMessage(`{"clock":1,"operation_type":"insert","payload":{}}`)
+		msg := service.WSMessage{Type: "edit", Data: editData}
+		h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+		if storeCalled {
+			t.Error("should not persist when site_id is missing")
+		}
+	})
+
+	t.Run("missing clock", func(t *testing.T) {
+		storeCalled = false
+		editData := json.RawMessage(`{"site_id":"site-1","operation_type":"insert","payload":{}}`)
+		msg := service.WSMessage{Type: "edit", Data: editData}
+		h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+		if storeCalled {
+			t.Error("should not persist when clock is zero")
+		}
+	})
+
+	t.Run("malformed data", func(t *testing.T) {
+		storeCalled = false
+		editData := json.RawMessage(`not-json`)
+		msg := service.WSMessage{Type: "edit", Data: editData}
+		h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+		if storeCalled {
+			t.Error("should not persist for malformed data")
+		}
+	})
+}
+
+func TestWSHandler_HandleEdit_NoOpsRepo_SkipsPersist(t *testing.T) {
+	presenceSvc := &mockPresenceService{}
+	h := &WSHandler{
+		presenceSvc: presenceSvc,
+		opsRepo:     nil, // No opsRepo configured.
+		jwtSecret:   testJWTSecret,
+	}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	editData := json.RawMessage(`{"site_id":"site-1","clock":1,"operation_type":"insert","payload":{}}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	// Should not panic when opsRepo is nil.
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+}
+
+func TestWSHandler_HandleEdit_PersistWithDeleteOp(t *testing.T) {
+	var storedOp *domain.CollabOperation
+	opsStore := &mockCollabOpsStore{
+		storeFn: func(_ context.Context, op *domain.CollabOperation) error {
+			storedOp = op
+			return nil
+		},
+	}
+
+	presenceSvc := &mockPresenceService{}
+	h := &WSHandler{
+		presenceSvc: presenceSvc,
+		opsRepo:     opsStore,
+		jwtSecret:   testJWTSecret,
+	}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	editData := json.RawMessage(`{"site_id":"site-2","clock":10,"operation_type":"delete","payload":{"range":[0,5]}}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+
+	if storedOp == nil {
+		t.Fatal("delete operation should have been persisted")
+	}
+	if storedOp.OperationType != "delete" {
+		t.Errorf("operation_type = %q, want %q", storedOp.OperationType, "delete")
+	}
+	if storedOp.Clock != 10 {
+		t.Errorf("clock = %d, want 10", storedOp.Clock)
+	}
+}
+
+func TestWSHandler_HandleEdit_PersistGeneratesUUID(t *testing.T) {
+	var storedOp *domain.CollabOperation
+	opsStore := &mockCollabOpsStore{
+		storeFn: func(_ context.Context, op *domain.CollabOperation) error {
+			storedOp = op
+			return nil
+		},
+	}
+
+	presenceSvc := &mockPresenceService{}
+	h := &WSHandler{
+		presenceSvc: presenceSvc,
+		opsRepo:     opsStore,
+		jwtSecret:   testJWTSecret,
+	}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	editData := json.RawMessage(`{"site_id":"site-1","clock":1,"operation_type":"insert","payload":{}}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+
+	if storedOp == nil {
+		t.Fatal("operation should have been persisted")
+	}
+	// Verify the generated ID is a valid UUID.
+	_, err := uuid.Parse(storedOp.ID)
+	if err != nil {
+		t.Errorf("stored op ID = %q is not a valid UUID: %v", storedOp.ID, err)
+	}
+}
+
+func TestWSHandler_HandleEdit_PersistSetsTimestamp(t *testing.T) {
+	var storedOp *domain.CollabOperation
+	opsStore := &mockCollabOpsStore{
+		storeFn: func(_ context.Context, op *domain.CollabOperation) error {
+			storedOp = op
+			return nil
+		},
+	}
+
+	presenceSvc := &mockPresenceService{}
+	h := &WSHandler{
+		presenceSvc: presenceSvc,
+		opsRepo:     opsStore,
+		jwtSecret:   testJWTSecret,
+	}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	before := time.Now()
+	editData := json.RawMessage(`{"site_id":"site-1","clock":1,"operation_type":"insert","payload":{}}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+	after := time.Now()
+
+	if storedOp == nil {
+		t.Fatal("operation should have been persisted")
+	}
+	if storedOp.CreatedAt.Before(before) || storedOp.CreatedAt.After(after) {
+		t.Errorf("created_at = %v, expected between %v and %v", storedOp.CreatedAt, before, after)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: NewWSHandler with collab repo and ops store
+// ---------------------------------------------------------------------------
+
+func TestNewWSHandler_WithCollabRepo(t *testing.T) {
+	presenceSvc := &mockPresenceService{}
+	collabRepo := &mockCollabMembershipChecker{}
+	opsStore := &mockCollabOpsStore{}
+
+	h := NewWSHandler(presenceSvc, collabRepo, opsStore, "jwt-secret", nil)
+	if h == nil {
+		t.Fatal("NewWSHandler returned nil")
+	}
+	if h.collabRepo != collabRepo {
+		t.Error("collabRepo not set correctly")
+	}
+	if h.opsRepo != opsStore {
+		t.Error("opsRepo not set correctly")
+	}
+}
+
+func TestNewWSHandler_NilRepos(t *testing.T) {
+	presenceSvc := &mockPresenceService{}
+
+	h := NewWSHandler(presenceSvc, nil, nil, "jwt-secret", nil)
+	if h == nil {
+		t.Fatal("NewWSHandler returned nil")
+	}
+	if h.collabRepo != nil {
+		t.Error("collabRepo should be nil")
+	}
+	if h.opsRepo != nil {
+		t.Error("opsRepo should be nil")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: CollabOperation domain type
+// ---------------------------------------------------------------------------
+
+func TestCollabOperation_JSONRoundTrip(t *testing.T) {
+	op := domain.CollabOperation{
+		ID:            uuid.New().String(),
+		RoomID:        "room-1",
+		SiteID:        "site-1",
+		Clock:         42,
+		OperationType: "insert",
+		Payload:       []byte(`{"ops":[{"type":"insert"}]}`),
+		CreatedAt:     time.Now().Truncate(time.Millisecond),
+	}
+
+	data, err := json.Marshal(op)
+	if err != nil {
+		t.Fatalf("marshal CollabOperation: %v", err)
+	}
+
+	var decoded domain.CollabOperation
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal CollabOperation: %v", err)
+	}
+
+	if decoded.ID != op.ID {
+		t.Errorf("ID = %q, want %q", decoded.ID, op.ID)
+	}
+	if decoded.RoomID != op.RoomID {
+		t.Errorf("RoomID = %q, want %q", decoded.RoomID, op.RoomID)
+	}
+	if decoded.SiteID != op.SiteID {
+		t.Errorf("SiteID = %q, want %q", decoded.SiteID, op.SiteID)
+	}
+	if decoded.Clock != op.Clock {
+		t.Errorf("Clock = %d, want %d", decoded.Clock, op.Clock)
+	}
+	if decoded.OperationType != op.OperationType {
+		t.Errorf("OperationType = %q, want %q", decoded.OperationType, op.OperationType)
+	}
+}
+
+func TestCollabOperation_DeleteOp(t *testing.T) {
+	op := domain.CollabOperation{
+		ID:            uuid.New().String(),
+		RoomID:        "room-2",
+		SiteID:        "site-2",
+		Clock:         10,
+		OperationType: "delete",
+		Payload:       []byte(`{"range":[0,5]}`),
+	}
+	if op.OperationType != "delete" {
+		t.Errorf("operation_type = %q, want %q", op.OperationType, "delete")
+	}
+}
+
+func TestCollabOperation_InsertOp(t *testing.T) {
+	op := domain.CollabOperation{
+		OperationType: "insert",
+	}
+	if op.OperationType != "insert" {
+		t.Errorf("operation_type = %q, want %q", op.OperationType, "insert")
+	}
+}
+
+func TestCollabOperation_EmptyPayload(t *testing.T) {
+	op := domain.CollabOperation{
+		ID:            uuid.New().String(),
+		RoomID:        "room-1",
+		SiteID:        "site-1",
+		Clock:         1,
+		OperationType: "insert",
+		Payload:       nil,
+	}
+	data, err := json.Marshal(op)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var decoded domain.CollabOperation
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+}
+
+func TestCollabOperation_MultipleOps(t *testing.T) {
+	ops := make([]domain.CollabOperation, 5)
+	for i := range ops {
+		ops[i] = domain.CollabOperation{
+			ID:            uuid.New().String(),
+			RoomID:        "room-1",
+			SiteID:        "site-1",
+			Clock:         i + 1,
+			OperationType: "insert",
+			Payload:       []byte(`{}`),
+		}
+	}
+	if len(ops) != 5 {
+		t.Errorf("len = %d, want 5", len(ops))
+	}
+	for i, op := range ops {
+		if op.Clock != i+1 {
+			t.Errorf("ops[%d].Clock = %d, want %d", i, op.Clock, i+1)
+		}
+	}
+}
+
+func TestCollabOperation_LargeClock(t *testing.T) {
+	op := domain.CollabOperation{
+		Clock: 999999999,
+	}
+	if op.Clock != 999999999 {
+		t.Errorf("Clock = %d, want 999999999", op.Clock)
+	}
+}
+
+func TestCollabOperation_DifferentSites(t *testing.T) {
+	sites := []string{"site-a", "site-b", "site-c"}
+	ops := make([]domain.CollabOperation, len(sites))
+	for i, site := range sites {
+		ops[i] = domain.CollabOperation{
+			SiteID:        site,
+			Clock:         i + 1,
+			OperationType: "insert",
+		}
+	}
+	for i, op := range ops {
+		if op.SiteID != sites[i] {
+			t.Errorf("ops[%d].SiteID = %q, want %q", i, op.SiteID, sites[i])
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Room access control with collabRepo -- additional edge cases
+// ---------------------------------------------------------------------------
+
+func TestWSHandler_HandleConnection_MemberOfDifferentRoom(t *testing.T) {
+	// User is a member of room-2 but not room-1.
+	collabRepo := &mockCollabMembershipChecker{
+		isMemberFn: func(_ context.Context, roomID, _ string) (bool, error) {
+			return roomID == "room-2", nil
+		},
+	}
+
+	h := NewWSHandler(&mockPresenceService{}, collabRepo, nil, testJWTSecret, nil)
+
+	userID := uuid.New().String()
+	token := generateTestWSToken(userID)
+
+	req := httptest.NewRequest(http.MethodGet, "/ws?token="+token+"&room=room-1", nil)
+	rec := httptest.NewRecorder()
+
+	h.HandleConnection(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want %d for non-member of room-1", rec.Code, http.StatusForbidden)
+	}
+}
+
+func TestWSHandler_HandleConnection_CorrectRoomMember(t *testing.T) {
+	// User is a member of room-1 specifically.
+	collabRepo := &mockCollabMembershipChecker{
+		isMemberFn: func(_ context.Context, roomID, _ string) (bool, error) {
+			return roomID == "room-1", nil
+		},
+	}
+
+	h := NewWSHandler(&mockPresenceService{}, collabRepo, nil, testJWTSecret, nil)
+
+	userID := uuid.New().String()
+	token := generateTestWSToken(userID)
+
+	req := httptest.NewRequest(http.MethodGet, "/ws?token="+token+"&room=room-1", nil)
+	rec := httptest.NewRecorder()
+
+	h.HandleConnection(rec, req)
+
+	// Should not be forbidden since the user is a member of room-1.
+	if rec.Code == http.StatusForbidden {
+		t.Fatal("user is member of room-1, should not be forbidden")
+	}
+}
+
+func TestWSHandler_HandleConnection_AccessControlBeforeUpgrade(t *testing.T) {
+	// Verify that the Forbidden response is sent before the WebSocket upgrade
+	// (i.e. the response is a plain HTTP response, not a WebSocket close frame).
+	collabRepo := &mockCollabMembershipChecker{
+		isMemberFn: func(_ context.Context, _, _ string) (bool, error) {
+			return false, nil
+		},
+	}
+
+	h := NewWSHandler(&mockPresenceService{}, collabRepo, nil, testJWTSecret, nil)
+
+	userID := uuid.New().String()
+	token := generateTestWSToken(userID)
+
+	req := httptest.NewRequest(http.MethodGet, "/ws?token="+token+"&room=room-1", nil)
+	rec := httptest.NewRecorder()
+
+	h.HandleConnection(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusForbidden)
+	}
+	// The response should be plain text (set by http.Error), not a WebSocket frame.
+	contentType := rec.Header().Get("Content-Type")
+	if contentType == "application/json" {
+		t.Error("expected plain text error, got JSON content type")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tests: CRDT persistence -- payload integrity
+// ---------------------------------------------------------------------------
+
+func TestWSHandler_HandleEdit_PersistPreservesPayload(t *testing.T) {
+	var storedPayload []byte
+	opsStore := &mockCollabOpsStore{
+		storeFn: func(_ context.Context, op *domain.CollabOperation) error {
+			storedPayload = op.Payload
+			return nil
+		},
+	}
+
+	presenceSvc := &mockPresenceService{}
+	h := &WSHandler{
+		presenceSvc: presenceSvc,
+		opsRepo:     opsStore,
+		jwtSecret:   testJWTSecret,
+	}
+	limiter := newClientRateLimiter(MaxEditRate, rateLimitWindow)
+
+	originalPayload := json.RawMessage(`{"encrypted":"dGhpcyBpcyBlbmNyeXB0ZWQ=","iv":"abcdef12"}`)
+	editData := json.RawMessage(`{"site_id":"site-1","clock":5,"operation_type":"insert","payload":` + string(originalPayload) + `}`)
+	msg := service.WSMessage{Type: "edit", Data: editData}
+
+	h.handleEdit(context.Background(), "room-1", "user-1", msg, limiter, nil)
+
+	if string(storedPayload) != string(originalPayload) {
+		t.Errorf("payload was modified: got %q, want %q", string(storedPayload), string(originalPayload))
 	}
 }

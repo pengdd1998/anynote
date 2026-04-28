@@ -31,7 +31,7 @@ type AIJobHandler struct {
 	gateway       *llm.Gateway
 	llmRepo       service.LLMConfigRepository
 	quotaSvc      service.QuotaService
-	rateLimiter   *service.RateLimiter
+	rateLimiter   service.RateLimitProvider
 	redis         *redis.Client
 	defaultCfg    llm.GatewayConfig
 	encryptionKey []byte
@@ -43,7 +43,7 @@ func NewAIJobHandler(
 	gateway *llm.Gateway,
 	llmRepo service.LLMConfigRepository,
 	quotaSvc service.QuotaService,
-	rateLimiter *service.RateLimiter,
+	rateLimiter service.RateLimitProvider,
 	redisClient *redis.Client,
 	defaultCfg llm.GatewayConfig,
 	encryptionKey []byte,
@@ -105,45 +105,23 @@ func (h *AIJobHandler) resolveConfig(ctx context.Context, uid uuid.UUID, req dom
 		Stream:      req.Stream,
 	}
 
-	// Check if user has custom LLM configuration
-	userCfg, err := h.llmRepo.GetDefaultByUser(ctx, uid)
-	if err == nil && userCfg != nil {
-		decryptedKey, decErr := llm.DecryptAPIKey(userCfg.EncryptedKey, h.encryptionKey)
-		if decErr != nil {
-			return llm.GatewayConfig{}, chatReq, fmt.Errorf("decrypt api key: %w", decErr)
-		}
-
-		dedicatedCfg := llm.GatewayConfig{
-			Provider:    userCfg.Provider,
-			BaseURL:     userCfg.BaseURL,
-			APIKey:      decryptedKey,
-			Model:       userCfg.Model,
-			MaxTokens:   userCfg.MaxTokens,
-			Temperature: userCfg.Temperature,
-			Timeout:     120 * 1e9,
-		}
-
-		if chatReq.Model == "" {
-			chatReq.Model = dedicatedCfg.Model
-		}
-
-		return dedicatedCfg, chatReq, nil
+	// Check if user has custom LLM configuration.
+	dedicatedCfg, err := service.UserLLMConfig(ctx, uid, h.llmRepo, h.encryptionKey)
+	if err != nil {
+		return llm.GatewayConfig{}, chatReq, fmt.Errorf("resolve user llm config: %w", err)
+	}
+	if dedicatedCfg != nil {
+		chatReq.Model = service.ResolveChatModel(chatReq.Model, *dedicatedCfg)
+		return *dedicatedCfg, chatReq, nil
 	}
 
-	// Shared mode: check rate limit and quota
+	// Shared mode: check rate limit and quota.
 	userIDStr := uid.String()
-	if !h.rateLimiter.Allow(userIDStr) {
-		return llm.GatewayConfig{}, chatReq, fmt.Errorf("quota exceeded")
+	if err := service.CheckSharedModeQuota(ctx, uid, userIDStr, h.rateLimiter, h.quotaSvc); err != nil {
+		return llm.GatewayConfig{}, chatReq, err
 	}
 
-	// Increment usage (non-fatal: do not block the job on quota tracking failure).
-	if err := h.quotaSvc.IncrementUsage(ctx, uid); err != nil {
-		slog.Error("failed to increment AI usage in job", "user_id", uid.String(), "error", err)
-	}
-
-	if chatReq.Model == "" {
-		chatReq.Model = h.defaultCfg.Model
-	}
+	chatReq.Model = service.ResolveChatModel(chatReq.Model, h.defaultCfg)
 
 	return h.defaultCfg, chatReq, nil
 }

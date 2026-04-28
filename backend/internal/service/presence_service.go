@@ -49,16 +49,25 @@ type PresenceService interface {
 	BroadcastToRoom(ctx context.Context, room string, msg WSMessage) error
 	// SubscribeRoom returns a channel that receives messages published to the room.
 	SubscribeRoom(ctx context.Context, room string) <-chan WSMessage
+	// Heartbeat refreshes the TTL on a room's presence hash. Callers should
+	// invoke this periodically (e.g. on each cursor update) to prevent the
+	// room from expiring while users are still active.
+	Heartbeat(ctx context.Context, room string) error
 }
 
 // presenceService implements PresenceService using Redis.
 type presenceService struct {
-	rdb *redis.Client
+	rdb       *redis.Client
+	ttl       time.Duration // TTL for room presence hashes
 }
 
 // NewPresenceService creates a new PresenceService backed by Redis.
+// Room presence hashes expire after 5 minutes unless refreshed by heartbeats.
 func NewPresenceService(rdb *redis.Client) PresenceService {
-	return &presenceService{rdb: rdb}
+	return &presenceService{
+		rdb: rdb,
+		ttl: 5 * time.Minute,
+	}
 }
 
 // redisKey for room members: presence:room:{room}
@@ -95,10 +104,13 @@ func (s *presenceService) Join(ctx context.Context, room, userID, username strin
 		return fmt.Errorf("marshal room member: %w", err)
 	}
 
-	// Add member to the room's Redis set.
+	// Add member to the room's Redis hash and set/extend TTL.
 	key := roomMembersKey(room)
 	if err := s.rdb.HSet(ctx, key, userID, data).Err(); err != nil {
 		return fmt.Errorf("redis HSet member: %w", err)
+	}
+	if err := s.rdb.Expire(ctx, key, s.ttl).Err(); err != nil {
+		return fmt.Errorf("redis Expire room: %w", err)
 	}
 
 	// Publish join event to the room channel.
@@ -139,6 +151,17 @@ func (s *presenceService) Leave(ctx context.Context, room, userID string) error 
 	})
 	msg := WSMessage{Type: "leave", Data: leaveData}
 	return s.BroadcastToRoom(ctx, room, msg)
+}
+
+func (s *presenceService) Heartbeat(ctx context.Context, room string) error {
+	if room == "" {
+		return ErrRoomRequired
+	}
+	key := roomMembersKey(room)
+	if err := s.rdb.Expire(ctx, key, s.ttl).Err(); err != nil {
+		return fmt.Errorf("redis Expire heartbeat: %w", err)
+	}
+	return nil
 }
 
 func (s *presenceService) GetRoomMembers(ctx context.Context, room string) ([]RoomMember, error) {

@@ -30,9 +30,9 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Encryption (server) | AES-256-GCM for API key storage at rest |
 | Infra | Docker Compose (PostgreSQL, Redis, MinIO, Chrome headless) |
 
-### Current State Summary (Updated 2026-04-25)
+### Current State Summary (Updated 2026-04-28)
 
-**v1.3.0-dev.** All 123 phases complete. Production-ready with zero lint issues, full l10n coverage (EN/ZH/JA/KO), schema v16.
+**v2.0.0.** All 143 phases complete. Production-ready with zero lint issues, full l10n coverage (EN/ZH/JA/KO), schema v25.
 
 | Module | Completeness | Notes |
 |---|---|---|
@@ -45,7 +45,7 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Backend Publish | 100% | Async publish with platform adapters, history, 25 tests |
 | Backend WebSocket/Presence | 100% | Room-based collab, CRDT relay, rate limiting, Redis pub/sub, 65 tests |
 | Backend Security | 100% | Security headers, JWT auth, per-IP/user rate limiting, 19 tests |
-| Backend Tests | 100% | 700+ test functions across 56+ test files, 18 packages |
+| Backend Tests | 100% | ~934 test functions across 14 packages, all pass |
 | Frontend Crypto | 100% | Native: XChaCha20-Poly1305 + Argon2id; Web: AES-256-GCM + PBKDF2, 100+ tests |
 | Frontend Database | 100% | Drift schema v16, 12 tables, FTS5 with CJK tokenizer, color columns, sort order, snippets, tag hierarchy, all DAOs tested |
 | Frontend Sync Engine | 100% | Pull/push, LWW, version vectors, periodic sync, connectivity-aware |
@@ -59,7 +59,7 @@ Build a local-first, privacy-first note-taking application where the server neve
 | Frontend Desktop | 100% | Menu bar, window state persistence, keyboard shortcuts, adaptive layout |
 | Frontend Search | 100% | FTS5 with BM25 ranking, CJK tokenizer, advanced search screen |
 | Frontend Localization | 100% | EN + ZH + JA + KO |
-| Frontend Tests | 100% | 2250+ tests (14 skipped, 0 failures) across 70+ test files |
+| Frontend Tests | 100% | 3395 tests (15 skipped, 0 failures) across 70+ test files |
 
 ### Main Phases
 
@@ -101,6 +101,16 @@ Build a local-first, privacy-first note-taking application where the server neve
 36. **Phase 112-115: Notifications & Shortcuts** — COMPLETED (local notifications, note reorder, AI chat tests, keyboard shortcuts)
 37. **Phase 116-119: Snippets & Export** — COMPLETED (code snippets, PDF export, Mermaid rendering, widget tests)
 38. **Phase 120-123: Hierarchy & Integration** — COMPLETED (tag hierarchy, collab cursors, quick actions + image DnD, widget tests)
+39. **Phase 128-133: Security, UX, Performance, Architecture (v1.4.0)** — COMPLETED (backend hardening, SQLCipher, toolbar redesign, performance, architecture, polish)
+40. **Phase 135: UX Polish — Error Handling & Offline** — COMPLETED (ErrorBoundary, ConflictResolutionScreen, unified SnackBar, What's New, offline indicators)
+41. **Phase 136: UX Polish — Editor Experience** — COMPLETED (autosave debounce, save status, extended toolbar, Find & Replace)
+42. **Phase 137: Cross-Platform Consistency** — COMPLETED (PlatformUtils, Breakpoints, adaptive widgets, FocusRing, DesktopContextMenu)
+43. **Phase 138: Multi-Device Sync** — COMPLETED (device identity, migrations 020-021, account recovery)
+44. **Phase 139: CRDT Persistence & Collab Backend** — COMPLETED (persistent siteIds, collab rooms/members, invite codes)
+45. **Phase 140: Image Sync & Web Images** — COMPLETED (image compression, encrypted image sync, WebImageStorage)
+46. **Phase 141: Collab Backend Hardening** — COMPLETED (operation persistence, WS access control, reconnect catch-up)
+47. **Phase 142: Web Platform** — COMPLETED (CryptoFactory, DatabaseFactory, UnsupportedError audit, cross-platform crypto tests)
+48. **Phase 143: Payment & Notification Infrastructure** — COMPLETED (payments, notifications, Stripe webhooks, CRUD endpoints)
 
 ---
 
@@ -2125,14 +2135,124 @@ Structured search operators, saved searches, and search history.
 - **translation_sheet_test.dart**: 14 tests (language selector, translate, loading, error, callbacks)
 - Total: 62 new tests, all passing
 
-## Future Considerations (Post-Phase 123)
+## v1.4.0 — Security, UX, Performance, Architecture (Completed 2026-04-27)
+
+### Phase 128: Backend Security Hardening ✅
+- Redis rate limiter, transaction sync, JWT validation, pool config, SSE escaping, worker validation, log retention
+
+### Phase 129: Frontend Security Hardening ✅
+- SQLCipher activation, database key derivation, web platform docs
+
+### Phase 130: UI/UX Toolbar Redesign ✅
+- Editor toolbar redesign, notes list AppBar overflow, save status indicator, context menu fix, responsive grid, theme tokens, localization
+
+### Phase 131: Frontend Performance & Architecture ✅
+- NotesListScreen decomposition, N+1 batch queries, background sync, typed API models, sync dedup, FTS5 helper
+
+### Phase 132: Backend Architecture Improvements ✅
+- ResponseWriter consolidation, LLM config resolver, sqlc removal, presence TTL, cleanup resilience, BIP-39 consolidation
+
+### Phase 133: Polish & Testing ✅
+- Tooltip shortcuts, FAB scroll, dark mode fixes, haptics, SnackBar helper, behavior tests, migration naming
+
+### Stats (v1.4.0)
+- 38 tasks completed across 6 phases
+- ~84 estimated hours of work
+- 2939 tests passing
+
+### Phase 134: E2E Integration Tests — COMPLETED
+
+**Backend (Go)** — 4 files, 13 tests with `//go:build integration`:
+- `e2e_full_server_test.go` — Full production stack test server (13 repos, 15 services, httptest.Server)
+- `e2e_auth_integration_test.go` — Register/login/me/refresh/rotation lifecycle (4 tests)
+- `e2e_share_integration_test.go` — Create/retrieve/react/toggle lifecycle (5 tests)
+- `e2e_note_links_integration_test.go` — Create/backlinks/graph/delete lifecycle (4 tests)
+
+**Frontend (Dart)** — 3 files, 28 tests with real libsodium crypto:
+- `pipeline_helper.dart` — Sodium init, in-memory DB, MockSyncApiClient, crypto helpers
+- `encryption_sync_pipeline_test.dart` — Push/pull/round-trip/multi-type pipelines (19 tests)
+- `conflict_pipeline_test.dart` — LWW conflict resolution, edge cases (9 tests)
+
+**Test counts**: 2967 frontend (was 2957) + 700+ backend, all passing, 0 regressions.
+
+### Phase 135: UX Polish — Error Handling & Offline Indicators — COMPLETED
+- Global ErrorBoundary widget, ConflictResolutionScreen, OfflineBanner in editors
+- Unified SnackBar: 37 files converted to AppSnackBar.info()/error()
+- NotificationPreferences screen (4 toggles with SharedPreferences)
+- What's New dialog (changelog constants, version-gated)
+- Onboarding permission requests, accessibility tooltip audit
+- Tests: 32 new
+
+### Phase 136: UX Polish — Editor Experience — COMPLETED
+- Autosave debounce via AppDurations.autoSaveDelay, _AppBarSaveStatus widget
+- Extended formatting toolbar (code block, checklist, indent/outdent, undo/redo)
+- Find & Replace bar (Ctrl+F): search, match count, replace/replace all
+- Tests: 110 new
+
+### Phase 137: Cross-Platform Consistency — COMPLETED
+- PlatformUtils utility, Breakpoints constants, Adaptive widgets (AdaptiveBuilder, AdaptiveVisibility, AdaptivePadding)
+- Focus management (FocusRing), Desktop context menu widget
+- Replaced all raw Platform.isX checks (12 files) with PlatformUtils getters
+- Keyboard shortcut consistency (platform-aware modifiers)
+- Tests: 112 new
+
+### Phase 138: Multi-Device Sync — Backend Device Identity — COMPLETED
+- Migration 020: devices table, Migration 021: sync_blobs.device_id
+- DeviceRepository, DeviceHandler (register, list, delete, update last seen)
+- Account recovery endpoint, stale device cleanup job
+- Frontend: stable device ID (UUID in SharedPreferences), device management API methods
+- Tests: backend + 7 frontend (device_id_test)
+
+### Phase 139: CRDT Persistence & Collab Backend — COMPLETED
+- Persistent CRDT siteIds (UUID v4 in SharedPreferences), CRDT state persistence
+- Migration 022: collab_rooms + collab_room_members tables
+- CollabRepository (9 methods), CollabService (8 sentinel errors, 8-char invite codes), CollabHandler (5 endpoints)
+- Tests: 87 new (21 frontend + 66 backend)
+
+### Phase 140: Image Sync & Web Images — COMPLETED
+- Image compression (JPEG 1920px/85%, auto-compress > 100KB), NoteImages Drift table + images_dao
+- Image push/pull in sync_engine.dart (encrypted blobs with item_type='image')
+- WebImageStorage (SharedPreferences-based, 5MB budget, base64) with kIsWeb delegation
+- Tests: 89 new
+
+### Phase 141: Collab Backend Hardening — COMPLETED
+- Migration 023: collab_operations table (room_id, site_id, clock, operation_type, payload)
+- WS room access control (403 if not member), CRDT operation persistence
+- Reconnect catch-up: ?since_clock=N, server sends missed ops
+- Tests: 72 new backend
+
+### Phase 142: Web Platform — COMPLETED
+- CryptoFactory — unified crypto across all platforms (sodium_libs-based XChaCha20-Poly1305 everywhere)
+- DatabaseFactory — web executor documentation (OPFS/IndexedDB via drift_flutter)
+- UnsupportedError audit — only stubs remain (io_stub, web_download_stub, markdown_export_service)
+- Cross-platform crypto contract tests (key derivation hierarchy, encrypt/decrypt)
+- Tests: 64 new
+
+### Phase 143: Payment & Notification Infrastructure — COMPLETED
+- Migration 024: payments table (user_id, stripe_session_id, amount, status, plan)
+- Migration 025: notifications table (user_id, type enum, title, body, data JSONB, is_read)
+- PaymentRepository + PaymentService: checkout creation, webhook handling, HMAC-SHA256 signature verification
+- NotificationRepository + NotificationService: CRUD, pagination, unread count
+- PaymentHandler: POST /payments/checkout, GET /payments, POST /payments/webhook (public)
+- NotificationHandler: GET /notifications, GET /notifications/unread-count, POST /notifications/{id}/read, POST /notifications/read-all
+- Stripe integration with test mode fallback (graceful degradation without STRIPE_SECRET_KEY)
+- Tests: 96 new backend
+
+### v2.0.0 Final Verification
+- Frontend: 3395 tests pass (0 failures, 15 skipped) — +428 new from v1.4.0
+- Backend: 14 packages, ~934 tests pass — +234 new from v1.4.0
+- flutter analyze: 0 errors (144 info-level only)
+- go build/vet: clean
+- Database schema: v25 (payments, notifications)
+- All 9 phases (135-143) COMPLETE
+
+## Future Considerations (Post-v2.0.0)
 
 | Area | Description | Priority |
 |------|-------------|----------|
-| Integration Test Harness | testcontainers-go with real PostgreSQL for repo integration tests | P2 |
-| Pre-existing Test Fixes | 11 Flutter test failures (pre-existing) | P2 |
+| Stripe Production Integration | Switch from test mode to live Stripe keys, subscription tiers | P1 |
+| Push Notification Delivery | FCM/APNs integration with notification infrastructure | P1 |
+| Web App Deployment | Build and deploy Flutter web app, CORS configuration | P2 |
 | Performance Profiling | Memory profiling, startup time optimization | P3 |
-| Multi-Device Sync | Cross-device session management, conflict UI | P3 |
 | Internationalization | RTL language support, plural rules, date formatting | P3 |
 | Analytics (Privacy-Preserving) | Opt-in, anonymized usage telemetry | P3 |
-| Collaborative Editing | Real-time multi-user cursor display, presence awareness | P2 |

@@ -22,9 +22,6 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final accountAsync = ref.watch(accountInfoProvider);
-    final aiQuotaAsync = ref.watch(aiQuotaProvider);
-    final syncStatusAsync = ref.watch(syncStatusProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
@@ -40,7 +37,7 @@ class SettingsScreen extends ConsumerWidget {
             // -- Account section ------------------------------------------------
             StaggeredGroup(
               staggerIndex: 0,
-              child: AccountSection(accountAsync: accountAsync),
+              child: const _AccountSectionWidget(),
             ),
 
             // -- AI section -----------------------------------------------------
@@ -63,7 +60,7 @@ class SettingsScreen extends ConsumerWidget {
                           trailing: const Icon(Icons.chevron_right, size: 20),
                           onTap: () => context.push('/settings/llm'),
                         ),
-                        _aiQuotaItem(l10n, aiQuotaAsync),
+                        const _AiQuotaSection(),
                       ],
                     ),
                   ],
@@ -144,7 +141,7 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsGroupHeader(title: l10n.sync),
                     SettingsGroup(
                       children: [
-                        _syncStatusItem(l10n, syncStatusAsync),
+                        const _SyncStatusSection(),
                       ],
                     ),
                     const SyncSection(),
@@ -153,9 +150,36 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
 
-            // -- Data section ---------------------------------------------------
+            // -- Notifications section ------------------------------------------
             StaggeredGroup(
               staggerIndex: 5,
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup('Notifications'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SettingsGroupHeader(title: 'Notifications'),
+                    SettingsGroup(
+                      children: [
+                        SettingsItem(
+                          icon: Icons.notifications_outlined,
+                          title: 'Notifications',
+                          subtitle: 'Configure notification preferences',
+                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          onTap: () => context.push('/settings/notifications'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // -- Data section ---------------------------------------------------
+            StaggeredGroup(
+              staggerIndex: 6,
               child: Semantics(
                 container: true,
                 label: l10n.settingsGroup(l10n.data),
@@ -208,38 +232,14 @@ class SettingsScreen extends ConsumerWidget {
             ),
 
             // -- Language section -----------------------------------------------
-            StaggeredGroup(
-              staggerIndex: 6,
-              child: Semantics(
-                container: true,
-                label: l10n.settingsGroup(l10n.language),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SettingsGroupHeader(title: l10n.language),
-                    SettingsGroup(
-                      children: [
-                        SettingsItem(
-                          icon: Icons.language,
-                          title: l10n.language,
-                          subtitle: _getLanguageDisplayName(
-                            ref.watch(localeProvider),
-                            l10n,
-                          ),
-                          trailing: const Icon(Icons.chevron_right, size: 20),
-                          onTap: () => _showLanguageDialog(context, ref),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            const StaggeredGroup(
+              staggerIndex: 7,
+              child: _LanguageSection(),
             ),
 
             // -- Keyboard shortcuts section -------------------------------------
             StaggeredGroup(
-              staggerIndex: 7,
+              staggerIndex: 8,
               child: Semantics(
                 container: true,
                 label: l10n.settingsGroup(l10n.keyboardShortcuts),
@@ -264,304 +264,25 @@ class SettingsScreen extends ConsumerWidget {
             ),
 
             // -- Appearance section ---------------------------------------------
-            StaggeredGroup(
-              staggerIndex: 8,
-              child: Semantics(
-                container: true,
-                label: l10n.settingsGroup(l10n.appearance),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SettingsGroupHeader(title: l10n.appearance),
-                    SettingsGroup(
-                      children: [
-                        SettingsItem(
-                          icon: Icons.palette_outlined,
-                          title: l10n.theme,
-                          subtitle: _getThemeDisplayName(
-                            ref.watch(themeOptionProvider),
-                            l10n,
-                          ),
-                          trailing: const Icon(Icons.chevron_right, size: 20),
-                          onTap: () => _showThemeDialog(context, ref),
-                        ),
-                        _reduceMotionItem(l10n, ref),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            const StaggeredGroup(
+              staggerIndex: 9,
+              child: _AppearanceSection(),
             ),
 
             // -- About section --------------------------------------------------
             const StaggeredGroup(
-              staggerIndex: 9,
+              staggerIndex: 10,
               child: AboutSection(),
             ),
 
             // -- Sign out (destructive, in its own group) -----------------------
             const StaggeredGroup(
-              staggerIndex: 10,
+              staggerIndex: 11,
               child: SignOutSection(),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // AI quota item
-  // ---------------------------------------------------------------------------
-
-  Widget _aiQuotaItem(
-    AppLocalizations l10n,
-    AsyncValue<Map<String, dynamic>> quotaAsync,
-  ) {
-    return SettingsItem(
-      icon: Icons.data_usage_outlined,
-      title: l10n.aiQuota,
-      subtitle: quotaAsync.when(
-        data: (quota) {
-          final used = quota['used'] ?? 0;
-          final limit = quota['limit'] ?? 50;
-          return l10n.requestsToday(used as int, limit as int);
-        },
-        loading: () => l10n.loading,
-        error: (_, __) => l10n.unableToLoadQuota,
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Sync status item
-  // ---------------------------------------------------------------------------
-
-  Widget _syncStatusItem(
-    AppLocalizations l10n,
-    AsyncValue<Map<String, dynamic>> syncStatusAsync,
-  ) {
-    return SettingsItem(
-      icon: Icons.cloud_outlined,
-      title: l10n.syncStatus,
-      subtitle: syncStatusAsync.when(
-        data: (status) {
-          final lastSyncedAt = status['last_synced_at'] as String?;
-          if (lastSyncedAt == null || lastSyncedAt.isEmpty) {
-            return l10n.lastSyncedNever;
-          }
-          return l10n.lastSynced(lastSyncedAt);
-        },
-        loading: () => l10n.checking,
-        error: (_, __) => l10n.unableToLoadSyncStatus,
-      ),
-      trailing: const SyncButton(),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
-
-  String _getLanguageDisplayName(Locale locale, AppLocalizations l10n) {
-    return switch (locale.languageCode) {
-      'zh' => l10n.chinese,
-      'ja' => l10n.japanese,
-      'ko' => l10n.korean,
-      _ => l10n.english,
-    };
-  }
-
-  String _getThemeDisplayName(ThemeOption option, AppLocalizations l10n) {
-    return switch (option) {
-      ThemeOption.light => l10n.themeLight,
-      ThemeOption.dark => l10n.themeDark,
-      ThemeOption.system => l10n.themeSystem,
-      ThemeOption.highContrastLight => l10n.themeHighContrastLight,
-      ThemeOption.highContrastDark => l10n.themeHighContrastDark,
-    };
-  }
-
-  void _showLanguageDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final currentLocale = ref.read(localeProvider);
-    showDialog(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text(l10n.language),
-        children: [
-          SimpleDialogOption(
-            onPressed: () {
-              ref.read(localeProvider.notifier).setLocale(const Locale('en'));
-              Navigator.pop(ctx);
-            },
-            child: ListTile(
-              leading: Icon(
-                currentLocale.languageCode == 'en'
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-              ),
-              title: Text(l10n.english),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              ref.read(localeProvider.notifier).setLocale(const Locale('zh'));
-              Navigator.pop(ctx);
-            },
-            child: ListTile(
-              leading: Icon(
-                currentLocale.languageCode == 'zh'
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-              ),
-              title: Text(l10n.chinese),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              ref.read(localeProvider.notifier).setLocale(const Locale('ja'));
-              Navigator.pop(ctx);
-            },
-            child: ListTile(
-              leading: Icon(
-                currentLocale.languageCode == 'ja'
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-              ),
-              title: Text(l10n.japanese),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              ref.read(localeProvider.notifier).setLocale(const Locale('ko'));
-              Navigator.pop(ctx);
-            },
-            child: ListTile(
-              leading: Icon(
-                currentLocale.languageCode == 'ko'
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-              ),
-              title: Text(l10n.korean),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showThemeDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final currentOption = ref.read(themeOptionProvider);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text(l10n.theme),
-        children: [
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.light,
-            currentOption: currentOption,
-            label: l10n.themeLight,
-            ref: ref,
-          ),
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.dark,
-            currentOption: currentOption,
-            label: l10n.themeDark,
-            ref: ref,
-          ),
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.system,
-            currentOption: currentOption,
-            label: l10n.themeSystem,
-            ref: ref,
-          ),
-          const Divider(),
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.highContrastLight,
-            currentOption: currentOption,
-            label: l10n.themeHighContrastLight,
-            ref: ref,
-            isHighContrast: true,
-          ),
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.highContrastDark,
-            currentOption: currentOption,
-            label: l10n.themeHighContrastDark,
-            ref: ref,
-            isHighContrast: true,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildThemeOption({
-    required BuildContext context,
-    required ThemeOption option,
-    required ThemeOption currentOption,
-    required String label,
-    required WidgetRef ref,
-    bool isHighContrast = false,
-  }) {
-    final isSelected = currentOption == option;
-    return SimpleDialogOption(
-      onPressed: () {
-        ref.read(themeOptionProvider.notifier).setThemeOption(option);
-        Navigator.pop(context);
-      },
-      child: ListTile(
-        leading: Icon(
-          isSelected
-              ? Icons.radio_button_checked
-              : Icons.radio_button_unchecked,
-          color: isHighContrast ? null : null,
-        ),
-        title: Text(
-          label,
-          style: isHighContrast
-              ? const TextStyle(fontWeight: FontWeight.bold)
-              : null,
-        ),
-        contentPadding: EdgeInsets.zero,
-      ),
-    );
-  }
-
-  Widget _reduceMotionItem(AppLocalizations l10n, WidgetRef ref) {
-    final override = ref.watch(reduceMotionOverrideProvider);
-    // Get context through a Builder to access MediaQuery
-    return Builder(
-      builder: (context) {
-        final systemDisabled = MediaQuery.disableAnimationsOf(context);
-        final isEnabled = override ?? systemDisabled;
-
-        return _SettingsItemWithSwitch(
-          icon: Icons.animation_outlined,
-          title: l10n.reduceMotion,
-          subtitle: override == null
-              ? l10n.reduceMotionSystem
-              : isEnabled
-                  ? l10n.reduceMotionOn
-                  : l10n.reduceMotionOff,
-          value: isEnabled,
-          onChanged: (value) {
-            ref.read(reduceMotionOverrideProvider.notifier).state = value;
-          },
-        );
-      },
     );
   }
 
@@ -687,6 +408,348 @@ class _IconCircle extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Icon(icon, size: 18, color: colorScheme.primary),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Extracted section widgets — each watches only the providers it needs,
+// preventing rebuilds in sibling sections when an unrelated provider changes.
+// ---------------------------------------------------------------------------
+
+/// Account section — watches [accountInfoProvider] independently.
+class _AccountSectionWidget extends ConsumerWidget {
+  const _AccountSectionWidget();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accountAsync = ref.watch(accountInfoProvider);
+    return AccountSection(accountAsync: accountAsync);
+  }
+}
+
+/// AI quota item — watches [aiQuotaProvider] independently.
+class _AiQuotaSection extends ConsumerWidget {
+  const _AiQuotaSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final quotaAsync = ref.watch(aiQuotaProvider);
+    return SettingsItem(
+      icon: Icons.data_usage_outlined,
+      title: l10n.aiQuota,
+      subtitle: quotaAsync.when(
+        data: (quota) {
+          return l10n.requestsToday(quota.dailyUsed, quota.dailyLimit);
+        },
+        loading: () => l10n.loading,
+        error: (_, __) => l10n.unableToLoadQuota,
+      ),
+    );
+  }
+}
+
+/// Sync status item — watches [syncStatusProvider] independently.
+class _SyncStatusSection extends ConsumerWidget {
+  const _SyncStatusSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final syncStatusAsync = ref.watch(syncStatusProvider);
+    return SettingsItem(
+      icon: Icons.cloud_outlined,
+      title: l10n.syncStatus,
+      subtitle: syncStatusAsync.when(
+        data: (status) {
+          final lastSynced = status.lastSyncedAt;
+          if (lastSynced == null) {
+            return l10n.lastSyncedNever;
+          }
+          return l10n.lastSynced(lastSynced.toIso8601String());
+        },
+        loading: () => l10n.checking,
+        error: (_, __) => l10n.unableToLoadSyncStatus,
+      ),
+      trailing: const SyncButton(),
+    );
+  }
+}
+
+/// Language section — watches [localeProvider] independently.
+class _LanguageSection extends ConsumerWidget {
+  const _LanguageSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = ref.watch(localeProvider);
+    return Semantics(
+      container: true,
+      label: l10n.settingsGroup(l10n.language),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SettingsGroupHeader(title: l10n.language),
+          SettingsGroup(
+            children: [
+              SettingsItem(
+                icon: Icons.language,
+                title: l10n.language,
+                subtitle: _getLanguageDisplayName(locale, l10n),
+                trailing: const Icon(Icons.chevron_right, size: 20),
+                onTap: () => _showLanguageDialog(context, ref),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _getLanguageDisplayName(Locale locale, AppLocalizations l10n) {
+    return switch (locale.languageCode) {
+      'zh' => l10n.chinese,
+      'ja' => l10n.japanese,
+      'ko' => l10n.korean,
+      _ => l10n.english,
+    };
+  }
+
+  static void _showLanguageDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = ref.read(localeProvider);
+    showDialog(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.language),
+        children: [
+          SimpleDialogOption(
+            onPressed: () {
+              ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+              Navigator.pop(ctx);
+            },
+            child: ListTile(
+              leading: Icon(
+                currentLocale.languageCode == 'en'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              ),
+              title: Text(l10n.english),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              ref.read(localeProvider.notifier).setLocale(const Locale('zh'));
+              Navigator.pop(ctx);
+            },
+            child: ListTile(
+              leading: Icon(
+                currentLocale.languageCode == 'zh'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              ),
+              title: Text(l10n.chinese),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              ref.read(localeProvider.notifier).setLocale(const Locale('ja'));
+              Navigator.pop(ctx);
+            },
+            child: ListTile(
+              leading: Icon(
+                currentLocale.languageCode == 'ja'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              ),
+              title: Text(l10n.japanese),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              ref.read(localeProvider.notifier).setLocale(const Locale('ko'));
+              Navigator.pop(ctx);
+            },
+            child: ListTile(
+              leading: Icon(
+                currentLocale.languageCode == 'ko'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              ),
+              title: Text(l10n.korean),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Appearance section — watches [themeOptionProvider] and
+/// [reduceMotionOverrideProvider] independently.
+class _AppearanceSection extends ConsumerWidget {
+  const _AppearanceSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final themeOption = ref.watch(themeOptionProvider);
+    return Semantics(
+      container: true,
+      label: l10n.settingsGroup(l10n.appearance),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SettingsGroupHeader(title: l10n.appearance),
+          SettingsGroup(
+            children: [
+              SettingsItem(
+                icon: Icons.palette_outlined,
+                title: l10n.theme,
+                subtitle: _getThemeDisplayName(themeOption, l10n),
+                trailing: const Icon(Icons.chevron_right, size: 20),
+                onTap: () => _showThemeDialog(context, ref),
+              ),
+              _ReduceMotionItem(l10n: l10n),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _getThemeDisplayName(
+      ThemeOption option, AppLocalizations l10n) {
+    return switch (option) {
+      ThemeOption.light => l10n.themeLight,
+      ThemeOption.dark => l10n.themeDark,
+      ThemeOption.system => l10n.themeSystem,
+      ThemeOption.highContrastLight => l10n.themeHighContrastLight,
+      ThemeOption.highContrastDark => l10n.themeHighContrastDark,
+    };
+  }
+
+  static void _showThemeDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentOption = ref.read(themeOptionProvider);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.theme),
+        children: [
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.light,
+            currentOption: currentOption,
+            label: l10n.themeLight,
+            ref: ref,
+          ),
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.dark,
+            currentOption: currentOption,
+            label: l10n.themeDark,
+            ref: ref,
+          ),
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.system,
+            currentOption: currentOption,
+            label: l10n.themeSystem,
+            ref: ref,
+          ),
+          const Divider(),
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.highContrastLight,
+            currentOption: currentOption,
+            label: l10n.themeHighContrastLight,
+            ref: ref,
+            isHighContrast: true,
+          ),
+          _buildThemeOption(
+            context: ctx,
+            option: ThemeOption.highContrastDark,
+            currentOption: currentOption,
+            label: l10n.themeHighContrastDark,
+            ref: ref,
+            isHighContrast: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildThemeOption({
+    required BuildContext context,
+    required ThemeOption option,
+    required ThemeOption currentOption,
+    required String label,
+    required WidgetRef ref,
+    bool isHighContrast = false,
+  }) {
+    final isSelected = currentOption == option;
+    return SimpleDialogOption(
+      onPressed: () {
+        ref.read(themeOptionProvider.notifier).setThemeOption(option);
+        Navigator.pop(context);
+      },
+      child: ListTile(
+        leading: Icon(
+          isSelected
+              ? Icons.radio_button_checked
+              : Icons.radio_button_unchecked,
+          color: isHighContrast ? null : null,
+        ),
+        title: Text(
+          label,
+          style: isHighContrast
+              ? const TextStyle(fontWeight: FontWeight.bold)
+              : null,
+        ),
+        contentPadding: EdgeInsets.zero,
+      ),
+    );
+  }
+}
+
+/// Reduce-motion toggle — watches [reduceMotionOverrideProvider] independently.
+class _ReduceMotionItem extends ConsumerWidget {
+  final AppLocalizations l10n;
+
+  const _ReduceMotionItem({required this.l10n});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final override = ref.watch(reduceMotionOverrideProvider);
+    return Builder(
+      builder: (context) {
+        final systemDisabled = MediaQuery.disableAnimationsOf(context);
+        final isEnabled = override ?? systemDisabled;
+
+        return _SettingsItemWithSwitch(
+          icon: Icons.animation_outlined,
+          title: l10n.reduceMotion,
+          subtitle: override == null
+              ? l10n.reduceMotionSystem
+              : isEnabled
+                  ? l10n.reduceMotionOn
+                  : l10n.reduceMotionOff,
+          value: isEnabled,
+          onChanged: (value) {
+            ref.read(reduceMotionOverrideProvider.notifier).state = value;
+          },
+        );
+      },
     );
   }
 }

@@ -38,15 +38,17 @@ class GeneratedContentsDao extends DatabaseAccessor<AppDatabase>
     String aiModelUsed = '',
   }) async {
     final now = DateTime.now();
-    await into(generatedContents).insert(GeneratedContentsCompanion.insert(
-      id: id,
-      encryptedBody: encryptedBody,
-      plainBody: Value(plainBody),
-      platformStyle: Value(platformStyle),
-      aiModelUsed: Value(aiModelUsed),
-      createdAt: now,
-      updatedAt: now,
-    ),);
+    await into(generatedContents).insert(
+      GeneratedContentsCompanion.insert(
+        id: id,
+        encryptedBody: encryptedBody,
+        plainBody: Value(plainBody),
+        platformStyle: Value(platformStyle),
+        aiModelUsed: Value(aiModelUsed),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
     return id;
   }
 
@@ -56,13 +58,15 @@ class GeneratedContentsDao extends DatabaseAccessor<AppDatabase>
     String? encryptedBody,
     String? plainBody,
   }) async {
-    await (update(generatedContents)..where((gc) => gc.id.equals(id)))
-        .write(GeneratedContentsCompanion(
-      encryptedBody: encryptedBody != null ? Value(encryptedBody) : const Value.absent(),
-      plainBody: Value(plainBody),
-      updatedAt: Value(DateTime.now()),
-      isSynced: const Value(false),
-    ),);
+    await (update(generatedContents)..where((gc) => gc.id.equals(id))).write(
+      GeneratedContentsCompanion(
+        encryptedBody:
+            encryptedBody != null ? Value(encryptedBody) : const Value.absent(),
+        plainBody: Value(plainBody),
+        updatedAt: Value(DateTime.now()),
+        isSynced: const Value(false),
+      ),
+    );
   }
 
   /// Delete generated content.
@@ -79,6 +83,13 @@ class GeneratedContentsDao extends DatabaseAccessor<AppDatabase>
   /// Mark as synced.
   Future<void> markSynced(String id) async {
     await (update(generatedContents)..where((gc) => gc.id.equals(id)))
+        .write(const GeneratedContentsCompanion(isSynced: Value(true)));
+  }
+
+  /// Mark multiple generated contents as synced in a single query.
+  Future<void> markSyncedBatch(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await (update(generatedContents)..where((gc) => gc.id.isIn(ids)))
         .write(const GeneratedContentsCompanion(isSynced: Value(true)));
   }
 }

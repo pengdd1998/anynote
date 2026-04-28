@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
@@ -12,6 +12,7 @@ import '../../../core/import/import_models.dart';
 import '../../../core/import/markdown_import_service.dart';
 import '../../../core/import/text_import.dart';
 import '../../../core/widgets/app_components.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 
@@ -171,9 +172,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   Future<void> _importMarkdownFiles() async {
     if (kIsWeb) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        AppSnackBar.info(
+          context,
+          message: AppLocalizations.of(context)!.notSupportedOnWeb,
         );
       }
       return;
@@ -196,9 +197,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
     if (filePaths.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.noMdFilesSelected)),
+        AppSnackBar.info(
+          context,
+          message: AppLocalizations.of(context)!.noMdFilesSelected,
         );
       }
       return;
@@ -260,9 +261,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   Future<void> _importMarkdownFolder() async {
     if (kIsWeb) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        AppSnackBar.info(
+          context,
+          message: AppLocalizations.of(context)!.notSupportedOnWeb,
         );
       }
       return;
@@ -455,9 +456,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   Future<void> _importAppleNotesFolder() async {
     if (kIsWeb) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        AppSnackBar.info(
+          context,
+          message: AppLocalizations.of(context)!.notSupportedOnWeb,
         );
       }
       return;
@@ -586,9 +587,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   Future<void> _importTextFiles() async {
     if (kIsWeb) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        AppSnackBar.info(
+          context,
+          message: AppLocalizations.of(context)!.notSupportedOnWeb,
         );
       }
       return;
@@ -611,9 +612,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
     if (filePaths.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.noTxtFilesSelected)),
+        AppSnackBar.info(
+          context,
+          message: AppLocalizations.of(context)!.noTxtFilesSelected,
         );
       }
       return;
@@ -676,9 +677,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   Future<void> _importTextFolder() async {
     if (kIsWeb) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.notSupportedOnWeb)),
+        AppSnackBar.info(
+          context,
+          message: AppLocalizations.of(context)!.notSupportedOnWeb,
         );
       }
       return;

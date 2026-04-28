@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
@@ -10,6 +10,7 @@ import '../../../../core/import/import_models.dart';
 import '../../../../core/import/markdown_import_service.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/markdown_export_service.dart';
 
 /// A bottom sheet for importing notes from Markdown files, ZIP archives,
@@ -631,8 +632,6 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    AppSnackBar.error(context, message: message);
   }
 }

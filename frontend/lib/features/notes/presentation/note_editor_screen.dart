@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
@@ -55,9 +55,13 @@ import 'widgets/reminder_picker_sheet.dart';
 import 'widgets/print_preview_sheet.dart';
 import 'widgets/editor_drop_target.dart';
 import 'widgets/editor_app_bar_actions.dart';
+import 'widgets/formatting_toolbar.dart';
+import 'widgets/find_replace_bar.dart';
 import '../../../core/notifications/reminder_service.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
 import '../../../core/constants/app_durations.dart';
+import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/offline_banner.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   /// Optional initial content to pre-fill the editor (e.g. from a template).
@@ -97,6 +101,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   String? _noteId;
   bool _isNew = true;
   bool _isSaving = false;
+  bool _isDirty = false;
   bool _isPreview = false;
   bool _useRichEditor = true;
   String? _errorMessage;
@@ -146,6 +151,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   // Reminder state for the current note.
   ReminderEntry? _currentReminder;
   Stream<ReminderEntry?>? _reminderStream;
+
+  // Find & replace state.
+  bool _showFindReplace = false;
+  final TextEditingController _findController = TextEditingController();
+  final TextEditingController _replaceController = TextEditingController();
+  final FindReplaceController _findReplaceCtrl = FindReplaceController();
 
   /// Preference key for storing the last edit/preview mode.
   static const _prefKeyPreviewMode = 'editor_preview_mode';
@@ -199,6 +210,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (!_isNew && _noteId != null) {
         AppKeyboardShortcuts.setPrintCallback(() => _showPrintPreview(context));
       }
+      // Wire Ctrl+F to open the find/replace bar in the editor.
+      AppKeyboardShortcuts.setFindCallback(_openFindReplace);
     });
   }
 
@@ -263,7 +276,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   void _onContentChanged() {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(seconds: 2), _saveNote);
+    _debounce = Timer(AppDurations.autoSaveDelay, _saveNote);
+    // Mark content as having unsaved changes.
+    if (!_isDirty) {
+      setState(() => _isDirty = true);
+    }
     // Debounce count updates to avoid recalculating on every keystroke.
     _countDebounceTimer?.cancel();
     _countDebounceTimer = Timer(AppDurations.debounce, _updateCounts);
@@ -642,6 +659,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         );
       }
       pm.end('note_save');
+      // Mark content as saved after successful persistence.
+      if (mounted) {
+        setState(() => _isDirty = false);
+      }
     } catch (e) {
       // Store the error but do not lose the user's input.
       // The debounced save will retry automatically.
@@ -673,6 +694,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyScrollController.dispose();
     _zenChromeAnimController?.dispose();
     _foldController.dispose();
+    _findController.dispose();
+    _replaceController.dispose();
 
     // Persist CRDT state and leave collab room if in collab mode.
     if (_isCollab && _noteId != null) {
@@ -684,6 +707,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     ref.read(presenceProvider.notifier).leaveRoom();
     // Clear keyboard shortcut callbacks registered by this screen.
     AppKeyboardShortcuts.clearPrintCallback();
+    AppKeyboardShortcuts.clearFindCallback();
     // Restore system UI when leaving the editor.
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
@@ -803,68 +827,71 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 onPressed: () => context.pop(),
               ),
               actions: EditorAppBarActions.buildActions(
-                context: context,
-                ref: ref,
-                noteId: _noteId,
-                isNew: _isNew,
-                isLocked: _isLocked,
-                isSaving: _isSaving,
-                useRichEditor: _useRichEditor,
-                isPreview: _isPreview,
-                isFoldView: _isFoldView,
-                isTypewriterScroll: _isTypewriterScroll,
-                isFocusMode: _isFocusMode,
-                isZenMode: _isZenMode,
-                hasReminder: _currentReminder != null,
-                onToggleLock: _toggleLock,
-                onShowReminderPicker: () => _showReminderPicker(context),
-                onToggleRichEditor: () {
-                  setState(() => _useRichEditor = !_useRichEditor);
-                },
-                onTogglePreview: () {
-                  final newValue = !_isPreview;
-                  setState(() => _isPreview = newValue);
-                  _savePreviewPreference(newValue);
-                },
-                onToggleFoldView: () {
-                  setState(() => _isFoldView = !_isFoldView);
-                },
-                onReadAloud: () {
-                  final speechState =
-                      ref.read(speechStateProvider).valueOrNull ??
-                          SpeechState.stopped;
-                  final service = ref.read(speechServiceProvider);
-                  if (speechState != SpeechState.stopped) {
-                    service.stop();
-                  } else {
-                    final content = _extractPlainText();
-                    if (content.isNotEmpty) service.speak(content);
-                  }
-                },
-                onShowTagPicker: () => _showTagPicker(context),
-                onShowBacklinks: () => _showBacklinks(context),
-                onShowRelatedNotes: () => _showRelatedNotes(context),
-                onShowProperties: () => _showProperties(context),
-                onShare: () {
-                  if (_noteId != null) {
-                    showShareBottomSheet(context, _noteId!);
-                  }
-                },
-                onPrint: () => _showPrintPreview(context),
-                onPickImage: () => _pickImage(context),
-                onPasteImage: () => _pasteImageFromClipboard(context),
-                onAiAction: (value) => _handleAiAction(context, value),
-                onToggleTypewriterScroll: () {
-                  setState(() => _isTypewriterScroll = !_isTypewriterScroll);
-                },
-                onToggleFocusMode: () {
-                  setState(() => _isFocusMode = !_isFocusMode);
-                },
-                onToggleZenMode: _toggleZenMode,
-                onSaveAndClose: () async {
-                  await _saveNote();
-                  if (context.mounted) context.pop();
-                },
+                context,
+                ref,
+                EditorActionsConfig(
+                  noteId: _noteId,
+                  isNew: _isNew,
+                  isLocked: _isLocked,
+                  isSaving: _isSaving,
+                  isDirty: _isDirty,
+                  useRichEditor: _useRichEditor,
+                  isPreview: _isPreview,
+                  isFoldView: _isFoldView,
+                  isTypewriterScroll: _isTypewriterScroll,
+                  isFocusMode: _isFocusMode,
+                  isZenMode: _isZenMode,
+                  hasReminder: _currentReminder != null,
+                  onToggleLock: _toggleLock,
+                  onShowReminderPicker: () => _showReminderPicker(context),
+                  onToggleRichEditor: () {
+                    setState(() => _useRichEditor = !_useRichEditor);
+                  },
+                  onTogglePreview: () {
+                    final newValue = !_isPreview;
+                    setState(() => _isPreview = newValue);
+                    _savePreviewPreference(newValue);
+                  },
+                  onToggleFoldView: () {
+                    setState(() => _isFoldView = !_isFoldView);
+                  },
+                  onReadAloud: () {
+                    final speechState =
+                        ref.read(speechStateProvider).valueOrNull ??
+                            SpeechState.stopped;
+                    final service = ref.read(speechServiceProvider);
+                    if (speechState != SpeechState.stopped) {
+                      service.stop();
+                    } else {
+                      final content = _extractPlainText();
+                      if (content.isNotEmpty) service.speak(content);
+                    }
+                  },
+                  onShowTagPicker: () => _showTagPicker(context),
+                  onShowBacklinks: () => _showBacklinks(context),
+                  onShowRelatedNotes: () => _showRelatedNotes(context),
+                  onShowProperties: () => _showProperties(context),
+                  onShare: () {
+                    if (_noteId != null) {
+                      showShareBottomSheet(context, _noteId!);
+                    }
+                  },
+                  onPrint: () => _showPrintPreview(context),
+                  onPickImage: () => _pickImage(context),
+                  onPasteImage: () => _pasteImageFromClipboard(context),
+                  onAiAction: (value) => _handleAiAction(context, value),
+                  onToggleTypewriterScroll: () {
+                    setState(() => _isTypewriterScroll = !_isTypewriterScroll);
+                  },
+                  onToggleFocusMode: () {
+                    setState(() => _isFocusMode = !_isFocusMode);
+                  },
+                  onToggleZenMode: _toggleZenMode,
+                  onSaveAndClose: () async {
+                    await _saveNote();
+                    if (context.mounted) context.pop();
+                  },
+                ),
               ),
             ),
       body: _buildBody(context, l10n, colorScheme),
@@ -878,6 +905,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   ) {
     return Column(
       children: [
+        // Offline banner: shown when device has no connectivity.
+        if (!_isZenMode) const OfflineBanner(),
+        // Formatting toolbar: shown below AppBar when in rich text mode
+        // (not in preview, zen mode, or plain text mode).
+        if (!_isZenMode && _useRichEditor && !_isPreview)
+          FormattingToolbar(
+            quillController: _quillController,
+            onPickImage: () => _pickImage(context),
+            onAiAction: () => _handleAiAction(context, 'summary'),
+          ),
+        // Find & replace bar: shown when activated via Ctrl+F / Cmd+F.
+        FindReplaceBar(
+          isVisible: _showFindReplace,
+          searchTextController: _findController,
+          replaceTextController: _replaceController,
+          matchIndex: _findReplaceCtrl.currentMatchIndex,
+          matchCount: _findReplaceCtrl.matchCount,
+          onSearchChanged: _onFindSearchChanged,
+          onPrevious: _onFindPrevious,
+          onNext: _onFindNext,
+          onReplace: _onFindReplace,
+          onReplaceAll: _onFindReplaceAll,
+          onClose: _closeFindReplace,
+        ),
         // Error banner (always visible, even in zen mode).
         if (_errorMessage != null)
           Semantics(
@@ -1066,6 +1117,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           },
         ),
 
+        // Save status indicator.
+        _SaveStatusChip(
+          isSaving: _isSaving,
+          isDirty: _isDirty,
+        ),
+
         // Compact word / character count bar with zen mode toggle.
         CharacterCountBar(
           wordCount: _wordCount,
@@ -1217,6 +1274,107 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         content: content,
       ),
     );
+  }
+
+  // ── Find & Replace ────────────────────────────────────
+
+  /// Opens the find/replace bar and populates the search field with the
+  /// currently selected text (if any). Wired to Ctrl+F / Cmd+F.
+  void _openFindReplace() {
+    // Pre-fill with selected text if available.
+    final selected = _getSelectedText();
+    if (selected.isNotEmpty) {
+      _findController.text = selected;
+      _findReplaceCtrl.setSearchQuery(selected);
+    }
+    setState(() => _showFindReplace = true);
+  }
+
+  /// Closes the find/replace bar and clears search state.
+  void _closeFindReplace() {
+    setState(() {
+      _showFindReplace = false;
+      _findController.clear();
+      _replaceController.clear();
+      _findReplaceCtrl.setSearchQuery('');
+    });
+  }
+
+  /// Called when the search text changes. Updates matches and highlights
+  /// the first result.
+  void _onFindSearchChanged(String query) {
+    _findReplaceCtrl.updateContent(_extractPlainText());
+    _findReplaceCtrl.setSearchQuery(query);
+    setState(() {});
+    _navigateToCurrentMatch();
+  }
+
+  /// Navigate to the previous match in the find results.
+  void _onFindPrevious() {
+    _findReplaceCtrl.previousMatch();
+    setState(() {});
+    _navigateToCurrentMatch();
+  }
+
+  /// Navigate to the next match in the find results.
+  void _onFindNext() {
+    _findReplaceCtrl.nextMatch();
+    setState(() {});
+    _navigateToCurrentMatch();
+  }
+
+  /// Replace the current match with the replacement text.
+  void _onFindReplace() {
+    final newContent = _findReplaceCtrl.replaceCurrent(
+      _replaceController.text,
+    );
+    if (newContent != null) {
+      _applyFindReplaceResult(newContent);
+    }
+  }
+
+  /// Replace all matches with the replacement text.
+  void _onFindReplaceAll() {
+    final newContent = _findReplaceCtrl.replaceAll(
+      _replaceController.text,
+    );
+    if (newContent != null) {
+      _applyFindReplaceResult(newContent);
+    }
+  }
+
+  /// Applies the result of a find/replace operation to the active editor.
+  void _applyFindReplaceResult(String newContent) {
+    if (_useRichEditor) {
+      // For the rich editor, replace the entire document content.
+      _quillController.clear();
+      _quillController.document.insert(0, newContent);
+    } else {
+      _effectiveContentController.text = newContent;
+    }
+    setState(() {});
+    _saveNote();
+  }
+
+  /// Positions the cursor at the current match location.
+  void _navigateToCurrentMatch() {
+    final match = _findReplaceCtrl.currentMatch();
+    if (match == null) return;
+
+    if (_useRichEditor) {
+      _quillController.updateSelection(
+        TextSelection(
+          baseOffset: match.start,
+          extentOffset: match.end,
+        ),
+        quill.ChangeSource.local,
+      );
+    } else {
+      _effectiveContentController.selection = TextSelection(
+        baseOffset: match.start,
+        extentOffset: match.end,
+      );
+    }
   }
 
   // ── Typewriter scroll scheduling ──────────────────────
@@ -1457,9 +1615,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (kIsWeb) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.failedToAddImage('Not available on web'))),
-      );
+      AppSnackBar.error(context,
+          message: l10n.failedToAddImage('Not available on web'));
       return;
     }
 
@@ -1522,9 +1679,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.failedToAddImage(e.toString()))),
-      );
+      AppSnackBar.error(context, message: l10n.failedToAddImage(e.toString()));
     }
   }
 
@@ -1537,9 +1692,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (kIsWeb) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.failedToAddImage('Not available on web'))),
-      );
+      AppSnackBar.error(context,
+          message: l10n.failedToAddImage('Not available on web'));
       return;
     }
 
@@ -1567,17 +1721,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // Could not read an image from clipboard.
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.failedToAddImage('No image found in clipboard')),
-        ),
-      );
+      AppSnackBar.error(context,
+          message: l10n.failedToAddImage('No image found in clipboard'));
     } catch (e) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.failedToAddImage(e.toString()))),
-      );
+      AppSnackBar.error(context, message: l10n.failedToAddImage(e.toString()));
     }
   }
 
@@ -1588,5 +1737,78 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final imageRef = '\n![image](file://$localPath)\n';
     controller.text = controller.text + imageRef;
     _saveNote();
+  }
+}
+
+/// A compact save status chip shown at the bottom of the editor.
+///
+/// Displays one of three states:
+/// - Green checkmark + "Saved" when content is saved.
+/// - Amber dot + "Unsaved" when there are unsaved changes.
+/// - Spinning indicator + "Saving..." when actively saving.
+class _SaveStatusChip extends StatelessWidget {
+  final bool isSaving;
+  final bool isDirty;
+
+  const _SaveStatusChip({
+    required this.isSaving,
+    required this.isDirty,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final String label;
+    final Color color;
+    final Widget icon;
+
+    if (isSaving) {
+      label = l10n.statusSaving;
+      color = colorScheme.tertiary;
+      icon = SizedBox(
+        width: 12,
+        height: 12,
+        child: CircularProgressIndicator(
+          strokeWidth: 1.5,
+          color: color,
+        ),
+      );
+    } else if (isDirty) {
+      label = l10n.statusUnsaved;
+      color = colorScheme.error;
+      icon = Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+        ),
+      );
+    } else {
+      label = l10n.statusSaved;
+      color = Colors.green;
+      icon = Icon(Icons.check_circle, size: 14, color: color);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          icon,
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

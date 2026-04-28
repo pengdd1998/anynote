@@ -85,8 +85,8 @@ void main() {
         overrides: defaultProviderOverrides(),
       );
 
-      // Sort popup menu button.
-      expect(find.byType(PopupMenuButton<String>), findsOneWidget);
+      // Sort popup menu button (at least one PopupMenuButton: sort + more overflow).
+      expect(find.byType(PopupMenuButton<String>), findsAtLeast(1));
 
       // Grid/list toggle icon button.
       expect(find.byIcon(Icons.grid_view), findsOneWidget);

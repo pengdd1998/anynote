@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 
 /// Full-screen template management page.
 ///
@@ -278,9 +279,7 @@ class _TemplateManagementScreenState
     );
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.templateSaved)),
-    );
+    AppSnackBar.info(context, message: l10n.templateSaved);
     await _loadTemplates();
   }
 
@@ -424,9 +423,7 @@ class _TemplateManagementScreenState
 
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.templateSaved)),
-                  );
+                  AppSnackBar.info(context, message: l10n.templateSaved);
                 }
                 await _loadTemplates();
               },
@@ -547,9 +544,7 @@ class _TemplateManagementScreenState
 
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.templateSaved)),
-                  );
+                  AppSnackBar.info(context, message: l10n.templateSaved);
                 }
                 await _loadTemplates();
               },

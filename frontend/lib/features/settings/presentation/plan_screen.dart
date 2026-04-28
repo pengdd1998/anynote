@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../settings/domain/plan_model.dart';
 import '../../settings/providers/plan_providers.dart';
 
@@ -122,8 +123,9 @@ class _PlanContent extends ConsumerWidget {
           OutlinedButton(
             onPressed: () {
               // Restore purchase stub -- will be connected to store later.
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.restorePurchaseComingSoon)),
+              AppSnackBar.info(
+                context,
+                message: l10n.restorePurchaseComingSoon,
               );
             },
             style: OutlinedButton.styleFrom(

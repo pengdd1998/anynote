@@ -2137,5 +2137,11 @@
   "barChartSemanticLabel": "条形图，按月显示笔记数量：{entries}",
   "donutChartSemanticLabel": "环形图，显示分布情况：{entries}",
   "tagItemSemanticLabel": "标签：{name}",
-  "tagItemSemanticHint": "长按以编辑"
+  "tagItemSemanticHint": "长按以编辑",
+
+  "moreActions": "更多操作",
+  "statusSaved": "已保存",
+  "statusUnsaved": "未保存",
+  "statusSaving": "保存中...",
+  "selectItemToView": "选择一个项目以查看"
 }

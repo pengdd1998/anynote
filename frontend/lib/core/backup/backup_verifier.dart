@@ -136,14 +136,21 @@ class BackupVerifier {
   /// - Format header is recognized ('anynote-backup-v1')
   /// - Required fields are present (backup_key_id, encrypted_data)
   /// - If [CryptoService] is unlocked, attempts decryption to count items
+  ///
+  /// On web, use [verifyContent] instead which accepts a string content.
   Future<BackupInfo> verify(String backupPath) async {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'Backup verification is not supported on web platform',
+      return const BackupInfo(
+        format: '',
+        backupKeyId: '',
+        errors: [
+          'Backup verification from file path is not supported on web. '
+              'Use verifyContent() with the file content instead.'
+        ],
       );
     }
 
-    final errors = <String>[];
+    final _ = <String>[];
 
     // 1. File existence and size check.
     final file = File(backupPath);
@@ -165,9 +172,26 @@ class BackupVerifier {
     }
 
     // 2. Parse JSON envelope.
+    final jsonStr = await file.readAsString();
+    return _verifyEnvelope(jsonStr);
+  }
+
+  /// Validate backup content provided as a JSON string.
+  ///
+  /// Web-compatible alternative to [verify] that accepts the backup content
+  /// directly instead of a file path. On web, the caller is responsible for
+  /// reading the file (e.g. via the File API or a file picker).
+  Future<BackupInfo> verifyContent(String jsonContent) async {
+    return _verifyEnvelope(jsonContent);
+  }
+
+  /// Internal verification logic operating on the JSON envelope string.
+  Future<BackupInfo> _verifyEnvelope(String jsonStr) async {
+    final errors = <String>[];
+
+    // Parse JSON envelope.
     Map<String, dynamic> envelope;
     try {
-      final jsonStr = await file.readAsString();
       envelope = jsonDecode(jsonStr) as Map<String, dynamic>;
     } catch (e) {
       return BackupInfo(
@@ -177,7 +201,7 @@ class BackupVerifier {
       );
     }
 
-    // 3. Check format header.
+    // Check format header.
     final format = envelope['format'] as String? ?? '';
     if (format != 'anynote-backup-v1') {
       return BackupInfo(
@@ -187,7 +211,7 @@ class BackupVerifier {
       );
     }
 
-    // 4. Check required fields.
+    // Check required fields.
     final backupKeyId = envelope['backup_key_id'] as String? ?? '';
     final encryptedData = envelope['encrypted_data'] as String? ?? '';
 
@@ -206,7 +230,7 @@ class BackupVerifier {
       );
     }
 
-    // 5. Attempt decryption to validate inner structure and count items.
+    // Attempt decryption to validate inner structure and count items.
     bool canDecrypt = false;
     int noteCount = 0;
     int tagCount = 0;
@@ -264,6 +288,8 @@ class BackupVerifier {
   /// note titles, computes date ranges, and counts items by type. Also
   /// checks against [existingNoteIds], [existingTagIds], [existingCollectionIds],
   /// and [existingContentIds] to count conflicts.
+  ///
+  /// On web, use [previewContent] instead which accepts a string content.
   Future<RestorePreview> preview(
     String backupPath,
     Set<String> existingNoteIds,
@@ -272,9 +298,7 @@ class BackupVerifier {
     Set<String> existingContentIds,
   ) async {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'Backup preview is not supported on web platform',
-      );
+      return const RestorePreview();
     }
 
     if (!_crypto.isUnlocked) {
@@ -283,6 +307,47 @@ class BackupVerifier {
 
     final file = File(backupPath);
     final jsonStr = await file.readAsString();
+    return _previewEnvelope(
+      jsonStr,
+      existingNoteIds,
+      existingTagIds,
+      existingCollectionIds,
+      existingContentIds,
+    );
+  }
+
+  /// Preview backup content provided as a JSON string.
+  ///
+  /// Web-compatible alternative to [preview] that accepts the backup content
+  /// directly instead of a file path.
+  Future<RestorePreview> previewContent(
+    String jsonContent,
+    Set<String> existingNoteIds,
+    Set<String> existingTagIds,
+    Set<String> existingCollectionIds,
+    Set<String> existingContentIds,
+  ) async {
+    return _previewEnvelope(
+      jsonContent,
+      existingNoteIds,
+      existingTagIds,
+      existingCollectionIds,
+      existingContentIds,
+    );
+  }
+
+  /// Internal preview logic operating on the JSON envelope string.
+  Future<RestorePreview> _previewEnvelope(
+    String jsonStr,
+    Set<String> existingNoteIds,
+    Set<String> existingTagIds,
+    Set<String> existingCollectionIds,
+    Set<String> existingContentIds,
+  ) async {
+    if (!_crypto.isUnlocked) {
+      throw StateError('Crypto service must be unlocked to preview backup');
+    }
+
     final envelope = jsonDecode(jsonStr) as Map<String, dynamic>;
 
     final backupKeyId = envelope['backup_key_id'] as String;

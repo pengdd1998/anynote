@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/search_providers.dart';
@@ -531,9 +532,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
       final db = ref.read(databaseProvider);
       await db.savedSearchesDao.create(name: name, query: query);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.searchSaved)),
-        );
+        AppSnackBar.info(context, message: l10n.searchSaved);
       }
     }
   }

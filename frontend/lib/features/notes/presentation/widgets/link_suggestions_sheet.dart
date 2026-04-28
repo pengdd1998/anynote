@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -243,21 +244,14 @@ class _SuggestionTile extends ConsumerWidget {
 
       if (context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n?.linkCreated ?? 'Link created'),
-          ),
-        );
+        AppSnackBar.info(context, message: l10n?.linkCreated ?? 'Link created');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n?.failedToCreateLink(e.toString()) ??
-                  'Failed to create link: $e',
-            ),
-          ),
+        AppSnackBar.error(
+          context,
+          message: l10n?.failedToCreateLink(e.toString()) ??
+              'Failed to create link: $e',
         );
       }
     }

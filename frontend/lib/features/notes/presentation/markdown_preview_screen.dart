@@ -219,7 +219,10 @@ class _MarkdownPreviewScreenState extends ConsumerState<MarkdownPreviewScreen> {
                       child: Icon(
                         Icons.description_outlined,
                         size: 48,
-                        color: Colors.grey.shade400,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant
+                            .withOpacity(0.4),
                       ),
                     ),
                     const SizedBox(height: 16),

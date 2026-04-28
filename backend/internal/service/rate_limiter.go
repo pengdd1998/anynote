@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+// RateLimitProvider is the interface for rate limiting implementations.
+// Both the in-memory RateLimiter and RedisRateLimiter satisfy this interface.
+type RateLimitProvider interface {
+	Allow(key string) bool
+}
+
 // RateLimiter implements per-user rate limiting using a sliding window.
 // Expired windows are evicted lazily to prevent unbounded memory growth.
 type RateLimiter struct {

@@ -84,6 +84,13 @@ class TagsDao extends DatabaseAccessor<AppDatabase> with _$TagsDaoMixin {
         .write(const TagsCompanion(isSynced: Value(true)));
   }
 
+  /// Mark multiple tags as synced in a single query.
+  Future<void> markSyncedBatch(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await (update(tags)..where((t) => t.id.isIn(ids)))
+        .write(const TagsCompanion(isSynced: Value(true)));
+  }
+
   /// Update the color of a tag. Pass null to remove the color.
   Future<void> updateTagColor(String id, String? color) async {
     await (update(tags)..where((t) => t.id.equals(id)))

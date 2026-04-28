@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../platform/platform_utils.dart';
 
 /// Represents shared content received from another app via the share extension.
 class SharedContent {
@@ -130,7 +131,7 @@ class ReceiveShareService {
 
     String? pendingData;
 
-    if (Platform.isAndroid) {
+    if (PlatformUtils.isAndroid) {
       // Android: read from SharedPreferences used by ShareActivity.
       final prefs = await SharedPreferences.getInstance();
       pendingData = prefs.getString(_prefsKey);
@@ -139,7 +140,7 @@ class ReceiveShareService {
         await prefs.remove(_prefsKey);
         await prefs.remove(_prefsTimestampKey);
       }
-    } else if (Platform.isIOS) {
+    } else if (PlatformUtils.isIOS) {
       // iOS: read from shared App Group UserDefaults.
       try {
         final result =

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/database/daos/note_properties_dao.dart';
 import '../../../core/notifications/reminder_service.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Screen that displays all upcoming reminders sorted by time.
@@ -25,7 +26,12 @@ class RemindersScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
+              Icon(Icons.error_outline,
+                  size: 48,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.4)),
               const SizedBox(height: 16),
               Text(e.toString(), textAlign: TextAlign.center),
             ],
@@ -131,12 +137,7 @@ class RemindersScreen extends ConsumerWidget {
               await service.cancelReminder(reminder.noteId);
               ref.invalidate(upcomingRemindersProvider);
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.removeReminder),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                AppSnackBar.info(context, message: l10n.removeReminder);
               }
             },
             child: Card(

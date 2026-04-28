@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -11,6 +12,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/export/export_service.dart';
 import '../../../core/widgets/markdown_preview.dart';
+import '../../../core/widgets/offline_banner.dart';
 import '../domain/decrypted_note.dart';
 import 'share_sheet.dart';
 import 'widgets/export_sheet.dart';
@@ -129,121 +131,134 @@ class NoteDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: FutureBuilder(
-        future: _loadNote(db, crypto, l10n),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(
+            child: FutureBuilder(
+              future: _loadNote(db, crypto, l10n),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          if (snapshot.hasError) {
-            final appError = ErrorMapper.map(snapshot.error!);
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      ErrorDisplay.errorIcon(appError),
-                      size: 48,
-                      color: Colors.red.shade300,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.failedToLoadNote,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      ErrorDisplay.userMessage(appError, l10n),
-                      textAlign: TextAlign.center,
-                      style:
-                          TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.tonal(
-                      onPressed: () => _loadNote(db, crypto, l10n),
-                      child: Text(l10n.retry),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          final data = snapshot.data;
-          if (data == null) {
-            return Center(child: Text(l10n.noteNotFound));
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(
-                  label: l10n.noteTitleLabel(data.title),
-                  header: true,
-                  child: Text(
-                    data.title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Semantics(
-                  label:
-                      '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))}${data.isSynced ? '' : ', ${l10n.notSynced}'}',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 14,
-                        color: Colors.grey.shade500,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        l10n.updatedDate(
-                          data.updatedAt.toLocal().toString().substring(0, 16),
-                        ),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                      if (!data.isSynced) ...[
-                        const SizedBox(width: 12),
-                        Icon(
-                          Icons.cloud_off,
-                          size: 14,
-                          color: Colors.orange.shade300,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          l10n.notSynced,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange.shade300,
+                if (snapshot.hasError) {
+                  final appError = ErrorMapper.map(snapshot.error!);
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            ErrorDisplay.errorIcon(appError),
+                            size: 48,
+                            color: Colors.red.shade300,
                           ),
+                          const SizedBox(height: 16),
+                          Text(
+                            l10n.failedToLoadNote,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            ErrorDisplay.userMessage(appError, l10n),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontSize: 13),
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton.tonal(
+                            onPressed: () => _loadNote(db, crypto, l10n),
+                            child: Text(l10n.retry),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                final data = snapshot.data;
+                if (data == null) {
+                  return Center(child: Text(l10n.noteNotFound));
+                }
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Semantics(
+                        label: l10n.noteTitleLabel(data.title),
+                        header: true,
+                        child: Text(
+                          data.title,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                      ],
+                      ),
+                      const SizedBox(height: 8),
+                      Semantics(
+                        label:
+                            '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))}${data.isSynced ? '' : ', ${l10n.notSynced}'}',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              size: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              l10n.updatedDate(
+                                data.updatedAt
+                                    .toLocal()
+                                    .toString()
+                                    .substring(0, 16),
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                            if (!data.isSynced) ...[
+                              const SizedBox(width: 12),
+                              Icon(
+                                Icons.cloud_off,
+                                size: 14,
+                                color: Colors.orange.shade300,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                l10n.notSynced,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.orange.shade300,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 32),
+                      Semantics(
+                        label: l10n.noteContent,
+                        child: MarkdownPreview(
+                          content: data.content,
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                const Divider(height: 32),
-                Semantics(
-                  label: l10n.noteContent,
-                  child: MarkdownPreview(
-                    content: data.content,
-                  ),
-                ),
-              ],
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
@@ -360,9 +375,7 @@ class NoteDetailScreen extends ConsumerWidget {
     if (!context.mounted || noteData == null) {
       if (context.mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.couldNotLoadForExport)),
-        );
+        AppSnackBar.error(context, message: l10n.couldNotLoadForExport);
       }
       return;
     }
@@ -395,9 +408,7 @@ class NoteDetailScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportFailed(e.toString()))),
-        );
+        AppSnackBar.error(context, message: l10n.exportFailed(e.toString()));
       }
     }
   }

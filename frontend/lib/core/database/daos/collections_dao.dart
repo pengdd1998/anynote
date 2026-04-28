@@ -110,6 +110,13 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
         .write(const CollectionsCompanion(isSynced: Value(true)));
   }
 
+  /// Mark multiple collections as synced in a single query.
+  Future<void> markSyncedBatch(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await (update(collections)..where((c) => c.id.isIn(ids)))
+        .write(const CollectionsCompanion(isSynced: Value(true)));
+  }
+
   /// Update the color of a collection. Pass null to remove the color.
   Future<void> updateCollectionColor(String id, String? color) async {
     await (update(collections)..where((c) => c.id.equals(id)))

@@ -8,6 +8,7 @@ import '../../../core/theme/color_utils.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/widgets/color_picker_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/sync_status_badge.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
@@ -200,9 +201,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
           final l10n = AppLocalizations.of(context)!;
           db.collectionsDao.deleteCollection(collection.id);
           _noteCountCache.remove(collection.id);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.collectionDeleted)),
-          );
+          AppSnackBar.info(context, message: l10n.collectionDeleted);
         },
         child: isGrid
             ? _buildGridCard(collection, db)
@@ -230,11 +229,21 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
           padding: const EdgeInsets.only(top: 4),
           child: Row(
             children: [
-              Icon(Icons.note_outlined, size: 14, color: Colors.grey.shade500),
+              Icon(Icons.note_outlined,
+                  size: 14,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.5)),
               const SizedBox(width: 4),
               Text(
                 l10n.noteCount(noteCount),
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withOpacity(0.5)),
               ),
             ],
           ),
@@ -316,12 +325,20 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                   Icon(
                     Icons.note_outlined,
                     size: 14,
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withOpacity(0.5),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     l10n.noteCount(noteCount),
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant
+                            .withOpacity(0.5)),
                   ),
                   const Spacer(),
                   // Color indicator dot.
@@ -435,9 +452,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     final l10n = AppLocalizations.of(context)!;
     db.collectionsDao.deleteCollection(collection.id);
     _noteCountCache.remove(collection.id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.collectionDeleted)),
-    );
+    AppSnackBar.info(context, message: l10n.collectionDeleted);
   }
 
   /// Show a dialog to create a new collection.

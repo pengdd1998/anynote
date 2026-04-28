@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../main.dart';
 import '../../features/settings/data/settings_providers.dart';
 import '../crypto/crypto_service.dart';
+import '../database/app_database.dart';
 import '../network/connectivity_service.dart';
 import 'sync_engine.dart' show SyncResult;
 
@@ -126,10 +127,27 @@ final syncLifecycleProvider = Provider<SyncLifecycle>((ref) {
   ref.listen(authStateProvider, (previous, next) {
     if (next) {
       // Authenticated -- attempt to unlock crypto and start sync.
-      final crypto = ref.read(cryptoServiceProvider);
-      if (!crypto.isUnlocked) {
-        crypto.unlock();
-      }
+      // Wrap async work in a fire-and-forget future since ref.listen
+      // callbacks are synchronous.
+      Future(() async {
+        final crypto = ref.read(cryptoServiceProvider);
+        if (!crypto.isUnlocked) {
+          await crypto.unlock();
+        }
+        // Derive and set the database encryption key now that crypto is
+        // unlocked. The key is used for SQLCipher PRAGMA on the next
+        // database connection.
+        if (crypto.isUnlocked) {
+          try {
+            final dbKey = await crypto.deriveDatabaseKey();
+            AppDatabase.setEncryptionKey(dbKey);
+          } catch (e) {
+            debugPrint(
+              '[SyncLifecycle] failed to derive database key: $e',
+            );
+          }
+        }
+      });
       lifecycle.start();
 
       // On first auth, retry any previously-failed operations from the

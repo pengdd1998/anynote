@@ -12,33 +12,33 @@ import (
 // wrapper correctly records the status code passed to WriteHeader.
 func TestResponseWriter_WriteHeader_CapturesCode(t *testing.T) {
 	rec := httptest.NewRecorder()
-	rw := newResponseWriter(rec)
+	rw := newInstrumentedResponseWriter(rec)
 
 	// Default status should be 200.
-	if rw.status != http.StatusOK {
-		t.Errorf("initial status = %d, want %d", rw.status, http.StatusOK)
+	if rw.Status() != http.StatusOK {
+		t.Errorf("initial status = %d, want %d", rw.Status(), http.StatusOK)
 	}
 
 	rw.WriteHeader(http.StatusCreated)
-	if rw.status != http.StatusCreated {
-		t.Errorf("status after WriteHeader(201) = %d, want %d", rw.status, http.StatusCreated)
+	if rw.Status() != http.StatusCreated {
+		t.Errorf("status after WriteHeader(201) = %d, want %d", rw.Status(), http.StatusCreated)
 	}
 	if rec.Code != http.StatusCreated {
 		t.Errorf("underlying recorder code = %d, want %d", rec.Code, http.StatusCreated)
 	}
 }
 
-// TestResponseWriter_WriteHeader_MultipleCalls verifies that the last
-// WriteHeader call wins, matching http.ResponseWriter semantics.
+// TestResponseWriter_WriteHeader_MultipleCalls verifies that only the first
+// WriteHeader call is captured, matching http.ResponseWriter semantics.
 func TestResponseWriter_WriteHeader_MultipleCalls(t *testing.T) {
 	rec := httptest.NewRecorder()
-	rw := newResponseWriter(rec)
+	rw := newInstrumentedResponseWriter(rec)
 
 	rw.WriteHeader(http.StatusBadRequest)
 	rw.WriteHeader(http.StatusInternalServerError)
 
-	if rw.status != http.StatusInternalServerError {
-		t.Errorf("status = %d, want %d (last WriteHeader call should win)", rw.status, http.StatusInternalServerError)
+	if rw.Status() != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d (first WriteHeader call should win)", rw.Status(), http.StatusBadRequest)
 	}
 }
 
@@ -50,7 +50,7 @@ func TestResponseWriter_Flush_Forwarded(t *testing.T) {
 	// httptest.ResponseRecorder does NOT implement http.Flusher, so we use a
 	// custom wrapper that records whether Flush was called.
 	flushed := false
-	rw := newResponseWriter(flusherRespWriter{ResponseWriter: rec, flushed: &flushed})
+	rw := newInstrumentedResponseWriter(flusherRespWriter{ResponseWriter: rec, flushed: &flushed})
 	rw.Flush()
 
 	if !flushed {
@@ -72,7 +72,7 @@ func (f flusherRespWriter) Flush() {
 // the underlying ResponseWriter does not implement http.Flusher.
 func TestResponseWriter_Flush_NonFlusher(t *testing.T) {
 	rec := httptest.NewRecorder()
-	rw := newResponseWriter(rec)
+	rw := newInstrumentedResponseWriter(rec)
 
 	// Should not panic.
 	rw.Flush()

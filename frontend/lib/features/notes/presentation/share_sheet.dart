@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../../core/constants/app_durations.dart';
 import '../../../core/share/share_service.dart';
+import '../../../core/widgets/app_snackbar.dart';
 
 /// Bottom sheet for creating a shared note link.
 ///
@@ -88,12 +88,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     if (_result == null) return;
     final l10n = AppLocalizations.of(context)!;
     Clipboard.setData(ClipboardData(text: _result!.shareLink));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.linkCopiedToClipboard),
-        duration: AppDurations.snackbarDuration,
-      ),
-    );
+    AppSnackBar.info(context, message: l10n.linkCopiedToClipboard);
   }
 
   @override

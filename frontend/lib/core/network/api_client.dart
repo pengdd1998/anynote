@@ -12,6 +12,17 @@ import '../../routing/app_router.dart';
 /// API client for communicating with the AnyNote backend.
 ///
 /// All endpoints return JSON. SSE streaming is handled separately.
+///
+/// ## TLS Certificate Pinning
+///
+/// This client intentionally does NOT implement TLS certificate pinning.
+/// AnyNote is designed as a self-hosted application where users deploy their
+/// own backend server and manage their own TLS certificates. Pinning a
+/// specific certificate would break connectivity whenever users renew or
+/// change their server certificates. Since all synced content is end-to-end
+/// encrypted (XChaCha20-Poly1305) client-side before transit, a TLS
+/// interception attack only reveals encrypted blobs -- the server never has
+/// access to plaintext user data.
 class ApiClient {
   final Dio _dio;
   final FlutterSecureStorage _secureStorage;
@@ -24,7 +35,7 @@ class ApiClient {
       : _secureStorage = const FlutterSecureStorage(),
         _dio = Dio(
           BaseOptions(
-            baseUrl: baseUrl,
+            baseUrl: _normalizeBaseUrl(baseUrl),
             connectTimeout: const Duration(seconds: 15),
             receiveTimeout: const Duration(seconds: 120), // Long for SSE
             sendTimeout: const Duration(seconds: 30),
@@ -34,6 +45,19 @@ class ApiClient {
           ),
         ) {
     _dio.interceptors.add(_AuthInterceptor(this));
+  }
+
+  /// Normalize the base URL: trim trailing slashes and validate format.
+  static String _normalizeBaseUrl(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) {
+      throw ArgumentError('API base URL must not be empty');
+    }
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || (!uri.hasScheme)) {
+      throw ArgumentError('Invalid API base URL: $url');
+    }
+    return trimmed.replaceAll(RegExp(r'/+$'), '');
   }
 
   /// The base URL used for API requests.
@@ -214,6 +238,51 @@ class ApiClient {
   Future<Map<String, dynamic>> syncStatus() async {
     final res = await _dio.get('/api/v1/sync/status');
     return res.data as Map<String, dynamic>;
+  }
+
+  // ── Device Management API ─────────────────────────
+
+  /// Register this sync device with the server (upsert).
+  Future<DeviceDto> registerSyncDevice({
+    required String deviceId,
+    required String deviceName,
+    required String platform,
+  }) async {
+    final res = await _dio.post(
+      '/api/v1/device-identity/register',
+      data: {
+        'device_id': deviceId,
+        'device_name': deviceName,
+        'platform': platform,
+      },
+    );
+    return DeviceDto.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  /// List all devices registered for the current user.
+  Future<List<DeviceDto>> listDevices() async {
+    final res = await _dio.get('/api/v1/device-identity');
+    return (res.data as List)
+        .map((d) => DeviceDto.fromJson(d as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Delete a registered device.
+  Future<void> deleteDevice(String deviceId) async {
+    await _dio.delete('/api/v1/device-identity/$deviceId');
+  }
+
+  /// Recover account using recovery key.
+  Future<void> recoverAccount({
+    required String email,
+    required String recoveryKey,
+    required String newPassword,
+  }) async {
+    await _dio.post('/api/v1/auth/recover', data: {
+      'email': email,
+      'recovery_key': recoveryKey,
+      'new_password': newPassword,
+    });
   }
 
   // ── AI Proxy API ──────────────────────────────────
@@ -623,5 +692,31 @@ class SyncPullResponseDto {
       SyncPullResponseDto(
         blobs: json['blobs'] as List,
         latestVersion: json['latest_version'] as int,
+      );
+}
+
+// ── Device Management DTOs ──
+
+class DeviceDto {
+  final String id;
+  final String deviceId;
+  final String deviceName;
+  final String platform;
+  final DateTime lastSeen;
+
+  DeviceDto({
+    required this.id,
+    required this.deviceId,
+    required this.deviceName,
+    required this.platform,
+    required this.lastSeen,
+  });
+
+  factory DeviceDto.fromJson(Map<String, dynamic> json) => DeviceDto(
+        id: json['id'] as String,
+        deviceId: json['device_id'] as String,
+        deviceName: json['device_name'] as String,
+        platform: json['platform'] as String,
+        lastSeen: DateTime.parse(json['last_seen'] as String),
       );
 }

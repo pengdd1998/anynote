@@ -1,11 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/collab/crdt_editor_controller.dart';
 import '../../../core/collab/crdt_text.dart';
 import '../../../core/collab/merge_engine.dart';
 import '../../../core/collab/ws_client.dart';
+import '../../../main.dart' show databaseProvider;
+
+/// Shared preferences key for the persistent CRDT site ID.
+const _kSiteIdKey = 'crdt_site_id';
 
 /// State held by the [CollabNotifier] for a single active collaboration
 /// session.
@@ -51,6 +57,7 @@ class CollabNotifier extends StateNotifier<CollabSessionState> {
   StreamSubscription<CrdtEditorOp>? _editorOpSub;
   StreamSubscription<WSConnectionState>? _connectionSub;
   Timer? _batchTimer;
+  Timer? _persistTimer;
 
   /// Buffer of outgoing CRDT operations, flushed every 50ms.
   final List<Map<String, dynamic>> _outgoingBuffer = [];
@@ -58,8 +65,15 @@ class CollabNotifier extends StateNotifier<CollabSessionState> {
   /// Maximum interval between batched sends.
   static const _batchInterval = Duration(milliseconds: 50);
 
+  /// How often CRDT state is persisted to the database while in a room.
+  static const _persistInterval = Duration(seconds: 5);
+
   /// The local merge engine for this session.
   MergeEngine? _mergeEngine;
+
+  /// In-memory cache for the siteId so we avoid reading SharedPreferences on
+  /// every joinRoom call.
+  static String? _siteIdCache;
 
   CollabNotifier(this._ref) : super(const CollabSessionState());
 
@@ -72,14 +86,27 @@ class CollabNotifier extends StateNotifier<CollabSessionState> {
   /// Creates a [CrdtEditorController] backed by a fresh CRDT document,
   /// joins the WebSocket room, and starts routing operations.
   /// If [existingCrdt] is provided, uses it as the starting document state.
-  void joinRoom(String noteId, {CRDTText? existingCrdt}) {
+  Future<void> joinRoom(String noteId, {CRDTText? existingCrdt}) async {
     // Tear down any previous session.
     _tearDown();
 
-    final siteId = 'site-${DateTime.now().millisecondsSinceEpoch}';
+    final siteId = await getOrCreateSiteId();
     _mergeEngine = MergeEngine(siteId);
 
     final crdt = existingCrdt ?? _mergeEngine!.getDocument(noteId);
+
+    // Load persisted CRDT state for this note if available.
+    final db = _ref.read(databaseProvider);
+    final savedState = await db.collabDao.loadState(noteId);
+    if (savedState != null) {
+      try {
+        _mergeEngine!.loadState(noteId, savedState.documentState);
+      } catch (_) {
+        // If the persisted state is corrupt, ignore and start fresh.
+        // The CRDT will re-sync from the server.
+      }
+    }
+
     final editorController = CrdtEditorController(crdt: crdt);
 
     // Listen for local CRDT operations and buffer them.
@@ -100,6 +127,9 @@ class CollabNotifier extends StateNotifier<CollabSessionState> {
       );
     });
 
+    // Start periodic CRDT state persistence.
+    _persistTimer = Timer.periodic(_persistInterval, (_) => _persistState());
+
     state = CollabSessionState(
       noteId: noteId,
       isConnected: wsNotifier.client.state == WSConnectionState.connected,
@@ -113,6 +143,8 @@ class CollabNotifier extends StateNotifier<CollabSessionState> {
       final wsNotifier = _ref.read(wsClientProvider.notifier);
       wsNotifier.client.leaveRoom(state.noteId!);
     }
+    // Do a final persist before tearing down.
+    _persistStateSync();
     _tearDown();
     state = const CollabSessionState();
   }
@@ -126,8 +158,83 @@ class CollabNotifier extends StateNotifier<CollabSessionState> {
 
   @override
   void dispose() {
+    _persistStateSync();
     _tearDown();
     super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Site ID persistence
+  // ---------------------------------------------------------------------------
+
+  /// Get or create a stable site ID for this installation.
+  ///
+  /// The site ID is a UUID v4 stored in SharedPreferences under
+  /// [ _kSiteIdKey]. Once generated, it persists across app restarts.
+  static Future<String> getOrCreateSiteId() async {
+    if (_siteIdCache != null) return _siteIdCache!;
+
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getString(_kSiteIdKey);
+    if (existing != null) {
+      _siteIdCache = existing;
+      return existing;
+    }
+
+    final newId = const Uuid().v4();
+    await prefs.setString(_kSiteIdKey, newId);
+    _siteIdCache = newId;
+    return newId;
+  }
+
+  /// Clear the in-memory siteId cache. Used in tests to force re-reads
+  /// from SharedPreferences or to simulate a fresh installation.
+  static void resetSiteIdCache() {
+    _siteIdCache = null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // CRDT state persistence
+  // ---------------------------------------------------------------------------
+
+  /// Persist the current CRDT state to the database (async fire-and-forget
+  /// for use in timer callbacks and leaveRoom/dispose where we do not want
+  /// to await the result).
+  void _persistStateSync() {
+    if (_mergeEngine == null || state.noteId == null) return;
+    final noteId = state.noteId!;
+    final engine = _mergeEngine!;
+    final stateJson = engine.exportState();
+    final clock = engine.clock;
+
+    // Fire and forget -- errors are non-critical (state will be rebuilt from
+    // server sync on next join).
+    _doPersist(noteId, stateJson, clock);
+  }
+
+  Future<void> _doPersist(String noteId, String stateJson, int clock) async {
+    try {
+      final db = _ref.read(databaseProvider);
+      await db.collabDao.saveState(
+        noteId: noteId,
+        documentState: stateJson,
+        lastVersion: clock,
+      );
+    } catch (_) {
+      // Persist failures are non-critical. The CRDT will re-sync from the
+      // server on the next joinRoom call.
+    }
+  }
+
+  /// Persist CRDT state periodically (called by [_persistTimer]).
+  Future<void> _persistState() async {
+    if (_mergeEngine == null || state.noteId == null) return;
+    final noteId = state.noteId!;
+    final engine = _mergeEngine!;
+    final stateJson = engine.exportState();
+    final clock = engine.clock;
+
+    await _doPersist(noteId, stateJson, clock);
   }
 
   // ---------------------------------------------------------------------------
@@ -224,6 +331,8 @@ class CollabNotifier extends StateNotifier<CollabSessionState> {
   // ---------------------------------------------------------------------------
 
   void _tearDown() {
+    _persistTimer?.cancel();
+    _persistTimer = null;
     _batchTimer?.cancel();
     _batchTimer = null;
     _outgoingBuffer.clear();

@@ -122,6 +122,7 @@ class NoteLinks extends Table {
 /// Local-only data, never synced to server (properties are user-specific views).
 @TableIndex(name: 'idx_note_properties_note_id', columns: {#noteId})
 @TableIndex(name: 'idx_note_properties_key', columns: {#key})
+@TableIndex(name: 'idx_note_properties_note_id_key', columns: {#noteId, #key})
 class NoteProperties extends Table {
   /// Client-generated UUID
   TextColumn get id => text()();
@@ -416,6 +417,42 @@ class SavedSearches extends Table {
 
   /// Last update timestamp.
   DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Note images - metadata for images attached to notes.
+/// Tracks file path, dimensions, hash, and sync status for each image.
+@TableIndex(name: 'idx_note_images_note_id', columns: {#noteId})
+@TableIndex(name: 'idx_note_images_is_synced', columns: {#isSynced})
+class NoteImages extends Table {
+  /// Client-generated UUID.
+  TextColumn get id => text()();
+
+  /// Reference to the note this image belongs to.
+  TextColumn get noteId => text().withDefault(const Constant(''))();
+
+  /// Local filesystem path to the image file.
+  TextColumn get path => text()();
+
+  /// MD5 hash of the original image bytes (for deduplication).
+  TextColumn get hash => text()();
+
+  /// File size in bytes after compression.
+  IntColumn get fileSize => integer().withDefault(const Constant(0))();
+
+  /// Image width in pixels.
+  IntColumn get width => integer().withDefault(const Constant(0))();
+
+  /// Image height in pixels.
+  IntColumn get height => integer().withDefault(const Constant(0))();
+
+  /// Whether this image has been synced to the server.
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+
+  /// Creation timestamp.
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
   Set<Column> get primaryKey => {id};

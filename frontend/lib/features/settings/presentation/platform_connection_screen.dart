@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/app_components.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
+import '../data/api_models.dart';
 import '../data/settings_providers.dart';
 
 class PlatformConnectionScreen extends ConsumerStatefulWidget {
@@ -76,27 +78,18 @@ class _PlatformConnectionScreenState
                       platform: p,
                       platformIcons: _platformIcons,
                       isConnecting: _isConnecting &&
-                          _connectingPlatform ==
-                              (p['key']?.toString() ??
-                                  p['name']?.toString().toLowerCase() ??
-                                  ''),
+                          _connectingPlatform == p.platform.toLowerCase(),
                       l10n: l10n,
                       onConnect: () => _connect(
-                        p['key']?.toString() ??
-                            p['name']?.toString().toLowerCase() ??
-                            '',
-                        p['name']?.toString() ?? 'Unknown',
+                        p.platform.toLowerCase(),
+                        p.displayName ?? p.platform,
                       ),
                       onVerify: () => _verify(
-                        p['key']?.toString() ??
-                            p['name']?.toString().toLowerCase() ??
-                            '',
+                        p.platform.toLowerCase(),
                       ),
                       onDisconnect: () => _confirmDisconnect(
-                        p['key']?.toString() ??
-                            p['name']?.toString().toLowerCase() ??
-                            '',
-                        p['name']?.toString() ?? 'Unknown',
+                        p.platform.toLowerCase(),
+                        p.displayName ?? p.platform,
                       ),
                     ),
                   ),
@@ -135,19 +128,14 @@ class _PlatformConnectionScreenState
         if (mounted) _showQRCodeDialog(displayName, qrCode);
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.connectedTo(displayName))),
-          );
+          AppSnackBar.info(context, message: l10n.connectedTo(displayName));
         }
       }
     } on DioException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.failedToConnect(e.message ?? 'Unknown error'),
-            ),
-          ),
+        AppSnackBar.error(
+          context,
+          message: l10n.failedToConnect(e.message ?? 'Unknown error'),
         );
       }
     } finally {
@@ -163,37 +151,29 @@ class _PlatformConnectionScreenState
   /// Verify a platform connection.
   Future<void> _verify(String platform) async {
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.verifyingConnection)),
-    );
+    AppSnackBar.info(context, message: l10n.verifyingConnection);
     try {
       final result =
           await ref.read(platformsProvider.notifier).verify(platform);
       final valid = result['valid'] == true;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              valid
-                  ? l10n.connectionVerified
-                  : l10n.connectionInvalid(
-                      result['error']?.toString() ?? 'please reconnect',
-                    ),
-            ),
-            backgroundColor: valid ? Colors.green : Colors.red,
-          ),
+        AppSnackBar.show(
+          context,
+          message: valid
+              ? l10n.connectionVerified
+              : l10n.connectionInvalid(
+                  result['error']?.toString() ?? 'please reconnect',
+                ),
+          type: valid ? SnackBarType.info : SnackBarType.error,
         );
         // Refresh the platform list to reflect updated status.
         ref.invalidate(platformsProvider);
       }
     } on DioException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.verificationFailedError(e.message ?? 'Network error'),
-            ),
-          ),
+        AppSnackBar.error(
+          context,
+          message: l10n.verificationFailedError(e.message ?? 'Network error'),
         );
       }
     }
@@ -219,21 +199,18 @@ class _PlatformConnectionScreenState
                 await ref.read(platformsProvider.notifier).disconnect(platform);
                 nav.pop();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.disconnectedFrom(displayName)),
-                    ),
+                  AppSnackBar.info(
+                    context,
+                    message: l10n.disconnectedFrom(displayName),
                   );
                 }
               } on DioException catch (e) {
                 nav.pop();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
+                  AppSnackBar.error(
+                    context,
+                    message:
                         l10n.failedToDisconnect(e.message ?? 'Unknown error'),
-                      ),
-                    ),
                   );
                 }
               }
@@ -302,7 +279,7 @@ class _PlatformConnectionScreenState
 // =============================================================================
 
 class _PlatformCard extends StatelessWidget {
-  final Map<String, dynamic> platform;
+  final PlatformConnection platform;
   final Map<String, IconData> platformIcons;
   final bool isConnecting;
   final AppLocalizations l10n;
@@ -324,11 +301,9 @@ class _PlatformCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final displayName = platform['name']?.toString() ?? 'Unknown';
-    final subtitle = platform['subtitle']?.toString() ?? '';
-    final connected = platform['connected'] == true;
-    final platformKey =
-        platform['key']?.toString() ?? displayName.toLowerCase();
+    final displayName = platform.displayName ?? platform.platform;
+    final connected = platform.isConnected;
+    final platformKey = platform.platform.toLowerCase();
     final icon = platformIcons[platformKey] ?? Icons.language;
 
     // Determine trailing widget based on connection state.
@@ -384,7 +359,7 @@ class _PlatformCard extends StatelessWidget {
         SettingsItem(
           icon: icon,
           title: displayName,
-          subtitle: subtitle.isNotEmpty ? subtitle : null,
+          subtitle: platform.status.isNotEmpty ? platform.status : null,
           trailing: trailing,
         ),
       ],

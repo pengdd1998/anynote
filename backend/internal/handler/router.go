@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/anynote/backend/internal/config"
+	"github.com/anynote/backend/internal/repository"
 	"github.com/anynote/backend/internal/service"
 )
 
@@ -63,9 +64,28 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	commentH := &CommentHandler{commentService: services.Comment}
 	planH := NewPlanHandler(services.Plan, services.Quota)
 	profileH := NewProfileHandler(services.Profile)
-	wsH := NewWSHandler(services.Presence, cfg.Auth.JWTSecret, cfg.Server.AllowOrigins)
+	wsH := NewWSHandler(services.Presence, services.CollabRepo, services.CollabOpsRepo, cfg.Auth.JWTSecret, cfg.Server.AllowOrigins)
 	noteLinkH := NewNoteLinkHandler(services.NoteLink)
 	aiAgentH := NewAIAgentHandler(services.AIAgent)
+	collabH := NewCollabHandler(services.Collab)
+
+		// Payment handler (nil-safe: routes are only registered when service is present).
+		var paymentH *PaymentHandler
+		if services.Payment != nil {
+			paymentH = NewPaymentHandler(services.Payment)
+		}
+
+		// Notification handler (nil-safe).
+		var notifH *NotificationHandler
+		if services.Notification != nil {
+			notifH = NewNotificationHandler(services.Notification)
+		}
+
+	// Device identity handler (uses DeviceRepo directly for CRUD).
+	var deviceH *DeviceHandler
+	if services.DeviceRepo != nil {
+		deviceH = NewDeviceHandler(services.DeviceRepo)
+	}
 
 	// Rate limiters
 	authRateLimiter := service.NewRateLimiter(20, time.Minute)    // 20 req/min per IP
@@ -82,6 +102,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/login", authH.Login)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/refresh", authH.RefreshToken)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Get("/recovery-salt", authH.GetRecoverySalt)
+			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/recover", authH.Recover)
 		})
 
 		// Public share retrieval (no auth required)
@@ -95,6 +116,11 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 		// WebSocket (auth handled inside handler via query-param token)
 		r.Get("/ws", wsH.HandleConnection)
+
+		// Payment webhook (no auth -- Stripe calls this directly)
+		if paymentH != nil {
+			r.Post("/payments/webhook", paymentH.HandleWebhook)
+		}
 
 		// Authenticated routes
 		r.Group(func(r chi.Router) {
@@ -156,6 +182,13 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			r.Post("/devices/register", pushH.RegisterDeviceToken)
 			r.Post("/devices/unregister", pushH.UnregisterDeviceToken)
 
+			// Device identity (multi-device tracking)
+			if deviceH != nil {
+				r.Post("/device-identity/register", deviceH.RegisterDevice)
+				r.Get("/device-identity", deviceH.ListDevices)
+				r.Delete("/device-identity/{deviceID}", deviceH.DeleteDevice)
+			}
+
 			// Comments
 			r.Get("/share/{id}/comments", commentH.ListComments)
 			r.Post("/share/{id}/comments", commentH.CreateComment)
@@ -174,10 +207,37 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			r.Get("/notes/{noteId}/backlinks", noteLinkH.GetBacklinks)
 			r.Get("/notes/{noteId}/links", noteLinkH.GetOutboundLinks)
 			r.Delete("/notes/links/{sourceId}/{targetId}", noteLinkH.DeleteLink)
-		})
-	})
 
-	// Optional pprof endpoints (only when PPROF_ENABLED or DEBUG is set).
+			// Collab rooms
+			r.Route("/collab/rooms", func(r chi.Router) {
+				r.Post("/", collabH.CreateRoom)
+				r.Post("/join", collabH.JoinRoom)
+				r.Get("/", collabH.GetUserRooms)
+				r.Route("/{roomId}", func(r chi.Router) {
+					r.Post("/leave", collabH.LeaveRoom)
+					r.Get("/members", collabH.GetRoomMembers)
+				})
+			})
+
+				// Payments (authenticated)
+				if paymentH != nil {
+					r.Post("/payments/checkout", paymentH.CreateCheckout)
+					r.Get("/payments", paymentH.GetPaymentHistory)
+				}
+
+				// Notifications
+				if notifH != nil {
+					r.Route("/notifications", func(r chi.Router) {
+						r.Get("/", notifH.ListNotifications)
+						r.Get("/unread-count", notifH.GetUnreadCount)
+						r.Post("/read-all", notifH.MarkAllRead)
+						r.Post("/{id}/read", notifH.MarkRead)
+					})
+				}
+		})
+		})
+
+		// Optional pprof endpoints (only when PPROF_ENABLED or DEBUG is set).
 	registerPprofRoutes(r)
 
 	return r
@@ -185,21 +245,27 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 // Services holds all service instances.
 type Services struct {
-	Auth      service.AuthService
-	Sync      service.SyncService
-	AIProxy   service.AIProxyService
-	Quota     service.QuotaService
-	LLMConfig service.LLMConfigService
-	Publish   service.PublishService
-	Platform  service.PlatformService
-	Share     service.ShareService
-	Push      service.PushService
-	Comment   service.CommentService
-	Presence  service.PresenceService
-	Plan      service.PlanService
-	Profile   service.ProfileService
-	NoteLink  service.NoteLinkService
-	AIAgent   service.AIAgentService
+	Auth         service.AuthService
+	Sync         service.SyncService
+	AIProxy      service.AIProxyService
+	Quota        service.QuotaService
+	LLMConfig    service.LLMConfigService
+	Publish      service.PublishService
+	Platform     service.PlatformService
+	Share        service.ShareService
+	Push         service.PushService
+	Comment      service.CommentService
+	Presence     service.PresenceService
+	Plan         service.PlanService
+	Profile      service.ProfileService
+	NoteLink     service.NoteLinkService
+	AIAgent      service.AIAgentService
+	Collab       service.CollabService
+	Payment      service.PaymentService
+	Notification service.NotificationService
+	DeviceRepo    *repository.DeviceRepository
+	CollabRepo    *repository.CollabRepository
+	CollabOpsRepo *repository.CollabOperationsRepository
 }
 
 // registerPprofRoutes mounts /debug/pprof/* endpoints when the PPROF_ENABLED

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/database/daos/snippets_dao.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import 'snippet_detail_sheet.dart';
@@ -209,9 +210,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
               onTap: () {
                 Clipboard.setData(ClipboardData(text: snippet.code));
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.codeCopied)),
-                );
+                AppSnackBar.info(context, message: l10n.codeCopied);
               },
             ),
             ListTile(

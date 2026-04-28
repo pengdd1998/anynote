@@ -120,6 +120,7 @@ func (s *syncService) Push(ctx context.Context, userID uuid.UUID, req domain.Syn
 			Version:       item.Version,
 			EncryptedData: item.EncryptedData,
 			BlobSize:      item.BlobSize,
+			DeviceID:      item.DeviceID,
 			UpdatedAt:     time.Now(),
 		}
 	}

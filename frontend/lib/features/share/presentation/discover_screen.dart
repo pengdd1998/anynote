@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_durations.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/discover_providers.dart';
@@ -78,13 +78,10 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         // Don't advance offset on failure so retry can work.
         _currentOffset -= 20;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)?.failedToLoadMore(e.toString()) ??
-                'Failed to load more: $e',
-          ),
-        ),
+      AppSnackBar.error(
+        context,
+        message: AppLocalizations.of(context)?.failedToLoadMore(e.toString()) ??
+            'Failed to load more: $e',
       );
     }
   }
@@ -166,13 +163,10 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         });
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      AppSnackBar.error(
+        context,
+        message:
             AppLocalizations.of(context)?.reactionFailed ?? 'Failed to react',
-          ),
-          duration: AppDurations.snackbarDuration,
-        ),
       );
     }
   }

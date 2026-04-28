@@ -1,7 +1,7 @@
-import 'dart:io' if (dart.library.js) 'dart:html';
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../platform/platform_utils.dart';
 
 /// Persists desktop window geometry (position, size, maximized state) so the
 /// window can be restored to its last known bounds on the next launch.
@@ -21,14 +21,7 @@ class WindowStateService {
   /// Whether window state persistence is supported on the current platform.
   static bool get isSupported {
     if (kIsWeb) return false;
-    // At compile time dart:io is available on native platforms.
-    // The import stub above handles web.
-    try {
-      // ignore: unnecessary_null_comparison
-      return !kIsWeb && Platform.isMacOS || Platform.isWindows || Platform.isLinux;
-    } catch (_) {
-      return false;
-    }
+    return PlatformUtils.isDesktop;
   }
 
   /// Save the current window bounds.

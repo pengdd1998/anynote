@@ -53,7 +53,21 @@ func main() {
 	slog.Info("configuration loaded", "log_level", cfg.LogLevel(), "log_format", cfg.LogFormat())
 
 	// Connect to PostgreSQL
-	pool, err := pgxpool.New(context.Background(), cfg.Database.URL)
+	poolConfig, err := pgxpool.ParseConfig(cfg.Database.URL)
+	if err != nil {
+		slog.Error("failed to parse database config", "error", err)
+		os.Exit(1)
+	}
+	if cfg.Database.MaxOpenConns > 0 {
+		poolConfig.MaxConns = int32(cfg.Database.MaxOpenConns)
+	}
+	if cfg.Database.MaxIdleConns > 0 {
+		poolConfig.MinConns = int32(cfg.Database.MaxIdleConns)
+	}
+	if cfg.Database.ConnMaxLifetime > 0 {
+		poolConfig.MaxConnLifetime = cfg.Database.ConnMaxLifetime
+	}
+	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 	if err != nil {
 		slog.Error("failed to connect to database", "error", err)
 		os.Exit(1)
@@ -68,8 +82,34 @@ func main() {
 	// Initialize LLM Gateway
 	gateway := llm.NewGateway()
 
-	// Initialize rate limiter (50 req/day for free users)
-	rateLimiter := service.NewRateLimiter(50, 24*time.Hour)
+	// Initialize Redis client early so it can be used for rate limiting.
+	// If Redis URL is not configured, rate limiting falls back to in-memory.
+	var redisClient *redisv9.Client
+	if cfg.Redis.URL != "" {
+		redisClient = redisv9.NewClient(&redisv9.Options{
+			Addr: cfg.Redis.URL,
+		})
+		defer redisClient.Close()
+	}
+
+	// Initialize rate limiter (50 req/day for free users).
+	// Prefer Redis-backed limiter for distributed deployments; fall back to
+	// in-memory when Redis is unavailable.
+	var rateLimiter service.RateLimitProvider
+	if redisClient != nil {
+		redisRL, rlErr := service.NewRedisRateLimiter(cfg.Redis.URL, 50, 24*time.Hour)
+		if rlErr != nil {
+			slog.Warn("Redis rate limiter unavailable, falling back to in-memory", "error", rlErr)
+			rateLimiter = service.NewRateLimiter(50, 24*time.Hour)
+		} else {
+			defer redisRL.Close()
+			rateLimiter = redisRL
+			slog.Info("Redis rate limiter initialized")
+		}
+	} else {
+		rateLimiter = service.NewRateLimiter(50, 24*time.Hour)
+		slog.Info("in-memory rate limiter initialized (no Redis configured)")
+	}
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(pool)
@@ -85,6 +125,11 @@ func main() {
 	planRepo := repository.NewPlanRepository(pool)
 	profileRepo := repository.NewProfileRepository(pool)
 	noteLinkRepo := repository.NewNoteLinkRepository(pool)
+	deviceRepo := repository.NewDeviceRepository(pool)
+	collabRepo := repository.NewCollabRepository(pool)
+	collabOpsRepo := repository.NewCollabOperationsRepository(pool)
+	paymentRepo := repository.NewPaymentRepository(pool)
+	notificationRepo := repository.NewNotificationRepository(pool)
 
 	// Start background goroutine to periodically clean up expired shared notes.
 	cleanupCtx, cancelCleanup := context.WithCancel(context.Background())
@@ -92,20 +137,38 @@ func main() {
 		ticker := time.NewTicker(1 * time.Hour)
 		defer ticker.Stop()
 
+		var consecutiveErrors int
+
 		// Run once immediately at startup.
 		if n, err := sharedNoteRepo.DeleteExpired(cleanupCtx); err != nil {
 			slog.Error("shared note cleanup failed", "error", err)
-		} else if n > 0 {
-			slog.Info("cleaned up expired shared notes", "deleted", n)
+			consecutiveErrors++
+		} else {
+			consecutiveErrors = 0
+			if n > 0 {
+				slog.Info("cleaned up expired shared notes", "deleted", n)
+			}
 		}
 
 		for {
 			select {
 			case <-ticker.C:
+				if consecutiveErrors > 0 {
+					backoff := time.Duration(min(consecutiveErrors*consecutiveErrors, 30)) * time.Minute
+					slog.Warn("shared note cleanup backing off", "errors", consecutiveErrors, "backoff", backoff)
+					time.Sleep(backoff)
+					if cleanupCtx.Err() != nil {
+						return
+					}
+				}
 				if n, err := sharedNoteRepo.DeleteExpired(cleanupCtx); err != nil {
 					slog.Error("shared note cleanup failed", "error", err)
-				} else if n > 0 {
-					slog.Info("cleaned up expired shared notes", "deleted", n)
+					consecutiveErrors++
+				} else {
+					consecutiveErrors = 0
+					if n > 0 {
+						slog.Info("cleaned up expired shared notes", "deleted", n)
+					}
 				}
 			case <-cleanupCtx.Done():
 				slog.Info("shared note cleanup goroutine stopped")
@@ -171,17 +234,14 @@ func main() {
 	profileSvc := service.NewProfileService(profileRepo)
 	noteLinkSvc := service.NewNoteLinkService(noteLinkRepo)
 	aiAgentSvc := service.NewAIAgentService(aiProxySvc)
+	collabSvc := service.NewCollabService(collabRepo)
 
-	// Initialize Redis client for health checks and presence service.
-	// If Redis URL is not configured, the health handler gracefully reports
-	// redis as "not_configured" rather than failing.
-	var redisClient *redisv9.Client
-	if cfg.Redis.URL != "" {
-		redisClient = redisv9.NewClient(&redisv9.Options{
-			Addr: cfg.Redis.URL,
-		})
-		defer redisClient.Close()
-	}
+	// Payment service: operates in test mode when Stripe is not configured.
+	var stripeClient service.StripeClient // nil = test mode
+	paymentSvc := service.NewPaymentService(paymentRepo, planRepo, stripeClient, cfg.Stripe.WebhookSecret)
+
+	// Notification service.
+	notificationSvc := service.NewNotificationService(notificationRepo)
 
 	// Initialize presence service (nil-safe: if Redis is not configured,
 	// callers must check readiness before using WebSocket endpoints).
@@ -212,21 +272,27 @@ func main() {
 
 	// Setup router
 	services := &handler.Services{
-		Auth:      authSvc,
-		Sync:      syncSvc,
-		AIProxy:   aiProxySvc,
-		Quota:     quotaSvc,
-		LLMConfig: llmConfigSvc,
-		Publish:   publishSvc,
-		Platform:  platformSvc,
-		Share:     shareSvc,
-		Push:      pushSvc,
-		Comment:   commentSvc,
-		Presence:  presenceSvc,
-		Plan:      planSvc,
-		Profile:   profileSvc,
-		NoteLink:  noteLinkSvc,
-		AIAgent:   aiAgentSvc,
+		Auth:         authSvc,
+		Sync:         syncSvc,
+		AIProxy:      aiProxySvc,
+		Quota:        quotaSvc,
+		LLMConfig:    llmConfigSvc,
+		Publish:      publishSvc,
+		Platform:     platformSvc,
+		Share:        shareSvc,
+		Push:         pushSvc,
+		Comment:      commentSvc,
+		Presence:     presenceSvc,
+		Plan:         planSvc,
+		Profile:      profileSvc,
+		NoteLink:     noteLinkSvc,
+		AIAgent:      aiAgentSvc,
+		Collab:       collabSvc,
+		Payment:      paymentSvc,
+		Notification: notificationSvc,
+		DeviceRepo:    deviceRepo,
+		CollabRepo:    collabRepo,
+		CollabOpsRepo: collabOpsRepo,
 	}
 
 	// Health handler: pgxpool.Pool implements the Pinger interface used by

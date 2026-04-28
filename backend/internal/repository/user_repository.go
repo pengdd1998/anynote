@@ -97,3 +97,25 @@ func (r *UserRepository) GetRecoverySaltByEmail(ctx context.Context, email strin
 	}
 	return salt, nil
 }
+
+// UpdateAuthCredentials replaces the stored auth_key_hash and salt for the
+// given user. This is used during account recovery to set a new password.
+func (r *UserRepository) UpdateAuthCredentials(ctx context.Context, userID uuid.UUID, hashedPassword, salt string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE users SET auth_key_hash = $1, salt = $2, updated_at = NOW() WHERE id = $3`,
+		hashedPassword, salt, userID,
+	)
+	return err
+}
+
+// GetRecoveryKeyByEmail returns the stored recovery_key for the given email.
+func (r *UserRepository) GetRecoveryKeyByEmail(ctx context.Context, email string) ([]byte, error) {
+	var key []byte
+	err := r.pool.QueryRow(ctx,
+		`SELECT recovery_key FROM users WHERE email = $1`, email,
+	).Scan(&key)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
+}

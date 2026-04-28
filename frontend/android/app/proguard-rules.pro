@@ -10,19 +10,24 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 
+# ── Flutter plugin registrant (critical for release builds) ────
+-keep class * extends io.flutter.embedding.engine.plugins.FlutterPlugin { *; }
+-keep class * extends io.flutter.embedding.engine.plugins.activity.ActivityAware { *; }
+-keep class **.GeneratedPluginRegistrant { *; }
+
 # ── Flutter Play Store Split (optional dependency) ──────────────
 -dontwarn com.google.android.play.core.**
 
 # ── sodium_libs (native crypto) ─────────────────────────────────
 # Sodium JNI bindings must not be stripped or obfuscated
 -keep class com.goterl.lazycode.** { *; }
+-keep class com.goterl.lazycode.lazysodium.** { *; }
 -keepclassmembers class com.goterl.lazycode.** {
     native <methods>;
+    public *;
 }
 
 # ── Drift (SQLite ORM) generated code ──────────────────────────
-# Drift generates .g.dart files that Dart mirrors rely on; the
-# Dart VM handles these at runtime. Keep Flutter engine access.
 -keep class * extends java.lang.reflect.** { *; }
 
 # ── flutter_secure_storage ─────────────────────────────────────
@@ -32,13 +37,9 @@
 -keep class io.github.jgolfault.flutter.sqlite3.** { *; }
 -keep class fr.free.sqlite3.** { *; }
 
-# ── Model / serializable classes ────────────────────────────────
-# Keep all Dart-visible model classes used in platform channels.
-# Flutter uses dart:ffi and platform channels; these rules
-# prevent stripping JNI bridge classes used by plugins.
--keepclassmembers class * {
-    public <init>(...);
-}
+# ── Kotlin reflection (used by serialization libs) ─────────────
+-keep class kotlin.reflect.** { *; }
+-dontwarn kotlin.reflect.**
 
 # ── General AndroidX ───────────────────────────────────────────
 -keep class androidx.** { *; }
@@ -50,4 +51,20 @@
 -keepnames class kotlinx.coroutines.CoroutineExceptionHandler
 -keepclassmembers class kotlinx.coroutines.** {
     *;
+}
+
+# ── Firebase ────────────────────────────────────────────────────
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+
+# ── WorkManager ────────────────────────────────────────────────
+-keep class androidx.work.** { *; }
+
+# ── Gson / JSON serialization ──────────────────────────────────
+-keepattributes Signature
+-keepattributes *Annotation*
+
+# ── Native methods ─────────────────────────────────────────────
+-keepclasseswithmembernames class * {
+    native <methods>;
 }

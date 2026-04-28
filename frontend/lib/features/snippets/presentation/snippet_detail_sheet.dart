@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Bottom sheet for viewing a snippet with syntax-highlighted code,
@@ -91,7 +92,8 @@ class _SheetHandleBar extends StatelessWidget {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color:
+              Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -132,9 +134,7 @@ class _SnippetHeaderRow extends StatelessWidget {
           tooltip: l10n.copyCode,
           onPressed: () {
             Clipboard.setData(ClipboardData(text: snippet.code));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.codeCopied)),
-            );
+            AppSnackBar.info(context, message: l10n.codeCopied);
           },
         ),
         IconButton(

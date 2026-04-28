@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../compose/data/ai_repository.dart';
 
 // ── Summary State ──────────────────────────────────
@@ -138,7 +139,10 @@ class SummarySheet extends ConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -194,7 +198,10 @@ class SummarySheet extends ConsumerWidget {
             Icon(
               Icons.auto_awesome_outlined,
               size: 48,
-              color: Colors.grey.shade300,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant
+                  .withOpacity(0.3),
             ),
             const SizedBox(height: 16),
             Text(
@@ -296,9 +303,7 @@ class SummarySheet extends ConsumerWidget {
                 child: OutlinedButton.icon(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: state.summary));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.copiedToClipboard)),
-                    );
+                    AppSnackBar.info(context, message: l10n.copiedToClipboard);
                   },
                   icon: const Icon(Icons.copy, size: 18),
                   label: Text(l10n.copy),

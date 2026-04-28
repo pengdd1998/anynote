@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/alpha_constants.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'note_card.dart';
 
@@ -39,8 +40,9 @@ class DismissibleNoteCard extends StatelessWidget {
   /// Called when the user taps the card.
   final VoidCallback onTap;
 
-  /// Called when the user long-presses the card.
-  final VoidCallback onLongPress;
+  /// Called when the user long-presses the card. Provides the global position
+  /// of the long press for context menu positioning.
+  final ValueChanged<Offset>? onLongPress;
 
   /// Called after a delete is confirmed (for parent state cleanup).
   final VoidCallback? onDeleted;
@@ -214,23 +216,19 @@ class DismissibleNoteCard extends StatelessWidget {
         onDismissed: (direction) {
           if (direction == DismissDirection.endToStart) {
             db.notesDao.softDeleteNote(note.id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.noteDeleted),
-                action: SnackBarAction(
-                  label: l10n.undo,
-                  onPressed: () async {
-                    await (db.update(db.notes)
-                          ..where((n) => n.id.equals(note.id)))
-                        .write(
-                      const NotesCompanion(
-                        deletedAt: Value(null),
-                        isSynced: Value(false),
-                      ),
-                    );
-                  },
-                ),
-              ),
+            AppSnackBar.info(
+              context,
+              message: l10n.noteDeleted,
+              actionLabel: l10n.undo,
+              onAction: () async {
+                await (db.update(db.notes)..where((n) => n.id.equals(note.id)))
+                    .write(
+                  const NotesCompanion(
+                    deletedAt: Value(null),
+                    isSynced: Value(false),
+                  ),
+                );
+              },
             );
             onDeleted?.call();
           }

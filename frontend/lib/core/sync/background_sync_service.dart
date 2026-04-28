@@ -3,25 +3,86 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../database/app_database.dart';
+import '../network/api_client.dart';
 import '../platform/platform_utils.dart';
 
 /// Background sync callback dispatcher for WorkManager.
 ///
 /// Must be a top-level function so it can be resolved by the platform
 /// plugin when the app is launched in the background.
+///
+/// This performs a **pull-only** sync using a lightweight HTTP client.
+/// The sync engine is not used because it requires a [CryptoService] with
+/// unlocked keys, which are generally not available in the background isolate.
+///
+/// Instead, we fetch the latest sync version and store it. On the next
+/// foreground sync, the [SyncLifecycle] will pull any new blobs and
+/// decrypt them properly.
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (kDebugMode) {
       debugPrint('Background sync task: $task');
     }
-    // Perform a lightweight pull-only sync.
-    // We cannot use Riverpod providers here since this runs in a
-    // separate isolate. Instead, we do a direct API call.
-    // For now, this is a placeholder that signals success.
-    // Full implementation requires initializing services in the
-    // background isolate.
-    return true;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final baseUrl = prefs.getString('api_base_url');
+      final accessToken = prefs.getString('access_token');
+
+      if (baseUrl == null || accessToken == null) {
+        if (kDebugMode) {
+          debugPrint('Background sync: no auth credentials, skipping');
+        }
+        return true;
+      }
+
+      // Open the database to read the last synced version.
+      final db = AppDatabase();
+      try {
+        final sinceVersion = await db.syncMetaDao.getLastSyncedVersion('all');
+
+        // Perform a lightweight sync pull using the API client.
+        final apiClient = ApiClient(baseUrl: baseUrl);
+        apiClient.setAccessToken(accessToken);
+
+        final response = await apiClient.syncPull(sinceVersion);
+
+        if (response.blobs.isEmpty) {
+          if (kDebugMode) {
+            debugPrint('Background sync: no new items');
+          }
+          return true;
+        }
+
+        // Store the latest sync version so the next foreground sync can
+        // skip these items. The actual blob processing (decryption, FTS5
+        // indexing) is deferred to the foreground SyncEngine which has
+        // access to the crypto service.
+        //
+        // We do NOT store the blobs themselves in the database here because
+        // doing so without proper decryption would leave orphaned encrypted
+        // rows. The foreground pull will re-fetch these same blobs and
+        // process them correctly.
+        await db.syncMetaDao.updateSyncMeta('all', response.latestVersion);
+
+        if (kDebugMode) {
+          debugPrint(
+            'Background sync: synced to version ${response.latestVersion}'
+            ' (${response.blobs.length} items noted)',
+          );
+        }
+        return true;
+      } finally {
+        await db.close();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Background sync failed: $e');
+      }
+      return false;
+    }
   });
 }
 

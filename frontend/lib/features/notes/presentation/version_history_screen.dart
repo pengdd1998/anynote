@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error.dart';
+import '../../../core/widgets/app_snackbar.dart';
 
 /// Screen that displays the version history of a note.
 ///
@@ -259,16 +260,15 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.versionRestored)),
-        );
+        AppSnackBar.info(context, message: l10n.versionRestored);
         // Reload versions to reflect the new snapshot.
         await _loadVersions();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.failedToRestore(e.toString()))),
+        AppSnackBar.error(
+          context,
+          message: l10n.failedToRestore(e.toString()),
         );
       }
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/features/settings/data/api_models.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
 import 'package:anynote/features/settings/presentation/platform_connection_screen.dart';
 import '../../../helpers/test_app_helper.dart';
@@ -24,8 +25,7 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows Platform Connections title in app bar',
-        (tester) async {
+    testWidgets('shows Platform Connections title in app bar', (tester) async {
       final handle = await pumpScreen(
         tester,
         const PlatformConnectionScreen(),
@@ -52,5 +52,5 @@ void main() {
 /// Fake platforms notifier that returns an empty list.
 class _FakePlatformsNotifier extends PlatformsNotifier {
   @override
-  Future<List<Map<String, dynamic>>> build() async => [];
+  Future<List<PlatformConnection>> build() async => [];
 }

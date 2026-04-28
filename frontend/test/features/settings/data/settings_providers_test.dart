@@ -11,19 +11,32 @@ import 'package:anynote/core/crypto/crypto_service.dart';
 import 'package:anynote/core/database/app_database.dart';
 import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
-import 'package:anynote/main.dart'
-    show apiClientProvider, databaseProvider;
+import 'package:anynote/main.dart' show apiClientProvider, databaseProvider;
 
 // ---------------------------------------------------------------------------
 // Mock ApiClient that records calls and returns preset responses.
 // ---------------------------------------------------------------------------
 class MockApiClient extends ApiClient {
   // Response stubs -- set before running tests.
-  Map<String, dynamic> aiQuotaResponse = {'used': 10, 'limit': 100};
-  Map<String, dynamic> syncStatusResponse = {'latest_version': 42};
+  Map<String, dynamic> aiQuotaResponse = {
+    'plan': 'free',
+    'daily_used': 10,
+    'daily_limit': 100,
+    'reset_at':
+        DateTime.now().toUtc().add(const Duration(hours: 24)).toIso8601String(),
+  };
+  Map<String, dynamic> syncStatusResponse = {
+    'latest_version': 42,
+    'total_items': 150,
+    'last_synced_at': DateTime.now().toUtc().toIso8601String(),
+  };
   Map<String, dynamic> meResponse = {
     'id': 'user-1',
     'email': 'test@example.com',
+    'username': 'testuser',
+    'plan': 'free',
+    'created_at': DateTime.now().toUtc().toIso8601String(),
+    'updated_at': DateTime.now().toUtc().toIso8601String(),
   };
   List<Map<String, dynamic>> llmConfigsResponse = [];
   List<String> llmProvidersResponse = ['OpenAI', 'DeepSeek'];
@@ -75,7 +88,8 @@ class MockApiClient extends ApiClient {
   }
 
   @override
-  Future<Map<String, dynamic>> createLlmConfig(Map<String, dynamic> config) async {
+  Future<Map<String, dynamic>> createLlmConfig(
+      Map<String, dynamic> config) async {
     createLlmConfigCalls.add(config['name'] ?? config.toString());
     return {'id': 'cfg-new', ...config};
   }
@@ -280,27 +294,37 @@ void main() {
     });
 
     test('build fetches AI quota from API', () async {
-      mockApi.aiQuotaResponse = {'used': 25, 'limit': 200};
+      mockApi.aiQuotaResponse = {
+        'plan': 'free',
+        'daily_used': 25,
+        'daily_limit': 200,
+        'reset_at': DateTime.now().toUtc().toIso8601String(),
+      };
 
       final result = await container.read(aiQuotaProvider.future);
 
-      expect(result['used'], 25);
-      expect(result['limit'], 200);
+      expect(result.dailyUsed, 25);
+      expect(result.dailyLimit, 200);
     });
 
     test('refresh reloads quota from API', () async {
       // First load.
       final first = await container.read(aiQuotaProvider.future);
-      expect(first['used'], 10);
+      expect(first.dailyUsed, 10);
 
       // Change the stub response.
-      mockApi.aiQuotaResponse = {'used': 50, 'limit': 200};
+      mockApi.aiQuotaResponse = {
+        'plan': 'free',
+        'daily_used': 50,
+        'daily_limit': 200,
+        'reset_at': DateTime.now().toUtc().toIso8601String(),
+      };
 
       // Refresh.
       await container.read(aiQuotaProvider.notifier).refresh();
       final second = await container.read(aiQuotaProvider.future);
 
-      expect(second['used'], 50);
+      expect(second.dailyUsed, 50);
     });
 
     test('build sets error state when API fails', () async {
@@ -353,28 +377,33 @@ void main() {
     test('build fetches sync status from API', () async {
       mockApi.syncStatusResponse = {
         'latest_version': 99,
-        'item_count': 150,
+        'total_items': 150,
+        'last_synced_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       final result = await container.read(syncStatusProvider.future);
 
-      expect(result['latest_version'], 99);
-      expect(result['item_count'], 150);
+      expect(result.latestVersion, 99);
+      expect(result.totalItems, 150);
     });
 
     test('refresh reloads sync status', () async {
       // First load.
       final first = await container.read(syncStatusProvider.future);
-      expect(first['latest_version'], 42);
+      expect(first.latestVersion, 42);
 
       // Change stub.
-      mockApi.syncStatusResponse = {'latest_version': 55};
+      mockApi.syncStatusResponse = {
+        'latest_version': 55,
+        'total_items': 160,
+        'last_synced_at': DateTime.now().toUtc().toIso8601String(),
+      };
 
       // Refresh.
       await container.read(syncStatusProvider.notifier).refresh();
       final second = await container.read(syncStatusProvider.future);
 
-      expect(second['latest_version'], 55);
+      expect(second.latestVersion, 55);
     });
 
     test('build sets error state when API fails', () async {
@@ -426,28 +455,35 @@ void main() {
         'id': 'user-abc',
         'email': 'alice@example.com',
         'username': 'alice',
+        'plan': 'free',
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       final result = await container.read(accountInfoProvider.future);
 
-      expect(result['id'], 'user-abc');
-      expect(result['email'], 'alice@example.com');
-      expect(result['username'], 'alice');
+      expect(result.id, 'user-abc');
+      expect(result.email, 'alice@example.com');
+      expect(result.username, 'alice');
     });
 
     test('refresh reloads account info', () async {
       final first = await container.read(accountInfoProvider.future);
-      expect(first['email'], 'test@example.com');
+      expect(first.email, 'test@example.com');
 
       mockApi.meResponse = {
         'id': 'user-1',
         'email': 'updated@example.com',
+        'username': 'testuser',
+        'plan': 'free',
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       await container.read(accountInfoProvider.notifier).refresh();
       final second = await container.read(accountInfoProvider.future);
 
-      expect(second['email'], 'updated@example.com');
+      expect(second.email, 'updated@example.com');
     });
 
     test('build sets error state when API fails', () async {
@@ -496,15 +532,29 @@ void main() {
 
     test('build fetches LLM configs from API', () async {
       mockApi.llmConfigsResponse = [
-        {'id': 'cfg-1', 'name': 'GPT-4', 'provider': 'OpenAI'},
-        {'id': 'cfg-2', 'name': 'DeepSeek Chat', 'provider': 'DeepSeek'},
+        {
+          'id': 'cfg-1',
+          'name': 'GPT-4',
+          'provider': 'OpenAI',
+          'model': 'gpt-4',
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        },
+        {
+          'id': 'cfg-2',
+          'name': 'DeepSeek Chat',
+          'provider': 'DeepSeek',
+          'model': 'deepseek-chat',
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        },
       ];
 
       final result = await container.read(llmConfigsProvider.future);
 
       expect(result.length, 2);
-      expect(result[0]['name'], 'GPT-4');
-      expect(result[1]['provider'], 'DeepSeek');
+      expect(result[0].name, 'GPT-4');
+      expect(result[1].provider, 'DeepSeek');
     });
 
     test('build returns empty list when no configs', () async {
@@ -533,9 +583,9 @@ void main() {
 
       final updatedConfig = {'name': 'Updated GPT-4'};
       await container.read(llmConfigsProvider.notifier).updateConfig(
-        'cfg-1',
-        updatedConfig,
-      );
+            'cfg-1',
+            updatedConfig,
+          );
 
       expect(mockApi.updateLlmConfigCalls.length, 1);
       expect(mockApi.updateLlmConfigCalls.first.$1, 'cfg-1');
@@ -551,16 +601,24 @@ void main() {
 
     test('test calls API and returns result', () async {
       final result = await container.read(llmConfigsProvider.notifier).test(
-        'cfg-1',
-      );
+            'cfg-1',
+          );
 
       expect(mockApi.testLlmConfigCalls, ['cfg-1']);
       expect(result['success'], isTrue);
     });
 
     test('refresh invalidates self to trigger reload', () async {
+      final ts = DateTime.now().toUtc().toIso8601String();
       mockApi.llmConfigsResponse = [
-        {'id': 'cfg-1', 'name': 'Old Config'},
+        {
+          'id': 'cfg-1',
+          'name': 'Old Config',
+          'provider': 'OpenAI',
+          'model': 'gpt-4',
+          'created_at': ts,
+          'updated_at': ts,
+        },
       ];
 
       final first = await container.read(llmConfigsProvider.future);
@@ -568,8 +626,22 @@ void main() {
 
       // Update stub and refresh.
       mockApi.llmConfigsResponse = [
-        {'id': 'cfg-1', 'name': 'Old Config'},
-        {'id': 'cfg-2', 'name': 'New Config'},
+        {
+          'id': 'cfg-1',
+          'name': 'Old Config',
+          'provider': 'OpenAI',
+          'model': 'gpt-4',
+          'created_at': ts,
+          'updated_at': ts,
+        },
+        {
+          'id': 'cfg-2',
+          'name': 'New Config',
+          'provider': 'DeepSeek',
+          'model': 'deepseek-chat',
+          'created_at': ts,
+          'updated_at': ts,
+        },
       ];
 
       await container.read(llmConfigsProvider.notifier).refresh();
@@ -649,15 +721,27 @@ void main() {
 
     test('build fetches platforms from API', () async {
       mockApi.platformsResponse = [
-        {'platform': 'xhs', 'connected': true},
-        {'platform': 'weibo', 'connected': false},
+        {
+          'id': 'p-1',
+          'platform': 'xhs',
+          'status': 'connected',
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        },
+        {
+          'id': 'p-2',
+          'platform': 'weibo',
+          'status': 'disconnected',
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        },
       ];
 
       final result = await container.read(platformsProvider.future);
 
       expect(result.length, 2);
-      expect(result[0]['platform'], 'xhs');
-      expect(result[1]['connected'], isFalse);
+      expect(result[0].platform, 'xhs');
+      expect(result[1].isConnected, isFalse);
     });
 
     test('build returns empty list when no platforms', () async {
@@ -674,8 +758,8 @@ void main() {
       await container.read(platformsProvider.future);
 
       final result = await container.read(platformsProvider.notifier).connect(
-        'xhs',
-      );
+            'xhs',
+          );
 
       expect(mockApi.connectPlatformCalls, ['xhs']);
       expect(result['status'], 'connected');
@@ -691,24 +775,43 @@ void main() {
 
     test('verify calls API and returns result', () async {
       final result = await container.read(platformsProvider.notifier).verify(
-        'xhs',
-      );
+            'xhs',
+          );
 
       expect(mockApi.verifyPlatformCalls, ['xhs']);
       expect(result['verified'], isTrue);
     });
 
     test('refresh invalidates self to trigger reload', () async {
+      final ts = DateTime.now().toUtc().toIso8601String();
       mockApi.platformsResponse = [
-        {'platform': 'xhs', 'connected': false},
+        {
+          'id': 'p-1',
+          'platform': 'xhs',
+          'status': 'disconnected',
+          'created_at': ts,
+          'updated_at': ts,
+        },
       ];
 
       final first = await container.read(platformsProvider.future);
       expect(first.length, 1);
 
       mockApi.platformsResponse = [
-        {'platform': 'xhs', 'connected': true},
-        {'platform': 'weibo', 'connected': true},
+        {
+          'id': 'p-1',
+          'platform': 'xhs',
+          'status': 'connected',
+          'created_at': ts,
+          'updated_at': ts,
+        },
+        {
+          'id': 'p-2',
+          'platform': 'weibo',
+          'status': 'connected',
+          'created_at': ts,
+          'updated_at': ts,
+        },
       ];
 
       await container.read(platformsProvider.notifier).refresh();
@@ -833,8 +936,7 @@ void main() {
       );
       addTearDown(() => emptyContainer.dispose());
 
-      final counts =
-          await emptyContainer.read(localItemCountsProvider.future);
+      final counts = await emptyContainer.read(localItemCountsProvider.future);
 
       expect(counts['notes'], 0);
       expect(counts['tags'], 0);

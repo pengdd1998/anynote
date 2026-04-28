@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -26,6 +27,18 @@ type User struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+// ── Device ────────────────────────────────────────
+
+type Device struct {
+	ID         string    `json:"id"`
+	UserID     string    `json:"user_id"`
+	DeviceID   string    `json:"device_id"`
+	DeviceName string    `json:"device_name"`
+	Platform   string    `json:"platform"`
+	LastSeen   time.Time `json:"last_seen"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
 // ── Sync Blob ─────────────────────────────────────
 
 type SyncBlob struct {
@@ -36,6 +49,7 @@ type SyncBlob struct {
 	Version       int       `json:"version"`
 	EncryptedData []byte    `json:"encrypted_data"`
 	BlobSize      int       `json:"blob_size"`
+	DeviceID      string    `json:"device_id" db:"device_id"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -147,6 +161,7 @@ type SyncPushItem struct {
 	Version       int       `json:"version"`
 	EncryptedData []byte    `json:"encrypted_data"`
 	BlobSize      int       `json:"blob_size"`
+	DeviceID      string    `json:"device_id"`
 }
 
 type SyncPushResponse struct {
@@ -276,6 +291,13 @@ type AuthResponse struct {
 	RefreshToken string    `json:"refresh_token"`
 	ExpiresAt    time.Time `json:"expires_at"`
 	User         User      `json:"user"`
+}
+
+// RecoverRequest is the payload for account recovery via recovery key.
+type RecoverRequest struct {
+	Email       string `json:"email"`
+	RecoveryKey string `json:"recovery_key"`
+	NewPassword string `json:"new_password"`
 }
 
 // ── Quota ─────────────────────────────────────────
@@ -452,6 +474,55 @@ type NoteGraphNode struct {
 	ItemID uuid.UUID `json:"item_id"`
 }
 
+// ── Collab Rooms ──────────────────────────────────
+
+// CollabRoom represents a collaboration room with an invite code.
+type CollabRoom struct {
+	ID          string     `json:"id"`
+	CreatorID   string     `json:"creator_id"`
+	InviteCode  string     `json:"invite_code"`
+	RoomName    string     `json:"room_name"`
+	MaxMembers  int        `json:"max_members"`
+	CreatedAt   time.Time  `json:"created_at"`
+	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
+	IsActive    bool       `json:"is_active"`
+	MemberCount int        `json:"member_count,omitempty"`
+}
+
+// CollabRoomMember represents a user's membership in a collab room.
+type CollabRoomMember struct {
+	ID       string    `json:"id"`
+	RoomID   string    `json:"room_id"`
+	UserID   string    `json:"user_id"`
+	Role     string    `json:"role"`
+	JoinedAt time.Time `json:"joined_at"`
+}
+
+// CreateRoomRequest is the payload for creating a collab room.
+type CreateRoomRequest struct {
+	RoomName string `json:"room_name"`
+	MaxMembers int  `json:"max_members"`
+}
+
+// JoinRoomRequest is the payload for joining a collab room via invite code.
+type JoinRoomRequest struct {
+	InviteCode string `json:"invite_code"`
+}
+
+// ── Collab Operations (CRDT persistence) ───────────
+
+// CollabOperation represents a persisted CRDT operation for a collab room.
+// Operations are stored as encrypted blobs -- the server never inspects payloads.
+type CollabOperation struct {
+	ID            string     `json:"id"`
+	RoomID        string     `json:"room_id"`
+	SiteID        string     `json:"site_id"`
+	Clock         int        `json:"clock"`
+	OperationType string     `json:"operation_type"` // "insert" or "delete"
+	Payload       []byte     `json:"payload"`        // JSONB, opaque to server
+	CreatedAt     time.Time  `json:"created_at"`
+}
+
 // ── AI Agent ────────────────────────────────────────
 
 // AIAgentRequest is the payload for requesting an AI agent action.
@@ -468,4 +539,45 @@ type AIAgentResponse struct {
 	Status  string                 `json:"status"`
 	Result  map[string]interface{} `json:"result"`
 	Message string                 `json:"message,omitempty"`
+}
+
+// ── Payment ────────────────────────────────────────
+
+// Payment represents a payment transaction record.
+type Payment struct {
+	ID               string     `json:"id"`
+	UserID           string     `json:"user_id"`
+	StripeSessionID  string     `json:"stripe_session_id"`
+	AmountCents      int        `json:"amount_cents"`
+	Currency         string     `json:"currency"`
+	Status           string     `json:"status"`
+	Plan             string     `json:"plan"`
+	CreatedAt        time.Time  `json:"created_at"`
+	CompletedAt      *time.Time `json:"completed_at,omitempty"`
+}
+
+// CreateCheckoutRequest is the payload for initiating a Stripe checkout session.
+type CreateCheckoutRequest struct {
+	Plan       string `json:"plan"`
+	SuccessURL string `json:"success_url"`
+	CancelURL  string `json:"cancel_url"`
+}
+
+// CheckoutResponse is returned after successfully creating a checkout session.
+type CheckoutResponse struct {
+	SessionURL string `json:"session_url"`
+}
+
+// ── Notification ───────────────────────────────────
+
+// Notification represents a persistent user notification.
+type Notification struct {
+	ID        string          `json:"id"`
+	UserID    string          `json:"user_id"`
+	Type      string          `json:"type"`
+	Title     string          `json:"title"`
+	Body      string          `json:"body"`
+	Data      json.RawMessage `json:"data"`
+	IsRead    bool            `json:"is_read"`
+	CreatedAt time.Time       `json:"created_at"`
 }

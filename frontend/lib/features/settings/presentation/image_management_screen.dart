@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart' show databaseProvider;
@@ -255,9 +256,7 @@ class ImageManagementScreen extends ConsumerWidget {
     }
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.cleanupComplete(deletedCount))),
-    );
+    AppSnackBar.info(context, message: l10n.cleanupComplete(deletedCount));
     ref.invalidate(imageStorageStatsProvider);
   }
 
@@ -303,9 +302,7 @@ class ImageManagementScreen extends ConsumerWidget {
     }
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.imageDeleted)),
-    );
+    AppSnackBar.info(context, message: l10n.imageDeleted);
     ref.invalidate(imageStorageStatsProvider);
   }
 }

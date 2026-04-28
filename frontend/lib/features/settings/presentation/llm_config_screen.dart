@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/error/error.dart';
 import '../../../core/widgets/app_components.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
+import '../data/api_models.dart';
 import '../data/settings_providers.dart';
 
 class LLMConfigScreen extends ConsumerStatefulWidget {
@@ -47,14 +49,13 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
             );
           }
           return RefreshIndicator(
-            onRefresh: () =>
-                ref.read(llmConfigsProvider.notifier).refresh(),
+            onRefresh: () => ref.read(llmConfigsProvider.notifier).refresh(),
             child: ListView.builder(
               padding: const EdgeInsets.only(top: 8, bottom: 80),
               itemCount: configs.length,
               itemBuilder: (context, index) {
                 final cfg = configs[index];
-                final id = cfg['id']?.toString() ?? '';
+                final id = cfg.id;
                 return StaggeredGroup(
                   staggerIndex: index,
                   child: Padding(
@@ -65,7 +66,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                       l10n: l10n,
                       onTest: () => _testConfig(id),
                       onEdit: () => _showEditDialog(cfg),
-                      onDelete: () => _confirmDelete(context, id, cfg['name']?.toString() ?? ''),
+                      onDelete: () => _confirmDelete(context, id, cfg.name),
                     ),
                   ),
                 );
@@ -81,12 +82,16 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(ErrorDisplay.errorIcon(appError), size: 48, color: Theme.of(context).colorScheme.error),
+                Icon(ErrorDisplay.errorIcon(appError),
+                    size: 48, color: Theme.of(context).colorScheme.error),
                 const SizedBox(height: 12),
                 Text(l10n.failedToLoadConfigs),
                 const SizedBox(height: 8),
-                Text(ErrorDisplay.userMessage(appError, l10n),
-                    style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),),
+                Text(
+                  ErrorDisplay.userMessage(appError, l10n),
+                  style: TextStyle(
+                      fontSize: 12, color: Theme.of(context).disabledColor),
+                ),
                 const SizedBox(height: 16),
                 FilledButton.tonal(
                   onPressed: () =>
@@ -139,20 +144,20 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   label: l10n.name,
                   child: TextField(
                     controller: nameCtrl,
-                    decoration:
-                        InputDecoration(labelText: l10n.name),
+                    decoration: InputDecoration(labelText: l10n.name),
                   ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedProvider,
-                  decoration:
-                      InputDecoration(labelText: l10n.provider),
+                  decoration: InputDecoration(labelText: l10n.provider),
                   items: _presets
-                      .map((p) => DropdownMenuItem(
-                            value: p['name'],
-                            child: Text(p['name']!),
-                          ),)
+                      .map(
+                        (p) => DropdownMenuItem(
+                          value: p['name'],
+                          child: Text(p['name']!),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) {
                     setDialogState(() => selectedProvider = v!);
@@ -164,8 +169,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   label: l10n.baseUrl,
                   child: TextField(
                     controller: urlCtrl,
-                    decoration:
-                        InputDecoration(labelText: l10n.baseUrl),
+                    decoration: InputDecoration(labelText: l10n.baseUrl),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -175,11 +179,13 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                     controller: keyCtrl,
                     decoration: InputDecoration(
                       labelText: l10n.apiKey,
-                      suffixIcon: const ExcludeSemantics(child: Icon(Icons.visibility_off)),
+                      suffixIcon: const ExcludeSemantics(
+                          child: Icon(Icons.visibility_off)),
                     ),
                     obscureText: true,
                   ),
-                ),                const SizedBox(height: 12),
+                ),
+                const SizedBox(height: 12),
                 A11yUtils.labeledTextField(
                   label: l10n.model,
                   child: TextField(
@@ -227,16 +233,13 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
   }
 
   /// Show a dialog to edit an existing LLM config.
-  void _showEditDialog(Map<String, dynamic> cfg) {
+  void _showEditDialog(LlmConfig cfg) {
     final l10n = AppLocalizations.of(context)!;
-    final id = cfg['id']?.toString() ?? '';
-    final nameCtrl =
-        TextEditingController(text: cfg['name']?.toString() ?? '');
-    final urlCtrl =
-        TextEditingController(text: cfg['base_url']?.toString() ?? '');
+    final id = cfg.id;
+    final nameCtrl = TextEditingController(text: cfg.name);
+    final urlCtrl = TextEditingController(text: cfg.baseUrl ?? '');
     final keyCtrl = TextEditingController(); // Never pre-fill API key
-    final modelCtrl =
-        TextEditingController(text: cfg['model']?.toString() ?? '');
+    final modelCtrl = TextEditingController(text: cfg.model);
 
     showDialog(
       context: context,
@@ -250,8 +253,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 label: l10n.name,
                 child: TextField(
                   controller: nameCtrl,
-                  decoration:
-                      InputDecoration(labelText: l10n.name),
+                  decoration: InputDecoration(labelText: l10n.name),
                 ),
               ),
               const SizedBox(height: 12),
@@ -259,8 +261,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 label: l10n.baseUrl,
                 child: TextField(
                   controller: urlCtrl,
-                  decoration:
-                      InputDecoration(labelText: l10n.baseUrl),
+                  decoration: InputDecoration(labelText: l10n.baseUrl),
                 ),
               ),
               const SizedBox(height: 12),
@@ -270,7 +271,8 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   controller: keyCtrl,
                   decoration: InputDecoration(
                     labelText: l10n.newApiKeyHint,
-                    suffixIcon: const ExcludeSemantics(child: Icon(Icons.visibility_off)),
+                    suffixIcon: const ExcludeSemantics(
+                        child: Icon(Icons.visibility_off)),
                   ),
                   obscureText: true,
                 ),
@@ -329,21 +331,18 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
   /// Test an LLM config by calling the test endpoint.
   Future<void> _testConfig(String id) async {
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.testingConnection)),
-    );
+    AppSnackBar.info(context, message: l10n.testingConnection);
     try {
-      final result =
-          await ref.read(llmConfigsProvider.notifier).test(id);
+      final result = await ref.read(llmConfigsProvider.notifier).test(id);
       final success = result['success'] == true;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success
-                ? l10n.connectionSuccessful
-                : l10n.connectionFailed(result['error']?.toString() ?? 'Unknown error'),),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
+        AppSnackBar.show(
+          context,
+          message: success
+              ? l10n.connectionSuccessful
+              : l10n.connectionFailed(
+                  result['error']?.toString() ?? 'Unknown error'),
+          type: success ? SnackBarType.info : SnackBarType.error,
         );
       }
     } catch (e) {
@@ -396,7 +395,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
 // =============================================================================
 
 class _LLMConfigCard extends StatelessWidget {
-  final Map<String, dynamic> cfg;
+  final LlmConfig cfg;
   final String id;
   final AppLocalizations l10n;
   final VoidCallback onTest;
@@ -421,21 +420,26 @@ class _LLMConfigCard extends StatelessWidget {
       children: [
         SettingsItem(
           icon: Icons.smart_toy_outlined,
-          title: cfg['name']?.toString() ?? '',
-          subtitle: '${cfg['provider'] ?? ''} - ${cfg['model'] ?? ''}',
+          title: cfg.name,
+          subtitle: '${cfg.provider} - ${cfg.model}',
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (cfg['is_default'] == true)
+              if (cfg.isDefault)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 2,),
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(l10n.defaultLabel,
-                      style: TextStyle(fontSize: 11, color: colorScheme.onPrimaryContainer),),
+                  child: Text(
+                    l10n.defaultLabel,
+                    style: TextStyle(
+                        fontSize: 11, color: colorScheme.onPrimaryContainer),
+                  ),
                 ),
               A11yUtils.labeledButton(
                 label: l10n.testConnection,
@@ -449,6 +453,7 @@ class _LLMConfigCard extends StatelessWidget {
                 label: l10n.delete,
                 child: IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20),
+                  tooltip: l10n.delete,
                   onPressed: id.isEmpty ? null : onDelete,
                 ),
               ),

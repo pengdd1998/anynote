@@ -19,14 +19,12 @@
 /// ```
 library;
 
-import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
-
 import 'package:flutter/cupertino.dart' show CupertinoPage;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../constants/app_durations.dart';
+import '../platform/platform_utils.dart';
 import 'animation_config.dart';
 
 /// Duration for forward page transitions.
@@ -75,7 +73,7 @@ CustomTransitionPage<void> fadeThroughTransition(Widget child) {
 /// When reduce motion is enabled, uses immediate transitions without animation.
 Page<void> slideTransition(Widget child) {
   // Use CupertinoPageRoute on iOS for native platform feel.
-  if (!kIsWeb && Platform.isIOS) {
+  if (PlatformUtils.isIOS) {
     return CupertinoPage(child: child);
   }
 

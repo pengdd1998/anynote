@@ -12,6 +12,7 @@ import '../../../core/crypto/master_key.dart';
 import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/notifications/push_service.dart';
+import '../../../core/widgets/app_snackbar.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -157,9 +158,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   tooltip: l10n.copyRecoveryKey,
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: _recoveryKey ?? ''));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.recoveryKeyCopied)),
-                    );
+                    AppSnackBar.info(context, message: l10n.recoveryKeyCopied);
                   },
                 ),
               ),

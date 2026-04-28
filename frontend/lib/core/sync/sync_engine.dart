@@ -1,11 +1,17 @@
 import 'dart:convert';
+import 'dart:io' show File
+    if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../crypto/crypto_service.dart';
 import '../database/app_database.dart';
 import '../performance/performance_monitor.dart';
 import '../network/api_client.dart';
+import '../storage/image_storage.dart';
 import 'conflict_resolver.dart';
 import 'sync_progress.dart';
 
@@ -24,7 +30,26 @@ class SyncEngine {
   final ApiClient _api;
   final CryptoService _crypto;
 
+  /// Cached stable device ID. Generated once, persisted in SharedPreferences.
+  static String? _cachedDeviceId;
+
   SyncEngine(this._db, this._api, this._crypto);
+
+  /// Returns a stable device ID, generating and persisting one if needed.
+  static Future<String> getDeviceId() async {
+    if (_cachedDeviceId != null) return _cachedDeviceId!;
+    final prefs = await SharedPreferences.getInstance();
+    var deviceId = prefs.getString('device_id');
+    if (deviceId == null) {
+      deviceId = const Uuid().v4();
+      await prefs.setString('device_id', deviceId);
+    }
+    _cachedDeviceId = deviceId;
+    return deviceId;
+  }
+
+  /// Reset the cached device ID (for testing).
+  static void resetDeviceIdCache() => _cachedDeviceId = null;
 
   /// Full sync cycle: pull then push.
   ///
@@ -117,6 +142,9 @@ class SyncEngine {
         case 'content':
           await _applyContentBlob(blob);
           break;
+        case 'image':
+          await _applyImageBlob(blob);
+          break;
       }
       count++;
       notifier.emit(notifier.current.copyWith(completedCount: count));
@@ -140,75 +168,106 @@ class SyncEngine {
 
     final notifier = SyncProgressNotifier.instance;
     final items = <SyncPushItem>[];
+    final deviceId = await getDeviceId();
 
-    // Gather and encrypt unsynced notes
+    // Gather and encrypt unsynced notes (parallel)
     final unsyncedNotes = await _db.notesDao.getUnsyncedNotes();
-    for (final note in unsyncedNotes) {
-      final encryptedData = await _encryptNoteForPush(note);
-      if (encryptedData == null) continue;
-
-      items.add(
-        SyncPushItem(
+    final noteResults = await Future.wait(
+      unsyncedNotes.map((note) async {
+        final encryptedData = await _encryptNoteForPush(note);
+        if (encryptedData == null) return null;
+        return SyncPushItem(
           itemId: note.id,
           itemType: 'note',
           version: note.version,
           encryptedData: encryptedData,
           blobSize: encryptedData.length,
-        ),
-      );
-    }
+          deviceId: deviceId,
+        );
+      }),
+    );
+    items.addAll(noteResults.whereType<SyncPushItem>());
 
-    // Gather and encrypt unsynced tags
+    // Gather and encrypt unsynced tags (parallel)
     final unsyncedTags = await _db.tagsDao.getUnsyncedTags();
-    for (final tag in unsyncedTags) {
-      final encryptedData = await _encryptTagForPush(tag);
-      if (encryptedData == null) continue;
-
-      items.add(
-        SyncPushItem(
+    final tagResults = await Future.wait(
+      unsyncedTags.map((tag) async {
+        final encryptedData = await _encryptTagForPush(tag);
+        if (encryptedData == null) return null;
+        return SyncPushItem(
           itemId: tag.id,
           itemType: 'tag',
           version: tag.version,
           encryptedData: encryptedData,
           blobSize: encryptedData.length,
-        ),
-      );
-    }
+          deviceId: deviceId,
+        );
+      }),
+    );
+    items.addAll(tagResults.whereType<SyncPushItem>());
 
-    // Gather and encrypt unsynced collections
+    // Gather and encrypt unsynced collections (parallel)
     final unsyncedCollections =
         await _db.collectionsDao.getUnsyncedCollections();
-    for (final collection in unsyncedCollections) {
-      final encryptedData = await _encryptCollectionForPush(collection);
-      if (encryptedData == null) continue;
-
-      items.add(
-        SyncPushItem(
+    final collectionResults = await Future.wait(
+      unsyncedCollections.map((collection) async {
+        final encryptedData = await _encryptCollectionForPush(collection);
+        if (encryptedData == null) return null;
+        return SyncPushItem(
           itemId: collection.id,
           itemType: 'collection',
           version: collection.version,
           encryptedData: encryptedData,
           blobSize: encryptedData.length,
-        ),
-      );
-    }
+          deviceId: deviceId,
+        );
+      }),
+    );
+    items.addAll(collectionResults.whereType<SyncPushItem>());
 
-    // Gather and encrypt unsynced generated contents
+    // Gather and encrypt unsynced generated contents (parallel)
     final unsyncedContents = await _db.generatedContentsDao.getUnsynced();
-    for (final content in unsyncedContents) {
-      final encryptedData = await _encryptContentForPush(content);
-      if (encryptedData == null) continue;
-
-      items.add(
-        SyncPushItem(
+    final contentResults = await Future.wait(
+      unsyncedContents.map((content) async {
+        final encryptedData = await _encryptContentForPush(content);
+        if (encryptedData == null) return null;
+        return SyncPushItem(
           itemId: content.id,
           itemType: 'content',
           version: content.version,
           encryptedData: encryptedData,
           blobSize: encryptedData.length,
-        ),
-      );
-    }
+          deviceId: deviceId,
+        );
+      }),
+    );
+    items.addAll(contentResults.whereType<SyncPushItem>());
+
+    // Gather and encrypt unsynced images (parallel)
+    final unsyncedImages = await _db.imagesDao.getUnsyncedImages();
+    final imageResults = await Future.wait(
+      unsyncedImages.map((image) async {
+        // Read image file bytes (skip if file has been deleted)
+        final file = File(image.path);
+        if (!await file.exists()) return null;
+        final bytes = await file.readAsBytes();
+
+        // Encrypt the image data (base64-encode first, matching note envelope pattern)
+        final encryptedBase64 =
+            await _crypto.encryptForItem(image.id, base64Encode(bytes));
+        final encryptedBytes = base64Decode(encryptedBase64);
+
+        return SyncPushItem(
+          itemId: image.id,
+          itemType: 'image',
+          version: 0,
+          encryptedData: encryptedBytes,
+          blobSize: encryptedBytes.length,
+          deviceId: deviceId,
+        );
+      }),
+    );
+    items.addAll(imageResults.whereType<SyncPushItem>());
 
     if (items.isEmpty) {
       return SyncPushResponse(accepted: [], conflicts: []);
@@ -230,25 +289,41 @@ class SyncEngine {
     // Parse the server JSON response into a typed SyncPushResponse.
     final response = _parsePushResponse(rawResponse as Map<String, dynamic>);
 
-    // Mark accepted items as synced
+    // Mark accepted items as synced (O(1) lookup + batch per type)
+    final itemById = {for (final item in items) item.itemId: item};
+    final notesToSync = <String>[];
+    final tagsToSync = <String>[];
+    final collectionsToSync = <String>[];
+    final contentsToSync = <String>[];
+    final imagesToSync = <String>[];
+
     for (final id in response.accepted) {
-      final item = items.where((i) => i.itemId == id).firstOrNull;
+      final item = itemById[id];
       if (item == null) continue;
       switch (item.itemType) {
         case 'note':
-          await _db.notesDao.markSynced(item.itemId);
-          break;
+          notesToSync.add(id);
         case 'tag':
-          await _db.tagsDao.markSynced(item.itemId);
-          break;
+          tagsToSync.add(id);
         case 'collection':
-          await _db.collectionsDao.markSynced(item.itemId);
-          break;
+          collectionsToSync.add(id);
         case 'content':
-          await _db.generatedContentsDao.markSynced(item.itemId);
-          break;
+          contentsToSync.add(id);
+        case 'image':
+          imagesToSync.add(id);
       }
     }
+
+    // Batch mark synced
+    if (notesToSync.isNotEmpty) await _db.notesDao.markSyncedBatch(notesToSync);
+    if (tagsToSync.isNotEmpty) await _db.tagsDao.markSyncedBatch(tagsToSync);
+    if (collectionsToSync.isNotEmpty) {
+      await _db.collectionsDao.markSyncedBatch(collectionsToSync);
+    }
+    if (contentsToSync.isNotEmpty) {
+      await _db.generatedContentsDao.markSyncedBatch(contentsToSync);
+    }
+    if (imagesToSync.isNotEmpty) await _db.imagesDao.markSyncedBatch(imagesToSync);
 
     return response;
   }
@@ -356,6 +431,55 @@ class SyncEngine {
       encryptedBody: encryptedBase64,
       plainBody: decrypted,
     );
+  }
+
+  /// Apply a pulled image blob to local storage.
+  ///
+  /// Decrypts the blob payload (base64-encoded image bytes), writes the image
+  /// to local storage, and upserts the image metadata record. If crypto is not
+  /// unlocked, the blob is silently skipped -- it will be re-delivered on a
+  /// future pull when the key becomes available.
+  Future<void> _applyImageBlob(SyncBlob blob) async {
+    final decrypted = await _tryDecryptBlob(blob.itemId, blob.encryptedData);
+    if (decrypted == null) return; // Can't decrypt, skip for now
+
+    // Decode the decrypted base64 data back to raw image bytes
+    final imageBytes = Uint8List.fromList(base64Decode(decrypted));
+
+    // Save to local storage (skip compression -- already compressed on source)
+    final path = await ImageStorage.saveImage(
+      imageBytes,
+      'synced',
+      compress: false,
+    );
+
+    // Check if image record already exists
+    final existing = await _db.imagesDao.getImageById(blob.itemId);
+    if (existing == null) {
+      // Insert new image record
+      await _db.imagesDao.upsertImage(
+        NoteImagesCompanion(
+          id: Value(blob.itemId),
+          noteId: const Value(''),
+          path: Value(path),
+          hash: const Value(''),
+          fileSize: Value(imageBytes.length),
+          isSynced: const Value(true),
+        ),
+      );
+    } else {
+      // Update existing record with the new path and mark synced
+      await _db.imagesDao.upsertImage(
+        NoteImagesCompanion(
+          id: Value(blob.itemId),
+          noteId: Value(existing.noteId),
+          path: Value(path),
+          hash: const Value(''),
+          fileSize: Value(imageBytes.length),
+          isSynced: const Value(true),
+        ),
+      );
+    }
   }
 
   // ── Push: encrypt items before sending ─────────────────
@@ -556,6 +680,7 @@ class SyncPushItem {
   final int version;
   final List<int> encryptedData;
   final int blobSize;
+  final String deviceId;
 
   SyncPushItem({
     required this.itemId,
@@ -563,6 +688,7 @@ class SyncPushItem {
     required this.version,
     required this.encryptedData,
     required this.blobSize,
+    this.deviceId = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -571,6 +697,7 @@ class SyncPushItem {
         'version': version,
         'encrypted_data': base64Encode(encryptedData),
         'blob_size': blobSize,
+        if (deviceId.isNotEmpty) 'device_id': deviceId,
       };
 }
 

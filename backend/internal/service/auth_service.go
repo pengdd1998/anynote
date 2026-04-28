@@ -22,6 +22,7 @@ var (
 	ErrAccountDeletion    = errors.New("account deletion failed")
 	ErrInvalidTokenType   = errors.New("invalid token type")
 	ErrTokenRevoked       = errors.New("refresh token has been revoked")
+	ErrInvalidRecoveryKey = errors.New("invalid recovery key")
 )
 
 type AuthService interface {
@@ -32,6 +33,7 @@ type AuthService interface {
 	DeleteAccount(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error
 	GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error)
 	GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error)
+	RecoverAccount(ctx context.Context, req *domain.RecoverRequest) error
 }
 
 type UserRepository interface {
@@ -41,6 +43,8 @@ type UserRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]byte, error)
 	GetRecoverySaltByEmail(ctx context.Context, email string) ([]byte, error)
+	UpdateAuthCredentials(ctx context.Context, userID uuid.UUID, hashedPassword, salt string) error
+	GetRecoveryKeyByEmail(ctx context.Context, email string) ([]byte, error)
 }
 
 // deviceTokenDeleter removes device tokens for a user.
@@ -298,6 +302,45 @@ func (s *authService) GetRecoverySaltByEmail(ctx context.Context, email string) 
 		return nil, ErrUserNotFound
 	}
 	return &domain.RecoverySaltResponse{RecoverySalt: salt}, nil
+}
+
+// RecoverAccount verifies the recovery key against the stored hash and updates
+// the user's password credentials. The recovery key comparison uses
+// bcrypt.CompareHashAndPassword because the stored recovery_key was hashed
+// with bcrypt during registration.
+func (s *authService) RecoverAccount(ctx context.Context, req *domain.RecoverRequest) error {
+	user, err := s.userRepo.GetByEmail(ctx, req.Email)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	// Verify the provided recovery key against the stored bcrypt hash.
+	if err := bcrypt.CompareHashAndPassword(user.RecoveryKey, []byte(req.RecoveryKey)); err != nil {
+		return ErrInvalidRecoveryKey
+	}
+
+	// Hash the new password and update credentials.
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), 12)
+	if err != nil {
+		return fmt.Errorf("hash new password: %w", err)
+	}
+
+	// The salt parameter is set to empty string because the client derives its
+	// own salt during the recovery flow. The server only stores the hashed
+	// auth key.
+	if err := s.userRepo.UpdateAuthCredentials(ctx, user.ID, string(hashedPassword), ""); err != nil {
+		return fmt.Errorf("update credentials: %w", err)
+	}
+
+	// Revoke all refresh tokens so other sessions are terminated.
+	if s.refreshTokenStore != nil {
+		if rtErr := s.refreshTokenStore.RevokeAllForUser(ctx, user.ID); rtErr != nil {
+			slog.Warn("auth: failed to revoke refresh tokens during account recovery",
+				"user_id", user.ID.String(), "error", rtErr)
+		}
+	}
+
+	return nil
 }
 
 func (s *authService) generateAuthResponse(user *domain.User) (*domain.AuthResponse, error) {

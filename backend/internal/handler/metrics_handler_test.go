@@ -53,7 +53,7 @@ func TestMetricsMiddleware_RecordsNon200Status(t *testing.T) {
 
 func TestMetricsMiddleware_FlushForwarding(t *testing.T) {
 	// Verify the wrapped ResponseWriter forwards Flush calls.
-	rw := newResponseWriterWithStatus(httptest.NewRecorder())
+	rw := newInstrumentedResponseWriter(httptest.NewRecorder())
 	// Should not panic.
 	rw.Flush()
 }

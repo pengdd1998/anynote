@@ -121,12 +121,10 @@ class ErrorDisplay {
       NetworkException() =>
         'Unable to connect to the server. Please check your internet connection.',
       ServerException() => 'A server error occurred. Please try again later.',
-      AuthException() =>
-        'Your session has expired. Please log in again.',
+      AuthException() => 'Your session has expired. Please log in again.',
       ForbiddenException() =>
         'You do not have permission to perform this action.',
-      NotFoundException() =>
-        'The requested item could not be found.',
+      NotFoundException() => 'The requested item could not be found.',
       RateLimitException(:final retryAfterSeconds?) =>
         'Too many requests. Please wait $retryAfterSeconds seconds and try again.',
       RateLimitException() =>
@@ -146,8 +144,7 @@ class ErrorDisplay {
       SyncException() => 'Sync failed: ${error.message}',
       StorageException() =>
         'A local storage error occurred. Please restart the app.',
-      UnknownException() =>
-        'An unexpected error occurred. Please try again.',
+      UnknownException() => 'An unexpected error occurred. Please try again.',
       _ => error.message,
     };
   }
@@ -198,7 +195,7 @@ class ErrorDisplay {
   /// Determine SnackBar background color based on error severity.
   static Color _snackBarColor(AppException error) {
     return switch (error) {
-      NetworkException() => Colors.grey.shade800,
+      NetworkException() => const Color(0xFF424242),
       AuthException() => Colors.orange.shade800,
       RateLimitException() => Colors.orange.shade800,
       CryptoException() => Colors.red.shade800,

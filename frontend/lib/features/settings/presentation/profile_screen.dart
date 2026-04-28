@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../providers/plan_providers.dart';
 
 /// Profile editing screen.
@@ -151,15 +152,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             publicProfileEnabled: _publicProfileEnabled,
           );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.profileSaved)),
-        );
+        AppSnackBar.info(context, message: l10n.profileSaved);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.profileSaveFailed)),
-        );
+        AppSnackBar.error(context, message: l10n.profileSaveFailed);
       }
     } finally {
       if (mounted) setState(() => _saving = false);

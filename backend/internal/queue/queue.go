@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	TaskTypeAIProxy  = "ai:proxy"
-	TaskTypePublish  = "publish:execute"
+	TaskTypeAIProxy           = "ai:proxy"
+	TaskTypePublish           = "publish:execute"
+	TaskCleanupExpiredShares  = "cleanup:expired_shares"
 )
 
 // Service manages the asynq task queue.

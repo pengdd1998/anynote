@@ -1,34 +1,29 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
-
 /// Web crypto compatibility layer.
 ///
-/// Provides runtime checks for crypto platform availability and
-/// an initialization entry point for the appropriate crypto backend.
+/// Since Phase 142, all platforms use sodium_libs (libsodium) for crypto
+/// operations. sodium_libs provides a JS/WASM backend (libsodium.js) for
+/// web browsers, enabling the same algorithms on all platforms:
+///   - XChaCha20-Poly1305 for AEAD encryption
+///   - Argon2id for password hashing
+///   - BLAKE2b for key derivation
 ///
-/// On native: sodium_libs is used (initialized lazily).
-/// On web: WebCrypto is available natively in the browser.
-///
-/// The actual platform-specific implementations are in:
-/// - Native: master_key_native_compat.dart, encryptor_native.dart
-/// - Web: master_key_web_compat.dart, encryptor_web.dart
+/// This class exists primarily for backward compatibility with callers
+/// that reference it, and for platform capability introspection.
 class CryptoCompat {
   /// Whether the current platform supports native crypto via sodium_libs.
-  static bool get supportsNativeCrypto => !kIsWeb;
+  /// Always true since Phase 142 (sodium_libs WASM/JS on web).
+  static bool get supportsNativeCrypto => true;
 
-  /// Initialize the platform-appropriate crypto backend.
+  /// Initialize the crypto backend.
   ///
-  /// On native platforms, this initializes sodium_libs.
-  /// On web, this is a no-op (WebCrypto is available natively in the browser).
+  /// On all platforms, this is a no-op because sodium_libs is initialized
+  /// lazily on first use by the Encryptor and MasterKeyManager classes.
   static Future<void> init() async {
-    if (kIsWeb) {
-      // WebCrypto is available natively in modern browsers via
-      // window.crypto.subtle. No additional initialization needed.
-    } else {
-      // Native path: sodium_libs is initialized lazily in Encryptor
-      // and MasterKeyManager via SodiumSumoInit.init().
-    }
+    // No-op: sodium_libs initializes lazily via SodiumSumoInit.init()
+    // the first time it is needed.
   }
 
   /// Check if full E2E encryption is supported on this platform.
+  /// Always true since all platforms use sodium_libs.
   static bool get isFullEncryptionSupported => true;
 }

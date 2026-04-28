@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/features/settings/data/api_models.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
 import 'package:anynote/features/settings/presentation/llm_config_screen.dart';
 import '../../../helpers/test_app_helper.dart';
@@ -32,5 +33,5 @@ void main() {
 /// Fake LLM configs notifier that returns an empty list.
 class _FakeLLMConfigsNotifier extends LlmConfigsNotifier {
   @override
-  Future<List<Map<String, dynamic>>> build() async => [];
+  Future<List<LlmConfig>> build() async => [];
 }

@@ -72,6 +72,16 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
   /// GlobalKey for the editor's render object, used to position the overlay.
   final GlobalKey _editorKey = GlobalKey();
 
+  /// Fallback scroll controller created when no external controller is
+  /// provided. Lazily initialized and disposed in [dispose].
+  ScrollController? _fallbackScrollController;
+
+  /// Returns the externally provided scroll controller, or lazily creates a
+  /// fallback one that is properly disposed when the State is removed.
+  ScrollController get _effectiveScrollController =>
+      widget.scrollController ??
+      (_fallbackScrollController ??= ScrollController());
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +92,7 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
   void dispose() {
     widget.controller.removeListener(_onTextChanged);
     _removeSlashOverlay();
+    _fallbackScrollController?.dispose();
     super.dispose();
   }
 
@@ -458,7 +469,7 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
         child: quill.QuillEditor(
           controller: widget.controller,
           focusNode: widget.focusNode,
-          scrollController: widget.scrollController ?? ScrollController(),
+          scrollController: _effectiveScrollController,
           config: const quill.QuillEditorConfig(
             padding: EdgeInsets.all(16),
             autoFocus: false,
@@ -556,7 +567,10 @@ class _SnippetPickerSheetState extends State<_SnippetPickerSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

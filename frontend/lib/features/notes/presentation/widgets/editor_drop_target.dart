@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -9,6 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/platform/platform_utils.dart';
 import '../../../../core/storage/image_storage.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 
 /// A wrapper widget that accepts dropped image files onto the editor area.
 ///
@@ -71,29 +72,20 @@ class _EditorDropTargetState extends ConsumerState<EditorDropTarget> {
           widget.onImageDropped(localPath);
 
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.imageAdded),
-                duration: AppDurations.snackbarDuration,
-              ),
-            );
+            AppSnackBar.info(context, message: l10n.imageAdded);
           }
         } catch (e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.failedToAddImage(e.toString()))),
+            AppSnackBar.error(
+              context,
+              message: l10n.failedToAddImage(e.toString()),
             );
           }
         }
       } else {
         // Non-image file.
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.unsupportedFileType),
-              duration: AppDurations.snackbarDuration,
-            ),
-          );
+          AppSnackBar.info(context, message: l10n.unsupportedFileType);
         }
       }
     }

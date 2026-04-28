@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -380,8 +381,7 @@ void main() {
       }
     });
 
-    test(
-        'WindowBounds.defaults provides reasonable fallback for first launch',
+    test('WindowBounds.defaults provides reasonable fallback for first launch',
         () async {
       const defaults = WindowBounds.defaults;
       // Verify the defaults are reasonable for a desktop window.
@@ -398,10 +398,28 @@ void main() {
   // ===========================================================================
 
   group('WindowStateService.isSupported', () {
-    test('returns true on Linux test runner', () {
-      // This test runs on Linux, so isSupported should be true.
-      // (It checks Platform.isLinux among others.)
+    test('returns true when running on Linux target', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
       expect(WindowStateService.isSupported, isTrue);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('returns false when running on Android target', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      expect(WindowStateService.isSupported, isFalse);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('returns true when running on macOS target', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      expect(WindowStateService.isSupported, isTrue);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('returns true when running on Windows target', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      expect(WindowStateService.isSupported, isTrue);
+      debugDefaultTargetPlatformOverride = null;
     });
   });
 }

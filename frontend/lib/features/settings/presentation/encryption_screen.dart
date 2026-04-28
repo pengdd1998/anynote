@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/backup/backup_service.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/widgets/app_components.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/settings_providers.dart';
@@ -138,11 +139,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   setState(() => _showRecoveryKey = true);
                 } else {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.incorrectPassword),
-                      ),
-                    );
+                    AppSnackBar.error(context, message: l10n.incorrectPassword);
                   }
                 }
               } catch (e) {
@@ -150,11 +147,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                     '[EncryptionScreen] password verification failed: $e');
                 nav.pop();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.verificationFailed),
-                    ),
-                  );
+                  AppSnackBar.error(context, message: l10n.verificationFailed);
                 }
               }
             },
@@ -219,21 +212,11 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
           FilledButton(
             onPressed: () async {
               if (newCtrl.text != confirmCtrl.text) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.passwordsDoNotMatch),
-                  ),
-                );
+                AppSnackBar.error(context, message: l10n.passwordsDoNotMatch);
                 return;
               }
               if (newCtrl.text.length < 8) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l10n.passwordMinLength,
-                    ),
-                  ),
-                );
+                AppSnackBar.error(context, message: l10n.passwordMinLength);
                 return;
               }
 
@@ -249,11 +232,8 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (!verified) {
                   nav.pop();
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.currentPasswordIncorrect),
-                      ),
-                    );
+                    AppSnackBar.error(context,
+                        message: l10n.currentPasswordIncorrect);
                   }
                   return;
                 }
@@ -265,20 +245,14 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (mounted) {
                   // Refresh the encryption status.
                   ref.read(encryptionStatusProvider.notifier).refresh();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.passwordChangedSuccessfully),
-                    ),
-                  );
+                  AppSnackBar.info(context,
+                      message: l10n.passwordChangedSuccessfully);
                 }
               } catch (e) {
                 nav.pop();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.failedToChangePassword(e.toString())),
-                    ),
-                  );
+                  AppSnackBar.error(context,
+                      message: l10n.failedToChangePassword(e.toString()));
                 }
               } finally {
                 if (mounted) {
@@ -383,22 +357,13 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (mounted) {
                   ref.read(encryptionStatusProvider.notifier).refresh();
                   ref.invalidate(localItemCountsProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.allLocalDataDeleted),
-                    ),
-                  );
+                  AppSnackBar.info(context, message: l10n.allLocalDataDeleted);
                 }
               } catch (e) {
                 nav.pop();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        l10n.failedToDeleteData(e.toString()),
-                      ),
-                    ),
-                  );
+                  AppSnackBar.error(context,
+                      message: l10n.failedToDeleteData(e.toString()));
                 }
               } finally {
                 if (mounted) setState(() => _isDeleting = false);
@@ -418,9 +383,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
     // File system APIs are not available on web platform.
     if (kIsWeb) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.notSupportedOnWeb)),
-        );
+        AppSnackBar.error(context, message: l10n.notSupportedOnWeb);
       }
       return;
     }
@@ -448,9 +411,8 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.backupExportFailed(e.toString()))),
-        );
+        AppSnackBar.error(context,
+            message: l10n.backupExportFailed(e.toString()));
       }
     }
   }
@@ -462,9 +424,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
     // File system APIs are not available on web platform.
     if (kIsWeb) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.notSupportedOnWeb)),
-        );
+        AppSnackBar.error(context, message: l10n.notSupportedOnWeb);
       }
       return;
     }
@@ -509,15 +469,12 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
 
       if (mounted) {
         ref.invalidate(localItemCountsProvider);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.importedItemsFromBackup(count))),
-        );
+        AppSnackBar.info(context, message: l10n.importedItemsFromBackup(count));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.backupImportFailed(e.toString()))),
-        );
+        AppSnackBar.error(context,
+            message: l10n.backupImportFailed(e.toString()));
       }
     }
   }
@@ -1048,13 +1005,7 @@ class _RecoveryKeyDisplay extends ConsumerWidget {
                     Clipboard.setData(
                       ClipboardData(text: recoveryKey),
                     );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          l10n.recoveryKeyCopied,
-                        ),
-                      ),
-                    );
+                    AppSnackBar.info(context, message: l10n.recoveryKeyCopied);
                   },
                   icon: const Icon(Icons.copy, size: 16),
                   label: Text(l10n.copyToClipboard),

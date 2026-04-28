@@ -4060,4 +4060,85 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get tagItemSemanticHint => '長押しで編集';
+
+  @override
+  String get moreActions => 'その他の操作';
+
+  @override
+  String get statusSaved => '保存済み';
+
+  @override
+  String get statusUnsaved => '未保存';
+
+  @override
+  String get statusSaving => '保存中...';
+
+  @override
+  String get selectItemToView => '項目を選択して表示';
+
+  @override
+  String get syncConflicts => 'Sync Conflicts';
+
+  @override
+  String get noConflicts => 'No conflicts to resolve';
+
+  @override
+  String conflictItem(String itemId) {
+    return 'Item: $itemId';
+  }
+
+  @override
+  String serverVersion(int version) {
+    return 'Server version: $version';
+  }
+
+  @override
+  String get keepLocal => 'Keep Local';
+
+  @override
+  String get keepServer => 'Keep Server';
+
+  @override
+  String get keepBoth => 'Keep Both';
+
+  @override
+  String get findInNote => 'Find in note';
+
+  @override
+  String get replaceWith => 'Replace with';
+
+  @override
+  String get noMatches => 'No matches';
+
+  @override
+  String matchCount(int current, int total) {
+    return '$current of $total';
+  }
+
+  @override
+  String get findPrevious => 'Previous match';
+
+  @override
+  String get findNext => 'Next match';
+
+  @override
+  String get replaceMatch => 'Replace';
+
+  @override
+  String get replaceAllMatches => 'Replace all';
+
+  @override
+  String get closeFindBar => 'Close find bar';
+
+  @override
+  String get codeBlock => 'Code block';
+
+  @override
+  String get checklist => 'Checklist';
+
+  @override
+  String get indent => 'Indent';
+
+  @override
+  String get outdent => 'Outdent';
 }

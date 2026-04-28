@@ -1,14 +1,17 @@
 import 'dart:async';
 
+import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:anynote/core/collab/crdt_editor_controller.dart';
 import 'package:anynote/core/collab/crdt_text.dart';
 import 'package:anynote/core/collab/ws_client.dart';
+import 'package:anynote/core/database/app_database.dart';
 import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/features/collab/providers/collab_provider.dart';
-import 'package:anynote/main.dart' show apiClientProvider;
+import 'package:anynote/main.dart' show apiClientProvider, databaseProvider;
 
 // ---------------------------------------------------------------------------
 // Mock WSClient that records method calls and allows simulating incoming
@@ -82,8 +85,7 @@ class MockWSClientNotifier extends StateNotifier<WSConnectionState>
     implements WSClientNotifier {
   final MockWSClient _mockClient;
 
-  MockWSClientNotifier(this._mockClient)
-      : super(WSConnectionState.connected);
+  MockWSClientNotifier(this._mockClient) : super(WSConnectionState.connected);
 
   @override
   WSClient get client => _mockClient;
@@ -106,6 +108,18 @@ class StubApiClient extends ApiClient {
 }
 
 void main() {
+  // Shared in-memory database for all collab provider tests.
+  late AppDatabase testDb;
+
+  setUp(() {
+    testDb = AppDatabase.forTesting(NativeDatabase.memory());
+    SharedPreferences.setMockInitialValues({});
+    CollabNotifier.resetSiteIdCache();
+  });
+
+  tearDown(() async {
+    await testDb.close();
+  });
   // ===========================================================================
   // CollabSessionState
   // ===========================================================================
@@ -161,11 +175,14 @@ void main() {
     late CollabNotifier notifier;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      CollabNotifier.resetSiteIdCache();
       mockClient = MockWSClient();
 
       // Override wsClientProvider to use the mock.
       container = ProviderContainer(
         overrides: [
+          databaseProvider.overrideWithValue(testDb),
           apiClientProvider.overrideWithValue(StubApiClient()),
           wsClientProvider.overrideWith((ref) {
             return MockWSClientNotifier(mockClient);
@@ -188,8 +205,8 @@ void main() {
       expect(state.editorController, isNull);
     });
 
-    test('joinRoom creates editor controller and joins WS room', () {
-      notifier.joinRoom('note-123');
+    test('joinRoom creates editor controller and joins WS room', () async {
+      await notifier.joinRoom('note-123');
 
       final state = container.read(collabProvider);
       expect(state.noteId, 'note-123');
@@ -197,22 +214,22 @@ void main() {
       expect(mockClient.joinedRooms, ['note-123']);
     });
 
-    test('joinRoom replaces previous session', () {
-      notifier.joinRoom('note-first');
+    test('joinRoom replaces previous session', () async {
+      await notifier.joinRoom('note-first');
       expect(mockClient.joinedRooms, ['note-first']);
 
-      notifier.joinRoom('note-second');
+      await notifier.joinRoom('note-second');
       expect(mockClient.joinedRooms, ['note-first', 'note-second']);
 
       final state = container.read(collabProvider);
       expect(state.noteId, 'note-second');
     });
 
-    test('joinRoom with existing CRDT uses provided document', () {
+    test('joinRoom with existing CRDT uses provided document', () async {
       final existingCrdt = CRDTText('site-existing');
       existingCrdt.localInsert(0, 'existing text');
 
-      notifier.joinRoom('note-crdt', existingCrdt: existingCrdt);
+      await notifier.joinRoom('note-crdt', existingCrdt: existingCrdt);
 
       final state = container.read(collabProvider);
       expect(state.editorController, isNotNull);
@@ -220,8 +237,8 @@ void main() {
       expect(state.editorController!.crdt.text, 'existing text');
     });
 
-    test('leaveRoom clears state and leaves WS room', () {
-      notifier.joinRoom('note-leave');
+    test('leaveRoom clears state and leaves WS room', () async {
+      await notifier.joinRoom('note-leave');
       expect(container.read(collabProvider).noteId, 'note-leave');
 
       notifier.leaveRoom();
@@ -233,7 +250,7 @@ void main() {
       expect(mockClient.leftRooms, ['note-leave']);
     });
 
-    test('leaveRoom without active session is a no-op', () {
+    test('leaveRoom without active session is a no-op', () async {
       // Should not throw.
       notifier.leaveRoom();
 
@@ -242,8 +259,8 @@ void main() {
       expect(mockClient.leftRooms, isEmpty);
     });
 
-    test('sendCursorPosition sends cursor via WS client', () {
-      notifier.joinRoom('note-cursor');
+    test('sendCursorPosition sends cursor via WS client', () async {
+      await notifier.joinRoom('note-cursor');
 
       notifier.sendCursorPosition(42);
 
@@ -257,7 +274,7 @@ void main() {
     });
 
     test('connection state updates propagate to session state', () async {
-      notifier.joinRoom('note-conn');
+      await notifier.joinRoom('note-conn');
       expect(container.read(collabProvider).isConnected, isTrue);
 
       // Simulate disconnection.
@@ -274,7 +291,7 @@ void main() {
     });
 
     test('dispose cleans up resources', () async {
-      notifier.joinRoom('note-dispose');
+      await notifier.joinRoom('note-dispose');
 
       // Dispose via the container (which calls notifier.dispose internally).
       // This should not throw.
@@ -284,6 +301,7 @@ void main() {
       // Re-create container for subsequent tests.
       container = ProviderContainer(
         overrides: [
+          databaseProvider.overrideWithValue(testDb),
           apiClientProvider.overrideWithValue(StubApiClient()),
           wsClientProvider.overrideWith((ref) {
             return MockWSClientNotifier(mockClient);
@@ -308,9 +326,12 @@ void main() {
     late CollabNotifier notifier;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      CollabNotifier.resetSiteIdCache();
       mockClient = MockWSClient();
       container = ProviderContainer(
         overrides: [
+          databaseProvider.overrideWithValue(testDb),
           apiClientProvider.overrideWithValue(StubApiClient()),
           wsClientProvider.overrideWith((ref) {
             return MockWSClientNotifier(mockClient);
@@ -326,7 +347,7 @@ void main() {
     });
 
     test('local insert triggers batched send after debounce', () async {
-      notifier.joinRoom('note-batch');
+      await notifier.joinRoom('note-batch');
 
       final editorController = container.read(collabProvider).editorController!;
 
@@ -345,7 +366,7 @@ void main() {
     });
 
     test('multiple rapid edits are batched into single send', () async {
-      notifier.joinRoom('note-batch-multi');
+      await notifier.joinRoom('note-batch-multi');
 
       final editorController = container.read(collabProvider).editorController!;
 
@@ -379,9 +400,12 @@ void main() {
     late CollabNotifier notifier;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      CollabNotifier.resetSiteIdCache();
       mockClient = MockWSClient();
       container = ProviderContainer(
         overrides: [
+          databaseProvider.overrideWithValue(testDb),
           apiClientProvider.overrideWithValue(StubApiClient()),
           wsClientProvider.overrideWith((ref) {
             return MockWSClientNotifier(mockClient);
@@ -397,7 +421,7 @@ void main() {
     });
 
     test('remote edit message updates editor controller', () async {
-      notifier.joinRoom('note-remote');
+      await notifier.joinRoom('note-remote');
 
       final editorController = container.read(collabProvider).editorController!;
 
@@ -406,14 +430,16 @@ void main() {
       final remoteNodes = remoteCrdt.localInsert(0, 'remote');
 
       // Simulate receiving an edit message.
-      mockClient.simulateMessage(WSMessage(WSMessageType.edit, {
-        'room': 'note-remote',
-        'ops': [
-          {
-            'inserts': remoteNodes.map((n) => n.toJson()).toList(),
-          },
-        ],
-      }),);
+      mockClient.simulateMessage(
+        WSMessage(WSMessageType.edit, {
+          'room': 'note-remote',
+          'ops': [
+            {
+              'inserts': remoteNodes.map((n) => n.toJson()).toList(),
+            },
+          ],
+        }),
+      );
 
       await Future<void>.delayed(Duration.zero);
 
@@ -422,7 +448,7 @@ void main() {
     });
 
     test('remote edit with delete operations', () async {
-      notifier.joinRoom('note-remote-del');
+      await notifier.joinRoom('note-remote-del');
 
       final editorController = container.read(collabProvider).editorController!;
 
@@ -434,14 +460,16 @@ void main() {
       // Simulate receiving a delete for node 'b' (index 1).
       final nodeIdToDelete = localNodes[1].id;
 
-      mockClient.simulateMessage(WSMessage(WSMessageType.edit, {
-        'room': 'note-remote-del',
-        'ops': [
-          {
-            'deletes': [nodeIdToDelete],
-          },
-        ],
-      }),);
+      mockClient.simulateMessage(
+        WSMessage(WSMessageType.edit, {
+          'room': 'note-remote-del',
+          'ops': [
+            {
+              'deletes': [nodeIdToDelete],
+            },
+          ],
+        }),
+      );
 
       await Future<void>.delayed(Duration.zero);
 
@@ -450,13 +478,15 @@ void main() {
     });
 
     test('cursor message is acknowledged without error', () async {
-      notifier.joinRoom('note-cursor-remote');
+      await notifier.joinRoom('note-cursor-remote');
 
       // Should not throw.
-      mockClient.simulateMessage(WSMessage(WSMessageType.cursor, {
-        'room': 'note-cursor-remote',
-        'position': 5,
-      }),);
+      mockClient.simulateMessage(
+        WSMessage(WSMessageType.cursor, {
+          'room': 'note-cursor-remote',
+          'position': 5,
+        }),
+      );
 
       await Future<void>.delayed(Duration.zero);
 
@@ -466,12 +496,14 @@ void main() {
     });
 
     test('edit message with no ops is handled gracefully', () async {
-      notifier.joinRoom('note-empty-ops');
+      await notifier.joinRoom('note-empty-ops');
 
-      mockClient.simulateMessage(WSMessage(WSMessageType.edit, {
-        'room': 'note-empty-ops',
-        // No 'ops' key.
-      }),);
+      mockClient.simulateMessage(
+        WSMessage(WSMessageType.edit, {
+          'room': 'note-empty-ops',
+          // No 'ops' key.
+        }),
+      );
 
       await Future<void>.delayed(Duration.zero);
 
@@ -481,12 +513,14 @@ void main() {
     });
 
     test('edit message with empty ops list is handled gracefully', () async {
-      notifier.joinRoom('note-no-ops');
+      await notifier.joinRoom('note-no-ops');
 
-      mockClient.simulateMessage(WSMessage(WSMessageType.edit, {
-        'room': 'note-no-ops',
-        'ops': <Map<String, dynamic>>[],
-      }),);
+      mockClient.simulateMessage(
+        WSMessage(WSMessageType.edit, {
+          'room': 'note-no-ops',
+          'ops': <Map<String, dynamic>>[],
+        }),
+      );
 
       await Future<void>.delayed(Duration.zero);
 
@@ -496,12 +530,14 @@ void main() {
 
     test('incoming edit before joinRoom is ignored', () async {
       // No room joined. Simulate a stray message.
-      mockClient.simulateMessage(WSMessage(WSMessageType.edit, {
-        'room': 'note-stray',
-        'ops': [
-          {'inserts': []},
-        ],
-      }),);
+      mockClient.simulateMessage(
+        WSMessage(WSMessageType.edit, {
+          'room': 'note-stray',
+          'ops': [
+            {'inserts': []},
+          ],
+        }),
+      );
 
       await Future<void>.delayed(Duration.zero);
 

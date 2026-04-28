@@ -24,7 +24,7 @@ func NewSyncBlobRepository(pool *pgxpool.Pool) *SyncBlobRepository {
 // limit controls the page size, cursor is the last version from the previous page (0 for first page).
 func (r *SyncBlobRepository) PullSince(ctx context.Context, userID uuid.UUID, sinceVersion int) ([]domain.SyncBlob, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT id, user_id, item_type, item_id, version, encrypted_data, blob_size, created_at, updated_at
+		`SELECT id, user_id, item_type, item_id, version, encrypted_data, blob_size, device_id, created_at, updated_at
 		 FROM sync_blobs
 		 WHERE user_id = $1 AND version > $2
 		 ORDER BY version ASC`,
@@ -38,7 +38,7 @@ func (r *SyncBlobRepository) PullSince(ctx context.Context, userID uuid.UUID, si
 	var blobs []domain.SyncBlob
 	for rows.Next() {
 		var b domain.SyncBlob
-		if err := rows.Scan(&b.ID, &b.UserID, &b.ItemType, &b.ItemID, &b.Version, &b.EncryptedData, &b.BlobSize, &b.CreatedAt, &b.UpdatedAt); err != nil {
+		if err := rows.Scan(&b.ID, &b.UserID, &b.ItemType, &b.ItemID, &b.Version, &b.EncryptedData, &b.BlobSize, &b.DeviceID, &b.CreatedAt, &b.UpdatedAt); err != nil {
 			return nil, err
 		}
 		blobs = append(blobs, b)
@@ -50,7 +50,7 @@ func (r *SyncBlobRepository) PullSince(ctx context.Context, userID uuid.UUID, si
 // ordered by version ascending for deterministic cursor-based pagination.
 func (r *SyncBlobRepository) PullSincePaginated(ctx context.Context, userID uuid.UUID, sinceVersion int, limit int) ([]domain.SyncBlob, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT id, user_id, item_type, item_id, version, encrypted_data, blob_size, created_at, updated_at
+		`SELECT id, user_id, item_type, item_id, version, encrypted_data, blob_size, device_id, created_at, updated_at
 		 FROM sync_blobs
 		 WHERE user_id = $1 AND version > $2
 		 ORDER BY version ASC
@@ -65,7 +65,7 @@ func (r *SyncBlobRepository) PullSincePaginated(ctx context.Context, userID uuid
 	var blobs []domain.SyncBlob
 	for rows.Next() {
 		var b domain.SyncBlob
-		if err := rows.Scan(&b.ID, &b.UserID, &b.ItemType, &b.ItemID, &b.Version, &b.EncryptedData, &b.BlobSize, &b.CreatedAt, &b.UpdatedAt); err != nil {
+		if err := rows.Scan(&b.ID, &b.UserID, &b.ItemType, &b.ItemID, &b.Version, &b.EncryptedData, &b.BlobSize, &b.DeviceID, &b.CreatedAt, &b.UpdatedAt); err != nil {
 			return nil, err
 		}
 		blobs = append(blobs, b)
@@ -88,12 +88,12 @@ func (r *SyncBlobRepository) HasMoreSince(ctx context.Context, userID uuid.UUID,
 // Returns false if the server already has an equal or newer version (conflict).
 func (r *SyncBlobRepository) Upsert(ctx context.Context, blob *domain.SyncBlob) (bool, error) {
 	tag, err := r.pool.Exec(ctx,
-		`INSERT INTO sync_blobs (user_id, item_type, item_id, version, encrypted_data, blob_size, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+		`INSERT INTO sync_blobs (user_id, item_type, item_id, version, encrypted_data, blob_size, device_id, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 		 ON CONFLICT (user_id, item_type, item_id) DO UPDATE
-		 SET version = $4, encrypted_data = $5, blob_size = $6, updated_at = NOW()
+		 SET version = $4, encrypted_data = $5, blob_size = $6, device_id = $7, updated_at = NOW()
 		 WHERE sync_blobs.version < $4`,
-		blob.UserID, blob.ItemType, blob.ItemID, blob.Version, blob.EncryptedData, blob.BlobSize,
+		blob.UserID, blob.ItemType, blob.ItemID, blob.Version, blob.EncryptedData, blob.BlobSize, blob.DeviceID,
 	)
 	if err != nil {
 		return false, fmt.Errorf("upsert sync blob: %w", err)
@@ -125,23 +125,36 @@ func (r *SyncBlobRepository) BatchUpsert(ctx context.Context, blobs []*domain.Sy
 		return results
 	}
 
+	// Wrap the entire batch in a transaction for atomicity.
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		for i := range blobs {
+			results[i].ItemID = blobs[i].ItemID
+			results[i].ItemType = blobs[i].ItemType
+			results[i].ClientVersion = blobs[i].Version
+			results[i].Error = fmt.Errorf("begin transaction: %w", err)
+		}
+		return results
+	}
+	defer tx.Rollback(ctx)
+
 	// Phase 1: Send all upsert queries in a single batch.
 	batch := &pgx.Batch{}
 	for i, blob := range blobs {
 		batch.Queue(
-			`INSERT INTO sync_blobs (user_id, item_type, item_id, version, encrypted_data, blob_size, created_at, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+			`INSERT INTO sync_blobs (user_id, item_type, item_id, version, encrypted_data, blob_size, device_id, created_at, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 			 ON CONFLICT (user_id, item_type, item_id) DO UPDATE
-			 SET version = $4, encrypted_data = $5, blob_size = $6, updated_at = NOW()
+			 SET version = $4, encrypted_data = $5, blob_size = $6, device_id = $7, updated_at = NOW()
 			 WHERE sync_blobs.version < $4`,
-			blob.UserID, blob.ItemType, blob.ItemID, blob.Version, blob.EncryptedData, blob.BlobSize,
+			blob.UserID, blob.ItemType, blob.ItemID, blob.Version, blob.EncryptedData, blob.BlobSize, blob.DeviceID,
 		)
 		results[i].ItemID = blob.ItemID
 		results[i].ItemType = blob.ItemType
 		results[i].ClientVersion = blob.Version
 	}
 
-	br := r.pool.SendBatch(ctx, batch)
+	br := tx.SendBatch(ctx, batch)
 	defer br.Close()
 
 	// Collect results from phase 1.
@@ -170,7 +183,7 @@ func (r *SyncBlobRepository) BatchUpsert(ctx context.Context, blobs []*domain.Sy
 			)
 		}
 
-		vbr := r.pool.SendBatch(ctx, verBatch)
+		vbr := tx.SendBatch(ctx, verBatch)
 		defer vbr.Close()
 
 		for _, idx := range conflictIndices {
@@ -182,6 +195,12 @@ func (r *SyncBlobRepository) BatchUpsert(ctx context.Context, blobs []*domain.Sy
 				results[idx].ServerVersion = serverVersion
 				blobs[idx].Version = serverVersion
 			}
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		for i := range blobs {
+			results[i].Error = fmt.Errorf("commit batch upsert: %w", err)
 		}
 	}
 
@@ -432,4 +451,17 @@ func (r *SyncBlobRepository) ListOperationLogs(ctx context.Context, userID uuid.
 		logs = append(logs, l)
 	}
 	return logs, rows.Err()
+}
+
+// CleanOldOperationLogs removes sync_operation_logs entries older than retentionDays.
+// Returns the number of rows deleted.
+func (r *SyncBlobRepository) CleanOldOperationLogs(ctx context.Context, retentionDays int) (int64, error) {
+	tag, err := r.pool.Exec(ctx,
+		`DELETE FROM sync_operation_logs WHERE created_at < NOW() - $1::interval`,
+		fmt.Sprintf("%d days", retentionDays),
+	)
+	if err != nil {
+		return 0, fmt.Errorf("clean old operation logs: %w", err)
+	}
+	return tag.RowsAffected(), nil
 }

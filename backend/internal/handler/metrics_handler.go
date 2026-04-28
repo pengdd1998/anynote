@@ -40,41 +40,13 @@ func MetricsHandler() http.Handler {
 	return promhttp.Handler()
 }
 
-// responseWriterWithStatus wraps http.ResponseWriter to capture the status code
-// for Prometheus instrumentation.
-type responseWriterWithStatus struct {
-	http.ResponseWriter
-	status      int
-	wroteHeader bool
-}
-
-func newResponseWriterWithStatus(w http.ResponseWriter) *responseWriterWithStatus {
-	return &responseWriterWithStatus{ResponseWriter: w, status: http.StatusOK}
-}
-
-func (rw *responseWriterWithStatus) WriteHeader(code int) {
-	if !rw.wroteHeader {
-		rw.status = code
-		rw.wroteHeader = true
-	}
-	rw.ResponseWriter.WriteHeader(code)
-}
-
-// Flush forwards Flush calls to the underlying ResponseWriter so that SSE
-// streaming works through this middleware.
-func (rw *responseWriterWithStatus) Flush() {
-	if flusher, ok := rw.ResponseWriter.(http.Flusher); ok {
-		flusher.Flush()
-	}
-}
-
 // MetricsMiddleware instruments all HTTP requests with Prometheus counter and
 // histogram metrics. It should be inserted before the RequestLogger so that
 // every request is recorded regardless of downstream errors.
 func MetricsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		rw := newResponseWriterWithStatus(w)
+		rw := newInstrumentedResponseWriter(w)
 
 		next.ServeHTTP(rw, r)
 
@@ -88,7 +60,7 @@ func MetricsMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		httpRequestsTotal.WithLabelValues(r.Method, routePattern, strconv.Itoa(rw.status)).Inc()
+		httpRequestsTotal.WithLabelValues(r.Method, routePattern, strconv.Itoa(rw.Status())).Inc()
 		httpRequestDuration.WithLabelValues(r.Method, routePattern).Observe(duration)
 	})
 }

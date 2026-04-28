@@ -2,7 +2,9 @@ package handler
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -79,8 +81,7 @@ func (h *PlatformHandler) Connect(w http.ResponseWriter, r *http.Request) {
 
 	// Send the QR code as the first event.
 	qrB64 := base64.StdEncoding.EncodeToString(qrPNG)
-	fmt.Fprintf(w, "event: qr_code\ndata: {\"auth_ref\":\"%s\",\"qr_png_base64\":\"%s\"}\n\n", authRef, qrB64)
-	flusher.Flush()
+	writeSSE(w, flusher, "qr_code", map[string]string{"auth_ref": authRef, "qr_png_base64": qrB64})
 
 	// Poll for auth completion.
 	pollCtx := r.Context()
@@ -94,26 +95,22 @@ func (h *PlatformHandler) Connect(w http.ResponseWriter, r *http.Request) {
 		case <-pollCtx.Done():
 			return
 		case <-timeout:
-			fmt.Fprintf(w, "event: status\ndata: {\"status\":\"failed\",\"error\":\"authentication timed out\"}\n\n")
-			flusher.Flush()
+			writeSSE(w, flusher, "status", map[string]string{"status": "failed", "error": "authentication timed out"})
 			return
 		case <-ticker.C:
 			encryptedAuth, pollErr := h.platformService.PollAuth(pollCtx, userID, platformName, authRef, h.masterKey)
 			if pollErr != nil {
-				fmt.Fprintf(w, "event: status\ndata: {\"status\":\"failed\",\"error\":\"%s\"}\n\n", pollErr.Error())
-				flusher.Flush()
+				writeSSE(w, flusher, "status", map[string]string{"status": "failed", "error": sanitizeError(pollErr)})
 				return
 			}
 			if encryptedAuth == nil {
 				// Still waiting.
-				fmt.Fprintf(w, "event: status\ndata: {\"status\":\"waiting\"}\n\n")
-				flusher.Flush()
+				writeSSE(w, flusher, "status", map[string]string{"status": "waiting"})
 				continue
 			}
 
 			// Auth succeeded.
-			fmt.Fprintf(w, "event: status\ndata: {\"status\":\"done\"}\n\n")
-			flusher.Flush()
+			writeSSE(w, flusher, "status", map[string]string{"status": "done"})
 			return
 		}
 	}
@@ -163,4 +160,25 @@ func (h *PlatformHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, conn)
+}
+
+// writeSSE marshals data to JSON and writes a server-sent event.
+func writeSSE(w http.ResponseWriter, flusher http.Flusher, event string, data interface{}) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		slog.Error("failed to marshal SSE data", "error", err)
+		return
+	}
+	fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event, jsonData)
+	flusher.Flush()
+}
+
+// sanitizeError truncates and sanitizes error messages to avoid leaking
+// internal details in SSE responses.
+func sanitizeError(err error) string {
+	msg := err.Error()
+	if len(msg) > 200 {
+		msg = msg[:200] + "..."
+	}
+	return msg
 }

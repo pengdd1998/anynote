@@ -42,6 +42,9 @@ func (s *routerStubAuthService) GetRecoverySalt(ctx context.Context, userID uuid
 func (s *routerStubAuthService) GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
 	return nil, nil
 }
+func (s *routerStubAuthService) RecoverAccount(ctx context.Context, req *domain.RecoverRequest) error {
+	return nil
+}
 
 // routerStubSyncService implements service.SyncService.
 type routerStubSyncService struct{}
@@ -218,6 +221,7 @@ func (s *routerStubPresenceService) SubscribeRoom(ctx context.Context, room stri
 	close(ch)
 	return ch
 }
+func (s *routerStubPresenceService) Heartbeat(ctx context.Context, room string) error { return nil }
 
 // routerStubPinger implements Pinger for health handler.
 type routerStubPinger struct{}

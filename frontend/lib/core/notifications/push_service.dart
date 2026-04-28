@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +7,7 @@ import '../../main.dart';
 import '../../routing/app_router.dart';
 import '../network/api_client.dart';
 import '../monitoring/error_reporter.dart';
+import '../platform/platform_utils.dart';
 
 /// Background message handler must be a top-level function.
 @pragma('vm:entry-point')
@@ -19,7 +18,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 /// Provider for the PushNotificationService singleton.
-final pushNotificationServiceProvider = Provider<PushNotificationService>((ref) {
+final pushNotificationServiceProvider =
+    Provider<PushNotificationService>((ref) {
   return PushNotificationService(ref.read(apiClientProvider));
 });
 
@@ -65,7 +65,7 @@ class PushNotificationService {
     try {
       // Firebase may not be configured in development builds.
       // Wrap in try/catch so the app continues to work without Firebase.
-      if (!Platform.isLinux && !Platform.isWindows) {
+      if (!PlatformUtils.isDesktop) {
         await Firebase.initializeApp();
       } else {
         // Firebase Messaging is not supported on desktop platforms.
@@ -142,7 +142,8 @@ class PushNotificationService {
       await _apiClient.registerDevice(token, platform);
       debugPrint('Device token registered: ${token.substring(0, 8)}...');
     } catch (e) {
-      ErrorReporter.instance.reportError(e, StackTrace.current, context: 'push_register');
+      ErrorReporter.instance
+          .reportError(e, StackTrace.current, context: 'push_register');
     }
   }
 
@@ -152,7 +153,8 @@ class PushNotificationService {
       await _apiClient.unregisterDevice(token);
       debugPrint('Device token unregistered');
     } catch (e) {
-      ErrorReporter.instance.reportError(e, StackTrace.current, context: 'push_unregister');
+      ErrorReporter.instance
+          .reportError(e, StackTrace.current, context: 'push_unregister');
     }
   }
 
@@ -215,9 +217,9 @@ class PushNotificationService {
   /// Detect the current platform for device registration.
   String _detectPlatform() {
     if (kIsWeb) return 'web';
-    if (Platform.isAndroid) return 'android';
-    if (Platform.isIOS) return 'ios';
-    if (Platform.isMacOS) return 'ios'; // macOS uses APNs-like tokens
+    if (PlatformUtils.isAndroid) return 'android';
+    if (PlatformUtils.isIOS) return 'ios';
+    if (PlatformUtils.isMacOS) return 'ios'; // macOS uses APNs-like tokens
     return 'web';
   }
 

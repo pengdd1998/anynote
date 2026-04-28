@@ -2137,5 +2137,11 @@
   "barChartSemanticLabel": "月別ノート数の棒グラフ：{entries}",
   "donutChartSemanticLabel": "分布を示すドーナツチャート：{entries}",
   "tagItemSemanticLabel": "タグ：{name}",
-  "tagItemSemanticHint": "長押しで編集"
+  "tagItemSemanticHint": "長押しで編集",
+
+  "moreActions": "その他の操作",
+  "statusSaved": "保存済み",
+  "statusUnsaved": "未保存",
+  "statusSaving": "保存中...",
+  "selectItemToView": "項目を選択して表示"
 }

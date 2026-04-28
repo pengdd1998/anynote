@@ -6,6 +6,7 @@ import '../../../core/crypto/key_storage.dart';
 import '../../../core/network/connectivity_service.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_queue_manager.dart';
+import 'api_models.dart';
 
 // ── Sync Engine Provider ──────────────────────────────
 
@@ -41,11 +42,12 @@ final syncQueueManagerProvider = Provider<SyncQueueManager>((ref) {
 // ── AI Quota ──────────────────────────────────────────
 
 /// Async notifier that fetches and exposes AI quota data.
-class AiQuotaNotifier extends AsyncNotifier<Map<String, dynamic>> {
+class AiQuotaNotifier extends AsyncNotifier<AiQuota> {
   @override
-  Future<Map<String, dynamic>> build() async {
+  Future<AiQuota> build() async {
     final api = ref.read(apiClientProvider);
-    return api.getAiQuota();
+    final raw = await api.getAiQuota();
+    return AiQuota.fromJson(raw);
   }
 
   /// Refresh the AI quota from the server.
@@ -53,24 +55,25 @@ class AiQuotaNotifier extends AsyncNotifier<Map<String, dynamic>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final api = ref.read(apiClientProvider);
-      return api.getAiQuota();
+      final raw = await api.getAiQuota();
+      return AiQuota.fromJson(raw);
     });
   }
 }
 
-final aiQuotaProvider =
-    AsyncNotifierProvider<AiQuotaNotifier, Map<String, dynamic>>(
+final aiQuotaProvider = AsyncNotifierProvider<AiQuotaNotifier, AiQuota>(
   AiQuotaNotifier.new,
 );
 
 // ── Sync Status ───────────────────────────────────────
 
 /// Async notifier that fetches sync status from the server and local DB.
-class SyncStatusNotifier extends AsyncNotifier<Map<String, dynamic>> {
+class SyncStatusNotifier extends AsyncNotifier<SyncStatusInfo> {
   @override
-  Future<Map<String, dynamic>> build() async {
+  Future<SyncStatusInfo> build() async {
     final api = ref.read(apiClientProvider);
-    return api.syncStatus();
+    final raw = await api.syncStatus();
+    return SyncStatusInfo.fromJson(raw);
   }
 
   /// Trigger a full sync cycle and refresh status afterwards.
@@ -78,7 +81,8 @@ class SyncStatusNotifier extends AsyncNotifier<Map<String, dynamic>> {
     final engine = ref.read(syncEngineProvider);
     final result = await engine.sync();
     // Refresh sync status after sync completes.
-    state = AsyncData(await ref.read(apiClientProvider).syncStatus());
+    final raw = await ref.read(apiClientProvider).syncStatus();
+    state = AsyncData(SyncStatusInfo.fromJson(raw));
     return result;
   }
 
@@ -87,49 +91,52 @@ class SyncStatusNotifier extends AsyncNotifier<Map<String, dynamic>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final api = ref.read(apiClientProvider);
-      return api.syncStatus();
+      final raw = await api.syncStatus();
+      return SyncStatusInfo.fromJson(raw);
     });
   }
 }
 
 final syncStatusProvider =
-    AsyncNotifierProvider<SyncStatusNotifier, Map<String, dynamic>>(
+    AsyncNotifierProvider<SyncStatusNotifier, SyncStatusInfo>(
   SyncStatusNotifier.new,
 );
 
 // ── Account Info ──────────────────────────────────────
 
 /// Loads account info from the server via GET /api/v1/auth/me.
-class AccountInfoNotifier extends AsyncNotifier<Map<String, dynamic>> {
+class AccountInfoNotifier extends AsyncNotifier<AccountInfo> {
   @override
-  Future<Map<String, dynamic>> build() async {
+  Future<AccountInfo> build() async {
     final api = ref.read(apiClientProvider);
-    return api.getMe();
+    final raw = await api.getMe();
+    return AccountInfo.fromJson(raw);
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final api = ref.read(apiClientProvider);
-      return api.getMe();
+      final raw = await api.getMe();
+      return AccountInfo.fromJson(raw);
     });
   }
 }
 
 final accountInfoProvider =
-    AsyncNotifierProvider<AccountInfoNotifier, Map<String, dynamic>>(
+    AsyncNotifierProvider<AccountInfoNotifier, AccountInfo>(
   AccountInfoNotifier.new,
 );
 
 // ── LLM Configs ───────────────────────────────────────
 
 /// Manages the list of LLM configurations.
-class LlmConfigsNotifier
-    extends AsyncNotifier<List<Map<String, dynamic>>> {
+class LlmConfigsNotifier extends AsyncNotifier<List<LlmConfig>> {
   @override
-  Future<List<Map<String, dynamic>>> build() async {
+  Future<List<LlmConfig>> build() async {
     final api = ref.read(apiClientProvider);
-    return api.listLlmConfigs();
+    final rawList = await api.listLlmConfigs();
+    return rawList.map((raw) => LlmConfig.fromJson(raw)).toList();
   }
 
   /// Create a new LLM config and refresh the list.
@@ -166,7 +173,7 @@ class LlmConfigsNotifier
 }
 
 final llmConfigsProvider =
-    AsyncNotifierProvider<LlmConfigsNotifier, List<Map<String, dynamic>>>(
+    AsyncNotifierProvider<LlmConfigsNotifier, List<LlmConfig>>(
   LlmConfigsNotifier.new,
 );
 
@@ -179,11 +186,12 @@ final llmProvidersProvider = FutureProvider<List<String>>((ref) async {
 // ── Platform Connections ──────────────────────────────
 
 /// Manages platform connection status.
-class PlatformsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
+class PlatformsNotifier extends AsyncNotifier<List<PlatformConnection>> {
   @override
-  Future<List<Map<String, dynamic>>> build() async {
+  Future<List<PlatformConnection>> build() async {
     final api = ref.read(apiClientProvider);
-    return api.listPlatforms();
+    final rawList = await api.listPlatforms();
+    return rawList.map((raw) => PlatformConnection.fromJson(raw)).toList();
   }
 
   /// Connect to a platform and refresh the list.
@@ -214,7 +222,7 @@ class PlatformsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
 }
 
 final platformsProvider =
-    AsyncNotifierProvider<PlatformsNotifier, List<Map<String, dynamic>>>(
+    AsyncNotifierProvider<PlatformsNotifier, List<PlatformConnection>>(
   PlatformsNotifier.new,
 );
 
@@ -225,10 +233,12 @@ class EncryptionStatusNotifier extends StateNotifier<EncryptionStatus> {
   final CryptoService _cryptoService;
 
   EncryptionStatusNotifier(this._cryptoService)
-      : super(const EncryptionStatus(
-          isInitialized: false,
-          isUnlocked: false,
-        ),) {
+      : super(
+          const EncryptionStatus(
+            isInitialized: false,
+            isUnlocked: false,
+          ),
+        ) {
     _loadStatus();
   }
 

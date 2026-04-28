@@ -4268,4 +4268,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tagItemSemanticHint => 'Long press to edit';
+
+  @override
+  String get moreActions => 'More actions';
+
+  @override
+  String get statusSaved => 'Saved';
+
+  @override
+  String get statusUnsaved => 'Unsaved';
+
+  @override
+  String get statusSaving => 'Saving...';
+
+  @override
+  String get selectItemToView => 'Select an item to view';
+
+  @override
+  String get syncConflicts => 'Sync Conflicts';
+
+  @override
+  String get noConflicts => 'No conflicts to resolve';
+
+  @override
+  String conflictItem(String itemId) {
+    return 'Item: $itemId';
+  }
+
+  @override
+  String serverVersion(int version) {
+    return 'Server version: $version';
+  }
+
+  @override
+  String get keepLocal => 'Keep Local';
+
+  @override
+  String get keepServer => 'Keep Server';
+
+  @override
+  String get keepBoth => 'Keep Both';
+
+  @override
+  String get findInNote => 'Find in note';
+
+  @override
+  String get replaceWith => 'Replace with';
+
+  @override
+  String get noMatches => 'No matches';
+
+  @override
+  String matchCount(int current, int total) {
+    return '$current of $total';
+  }
+
+  @override
+  String get findPrevious => 'Previous match';
+
+  @override
+  String get findNext => 'Next match';
+
+  @override
+  String get replaceMatch => 'Replace';
+
+  @override
+  String get replaceAllMatches => 'Replace all';
+
+  @override
+  String get closeFindBar => 'Close find bar';
+
+  @override
+  String get codeBlock => 'Code block';
+
+  @override
+  String get checklist => 'Checklist';
+
+  @override
+  String get indent => 'Indent';
+
+  @override
+  String get outdent => 'Outdent';
 }

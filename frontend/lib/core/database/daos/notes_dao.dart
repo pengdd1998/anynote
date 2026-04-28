@@ -85,25 +85,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   /// Count total FTS5 search matches for a query.
   /// Returns the total number of matching note IDs (before LIMIT/OFFSET).
   Future<int> countSearchResults(String query) async {
-    final sanitized = _sanitizeFtsQuery(query);
-    if (sanitized.isEmpty) return 0;
-
-    await customStatement(
-      'CREATE TEMP TABLE IF NOT EXISTS _fts_count (cnt INTEGER NOT NULL)',
-    );
-    await customStatement('DELETE FROM _fts_count');
-    await customStatement(
-      'INSERT INTO _fts_count (cnt) SELECT COUNT(*) FROM notes_fts WHERE notes_fts MATCH ?',
-      [sanitized],
-    );
-
-    final result = await customSelect(
-      'SELECT cnt FROM _fts_count',
-      readsFrom: {notes},
-    ).getSingleOrNull();
-
-    if (result == null) return 0;
-    return result.read<int>('cnt');
+    final ids = await ftsSearchNoteIds(query);
+    return ids.length;
   }
 
   /// Get notes paginated with flexible sort order.
@@ -273,6 +256,13 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
         .write(const NotesCompanion(isSynced: Value(true)));
   }
 
+  /// Mark multiple notes as synced in a single query.
+  Future<void> markSyncedBatch(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await (update(notes)..where((n) => n.id.isIn(ids)))
+        .write(const NotesCompanion(isSynced: Value(true)));
+  }
+
   /// Toggle pin status for a note.
   Future<void> togglePin(String id) async {
     final note = await getNoteById(id);
@@ -335,28 +325,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   /// - Mixed Chinese/English queries work (e.g. "Python教程")
   /// - English queries work as expected (e.g. "flutter riverpod")
   Future<List<Note>> searchNotes(String query) async {
-    final sanitized = _sanitizeFtsQuery(query);
-    if (sanitized.isEmpty) return [];
-
-    // FTS5 MATCH is not compatible with Drift's customSelect SQL parser.
-    // Use a temp table to bridge the gap: write FTS5 results to a temp table
-    // via customStatement, then read from it via customSelect.
-    await customStatement(
-      'CREATE TEMP TABLE IF NOT EXISTS _fts_results (note_id TEXT NOT NULL PRIMARY KEY)',
-    );
-    await customStatement('DELETE FROM _fts_results');
-    await customStatement(
-      'INSERT INTO _fts_results (note_id) SELECT note_id FROM notes_fts WHERE notes_fts MATCH ?',
-      [sanitized],
-    );
-
-    final ftsResults = await customSelect(
-      'SELECT note_id FROM _fts_results',
-      readsFrom: {notes},
-    ).get();
-
-    final matchingIds =
-        ftsResults.map((r) => r.read<String>('note_id')).toList();
+    final matchingIds = await ftsSearchNoteIds(query);
     if (matchingIds.isEmpty) return [];
 
     return (select(notes)
@@ -371,30 +340,15 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     int limit,
     int offset,
   ) async {
-    final sanitized = _sanitizeFtsQuery(query);
-    if (sanitized.isEmpty) return [];
+    final allIds = await ftsSearchNoteIds(query);
+    if (allIds.isEmpty) return [];
 
-    await customStatement(
-      'CREATE TEMP TABLE IF NOT EXISTS _fts_results (note_id TEXT NOT NULL PRIMARY KEY)',
-    );
-    await customStatement('DELETE FROM _fts_results');
-    await customStatement(
-      'INSERT INTO _fts_results (note_id) SELECT note_id FROM notes_fts WHERE notes_fts MATCH ?',
-      [sanitized],
-    );
-
-    final ftsResults = await customSelect(
-      'SELECT note_id FROM _fts_results LIMIT ? OFFSET ?',
-      readsFrom: {notes},
-      variables: [Variable<int>(limit), Variable<int>(offset)],
-    ).get();
-
-    final matchingIds =
-        ftsResults.map((r) => r.read<String>('note_id')).toList();
-    if (matchingIds.isEmpty) return [];
+    // Apply offset and limit to the full result set.
+    final paginatedIds = allIds.skip(offset).take(limit).toList();
+    if (paginatedIds.isEmpty) return [];
 
     return (select(notes)
-          ..where((n) => n.id.isIn(matchingIds) & n.deletedAt.isNull()))
+          ..where((n) => n.id.isIn(paginatedIds) & n.deletedAt.isNull()))
         .get();
   }
 
@@ -475,41 +429,30 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     // Determine the candidate note IDs from FTS5 (if query provided).
     List<String>? ftsIds;
     if (query != null && query.trim().isNotEmpty) {
-      final sanitized = _sanitizeFtsQuery(query);
-      if (sanitized.isEmpty) return [];
-
-      await customStatement(
-        'CREATE TEMP TABLE IF NOT EXISTS _fts_filtered (note_id TEXT NOT NULL PRIMARY KEY)',
-      );
-      await customStatement('DELETE FROM _fts_filtered');
-      await customStatement(
-        'INSERT INTO _fts_filtered (note_id) SELECT note_id FROM notes_fts WHERE notes_fts MATCH ?',
-        [sanitized],
-      );
-
-      final ftsRows = await customSelect(
-        'SELECT note_id FROM _fts_filtered',
-        readsFrom: {notes},
-      ).get();
-
-      ftsIds = ftsRows.map((r) => r.read<String>('note_id')).toList();
+      ftsIds = await ftsSearchNoteIds(query);
       if (ftsIds.isEmpty) return [];
     }
 
     // If tag filter is set, find note IDs that have ALL specified tags.
     List<String>? tagFilteredIds;
     if (tagIds != null && tagIds.isNotEmpty) {
-      // For each tag, collect note IDs; intersect them so notes match ALL tags.
-      Set<String>? intersection;
-      for (final tagId in tagIds) {
-        final rows = await (select(noteTags)
-              ..where((nt) => nt.tagId.equals(tagId)))
-            .get();
-        final ids = rows.map((nt) => nt.noteId).toSet();
-        intersection =
-            intersection == null ? ids : intersection.intersection(ids);
+      // Single query for all tags instead of N individual queries.
+      final allRows =
+          await (select(noteTags)..where((nt) => nt.tagId.isIn(tagIds))).get();
+      // Group note IDs by tag, then intersect to find notes with ALL tags.
+      final notesByTag = <String, Set<String>>{};
+      for (final row in allRows) {
+        notesByTag.putIfAbsent(row.tagId, () => <String>{}).add(row.noteId);
       }
-      tagFilteredIds = intersection?.toList() ?? [];
+      if (notesByTag.length < tagIds.length) {
+        // At least one tag has no notes at all -- no intersection possible.
+        return [];
+      }
+      var intersection = notesByTag.values.first.toSet();
+      for (final noteIds in notesByTag.values) {
+        intersection = intersection.intersection(noteIds);
+      }
+      tagFilteredIds = intersection.toList();
       if (tagFilteredIds.isEmpty) return [];
     }
 
@@ -651,17 +594,23 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       }
       if (matchingTagIds.isEmpty) return [];
 
-      // Find notes that have ALL specified tag filters.
-      Set<String>? intersection;
-      for (final tagId in matchingTagIds) {
-        final rows = await (select(noteTags)
-              ..where((nt) => nt.tagId.equals(tagId)))
-            .get();
-        final ids = rows.map((nt) => nt.noteId).toSet();
-        intersection =
-            intersection == null ? ids : intersection.intersection(ids);
+      // Single query for all matching tags instead of N individual queries.
+      final allTagRows = await (select(noteTags)
+            ..where((nt) => nt.tagId.isIn(matchingTagIds.toList())))
+          .get();
+      // Group note IDs by tag, then intersect to find notes with ALL tags.
+      final notesByTag = <String, Set<String>>{};
+      for (final row in allTagRows) {
+        notesByTag.putIfAbsent(row.tagId, () => <String>{}).add(row.noteId);
       }
-      tagFilteredIds = intersection?.toList() ?? [];
+      if (notesByTag.length < matchingTagIds.length) {
+        return [];
+      }
+      var intersection = notesByTag.values.first.toSet();
+      for (final noteIds in notesByTag.values) {
+        intersection = intersection.intersection(noteIds);
+      }
+      tagFilteredIds = intersection.toList();
       if (tagFilteredIds.isEmpty) return [];
     }
 
@@ -926,6 +875,123 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       'INSERT INTO notes_fts (note_id, content, title) VALUES (?, ?, ?)',
       [noteId, content, title ?? ''],
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Batch loading (N+1 fix)
+  // ---------------------------------------------------------------------------
+
+  /// Batch-load tags for multiple notes in a single query.
+  ///
+  /// Returns a map of note ID -> list of tags. Notes with no tags are
+  /// included with an empty list. This replaces N individual calls to
+  /// [TagsDao.getTagsForNote] with a single SQL query.
+  Future<Map<String, List<Tag>>> batchGetTagsForNotes(
+    List<String> noteIds,
+  ) async {
+    if (noteIds.isEmpty) return {};
+
+    // Fetch all note-tag associations for the given note IDs.
+    final noteTagRows =
+        await (select(noteTags)..where((nt) => nt.noteId.isIn(noteIds))).get();
+
+    if (noteTagRows.isEmpty) {
+      return {for (final id in noteIds) id: <Tag>[]};
+    }
+
+    // Collect unique tag IDs and fetch all matching tags in one query.
+    final tagIds = noteTagRows.map((nt) => nt.tagId).toSet().toList();
+    final tagRows = await (select(tags)..where((t) => t.id.isIn(tagIds))).get();
+    final tagMap = {for (final t in tagRows) t.id: t};
+
+    // Build the result map.
+    final result = <String, List<Tag>>{for (final id in noteIds) id: <Tag>[]};
+    for (final nt in noteTagRows) {
+      final tag = tagMap[nt.tagId];
+      if (tag != null) {
+        result[nt.noteId]?.add(tag);
+      }
+    }
+    return result;
+  }
+
+  /// Batch-load lock state for multiple notes in a single query.
+  ///
+  /// Returns a map of note ID -> whether the note is locked. Notes with
+  /// no lock property are included as `false`.
+  Future<Map<String, bool>> batchGetLocksForNotes(
+    List<String> noteIds,
+  ) async {
+    if (noteIds.isEmpty) return {};
+
+    final props = await (select(noteProperties)
+          ..where((np) =>
+              np.noteId.isIn(noteIds) &
+              np.key.equals('is_locked') &
+              np.valueText.equals('true')))
+        .get();
+
+    final lockedIds = props.map((p) => p.noteId).toSet();
+    return {for (final id in noteIds) id: lockedIds.contains(id)};
+  }
+
+  /// Batch-load properties for multiple notes in a single query.
+  ///
+  /// Returns a map of note ID -> list of properties. Notes with no
+  /// properties are included with an empty list.
+  Future<Map<String, List<NoteProperty>>> batchGetPropertiesForNotes(
+    List<String> noteIds,
+  ) async {
+    if (noteIds.isEmpty) return {};
+
+    final props = await (select(noteProperties)
+          ..where((np) => np.noteId.isIn(noteIds))
+          ..orderBy([(p) => OrderingTerm.asc(p.key)]))
+        .get();
+
+    final result = <String, List<NoteProperty>>{
+      for (final id in noteIds) id: <NoteProperty>[],
+    };
+    for (final prop in props) {
+      result[prop.noteId]?.add(prop);
+    }
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // FTS5 reusable helper
+  // ---------------------------------------------------------------------------
+
+  /// Execute an FTS5 search and return the matching note IDs.
+  ///
+  /// Handles query sanitization and temp table creation internally.
+  /// Returns an empty list if the query is empty or matches nothing.
+  /// The caller can use the returned IDs for further filtering or sorting.
+  Future<List<String>> ftsSearchNoteIds(String query) async {
+    final sanitized = _sanitizeFtsQuery(query);
+    if (sanitized.isEmpty) return [];
+
+    await customStatement(
+      'CREATE TEMP TABLE IF NOT EXISTS _fts_id_lookup '
+      '(note_id TEXT NOT NULL PRIMARY KEY)',
+    );
+    try {
+      await customStatement('DELETE FROM _fts_id_lookup');
+      await customStatement(
+        'INSERT INTO _fts_id_lookup (note_id) '
+        'SELECT note_id FROM notes_fts WHERE notes_fts MATCH ?',
+        [sanitized],
+      );
+
+      final rows = await customSelect(
+        'SELECT note_id FROM _fts_id_lookup',
+        readsFrom: {notes},
+      ).get();
+
+      return rows.map((r) => r.read<String>('note_id')).toList();
+    } finally {
+      await customStatement('DROP TABLE IF EXISTS _fts_id_lookup');
+    }
   }
 
   // ---------------------------------------------------------------------------

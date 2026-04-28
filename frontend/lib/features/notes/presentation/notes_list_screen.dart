@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
@@ -24,6 +25,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/master_detail_layout.dart';
 import '../../../core/widgets/offline_banner.dart';
 import '../../../core/widgets/sidebar_provider.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/pressable_scale.dart';
 import 'widgets/sync_status_indicator.dart';
 import '../../../l10n/app_localizations.dart';
@@ -107,6 +109,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   /// Whether the scroll-to-top FAB should be visible.
   bool _showScrollToTop = false;
 
+  /// Whether the create-note FAB should be visible (hidden on scroll down).
+  bool _showFab = true;
+
   /// Selected note ID for the master-detail layout on desktop.
   /// Null on phone layout.
   String? _selectedNoteId;
@@ -188,6 +193,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   // ---------------------------------------------------------------------------
 
   /// Apply property filters to the notes list.
+  ///
+  /// Uses batch property loading to avoid N+1 queries when filtering
+  /// by status or priority.
   Future<List<Note>> _applyPropertyFilters(
     List<Note> notes,
     AppDatabase db,
@@ -196,49 +204,43 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       return notes;
     }
 
+    // Batch-load properties for all notes that are not already cached.
+    final uncachedIds = notes
+        .where((n) => !_propertiesCache.containsKey(n.id))
+        .map((n) => n.id)
+        .toList();
+
+    if (uncachedIds.isNotEmpty) {
+      final batchProps =
+          await db.notesDao.batchGetPropertiesForNotes(uncachedIds);
+      _propertiesCache.addAll(batchProps);
+      // Evict oldest entries when the cache exceeds the max size.
+      while (_propertiesCache.length > _maxPropertiesCacheSize) {
+        _propertiesCache.remove(_propertiesCache.keys.first);
+      }
+    }
+
     final filtered = <Note>[];
 
     for (final note in notes) {
-      // Load properties for this note (use cache if available)
-      List<NoteProperty>? properties = _propertiesCache[note.id];
-      if (properties == null) {
-        properties = await db.notePropertiesDao.getPropertiesForNote(note.id);
-        if (_propertiesCache.length >= _maxPropertiesCacheSize) {
-          _propertiesCache.remove(_propertiesCache.keys.first);
-        }
-        _propertiesCache[note.id] = properties;
-      }
+      final properties = _propertiesCache[note.id] ?? [];
 
       bool matchesStatus = true;
       bool matchesPriority = true;
 
-      for (final property in properties) {
-        if (property.key == BuiltInProperties.status &&
-            property.valueText == _statusFilter) {
-          matchesStatus = true;
-        }
-        if (property.key == BuiltInProperties.priority &&
-            property.valueText == _priorityFilter) {
-          matchesPriority = true;
-        }
-      }
-
-      // If filter is set and property doesn't match, exclude
       if (_statusFilter != null) {
-        final hasStatus = properties.any(
+        matchesStatus = properties.any(
           (p) =>
               p.key == BuiltInProperties.status && p.valueText == _statusFilter,
         );
-        matchesStatus = hasStatus;
       }
 
       if (_priorityFilter != null) {
-        final hasPriority = properties.any(
+        matchesPriority = properties.any(
           (p) =>
               p.key == BuiltInProperties.priority &&
               p.valueText == _priorityFilter,
         );
-        matchesPriority = hasPriority;
       }
 
       if (matchesStatus && matchesPriority) {
@@ -278,10 +280,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           _isLoadingPage = false;
         });
 
-        for (final note in firstPage) {
-          _loadTagsForNote(note.id, db);
-          _loadLockForNote(note.id, db);
-        }
+        _batchLoadTagsAndLocks(firstPage, db);
       });
     });
   }
@@ -310,10 +309,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       _isLoadingPage = false;
     });
 
-    for (final note in uniqueNewNotes) {
-      _loadTagsForNote(note.id, db);
-      _loadLockForNote(note.id, db);
-    }
+    _batchLoadTagsAndLocks(uniqueNewNotes, db);
   }
 
   /// Reset pagination state and reload from scratch.
@@ -351,10 +347,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           _searchResults = results;
           _hasMoreSearchResults = results.length == _kPageSize;
         });
-        for (final note in results) {
-          _loadTagsForNote(note.id, db);
-          _loadLockForNote(note.id, db);
-        }
+        _batchLoadTagsAndLocks(results, db);
       });
     });
   }
@@ -388,10 +381,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       _isLoadingMoreSearch = false;
     });
 
-    for (final note in uniqueNew) {
-      _loadTagsForNote(note.id, db);
-      _loadLockForNote(note.id, db);
-    }
+    _batchLoadTagsAndLocks(uniqueNew, db);
   }
 
   // ---------------------------------------------------------------------------
@@ -426,21 +416,6 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   // Helpers
   // ---------------------------------------------------------------------------
 
-  /// Load tags for a single note and cache them.
-  Future<void> _loadTagsForNote(String noteId, AppDatabase db) async {
-    if (_tagsCache.containsKey(noteId)) return;
-    final tags = await db.tagsDao.getTagsForNote(noteId);
-    if (mounted) {
-      setState(() {
-        _tagsCache[noteId] = tags;
-        // Evict oldest entries when the cache exceeds the max size.
-        while (_tagsCache.length > _maxTagsCacheSize) {
-          _tagsCache.remove(_tagsCache.keys.first);
-        }
-      });
-    }
-  }
-
   /// Load lock state for a single note and cache it.
   Future<void> _loadLockForNote(String noteId, AppDatabase db) async {
     if (_lockedCache.containsKey(noteId)) return;
@@ -450,6 +425,55 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         _lockedCache[noteId] = locked;
       });
     }
+  }
+
+  /// Batch-load tags and lock states for a list of notes.
+  ///
+  /// Uses the DAO's batch methods to avoid N+1 queries. Only loads
+  /// data for notes that are not already cached.
+  Future<void> _batchLoadTagsAndLocks(
+    List<Note> notes,
+    AppDatabase db,
+  ) async {
+    if (notes.isEmpty) return;
+
+    // Determine which notes need tag and lock loading.
+    final notesNeedingTags =
+        notes.where((n) => !_tagsCache.containsKey(n.id)).toList();
+    final notesNeedingLocks =
+        notes.where((n) => !_lockedCache.containsKey(n.id)).toList();
+
+    if (notesNeedingTags.isEmpty && notesNeedingLocks.isEmpty) return;
+
+    // Run both batch queries in parallel.
+    final results = await Future.wait([
+      if (notesNeedingTags.isNotEmpty)
+        db.notesDao.batchGetTagsForNotes(
+          notesNeedingTags.map((n) => n.id).toList(),
+        )
+      else
+        Future.value(<String, List<Tag>>{}),
+      if (notesNeedingLocks.isNotEmpty)
+        db.notesDao.batchGetLocksForNotes(
+          notesNeedingLocks.map((n) => n.id).toList(),
+        )
+      else
+        Future.value(<String, bool>{}),
+    ]);
+
+    if (!mounted) return;
+
+    final tagsMap = results[0] as Map<String, List<Tag>>;
+    final locksMap = results[1] as Map<String, bool>;
+
+    setState(() {
+      _tagsCache.addAll(tagsMap);
+      // Evict oldest entries when the cache exceeds the max size.
+      while (_tagsCache.length > _maxTagsCacheSize) {
+        _tagsCache.remove(_tagsCache.keys.first);
+      }
+      _lockedCache.addAll(locksMap);
+    });
   }
 
   /// Sort notes according to the current sort option.
@@ -607,67 +631,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 );
               },
             ),
-            // Import
-            IconButton(
-              icon: const Icon(Icons.file_download_outlined),
-              tooltip: l10n.importNotes,
-              onPressed: () => _showImportSheet(context),
-            ),
-            // Collections
-            IconButton(
-              icon: const Icon(Icons.folder_outlined),
-              tooltip: l10n.collections,
-              onPressed: () => context.push('/collections'),
-            ),
-            // Knowledge Graph
-            IconButton(
-              icon: const Icon(Icons.account_tree_outlined),
-              tooltip: l10n.knowledgeGraph,
-              onPressed: () => context.push('/notes/graph'),
-            ),
-            // Properties Dashboard
-            IconButton(
-              icon: const Icon(Icons.dashboard_outlined),
-              tooltip: l10n.propertiesDashboard,
-              onPressed: () => context.push('/notes/dashboard'),
-            ),
-            // Statistics
-            IconButton(
-              icon: const Icon(Icons.bar_chart_outlined),
-              tooltip: l10n.statistics,
-              onPressed: () => context.push('/notes/statistics'),
-            ),
-            // Daily Notes (Calendar)
-            IconButton(
-              icon: const Icon(Icons.calendar_today_outlined),
-              tooltip: l10n.dailyNotes,
-              onPressed: () => context.push('/notes/daily'),
-            ),
-            // Reminders
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              tooltip: l10n.reminders,
-              onPressed: () => context.push('/notes/reminders'),
-            ),
-            // Orphaned Notes
-            IconButton(
-              icon: const Icon(Icons.scatter_plot_outlined),
-              tooltip: l10n.orphanedNotes,
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (ctx) => const OrphanedNotesSheet(),
-                );
-              },
-            ),
-            // Code Snippets
-            IconButton(
-              icon: const Icon(Icons.code_outlined),
-              tooltip: l10n.snippets,
-              onPressed: () => context.push('/snippets'),
-            ),
-            // Sort menu
+            // Sort menu (frequently used, stays as a top-level button)
             PopupMenuButton<String>(
               icon: const Icon(Icons.sort),
               tooltip: l10n.sortNotes,
@@ -705,7 +669,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             // Grid/List toggle
             IconButton(
               icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
-              tooltip: _isGridView ? l10n.listView : l10n.gridView,
+              tooltip: _isGridView
+                  ? '${l10n.listView} (Ctrl+G)'
+                  : '${l10n.gridView} (Ctrl+G)',
               onPressed: () {
                 setState(() => _isGridView = !_isGridView);
               },
@@ -721,14 +687,15 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             if (!_isSelectionMode)
               IconButton(
                 icon: const Icon(Icons.keyboard_command_key),
-                tooltip: l10n.commandPalette,
+                tooltip: '${l10n.commandPalette} (Ctrl+K)',
                 onPressed: showCommandPalette,
               ),
             // Search toggle
             IconButton(
               icon: Icon(_isSearching ? Icons.close : Icons.search),
-              tooltip:
-                  _isSearching ? l10n.closeSearch : l10n.searchNotesTooltip,
+              tooltip: _isSearching
+                  ? l10n.closeSearch
+                  : '${l10n.searchNotesTooltip} (Ctrl+F)',
               onPressed: () {
                 setState(() {
                   _isSearching = !_isSearching;
@@ -746,99 +713,225 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 });
               },
             ),
+            // "More" overflow menu with secondary features
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              tooltip: l10n.moreActions,
+              onSelected: (value) {
+                switch (value) {
+                  case 'collections':
+                    context.push('/collections');
+                  case 'graph':
+                    context.push('/notes/graph');
+                  case 'dashboard':
+                    context.push('/notes/dashboard');
+                  case 'statistics':
+                    context.push('/notes/statistics');
+                  case 'daily':
+                    context.push('/notes/daily');
+                  case 'reminders':
+                    context.push('/notes/reminders');
+                  case 'orphaned':
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (ctx) => const OrphanedNotesSheet(),
+                    );
+                  case 'snippets':
+                    context.push('/snippets');
+                  case 'import':
+                    _showImportSheet(context);
+                }
+              },
+              itemBuilder: (context) => [
+                // --- View section ---
+                PopupMenuItem(
+                  value: 'collections',
+                  child: ListTile(
+                    leading: const Icon(Icons.folder_outlined),
+                    title: Text(l10n.collections),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'graph',
+                  child: ListTile(
+                    leading: const Icon(Icons.account_tree_outlined),
+                    title: Text(l10n.knowledgeGraph),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'dashboard',
+                  child: ListTile(
+                    leading: const Icon(Icons.dashboard_outlined),
+                    title: Text(l10n.propertiesDashboard),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'statistics',
+                  child: ListTile(
+                    leading: const Icon(Icons.bar_chart_outlined),
+                    title: Text(l10n.statistics),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'daily',
+                  child: ListTile(
+                    leading: const Icon(Icons.calendar_today_outlined),
+                    title: Text(l10n.dailyNotes),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuDivider(),
+                // --- Tools section ---
+                PopupMenuItem(
+                  value: 'reminders',
+                  child: ListTile(
+                    leading: const Icon(Icons.notifications_outlined),
+                    title: Text(l10n.reminders),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'orphaned',
+                  child: ListTile(
+                    leading: const Icon(Icons.scatter_plot_outlined),
+                    title: Text(l10n.orphanedNotes),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'snippets',
+                  child: ListTile(
+                    leading: const Icon(Icons.code_outlined),
+                    title: Text(l10n.snippets),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuDivider(),
+                // --- Import/Export section ---
+                PopupMenuItem(
+                  value: 'import',
+                  child: ListTile(
+                    leading: const Icon(Icons.file_download_outlined),
+                    title: Text(l10n.importNotes),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
           ],
         ],
       ),
-      body: Column(
-        children: [
-          // Offline banner at the top
-          const OfflineBanner(),
-          // Batch action bar (shown when in selection mode)
-          if (_isSelectionMode)
-            NotesBatchActionBar(
-              selectedNoteIds: _selectedNoteIds,
-              notes: _notes,
-              onTogglePin: () => _batchTogglePin(db, l10n),
-              onColor: () => _batchColor(db, l10n),
-              onLock: () => _batchLock(db, l10n),
-              onDelete: () => _batchDelete(db, l10n),
-              onExport: _showExportSheet,
-              onCompare:
-                  _selectedNoteIds.length == 2 ? _compareSelectedNotes : null,
-              onMoveToCollection: () =>
-                  _moveToCollection(db, l10n, _selectedNoteIds.toList()),
-              onAddTags: () => _batchAddTags(db, l10n),
-            ),
-          // Property filter bar
-          if (!_isSearching)
-            NotesFilterBar(
-              statusFilter: _statusFilter,
-              priorityFilter: _priorityFilter,
-              onFilterTap: () => NotesFilterSheet.show(
-                context: context,
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          final scrollingDown = notification.metrics.extentAfter >
+              notification.metrics.extentBefore;
+          if (scrollingDown) {
+            // Scrolling down -- hide FAB.
+            if (_showFab) setState(() => _showFab = false);
+          } else {
+            // Scrolling up or idle -- show FAB.
+            if (!_showFab) setState(() => _showFab = true);
+          }
+          return false;
+        },
+        child: Column(
+          children: [
+            // Offline banner at the top
+            const OfflineBanner(),
+            // Batch action bar (shown when in selection mode)
+            if (_isSelectionMode)
+              NotesBatchActionBar(
+                selectedNoteIds: _selectedNoteIds,
+                notes: _notes,
+                onTogglePin: () => _batchTogglePin(db, l10n),
+                onColor: () => _batchColor(db, l10n),
+                onLock: () => _batchLock(db, l10n),
+                onDelete: () => _batchDelete(db, l10n),
+                onExport: _showExportSheet,
+                onCompare:
+                    _selectedNoteIds.length == 2 ? _compareSelectedNotes : null,
+                onMoveToCollection: () =>
+                    _moveToCollection(db, l10n, _selectedNoteIds.toList()),
+                onAddTags: () => _batchAddTags(db, l10n),
+              ),
+            // Property filter bar
+            if (!_isSearching)
+              NotesFilterBar(
                 statusFilter: _statusFilter,
                 priorityFilter: _priorityFilter,
-                onStatusChanged: (status) =>
-                    setState(() => _statusFilter = status),
-                onPriorityChanged: (priority) =>
-                    setState(() => _priorityFilter = priority),
+                onFilterTap: () => NotesFilterSheet.show(
+                  context: context,
+                  statusFilter: _statusFilter,
+                  priorityFilter: _priorityFilter,
+                  onStatusChanged: (status) =>
+                      setState(() => _statusFilter = status),
+                  onPriorityChanged: (priority) =>
+                      setState(() => _priorityFilter = priority),
+                ),
+                onStatusCleared: () => setState(() => _statusFilter = null),
+                onPriorityCleared: () => setState(() => _priorityFilter = null),
+                onClearAll: () => setState(() {
+                  _statusFilter = null;
+                  _priorityFilter = null;
+                }),
               ),
-              onStatusCleared: () => setState(() => _statusFilter = null),
-              onPriorityCleared: () => setState(() => _priorityFilter = null),
-              onClearAll: () => setState(() {
-                _statusFilter = null;
-                _priorityFilter = null;
-              }),
-            ),
-          // Main content
-          Expanded(
-            child: wideScreen
-                ? MasterDetailLayout(
-                    selectedId: _selectedNoteId,
-                    onSelectionChanged: (id) {
-                      setState(() => _selectedNoteId = id);
-                    },
-                    sidebarVisible: ref.watch(sidebarVisibleProvider),
-                    masterPane: _isSearching && _searchQuery.isNotEmpty
-                        ? _buildSearchBody(db)
-                        : _buildNotesBody(db),
-                    detailPaneBuilder: (selectedId) {
-                      if (selectedId == null) {
-                        return const InlineDetailPlaceholder();
-                      }
+            // Main content
+            Expanded(
+              child: wideScreen
+                  ? MasterDetailLayout(
+                      placeholderText: l10n.selectItemToView,
+                      selectedId: _selectedNoteId,
+                      onSelectionChanged: (id) {
+                        setState(() => _selectedNoteId = id);
+                      },
+                      sidebarVisible: ref.watch(sidebarVisibleProvider),
+                      masterPane: _isSearching && _searchQuery.isNotEmpty
+                          ? _buildSearchBody(db)
+                          : _buildNotesBody(db),
+                      detailPaneBuilder: (selectedId) {
+                        if (selectedId == null) {
+                          return const InlineDetailPlaceholder();
+                        }
 
-                      // Primary detail widget
-                      final primaryDetail = InlineNoteDetail(
-                        noteId: selectedId,
-                        db: db,
-                        crypto: ref.read(cryptoServiceProvider),
-                        onSplitViewToggle: _splitViewNoteId == null
-                            ? () => _showSplitNotePicker(context)
-                            : null,
-                      );
-
-                      // If split view is active, wrap in SplitViewPane
-                      if (_splitViewNoteId != null) {
-                        return SplitViewPane(
-                          primaryChild: primaryDetail,
-                          secondaryChild: InlineNoteDetail(
-                            noteId: _splitViewNoteId!,
-                            db: db,
-                            crypto: ref.read(cryptoServiceProvider),
-                          ),
-                          secondaryTitle: _splitViewNoteTitle ?? l10n.untitled,
-                          onClose: _closeSplitView,
+                        // Primary detail widget
+                        final primaryDetail = InlineNoteDetail(
+                          noteId: selectedId,
+                          db: db,
+                          crypto: ref.read(cryptoServiceProvider),
+                          onSplitViewToggle: _splitViewNoteId == null
+                              ? () => _showSplitNotePicker(context)
+                              : null,
                         );
-                      }
 
-                      return primaryDetail;
-                    },
-                  )
-                : _isSearching && _searchQuery.isNotEmpty
-                    ? _buildSearchBody(db)
-                    : _buildNotesBody(db),
-          ),
-        ],
+                        // If split view is active, wrap in SplitViewPane
+                        if (_splitViewNoteId != null) {
+                          return SplitViewPane(
+                            primaryChild: primaryDetail,
+                            secondaryChild: InlineNoteDetail(
+                              noteId: _splitViewNoteId!,
+                              db: db,
+                              crypto: ref.read(cryptoServiceProvider),
+                            ),
+                            secondaryTitle:
+                                _splitViewNoteTitle ?? l10n.untitled,
+                            onClose: _closeSplitView,
+                          );
+                        }
+
+                        return primaryDetail;
+                      },
+                    )
+                  : _isSearching && _searchQuery.isNotEmpty
+                      ? _buildSearchBody(db)
+                      : _buildNotesBody(db),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: _isSelectionMode
           ? null
@@ -875,16 +968,28 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Create new note FAB.
-                PressableScale(
-                  onPressed: () => _showCreateOptions(context),
-                  child: Semantics(
-                    button: true,
-                    label: l10n.createNewNote,
-                    child: FloatingActionButton(
-                      onPressed: () => _showCreateOptions(context),
-                      tooltip: l10n.createNewNote,
-                      child: const Icon(Icons.add),
+                // Create new note FAB with hide-on-scroll animation.
+                AnimatedSlide(
+                  offset: _showFab ? Offset.zero : const Offset(0, 2),
+                  duration: AppDurations.mediumAnimation,
+                  curve: Curves.easeOutCubic,
+                  child: AnimatedOpacity(
+                    opacity: _showFab ? 1.0 : 0.0,
+                    duration: AppDurations.mediumAnimation,
+                    child: IgnorePointer(
+                      ignoring: !_showFab,
+                      child: PressableScale(
+                        onPressed: () => _showCreateOptions(context),
+                        child: Semantics(
+                          button: true,
+                          label: l10n.createNewNote,
+                          child: FloatingActionButton(
+                            onPressed: () => _showCreateOptions(context),
+                            tooltip: l10n.createNewNote,
+                            child: const Icon(Icons.add),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -1010,10 +1115,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     }
 
     // Trigger tag and lock loading for visible search results.
-    for (final note in _searchResults) {
-      _loadTagsForNote(note.id, db);
-      _loadLockForNote(note.id, db);
-    }
+    _batchLoadTagsAndLocks(_searchResults, db);
 
     return _isGridView
         ? _buildNotesGrid(_searchResults, db, isSearchMode: true)
@@ -1059,7 +1161,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             isSelected: false,
             disableSwipe: true,
             onTap: () => _onNoteTap(note.id),
-            onLongPress: () => _onNoteLongPress(note.id),
+            onLongPress: (position) => _onNoteLongPress(note.id, position),
             onDeleted: () {},
             untitled: AppLocalizations.of(context)!.untitled,
             onStatusTap: () => _cycleStatus(note.id, db),
@@ -1130,9 +1232,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     return GridView.builder(
       controller: _scrollController,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 280,
+        mainAxisExtent: 180,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
       ),
       itemCount: notes.length + (showLoader ? 1 : 0),
       padding: const EdgeInsets.only(bottom: 80),
@@ -1188,7 +1292,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       isSelected: isSelected,
       disableSwipe: _isSelectionMode,
       onTap: () => _onNoteTap(note.id),
-      onLongPress: () => _onNoteLongPress(note.id),
+      onLongPress: (position) => _onNoteLongPress(note.id, position),
       onDeleted: () {},
       untitled: l10n.untitled,
       onStatusTap: () => _cycleStatus(note.id, db),
@@ -1283,21 +1387,30 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     }
   }
 
-  /// Handle note long press: show context menu and enter selection mode.
-  void _onNoteLongPress(String noteId) {
+  /// Handle note long press: show context menu at the press position
+  /// and enter selection mode.
+  void _onNoteLongPress(String noteId, Offset position) {
     if (!_isSelectionMode) {
+      HapticFeedback.mediumImpact();
       setState(() {
         _isSelectionMode = true;
         _selectedNoteIds.add(noteId);
       });
     }
 
+    // Compute the menu position from the long press coordinates.
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final menuPosition = RelativeRect.fromRect(
+      Rect.fromPoints(position, position),
+      Offset.zero & overlay.size,
+    );
+
     // Show a context menu with lock/unlock and move options.
     final l10n = AppLocalizations.of(context)!;
     final db = ref.read(databaseProvider);
     showMenu<String>(
       context: context,
-      position: RelativeRect.fill,
+      position: menuPosition,
       items: [
         PopupMenuItem(
           value: 'lock',
@@ -1352,7 +1465,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1406,13 +1522,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     // File system APIs are not available on web platform.
     if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)?.notAvailableOnWeb ??
-                'This feature is not available on web',
-          ),
-        ),
+      AppSnackBar.error(
+        context,
+        message: AppLocalizations.of(context)?.notAvailableOnWeb ??
+            'This feature is not available on web',
       );
       return;
     }
@@ -1498,13 +1611,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       Navigator.pop(context);
 
       // Show result snackbar.
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.importComplete(result.importedCount, result.skippedCount),
-          ),
-          duration: const Duration(seconds: 3),
-        ),
+      AppSnackBar.info(
+        context,
+        message: l10n.importComplete(result.importedCount, result.skippedCount),
       );
 
       // Reload notes list.
@@ -1513,11 +1622,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       if (!context.mounted) return;
       // Close progress dialog.
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text(AppLocalizations.of(context)!.importFailed(e.toString())),
-        ),
+      AppSnackBar.error(
+        context,
+        message: AppLocalizations.of(context)!.importFailed(e.toString()),
       );
     }
   }
@@ -1541,7 +1648,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1647,6 +1757,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
   /// Exit selection mode.
   void _exitSelectionMode() {
+    HapticFeedback.lightImpact();
     setState(() {
       _isSelectionMode = false;
       _selectedNoteIds.clear();
@@ -1664,17 +1775,15 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     });
 
     await db.notesDao.bulkPin(_selectedNoteIds.toList(), !hasPinned);
+    HapticFeedback.mediumImpact();
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          hasPinned
-              ? l10n.notesUnpinned(_selectedNoteIds.length)
-              : l10n.notesPinned(_selectedNoteIds.length),
-        ),
-      ),
+    AppSnackBar.info(
+      context,
+      message: hasPinned
+          ? l10n.notesUnpinned(_selectedNoteIds.length)
+          : l10n.notesPinned(_selectedNoteIds.length),
     );
 
     _exitSelectionMode();
@@ -1707,17 +1816,14 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.notesDeleted(_selectedNoteIds.length)),
-          action: SnackBarAction(
-            label: l10n.undo,
-            onPressed: () async {
-              await db.notesDao.bulkRestore(_selectedNoteIds.toList());
-              _resetAndReload();
-            },
-          ),
-        ),
+      AppSnackBar.info(
+        context,
+        message: l10n.notesDeleted(_selectedNoteIds.length),
+        actionLabel: l10n.undo,
+        onAction: () async {
+          await db.notesDao.bulkRestore(_selectedNoteIds.toList());
+          _resetAndReload();
+        },
       );
 
       _exitSelectionMode();
@@ -1755,11 +1861,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         _tagsCache.remove(noteId);
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.tags),
-        ),
-      );
+      AppSnackBar.info(context, message: l10n.tags);
 
       _exitSelectionMode();
     }
@@ -1807,14 +1909,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          selectedColor.isEmpty
-              ? l10n.colorRemovedFromNotes(ids.length)
-              : l10n.notesColored(ids.length),
-        ),
-      ),
+    AppSnackBar.info(
+      context,
+      message: selectedColor.isEmpty
+          ? l10n.colorRemovedFromNotes(ids.length)
+          : l10n.notesColored(ids.length),
     );
 
     _exitSelectionMode();
@@ -1840,14 +1939,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          shouldLock
-              ? l10n.notesLocked(ids.length)
-              : l10n.notesUnlocked(ids.length),
-        ),
-      ),
+    AppSnackBar.info(
+      context,
+      message: shouldLock
+          ? l10n.notesLocked(ids.length)
+          : l10n.notesUnlocked(ids.length),
     );
 
     _exitSelectionMode();
@@ -1869,12 +1965,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isLocked ? l10n.unlockNote : l10n.lockNote,
-        ),
-      ),
+    AppSnackBar.info(
+      context,
+      message: isLocked ? l10n.unlockNote : l10n.lockNote,
     );
   }
 
@@ -1908,9 +2001,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             collection.plainTitle ?? l10n.untitledCollection,
           );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    AppSnackBar.info(context, message: message);
 
     if (_isSelectionMode) _exitSelectionMode();
   }

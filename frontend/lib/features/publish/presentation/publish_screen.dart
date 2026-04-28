@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/error/error.dart';
 import '../../../core/theme/alpha_constants.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/publish_providers.dart';
@@ -69,8 +70,11 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          Icon(Icons.share_outlined,
-                              size: 36, color: Colors.grey.shade400,),
+                          Icon(
+                            Icons.share_outlined,
+                            size: 36,
+                            color: Colors.grey.shade400,
+                          ),
                           const SizedBox(height: 8),
                           Text(l10n.noPlatformsConnected),
                           const SizedBox(height: 8),
@@ -86,13 +90,15 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                 }
                 return Column(
                   children: platforms.map((p) {
-                    final name =
-                        p['name']?.toString() ?? p['platform']?.toString() ?? l10n.unknown;
+                    final name = p['name']?.toString() ??
+                        p['platform']?.toString() ??
+                        l10n.unknown;
                     final platformKey =
                         p['key']?.toString() ?? name.toLowerCase();
                     final icon = _platformIcons[platformKey] ?? Icons.language;
-                    final subtitle =
-                        p['display_name']?.toString() ?? p['subtitle']?.toString() ?? '';
+                    final subtitle = p['display_name']?.toString() ??
+                        p['subtitle']?.toString() ??
+                        '';
                     final isSelected = _selectedPlatform == platformKey;
 
                     return Card(
@@ -110,19 +116,20 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           isSelected ? '. ${l10n.selectedLabel}' : '',
                         ),
                         child: ListTile(
-                        leading: CircleAvatar(
-                          child: Icon(icon, size: 20),
-                        ),
-                        title: Text(name),
-                        subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
-                        trailing: isSelected
-                            ? const Icon(Icons.check_circle, color: Colors.green)
-                            : null,
-                        onTap: () {
-                          setState(() {
-                            _selectedPlatform = platformKey;
-                          });
-                        },
+                          leading: CircleAvatar(
+                            child: Icon(icon, size: 20),
+                          ),
+                          title: Text(name),
+                          subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
+                          trailing: isSelected
+                              ? const Icon(Icons.check_circle,
+                                  color: Colors.green)
+                              : null,
+                          onTap: () {
+                            setState(() {
+                              _selectedPlatform = platformKey;
+                            });
+                          },
                         ),
                       ),
                     );
@@ -142,14 +149,21 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Icon(ErrorDisplay.errorIcon(appError),
-                            size: 36, color: Colors.red,),
+                        Icon(
+                          ErrorDisplay.errorIcon(appError),
+                          size: 36,
+                          color: Colors.red,
+                        ),
                         const SizedBox(height: 8),
                         Text(l10n.failedToLoadPlatforms),
                         const SizedBox(height: 4),
-                        Text(ErrorDisplay.userMessage(appError, l10n),
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey,),),
+                        Text(
+                          ErrorDisplay.userMessage(appError, l10n),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         FilledButton.tonal(
                           onPressed: () =>
@@ -183,12 +197,16 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         children: [
-                          Icon(Icons.publish_outlined,
-                              size: 48, color: Colors.grey.shade400,),
+                          Icon(
+                            Icons.publish_outlined,
+                            size: 48,
+                            color: Colors.grey.shade400,
+                          ),
                           const SizedBox(height: 8),
-                          Text(l10n.noPublicationsYet,
-                              style:
-                                  TextStyle(color: Colors.grey.shade500),),
+                          Text(
+                            l10n.noPublicationsYet,
+                            style: TextStyle(color: Colors.grey.shade500),
+                          ),
                         ],
                       ),
                     ),
@@ -203,10 +221,10 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: OutlinedButton(
-                          onPressed: () =>
-                              context.push('/publish/history'),
+                          onPressed: () => context.push('/publish/history'),
                           child: Text(
-                              l10n.viewAll(history.length),),
+                            l10n.viewAll(history.length),
+                          ),
                         ),
                       ),
                   ],
@@ -225,8 +243,11 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Icon(ErrorDisplay.errorIcon(appError),
-                            size: 36, color: Colors.red,),
+                        Icon(
+                          ErrorDisplay.errorIcon(appError),
+                          size: 36,
+                          color: Colors.red,
+                        ),
                         const SizedBox(height: 8),
                         Text(ErrorDisplay.userMessage(appError, l10n)),
                         const SizedBox(height: 8),
@@ -251,8 +272,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
 
   Widget _buildPublishForm(BuildContext context, PublishActionState state) {
     final l10n = AppLocalizations.of(context)!;
-    final canPublish =
-        _selectedPlatform != null && !state.isLoading;
+    final canPublish = _selectedPlatform != null && !state.isLoading;
 
     return Card(
       child: Padding(
@@ -313,11 +333,15 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle,
-                        color: Colors.green, size: 16,),
+                    const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      l10n.publishedStatus(state.result?['status'] ?? 'pending'),
+                      l10n.publishedStatus(
+                          state.result?['status'] ?? 'pending'),
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.green,
@@ -382,37 +406,38 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
           createdAt.isNotEmpty ? '. $createdAt' : '',
         ),
         child: ListTile(
-        leading: Icon(statusIcon, color: statusColor),
-        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text(
-          '$platform${createdAt.isNotEmpty ? ' - $createdAt' : ''}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: platformURL.isNotEmpty
-            ? Semantics(
-                button: true,
-                label: l10n.openInBrowser,
-                child: IconButton(
-                  icon: const Icon(Icons.open_in_new, size: 18),
-                  onPressed: () async {
-                    final uri = Uri.parse(platformURL);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                ),
-              )
-            : Semantics(
-                label: l10n.statusLabel(status),
-                child: Chip(
-                  label: Text(
-                    status,
-                    style: const TextStyle(fontSize: 11),
+          leading: Icon(statusIcon, color: statusColor),
+          title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+          subtitle: Text(
+            '$platform${createdAt.isNotEmpty ? ' - $createdAt' : ''}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: platformURL.isNotEmpty
+              ? Semantics(
+                  button: true,
+                  label: l10n.openInBrowser,
+                  child: IconButton(
+                    icon: const Icon(Icons.open_in_new, size: 18),
+                    onPressed: () async {
+                      final uri = Uri.parse(platformURL);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri,
+                            mode: LaunchMode.externalApplication);
+                      }
+                    },
                   ),
-                  visualDensity: VisualDensity.compact,
+                )
+              : Semantics(
+                  label: l10n.statusLabel(status),
+                  child: Chip(
+                    label: Text(
+                      status,
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ),
-              ),
         ),
       ),
     );
@@ -425,9 +450,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
 
     if (title.isEmpty || content.isEmpty) {
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.titleAndContentRequired)),
-      );
+      AppSnackBar.error(context, message: l10n.titleAndContentRequired);
       return;
     }
 
@@ -448,9 +471,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
       final state = ref.read(publishActionProvider);
       if (state.result != null && mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.publishRequestSubmitted)),
-        );
+        AppSnackBar.info(context, message: l10n.publishRequestSubmitted);
         // Clear form on success
         _titleController.clear();
         _contentController.clear();

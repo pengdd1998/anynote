@@ -72,6 +72,11 @@ class AppKeyboardShortcuts extends StatefulWidget {
   /// Optional callback invoked by Ctrl+H (cycle heading h1->h2->h3->p).
   static void Function()? headingCycleCallback;
 
+  /// Optional callback invoked by Ctrl+F when the editor is active.
+  /// When set, Ctrl+F opens the in-editor find/replace bar instead of
+  /// navigating to the global search page.
+  static void Function()? findCallback;
+
   /// Register a callback for the Ctrl+Shift+F zen mode shortcut.
   static void setZenModeCallback(void Function() cb) {
     zenModeCallback = cb;
@@ -131,6 +136,16 @@ class AppKeyboardShortcuts extends StatefulWidget {
   static void clearHeadingCycleCallback() {
     headingCycleCallback = null;
   }
+
+  /// Register a callback for the Ctrl+F find shortcut in the editor.
+  static void setFindCallback(void Function() cb) {
+    findCallback = cb;
+  }
+
+  /// Clear the find callback (call in dispose).
+  static void clearFindCallback() {
+    findCallback = null;
+  }
 }
 
 class _AppKeyboardShortcutsState extends State<AppKeyboardShortcuts> {
@@ -169,7 +184,11 @@ class _AppKeyboardShortcutsState extends State<AppKeyboardShortcuts> {
           _triggerSync();
           return true;
         case LogicalKeyboardKey.keyF:
-          _navigate('/search');
+          if (AppKeyboardShortcuts.findCallback != null) {
+            AppKeyboardShortcuts.findCallback!();
+          } else {
+            _navigate('/search');
+          }
           return true;
         case LogicalKeyboardKey.keyB:
           _toggleSidebar();

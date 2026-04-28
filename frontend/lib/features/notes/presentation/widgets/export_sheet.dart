@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
@@ -10,6 +10,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/export/pdf_export_service.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/markdown_export_service.dart';
 
 // ignore: unused_import - kept for reference; needed if direct DAO access is required later
@@ -374,9 +375,7 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
             exportable.content,
           );
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.pdfGenerated)),
-            );
+            AppSnackBar.info(context, message: l10n.pdfGenerated);
             Navigator.pop(context);
           }
           return;
@@ -407,9 +406,7 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.exportComplete)),
-          );
+          AppSnackBar.info(context, message: l10n.exportComplete);
           Navigator.pop(context);
         }
         return;
@@ -427,10 +424,9 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.notesExported(exportableNotes.length)),
-          ),
+        AppSnackBar.info(
+          context,
+          message: l10n.notesExported(exportableNotes.length),
         );
         Navigator.pop(context);
       }
@@ -448,9 +444,7 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
   void _showError(String message) {
     if (!mounted) return;
     setState(() => _isExporting = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    AppSnackBar.error(context, message: message);
   }
 
   /// Trigger a browser download for web platforms.

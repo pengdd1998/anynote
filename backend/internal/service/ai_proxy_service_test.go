@@ -266,10 +266,11 @@ func TestAIProxyService_QuotaExceeded(t *testing.T) {
 	}
 }
 
-func TestAIProxyService_DecryptKeyFailure(t *testing.T) {
+func TestAIProxyService_DecryptKeyFailure_FallsBackToShared(t *testing.T) {
 	encKey := newTestEncryptionKey()
 
-	// Store corrupted encrypted key -- decryption will fail.
+	// Store corrupted encrypted key -- decryption will fail, causing fallback
+	// to shared mode.
 	userID := uuid.New()
 	llmRepo := &mockLLMConfigRepo{
 		config: &domain.LLMConfig{
@@ -284,7 +285,14 @@ func TestAIProxyService_DecryptKeyFailure(t *testing.T) {
 		},
 	}
 
-	provider := &mockProvider{}
+	provider := &mockProvider{
+		chatStreamFn: func(ctx context.Context, apiKey, baseURL string, req llm.ChatRequest) (<-chan domain.StreamChunk, error) {
+			ch := make(chan domain.StreamChunk, 1)
+			ch <- domain.StreamChunk{Done: true}
+			close(ch)
+			return ch, nil
+		},
+	}
 	gw := newTestGateway(provider)
 	rateLimiter := NewRateLimiter(100, time.Hour)
 	quotaSvc := &mockQuotaService{}
@@ -306,8 +314,8 @@ func TestAIProxyService_DecryptKeyFailure(t *testing.T) {
 		},
 		Stream: true,
 	})
-	if err == nil {
-		t.Error("expected error when API key decryption fails")
+	if err != nil {
+		t.Errorf("expected graceful fallback to shared mode, got error: %v", err)
 	}
 }
 

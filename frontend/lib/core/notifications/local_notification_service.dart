@@ -1,11 +1,10 @@
-import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../platform/platform_utils.dart';
 import '../../routing/app_router.dart';
 
 /// Callback type for notification tap events.
@@ -33,7 +32,7 @@ class LocalNotificationService {
 
   /// Returns true on platforms that support local notifications (Android, iOS).
   bool get _isSupported {
-    return !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    return !kIsWeb && (PlatformUtils.isMobile);
   }
 
   /// Initialize the flutter_local_notifications plugin with platform-specific
@@ -73,6 +72,21 @@ class LocalNotificationService {
         onDidReceiveNotificationResponse: _handleNotificationResponse,
       );
 
+      // Create the notification channel explicitly for Android 8.0+ (API 26).
+      // While flutter_local_notifications may auto-create it, explicit creation
+      // is more robust and prevents silent notification failures.
+      if (PlatformUtils.isAndroid) {
+        final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+        await androidPlugin
+            ?.createNotificationChannel(const AndroidNotificationChannel(
+          'note_reminders',
+          'Note Reminders',
+          description: 'Notifications for note reminders',
+          importance: Importance.high,
+        ));
+      }
+
       _initialized = true;
       debugPrint('Local notification service initialized');
     } catch (e) {
@@ -111,7 +125,7 @@ class LocalNotificationService {
     if (!_initialized || !_isSupported) return false;
 
     try {
-      if (Platform.isIOS) {
+      if (PlatformUtils.isIOS) {
         final result = await _plugin
             .resolvePlatformSpecificImplementation<
                 IOSFlutterLocalNotificationsPlugin>()
@@ -123,7 +137,7 @@ class LocalNotificationService {
         return result ?? false;
       }
 
-      if (Platform.isAndroid) {
+      if (PlatformUtils.isAndroid) {
         final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
         // requestNotificationsPermission is only available on Android 13+.

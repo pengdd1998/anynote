@@ -6,13 +6,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Secure storage interface for cryptographic keys.
 ///
-/// On native platforms: uses FlutterSecureStorage (Keychain on iOS,
-/// EncryptedSharedPreferences on Android).
+/// On native platforms (iOS, Android, macOS, Windows, Linux): uses
+/// FlutterSecureStorage, which delegates to platform-specific hardware-backed
+/// keystores:
+///   - iOS: Keychain Services (Secure Enclave when available)
+///   - Android: EncryptedSharedPreferences (backed by Android Keystore)
+///   - macOS: Keychain Services
+///   - Windows/Windows: libsecret / DPAPI respectively
 ///
-/// On web: uses SharedPreferences with base64-encoded hex values.
-/// Note: Web storage is NOT as secure as native secure storage. The browser's
-/// localStorage (backed by SharedPreferences) is accessible to any JavaScript
-/// running in the same origin. Users should be advised of this limitation.
+/// On web: uses SharedPreferences with base64-encoded hex values stored in
+/// the browser's localStorage. **This is significantly less secure than native
+/// storage** because:
+///   1. localStorage is accessible to any JavaScript running in the same
+///      origin, meaning a successful XSS attack can exfiltrate all stored
+///      keys including the master key.
+///   2. The master key stored in localStorage is the single point of failure
+///      on web -- any script with access to it can decrypt all user data.
+///   3. Browser storage is subject to eviction under storage pressure and is
+///      not encrypted at rest by the browser itself.
+///
+/// **Recommendation**: Users with high security requirements (e.g. storing
+/// sensitive personal data, financial notes, medical information) should use
+/// the native AnyNote app on iOS or Android rather than the web version.
+/// The E2E encryption of synced content mitigates server-side risks, but the
+/// local key storage boundary on web is fundamentally weaker.
 class KeyStorage {
   static const _keyMasterKey = 'master_key';
   static const _keyEncryptKey = 'encrypt_key';

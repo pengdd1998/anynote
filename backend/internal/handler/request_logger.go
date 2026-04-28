@@ -15,30 +15,6 @@ var skippedPaths = map[string]bool{
 	"/metrics": true,
 }
 
-// responseWriter wraps http.ResponseWriter to capture the status code.
-type responseWriter struct {
-	http.ResponseWriter
-	status int
-}
-
-func newResponseWriter(w http.ResponseWriter) *responseWriter {
-	return &responseWriter{ResponseWriter: w, status: http.StatusOK}
-}
-
-func (rw *responseWriter) WriteHeader(code int) {
-	rw.status = code
-	rw.ResponseWriter.WriteHeader(code)
-}
-
-// Flush forwards Flush calls to the underlying ResponseWriter when it
-// implements http.Flusher. This is necessary for SSE streaming to work
-// through the RequestLogger middleware.
-func (rw *responseWriter) Flush() {
-	if flusher, ok := rw.ResponseWriter.(http.Flusher); ok {
-		flusher.Flush()
-	}
-}
-
 // RequestLogger returns middleware that logs each request with structured fields.
 // It deliberately excludes request and response bodies for privacy (CLAUDE.md rule).
 // Noisy endpoints (/health, /ready, /metrics) are skipped to keep logs useful.
@@ -51,7 +27,7 @@ func RequestLogger(next http.Handler) http.Handler {
 		}
 
 		start := time.Now()
-		rw := newResponseWriter(w)
+		rw := newInstrumentedResponseWriter(w)
 
 		// Set the X-Request-ID response header so clients can correlate errors.
 		requestID := middleware.GetReqID(r.Context())
@@ -67,7 +43,7 @@ func RequestLogger(next http.Handler) http.Handler {
 		attrs := []any{
 			"method", r.Method,
 			"path", r.URL.Path,
-			"status", rw.status,
+			"status", rw.Status(),
 			"duration_ms", duration.Milliseconds(),
 			"trace_id", requestID,
 		}
@@ -76,9 +52,9 @@ func RequestLogger(next http.Handler) http.Handler {
 		}
 
 		// Log level: INFO for success, WARN for client errors, ERROR for server errors.
-		if rw.status >= 500 {
+		if rw.Status() >= 500 {
 			slog.Error("request completed", attrs...)
-		} else if rw.status >= 400 {
+		} else if rw.Status() >= 400 {
 			slog.Warn("request completed", attrs...)
 		} else {
 			slog.Info("request completed", attrs...)

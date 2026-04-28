@@ -9,6 +9,7 @@ import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error.dart';
 import '../../../core/widgets/app_components.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../data/compose_providers.dart';
@@ -60,12 +61,14 @@ class ComposeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 20),
                     PressableScale(
-                      onPressed: () => _showNoteSelector(context, ref, notesAsync),
+                      onPressed: () =>
+                          _showNoteSelector(context, ref, notesAsync),
                       child: Semantics(
                         button: true,
                         label: l10n.startComposing,
                         child: FilledButton.icon(
-                          onPressed: () => _showNoteSelector(context, ref, notesAsync),
+                          onPressed: () =>
+                              _showNoteSelector(context, ref, notesAsync),
                           icon: const Icon(Icons.add),
                           label: Text(l10n.startComposing),
                         ),
@@ -93,7 +96,8 @@ class ComposeScreen extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.article_outlined, size: 48, color: Colors.grey.shade400),
+                          Icon(Icons.article_outlined,
+                              size: 48, color: Colors.grey.shade400),
                           const SizedBox(height: 8),
                           Text(
                             l10n.noCompositionsYet,
@@ -108,10 +112,11 @@ class ComposeScreen extends ConsumerWidget {
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final item = items[index];
-                      final title = item.plainBody != null && item.plainBody!.length > 80
-                          ? '${item.plainBody!.substring(0, 80)}...'
-                          // Use localized untitled fallback
-                          : item.plainBody ?? l10n.untitled;
+                      final title =
+                          item.plainBody != null && item.plainBody!.length > 80
+                              ? '${item.plainBody!.substring(0, 80)}...'
+                              // Use localized untitled fallback
+                              : item.plainBody ?? l10n.untitled;
                       final time = _formatTime(context, item.updatedAt);
                       final platform = item.platformStyle;
 
@@ -121,32 +126,39 @@ class ComposeScreen extends ConsumerWidget {
                           label: l10n.compositionSemanticLabel(
                             title,
                             time,
-                            platform != 'generic' ? l10n.platformSuffix(platform) : '',
+                            platform != 'generic'
+                                ? l10n.platformSuffix(platform)
+                                : '',
                           ),
                           child: ListTile(
-                          leading: Icon(
-                            Icons.auto_awesome,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          title: Text(
-                            title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Row(
-                            children: [
-                              if (platform != 'generic')
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: Chip(
-                                    label: Text(platform, style: const TextStyle(fontSize: 11)),
-                                    visualDensity: VisualDensity.compact,
+                            leading: Icon(
+                              Icons.auto_awesome,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            title: Text(
+                              title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Row(
+                              children: [
+                                if (platform != 'generic')
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: Chip(
+                                      label: Text(platform,
+                                          style: const TextStyle(fontSize: 11)),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
                                   ),
-                                ),
-                              Text(time, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
-                            ],
-                          ),
-                          onTap: () => _showContentPreview(context, ref, item),
+                                Text(time,
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade500)),
+                              ],
+                            ),
+                            onTap: () =>
+                                _showContentPreview(context, ref, item),
                           ),
                         ),
                       );
@@ -164,12 +176,16 @@ class ComposeScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(ErrorDisplay.errorIcon(appError),
-                            size: 36, color: Colors.grey.shade400,),
+                        Icon(
+                          ErrorDisplay.errorIcon(appError),
+                          size: 36,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           ErrorDisplay.userMessage(appError, l10n),
-                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -250,12 +266,12 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
 
   // Platform options with localized display names resolved at build time.
   List<(String, String)> _platformOptions(AppLocalizations l10n) => [
-    ('generic', l10n.platformGeneric),
-    ('xhs', l10n.platformXhs),
-    ('twitter', l10n.platformTwitter),
-    ('blog', l10n.platformBlog),
-    ('linkedin', l10n.platformLinkedin),
-  ];
+        ('generic', l10n.platformGeneric),
+        ('xhs', l10n.platformXhs),
+        ('twitter', l10n.platformTwitter),
+        ('blog', l10n.platformBlog),
+        ('linkedin', l10n.platformLinkedin),
+      ];
 
   @override
   void dispose() {
@@ -282,7 +298,10 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -293,7 +312,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
                 children: [
-                  Text(l10n.newComposition, style: Theme.of(context).textTheme.titleLarge),
+                  Text(l10n.newComposition,
+                      style: Theme.of(context).textTheme.titleLarge),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -313,7 +333,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                   hintText: l10n.topicHint,
                   prefixIcon: const Icon(Icons.lightbulb_outline),
                 ),
-                onChanged: (v) => ref.read(composeSessionProvider.notifier).setTopic(v),
+                onChanged: (v) =>
+                    ref.read(composeSessionProvider.notifier).setTopic(v),
               ),
             ),
 
@@ -327,12 +348,15 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                   prefixIcon: const Icon(Icons.share_outlined),
                 ),
                 items: _platformOptions(l10n)
-                    .map((o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)))
+                    .map(
+                        (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)))
                     .toList(),
                 onChanged: (v) {
                   if (v != null) {
                     setState(() => _platformStyle = v);
-                    ref.read(composeSessionProvider.notifier).setPlatformStyle(v);
+                    ref
+                        .read(composeSessionProvider.notifier)
+                        .setPlatformStyle(v);
                   }
                 },
               ),
@@ -343,11 +367,14 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
                 children: [
-                  Text(l10n.selectNotes, style: Theme.of(context).textTheme.titleSmall),
+                  Text(l10n.selectNotes,
+                      style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(width: 8),
                   Text(
                     l10n.selectedCount(_selectedIds.length),
-                    style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 13),
                   ),
                 ],
               ),
@@ -359,7 +386,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 data: (notes) {
                   if (notes.isEmpty) {
                     return Center(
-                      child: Text(l10n.noNotesAvailableCreate, textAlign: TextAlign.center),
+                      child: Text(l10n.noNotesAvailableCreate,
+                          textAlign: TextAlign.center),
                     );
                   }
 
@@ -370,15 +398,18 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                       final note = notes[index];
                       // Use localized untitled fallback
                       final title = note.plainTitle ?? l10n.untitled;
-                      final preview = note.plainContent != null && note.plainContent!.length > 60
+                      final preview = note.plainContent != null &&
+                              note.plainContent!.length > 60
                           ? '${note.plainContent!.substring(0, 60)}...'
                           : note.plainContent ?? '';
                       final isSelected = _selectedIds.contains(note.id);
 
                       return CheckboxListTile(
                         value: isSelected,
-                        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        subtitle: Text(preview, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        title: Text(title,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(preview,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
                         onChanged: (checked) {
                           setState(() {
                             if (checked == true) {
@@ -387,10 +418,12 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                               _selectedIds.remove(note.id);
                             }
                           });
-                          ref.read(composeSessionProvider.notifier).toggleNoteSelection(
-                            note.id,
-                            note.plainContent ?? '',
-                          );
+                          ref
+                              .read(composeSessionProvider.notifier)
+                              .toggleNoteSelection(
+                                note.id,
+                                note.plainContent ?? '',
+                              );
                         },
                       );
                     },
@@ -407,8 +440,11 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(ErrorDisplay.errorIcon(appError),
-                            size: 36, color: Colors.grey.shade400,),
+                        Icon(
+                          ErrorDisplay.errorIcon(appError),
+                          size: 36,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           ErrorDisplay.userMessage(appError, l10n),
@@ -428,13 +464,15 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 child: SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: _selectedIds.isEmpty || _topicController.text.isEmpty
-                        ? null
-                        : () {
-                            Navigator.pop(context);
-                            final sessionId = ref.read(startComposeSessionProvider)();
-                            context.push('/compose/cluster/$sessionId');
-                          },
+                    onPressed:
+                        _selectedIds.isEmpty || _topicController.text.isEmpty
+                            ? null
+                            : () {
+                                Navigator.pop(context);
+                                final sessionId =
+                                    ref.read(startComposeSessionProvider)();
+                                context.push('/compose/cluster/$sessionId');
+                              },
                     icon: const Icon(Icons.auto_awesome),
                     label: Text(l10n.startComposing),
                   ),
@@ -459,7 +497,8 @@ class _ContentPreviewSheet extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_ContentPreviewSheet> createState() => _ContentPreviewSheetState();
+  ConsumerState<_ContentPreviewSheet> createState() =>
+      _ContentPreviewSheetState();
 }
 
 class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
@@ -469,9 +508,7 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
     await Clipboard.setData(ClipboardData(text: widget.content));
     if (mounted) {
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.copiedToClipboard)),
-      );
+      AppSnackBar.info(context, message: l10n.copiedToClipboard);
     }
   }
 
@@ -513,17 +550,16 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
 
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.savedAsNote)),
-        );
+        AppSnackBar.info(context, message: l10n.savedAsNote);
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         final appError = ErrorMapper.map(e);
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorDisplay.userMessage(appError, l10n))),
+        AppSnackBar.error(
+          context,
+          message: ErrorDisplay.userMessage(appError, l10n),
         );
       }
     } finally {
@@ -550,7 +586,10 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -570,7 +609,8 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: Chip(
-                      label: Text(widget.platform, style: const TextStyle(fontSize: 11)),
+                      label: Text(widget.platform,
+                          style: const TextStyle(fontSize: 11)),
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
