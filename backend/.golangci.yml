@@ -6,9 +6,6 @@ run:
   go: "1.22"
   # Timeout for the entire run
   timeout: 5m
-  # Directories to skip
-  skip-dirs:
-    - db/migrations
   # Files to skip (generated code)
   skip-files:
     - ".*\\.pb\\.go$"
@@ -68,7 +65,7 @@ linters-settings:
 
   goconst:
     # Minimum occurrences of a string to trigger a warning
-    min occurrences: 3
+    min-occurrences: 3
     # Minimum length of the string constant
     min-len: 3
     # Ignore tests
@@ -119,6 +116,9 @@ issues:
   max-same-issues: 3
   # Show all issues from a linter
   new: false
+  # Directories to skip
+  exclude-dirs:
+    - db/migrations
 
   # Exclude some linters from running on test files
   exclude-rules:
