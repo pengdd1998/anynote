@@ -51,7 +51,11 @@ jobs:
 
       - name: Rename APK
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION="dev-$(echo $GITHUB_SHA | cut -c1-7)"
+          fi
           mv build/app/outputs/flutter-apk/app-release.apk \
              build/app/outputs/flutter-apk/anynote-${VERSION}.apk
 
