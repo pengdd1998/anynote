@@ -385,14 +385,14 @@ func TestFCMAdapter_CancelledContext(t *testing.T) {
 
 	// The mock does not check context, but the call should still go through
 	// since the mock ignores context. This verifies the adapter does not
-	// panic on cancelled contexts.
+	// panic on canceled contexts.
 	err := svc.SendPush(ctx, userID, PushPayload{
-		Title: "Cancelled",
+		Title: "Canceled",
 		Body:  "Context",
 	})
 	// The mock ignores context, so no error is expected.
 	if err != nil {
-		t.Fatalf("SendPush with cancelled context: %v", err)
+		t.Fatalf("SendPush with canceled context: %v", err)
 	}
 }
 

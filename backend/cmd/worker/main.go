@@ -226,7 +226,7 @@ func main() {
 	}
 
 	slog.Info("closing Redis client")
-	rdb.Close()
+	_ = rdb.Close()
 
 	slog.Info("closing database pool")
 	pool.Close()

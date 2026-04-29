@@ -1,3 +1,4 @@
+// Package webhook implements a generic webhook platform adapter for publishing content.
 package webhook
 
 import (

@@ -16,7 +16,7 @@ var (
 	ErrInvalidPlan       = errors.New("invalid plan")
 )
 
-// PlanRepository defines the data access interface for plan operations.
+// PlanRepo defines the data access interface for plan operations.
 type PlanRepo interface {
 	GetPlan(ctx context.Context, userID uuid.UUID) (string, error)
 	SetPlan(ctx context.Context, userID uuid.UUID, plan string) error

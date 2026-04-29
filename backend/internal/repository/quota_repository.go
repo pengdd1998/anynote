@@ -65,9 +65,11 @@ func (r *QuotaRepository) ResetIfNeeded(ctx context.Context, userID uuid.UUID) e
 }
 
 // EnsureQuota creates a quota record if one doesn't exist for the user.
+const planPro = "pro"
+
 func (r *QuotaRepository) EnsureQuota(ctx context.Context, userID uuid.UUID, plan string) error {
 	limit := 50
-	if plan == "pro" || plan == "lifetime" {
+	if plan == planPro || plan == "lifetime" {
 		limit = 500
 	}
 

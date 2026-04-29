@@ -1,3 +1,4 @@
+// Package handler implements HTTP handlers for the AnyNote API.
 package handler
 
 import (

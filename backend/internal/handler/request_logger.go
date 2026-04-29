@@ -52,11 +52,12 @@ func RequestLogger(next http.Handler) http.Handler {
 		}
 
 		// Log level: INFO for success, WARN for client errors, ERROR for server errors.
-		if rw.Status() >= 500 {
+		switch {
+		case rw.Status() >= 500:
 			slog.Error("request completed", attrs...)
-		} else if rw.Status() >= 400 {
+		case rw.Status() >= 400:
 			slog.Warn("request completed", attrs...)
-		} else {
+		default:
 			slog.Info("request completed", attrs...)
 		}
 	})

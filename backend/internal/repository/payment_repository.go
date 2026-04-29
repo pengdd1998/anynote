@@ -120,7 +120,7 @@ func (r *PaymentRepository) CompletePaymentTx(ctx context.Context, paymentID, pl
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Update payment status
 	_, err = tx.Exec(ctx,

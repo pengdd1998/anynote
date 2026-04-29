@@ -19,17 +19,6 @@ import (
 //   TEST_DATABASE_URL="postgres://anynote:anynote@localhost:5432/anynote_test?sslmode=disable" go test ./internal/repository/...
 // ---------------------------------------------------------------------------
 
-func getTestPool(t *testing.T) interface{} {
-	t.Helper()
-	// The repository tests need a real pgxpool.Pool. Since we cannot
-	// construct one without a running database, we instead test the
-	// repository layer via the service layer with mocks (see push_service_test.go).
-	//
-	// This file documents the expected behavior and provides integration
-	// test scaffolding for when a database is available.
-	return nil
-}
-
 // TestDeviceTokenRepository_DocumentsExpectedBehavior documents the expected
 // behaviors for the DeviceTokenRepository. These behaviors are tested
 // indirectly through PushService tests using mock repositories.
@@ -62,25 +51,6 @@ func TestDeviceTokenRepository_DocumentsExpectedBehavior(t *testing.T) {
 		// Returns an empty slice (not nil) when no tokens found.
 		t.Log("documented: ListByUser returns ordered entries")
 	})
-}
-
-// The following integration tests will run only when a database is available.
-// They are guarded by a build tag or environment variable check.
-
-func skipIfNoDB(t *testing.T) {
-	t.Helper()
-	dbURL := "postgres://anynote:anynote@localhost:5432/anynote_test?sslmode=disable"
-	pool, err := createTestPool(dbURL)
-	if err != nil {
-		t.Skip("Skipping integration test: PostgreSQL not available")
-	}
-	_ = pool
-}
-
-func createTestPool(dbURL string) (interface{}, error) {
-	// Placeholder for integration test setup.
-	// In production, use pgxpool.New(context.Background(), dbURL).
-	return nil, nil
 }
 
 // ---------------------------------------------------------------------------

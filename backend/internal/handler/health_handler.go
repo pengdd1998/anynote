@@ -13,6 +13,8 @@ import (
 // Version is set at build time via ldflags (e.g. -X handler.Version=v1.0.0).
 var Version = "dev"
 
+const statusNotConfigured = "not_configured"
+
 // Pinger is implemented by any dependency that supports a health-check ping.
 // Both *pgxpool.Pool and *sql.DB satisfy this interface via their Ping methods.
 type Pinger interface {
@@ -83,7 +85,7 @@ func (h *HealthHandler) ReadinessCheck(w http.ResponseWriter, _ *http.Request) {
 			checks["redis"] = "ok"
 		}
 	} else {
-		checks["redis"] = "not_configured"
+		checks["redis"] = statusNotConfigured
 	}
 
 	// Check MinIO connectivity.
@@ -95,7 +97,7 @@ func (h *HealthHandler) ReadinessCheck(w http.ResponseWriter, _ *http.Request) {
 			checks["minio"] = "ok"
 		}
 	} else {
-		checks["minio"] = "not_configured"
+		checks["minio"] = statusNotConfigured
 	}
 
 	status := http.StatusOK
@@ -113,5 +115,5 @@ func (h *HealthHandler) ReadinessCheck(w http.ResponseWriter, _ *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }

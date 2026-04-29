@@ -78,12 +78,6 @@ func (r *RateLimiter) Allow(userID string) bool {
 	}
 	w.timestamps = valid
 
-	// If all timestamps expired and window is now empty, check if we can
-	// prune the key entirely (avoids leaving empty-window entries in the map).
-	if len(w.timestamps) == 0 && !exists {
-		// Just created this window and haven't added the current request yet;
-		// keep it so the request gets recorded below.
-	}
 
 	// Check limit
 	if len(w.timestamps) >= r.limit {

@@ -9,7 +9,7 @@ import (
 
 const slowQueryThreshold = 100 * time.Millisecond
 
-// dbQueryDuration tracks database query durations in seconds, labelled by
+// dbQueryDuration tracks database query durations in seconds, labeled by
 // the operation name passed to NewQueryTimer / QueryTimerWithCount.
 var dbQueryDuration = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
@@ -24,8 +24,8 @@ func init() {
 	prometheus.MustRegister(dbQueryDuration)
 }
 
-// QueryTimer measures the duration of a database query and logs a warning
-// if it exceeds the slow-query threshold (100 ms).
+// NewQueryTimer returns a function that measures the duration of a database query
+// and logs a warning if it exceeds the slow-query threshold (100 ms).
 //
 // Usage:
 //

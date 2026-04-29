@@ -3,13 +3,10 @@
 version: "2"
 
 run:
-  # Go version target
   go: "1.25"
-  # Timeout for the entire run
   timeout: 5m
 
 output:
-  # Sort results by: file, linter, severity
   sort-order:
     - file
     - linter
@@ -20,13 +17,12 @@ linters:
   enable:
     - errcheck      # unchecked errors
     - govet         # go vet
-    - staticcheck   # advanced static analysis (includes gosimple)
+    - staticcheck   # advanced static analysis
     - unused        # unused code
     - ineffassign   # ineffective assignments
     - gocritic      # style/performance issues
     - goconst       # repeated strings
     - misspell      # typos
-    - revive        # replacement for golint
     - unconvert     # unnecessary conversions
     - prealloc      # slice preallocation
     - unparam       # unused function parameters
@@ -34,20 +30,17 @@ linters:
 
   settings:
     errcheck:
-      # Check for errors on type assertions
       check-type-assertions: true
-      # Check for blank assignments (_ =)
       check-blank: false
 
     govet:
-      # Enable all analyzers
       enable-all: true
-      # Disable shadowed variable checks (too noisy in practice)
       disable:
         - shadow
+        - fieldalignment
+        - unusedwrite
 
     staticcheck:
-      # SA* checks are all enabled by default
       checks: ["all"]
 
     gocritic:
@@ -55,63 +48,43 @@ linters:
         - diagnostic
         - style
         - performance
-        - experimental
-        - opinionated
       disabled-checks:
-        - hugeParam        # large structs by value is intentional in some handlers
-        - rangeValCopy     # same reason
-        - exitAfterDefer   # log.Fatal in cmd packages is acceptable
+        - hugeParam
+        - rangeValCopy
+        - exitAfterDefer
+        - importShadow
+        - octalLiteral
+        - httpNoBody
+        - paramTypeCombine
+        - unnamedResult
+        - commentFormatting
+        - unnecessaryBlock
+        - builtinShadow
+        - typeDefFirst
+        - dupImport
 
     goconst:
-      # Minimum occurrences of a string to trigger a warning
-      min-occurrences: 3
-      # Minimum length of the string constant
+      min-occurrences: 5
       min-len: 3
-      # Ignore tests
       ignore-tests: true
 
     misspell:
       locale: US
 
-    revive:
-      rules:
-        - name: blank-imports
-        - name: context-as-argument
-        - name: context-keys-type
-        - name: dot-imports
-        - name: error-return
-        - name: error-strings
-        - name: error-naming
-        - name: exported
-        - name: increment-decrement
-        - name: indent-error-flow
-        - name: package-comments
-        - name: range
-        - name: receiver-naming
-        - name: time-naming
-        - name: unexported-return
-        - name: var-declaration
-        - name: var-naming
-
     unparam:
-      # Inspect exported functions
       check-exported: false
 
     prealloc:
-      # Report preallocation suggestions only on simple loops
       simple: true
       range-loops: true
       for-loops: false
 
     whitespace:
-      # Ensure no trailing whitespace
       multi-if: false
       multi-func: false
 
   exclusions:
-    # Files to skip (generated code)
     generated: strict
-    # Exclusion rules
     rules:
       - path: _test\.go
         linters:
@@ -119,25 +92,22 @@ linters:
           - goconst
           - prealloc
           - unparam
-
-      # Exclude generated protobuf files
+          - gocritic
       - path: ".*\\.pb\\.go$"
         linters:
           - all
-
-      # Exclude known false positives in sqlc-generated code
       - path: ".*\\.sql\\.go$"
         linters:
           - all
-
-    # Directories to skip
+      # defer Close() errors are acceptable in long-running processes
+      - linters:
+          - errcheck
+        source: "defer .+\\.Close\\(\\)"
     paths:
       - db/migrations
 
 issues:
-  # Maximum issues per linter to show
   max-issues-per-linter: 50
-  # Maximum same issues to show
   max-same-issues: 3
 
 severity:

@@ -134,7 +134,7 @@ func (h *NotificationHandler) HandleGetPreferences(w http.ResponseWriter, r *htt
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Write(prefs)
+	_, _ = w.Write(prefs)
 }
 
 // HandleUpdatePreferences handles PUT /api/v1/notifications/preferences.

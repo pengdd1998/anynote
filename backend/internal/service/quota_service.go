@@ -43,7 +43,7 @@ func (s *quotaService) resetIfNeeded(ctx context.Context, userID uuid.UUID) {
 	key := userID.String()
 
 	if cached, ok := s.lastReset.Load(key); ok {
-		if cached.(string) == today {
+		if cachedStr, _ := cached.(string); cachedStr == today {
 			return // Already reset today; no DB call needed.
 		}
 	}

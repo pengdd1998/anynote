@@ -57,7 +57,9 @@ func (h *PlatformHandler) Connect(w http.ResponseWriter, r *http.Request) {
 
 	platformName := chi.URLParam(r, "platform")
 	if err := validateRequired(platformName, "platform"); err != nil {
-		writeValidationError(w, err.(*ValidationError))
+		if ve, ok := err.(*ValidationError); ok {
+			writeValidationError(w, ve)
+		}
 		return
 	}
 
@@ -125,7 +127,9 @@ func (h *PlatformHandler) Disconnect(w http.ResponseWriter, r *http.Request) {
 
 	platformName := chi.URLParam(r, "platform")
 	if err := validateRequired(platformName, "platform"); err != nil {
-		writeValidationError(w, err.(*ValidationError))
+		if ve, ok := err.(*ValidationError); ok {
+			writeValidationError(w, ve)
+		}
 		return
 	}
 
@@ -146,7 +150,9 @@ func (h *PlatformHandler) Verify(w http.ResponseWriter, r *http.Request) {
 
 	platformName := chi.URLParam(r, "platform")
 	if err := validateRequired(platformName, "platform"); err != nil {
-		writeValidationError(w, err.(*ValidationError))
+		if ve, ok := err.(*ValidationError); ok {
+			writeValidationError(w, ve)
+		}
 		return
 	}
 
@@ -169,7 +175,7 @@ func writeSSE(w http.ResponseWriter, flusher http.Flusher, event string, data in
 		slog.Error("failed to marshal SSE data", "error", err)
 		return
 	}
-	fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event, jsonData)
+	_, _ = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event, jsonData)
 	flusher.Flush()
 }
 

@@ -1,3 +1,4 @@
+// Package service implements business logic for the AnyNote API.
 package service
 
 import (
@@ -18,6 +19,7 @@ var (
 	ErrEmailExists        = errors.New("email already exists")
 	ErrUsernameExists     = errors.New("username already exists")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrInvalidToken       = errors.New("invalid token")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrAccountDeletion    = errors.New("account deletion failed")
 	ErrInvalidTokenType   = errors.New("invalid token type")
@@ -180,7 +182,10 @@ func (s *authService) RefreshToken(ctx context.Context, refreshToken string) (*d
 		return nil, ErrInvalidCredentials
 	}
 
-	claims := token.Claims.(jwt.MapClaims)
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, ErrInvalidToken
+	}
 
 	// Verify the token is a refresh token, not an access token.
 	tokenType, _ := claims["token_type"].(string)

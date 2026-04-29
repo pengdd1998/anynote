@@ -1,3 +1,4 @@
+// Package platform defines the adapter interface and registry for platform publishing.
 package platform
 
 import "context"

@@ -430,7 +430,7 @@ func TestPlatformHandler_Connect_SSESetup(t *testing.T) {
 		startAuthFn: func(ctx context.Context, uid uuid.UUID, platformName string, masterKey []byte) (string, []byte, error) {
 			return "auth-ref-123", qrPNG, nil
 		},
-		// PollAuth returns nil (still pending) on first call, then context will be cancelled.
+		// PollAuth returns nil (still pending) on first call, then context will be canceled.
 		pollAuthFn: func(ctx context.Context, uid uuid.UUID, platformName string, authRef string, masterKey []byte) ([]byte, error) {
 			return nil, nil
 		},

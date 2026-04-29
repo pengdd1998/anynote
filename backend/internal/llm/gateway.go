@@ -1,3 +1,4 @@
+// Package llm provides a gateway for LLM provider interactions with circuit breaker support.
 package llm
 
 import (
@@ -46,13 +47,12 @@ func (g *Gateway) Register(name string, p Provider) {
 
 	// Create a circuit breaker for this provider with the default options.
 	providerName := name // capture for closure
-	opts := append(
-		gatewayCircuitBreakerOpts[:len(gatewayCircuitBreakerOpts):len(gatewayCircuitBreakerOpts)],
-		WithOnStateChange(func(from, to State) {
-			setCircuitBreakerMetric(providerName, to)
-		}),
-	)
-	g.circuitBreakers[name] = NewCircuitBreaker(opts...)
+	cbOpts := make([]CircuitBreakerOption, len(gatewayCircuitBreakerOpts), len(gatewayCircuitBreakerOpts)+1)
+	copy(cbOpts, gatewayCircuitBreakerOpts)
+	cbOpts = append(cbOpts, WithOnStateChange(func(from, to State) {
+		setCircuitBreakerMetric(providerName, to)
+	}))
+	g.circuitBreakers[name] = NewCircuitBreaker(cbOpts...)
 }
 
 // SetCircuitBreaker replaces the circuit breaker for a specific provider.

@@ -1,3 +1,4 @@
+// Package medium implements the Medium platform adapter for publishing.
 package medium
 
 import (

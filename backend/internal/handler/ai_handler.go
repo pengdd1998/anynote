@@ -132,13 +132,13 @@ func (h *AIHandler) handleStream(w http.ResponseWriter, r *http.Request, chunkCh
 		case chunk, ok := <-chunkCh:
 			if !ok {
 				// Stream ended without Done marker
-				fmt.Fprintf(w, "data: {\"done\":true}\n\n")
+				_, _ = fmt.Fprintf(w, "data: {\"done\":true}\n\n")
 				flusher.Flush()
 				return
 			}
 			if chunk.Error != "" {
 				errorPayload, _ := json.Marshal(map[string]string{"error": chunk.Error})
-				fmt.Fprintf(w, "event: error\ndata: %s\n\n", errorPayload)
+				_, _ = fmt.Fprintf(w, "event: error\ndata: %s\n\n", errorPayload)
 				flusher.Flush()
 				return
 			}
@@ -157,7 +157,7 @@ func (h *AIHandler) handleStream(w http.ResponseWriter, r *http.Request, chunkCh
 				"content": content,
 				"done":    chunk.Done,
 			})
-			fmt.Fprintf(w, "data: %s\n\n", data)
+			_, _ = fmt.Fprintf(w, "data: %s\n\n", data)
 			flusher.Flush()
 
 			if chunk.Done {

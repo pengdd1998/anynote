@@ -1,3 +1,4 @@
+// Package xiaohongshu implements the Xiaohongshu (XHS / RedNote) platform adapter.
 package xiaohongshu
 
 import (
@@ -20,6 +21,7 @@ import (
 
 // XHS creator and publish URLs.
 const (
+	statusUnknown  = "unknown"
 	creatorBaseURL = "https://creator.xiaohongshu.com"
 	loginURL       = creatorBaseURL + "/login"
 	publishURL     = creatorBaseURL + "/publish/publish"
@@ -132,7 +134,7 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 
 	// Auth appears complete.  Wait briefly for the page to settle, then
 	// extract cookies.
-	chromedp.Run(handle.BrowserCtx, chromedp.Sleep(2*time.Second))
+	_ = chromedp.Run(handle.BrowserCtx, chromedp.Sleep(2*time.Second))
 
 	var cookies []*network.Cookie
 	if err := chromedp.Run(handle.BrowserCtx,
@@ -252,7 +254,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 			return nil, fmt.Errorf("upload image %s: %w", filePath, err)
 		}
 		// Wait for the upload to complete (image thumbnail appears).
-		chromedp.Run(browserCtx,
+		_ = chromedp.Run(browserCtx,
 			chromedp.Sleep(2*time.Second),
 		)
 	}
@@ -315,7 +317,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	// Try to extract the post URL from the resulting page.
 	// XHS creator dashboard may show the newly published note with a link.
 	var postURL string
-	chromedp.Run(browserCtx,
+	_ = chromedp.Run(browserCtx,
 		chromedp.Evaluate(`
 			(() => {
 				// Look for a link to the published note.
@@ -351,7 +353,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterKey []byte, platformID string) (string, error) {
 	jar, err := common.DecryptCookieJar(ctx, encryptedAuth, masterKey)
 	if err != nil {
-		return "unknown", err
+		return statusUnknown, err
 	}
 
 	postURL := postBaseURL + platformID
@@ -374,13 +376,13 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 		}),
 		chromedp.Sleep(2*time.Second),
 	); err != nil {
-		return "unknown", fmt.Errorf("navigate to post: %w", err)
+		return statusUnknown, fmt.Errorf("navigate to post: %w", err)
 	}
 
 	// Set cookies and reload.
 	cookieActions := chromedputil.CookieActions(&jar)
 	if err := chromedp.Run(browserCtx, cookieActions...); err != nil {
-		return "unknown", fmt.Errorf("set cookies: %w", err)
+		return statusUnknown, fmt.Errorf("set cookies: %w", err)
 	}
 
 	// Reload with cookies.
@@ -389,7 +391,7 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 		chromedp.Sleep(3*time.Second),
 		chromedp.Evaluate(`document.body.innerText.substring(0, 500)`, &pageContent),
 	); err != nil {
-		return "unknown", fmt.Errorf("check page: %w", err)
+		return statusUnknown, fmt.Errorf("check page: %w", err)
 	}
 
 	// If the page contains indicators that the note has been removed or
@@ -406,7 +408,7 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 		return "live", nil
 	}
 
-	return "unknown", nil
+	return statusUnknown, nil
 }
 
 // ---------------------------------------------------------------------------

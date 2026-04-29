@@ -23,11 +23,15 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	// Validate input
 	if err := validateEmail(req.Email); err != nil {
-		writeValidationError(w, err.(*ValidationError))
+		if ve, ok := err.(*ValidationError); ok {
+			writeValidationError(w, ve)
+		}
 		return
 	}
 	if err := validateUsername(req.Username); err != nil {
-		writeValidationError(w, err.(*ValidationError))
+		if ve, ok := err.(*ValidationError); ok {
+			writeValidationError(w, ve)
+		}
 		return
 	}
 	if len(req.AuthKeyHash) == 0 {
@@ -72,7 +76,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := validateEmail(req.Email); err != nil {
-		writeValidationError(w, err.(*ValidationError))
+		if ve, ok := err.(*ValidationError); ok {
+			writeValidationError(w, ve)
+		}
 		return
 	}
 	if len(req.AuthKeyHash) == 0 {
@@ -177,7 +183,9 @@ func (h *AuthHandler) GetRecoverySalt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := validateEmail(email); err != nil {
-		writeValidationError(w, err.(*ValidationError))
+		if ve, ok := err.(*ValidationError); ok {
+			writeValidationError(w, ve)
+		}
 		return
 	}
 
@@ -206,7 +214,9 @@ func (h *AuthHandler) Recover(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := validateEmail(req.Email); err != nil {
-		writeValidationError(w, err.(*ValidationError))
+		if ve, ok := err.(*ValidationError); ok {
+			writeValidationError(w, ve)
+		}
 		return
 	}
 	if req.RecoveryKey == "" {

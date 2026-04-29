@@ -79,6 +79,12 @@ func NewPaymentService(
 	}
 }
 
+// Payment status constants.
+const (
+	paymentStatusCompleted = "completed"
+	paymentStatusPending   = "pending"
+)
+
 // planAmounts maps plan names to their price in cents.
 var planAmounts = map[string]int{
 	"pro":      499,  // $4.99/month
@@ -112,7 +118,7 @@ func (s *paymentService) CreateCheckoutSession(ctx context.Context, userID strin
 		StripeSessionID: sessionID,
 		AmountCents:     amount,
 		Currency:        "usd",
-		Status:          "pending",
+		Status:          paymentStatusPending,
 		Plan:            req.Plan,
 	}
 
@@ -217,7 +223,7 @@ func (s *paymentService) completePayment(ctx context.Context, sessionID string) 
 		return ErrPaymentNotFound
 	}
 
-	if payment.Status == "completed" {
+	if payment.Status == paymentStatusCompleted {
 		return ErrPaymentAlreadyDone
 	}
 
@@ -286,7 +292,7 @@ func (s *paymentService) handleCheckoutExpired(ctx context.Context, event stripe
 	if payment == nil {
 		return ErrPaymentNotFound
 	}
-	if payment.Status != "pending" {
+	if payment.Status != paymentStatusPending {
 		return nil // already processed
 	}
 	if err := s.paymentRepo.UpdateStatus(ctx, payment.ID, "expired"); err != nil {

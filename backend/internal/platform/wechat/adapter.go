@@ -1,3 +1,4 @@
+// Package wechat implements the WeChat platform adapter for publishing and authentication.
 package wechat
 
 import (
@@ -20,9 +21,10 @@ import (
 
 // WeChat Official Account platform URLs.
 const (
-	mpBaseURL  = "https://mp.weixin.qq.com"
-	loginURL   = mpBaseURL + "/"
-	publishURL = mpBaseURL + "/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77"
+	statusUnknown = "unknown"
+	mpBaseURL     = "https://mp.weixin.qq.com"
+	loginURL      = mpBaseURL + "/"
+	publishURL    = mpBaseURL + "/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77"
 
 	// Delay between automated actions to reduce bot-detection risk.
 	actionDelay = 1500 * time.Millisecond
@@ -143,7 +145,7 @@ func (a *Adapter) PollAuth(ctx context.Context, session *platform.AuthSession, m
 
 	// Auth appears complete.  Wait briefly for the page to settle, then
 	// extract cookies.
-	chromedp.Run(handle.BrowserCtx, chromedp.Sleep(2*time.Second))
+	_ = chromedp.Run(handle.BrowserCtx, chromedp.Sleep(2*time.Second))
 
 	var cookies []*network.Cookie
 	if err := chromedp.Run(handle.BrowserCtx,
@@ -277,7 +279,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 			return nil, fmt.Errorf("upload image %s: %w", filePath, err)
 		}
 		// Wait for the upload to complete (image thumbnail appears).
-		chromedp.Run(browserCtx,
+		_ = chromedp.Run(browserCtx,
 			chromedp.Sleep(2*time.Second),
 		)
 	}
@@ -348,7 +350,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	// WeChat may change how the editor exposes the saved article ID (e.g.,
 	// returning it via an API response or a different URL format).
 	var articleURL string
-	chromedp.Run(browserCtx,
+	_ = chromedp.Run(browserCtx,
 		chromedp.Location(&articleURL),
 	)
 
@@ -376,7 +378,7 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterKey []byte, platformID string) (string, error) {
 	jar, err := common.DecryptCookieJar(ctx, encryptedAuth, masterKey)
 	if err != nil {
-		return "unknown", err
+		return statusUnknown, err
 	}
 
 	// Build the URL to check.  For drafts, use the MP console;
@@ -401,13 +403,13 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 		}),
 		chromedp.Sleep(2*time.Second),
 	); err != nil {
-		return "unknown", fmt.Errorf("navigate to article: %w", err)
+		return statusUnknown, fmt.Errorf("navigate to article: %w", err)
 	}
 
 	// Set cookies and reload.
 	cookieActions := chromedputil.CookieActions(&jar)
 	if err := chromedp.Run(browserCtx, cookieActions...); err != nil {
-		return "unknown", fmt.Errorf("set cookies: %w", err)
+		return statusUnknown, fmt.Errorf("set cookies: %w", err)
 	}
 
 	// Reload with cookies.
@@ -416,7 +418,7 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 		chromedp.Sleep(3*time.Second),
 		chromedp.Evaluate(`document.body.innerText.substring(0, 500)`, &pageContent),
 	); err != nil {
-		return "unknown", fmt.Errorf("check page: %w", err)
+		return statusUnknown, fmt.Errorf("check page: %w", err)
 	}
 
 	// If the page contains indicators that the article has been removed or
@@ -443,12 +445,12 @@ func (a *Adapter) CheckStatus(ctx context.Context, encryptedAuth []byte, masterK
 
 	// If the page redirected to login, the session has expired.
 	var currentURL string
-	chromedp.Run(browserCtx, chromedp.Location(&currentURL))
+	_ = chromedp.Run(browserCtx, chromedp.Location(&currentURL))
 	if strings.Contains(currentURL, "login") || strings.Contains(pageContent, "请登录") {
-		return "unknown", fmt.Errorf("session expired")
+		return statusUnknown, fmt.Errorf("session expired")
 	}
 
-	return "unknown", nil
+	return statusUnknown, nil
 }
 
 // ---------------------------------------------------------------------------

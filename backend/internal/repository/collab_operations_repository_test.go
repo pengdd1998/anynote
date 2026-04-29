@@ -216,13 +216,13 @@ func TestNewCollabOperationsRepository(t *testing.T) {
 
 func TestCollabOperationsRepository_ContextCancellation(t *testing.T) {
 	t.Run("StoreOperation_respects_context", func(t *testing.T) {
-		// When the passed context is cancelled, the INSERT should return
+		// When the passed context is canceled, the INSERT should return
 		// context.Canceled or context.DeadlineExceeded.
 		t.Log("documented: StoreOperation respects context cancellation")
 	})
 
 	t.Run("GetOperationsSince_respects_context", func(t *testing.T) {
-		// When the passed context is cancelled, the SELECT should return
+		// When the passed context is canceled, the SELECT should return
 		// context.Canceled or context.DeadlineExceeded.
 		t.Log("documented: GetOperationsSince respects context cancellation")
 	})
@@ -461,10 +461,10 @@ func TestCollabOperationsRepository_ContextUsage(t *testing.T) {
 		t.Log("documented: all methods propagate context to database pool")
 	})
 
-	t.Run("cancelled_context_returns_error", func(t *testing.T) {
-		// With a cancelled context, the pgxpool Exec/Query returns
+	t.Run("canceled_context_returns_error", func(t *testing.T) {
+		// With a canceled context, the pgxpool Exec/Query returns
 		// context.Canceled or context.DeadlineExceeded. This cannot be tested
 		// without a real pool (nil pool would panic).
-		t.Log("documented: cancelled context propagates error from pgxpool")
+		t.Log("documented: canceled context propagates error from pgxpool")
 	})
 }

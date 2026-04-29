@@ -1,3 +1,4 @@
+// Package config loads and validates application configuration from YAML files and environment variables.
 package config
 
 import (
@@ -38,7 +39,7 @@ type Config struct {
 	Stripe   StripeConfig   `yaml:"stripe"`
 }
 
-// MinIOConfig defaults — Bucket defaults to "anynote" when empty.
+// BucketName returns the configured bucket name, defaulting to "anynote" when empty.
 func (c MinIOConfig) BucketName() string {
 	if c.Bucket == "" {
 		return "anynote"
@@ -46,7 +47,7 @@ func (c MinIOConfig) BucketName() string {
 	return c.Bucket
 }
 
-// LogConfig controls structured logging behaviour.
+// LogConfig controls structured logging behavior.
 type LogConfig struct {
 	Level  string `yaml:"level"`  // debug, info, warn, error (default: info)
 	Format string `yaml:"format"` // json (default) or text
@@ -209,7 +210,7 @@ func (c *Config) applyEnvOverrides() {
 		c.MinIO.SecretKey = v
 	}
 	if v := os.Getenv("PORT"); v != "" {
-		fmt.Sscanf(v, "%d", &c.Server.Port)
+		_, _ = fmt.Sscanf(v, "%d", &c.Server.Port)
 	}
 	if v := os.Getenv("LOG_LEVEL"); v != "" {
 		c.Log.Level = v

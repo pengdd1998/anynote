@@ -23,7 +23,7 @@ func InitFCMClient(ctx context.Context, credentialsFile string) (service.FCMClie
 		return nil, nil
 	}
 
-	app, err := firebase.NewApp(ctx, nil, option.WithCredentialsFile(credentialsFile))
+	app, err := firebase.NewApp(ctx, nil, option.WithCredentialsFile(credentialsFile)) //nolint:staticcheck // intentional: migration to new API not yet planned
 	if err != nil {
 		return nil, fmt.Errorf("firebase app init: %w", err)
 	}

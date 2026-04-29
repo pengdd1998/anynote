@@ -17,6 +17,8 @@ import (
 // Sessions older than this are cleaned up by the background goroutine.
 const sessionMaxAge = 5 * time.Minute
 
+const statusActive = "active"
+
 type PlatformService interface {
 	List(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error)
 	Connect(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error)
@@ -173,7 +175,7 @@ func (s *platformService) Verify(ctx context.Context, userID uuid.UUID, platform
 	}
 
 	// Update the last_verified timestamp.
-	conn.Status = "active"
+	conn.Status = statusActive
 	if err := s.platformRepo.Update(ctx, conn); err != nil {
 		return nil, fmt.Errorf("update verification: %w", err)
 	}
@@ -215,7 +217,10 @@ func (s *platformService) PollAuth(ctx context.Context, userID uuid.UUID, platfo
 	if !ok {
 		return nil, fmt.Errorf("auth session not found or expired")
 	}
-	stored := val.(*storedAuthSession)
+	stored, ok := val.(*storedAuthSession)
+		if !ok {
+			return nil, fmt.Errorf("invalid auth session type")
+		}
 
 	adapter, err := s.registry.Get(platformName)
 	if err != nil {
@@ -240,7 +245,7 @@ func (s *platformService) PollAuth(ctx context.Context, userID uuid.UUID, platfo
 			ID:       uuid.New(),
 			UserID:   userID,
 			Platform: platformName,
-			Status:   "active",
+			Status:   statusActive,
 		}
 		conn.EncryptedAuth = encryptedAuth
 		if createErr := s.platformRepo.Create(ctx, conn); createErr != nil {
@@ -248,7 +253,7 @@ func (s *platformService) PollAuth(ctx context.Context, userID uuid.UUID, platfo
 		}
 	} else {
 		conn.EncryptedAuth = encryptedAuth
-		conn.Status = "active"
+		conn.Status = statusActive
 		if updateErr := s.platformRepo.Update(ctx, conn); updateErr != nil {
 			return nil, fmt.Errorf("update connection: %w", updateErr)
 		}

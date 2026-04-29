@@ -1,3 +1,4 @@
+// Package wordpress implements the WordPress platform adapter for publishing and authentication.
 package wordpress
 
 import (
@@ -320,15 +321,16 @@ func (a *Adapter) RevokeAuth(ctx context.Context, encryptedAuth []byte, masterKe
 	// Try to find and delete the application password that matches.
 	// We delete all application passwords named "AnyNote" or a similar pattern.
 	for _, ap := range appPasswords {
-		if strings.Contains(strings.ToLower(ap.Name), "anynote") {
-			deleteURL := authData.SiteURL + "/wp-json/wp/v2/users/me/application-passwords/" + ap.UUID
-			delReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, deleteURL, nil)
-			if err != nil {
-				continue
-			}
-			delReq.SetBasicAuth(authData.Username, authData.AppPassword)
-			httpclient.Shared.Do(delReq)
+		if !strings.Contains(strings.ToLower(ap.Name), "anynote") {
+			continue
 		}
+		deleteURL := authData.SiteURL + "/wp-json/wp/v2/users/me/application-passwords/" + ap.UUID
+		delReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, deleteURL, nil)
+		if err != nil {
+			continue
+		}
+		delReq.SetBasicAuth(authData.Username, authData.AppPassword)
+		_, _ = httpclient.Shared.Do(delReq)
 	}
 
 	return nil

@@ -644,7 +644,7 @@ func TestIntegration_Concurrent_SyncBlobInserts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to count blobs: %v", err)
 	}
-	if int(count) != concurrency {
+	if count != concurrency {
 		t.Errorf("Expected %d blobs, got %d", concurrency, count)
 	}
 }

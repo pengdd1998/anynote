@@ -1,3 +1,4 @@
+// Package domain defines shared domain types for the AnyNote backend.
 package domain
 
 // Plan represents a user subscription tier.
@@ -9,7 +10,7 @@ const (
 	PlanLifetime Plan = "lifetime"
 )
 
-// ValidPlans is the set of recognised plan values.
+// ValidPlans is the set of recognized plan values.
 var ValidPlans = map[Plan]bool{
 	PlanFree:     true,
 	PlanPro:      true,
@@ -59,7 +60,7 @@ var PlanLimitsMap = map[Plan]PlanLimits{
 }
 
 // GetPlanLimits returns the limits for the given plan, defaulting to the free
-// tier limits when the plan is unrecognised.
+// tier limits when the plan is unrecognized.
 func GetPlanLimits(p Plan) PlanLimits {
 	if limits, ok := PlanLimitsMap[p]; ok {
 		return limits

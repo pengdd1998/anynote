@@ -1,3 +1,4 @@
+// Package repository implements database access layer using pgxpool for PostgreSQL.
 package repository
 
 import (
@@ -136,7 +137,7 @@ func (r *SyncBlobRepository) BatchUpsert(ctx context.Context, blobs []*domain.Sy
 		}
 		return results
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Phase 1: Send all upsert queries in a single batch.
 	batch := &pgx.Batch{}
@@ -374,7 +375,7 @@ func (r *SyncBlobRepository) BatchDelete(ctx context.Context, userID uuid.UUID, 
 	if err != nil {
 		return 0, fmt.Errorf("begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Use a batch to send all delete queries in a single round-trip.
 	batch := &pgx.Batch{}

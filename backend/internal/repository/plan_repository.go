@@ -18,6 +18,8 @@ func NewPlanRepository(pool *pgxpool.Pool) *PlanRepository {
 	return &PlanRepository{pool: pool}
 }
 
+const planFree = "free"
+
 // GetPlan returns the current plan string for the given user.
 // Returns "free" when the user has no explicit plan set.
 func (r *PlanRepository) GetPlan(ctx context.Context, userID uuid.UUID) (string, error) {
@@ -26,7 +28,7 @@ func (r *PlanRepository) GetPlan(ctx context.Context, userID uuid.UUID) (string,
 		`SELECT COALESCE(plan, 'free') FROM users WHERE id = $1`, userID,
 	).Scan(&plan)
 	if err != nil {
-		return "free", fmt.Errorf("get plan: %w", err)
+		return planFree, fmt.Errorf("get plan: %w", err)
 	}
 	return plan, nil
 }

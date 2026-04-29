@@ -12,7 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/golang-jwt/jwt/v5"
-	"nhooyr.io/websocket"
+	"nhooyr.io/websocket" //nolint:staticcheck // intentional: migration to coder/websocket not yet planned
 
 	"github.com/anynote/backend/internal/domain"
 	"github.com/anynote/backend/internal/service"
@@ -190,14 +190,14 @@ func (h *WSHandler) HandleConnection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// --- Upgrade to WebSocket ---
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{ //nolint:staticcheck // intentional: migration to coder/websocket not yet planned
 		OriginPatterns: h.originPatterns(),
 	})
 	if err != nil {
 		slog.Error("ws: upgrade failed", "error", err)
 		return
 	}
-	defer conn.CloseNow()
+	defer conn.CloseNow() //nolint:errcheck,staticcheck // deferred close on cleanup path; deprecated websocket lib
 
 	// Build a username. For now, use the userID. The client may send a "join"
 	// message with a preferred username later.
@@ -209,7 +209,7 @@ func (h *WSHandler) HandleConnection(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.presenceSvc.Join(ctx, room, userID, username); err != nil {
 		slog.Error("ws: join failed", "room", room, "error", err)
-		conn.Close(websocket.StatusPolicyViolation, "join failed")
+		_ = conn.Close(websocket.StatusPolicyViolation, "join failed") //nolint:staticcheck // intentional: deprecated websocket lib
 		return
 	}
 	defer func() {
@@ -279,7 +279,7 @@ func (h *WSHandler) validateToken(tokenStr string) (string, error) {
 
 // sendPresenceList fetches current room members and sends them as a
 // "presence" message to the given connection.
-func (h *WSHandler) sendPresenceList(ctx context.Context, conn *websocket.Conn, room string) error {
+func (h *WSHandler) sendPresenceList(ctx context.Context, conn *websocket.Conn, room string) error { //nolint:staticcheck // intentional: deprecated websocket lib
 	members, err := h.presenceSvc.GetRoomMembers(ctx, room)
 	if err != nil {
 		return fmt.Errorf("get room members: %w", err)
@@ -296,11 +296,11 @@ func (h *WSHandler) sendPresenceList(ctx context.Context, conn *websocket.Conn, 
 
 // readPump reads messages from the WebSocket connection and dispatches them.
 // editLimiter and cursorLimiter enforce per-client rate limits for relay messages.
-func (h *WSHandler) readPump(ctx context.Context, conn *websocket.Conn, room, userID string, editLimiter, cursorLimiter *clientRateLimiter) {
+func (h *WSHandler) readPump(ctx context.Context, conn *websocket.Conn, room, userID string, editLimiter, cursorLimiter *clientRateLimiter) { //nolint:staticcheck // intentional: deprecated websocket lib
 	for {
-		_, raw, err := conn.Read(ctx)
+		_, raw, err := conn.Read(ctx) //nolint:staticcheck // intentional: deprecated websocket lib
 		if err != nil {
-			// Normal closure or context cancelled; stop reading.
+			// Normal closure or context canceled; stop reading.
 			return
 		}
 
@@ -371,7 +371,7 @@ func (h *WSHandler) handleTyping(ctx context.Context, room, userID string, data 
 // The server is zero-knowledge: it never inspects or modifies the ops payload.
 // Rate limited to MaxEditRate messages per second per client.
 // When opsRepo is configured, the operation is also persisted for catch-up.
-func (h *WSHandler) handleEdit(ctx context.Context, room, userID string, msg service.WSMessage, limiter *clientRateLimiter, conn *websocket.Conn) {
+func (h *WSHandler) handleEdit(ctx context.Context, room, userID string, msg service.WSMessage, limiter *clientRateLimiter, conn *websocket.Conn) { //nolint:staticcheck // intentional: deprecated websocket lib
 	if !limiter.Allow() {
 		sendRateLimitError(ctx, conn, "edit_rate_limited", "Edit rate limit exceeded")
 		return
@@ -393,7 +393,7 @@ func (h *WSHandler) handleEdit(ctx context.Context, room, userID string, msg ser
 
 // handleCursor relays cursor position updates to all other clients in the room.
 // Rate limited to MaxCursorRate messages per second per client.
-func (h *WSHandler) handleCursor(ctx context.Context, room, userID string, msg service.WSMessage, limiter *clientRateLimiter, conn *websocket.Conn) {
+func (h *WSHandler) handleCursor(ctx context.Context, room, userID string, msg service.WSMessage, limiter *clientRateLimiter, conn *websocket.Conn) { //nolint:staticcheck // intentional: deprecated websocket lib
 	if !limiter.Allow() {
 		sendRateLimitError(ctx, conn, "cursor_rate_limited", "Cursor rate limit exceeded")
 		return
@@ -410,7 +410,7 @@ func (h *WSHandler) handleCursor(ctx context.Context, room, userID string, msg s
 // sendMissedOperations sends any CRDT operations the client has missed since
 // the given clock value. The client passes ?since_clock=N on the WS connection
 // URL. If absent, no catch-up is performed (client starts fresh).
-func (h *WSHandler) sendMissedOperations(ctx context.Context, conn *websocket.Conn, room string, r *http.Request) error {
+func (h *WSHandler) sendMissedOperations(ctx context.Context, conn *websocket.Conn, room string, r *http.Request) error { //nolint:staticcheck // intentional: deprecated websocket lib
 	sinceStr := r.URL.Query().Get("since_clock")
 	if sinceStr == "" {
 		return nil
@@ -442,7 +442,7 @@ func (h *WSHandler) sendMissedOperations(ctx context.Context, conn *websocket.Co
 // persistOperation extracts CRDT operation metadata from an edit message and
 // persists it. The payload is stored as-is (encrypted blob). Persistence errors
 // are logged but do not block the relay -- availability over strict consistency.
-func (h *WSHandler) persistOperation(ctx context.Context, room, userID string, msg service.WSMessage) {
+func (h *WSHandler) persistOperation(ctx context.Context, room, _ string, msg service.WSMessage) {
 	// Extract structured fields from the edit message data.
 	// Expected JSON: {"site_id": "...", "clock": N, "operation_type": "insert|delete", ...}
 	var editData struct {
@@ -476,13 +476,13 @@ func (h *WSHandler) persistOperation(ctx context.Context, room, userID string, m
 
 // sendRateLimitError writes a rate limit error message to the WebSocket connection.
 // If the connection is nil or the write fails, the error is silently dropped.
-func sendRateLimitError(ctx context.Context, conn *websocket.Conn, code, message string) {
+func sendRateLimitError(ctx context.Context, conn *websocket.Conn, code, message string) { //nolint:staticcheck // intentional: deprecated websocket lib
 	if conn == nil {
 		return
 	}
 	errMsg := service.WSMessage{
 		Type: "error",
-		Data: json.RawMessage(fmt.Sprintf(`{"code":"%s","message":"%s"}`, code, message)),
+		Data: json.RawMessage(fmt.Sprintf(`{"code":%q,"message":%q}`, code, message)),
 	}
 	if writeErr := wsWriteJSON(ctx, conn, errMsg); writeErr != nil {
 		slog.Debug("ws: failed to send rate limit error", "error", writeErr)
@@ -491,15 +491,15 @@ func sendRateLimitError(ctx context.Context, conn *websocket.Conn, code, message
 
 // writePump reads from the room subscription channel and writes messages to the
 // WebSocket connection. It exits when the context is done or the channel is closed.
-func (h *WSHandler) writePump(ctx context.Context, conn *websocket.Conn, roomCh <-chan service.WSMessage) {
+func (h *WSHandler) writePump(ctx context.Context, conn *websocket.Conn, roomCh <-chan service.WSMessage) { //nolint:staticcheck // intentional: deprecated websocket lib
 	for {
 		select {
 		case <-ctx.Done():
-			conn.Close(websocket.StatusNormalClosure, "idle timeout")
+			_ = conn.Close(websocket.StatusNormalClosure, "idle timeout") //nolint:staticcheck // intentional: deprecated websocket lib
 			return
 		case msg, ok := <-roomCh:
 			if !ok {
-				conn.Close(websocket.StatusNormalClosure, "room closed")
+				_ = conn.Close(websocket.StatusNormalClosure, "room closed") //nolint:staticcheck // intentional: deprecated websocket lib
 				return
 			}
 			if err := wsWriteJSON(ctx, conn, msg); err != nil {
@@ -510,10 +510,10 @@ func (h *WSHandler) writePump(ctx context.Context, conn *websocket.Conn, roomCh 
 }
 
 // wsWriteJSON marshals a WSMessage and writes it as a text frame.
-func wsWriteJSON(ctx context.Context, conn *websocket.Conn, msg service.WSMessage) error {
+func wsWriteJSON(ctx context.Context, conn *websocket.Conn, msg service.WSMessage) error { //nolint:staticcheck // intentional: deprecated websocket lib
 	data, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("marshal: %w", err)
 	}
-	return conn.Write(ctx, websocket.MessageText, data)
+	return conn.Write(ctx, websocket.MessageText, data) //nolint:staticcheck // intentional: deprecated websocket lib
 }

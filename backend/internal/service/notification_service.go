@@ -50,7 +50,7 @@ func NewNotificationService(repo NotificationRepo) NotificationService {
 	return &notificationService{repo: repo}
 }
 
-// validNotificationTypes is the set of recognised notification type values.
+// validNotificationTypes is the set of recognized notification type values.
 var validNotificationTypes = map[string]bool{
 	"sync_conflict":     true,
 	"share_received":    true,

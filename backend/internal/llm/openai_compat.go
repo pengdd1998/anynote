@@ -74,7 +74,7 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1*1024*1024))
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		cancel()
 		if err != nil {
 			return nil, fmt.Errorf("reading error response body: %w", err)
@@ -93,7 +93,7 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 		scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 
 		for scanner.Scan() {
-			// Stop reading if the caller cancelled the context.
+			// Stop reading if the caller canceled the context.
 			select {
 			case <-streamCtx.Done():
 				return
@@ -133,7 +133,7 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 			// Only report scanner errors if the context is still active.
 			select {
 			case <-streamCtx.Done():
-				// Context cancelled; scanner error is expected.
+				// Context canceled; scanner error is expected.
 			default:
 				ch <- domain.StreamChunk{Error: err.Error()}
 			}
@@ -193,7 +193,7 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 		}
 
 		respBody, readErr := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		if readErr != nil {
 			lastErr = fmt.Errorf("reading response body: %w", readErr)
 			continue

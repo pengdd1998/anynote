@@ -1,3 +1,4 @@
+// Package queue manages the asynq task queue for AI proxy, publishing, and push notification jobs.
 package queue
 
 import (
@@ -164,5 +165,5 @@ func (s *Service) Stop() {
 
 // Shutdown closes the queue client. Call Stop first to shut down the worker server.
 func (s *Service) Shutdown() {
-	s.client.Close()
+	_ = s.client.Close()
 }
