@@ -1,0 +1,58 @@
+# AnyNote iOS Fastfile
+# Usage:
+#   bundle exec fastlane build_release
+#   bundle exec fastlane screenshots
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build release IPA"
+  lane :build_release do
+    build_ios_app(
+      scheme: "Runner",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "AnyNote.ipa"
+    )
+  end
+
+  desc "Take screenshots for App Store listing"
+  lane :screenshots do
+    capture_screenshots
+  end
+
+  desc "Run tests before building"
+  lane :test do
+    run_tests(
+      scheme: "RunnerTests"
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    build_ios_app(
+      scheme: "Runner",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "AnyNote.ipa"
+    )
+    upload_to_testflight(
+      ipa: "./build/AnyNote.ipa"
+    )
+  end
+
+  desc "Build and submit for App Store review"
+  lane :release do
+    build_ios_app(
+      scheme: "Runner",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "AnyNote.ipa"
+    )
+    deliver(
+      ipa: "./build/AnyNote.ipa",
+      submit_for_review: true,
+      automatic_release: false
+    )
+  end
+end

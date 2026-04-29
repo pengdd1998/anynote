@@ -1,0 +1,27 @@
+AnyNote is a local-first, privacy-first note-taking app with true end-to-end encryption. Your notes are encrypted on your device before they ever leave it -- the server never sees your plaintext content.
+
+ZERO-KNOWLEDGE ARCHITECTURE
+AnyNote uses XChaCha20-Poly1305 authenticated encryption with keys derived via Argon2id and HKDF-SHA256. Every note gets its own unique encryption key. The server stores only encrypted blobs and cannot read your data.
+
+WORKS OFFLINE
+Your notes live on your device first. Create, edit, and organize without an internet connection. Sync automatically when you are back online.
+
+RICH EDITOR
+Write with a full-featured rich text editor supporting markdown, code blocks, math formulas, and image attachments. Use keyboard shortcuts for efficient writing on desktop.
+
+CROSS-DEVICE SYNC
+Encrypted sync across all your devices -- iPhone, iPad, Mac, Windows, Android, and web. Conflict resolution with version vectors ensures nothing is lost.
+
+AI-POWERED FEATURES (OPTIONAL)
+Use your own LLM API key or the shared server model for AI-assisted writing. AI requests are proxied directly -- we never log request or response content.
+
+PUBLISH ANYWHERE
+Publish your notes directly to Xiaohongshu, Medium, WordPress, and more. Platform credentials are encrypted at rest.
+
+ORGANIZE YOUR WAY
+Tags, collections, and full-text search keep your notes organized. FTS5-powered search handles both English and Chinese text effortlessly.
+
+OPEN SOURCE
+AnyNote is open source. Audit the code, self-host your own instance, or contribute to the project.
+
+Your notes. Your privacy. No compromises.

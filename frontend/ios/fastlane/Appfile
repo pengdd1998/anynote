@@ -1,0 +1,4 @@
+app_identifier("com.anynote.app")
+apple_id("dev@anynote.app")
+itc_team_id("") # App Store Connect team ID (set via environment variable FASTLANE_ITC_TEAM_ID)
+team_id("")     # Apple Developer Portal team ID (set via environment variable FASTLANE_TEAM_ID)

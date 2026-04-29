@@ -1,0 +1,1 @@
+notes,encrypted,privacy,e2e,secure,markdown,sync,offline,local-first,crypto,XChaCha20,AI,publish

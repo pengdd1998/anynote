@@ -97,7 +97,12 @@ frontend/android/app/build/
 frontend/android/local.properties
 frontend/android/.idea/
 frontend/android/app/src/main/java/io/
-frontend/ios/
+# iOS: local .gitignore handles exclusions (Pods/, build, generated); track Podfile, xcodeproj, fastlane
+frontend/ios/Pods/
+frontend/ios/Flutter/ephemeral/
+frontend/ios/build/
+frontend/ios/*.xcuserdata/
+frontend/ios/**/xcuserdata/
 frontend/windows/
 frontend/linux/
 frontend/macos/
