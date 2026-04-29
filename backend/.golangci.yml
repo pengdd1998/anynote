@@ -139,8 +139,6 @@ issues:
   max-issues-per-linter: 50
   # Maximum same issues to show
   max-same-issues: 3
-  # Show all issues from a linter
-  new: false
 
 severity:
   default: warning
