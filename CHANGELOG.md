@@ -5,6 +5,14 @@ All notable changes to AnyNote will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] — 2026-04-29
+
+### Fixed
+
+- Track iOS project files (Podfile, xcodeproj, fastlane) in git — root .gitignore blanket-ignored `frontend/ios/` causing CI pod install to fail
+- Remove explicit pod declarations from Podfile (Sodium, sqlite3_flutter_libs, flutter_secure_storage) — Flutter plugins manage their own podspecs
+- Migrate golangci-lint to v2 schema for Go 1.25 compatibility (action@v7, v2.11 binary)
+
 ## [2.2.0] — 2026-04-29
 
 ### Added
