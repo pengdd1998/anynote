@@ -1,6 +1,6 @@
 CREATE TABLE notifications (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     type TEXT NOT NULL CHECK (type IN ('sync_conflict', 'share_received', 'reminder', 'system', 'payment')),
     title TEXT NOT NULL DEFAULT '',
     body TEXT NOT NULL DEFAULT '',
