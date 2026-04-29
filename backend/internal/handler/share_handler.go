@@ -92,6 +92,10 @@ func (h *ShareHandler) GetShare(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	if resp == nil {
+		writeError(w, r, http.StatusNotFound, "not_found", "Shared note not found")
+		return
+	}
 
 	// If the share is password-protected, verify the password hash.
 	if resp.HasPassword {

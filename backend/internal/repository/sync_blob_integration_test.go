@@ -289,8 +289,11 @@ func TestBatchUpsert_WithConflicts(t *testing.T) {
 	if results[2].Accepted {
 		t.Error("conflict1 should be rejected")
 	}
-	if results[2].ServerVersion != 10 {
-		t.Errorf("conflict1 ServerVersion = %d, want 10", results[2].ServerVersion)
+	// conflict1 (v5) conflicts with existing1 (v10), but update1 (v15) in the
+	// same batch already updated existing1, so the server version reflects the
+	// batch-internal update.
+	if results[2].ServerVersion != 15 {
+		t.Errorf("conflict1 ServerVersion = %d, want 15 (updated by batch-mate update1)", results[2].ServerVersion)
 	}
 	if results[3].Accepted {
 		t.Error("conflict2 should be rejected")

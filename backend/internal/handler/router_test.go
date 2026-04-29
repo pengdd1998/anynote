@@ -164,7 +164,7 @@ func (s *routerStubShareService) CreateShare(ctx context.Context, userID uuid.UU
 	return nil, nil
 }
 func (s *routerStubShareService) GetShare(ctx context.Context, id string) (*domain.GetShareResponse, error) {
-	return nil, nil
+	return &domain.GetShareResponse{ID: id, EncryptedContent: "test", EncryptedTitle: "test"}, nil
 }
 func (s *routerStubShareService) DiscoverFeed(ctx context.Context, limit, offset int) ([]domain.DiscoverFeedItem, error) {
 	return nil, nil
