@@ -282,7 +282,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurfaceVariant
-                        .withOpacity(0.3),
+                        .withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -514,7 +514,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
               padding: const EdgeInsets.only(left: 4, top: 6, bottom: 6),
               child: Chip(
                 label: Text(AppLocalizations.of(context)!
-                    .tagsCountLabel(_selectedTagIds.length)),
+                    .tagsCountLabel(_selectedTagIds.length),),
                 avatar: const Icon(Icons.label, size: 14),
                 deleteIcon: const Icon(Icons.close, size: 14),
                 onDeleted: () {

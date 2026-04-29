@@ -149,7 +149,8 @@ func main() {
 	)
 
 	// Register real handlers (replaces stubs)
-	qSvc.RegisterHandlers(aiHandler, publishHandler)
+	pushHandler := queue.NewPushJobHandler(pushSvc)
+	qSvc.RegisterHandlers(aiHandler, publishHandler, pushHandler)
 
 	// Register cleanup handler for expired shared notes.
 	cleanupHandler := queue.NewCleanupHandler(sharedNoteRepo)
@@ -157,7 +158,7 @@ func main() {
 
 	// Start the asynq worker server. Start runs in the background, so we
 	// block on the signal channel below.
-	slog.Info("worker starting", "queues", []string{"ai", "publish"})
+	slog.Info("worker starting", "queues", []string{"ai", "publish", "push"})
 	if err := qSvc.Start(cfg.Redis.URL); err != nil {
 		slog.Error("worker start error", "error", err)
 		os.Exit(1)

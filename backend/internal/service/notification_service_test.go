@@ -81,6 +81,14 @@ func (m *mockNotificationRepo) Delete(_ context.Context, _, _ string) error {
 	return m.deleteErr
 }
 
+func (m *mockNotificationRepo) GetNotificationPreferences(_ context.Context, _ string) (json.RawMessage, error) {
+	return json.RawMessage(`{"pushNotifications":true,"reminderNotifications":true}`), nil
+}
+
+func (m *mockNotificationRepo) UpdateNotificationPreferences(_ context.Context, _ string, _ json.RawMessage) error {
+	return nil
+}
+
 // ---------------------------------------------------------------------------
 // Tests: CreateNotification
 // ---------------------------------------------------------------------------
@@ -141,7 +149,7 @@ func TestNotificationService_CreateNotification_AllValidTypes(t *testing.T) {
 	repo := newMockNotificationRepo()
 	svc := NewNotificationService(repo)
 
-	validTypes := []string{"sync_conflict", "share_received", "reminder", "system", "payment"}
+	validTypes := []string{"sync_conflict", "share_received", "reminder", "system", "payment", "publish_started", "publish_completed", "collab_invite"}
 	for _, nType := range validTypes {
 		err := svc.CreateNotification(context.Background(), "user-1", nType, "Title", "Body", nil)
 		if err != nil {

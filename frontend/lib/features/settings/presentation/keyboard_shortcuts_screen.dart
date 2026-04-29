@@ -36,14 +36,14 @@ class KeyboardShortcutsScreen extends StatelessWidget {
       _ShortcutTile(shortcut: '$mod+S', description: l10n.shortcutSave),
       _ShortcutTile(shortcut: '$mod+F', description: l10n.shortcutSearch),
       _ShortcutTile(
-          shortcut: '$mod+K', description: l10n.shortcutCommandPalette),
+          shortcut: '$mod+K', description: l10n.shortcutCommandPalette,),
       _ShortcutTile(shortcut: '$mod+,', description: l10n.shortcutSettings),
       _ShortcutTile(shortcut: '$mod+W', description: l10n.shortcutCloseNote),
       _ShortcutTile(shortcut: '$mod+P', description: l10n.shortcutPrint),
       _ShortcutTile(
-          shortcut: '$mod+B', description: l10n.shortcutToggleSidebar),
+          shortcut: '$mod+B', description: l10n.shortcutToggleSidebar,),
       _ShortcutTile(
-          shortcut: '$mod+Shift+F', description: l10n.shortcutFocusMode),
+          shortcut: '$mod+Shift+F', description: l10n.shortcutFocusMode,),
       if (!PlatformUtils.isMacOS)
         _ShortcutTile(shortcut: 'F11', description: l10n.shortcutFullScreen),
       _ShortcutTile(shortcut: 'Esc', description: l10n.shortcutExitZen),
@@ -56,7 +56,7 @@ class KeyboardShortcutsScreen extends StatelessWidget {
       _ShortcutTile(shortcut: '$mod+B', description: l10n.shortcutBold),
       _ShortcutTile(shortcut: '$mod+I', description: l10n.shortcutItalic),
       _ShortcutTile(
-          shortcut: '$mod+Shift+S', description: l10n.shortcutStrikethrough),
+          shortcut: '$mod+Shift+S', description: l10n.shortcutStrikethrough,),
       _ShortcutTile(shortcut: '$mod+Z', description: l10n.shortcutUndo),
       _ShortcutTile(shortcut: '$mod+Y', description: l10n.shortcutRedo),
       _ShortcutTile(shortcut: '$mod+Shift+K', description: l10n.shortcutLink),
@@ -68,7 +68,7 @@ class KeyboardShortcutsScreen extends StatelessWidget {
             '${l10n.slashHeading1} / ${l10n.slashHeading2} / ${l10n.slashHeading3}',
       ),
       _ShortcutTile(
-          shortcut: '$mod+Shift+L', description: l10n.slashBulletList),
+          shortcut: '$mod+Shift+L', description: l10n.slashBulletList,),
     ];
   }
 

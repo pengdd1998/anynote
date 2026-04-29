@@ -17,11 +17,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: defaultProviderOverrides(),
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('en'),
-            home: const Scaffold(body: SignOutSection()),
+            locale: Locale('en'),
+            home: Scaffold(body: SignOutSection()),
           ),
         ),
       );
@@ -35,11 +35,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: defaultProviderOverrides(),
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('en'),
-            home: const Scaffold(body: SignOutSection()),
+            locale: Locale('en'),
+            home: Scaffold(body: SignOutSection()),
           ),
         ),
       );
@@ -58,11 +58,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: defaultProviderOverrides(),
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('en'),
-            home: const Scaffold(body: SignOutSection()),
+            locale: Locale('en'),
+            home: Scaffold(body: SignOutSection()),
           ),
         ),
       );
@@ -84,11 +84,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: defaultProviderOverrides(),
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('en'),
-            home: const Scaffold(body: SignOutSection()),
+            locale: Locale('en'),
+            home: Scaffold(body: SignOutSection()),
           ),
         ),
       );
@@ -104,11 +104,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: defaultProviderOverrides(),
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('en'),
-            home: const Scaffold(body: SignOutSection()),
+            locale: Locale('en'),
+            home: Scaffold(body: SignOutSection()),
           ),
         ),
       );
@@ -124,11 +124,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: defaultProviderOverrides(),
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('en'),
-            home: const Scaffold(body: SyncButton()),
+            locale: Locale('en'),
+            home: Scaffold(body: SyncButton()),
           ),
         ),
       );

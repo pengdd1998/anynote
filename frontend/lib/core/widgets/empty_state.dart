@@ -51,7 +51,7 @@ class EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon,
-                size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.4)),
+                size: 64, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),),
             const SizedBox(height: 16),
             Text(
               title,
@@ -65,7 +65,7 @@ class EmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 style: TextStyle(
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),),
                 textAlign: TextAlign.center,
               ),
             ],

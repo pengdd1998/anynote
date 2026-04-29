@@ -168,7 +168,7 @@ class NoteDetailScreen extends ConsumerWidget {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurfaceVariant,
-                                fontSize: 13),
+                                fontSize: 13,),
                           ),
                           const SizedBox(height: 16),
                           FilledButton.tonal(

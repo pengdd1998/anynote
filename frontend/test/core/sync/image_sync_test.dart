@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
@@ -107,7 +106,7 @@ class _ImageTestSyncEngine {
     // In production: crypto.encryptForItem(imageId, base64Data)
     // In tests: base64-encode the base64 string to simulate the extra layer.
     return Uint8List.fromList(
-        utf8.encode(base64Encode(utf8.encode(base64Data))));
+        utf8.encode(base64Encode(utf8.encode(base64Data))),);
   }
 
   /// Simulate "decrypting" image bytes -- reverse of _encryptImageBytes.
@@ -202,7 +201,7 @@ class _ImageTestSyncEngine {
   // ── Blob application helpers ────────────────────────
 
   Future<void> _applyNoteBlob(
-      String itemId, List<int> encryptedData, int version) async {
+      String itemId, List<int> encryptedData, int version,) async {
     String? plainContent;
     if (cryptoUnlocked) {
       try {
@@ -231,7 +230,7 @@ class _ImageTestSyncEngine {
   }
 
   Future<void> _applyImageBlob(
-      String itemId, List<int> encryptedData, int version) async {
+      String itemId, List<int> encryptedData, int version,) async {
     final decrypted = _decryptToBase64(itemId, encryptedData);
     if (decrypted == null) return;
 
@@ -288,7 +287,7 @@ class _ImageTestSyncEngine {
 
   /// Create an image file on disk and insert a metadata record.
   Future<void> insertTestImage(
-      String id, String noteId, Uint8List bytes) async {
+      String id, String noteId, Uint8List bytes,) async {
     final path = await ImageStorage.saveImage(bytes, noteId, compress: false);
     await _imagesDao.insertImage(
       NoteImagesCompanion(
@@ -420,7 +419,7 @@ void main() {
         engine.createImageBlob('img-multi-1', bytes1),
         engine.createImageBlob('img-multi-2', bytes2),
         engine.createImageBlob('img-multi-3', bytes3),
-      ], latestVersion: 3));
+      ], latestVersion: 3,),);
 
       final count = await engine.pull();
       expect(count, 3);
@@ -442,7 +441,7 @@ void main() {
           'version': 1,
         },
         engine.createImageBlob('img-mixed', imageBytes),
-      ], latestVersion: 2));
+      ], latestVersion: 2,),);
 
       final count = await engine.pull();
       expect(count, 2);
@@ -497,7 +496,7 @@ void main() {
       engine.setupPush(_MockPushResponse(
         accepted: ['img-push-1'],
         conflicts: [],
-      ));
+      ),);
 
       final result = await engine.push();
       expect(result.accepted, contains('img-push-1'));
@@ -513,7 +512,7 @@ void main() {
       engine.setupPush(_MockPushResponse(
         accepted: ['img-synced'],
         conflicts: [],
-      ));
+      ),);
 
       await engine.push();
 
@@ -528,7 +527,7 @@ void main() {
       engine.setupPush(_MockPushResponse(
         accepted: [],
         conflicts: [],
-      ));
+      ),);
 
       await engine.push();
 
@@ -551,7 +550,7 @@ void main() {
       engine.setupPush(_MockPushResponse(
         accepted: [],
         conflicts: [],
-      ));
+      ),);
 
       final result = await engine.push();
       // The image should not have been pushed (file missing)
@@ -587,7 +586,7 @@ void main() {
           'img-multi-push-3',
         ],
         conflicts: [],
-      ));
+      ),);
 
       final result = await engine.push();
       expect(result.accepted.length, 3);
@@ -612,7 +611,7 @@ void main() {
       engine.setupPush(_MockPushResponse(
         accepted: ['img-accept'],
         conflicts: [],
-      ));
+      ),);
 
       final result = await engine.push();
       expect(result.accepted, ['img-accept']);
@@ -644,7 +643,7 @@ void main() {
       engine.setupPush(_MockPushResponse(
         accepted: ['img-rt'],
         conflicts: [],
-      ));
+      ),);
       await engine.push();
 
       // Verify synced

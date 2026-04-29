@@ -1616,7 +1616,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
       AppSnackBar.error(context,
-          message: l10n.failedToAddImage('Not available on web'));
+          message: l10n.failedToAddImage('Not available on web'),);
       return;
     }
 
@@ -1693,7 +1693,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
       AppSnackBar.error(context,
-          message: l10n.failedToAddImage('Not available on web'));
+          message: l10n.failedToAddImage('Not available on web'),);
       return;
     }
 
@@ -1722,7 +1722,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
       AppSnackBar.error(context,
-          message: l10n.failedToAddImage('No image found in clipboard'));
+          message: l10n.failedToAddImage('No image found in clipboard'),);
     } catch (e) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;

@@ -18,11 +18,11 @@ void main() {
             notificationPreferencesProvider
                 .overrideWith(() => NotificationPreferencesNotifier()),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('en'),
-            home: const NotificationSettingsScreen(),
+            locale: Locale('en'),
+            home: NotificationSettingsScreen(),
           ),
         ),
       );

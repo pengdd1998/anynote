@@ -104,13 +104,13 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                       // Restore
                       try {
                         await db.notesDao.restoreNote(note.id);
-                        if (mounted) {
+                        if (context.mounted) {
                           AppSnackBar.info(context, message: l10n.restore);
                         }
                       } catch (e) {
-                        if (mounted) {
+                        if (context.mounted) {
                           AppSnackBar.error(context,
-                              message: l10n.failedToRestoreError(e.toString()));
+                              message: l10n.failedToRestoreError(e.toString()),);
                         }
                       }
                       return false;
@@ -143,10 +143,10 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                       try {
                         db.notesDao.permanentlyDeleteNote(note.id);
                         AppSnackBar.info(context,
-                            message: l10n.permanentlyDelete);
+                            message: l10n.permanentlyDelete,);
                       } catch (e) {
                         AppSnackBar.error(context,
-                            message: l10n.failedToDeleteError(e.toString()));
+                            message: l10n.failedToDeleteError(e.toString()),);
                       }
                     }
                   },
@@ -312,14 +312,14 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 try {
                   await db.notesDao.restoreNote(note.id);
                   if (ctx.mounted) Navigator.of(ctx).pop();
-                  if (mounted) {
+                  if (context.mounted) {
                     AppSnackBar.info(context, message: l10n.restore);
                   }
                 } catch (e) {
                   if (ctx.mounted) Navigator.of(ctx).pop();
-                  if (mounted) {
+                  if (context.mounted) {
                     AppSnackBar.error(context,
-                        message: l10n.failedToRestoreError(e.toString()));
+                        message: l10n.failedToRestoreError(e.toString()),);
                   }
                 }
               },
@@ -359,14 +359,14 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 if (confirmed == true) {
                   try {
                     await db.notesDao.permanentlyDeleteNote(note.id);
-                    if (mounted) {
+                    if (context.mounted) {
                       AppSnackBar.info(context,
-                          message: l10n.permanentlyDelete);
+                          message: l10n.permanentlyDelete,);
                     }
                   } catch (e) {
-                    if (mounted) {
+                    if (context.mounted) {
                       AppSnackBar.error(context,
-                          message: l10n.failedToDeleteError(e.toString()));
+                          message: l10n.failedToDeleteError(e.toString()),);
                     }
                   }
                 }
@@ -399,7 +399,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
             onPressed: () async {
               Navigator.of(ctx).pop();
               await db.notesDao.emptyTrash();
-              if (mounted) {
+              if (context.mounted) {
                 AppSnackBar.info(context, message: l10n.emptyTrash);
               }
             },

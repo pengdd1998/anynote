@@ -9,7 +9,7 @@ void main() {
 
   group('CursorData', () {
     test('constructor sets all fields', () {
-      final cursor = CursorData(
+      const cursor = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
@@ -23,7 +23,7 @@ void main() {
     });
 
     test('constructor with selectionEnd sets field', () {
-      final cursor = CursorData(
+      const cursor = CursorData(
         userId: 'u1',
         username: 'Bob',
         position: 3,
@@ -34,7 +34,7 @@ void main() {
     });
 
     test('hasSelection is false when selectionEnd is null', () {
-      final cursor = CursorData(
+      const cursor = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
@@ -44,7 +44,7 @@ void main() {
     });
 
     test('hasSelection is false when selectionEnd equals position', () {
-      final cursor = CursorData(
+      const cursor = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
@@ -55,7 +55,7 @@ void main() {
     });
 
     test('hasSelection is true when selectionEnd differs from position', () {
-      final cursor = CursorData(
+      const cursor = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
@@ -66,7 +66,7 @@ void main() {
     });
 
     test('hasSelection is true when selectionEnd is less than position', () {
-      final cursor = CursorData(
+      const cursor = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 10,
@@ -118,14 +118,14 @@ void main() {
     });
 
     test('equality returns true for identical fields', () {
-      final cursor1 = CursorData(
+      const cursor1 = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
         selectionEnd: 10,
         color: Colors.blue,
       );
-      final cursor2 = CursorData(
+      const cursor2 = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
@@ -136,13 +136,13 @@ void main() {
     });
 
     test('equality returns false for different fields', () {
-      final cursor1 = CursorData(
+      const cursor1 = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
         color: Colors.blue,
       );
-      final cursor2 = CursorData(
+      const cursor2 = CursorData(
         userId: 'u1',
         username: 'Bob',
         position: 5,
@@ -152,14 +152,14 @@ void main() {
     });
 
     test('equality returns false for different selectionEnd', () {
-      final cursor1 = CursorData(
+      const cursor1 = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
         selectionEnd: 10,
         color: Colors.blue,
       );
-      final cursor2 = CursorData(
+      const cursor2 = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
@@ -170,7 +170,7 @@ void main() {
     });
 
     test('equality returns false for non-CursorData object', () {
-      final cursor = CursorData(
+      const cursor = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
@@ -180,14 +180,14 @@ void main() {
     });
 
     test('hashCode is consistent with equality', () {
-      final cursor1 = CursorData(
+      const cursor1 = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
         selectionEnd: 10,
         color: Colors.blue,
       );
-      final cursor2 = CursorData(
+      const cursor2 = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
@@ -198,13 +198,13 @@ void main() {
     });
 
     test('hashCode differs for different cursors', () {
-      final cursor1 = CursorData(
+      const cursor1 = CursorData(
         userId: 'u1',
         username: 'Alice',
         position: 5,
         color: Colors.blue,
       );
-      final cursor2 = CursorData(
+      const cursor2 = CursorData(
         userId: 'u2',
         username: 'Bob',
         position: 10,
@@ -240,7 +240,7 @@ void main() {
     testWidgets('renders Stack with cursor elements when cursors provided',
         (tester) async {
       final cursors = [
-        CursorData(
+        const CursorData(
           userId: 'u1',
           username: 'Alice',
           position: 0,
@@ -269,13 +269,13 @@ void main() {
 
     testWidgets('renders multiple cursors', (tester) async {
       final cursors = [
-        CursorData(
+        const CursorData(
           userId: 'u1',
           username: 'Alice',
           position: 0,
           color: Colors.blue,
         ),
-        CursorData(
+        const CursorData(
           userId: 'u2',
           username: 'Bob',
           position: 3,
@@ -302,7 +302,7 @@ void main() {
     testWidgets('renders selection highlight when cursor has selection',
         (tester) async {
       final cursors = [
-        CursorData(
+        const CursorData(
           userId: 'u1',
           username: 'Alice',
           position: 0,
@@ -337,7 +337,7 @@ void main() {
 
     testWidgets('accepts custom layout parameters', (tester) async {
       final cursors = [
-        CursorData(
+        const CursorData(
           userId: 'u1',
           username: 'Alice',
           position: 2,

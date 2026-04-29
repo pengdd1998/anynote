@@ -24,7 +24,7 @@ void main() {
   // ---------------------------------------------------------------------------
   // Helper to insert a test image.
   // ---------------------------------------------------------------------------
-  Future<void> _insertImage({
+  Future<void> insertImage({
     required String id,
     String noteId = 'note-1',
     String path = '/tmp/test.png',
@@ -50,7 +50,7 @@ void main() {
 
   group('insertImage', () {
     test('inserts a new image record', () async {
-      await _insertImage(id: 'img-1');
+      await insertImage(id: 'img-1');
 
       final image = await dao.getImageById('img-1');
       expect(image, isNotNull);
@@ -65,7 +65,7 @@ void main() {
     });
 
     test('inserts image with empty noteId default', () async {
-      await _insertImage(id: 'img-empty-note', noteId: '');
+      await insertImage(id: 'img-empty-note', noteId: '');
 
       final image = await dao.getImageById('img-empty-note');
       expect(image, isNotNull);
@@ -73,16 +73,16 @@ void main() {
     });
 
     test('inserts multiple images for same note', () async {
-      await _insertImage(id: 'img-a', noteId: 'note-multi');
-      await _insertImage(id: 'img-b', noteId: 'note-multi');
-      await _insertImage(id: 'img-c', noteId: 'note-multi');
+      await insertImage(id: 'img-a', noteId: 'note-multi');
+      await insertImage(id: 'img-b', noteId: 'note-multi');
+      await insertImage(id: 'img-c', noteId: 'note-multi');
 
       final images = await dao.getImagesForNote('note-multi');
       expect(images.length, 3);
     });
 
     test('sets createdAt timestamp automatically', () async {
-      await _insertImage(id: 'img-ts');
+      await insertImage(id: 'img-ts');
 
       final image = await dao.getImageById('img-ts');
       expect(image, isNotNull);
@@ -97,9 +97,9 @@ void main() {
     });
 
     test('returns only images for the specified note', () async {
-      await _insertImage(id: 'img-n1', noteId: 'note-target');
-      await _insertImage(id: 'img-n2', noteId: 'note-other');
-      await _insertImage(id: 'img-n3', noteId: 'note-target');
+      await insertImage(id: 'img-n1', noteId: 'note-target');
+      await insertImage(id: 'img-n2', noteId: 'note-other');
+      await insertImage(id: 'img-n3', noteId: 'note-target');
 
       final images = await dao.getImagesForNote('note-target');
       expect(images.length, 2);
@@ -107,10 +107,10 @@ void main() {
     });
 
     test('returns images ordered by creation time', () async {
-      await _insertImage(id: 'img-first', noteId: 'note-ordered');
+      await insertImage(id: 'img-first', noteId: 'note-ordered');
       // Small delay to ensure different timestamps.
       await Future<void>.delayed(const Duration(milliseconds: 10));
-      await _insertImage(id: 'img-second', noteId: 'note-ordered');
+      await insertImage(id: 'img-second', noteId: 'note-ordered');
 
       final images = await dao.getImagesForNote('note-ordered');
       expect(images.length, 2);
@@ -126,7 +126,7 @@ void main() {
     });
 
     test('returns correct image by id', () async {
-      await _insertImage(id: 'img-specific', hash: 'unique-hash');
+      await insertImage(id: 'img-specific', hash: 'unique-hash');
 
       final image = await dao.getImageById('img-specific');
       expect(image, isNotNull);
@@ -134,8 +134,8 @@ void main() {
     });
 
     test('returns different images for different IDs', () async {
-      await _insertImage(id: 'img-x', hash: 'hash-x');
-      await _insertImage(id: 'img-y', hash: 'hash-y');
+      await insertImage(id: 'img-x', hash: 'hash-x');
+      await insertImage(id: 'img-y', hash: 'hash-y');
 
       final imageX = await dao.getImageById('img-x');
       final imageY = await dao.getImageById('img-y');
@@ -147,7 +147,7 @@ void main() {
 
   group('deleteImage', () {
     test('deletes an existing image', () async {
-      await _insertImage(id: 'img-del');
+      await insertImage(id: 'img-del');
 
       await dao.deleteImage('img-del');
 
@@ -161,8 +161,8 @@ void main() {
     });
 
     test('does not affect other images', () async {
-      await _insertImage(id: 'img-keep');
-      await _insertImage(id: 'img-remove');
+      await insertImage(id: 'img-keep');
+      await insertImage(id: 'img-remove');
 
       await dao.deleteImage('img-remove');
 
@@ -173,9 +173,9 @@ void main() {
 
   group('deleteImagesForNote', () {
     test('deletes all images for a note', () async {
-      await _insertImage(id: 'img-d1', noteId: 'note-del');
-      await _insertImage(id: 'img-d2', noteId: 'note-del');
-      await _insertImage(id: 'img-d3', noteId: 'note-del');
+      await insertImage(id: 'img-d1', noteId: 'note-del');
+      await insertImage(id: 'img-d2', noteId: 'note-del');
+      await insertImage(id: 'img-d3', noteId: 'note-del');
 
       final count = await dao.deleteImagesForNote('note-del');
       expect(count, 3);
@@ -185,8 +185,8 @@ void main() {
     });
 
     test('does not delete images for other notes', () async {
-      await _insertImage(id: 'img-keep', noteId: 'note-keep');
-      await _insertImage(id: 'img-del', noteId: 'note-del');
+      await insertImage(id: 'img-keep', noteId: 'note-keep');
+      await insertImage(id: 'img-del', noteId: 'note-del');
 
       await dao.deleteImagesForNote('note-del');
 
@@ -203,15 +203,15 @@ void main() {
 
   group('getUnsyncedImages', () {
     test('returns empty list when all images are synced', () async {
-      await _insertImage(id: 'img-synced', isSynced: true);
+      await insertImage(id: 'img-synced', isSynced: true);
 
       final unsynced = await dao.getUnsyncedImages();
       expect(unsynced, isEmpty);
     });
 
     test('returns images with isSynced = false', () async {
-      await _insertImage(id: 'img-unsynced', isSynced: false);
-      await _insertImage(id: 'img-synced', isSynced: true);
+      await insertImage(id: 'img-unsynced', isSynced: false);
+      await insertImage(id: 'img-synced', isSynced: true);
 
       final unsynced = await dao.getUnsyncedImages();
       expect(unsynced.length, 1);
@@ -219,9 +219,9 @@ void main() {
     });
 
     test('returns all unsynced images across notes', () async {
-      await _insertImage(id: 'img-u1', noteId: 'note-a', isSynced: false);
-      await _insertImage(id: 'img-u2', noteId: 'note-b', isSynced: false);
-      await _insertImage(id: 'img-u3', noteId: 'note-c', isSynced: false);
+      await insertImage(id: 'img-u1', noteId: 'note-a', isSynced: false);
+      await insertImage(id: 'img-u2', noteId: 'note-b', isSynced: false);
+      await insertImage(id: 'img-u3', noteId: 'note-c', isSynced: false);
 
       final unsynced = await dao.getUnsyncedImages();
       expect(unsynced.length, 3);
@@ -235,7 +235,7 @@ void main() {
 
   group('markSynced', () {
     test('marks an unsynced image as synced', () async {
-      await _insertImage(id: 'img-mark', isSynced: false);
+      await insertImage(id: 'img-mark', isSynced: false);
 
       await dao.markSynced('img-mark');
 
@@ -245,7 +245,7 @@ void main() {
 
     test('image no longer appears in getUnsyncedImages after marking',
         () async {
-      await _insertImage(id: 'img-mk', isSynced: false);
+      await insertImage(id: 'img-mk', isSynced: false);
 
       await dao.markSynced('img-mk');
 
@@ -254,7 +254,7 @@ void main() {
     });
 
     test('marking already-synced image is a no-op', () async {
-      await _insertImage(id: 'img-already', isSynced: true);
+      await insertImage(id: 'img-already', isSynced: true);
 
       await dao.markSynced('img-already');
 
@@ -271,7 +271,7 @@ void main() {
   group('full image lifecycle', () {
     test('insert, query, sync, verify, delete', () async {
       // Insert.
-      await _insertImage(
+      await insertImage(
         id: 'img-life',
         noteId: 'note-life',
         path: '/tmp/lifecycle.jpg',

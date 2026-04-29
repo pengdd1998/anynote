@@ -527,7 +527,7 @@ class NotePropertiesDao extends DatabaseAccessor<AppDatabase>
 
     final now = DateTime.now();
     final value = locked ? 'true' : 'false';
-    final key = BuiltInProperties.isLocked;
+    const key = BuiltInProperties.isLocked;
 
     // Fetch all existing is_locked properties for these notes in one query.
     final existing = await (select(noteProperties)

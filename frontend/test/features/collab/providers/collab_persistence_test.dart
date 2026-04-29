@@ -25,7 +25,7 @@ class MockWSClient extends WSClient {
   final _messageController = StreamController<WSMessage>.broadcast();
   final _stateController = StreamController<WSConnectionState>.broadcast();
 
-  WSConnectionState _currentState = WSConnectionState.connected;
+  final WSConnectionState _currentState = WSConnectionState.connected;
 
   MockWSClient()
       : super(baseUrl: 'ws://localhost:8080/api/v1/ws', token: 'test-token');

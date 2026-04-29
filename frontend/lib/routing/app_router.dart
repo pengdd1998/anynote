@@ -786,7 +786,7 @@ class _DeferredLoaderState extends State<_DeferredLoader> {
             children: [
               Icon(Icons.error_outline,
                   size: 48,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,),
               const SizedBox(height: 16),
               Text(
                 l10n?.failedToLoadDeferred ?? 'Failed to load',

@@ -138,7 +138,7 @@ class WritingAssistSheet extends ConsumerWidget {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.3),
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -247,7 +247,7 @@ class WritingAssistSheet extends ConsumerWidget {
                 color: Theme.of(context)
                     .colorScheme
                     .onSurfaceVariant
-                    .withOpacity(0.3),
+                    .withValues(alpha: 0.3),
               ),
               const SizedBox(height: 12),
               Text(

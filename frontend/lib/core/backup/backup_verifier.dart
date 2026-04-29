@@ -390,7 +390,7 @@ class BackupVerifier {
         } catch (e) {
           // Skip unparseable dates.
           debugPrint(
-              '[BackupVerifier] skipped unparseable date "$createdAt": $e');
+              '[BackupVerifier] skipped unparseable date "$createdAt": $e',);
         }
       }
     }

@@ -207,7 +207,7 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurfaceVariant
-                                  .withOpacity(0.4),
+                                  .withValues(alpha: 0.4),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -219,7 +219,7 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurfaceVariant
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                   ),
                             ),
                           ],

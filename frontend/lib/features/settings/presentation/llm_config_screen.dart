@@ -83,14 +83,14 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(ErrorDisplay.errorIcon(appError),
-                    size: 48, color: Theme.of(context).colorScheme.error),
+                    size: 48, color: Theme.of(context).colorScheme.error,),
                 const SizedBox(height: 12),
                 Text(l10n.failedToLoadConfigs),
                 const SizedBox(height: 8),
                 Text(
                   ErrorDisplay.userMessage(appError, l10n),
                   style: TextStyle(
-                      fontSize: 12, color: Theme.of(context).disabledColor),
+                      fontSize: 12, color: Theme.of(context).disabledColor,),
                 ),
                 const SizedBox(height: 16),
                 FilledButton.tonal(
@@ -180,7 +180,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                     decoration: InputDecoration(
                       labelText: l10n.apiKey,
                       suffixIcon: const ExcludeSemantics(
-                          child: Icon(Icons.visibility_off)),
+                          child: Icon(Icons.visibility_off),),
                     ),
                     obscureText: true,
                   ),
@@ -272,7 +272,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   decoration: InputDecoration(
                     labelText: l10n.newApiKeyHint,
                     suffixIcon: const ExcludeSemantics(
-                        child: Icon(Icons.visibility_off)),
+                        child: Icon(Icons.visibility_off),),
                   ),
                   obscureText: true,
                 ),
@@ -341,7 +341,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
           message: success
               ? l10n.connectionSuccessful
               : l10n.connectionFailed(
-                  result['error']?.toString() ?? 'Unknown error'),
+                  result['error']?.toString() ?? 'Unknown error',),
           type: success ? SnackBarType.info : SnackBarType.error,
         );
       }
@@ -438,7 +438,7 @@ class _LLMConfigCard extends StatelessWidget {
                   child: Text(
                     l10n.defaultLabel,
                     style: TextStyle(
-                        fontSize: 11, color: colorScheme.onPrimaryContainer),
+                        fontSize: 11, color: colorScheme.onPrimaryContainer,),
                   ),
                 ),
               A11yUtils.labeledButton(

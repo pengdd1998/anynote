@@ -379,7 +379,7 @@ class _PropertyEditorDialogState extends ConsumerState<_PropertyEditorDialog> {
                 Text(
                   l10n.propertyOf(
                       BuiltInProperties.getInfo(_selectedKey)?.displayName ??
-                          _selectedKey),
+                          _selectedKey,),
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               const SizedBox(height: 16),

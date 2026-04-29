@@ -8,7 +8,7 @@ import 'package:anynote/features/settings/data/notification_preferences.dart';
 void main() {
   group('NotificationPreferences', () {
     test('defaults all fields to true', () {
-      final prefs = NotificationPreferences();
+      const prefs = NotificationPreferences();
       expect(prefs.reminderNotifications, isTrue);
       expect(prefs.syncConflictNotifications, isTrue);
       expect(prefs.shareNotifications, isTrue);
@@ -30,7 +30,7 @@ void main() {
     });
 
     test('toJson round-trips correctly', () {
-      final prefs = NotificationPreferences(
+      const prefs = NotificationPreferences(
         reminderNotifications: false,
         syncConflictNotifications: true,
         shareNotifications: false,
@@ -73,7 +73,7 @@ void main() {
     });
 
     test('toJson produces valid JSON', () {
-      final prefs = NotificationPreferences();
+      const prefs = NotificationPreferences();
       final jsonStr = jsonEncode(prefs.toJson());
       final decoded = jsonDecode(jsonStr) as Map<String, dynamic>;
       final restored = NotificationPreferences.fromJson(decoded);
@@ -81,7 +81,7 @@ void main() {
     });
 
     test('stored preferences are loaded correctly', () async {
-      final original = NotificationPreferences(
+      const original = NotificationPreferences(
         reminderNotifications: false,
         syncConflictNotifications: true,
         shareNotifications: false,

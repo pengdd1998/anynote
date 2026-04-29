@@ -39,7 +39,7 @@ void main() {
       category: Value(category),
       description: Value(description),
       tags: Value(tags),
-    ));
+    ),);
   }
 
   // ── insertSnippet ────────────────────────────────────────
@@ -75,9 +75,9 @@ void main() {
       expect(
           snippet!.createdAt
               .isAfter(before.subtract(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
       expect(snippet.createdAt.isBefore(after.add(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
     });
   });
 
@@ -202,11 +202,11 @@ void main() {
     test('updates title and code', () async {
       await createSnippet(id: 'snip-upd');
 
-      await dao.updateSnippet(SnippetsCompanion(
-        id: const Value('snip-upd'),
-        title: const Value('Updated Title'),
-        code: const Value('console.log("hi")'),
-      ));
+      await dao.updateSnippet(const SnippetsCompanion(
+        id: Value('snip-upd'),
+        title: Value('Updated Title'),
+        code: Value('console.log("hi")'),
+      ),);
 
       final snippet = await dao.getSnippetById('snip-upd');
       expect(snippet!.title, 'Updated Title');
@@ -214,10 +214,10 @@ void main() {
     });
 
     test('does not insert when updating non-existent ID', () async {
-      await dao.updateSnippet(SnippetsCompanion(
-        id: const Value('nonexistent'),
-        title: const Value('Ghost'),
-      ));
+      await dao.updateSnippet(const SnippetsCompanion(
+        id: Value('nonexistent'),
+        title: Value('Ghost'),
+      ),);
       expect(await dao.getSnippetById('nonexistent'), isNull);
     });
   });

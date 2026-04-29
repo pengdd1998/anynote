@@ -60,6 +60,14 @@ func (m *mockNotificationService) MarkAllRead(ctx context.Context, userID string
 	return nil
 }
 
+func (m *mockNotificationService) GetNotificationPreferences(_ context.Context, _ string) (json.RawMessage, error) {
+	return json.RawMessage(`{"pushNotifications":true,"reminderNotifications":true}`), nil
+}
+
+func (m *mockNotificationService) UpdateNotificationPreferences(_ context.Context, _ string, prefs json.RawMessage) error {
+	return nil
+}
+
 // ---------------------------------------------------------------------------
 // Router setup helper
 // ---------------------------------------------------------------------------

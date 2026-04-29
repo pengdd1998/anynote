@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../main.dart';
 
 /// User-configurable notification preferences.
 ///
@@ -79,7 +82,7 @@ class NotificationPreferences {
 const _prefsKey = 'notification_preferences';
 
 /// Riverpod notifier that manages [NotificationPreferences] with
-/// persistence via SharedPreferences.
+/// persistence via SharedPreferences and backend sync when authenticated.
 class NotificationPreferencesNotifier
     extends Notifier<NotificationPreferences> {
   @override
@@ -90,6 +93,7 @@ class NotificationPreferencesNotifier
   }
 
   Future<void> _loadFromPrefs() async {
+    // 1. Load local preferences first for instant UI response.
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_prefsKey);
     if (raw != null) {
@@ -100,6 +104,45 @@ class NotificationPreferencesNotifier
         // Corrupted data -- keep defaults.
       }
     }
+
+    // 2. Fetch from backend if authenticated and merge server data as the
+    //    authoritative source (last-write-wins across devices).
+    await _fetchFromBackend();
+  }
+
+  /// Fetch preferences from the backend and update local state if the
+  /// response differs. Silently no-ops when offline or unauthenticated.
+  Future<void> _fetchFromBackend() async {
+    try {
+      if (!ref.read(authStateProvider)) return;
+      final api = ref.read(apiClientProvider);
+      final data = await api.getNotificationPreferences();
+      final serverPrefs = NotificationPreferences.fromJson(data);
+      if (serverPrefs != state) {
+        state = serverPrefs;
+        // Persist the server-merged value locally.
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_prefsKey, jsonEncode(state.toJson()));
+      }
+    } catch (e) {
+      // Backend fetch failed (offline, server error, etc.) -- keep local.
+      debugPrint('[NotificationPreferences] backend fetch failed: $e');
+    }
+  }
+
+  /// Push current preferences to the backend. Silently no-ops when offline
+  /// or unauthenticated so that local preference changes always work.
+  Future<void> _pushToBackend() async {
+    try {
+      if (!ref.read(authStateProvider)) return;
+      final api = ref.read(apiClientProvider);
+      await api.updateNotificationPreferences(
+        state.toJson().map((k, v) => MapEntry(k, v as bool)),
+      );
+    } catch (e) {
+      // Backend push failed (offline, server error, etc.) -- non-critical.
+      debugPrint('[NotificationPreferences] backend push failed: $e');
+    }
   }
 
   Future<void> _saveToPrefs() async {
@@ -107,13 +150,14 @@ class NotificationPreferencesNotifier
     await prefs.setString(_prefsKey, jsonEncode(state.toJson()));
   }
 
-  /// Update individual preference fields and persist.
+  /// Update individual preference fields and persist locally + push to backend.
   Future<void> update(NotificationPreferences prefs) async {
     state = prefs;
     await _saveToPrefs();
+    await _pushToBackend();
   }
 
-  /// Toggle a single preference by field name and persist.
+  /// Toggle a single preference by field name and persist locally + push to backend.
   Future<void> setField(String field, bool value) async {
     state = switch (field) {
       'reminderNotifications' => state.copyWith(reminderNotifications: value),
@@ -124,6 +168,7 @@ class NotificationPreferencesNotifier
       _ => state,
     };
     await _saveToPrefs();
+    await _pushToBackend();
   }
 }
 

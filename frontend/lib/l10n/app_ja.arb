@@ -1443,6 +1443,8 @@
   "yes": "はい",
   "restorePurchase": "購入を復元",
   "restorePurchaseComingSoon": "購入の復元は近日公開予定です。",
+  "planRestored": "購入が正常に復元されました。",
+  "noCompletedPayments": "完了した支払いが見つかりません。",
   "lifetimeMember": "ライフタイムメンバー -- すべての機能が永久にアンロックされます。",
   "selectPlan": "プランを選択",
   "proPlanDescription": "メモ無制限、1日500回AIリクエスト、5 GBストレージ",

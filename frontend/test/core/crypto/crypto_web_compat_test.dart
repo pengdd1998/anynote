@@ -372,7 +372,7 @@ void main() {
       for (int i = 0; i < keys.length; i++) {
         for (int j = i + 1; j < keys.length; j++) {
           expect(keys[i], isNot(equals(keys[j])),
-              reason: 'Keys at positions $i and $j should differ');
+              reason: 'Keys at positions $i and $j should differ',);
         }
       }
     });

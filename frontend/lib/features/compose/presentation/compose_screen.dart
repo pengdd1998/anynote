@@ -97,7 +97,7 @@ class ComposeScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.article_outlined,
-                              size: 48, color: Colors.grey.shade400),
+                              size: 48, color: Colors.grey.shade400,),
                           const SizedBox(height: 8),
                           Text(
                             l10n.noCompositionsYet,
@@ -147,14 +147,14 @@ class ComposeScreen extends ConsumerWidget {
                                     padding: const EdgeInsets.only(right: 8),
                                     child: Chip(
                                       label: Text(platform,
-                                          style: const TextStyle(fontSize: 11)),
+                                          style: const TextStyle(fontSize: 11),),
                                       visualDensity: VisualDensity.compact,
                                     ),
                                   ),
                                 Text(time,
                                     style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey.shade500)),
+                                        color: Colors.grey.shade500,),),
                               ],
                             ),
                             onTap: () =>
@@ -185,7 +185,7 @@ class ComposeScreen extends ConsumerWidget {
                         Text(
                           ErrorDisplay.userMessage(appError, l10n),
                           style: TextStyle(
-                              color: Theme.of(context).colorScheme.error),
+                              color: Theme.of(context).colorScheme.error,),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -301,7 +301,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.3),
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -313,7 +313,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
               child: Row(
                 children: [
                   Text(l10n.newComposition,
-                      style: Theme.of(context).textTheme.titleLarge),
+                      style: Theme.of(context).textTheme.titleLarge,),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -349,7 +349,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 ),
                 items: _platformOptions(l10n)
                     .map(
-                        (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)))
+                        (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)),)
                     .toList(),
                 onChanged: (v) {
                   if (v != null) {
@@ -368,13 +368,13 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
               child: Row(
                 children: [
                   Text(l10n.selectNotes,
-                      style: Theme.of(context).textTheme.titleSmall),
+                      style: Theme.of(context).textTheme.titleSmall,),
                   const SizedBox(width: 8),
                   Text(
                     l10n.selectedCount(_selectedIds.length),
                     style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
-                        fontSize: 13),
+                        fontSize: 13,),
                   ),
                 ],
               ),
@@ -387,7 +387,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                   if (notes.isEmpty) {
                     return Center(
                       child: Text(l10n.noNotesAvailableCreate,
-                          textAlign: TextAlign.center),
+                          textAlign: TextAlign.center,),
                     );
                   }
 
@@ -407,9 +407,9 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                       return CheckboxListTile(
                         value: isSelected,
                         title: Text(title,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                            maxLines: 1, overflow: TextOverflow.ellipsis,),
                         subtitle: Text(preview,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                            maxLines: 1, overflow: TextOverflow.ellipsis,),
                         onChanged: (checked) {
                           setState(() {
                             if (checked == true) {
@@ -589,7 +589,7 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                 color: Theme.of(context)
                     .colorScheme
                     .onSurfaceVariant
-                    .withOpacity(0.3),
+                    .withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -610,7 +610,7 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                     padding: const EdgeInsets.only(right: 8),
                     child: Chip(
                       label: Text(widget.platform,
-                          style: const TextStyle(fontSize: 11)),
+                          style: const TextStyle(fontSize: 11),),
                       visualDensity: VisualDensity.compact,
                     ),
                   ),

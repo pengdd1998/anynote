@@ -62,7 +62,7 @@ NoteStatistics _emptyStats() {
     wordsByMonth: {},
     topTags: [],
     topCollections: [],
-    writingStreak: const WritingStreak(
+    writingStreak: WritingStreak(
       currentStreak: 0,
       longestStreak: 0,
       activeDaysLast30: {},
@@ -143,7 +143,7 @@ void main() {
 
       // Overview card values.
       expect(find.text('42'),
-          findsAtLeast(1)); // total notes (also in donut total)
+          findsAtLeast(1),); // total notes (also in donut total)
       expect(find.text('12.0K'), findsOneWidget); // total words
       expect(find.text('286'), findsOneWidget); // avg words per note
 
@@ -292,7 +292,7 @@ void main() {
         wordsByMonth: {},
         topTags: [],
         topCollections: [],
-        writingStreak: const WritingStreak(
+        writingStreak: WritingStreak(
           currentStreak: 0,
           longestStreak: 0,
           activeDaysLast30: {},

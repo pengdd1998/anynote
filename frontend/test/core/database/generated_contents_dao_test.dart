@@ -62,9 +62,9 @@ void main() {
       final item = await dao.getById('gc-ts');
       expect(
           item!.createdAt.isAfter(before.subtract(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
       expect(item.createdAt.isBefore(after.add(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
       expect(item.updatedAt, item.createdAt);
     });
   });

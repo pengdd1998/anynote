@@ -48,7 +48,7 @@ class SnippetDetailSheet extends StatelessWidget {
                 snippet.usageCount > 0)
               _SnippetMetadataChips(snippet: snippet, l10n: l10n, theme: theme),
             _SnippetDescriptionAndTags(
-                snippet: snippet, l10n: l10n, theme: theme),
+                snippet: snippet, l10n: l10n, theme: theme,),
             const SizedBox(height: 16),
             _SnippetCodeBlock(snippet: snippet, theme: theme),
           ],
@@ -93,7 +93,7 @@ class _SheetHandleBar extends StatelessWidget {
         height: 4,
         decoration: BoxDecoration(
           color:
-              Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
+              Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(2),
         ),
       ),

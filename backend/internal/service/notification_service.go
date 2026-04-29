@@ -22,6 +22,10 @@ type NotificationRepo interface {
 	MarkRead(ctx context.Context, id, userID string) error
 	MarkAllRead(ctx context.Context, userID string) error
 	Delete(ctx context.Context, id, userID string) error
+
+	// Notification preferences (stored on users table).
+	GetNotificationPreferences(ctx context.Context, userID string) (json.RawMessage, error)
+	UpdateNotificationPreferences(ctx context.Context, userID string, prefs json.RawMessage) error
 }
 
 // NotificationService provides notification persistence business logic.
@@ -31,6 +35,10 @@ type NotificationService interface {
 	GetUnreadCount(ctx context.Context, userID string) (int, error)
 	MarkRead(ctx context.Context, id, userID string) error
 	MarkAllRead(ctx context.Context, userID string) error
+
+	// Notification preferences.
+	GetNotificationPreferences(ctx context.Context, userID string) (json.RawMessage, error)
+	UpdateNotificationPreferences(ctx context.Context, userID string, prefs json.RawMessage) error
 }
 
 type notificationService struct {
@@ -44,11 +52,14 @@ func NewNotificationService(repo NotificationRepo) NotificationService {
 
 // validNotificationTypes is the set of recognised notification type values.
 var validNotificationTypes = map[string]bool{
-	"sync_conflict":  true,
-	"share_received": true,
-	"reminder":       true,
-	"system":         true,
-	"payment":        true,
+	"sync_conflict":     true,
+	"share_received":    true,
+	"reminder":          true,
+	"system":            true,
+	"payment":           true,
+	"publish_started":   true,
+	"publish_completed": true,
+	"collab_invite":     true,
 }
 
 // CreateNotification validates the type and persists a new notification.
@@ -111,4 +122,34 @@ func (s *notificationService) MarkRead(ctx context.Context, id, userID string) e
 // MarkAllRead marks all notifications for a user as read.
 func (s *notificationService) MarkAllRead(ctx context.Context, userID string) error {
 	return s.repo.MarkAllRead(ctx, userID)
+}
+
+// GetNotificationPreferences returns the user's notification preferences as raw JSON.
+func (s *notificationService) GetNotificationPreferences(ctx context.Context, userID string) (json.RawMessage, error) {
+	prefs, err := s.repo.GetNotificationPreferences(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get notification preferences: %w", err)
+	}
+	return prefs, nil
+}
+
+// UpdateNotificationPreferences validates and persists the user's notification preferences.
+// The prefs value must be a valid JSON object where all values are booleans.
+func (s *notificationService) UpdateNotificationPreferences(ctx context.Context, userID string, prefs json.RawMessage) error {
+	// Validate that prefs is a JSON object with boolean values only.
+	var parsed map[string]bool
+	if err := json.Unmarshal(prefs, &parsed); err != nil {
+		return fmt.Errorf("invalid preferences: must be a JSON object with boolean values: %w", err)
+	}
+
+	// Re-marshal to ensure canonical form (no extra whitespace, sorted keys).
+	canonical, err := json.Marshal(parsed)
+	if err != nil {
+		return fmt.Errorf("marshal preferences: %w", err)
+	}
+
+	if err := s.repo.UpdateNotificationPreferences(ctx, userID, canonical); err != nil {
+		return fmt.Errorf("update notification preferences: %w", err)
+	}
+	return nil
 }

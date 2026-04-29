@@ -191,7 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               // Server update failed; local keys are already migrated.
               // The user will log in with v2 params next time.
               debugPrint(
-                  '[LoginScreen] server KDF migration update failed: $e');
+                  '[LoginScreen] server KDF migration update failed: $e',);
             }
 
             if (mounted) {

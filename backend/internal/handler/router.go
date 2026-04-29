@@ -94,6 +94,11 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	discoverRateLimiter := service.NewRateLimiter(60, time.Minute) // 60 req/min per IP
 	aiRateLimiter := service.NewRateLimiter(20, time.Minute)      // 20 req/min per user
 	llmRateLimiter := service.NewRateLimiter(10, time.Minute)     // 10 req/min per user
+	// Webhook rate limiter: separate from the global/authenticated rate limiters
+	// because Stripe may retry delivery up to several times during outages.
+	// 100 req/min per IP is generous enough for legitimate retries while still
+	// protecting against brute-force signature guessing or DDoS.
+	webhookRateLimiter := service.NewRateLimiter(100, time.Minute)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		// Public auth routes (rate limited by IP)
@@ -117,9 +122,11 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 		// WebSocket (auth handled inside handler via query-param token)
 		r.Get("/ws", wsH.HandleConnection)
 
-		// Payment webhook (no auth -- Stripe calls this directly)
+		// Payment webhook (no auth -- Stripe calls this directly).
+		// Rate limited per IP to mitigate retry storms while allowing
+		// Stripe's legitimate retry schedule (up to ~3 days with backoff).
 		if paymentH != nil {
-			r.Post("/payments/webhook", paymentH.HandleWebhook)
+			r.With(RateLimitMiddleware(webhookRateLimiter, IPKeyFunc, time.Minute)).Post("/payments/webhook", paymentH.HandleWebhook)
 		}
 
 		// Authenticated routes
@@ -231,6 +238,8 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 						r.Get("/", notifH.ListNotifications)
 						r.Get("/unread-count", notifH.GetUnreadCount)
 						r.Post("/read-all", notifH.MarkAllRead)
+						r.Get("/preferences", notifH.HandleGetPreferences)
+						r.Put("/preferences", notifH.HandleUpdatePreferences)
 						r.Post("/{id}/read", notifH.MarkRead)
 					})
 				}

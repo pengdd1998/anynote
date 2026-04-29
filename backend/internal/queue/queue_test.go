@@ -118,9 +118,10 @@ func TestService_RegisterHandlers(t *testing.T) {
 
 	aiHandler := &AIJobHandler{}
 	publishHandler := &PublishJobHandler{}
+	pushHandler := &PushJobHandler{}
 
 	// RegisterHandlers should not panic.
-	svc.RegisterHandlers(aiHandler, publishHandler)
+	svc.RegisterHandlers(aiHandler, publishHandler, pushHandler)
 }
 
 func TestService_Shutdown(t *testing.T) {

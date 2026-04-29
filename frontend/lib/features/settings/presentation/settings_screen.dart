@@ -35,9 +35,9 @@ class SettingsScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: 32),
           children: [
             // -- Account section ------------------------------------------------
-            StaggeredGroup(
+            const StaggeredGroup(
               staggerIndex: 0,
-              child: const _AccountSectionWidget(),
+              child: _AccountSectionWidget(),
             ),
 
             // -- AI section -----------------------------------------------------
@@ -139,9 +139,9 @@ class SettingsScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SettingsGroupHeader(title: l10n.sync),
-                    SettingsGroup(
+                    const SettingsGroup(
                       children: [
-                        const _SyncStatusSection(),
+                        _SyncStatusSection(),
                       ],
                     ),
                     const SyncSection(),
@@ -627,7 +627,7 @@ class _AppearanceSection extends ConsumerWidget {
   }
 
   static String _getThemeDisplayName(
-      ThemeOption option, AppLocalizations l10n) {
+      ThemeOption option, AppLocalizations l10n,) {
     return switch (option) {
       ThemeOption.light => l10n.themeLight,
       ThemeOption.dark => l10n.themeDark,

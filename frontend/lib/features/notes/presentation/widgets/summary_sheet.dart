@@ -142,7 +142,7 @@ class SummarySheet extends ConsumerWidget {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.3),
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -201,7 +201,7 @@ class SummarySheet extends ConsumerWidget {
               color: Theme.of(context)
                   .colorScheme
                   .onSurfaceVariant
-                  .withOpacity(0.3),
+                  .withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
             Text(

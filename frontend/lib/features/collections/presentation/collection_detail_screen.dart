@@ -147,7 +147,7 @@ class _CollectionDetailScreenState
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 13),
+                  fontSize: 13,),
             ),
             const SizedBox(height: 16),
             FilledButton.tonal(
@@ -239,7 +239,7 @@ class _CollectionDetailScreenState
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 12),
+                        fontSize: 12,),
                   )
                 : null,
             leading: ReorderableDragStartListener(

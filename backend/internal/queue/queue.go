@@ -3,6 +3,8 @@ package queue
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/hibiken/asynq"
 )
@@ -10,6 +12,7 @@ import (
 const (
 	TaskTypeAIProxy           = "ai:proxy"
 	TaskTypePublish           = "publish:execute"
+	TaskTypePush              = "push:send"
 	TaskCleanupExpiredShares  = "cleanup:expired_shares"
 )
 
@@ -71,6 +74,32 @@ func (s *Service) EnqueuePublishJob(ctx context.Context, userID string, platform
 	return info.ID, nil
 }
 
+// PushPayload is the JSON payload for a push notification queue job.
+type PushPayload struct {
+	UserID string            `json:"user_id"`
+	Title  string            `json:"title"`
+	Body   string            `json:"body"`
+	Data   map[string]string `json:"data,omitempty"`
+}
+
+// EnqueuePushJob enqueues a push notification job with retry support.
+func (s *Service) EnqueuePushJob(ctx context.Context, payload PushPayload) (string, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("marshal push payload: %w", err)
+	}
+	task := asynq.NewTask(TaskTypePush, data)
+	info, err := s.client.EnqueueContext(ctx, task,
+		asynq.Queue("push"),
+		asynq.MaxRetry(3),
+		asynq.Timeout(30*time.Second),
+	)
+	if err != nil {
+		return "", fmt.Errorf("enqueue push job: %w", err)
+	}
+	return info.ID, nil
+}
+
 // HandleFunc registers a handler for a task type.
 func (s *Service) HandleFunc(taskType string, handler func(ctx context.Context, t *asynq.Task) error) {
 	s.mux.HandleFunc(taskType, handler)
@@ -78,9 +107,10 @@ func (s *Service) HandleFunc(taskType string, handler func(ctx context.Context, 
 
 // RegisterHandlers registers all task handlers using the provided handler instances.
 // This is the preferred way to wire up handlers with full dependency injection.
-func (s *Service) RegisterHandlers(aiHandler *AIJobHandler, publishHandler *PublishJobHandler) {
+func (s *Service) RegisterHandlers(aiHandler *AIJobHandler, publishHandler *PublishJobHandler, pushHandler *PushJobHandler) {
 	s.mux.HandleFunc(TaskTypeAIProxy, aiHandler.HandleTask)
 	s.mux.HandleFunc(TaskTypePublish, publishHandler.HandleTask)
+	s.mux.HandleFunc(TaskTypePush, pushHandler.ProcessTask)
 }
 
 // Run starts the worker process.
@@ -92,6 +122,7 @@ func (s *Service) Run(redisURL string) error {
 			Queues: map[string]int{
 				"ai":      2,
 				"publish": 1,
+				"push":    5,
 			},
 		},
 	)
@@ -110,6 +141,7 @@ func (s *Service) Start(redisURL string) error {
 			Queues: map[string]int{
 				"ai":      2,
 				"publish": 1,
+				"push":    5,
 			},
 		},
 	)

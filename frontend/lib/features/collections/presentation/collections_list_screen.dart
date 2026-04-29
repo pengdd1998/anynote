@@ -234,7 +234,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.5)),
+                      .withValues(alpha: 0.5),),
               const SizedBox(width: 4),
               Text(
                 l10n.noteCount(noteCount),
@@ -243,7 +243,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurfaceVariant
-                        .withOpacity(0.5)),
+                        .withValues(alpha: 0.5),),
               ),
             ],
           ),
@@ -328,7 +328,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurfaceVariant
-                        .withOpacity(0.5),
+                        .withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -338,7 +338,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                         color: Theme.of(context)
                             .colorScheme
                             .onSurfaceVariant
-                            .withOpacity(0.5)),
+                            .withValues(alpha: 0.5),),
                   ),
                   const Spacer(),
                   // Color indicator dot.

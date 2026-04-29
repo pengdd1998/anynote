@@ -4546,6 +4546,18 @@ abstract class AppLocalizations {
   /// **'Restore purchase will be available soon.'**
   String get restorePurchaseComingSoon;
 
+  /// Snackbar after successfully restoring a purchase
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase restored successfully.'**
+  String get planRestored;
+
+  /// Snackbar when restore finds no payment history
+  ///
+  /// In en, this message translates to:
+  /// **'No completed payments found.'**
+  String get noCompletedPayments;
+
   /// Badge text for lifetime plan users
   ///
   /// In en, this message translates to:

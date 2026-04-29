@@ -327,7 +327,7 @@ QueryExecutor _openConnection() {
       file,
       setup: (db) {
         if (_dbEncryptionKey != null) {
-          db.execute("PRAGMA key = \"$_dbEncryptionKey\"");
+          db.execute('PRAGMA key = "$_dbEncryptionKey"');
         }
       },
     );

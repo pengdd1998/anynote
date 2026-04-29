@@ -127,7 +127,7 @@ class NoteCard extends StatelessWidget {
                   padding: _isGrid
                       ? const EdgeInsets.all(12)
                       : const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                          horizontal: 16, vertical: 12,),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

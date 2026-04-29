@@ -230,6 +230,12 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("STRIPE_WEBHOOK_SECRET"); v != "" {
 		c.Stripe.WebhookSecret = v
 	}
+	if v := os.Getenv("STRIPE_PRO_PRICE_ID"); v != "" {
+		c.Stripe.ProPriceID = v
+	}
+	if v := os.Getenv("STRIPE_LIFETIME_PRICE_ID"); v != "" {
+		c.Stripe.LifetimePriceID = v
+	}
 }
 
 // LogLevel returns the configured log level as a string (debug, info, warn, error).

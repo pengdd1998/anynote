@@ -84,7 +84,7 @@ void main() {
       final syncedAt = all[0].lastSyncedAt;
       expect(syncedAt, isNotNull);
       expect(syncedAt!.isAfter(before.subtract(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
       expect(syncedAt.isBefore(after.add(const Duration(seconds: 1))), isTrue);
     });
   });

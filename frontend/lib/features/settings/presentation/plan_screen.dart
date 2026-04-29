@@ -121,12 +121,22 @@ class _PlanContent extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           OutlinedButton(
-            onPressed: () {
-              // Restore purchase stub -- will be connected to store later.
-              AppSnackBar.info(
-                context,
-                message: l10n.restorePurchaseComingSoon,
-              );
+            onPressed: () async {
+              final success =
+                  await ref.read(planInfoProvider.notifier).restorePurchase();
+              if (context.mounted) {
+                if (success) {
+                  AppSnackBar.info(
+                    context,
+                    message: AppLocalizations.of(context)!.planRestored,
+                  );
+                } else {
+                  AppSnackBar.info(
+                    context,
+                    message: AppLocalizations.of(context)!.noCompletedPayments,
+                  );
+                }
+              }
             },
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -175,7 +185,7 @@ class _PlanContent extends ConsumerWidget {
               trailing: Text(l10n.proPrice),
               onTap: () {
                 Navigator.pop(ctx);
-                ref.read(planInfoProvider.notifier).upgrade(PlanType.pro);
+                ref.read(planInfoProvider.notifier).startCheckout('pro');
               },
             ),
             ListTile(
@@ -184,7 +194,7 @@ class _PlanContent extends ConsumerWidget {
               trailing: Text(l10n.lifetimePrice),
               onTap: () {
                 Navigator.pop(ctx);
-                ref.read(planInfoProvider.notifier).upgrade(PlanType.lifetime);
+                ref.read(planInfoProvider.notifier).startCheckout('lifetime');
               },
             ),
           ],
@@ -280,8 +290,10 @@ class _PlanComparisonCard extends StatelessWidget {
             decoration: BoxDecoration(color: colorScheme.surfaceContainerHigh),
             children: [
               const _HeaderCell(''),
-              _HeaderCell(l10n.freePlan,
-                  highlight: currentPlan == PlanType.free),
+              _HeaderCell(
+                l10n.freePlan,
+                highlight: currentPlan == PlanType.free,
+              ),
               _HeaderCell(l10n.proPlan, highlight: currentPlan == PlanType.pro),
               _HeaderCell(
                 l10n.lifetimePlan,

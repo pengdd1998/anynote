@@ -89,7 +89,7 @@ class MockApiClient extends ApiClient {
 
   @override
   Future<Map<String, dynamic>> createLlmConfig(
-      Map<String, dynamic> config) async {
+      Map<String, dynamic> config,) async {
     createLlmConfigCalls.add(config['name'] ?? config.toString());
     return {'id': 'cfg-new', ...config};
   }

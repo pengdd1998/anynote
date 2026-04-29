@@ -2586,6 +2586,12 @@
   "restorePurchaseComingSoon": "Restore purchase will be available soon.",
   "@restorePurchaseComingSoon": { "description": "Message when restore purchase is not yet available" },
 
+  "planRestored": "Purchase restored successfully.",
+  "@planRestored": { "description": "Snackbar after successfully restoring a purchase" },
+
+  "noCompletedPayments": "No completed payments found.",
+  "@noCompletedPayments": { "description": "Snackbar when restore finds no payment history" },
+
   "lifetimeMember": "Lifetime Member -- all features unlocked forever.",
   "@lifetimeMember": { "description": "Badge text for lifetime plan users" },
 

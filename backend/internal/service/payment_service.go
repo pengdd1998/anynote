@@ -39,6 +39,8 @@ type PaymentRepo interface {
 	UpdateStatus(ctx context.Context, id, status string) error
 	GetPaymentsByUser(ctx context.Context, userID string) ([]domain.Payment, error)
 	GetLatestCompletedPayment(ctx context.Context, userID string) (*domain.Payment, error)
+	CompletePaymentTx(ctx context.Context, paymentID, plan string, userID uuid.UUID) error
+	RecordWebhookEvent(ctx context.Context, eventID string) (bool, error)
 }
 
 // PaymentService provides payment verification and checkout business logic.
@@ -121,14 +123,13 @@ func (s *paymentService) CreateCheckoutSession(ctx context.Context, userID strin
 	return &domain.CheckoutResponse{SessionURL: sessionURL}, nil
 }
 
-// HandleWebhook verifies the Stripe webhook signature and updates the payment
-// status. On successful checkout, it upgrades the user's plan.
+// HandleWebhook verifies the Stripe webhook signature, checks idempotency, and
+// routes the event to the appropriate handler based on event type.
 func (s *paymentService) HandleWebhook(ctx context.Context, payload []byte, sig string) error {
 	if s.testMode {
 		return s.handleTestWebhook(ctx, payload)
 	}
 
-	// Verify Stripe webhook signature.
 	if err := VerifyStripeSignature(payload, sig, s.webhookSecret); err != nil {
 		return ErrInvalidStripeSig
 	}
@@ -138,17 +139,35 @@ func (s *paymentService) HandleWebhook(ctx context.Context, payload []byte, sig 
 		return fmt.Errorf("parse webhook payload: %w", err)
 	}
 
-	if event.Type != "checkout.session.completed" {
-		slog.Info("ignoring non-completion webhook event", "type", event.Type)
+	if event.ID == "" {
+		return fmt.Errorf("webhook event missing ID")
+	}
+
+	// Idempotency check
+	isNew, err := s.paymentRepo.RecordWebhookEvent(ctx, event.ID)
+	if err != nil {
+		return fmt.Errorf("webhook idempotency check: %w", err)
+	}
+	if !isNew {
+		slog.Info("webhook event already processed, skipping", "event_id", event.ID)
 		return nil
 	}
 
-	sessionID := event.Data.Object.ID
-	if sessionID == "" {
-		return fmt.Errorf("webhook event missing session ID")
+	switch event.Type {
+	case "checkout.session.completed":
+		return s.handleCheckoutCompleted(ctx, event)
+	case "customer.subscription.deleted":
+		return s.handleSubscriptionDeleted(ctx, event)
+	case "invoice.payment_failed":
+		return s.handleInvoicePaymentFailed(ctx, event)
+	case "checkout.session.expired":
+		return s.handleCheckoutExpired(ctx, event)
+	case "charge.refunded":
+		return s.handleChargeRefunded(ctx, event)
+	default:
+		slog.Info("ignoring unhandled webhook event", "type", event.Type, "event_id", event.ID)
+		return nil
 	}
-
-	return s.completePayment(ctx, sessionID)
 }
 
 // handleTestWebhook processes webhooks in test mode without signature verification.
@@ -158,19 +177,37 @@ func (s *paymentService) handleTestWebhook(ctx context.Context, payload []byte) 
 		return fmt.Errorf("parse test webhook payload: %w", err)
 	}
 
-	if event.Type != "checkout.session.completed" {
+	// Idempotency check (best-effort in test mode)
+	if event.ID != "" {
+		isNew, err := s.paymentRepo.RecordWebhookEvent(ctx, event.ID)
+		if err == nil && !isNew {
+			slog.Info("test webhook event already processed, skipping", "event_id", event.ID)
+			return nil
+		}
+	}
+
+	switch event.Type {
+	case "checkout.session.completed":
+		sessionID := event.Data.Object.ID
+		if sessionID == "" {
+			return fmt.Errorf("test webhook event missing session ID")
+		}
+		return s.completePayment(ctx, sessionID)
+	case "customer.subscription.deleted":
+		return s.handleSubscriptionDeleted(ctx, event)
+	case "invoice.payment_failed":
+		return s.handleInvoicePaymentFailed(ctx, event)
+	case "checkout.session.expired":
+		return s.handleCheckoutExpired(ctx, event)
+	case "charge.refunded":
+		return s.handleChargeRefunded(ctx, event)
+	default:
 		return nil
 	}
-
-	sessionID := event.Data.Object.ID
-	if sessionID == "" {
-		return fmt.Errorf("test webhook event missing session ID")
-	}
-
-	return s.completePayment(ctx, sessionID)
 }
 
-// completePayment marks a payment as completed and upgrades the user's plan.
+// completePayment marks a payment as completed and upgrades the user's plan
+// atomically within a single database transaction.
 func (s *paymentService) completePayment(ctx context.Context, sessionID string) error {
 	payment, err := s.paymentRepo.GetByStripeSessionID(ctx, sessionID)
 	if err != nil {
@@ -184,17 +221,13 @@ func (s *paymentService) completePayment(ctx context.Context, sessionID string) 
 		return ErrPaymentAlreadyDone
 	}
 
-	if err := s.paymentRepo.UpdateStatus(ctx, payment.ID, "completed"); err != nil {
-		return fmt.Errorf("update payment status: %w", err)
-	}
-
-	// Upgrade the user's plan.
 	userID, parseErr := uuid.Parse(payment.UserID)
 	if parseErr != nil {
 		return fmt.Errorf("parse user ID: %w", parseErr)
 	}
-	if err := s.planRepo.SetPlan(ctx, userID, payment.Plan); err != nil {
-		return fmt.Errorf("upgrade user plan: %w", err)
+
+	if err := s.paymentRepo.CompletePaymentTx(ctx, payment.ID, payment.Plan, userID); err != nil {
+		return fmt.Errorf("complete payment transaction: %w", err)
 	}
 
 	slog.Info("payment completed, plan upgraded",
@@ -202,6 +235,91 @@ func (s *paymentService) completePayment(ctx context.Context, sessionID string) 
 		"plan", payment.Plan,
 		"session_id", sessionID,
 	)
+	return nil
+}
+
+// handleCheckoutCompleted handles checkout.session.completed events.
+func (s *paymentService) handleCheckoutCompleted(ctx context.Context, event stripeWebhookEvent) error {
+	sessionID := event.Data.Object.ID
+	if sessionID == "" {
+		return fmt.Errorf("checkout.session.completed event missing session ID")
+	}
+	return s.completePayment(ctx, sessionID)
+}
+
+// handleSubscriptionDeleted handles customer.subscription.deleted events.
+// Downgrades the user to the free plan.
+func (s *paymentService) handleSubscriptionDeleted(ctx context.Context, event stripeWebhookEvent) error {
+	userID := event.Data.Object.ClientReferenceID
+	if userID == "" {
+		return fmt.Errorf("subscription.deleted event missing client_reference_id")
+	}
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return fmt.Errorf("parse user ID from client_reference_id: %w", err)
+	}
+	if err := s.planRepo.SetPlan(ctx, uid, "free"); err != nil {
+		return fmt.Errorf("downgrade plan on subscription deleted: %w", err)
+	}
+	slog.Info("subscription deleted, plan downgraded to free", "user_id", userID)
+	return nil
+}
+
+// handleInvoicePaymentFailed handles invoice.payment_failed events.
+// Logs the failure; Stripe will retry automatically.
+func (s *paymentService) handleInvoicePaymentFailed(_ context.Context, event stripeWebhookEvent) error {
+	slog.Warn("invoice payment failed", "event_id", event.ID)
+	return nil
+}
+
+// handleCheckoutExpired handles checkout.session.expired events.
+// Marks the corresponding payment as expired if it is still pending.
+func (s *paymentService) handleCheckoutExpired(ctx context.Context, event stripeWebhookEvent) error {
+	sessionID := event.Data.Object.ID
+	if sessionID == "" {
+		return fmt.Errorf("checkout.session.expired event missing session ID")
+	}
+	payment, err := s.paymentRepo.GetByStripeSessionID(ctx, sessionID)
+	if err != nil {
+		return fmt.Errorf("lookup payment for expired session: %w", err)
+	}
+	if payment == nil {
+		return ErrPaymentNotFound
+	}
+	if payment.Status != "pending" {
+		return nil // already processed
+	}
+	if err := s.paymentRepo.UpdateStatus(ctx, payment.ID, "expired"); err != nil {
+		return fmt.Errorf("mark payment expired: %w", err)
+	}
+	slog.Info("checkout session expired", "session_id", sessionID)
+	return nil
+}
+
+// handleChargeRefunded handles charge.refunded events.
+// Marks the payment as refunded and downgrades the user to the free plan.
+func (s *paymentService) handleChargeRefunded(ctx context.Context, event stripeWebhookEvent) error {
+	sessionID := event.Data.Object.ID
+	if sessionID == "" {
+		return fmt.Errorf("charge.refunded event missing session ID")
+	}
+	payment, err := s.paymentRepo.GetByStripeSessionID(ctx, sessionID)
+	if err != nil {
+		return fmt.Errorf("lookup payment for refunded charge: %w", err)
+	}
+	if payment == nil {
+		return ErrPaymentNotFound
+	}
+	if err := s.paymentRepo.UpdateStatus(ctx, payment.ID, "refunded"); err != nil {
+		return fmt.Errorf("mark payment refunded: %w", err)
+	}
+	uid, parseErr := uuid.Parse(payment.UserID)
+	if parseErr == nil {
+		if err := s.planRepo.SetPlan(ctx, uid, "free"); err != nil {
+			slog.Error("failed to downgrade plan after refund", "user_id", payment.UserID, "error", err)
+		}
+	}
+	slog.Info("payment refunded, plan downgraded", "user_id", payment.UserID, "session_id", sessionID)
 	return nil
 }
 
@@ -219,10 +337,15 @@ func (s *paymentService) GetPaymentHistory(ctx context.Context, userID string) (
 
 // stripeWebhookEvent represents the top-level structure of a Stripe webhook event.
 type stripeWebhookEvent struct {
+	ID   string `json:"id"`
 	Type string `json:"type"`
 	Data struct {
 		Object struct {
-			ID string `json:"id"`
+			ID                string `json:"id"`
+			ClientReferenceID string `json:"client_reference_id"`
+			AmountTotal       int64  `json:"amount_total"`
+			Subscription      string `json:"subscription"`
+			PaymentIntent     string `json:"payment_intent"`
 		} `json:"object"`
 	} `json:"data"`
 }

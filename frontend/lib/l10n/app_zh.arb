@@ -1443,6 +1443,8 @@
   "yes": "是",
   "restorePurchase": "恢复购买",
   "restorePurchaseComingSoon": "恢复购买功能即将推出。",
+  "planRestored": "购买已成功恢复。",
+  "noCompletedPayments": "未找到已完成的支付记录。",
   "lifetimeMember": "终身会员 -- 所有功能永久解锁。",
   "selectPlan": "选择方案",
   "proPlanDescription": "无限笔记、每日 500 次 AI 请求、5 GB 存储",

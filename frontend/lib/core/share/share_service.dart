@@ -253,7 +253,7 @@ class ShareService {
       } catch (e) {
         // Server unavailable -- fall through to self-contained mode.
         debugPrint(
-            '[ShareService] server share creation failed, falling back to local mode: $e');
+            '[ShareService] server share creation failed, falling back to local mode: $e',);
       }
     }
 

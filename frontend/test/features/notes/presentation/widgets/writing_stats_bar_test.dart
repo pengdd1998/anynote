@@ -39,13 +39,13 @@ Future<void> pumpWritingStatsBar(
 void main() {
   group('WritingStatsBar', () {
     testWidgets('renders word count when visible', (tester) async {
-      final stats = WritingStats(
+      const stats = WritingStats(
         wordCount: 42,
         charCount: 200,
         charCountNoSpaces: 170,
         lineCount: 10,
         paragraphCount: 3,
-        estimatedReadingTime: const Duration(minutes: 1),
+        estimatedReadingTime: Duration(minutes: 1),
         isCJK: false,
       );
 
@@ -55,7 +55,7 @@ void main() {
     });
 
     testWidgets('renders character count when visible', (tester) async {
-      final stats = WritingStats(
+      const stats = WritingStats(
         wordCount: 10,
         charCount: 256,
         charCountNoSpaces: 220,
@@ -71,13 +71,13 @@ void main() {
     });
 
     testWidgets('renders reading time for less than 1 minute', (tester) async {
-      final stats = WritingStats(
+      const stats = WritingStats(
         wordCount: 5,
         charCount: 20,
         charCountNoSpaces: 18,
         lineCount: 1,
         paragraphCount: 1,
-        estimatedReadingTime: const Duration(seconds: 30),
+        estimatedReadingTime: Duration(seconds: 30),
         isCJK: false,
       );
 
@@ -87,13 +87,13 @@ void main() {
     });
 
     testWidgets('renders reading time for multiple minutes', (tester) async {
-      final stats = WritingStats(
+      const stats = WritingStats(
         wordCount: 400,
         charCount: 2000,
         charCountNoSpaces: 1700,
         lineCount: 50,
         paragraphCount: 10,
-        estimatedReadingTime: const Duration(minutes: 5),
+        estimatedReadingTime: Duration(minutes: 5),
         isCJK: false,
       );
 
@@ -103,7 +103,7 @@ void main() {
     });
 
     testWidgets('renders line count', (tester) async {
-      final stats = WritingStats(
+      const stats = WritingStats(
         wordCount: 10,
         charCount: 50,
         charCountNoSpaces: 40,
@@ -119,7 +119,7 @@ void main() {
     });
 
     testWidgets('renders paragraph count', (tester) async {
-      final stats = WritingStats(
+      const stats = WritingStats(
         wordCount: 10,
         charCount: 50,
         charCountNoSpaces: 40,
@@ -147,13 +147,13 @@ void main() {
     });
 
     testWidgets('does not show stat chips when hidden', (tester) async {
-      final stats = WritingStats(
+      const stats = WritingStats(
         wordCount: 99,
         charCount: 500,
         charCountNoSpaces: 400,
         lineCount: 20,
         paragraphCount: 5,
-        estimatedReadingTime: const Duration(minutes: 1),
+        estimatedReadingTime: Duration(minutes: 1),
         isCJK: false,
       );
 
@@ -195,7 +195,7 @@ void main() {
     });
 
     testWidgets('updates stats when rebuilt with new values', (tester) async {
-      final stats1 = WritingStats(
+      const stats1 = WritingStats(
         wordCount: 10,
         charCount: 50,
         charCountNoSpaces: 40,
@@ -208,7 +208,7 @@ void main() {
       await pumpWritingStatsBar(tester, stats: stats1);
       expect(find.textContaining('10'), findsOneWidget);
 
-      final stats2 = WritingStats(
+      const stats2 = WritingStats(
         wordCount: 20,
         charCount: 100,
         charCountNoSpaces: 80,
@@ -223,7 +223,7 @@ void main() {
     });
 
     testWidgets('renders dividers between stat chips', (tester) async {
-      final stats = WritingStats(
+      const stats = WritingStats(
         wordCount: 10,
         charCount: 50,
         charCountNoSpaces: 40,

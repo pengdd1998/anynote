@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/anynote/backend/internal/domain"
@@ -108,4 +110,55 @@ func (r *PaymentRepository) GetLatestCompletedPayment(ctx context.Context, userI
 		return nil, nil //nolint:nilerr // no completed payment is not an error
 	}
 	return &p, nil
+}
+
+// CompletePaymentTx atomically marks a payment as completed and upgrades the user's plan.
+// Both operations execute within a single database transaction so that a failure after
+// the status update does not leave the user on the old plan.
+func (r *PaymentRepository) CompletePaymentTx(ctx context.Context, paymentID, plan string, userID uuid.UUID) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Update payment status
+	_, err = tx.Exec(ctx,
+		`UPDATE payments SET status = 'completed', completed_at = NOW() WHERE id = $1`,
+		paymentID,
+	)
+	if err != nil {
+		return fmt.Errorf("update payment status: %w", err)
+	}
+
+	// Upgrade plan
+	_, err = tx.Exec(ctx,
+		`UPDATE users SET plan = $1, plan_updated_at = NOW() WHERE id = $2`,
+		plan, userID,
+	)
+	if err != nil {
+		return fmt.Errorf("upgrade plan: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit transaction: %w", err)
+	}
+	return nil
+}
+
+// RecordWebhookEvent records a Stripe webhook event ID for idempotency.
+// Returns false if the event was already processed.
+func (r *PaymentRepository) RecordWebhookEvent(ctx context.Context, eventID string) (bool, error) {
+	var inserted bool
+	err := r.pool.QueryRow(ctx,
+		`INSERT INTO stripe_webhook_events (event_id) VALUES ($1) ON CONFLICT (event_id) DO NOTHING RETURNING true`,
+		eventID,
+	).Scan(&inserted)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, nil // already processed
+		}
+		return false, fmt.Errorf("record webhook event: %w", err)
+	}
+	return inserted, nil
 }

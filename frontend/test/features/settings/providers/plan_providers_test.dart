@@ -45,7 +45,7 @@ class MockApiClient extends ApiClient {
 
   @override
   Future<Map<String, dynamic>> upgradePlan(String plan,
-      {String? paymentRef}) async {
+      {String? paymentRef,}) async {
     return upgradeResponse ??
         <String, dynamic>{
           'plan': plan,
@@ -147,7 +147,7 @@ void main() {
         'plan': 'pro',
         'limits': <String, dynamic>{
           'max_notes': 10000,
-          'can_collaborate': true
+          'can_collaborate': true,
         },
         'ai_daily_used': 0,
         'storage_bytes': 0,

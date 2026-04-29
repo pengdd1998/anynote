@@ -240,7 +240,7 @@ void main() {
       final sub = service.progressStream.listen(progressValues.add);
 
       // Two paragraphs with double newline separator.
-      service.speak('Para one ' * 50 + '\n\n' + 'Para two ' * 50);
+      service.speak('${'Para one ' * 50}\n\n${'Para two ' * 50}');
 
       await Future<void>.delayed(const Duration(milliseconds: 50));
 

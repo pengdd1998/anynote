@@ -96,6 +96,7 @@ dependencies:
   workmanager: ^0.6.0
   archive: ^4.0.9
 
+  sqlite3: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -111,8 +112,6 @@ dev_dependencies:
   # App Store assets
   flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.3
-
-  sqlite3: any
 flutter:
   generate: true
   uses-material-design: true

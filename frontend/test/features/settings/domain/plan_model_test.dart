@@ -10,7 +10,7 @@ void main() {
   group('PlanType', () {
     test('has all three enum values', () {
       expect(PlanType.values,
-          containsAll([PlanType.free, PlanType.pro, PlanType.lifetime]));
+          containsAll([PlanType.free, PlanType.pro, PlanType.lifetime]),);
       expect(PlanType.values.length, 3);
     });
 

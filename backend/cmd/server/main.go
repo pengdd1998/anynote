@@ -14,6 +14,7 @@ import (
 
 	"github.com/anynote/backend/internal/appsetup"
 	"github.com/anynote/backend/internal/fcmadapter"
+	"github.com/anynote/backend/internal/stripeadapter"
 	"github.com/anynote/backend/internal/config"
 	"github.com/anynote/backend/internal/handler"
 	"github.com/anynote/backend/internal/llm"
@@ -237,7 +238,16 @@ func main() {
 	collabSvc := service.NewCollabService(collabRepo)
 
 	// Payment service: operates in test mode when Stripe is not configured.
-	var stripeClient service.StripeClient // nil = test mode
+	var stripeClient service.StripeClient
+	if cfg.Stripe.SecretKey != "" && cfg.Stripe.ProPriceID != "" && cfg.Stripe.LifetimePriceID != "" {
+		sc, err := stripeadapter.InitStripeClient(cfg.Stripe)
+		if err != nil {
+			slog.Warn("Stripe client initialization failed, falling back to test mode", "error", err)
+		} else {
+			stripeClient = sc
+			slog.Info("Stripe client initialized, production payment mode enabled")
+		}
+	}
 	paymentSvc := service.NewPaymentService(paymentRepo, planRepo, stripeClient, cfg.Stripe.WebhookSecret)
 
 	// Notification service.

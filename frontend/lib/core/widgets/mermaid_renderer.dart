@@ -161,7 +161,7 @@ class _MermaidRendererState extends State<MermaidRenderer> {
           } catch (e) {
             // Ignore malformed messages.
             debugPrint(
-                '[MermaidRenderer] failed to parse JS channel message: $e');
+                '[MermaidRenderer] failed to parse JS channel message: $e',);
           }
         },
       );

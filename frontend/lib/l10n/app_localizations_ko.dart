@@ -2436,6 +2436,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get restorePurchaseComingSoon => '구매 복원 기능이 곧 제공됩니다.';
 
   @override
+  String get planRestored => '구매가 성공적으로 복원되었습니다.';
+
+  @override
+  String get noCompletedPayments => '완료된 결제 내역이 없습니다.';
+
+  @override
   String get lifetimeMember => '평생 회원 -- 모든 기능이 영구적으로 잠금 해제됩니다.';
 
   @override

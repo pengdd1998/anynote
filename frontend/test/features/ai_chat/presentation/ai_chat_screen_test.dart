@@ -28,7 +28,7 @@ void main() {
           compose.aiRepositoryProvider
               .overrideWith((ref) => _FakeAIRepository()),
           aiChatRepositoryProvider.overrideWith((ref) =>
-              AIChatRepository(ref.read(compose.aiRepositoryProvider))),
+              AIChatRepository(ref.read(compose.aiRepositoryProvider)),),
         ];
 
     /// Pump the AiChatScreen with all required overrides.

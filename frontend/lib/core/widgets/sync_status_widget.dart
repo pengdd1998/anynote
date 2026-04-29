@@ -147,9 +147,10 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
     SyncProgress progress,
   ) {
     final l10n = AppLocalizations.of(context);
-    if (isOffline)
+    if (isOffline) {
       return l10n?.offlineSyncTooltip ??
           'Offline -- changes will sync when connected';
+    }
     if (isSyncing && progress.isActive) {
       final label = progress.phase == SyncPhase.pulling
           ? (l10n?.pullingLabel ?? 'Pulling')

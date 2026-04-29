@@ -88,7 +88,7 @@ void main() {
       await tagsDao.markSyncedBatch(['tag-b1', 'tag-b2']);
 
       final all = await tagsDao.getAllTags();
-      final find = (String id) => all.firstWhere((t) => t.id == id);
+      Tag find(String id) => all.firstWhere((t) => t.id == id);
       expect(find('tag-b1').isSynced, isTrue);
       expect(find('tag-b2').isSynced, isTrue);
       expect(find('tag-b3').isSynced, isFalse);
@@ -124,16 +124,16 @@ void main() {
   group('CollectionsDao.markSyncedBatch', () {
     test('marks only the specified collections as synced', () async {
       await collectionsDao.createCollection(
-          id: 'col-b1', encryptedTitle: 'enc1');
+          id: 'col-b1', encryptedTitle: 'enc1',);
       await collectionsDao.createCollection(
-          id: 'col-b2', encryptedTitle: 'enc2');
+          id: 'col-b2', encryptedTitle: 'enc2',);
       await collectionsDao.createCollection(
-          id: 'col-b3', encryptedTitle: 'enc3');
+          id: 'col-b3', encryptedTitle: 'enc3',);
 
       await collectionsDao.markSyncedBatch(['col-b1', 'col-b2']);
 
       final all = await collectionsDao.getAllCollections();
-      final find = (String id) => all.firstWhere((c) => c.id == id);
+      Collection find(String id) => all.firstWhere((c) => c.id == id);
       expect(find('col-b1').isSynced, isTrue);
       expect(find('col-b2').isSynced, isTrue);
       expect(find('col-b3').isSynced, isFalse);
@@ -141,7 +141,7 @@ void main() {
 
     test('empty list does not throw', () async {
       await collectionsDao.createCollection(
-          id: 'col-empty', encryptedTitle: 'enc');
+          id: 'col-empty', encryptedTitle: 'enc',);
       await collectionsDao.markSyncedBatch([]);
       final all = await collectionsDao.getAllCollections();
       expect(all[0].isSynced, isFalse);
@@ -149,7 +149,7 @@ void main() {
 
     test('non-existent IDs do not throw', () async {
       await collectionsDao.createCollection(
-          id: 'col-ne', encryptedTitle: 'enc');
+          id: 'col-ne', encryptedTitle: 'enc',);
       await collectionsDao.markSyncedBatch(['nonexistent-col']);
       final all = await collectionsDao.getAllCollections();
       expect(all[0].isSynced, isFalse);
@@ -157,7 +157,7 @@ void main() {
 
     test('idempotent -- calling twice is safe', () async {
       await collectionsDao.createCollection(
-          id: 'col-idem', encryptedTitle: 'enc');
+          id: 'col-idem', encryptedTitle: 'enc',);
       await collectionsDao.markSyncedBatch(['col-idem']);
       await collectionsDao.markSyncedBatch(['col-idem']);
       final all = await collectionsDao.getAllCollections();

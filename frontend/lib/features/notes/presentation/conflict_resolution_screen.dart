@@ -139,7 +139,7 @@ class _ConflictCard extends StatelessWidget {
         _ConflictResolutionResult(
           conflict: conflict,
           resolution: resolution,
-        ));
+        ),);
   }
 }
 

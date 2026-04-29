@@ -57,7 +57,7 @@ class FormattingToolbar extends StatelessWidget {
         color: colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: colorScheme.outlineVariant.withOpacity(0.5),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
             width: 1,
           ),
         ),
@@ -230,7 +230,7 @@ class FormattingToolbar extends StatelessWidget {
         width: 1,
         indent: 10,
         endIndent: 10,
-        color: colorScheme.outlineVariant.withOpacity(0.5),
+        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
       ),
     );
   }
@@ -336,7 +336,7 @@ class _FormatButton extends StatelessWidget {
       color: isActive ? colorScheme.primary : colorScheme.onSurfaceVariant,
       style: IconButton.styleFrom(
         backgroundColor: isActive
-            ? colorScheme.primaryContainer.withOpacity(0.3)
+            ? colorScheme.primaryContainer.withValues(alpha: 0.3)
             : Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),

@@ -53,11 +53,11 @@ Future<void> pumpSyncSection(
   await tester.pumpWidget(
     ProviderScope(
       overrides: allOverrides,
-      child: MaterialApp(
+      child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('en'),
-        home: const Scaffold(body: SyncSection()),
+        locale: Locale('en'),
+        home: Scaffold(body: SyncSection()),
       ),
     ),
   );
@@ -85,11 +85,11 @@ Future<void> pumpSyncSectionWithState(
   await tester.pumpWidget(
     ProviderScope(
       overrides: allOverrides,
-      child: MaterialApp(
+      child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('en'),
-        home: const Scaffold(body: SyncSection()),
+        locale: Locale('en'),
+        home: Scaffold(body: SyncSection()),
       ),
     ),
   );

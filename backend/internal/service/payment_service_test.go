@@ -25,6 +25,7 @@ type mockPaymentRepo struct {
 	byID        map[string]*domain.Payment // keyed by id
 	createErr   error
 	updateErr   error
+	txErr       error // error returned by CompletePaymentTx
 }
 
 func newMockPaymentRepo() *mockPaymentRepo {
@@ -89,6 +90,28 @@ func (m *mockPaymentRepo) GetLatestCompletedPayment(_ context.Context, userID st
 		}
 	}
 	return latest, nil
+}
+
+func (m *mockPaymentRepo) CompletePaymentTx(_ context.Context, paymentID, plan string, _ uuid.UUID) error {
+	if m.txErr != nil {
+		return m.txErr
+	}
+	if m.updateErr != nil {
+		return m.updateErr
+	}
+	p, ok := m.byID[paymentID]
+	if !ok {
+		return fmt.Errorf("not found")
+	}
+	p.Status = "completed"
+	now := time.Now()
+	p.CompletedAt = &now
+	_ = plan
+	return nil
+}
+
+func (m *mockPaymentRepo) RecordWebhookEvent(_ context.Context, _ string) (bool, error) {
+	return true, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -294,18 +317,13 @@ func TestPaymentService_HandleWebhook_TestMode_CompletesPayment(t *testing.T) {
 		t.Fatalf("HandleWebhook: %v", err)
 	}
 
-	// Verify payment status updated.
+	// Verify payment status updated (transactional upgrade also marks this).
 	p, _ := paymentRepo.GetByStripeSessionID(context.Background(), payment.StripeSessionID)
 	if p.Status != "completed" {
 		t.Errorf("payment status = %q, want completed", p.Status)
 	}
-
-	// Verify plan was upgraded.
-	if !planRepo.setPlanCalled {
-		t.Error("SetPlan should have been called")
-	}
-	if planRepo.setPlanArg != "pro" {
-		t.Errorf("SetPlan arg = %q, want pro", planRepo.setPlanArg)
+	if p.CompletedAt == nil {
+		t.Error("payment CompletedAt should be set")
 	}
 }
 
@@ -315,15 +333,15 @@ func TestPaymentService_HandleWebhook_TestMode_IgnoresNonCompletion(t *testing.T
 	svc := NewPaymentService(paymentRepo, planRepo, nil, "")
 
 	payload, _ := json.Marshal(map[string]interface{}{
-		"type": "checkout.session.expired",
+		"type": "account.updated",
 		"data": map[string]interface{}{
-			"object": map[string]interface{}{"id": "cs_test_123"},
+			"object": map[string]interface{}{"id": "acct_123"},
 		},
 	})
 
 	err := svc.HandleWebhook(context.Background(), payload, "")
 	if err != nil {
-		t.Fatalf("HandleWebhook should not error for non-completion events: %v", err)
+		t.Fatalf("HandleWebhook should not error for unhandled events: %v", err)
 	}
 }
 
@@ -421,6 +439,7 @@ func TestPaymentService_HandleWebhook_WithSignatureVerification(t *testing.T) {
 	paymentRepo.CreatePayment(context.Background(), payment)
 
 	eventPayload, _ := json.Marshal(map[string]interface{}{
+		"id":   "evt_sig_test_001",
 		"type": "checkout.session.completed",
 		"data": map[string]interface{}{
 			"object": map[string]interface{}{"id": "cs_live_sig_test"},
@@ -678,18 +697,16 @@ func TestPaymentService_CompletePayment_UpdateStatusError(t *testing.T) {
 	}
 }
 
-func TestPaymentService_CompletePayment_SetPlanError(t *testing.T) {
+func TestPaymentService_CompletePayment_TransactionError(t *testing.T) {
 	paymentRepo := newMockPaymentRepo()
-	planRepo := &mockPlanRepo{
-		plan:       "free",
-		setPlanErr: errors.New("set plan failed"),
-	}
+	paymentRepo.txErr = errors.New("transaction failed")
+	planRepo := &mockPlanRepo{plan: "free"}
 	svc := NewPaymentService(paymentRepo, planRepo, nil, "")
 
 	userID := uuid.New()
 	payment := &domain.Payment{
 		UserID:          userID.String(),
-		StripeSessionID: "cs_setplan_err",
+		StripeSessionID: "cs_tx_err",
 		AmountCents:     499,
 		Currency:        "usd",
 		Status:          "pending",
@@ -700,14 +717,14 @@ func TestPaymentService_CompletePayment_SetPlanError(t *testing.T) {
 	event := map[string]interface{}{
 		"type": "checkout.session.completed",
 		"data": map[string]interface{}{
-			"object": map[string]interface{}{"id": "cs_setplan_err"},
+			"object": map[string]interface{}{"id": "cs_tx_err"},
 		},
 	}
 	payload, _ := json.Marshal(event)
 
 	err := svc.HandleWebhook(context.Background(), payload, "")
 	if err == nil {
-		t.Error("expected error when SetPlan fails")
+		t.Error("expected error when CompletePaymentTx fails")
 	}
 }
 

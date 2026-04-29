@@ -250,7 +250,7 @@ class ImageManagementScreen extends ConsumerWidget {
         } catch (e) {
           // Skip files that cannot be deleted.
           debugPrint(
-              '[ImageManagementScreen] failed to delete orphaned file: $e');
+              '[ImageManagementScreen] failed to delete orphaned file: $e',);
         }
       }
     }

@@ -193,13 +193,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           Icon(
             Icons.chat_bubble_outline,
             size: 64,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.4),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
             l10n.aiChatWelcome,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
             textAlign: TextAlign.center,
           ),
@@ -207,8 +207,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           Text(
             l10n.aiChatWelcomeDesc,
             style: TextStyle(
-                color: colorScheme.onSurfaceVariant.withOpacity(0.5),
-                fontSize: 13),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                fontSize: 13,),
             textAlign: TextAlign.center,
           ),
         ],
@@ -436,7 +436,7 @@ class _ContextNoteSelectorSheetState extends State<_ContextNoteSelectorSheet> {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.3),
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

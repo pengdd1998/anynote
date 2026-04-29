@@ -144,7 +144,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 }
               } catch (e) {
                 debugPrint(
-                    '[EncryptionScreen] password verification failed: $e');
+                    '[EncryptionScreen] password verification failed: $e',);
                 nav.pop();
                 if (mounted) {
                   AppSnackBar.error(context, message: l10n.verificationFailed);
@@ -233,7 +233,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   nav.pop();
                   if (mounted) {
                     AppSnackBar.error(context,
-                        message: l10n.currentPasswordIncorrect);
+                        message: l10n.currentPasswordIncorrect,);
                   }
                   return;
                 }
@@ -246,13 +246,13 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   // Refresh the encryption status.
                   ref.read(encryptionStatusProvider.notifier).refresh();
                   AppSnackBar.info(context,
-                      message: l10n.passwordChangedSuccessfully);
+                      message: l10n.passwordChangedSuccessfully,);
                 }
               } catch (e) {
                 nav.pop();
                 if (mounted) {
                   AppSnackBar.error(context,
-                      message: l10n.failedToChangePassword(e.toString()));
+                      message: l10n.failedToChangePassword(e.toString()),);
                 }
               } finally {
                 if (mounted) {
@@ -363,7 +363,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 nav.pop();
                 if (mounted) {
                   AppSnackBar.error(context,
-                      message: l10n.failedToDeleteData(e.toString()));
+                      message: l10n.failedToDeleteData(e.toString()),);
                 }
               } finally {
                 if (mounted) setState(() => _isDeleting = false);
@@ -412,7 +412,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
     } catch (e) {
       if (mounted) {
         AppSnackBar.error(context,
-            message: l10n.backupExportFailed(e.toString()));
+            message: l10n.backupExportFailed(e.toString()),);
       }
     }
   }
@@ -474,7 +474,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
     } catch (e) {
       if (mounted) {
         AppSnackBar.error(context,
-            message: l10n.backupImportFailed(e.toString()));
+            message: l10n.backupImportFailed(e.toString()),);
       }
     }
   }

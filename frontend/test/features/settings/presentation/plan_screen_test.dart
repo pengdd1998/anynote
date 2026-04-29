@@ -250,6 +250,12 @@ class _FakePlanNotifier extends AsyncNotifier<PlanInfo>
   Future<void> upgrade(PlanType plan) async {
     // No-op for tests.
   }
+
+  @override
+  Future<void> startCheckout(String plan) async {}
+
+  @override
+  Future<bool> restorePurchase() async => false;
 }
 
 /// A plan notifier that never resolves (stays loading).
@@ -266,6 +272,12 @@ class _HangingPlanNotifier extends AsyncNotifier<PlanInfo>
 
   @override
   Future<void> upgrade(PlanType plan) async {}
+
+  @override
+  Future<void> startCheckout(String plan) async {}
+
+  @override
+  Future<bool> restorePurchase() async => false;
 }
 
 /// A plan notifier that throws an error.
@@ -281,4 +293,10 @@ class _ErrorPlanNotifier extends AsyncNotifier<PlanInfo>
 
   @override
   Future<void> upgrade(PlanType plan) async {}
+
+  @override
+  Future<void> startCheckout(String plan) async {}
+
+  @override
+  Future<bool> restorePurchase() async => false;
 }

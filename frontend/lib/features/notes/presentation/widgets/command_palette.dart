@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -435,7 +434,7 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isDesktop = PlatformUtils.isDesktop;
-    final shortcutHint = isDesktop ? PlatformUtils.modifierLabel + '+K' : '';
+    final shortcutHint = isDesktop ? '${PlatformUtils.modifierLabel}+K' : '';
 
     return KeyboardListener(
       focusNode: FocusNode(),

@@ -13,8 +13,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: DesktopContextMenu(
-            items: [
-              const PopupMenuItem(value: 'copy', child: Text('Copy')),
+            items: const [
+              PopupMenuItem(value: 'copy', child: Text('Copy')),
             ],
             onSelected: (_) {},
             child: const Text('Target'),
@@ -35,8 +35,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: DesktopContextMenu(
-            items: [
-              const PopupMenuItem(value: 'copy', child: Text('Copy')),
+            items: const [
+              PopupMenuItem(value: 'copy', child: Text('Copy')),
             ],
             onSelected: (_) {},
             child: const Text('Target'),
@@ -57,8 +57,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: DesktopContextMenu(
-            items: [
-              const PopupMenuItem(value: 'copy', child: Text('Copy')),
+            items: const [
+              PopupMenuItem(value: 'copy', child: Text('Copy')),
             ],
             onSelected: (_) {},
             child: const Text('Target'),
@@ -78,8 +78,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: DesktopContextMenu(
-            items: [
-              const PopupMenuItem(value: 'copy', child: Text('Copy')),
+            items: const [
+              PopupMenuItem(value: 'copy', child: Text('Copy')),
             ],
             onSelected: (_) {},
             child: const Text('Target'),
@@ -98,8 +98,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: DesktopContextMenu(
-            items: [
-              const PopupMenuItem(value: 'copy', child: Text('Copy')),
+            items: const [
+              PopupMenuItem(value: 'copy', child: Text('Copy')),
             ],
             onSelected: (_) {},
             child: const Text('Target'),

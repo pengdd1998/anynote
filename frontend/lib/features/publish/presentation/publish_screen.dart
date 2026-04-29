@@ -123,7 +123,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
                           trailing: isSelected
                               ? const Icon(Icons.check_circle,
-                                  color: Colors.green)
+                                  color: Colors.green,)
                               : null,
                           onTap: () {
                             setState(() {
@@ -341,7 +341,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                     const SizedBox(width: 4),
                     Text(
                       l10n.publishedStatus(
-                          state.result?['status'] ?? 'pending'),
+                          state.result?['status'] ?? 'pending',),
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.green,
@@ -423,7 +423,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                       final uri = Uri.parse(platformURL);
                       if (await canLaunchUrl(uri)) {
                         await launchUrl(uri,
-                            mode: LaunchMode.externalApplication);
+                            mode: LaunchMode.externalApplication,);
                       }
                     },
                   ),

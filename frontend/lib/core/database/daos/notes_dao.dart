@@ -928,7 +928,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
           ..where((np) =>
               np.noteId.isIn(noteIds) &
               np.key.equals('is_locked') &
-              np.valueText.equals('true')))
+              np.valueText.equals('true'),))
         .get();
 
     final lockedIds = props.map((p) => p.noteId).toSet();

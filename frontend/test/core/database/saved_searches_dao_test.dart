@@ -47,9 +47,9 @@ void main() {
       final item = await dao.getById(id);
       expect(
           item!.createdAt.isAfter(before.subtract(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
       expect(item.createdAt.isBefore(after.add(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
       expect(item.updatedAt, item.createdAt);
     });
   });
@@ -144,7 +144,7 @@ void main() {
       // updatedAt should have changed (or be at least as new).
       expect(
         updatedItem!.updatedAt.isAfter(
-            originalUpdatedAt.subtract(const Duration(milliseconds: 1))),
+            originalUpdatedAt.subtract(const Duration(milliseconds: 1)),),
         isTrue,
       );
     });

@@ -152,8 +152,8 @@ void main() {
   group('Web database behavior', () {
     test('kIsWeb is consistent throughout test session', () {
       // Verify that the platform check does not change between calls.
-      final first = kIsWeb;
-      final second = kIsWeb;
+      const first = kIsWeb;
+      const second = kIsWeb;
       expect(first, equals(second));
     });
 

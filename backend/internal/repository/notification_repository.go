@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -109,6 +110,36 @@ func (r *NotificationRepository) Delete(ctx context.Context, id, userID string) 
 	}
 	if tag.RowsAffected() == 0 {
 		return fmt.Errorf("delete notification: not found")
+	}
+	return nil
+}
+
+// GetNotificationPreferences returns the notification_preferences JSONB column
+// for the given user from the users table.
+func (r *NotificationRepository) GetNotificationPreferences(ctx context.Context, userID string) (json.RawMessage, error) {
+	var prefs json.RawMessage
+	err := r.pool.QueryRow(ctx,
+		`SELECT notification_preferences FROM users WHERE id = $1`,
+		userID,
+	).Scan(&prefs)
+	if err != nil {
+		return nil, fmt.Errorf("get notification preferences: %w", err)
+	}
+	return prefs, nil
+}
+
+// UpdateNotificationPreferences replaces the notification_preferences JSONB column
+// for the given user.
+func (r *NotificationRepository) UpdateNotificationPreferences(ctx context.Context, userID string, prefs json.RawMessage) error {
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE users SET notification_preferences = $1, updated_at = NOW() WHERE id = $2`,
+		prefs, userID,
+	)
+	if err != nil {
+		return fmt.Errorf("update notification preferences: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("update notification preferences: user not found")
 	}
 	return nil
 }

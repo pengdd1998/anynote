@@ -22,7 +22,7 @@ void main() {
     test('each version has at least one entry', () {
       for (final entry in Changelog.entries.entries) {
         expect(entry.value, isNotEmpty,
-            reason: 'Version ${entry.key} has no entries');
+            reason: 'Version ${entry.key} has no entries',);
       }
     });
 

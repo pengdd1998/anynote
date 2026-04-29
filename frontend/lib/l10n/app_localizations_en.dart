@@ -2527,6 +2527,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Restore purchase will be available soon.';
 
   @override
+  String get planRestored => 'Purchase restored successfully.';
+
+  @override
+  String get noCompletedPayments => 'No completed payments found.';
+
+  @override
   String get lifetimeMember =>
       'Lifetime Member -- all features unlocked forever.';
 

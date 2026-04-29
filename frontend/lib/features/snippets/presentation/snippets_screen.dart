@@ -304,7 +304,7 @@ class _SnippetsFilterBar extends StatelessWidget {
                 child: DropdownButton<String>(
                   value: languageFilter,
                   hint: Text(l10n.allLanguages,
-                      style: const TextStyle(fontSize: 13)),
+                      style: const TextStyle(fontSize: 13),),
                   isExpanded: true,
                   underline: const SizedBox.shrink(),
                   items: [
@@ -327,7 +327,7 @@ class _SnippetsFilterBar extends StatelessWidget {
                 child: DropdownButton<String>(
                   value: categoryFilter,
                   hint: Text(l10n.allCategories,
-                      style: const TextStyle(fontSize: 13)),
+                      style: const TextStyle(fontSize: 13),),
                   isExpanded: true,
                   underline: const SizedBox.shrink(),
                   items: [
@@ -382,7 +382,7 @@ class _SnippetsListBody extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.code_off_outlined,
-                    size: 64, color: theme.disabledColor),
+                    size: 64, color: theme.disabledColor,),
                 const SizedBox(height: 16),
                 Text(
                   l10n.noSnippets,

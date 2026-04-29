@@ -76,7 +76,7 @@ void main() {
     });
 
     test('extracts heading levels 1 through 6', () {
-      final md = '# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6';
+      const md = '# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6';
       final result = extractToc(md);
 
       expect(result.length, 6);
@@ -87,7 +87,7 @@ void main() {
     });
 
     test('assigns sequential IDs', () {
-      final md = '# A\n## B\n### C';
+      const md = '# A\n## B\n### C';
       final result = extractToc(md);
 
       expect(result[0].id, 'toc-0');
@@ -96,7 +96,7 @@ void main() {
     });
 
     test('assigns correct line indices', () {
-      final md = 'some text\n# First\nmore text\n## Second';
+      const md = 'some text\n# First\nmore text\n## Second';
       final result = extractToc(md);
 
       expect(result[0].lineIndex, 1);
@@ -190,7 +190,7 @@ void main() {
 
   group('extractToc fenced code blocks', () {
     test('ignores ATX headings inside triple-backtick code blocks', () {
-      final md = '# Real Heading\n```\n# Fake Heading\n```\n## Another Real';
+      const md = '# Real Heading\n```\n# Fake Heading\n```\n## Another Real';
       final result = extractToc(md);
 
       expect(result.length, 2);
@@ -199,14 +199,14 @@ void main() {
     });
 
     test('ignores ATX headings inside triple-tilde code blocks', () {
-      final md = '~~~\n# Ignored\n~~~';
+      const md = '~~~\n# Ignored\n~~~';
       final result = extractToc(md);
 
       expect(result, isEmpty);
     });
 
     test('handles code block at the end without closing fence', () {
-      final md = '# Heading\n```\n# Still in code';
+      const md = '# Heading\n```\n# Still in code';
       final result = extractToc(md);
 
       expect(result.length, 1);
@@ -214,7 +214,7 @@ void main() {
     });
 
     test('handles multiple code blocks', () {
-      final md = '# H1\n```\n# skip\n```\n## H2\n```\n# skip again\n```';
+      const md = '# H1\n```\n# skip\n```\n## H2\n```\n# skip again\n```';
       final result = extractToc(md);
 
       expect(result.length, 2);
@@ -229,7 +229,7 @@ void main() {
 
   group('extractToc indented code blocks', () {
     test('ignores headings indented with 4 spaces', () {
-      final md = '# Real\n    # Indented';
+      const md = '# Real\n    # Indented';
       final result = extractToc(md);
 
       expect(result.length, 1);
@@ -237,7 +237,7 @@ void main() {
     });
 
     test('ignores headings indented with a tab', () {
-      final md = '# Real\n\t# TabIndented';
+      const md = '# Real\n\t# TabIndented';
       final result = extractToc(md);
 
       expect(result.length, 1);
@@ -283,7 +283,7 @@ void main() {
     });
 
     test('handles mixed ATX and Setext headings', () {
-      final md = '''# Title
+      const md = '''# Title
 
 ## Section
 
@@ -306,7 +306,7 @@ Sub Heading
     });
 
     test('line index is correct after skipping setext underline', () {
-      final md = 'Title\n===\n## Next';
+      const md = 'Title\n===\n## Next';
       final result = extractToc(md);
 
       // First heading at line 0, second at line 2.

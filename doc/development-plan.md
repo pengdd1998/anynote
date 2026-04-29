@@ -2246,12 +2246,35 @@ Structured search operators, saved searches, and search history.
 - Database schema: v25 (payments, notifications)
 - All 9 phases (135-143) COMPLETE
 
-## Future Considerations (Post-v2.0.0)
+## v2.1.0 — Complete (Stripe Production + Push Notifications)
+
+### Phase 146: Maintenance
+- [x] Fix 279 info-level Flutter lint issues (flutter analyze = 0 issues)
+- [x] Update CHANGELOG.md for v1.1.0–v2.0.0
+- [x] Update development-plan.md
+
+### Phase 147: Stripe Production Integration
+- [x] Add stripe-go SDK + StripeClient adapter (`backend/internal/stripeadapter/`)
+- [x] Wire StripeClient + config env overrides
+- [x] Webhook idempotency + subscription lifecycle handlers
+- [x] Atomic payment-to-plan upgrade (DB transaction)
+- [x] Webhook rate limiting
+- [x] Frontend: Stripe Checkout redirect flow
+- [x] Frontend: Restore Purchase implementation
+
+### Phase 148: Push Notification Delivery
+- [x] Async push queue (TaskTypePush in asynq)
+- [x] Notification preference sync (backend endpoint)
+- [x] Fix notification type CHECK constraint
+- [x] Frontend: notification preference sync
+- [x] iOS push capabilities (entitlements, UIBackgroundModes)
+- [x] APNs config in FCM messages
+- [x] Firebase setup documentation
+
+## Future Considerations (Post-v2.1.0)
 
 | Area | Description | Priority |
 |------|-------------|----------|
-| Stripe Production Integration | Switch from test mode to live Stripe keys, subscription tiers | P1 |
-| Push Notification Delivery | FCM/APNs integration with notification infrastructure | P1 |
 | Web App Deployment | Build and deploy Flutter web app, CORS configuration | P2 |
 | Performance Profiling | Memory profiling, startup time optimization | P3 |
 | Internationalization | RTL language support, plural rules, date formatting | P3 |

@@ -84,7 +84,7 @@ class LocalNotificationService {
           'Note Reminders',
           description: 'Notifications for note reminders',
           importance: Importance.high,
-        ));
+        ),);
       }
 
       _initialized = true;

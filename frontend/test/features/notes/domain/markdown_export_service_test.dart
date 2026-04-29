@@ -112,7 +112,7 @@ void main() {
     });
 
     test('removes control characters (0x00-0x1f)', () {
-      final withControl = 'hello\x00world\x01test\x1f';
+      const withControl = 'hello\x00world\x01test\x1f';
       expect(
         MarkdownExportService.sanitizeFilename(withControl),
         equals('helloworldtest'),
@@ -187,7 +187,7 @@ void main() {
       final exportable = _makeExportable(
         properties: [
           _makeProperty(
-              key: 'priority_level', valueType: 'number', valueNumber: 42.5),
+              key: 'priority_level', valueType: 'number', valueNumber: 42.5,),
         ],
       );
       final result = MarkdownExportService.generateFrontmatter(exportable);

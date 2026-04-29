@@ -983,16 +983,16 @@ class _ConflictWarningCard extends StatelessWidget {
           const SizedBox(height: 8),
           if (preview.existingNoteCount > 0)
             _conflictRow(Icons.note_outlined,
-                l10n.existingNotesCount(preview.existingNoteCount)),
+                l10n.existingNotesCount(preview.existingNoteCount),),
           if (preview.existingTagCount > 0)
             _conflictRow(Icons.label_outline,
-                l10n.existingTagsCount(preview.existingTagCount)),
+                l10n.existingTagsCount(preview.existingTagCount),),
           if (preview.existingCollectionCount > 0)
             _conflictRow(Icons.folder_outlined,
-                l10n.existingCollectionsCount(preview.existingCollectionCount)),
+                l10n.existingCollectionsCount(preview.existingCollectionCount),),
           if (preview.existingContentCount > 0)
             _conflictRow(Icons.auto_awesome_outlined,
-                l10n.existingContentsCount(preview.existingContentCount)),
+                l10n.existingContentsCount(preview.existingContentCount),),
         ],
       ),
     );

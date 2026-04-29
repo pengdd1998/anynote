@@ -628,14 +628,14 @@ void main() {
 
       // Set with recurring first.
       await dao.setReminder('note-rem-no-recur', reminderTime,
-          recurring: 'weekly');
+          recurring: 'weekly',);
       expect(await dao.getProperty('note-rem-no-recur', 'reminder_recurring'),
-          isNotNull);
+          isNotNull,);
 
       // Update without recurring.
       await dao.setReminder('note-rem-no-recur', reminderTime);
       expect(await dao.getProperty('note-rem-no-recur', 'reminder_recurring'),
-          isNull);
+          isNull,);
     });
 
     test('setReminder upserts existing reminder', () async {
@@ -673,16 +673,16 @@ void main() {
       // Verify properties exist.
       expect(await dao.getProperty('note-clear-rem', 'reminder_at'), isNotNull);
       expect(
-          await dao.getProperty('note-clear-rem', 'reminder_title'), isNotNull);
+          await dao.getProperty('note-clear-rem', 'reminder_title'), isNotNull,);
       expect(await dao.getProperty('note-clear-rem', 'reminder_recurring'),
-          isNotNull);
+          isNotNull,);
 
       await dao.clearReminder('note-clear-rem');
 
       expect(await dao.getProperty('note-clear-rem', 'reminder_at'), isNull);
       expect(await dao.getProperty('note-clear-rem', 'reminder_title'), isNull);
       expect(await dao.getProperty('note-clear-rem', 'reminder_recurring'),
-          isNull);
+          isNull,);
     });
 
     test('getNotesWithReminders returns notes with reminders', () async {

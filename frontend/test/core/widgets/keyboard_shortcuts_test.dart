@@ -216,11 +216,11 @@ void main() {
 
         if (label == 'Cmd') {
           expect(key, LogicalKeyboardKey.meta,
-              reason: 'Cmd label should map to meta key on $platform');
+              reason: 'Cmd label should map to meta key on $platform',);
         } else {
           expect(label, 'Ctrl');
           expect(key, LogicalKeyboardKey.control,
-              reason: 'Ctrl label should map to control key on $platform');
+              reason: 'Ctrl label should map to control key on $platform',);
         }
       }
       debugDefaultTargetPlatformOverride = null;

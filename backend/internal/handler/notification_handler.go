@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -115,4 +116,53 @@ func (h *NotificationHandler) MarkAllRead(w http.ResponseWriter, r *http.Request
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "all_read"})
+}
+
+// HandleGetPreferences handles GET /api/v1/notifications/preferences.
+// Returns the user's notification preferences as a JSON object.
+func (h *NotificationHandler) HandleGetPreferences(w http.ResponseWriter, r *http.Request) {
+	userID, err := parseUserID(r)
+	if err != nil {
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+
+	prefs, err := h.notifSvc.GetNotificationPreferences(r.Context(), userID.String())
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "preferences_error", "Failed to get notification preferences")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Write(prefs)
+}
+
+// HandleUpdatePreferences handles PUT /api/v1/notifications/preferences.
+// Updates the user's notification preferences. The request body must be a JSON
+// object where all values are booleans (e.g. {"pushNotifications": true, "reminderNotifications": false}).
+func (h *NotificationHandler) HandleUpdatePreferences(w http.ResponseWriter, r *http.Request) {
+	userID, err := parseUserID(r)
+	if err != nil {
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+
+	var prefs map[string]bool
+	if err := json.NewDecoder(r.Body).Decode(&prefs); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid_json", "Request body must be a JSON object with boolean values")
+		return
+	}
+
+	prefsJSON, err := json.Marshal(prefs)
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid_preferences", "Failed to encode preferences")
+		return
+	}
+
+	if err := h.notifSvc.UpdateNotificationPreferences(r.Context(), userID.String(), prefsJSON); err != nil {
+		writeError(w, r, http.StatusInternalServerError, "preferences_error", "Failed to update notification preferences")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

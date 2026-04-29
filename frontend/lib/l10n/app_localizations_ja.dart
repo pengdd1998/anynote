@@ -2435,6 +2435,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get restorePurchaseComingSoon => '購入の復元は近日公開予定です。';
 
   @override
+  String get planRestored => '購入が正常に復元されました。';
+
+  @override
+  String get noCompletedPayments => '完了した支払いが見つかりません。';
+
+  @override
   String get lifetimeMember => 'ライフタイムメンバー -- すべての機能が永久にアンロックされます。';
 
   @override

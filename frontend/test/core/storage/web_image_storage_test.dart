@@ -82,8 +82,8 @@ void main() {
       final bytes1 = Uint8List.fromList([1, 1, 1]);
       final bytes2 = Uint8List.fromList([2, 2, 2, 2]);
 
-      final _ = await WebImageStorage.saveWebImage(bytes1, 'note-ow');
-      final __ = await WebImageStorage.saveWebImage(bytes2, 'note-ow');
+      await WebImageStorage.saveWebImage(bytes1, 'note-ow');
+      await WebImageStorage.saveWebImage(bytes2, 'note-ow');
 
       // Same key because same noteId + same content produces same hash,
       // but here the content differs so keys differ.

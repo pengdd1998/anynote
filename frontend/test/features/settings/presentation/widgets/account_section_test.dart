@@ -50,7 +50,7 @@ void main() {
             plan: 'pro',
             createdAt: _testDate,
             updatedAt: _testDate,
-          )),
+          ),),
         );
 
         expect(find.text('Account'), findsOneWidget);
@@ -66,7 +66,7 @@ void main() {
             plan: 'pro',
             createdAt: _testDate,
             updatedAt: _testDate,
-          )),
+          ),),
         );
 
         expect(find.text('Email'), findsOneWidget);
@@ -83,7 +83,7 @@ void main() {
             plan: 'pro',
             createdAt: _testDate,
             updatedAt: _testDate,
-          )),
+          ),),
         );
 
         expect(find.text('Plan'), findsOneWidget);
@@ -100,7 +100,7 @@ void main() {
             plan: 'free',
             createdAt: _testDate,
             updatedAt: _testDate,
-          )),
+          ),),
         );
 
         expect(find.text('Upgrade'), findsOneWidget);
@@ -116,7 +116,7 @@ void main() {
             plan: 'free',
             createdAt: _testDate,
             updatedAt: _testDate,
-          )),
+          ),),
         );
 
         expect(find.text('Profile'), findsOneWidget);

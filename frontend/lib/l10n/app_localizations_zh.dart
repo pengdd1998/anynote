@@ -2424,6 +2424,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restorePurchaseComingSoon => '恢复购买功能即将推出。';
 
   @override
+  String get planRestored => '购买已成功恢复。';
+
+  @override
+  String get noCompletedPayments => '未找到已完成的支付记录。';
+
+  @override
   String get lifetimeMember => '终身会员 -- 所有功能永久解锁。';
 
   @override

@@ -52,10 +52,19 @@ func (f *firebaseFCMClient) Send(ctx context.Context, msg *service.FCMMessage) (
 		Android: &messaging.AndroidConfig{
 			Priority: msg.Priority,
 		},
+		APNS: &messaging.APNSConfig{
+			Payload: &messaging.APNSPayload{
+				Aps: &messaging.Aps{
+					Sound: "default",
+				},
+			},
+		},
 	}
 
 	if len(msg.Data) > 0 {
 		fbMsg.Data = msg.Data
+		// Enable background content delivery on iOS for data-rich messages.
+		fbMsg.APNS.Payload.Aps.ContentAvailable = true
 	}
 
 	return f.client.Send(ctx, fbMsg)

@@ -74,7 +74,7 @@ class _CollectionPickerSheetState extends ConsumerState<CollectionPickerSheet> {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.3),
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

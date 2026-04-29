@@ -224,7 +224,7 @@ Future<String> _tryLegacyWebDecryptString(
   // be rare and would require the old WebCrypto path to decrypt.
   //
   // For now, throw a descriptive error.
-  throw FormatException(
+  throw const FormatException(
     'Legacy web-encrypted data (AES-256-GCM) cannot be decrypted with '
     'the current crypto backend. Re-encrypt the data on the original '
     'platform or use the migration tool.',
@@ -235,7 +235,7 @@ Future<Uint8List> _tryLegacyWebDecryptBlob(
   Uint8List encrypted,
   Uint8List itemKey,
 ) async {
-  throw FormatException(
+  throw const FormatException(
     'Legacy web-encrypted blob data (AES-256-GCM) cannot be decrypted '
     'with the current crypto backend.',
   );

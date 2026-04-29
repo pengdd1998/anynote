@@ -263,7 +263,7 @@ class FindReplaceController {
   int currentMatchIndex = -1;
 
   /// All match offsets within the content.
-  List<_TextMatch> _matches = [];
+  List<TextMatch> _matches = [];
 
   FindReplaceController({this.content = ''});
 
@@ -292,14 +292,14 @@ class FindReplaceController {
   int get matchCount => _matches.length;
 
   /// Advances to the next match and returns its offset range, or null.
-  _TextMatch? nextMatch() {
+  TextMatch? nextMatch() {
     if (_matches.isEmpty) return null;
     currentMatchIndex = (currentMatchIndex + 1) % _matches.length;
     return _matches[currentMatchIndex];
   }
 
   /// Goes to the previous match and returns its offset range, or null.
-  _TextMatch? previousMatch() {
+  TextMatch? previousMatch() {
     if (_matches.isEmpty) return null;
     currentMatchIndex =
         (currentMatchIndex - 1 + _matches.length) % _matches.length;
@@ -307,7 +307,7 @@ class FindReplaceController {
   }
 
   /// Returns the current match, or null.
-  _TextMatch? currentMatch() {
+  TextMatch? currentMatch() {
     if (_matches.isEmpty || currentMatchIndex < 0) return null;
     return _matches[currentMatchIndex];
   }
@@ -373,16 +373,16 @@ class FindReplaceController {
     while (start < contentLower.length) {
       final index = contentLower.indexOf(queryLower, start);
       if (index == -1) break;
-      _matches.add(_TextMatch(start: index, end: index + searchQuery.length));
+      _matches.add(TextMatch(start: index, end: index + searchQuery.length));
       start = index + 1;
     }
   }
 }
 
 /// Internal representation of a text match with start/end offsets.
-class _TextMatch {
+class TextMatch {
   final int start;
   final int end;
 
-  const _TextMatch({required this.start, required this.end});
+  const TextMatch({required this.start, required this.end});
 }

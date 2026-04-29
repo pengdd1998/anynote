@@ -112,6 +112,7 @@ class IOException implements Exception {
 
 /// Stub for dart:io [SocketException].
 class SocketException implements IOException {
+  @override
   final String message;
   final OSError? osError;
   final InternetAddress? address;
@@ -141,13 +142,16 @@ class InternetAddress {
 
 /// Stub for dart:io [InternetAddressType].
 enum InternetAddressType {
+  // ignore: constant_identifier_names
   IPv4,
+  // ignore: constant_identifier_names
   IPv6,
   any,
 }
 
 /// Stub for dart:io [HandshakeException].
 class HandshakeException implements IOException {
+  @override
   final String? message;
 
   HandshakeException([this.message]);

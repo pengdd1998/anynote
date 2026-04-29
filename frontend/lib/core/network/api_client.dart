@@ -278,11 +278,14 @@ class ApiClient {
     required String recoveryKey,
     required String newPassword,
   }) async {
-    await _dio.post('/api/v1/auth/recover', data: {
-      'email': email,
-      'recovery_key': recoveryKey,
-      'new_password': newPassword,
-    });
+    await _dio.post(
+      '/api/v1/auth/recover',
+      data: {
+        'email': email,
+        'recovery_key': recoveryKey,
+        'new_password': newPassword,
+      },
+    );
   }
 
   // ── AI Proxy API ──────────────────────────────────
@@ -477,6 +480,46 @@ class ApiClient {
       },
     );
     return res.data as Map<String, dynamic>;
+  }
+
+  // ── Payments API ───────────────────────────────────
+
+  /// Create a Stripe checkout session. Returns the checkout URL.
+  Future<String> createCheckout({
+    required String plan,
+    String? successUrl,
+    String? cancelUrl,
+  }) async {
+    final res = await _dio.post(
+      '/api/v1/payments/checkout',
+      data: {
+        'plan': plan,
+        if (successUrl != null) 'success_url': successUrl,
+        if (cancelUrl != null) 'cancel_url': cancelUrl,
+      },
+    );
+    return (res.data as Map<String, dynamic>)['session_url'] as String;
+  }
+
+  /// Get payment history for the current user.
+  Future<List<Map<String, dynamic>>> getPaymentHistory() async {
+    final res = await _dio.get('/api/v1/payments');
+    final data = res.data as Map<String, dynamic>;
+    final payments = data['payments'] as List? ?? [];
+    return payments.cast<Map<String, dynamic>>();
+  }
+
+  // ── Notification Preferences API ──────────────────
+
+  /// Get notification preferences from the server.
+  Future<Map<String, dynamic>> getNotificationPreferences() async {
+    final res = await _dio.get('/api/v1/notifications/preferences');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Update notification preferences on the server.
+  Future<void> updateNotificationPreferences(Map<String, bool> prefs) async {
+    await _dio.put('/api/v1/notifications/preferences', data: prefs);
   }
 
   // ── Note Links API ─────────────────────────────────

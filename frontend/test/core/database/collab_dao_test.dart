@@ -87,9 +87,9 @@ void main() {
       final state = await collabDao.loadState('note-ts');
       expect(
           state!.updatedAt.isAfter(before.subtract(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
       expect(state.updatedAt.isBefore(after.add(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
     });
 
     test('different notes have independent states', () async {
@@ -185,9 +185,9 @@ void main() {
       final state = await collabDao.loadState('note-uts');
       expect(
           state!.updatedAt.isAfter(before.subtract(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
       expect(state.updatedAt.isBefore(after.add(const Duration(seconds: 1))),
-          isTrue);
+          isTrue,);
     });
   });
 }

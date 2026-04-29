@@ -30,11 +30,11 @@ Future<void> pumpAboutSection(
         ),
         ...overrides,
       ],
-      child: MaterialApp(
+      child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('en'),
-        home: const Scaffold(body: AboutSection()),
+        locale: Locale('en'),
+        home: Scaffold(body: AboutSection()),
       ),
     ),
   );

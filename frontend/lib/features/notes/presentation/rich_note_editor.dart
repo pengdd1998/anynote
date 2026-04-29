@@ -364,7 +364,7 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
 
   /// Builds the formatting toolbar with warm styling and shortcut tooltips.
   Widget _buildToolbar(
-      BuildContext context, quill.QuillIconTheme iconTheme, bool isDark) {
+      BuildContext context, quill.QuillIconTheme iconTheme, bool isDark,) {
     return quill.QuillSimpleToolbar(
       controller: widget.controller,
       config: quill.QuillSimpleToolbarConfig(
@@ -415,7 +415,7 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
 
   /// Builds the toolbar button options with warm icon theme and shortcut tooltips.
   quill.QuillSimpleToolbarButtonOptions _buildToolbarButtonOptions(
-      quill.QuillIconTheme iconTheme) {
+      quill.QuillIconTheme iconTheme,) {
     return quill.QuillSimpleToolbarButtonOptions(
       base: quill.QuillToolbarBaseButtonOptions(iconTheme: iconTheme),
       bold: quill.QuillToolbarToggleStyleButtonOptions(
@@ -570,7 +570,7 @@ class _SnippetPickerSheetState extends State<_SnippetPickerSheet> {
                 color: Theme.of(context)
                     .colorScheme
                     .onSurfaceVariant
-                    .withOpacity(0.3),
+                    .withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
