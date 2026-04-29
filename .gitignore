@@ -42,6 +42,9 @@ secret*.json
 # Binaries
 backend/bin/
 backend/tmp/
+backend/server
+backend/worker
+backend/migrate
 *.exe
 *.exe~
 *.dll

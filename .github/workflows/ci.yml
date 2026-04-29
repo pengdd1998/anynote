@@ -73,10 +73,7 @@ jobs:
         run: |
           COV=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
           echo "Go coverage: ${COV}%"
-          if (( $(echo "$COV < 50" | bc -l) )); then
-            echo "Coverage $COV% is below 50% threshold"
-            exit 1
-          fi
+          awk "BEGIN { if ($COV < 50) { print \"Coverage $COV% is below 50% threshold\"; exit 1 } }"
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
@@ -106,6 +103,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.41.7'
           channel: stable
 
       - name: Install system dependencies (libsodium for crypto tests)

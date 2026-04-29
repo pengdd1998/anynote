@@ -119,7 +119,7 @@ services:
   worker:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.worker
     container_name: anynote-worker
     environment:
       - DATABASE_URL=postgres://anynote:${POSTGRES_PASSWORD:-anynote_dev}@postgres:5432/anynote?sslmode=disable

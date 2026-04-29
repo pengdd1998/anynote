@@ -158,19 +158,52 @@ func extractUpSQL(content string) string {
 	return upSQL
 }
 
-// SetupTestDB creates a PostgreSQL container, runs all migrations, and returns
+// SetupTestDB creates a PostgreSQL test database, runs all migrations, and returns
 // a ready-to-use PostgresContainer. This is the main entry point for integration tests.
+//
+// When DATABASE_URL is set (e.g., in CI with a service container), it connects to
+// that database directly instead of spawning a testcontainer.
 func SetupTestDB(t *testing.T) *PostgresContainer {
 	t.Helper()
-	pc := SetupPostgresContainer(t)
 
-	migrationsDir, err := filepath.Abs(filepath.Join("..", "..", "db", "migrations"))
+	if dsn := os.Getenv("DATABASE_URL"); dsn != "" {
+		pc := connectDB(t, dsn)
+		migrationsDir := resolveMigrationsDir(t)
+		RunMigrations(t, pc.Pool, migrationsDir)
+		return pc
+	}
+
+	pc := SetupPostgresContainer(t)
+	migrationsDir := resolveMigrationsDir(t)
+	RunMigrations(t, pc.Pool, migrationsDir)
+	return pc
+}
+
+// connectDB connects to an existing PostgreSQL instance using the given DSN.
+func connectDB(t *testing.T, dsn string) *PostgresContainer {
+	t.Helper()
+	ctx := context.Background()
+
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatalf("failed to create connection pool: %v", err)
+	}
+
+	if err := pool.Ping(ctx); err != nil {
+		t.Fatalf("failed to ping database: %v", err)
+	}
+
+	return &PostgresContainer{Pool: pool, DSN: dsn}
+}
+
+// resolveMigrationsDir returns the absolute path to the migrations directory.
+func resolveMigrationsDir(t *testing.T) string {
+	t.Helper()
+	dir, err := filepath.Abs(filepath.Join("..", "..", "db", "migrations"))
 	if err != nil {
 		t.Fatalf("failed to resolve migrations dir: %v", err)
 	}
-	RunMigrations(t, pc.Pool, migrationsDir)
-
-	return pc
+	return dir
 }
 
 // CleanTable truncates the given table(s) in the test database.

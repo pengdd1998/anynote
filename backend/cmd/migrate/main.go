@@ -63,6 +63,11 @@ func main() {
 	for _, file := range files {
 		filename := filepath.Base(file)
 
+		// Skip down-migration files
+		if strings.HasSuffix(filename, ".down.sql") {
+			continue
+		}
+
 		// Check if already applied
 		var exists bool
 		err := pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE version = $1)", filename).Scan(&exists)
