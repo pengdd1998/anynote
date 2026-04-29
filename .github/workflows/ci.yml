@@ -53,8 +53,7 @@ jobs:
         with:
           version: v2.11.4
           working-directory: backend
-          skip-cache: true
-          args: --verbose
+          verify: false
 
       - name: Security scan (gosec)
         continue-on-error: true
