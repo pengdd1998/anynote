@@ -171,7 +171,7 @@ func (r *SyncBlobRepository) BatchUpsert(ctx context.Context, blobs []*domain.Sy
 			conflictIndices = append(conflictIndices, i)
 		}
 	}
-	br.Close()
+	_ = br.Close()
 
 	// Phase 2: For conflicts, fetch current server versions in a second batch.
 	if len(conflictIndices) > 0 {
@@ -196,7 +196,7 @@ func (r *SyncBlobRepository) BatchUpsert(ctx context.Context, blobs []*domain.Sy
 				blobs[idx].Version = serverVersion
 			}
 		}
-		vbr.Close()
+		_ = vbr.Close()
 	}
 
 	if err := tx.Commit(ctx); err != nil {
@@ -396,7 +396,7 @@ func (r *SyncBlobRepository) BatchDelete(ctx context.Context, userID uuid.UUID, 
 		}
 		deleted += int(tag.RowsAffected())
 	}
-	br.Close()
+	_ = br.Close()
 
 	if err := tx.Commit(ctx); err != nil {
 		return 0, fmt.Errorf("commit batch delete: %w", err)
