@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/app_components.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/api_models.dart';
@@ -44,12 +45,12 @@ class AccountSection extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SettingsItem(
-          icon: Icons.person_outline,
+          icon: AppIcons.personOutline,
           title: l10n.email,
           subtitle: account.email,
         ),
         SettingsItem(
-          icon: Icons.badge_outlined,
+          icon: AppIcons.badge,
           title: l10n.plan,
           subtitle: account.plan,
           trailing: FilledButton.tonal(
@@ -62,10 +63,10 @@ class AccountSection extends ConsumerWidget {
           ),
         ),
         SettingsItem(
-          icon: Icons.person_outline,
+          icon: AppIcons.personOutline,
           title: l10n.profile,
           subtitle: l10n.editPublicProfile,
-          trailing: const Icon(Icons.chevron_right, size: 20),
+          trailing: const Icon(AppIcons.chevronRight, size: 20),
           onTap: () => context.push('/settings/profile'),
         ),
       ],
@@ -77,12 +78,12 @@ class AccountSection extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SettingsItem(
-          icon: Icons.person_outline,
+          icon: AppIcons.personOutline,
           title: l10n.email,
           subtitle: l10n.loading,
         ),
         SettingsItem(
-          icon: Icons.badge_outlined,
+          icon: AppIcons.badge,
           title: l10n.plan,
           subtitle: l10n.loading,
         ),
@@ -95,12 +96,12 @@ class AccountSection extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SettingsItem(
-          icon: Icons.person_outline,
+          icon: AppIcons.personOutline,
           title: l10n.email,
           subtitle: l10n.unableToLoadAccountInfo,
         ),
         SettingsItem(
-          icon: Icons.badge_outlined,
+          icon: AppIcons.badge,
           title: l10n.plan,
           subtitle: '--',
         ),

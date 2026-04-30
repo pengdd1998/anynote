@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/error/error.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
@@ -41,7 +42,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
         data: (configs) {
           if (configs.isEmpty) {
             return AppEmptyState(
-              icon: Icons.smart_toy_outlined,
+              icon: AppIcons.ai,
               title: l10n.noLLMConfigs,
               subtitle: l10n.addLLMToEnableAI,
               actionLabel: l10n.addProvider,
@@ -82,15 +83,20 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(ErrorDisplay.errorIcon(appError),
-                    size: 48, color: Theme.of(context).colorScheme.error,),
+                Icon(
+                  ErrorDisplay.errorIcon(appError),
+                  size: 48,
+                  color: Theme.of(context).colorScheme.error,
+                ),
                 const SizedBox(height: 12),
                 Text(l10n.failedToLoadConfigs),
                 const SizedBox(height: 8),
                 Text(
                   ErrorDisplay.userMessage(appError, l10n),
                   style: TextStyle(
-                      fontSize: 12, color: Theme.of(context).disabledColor,),
+                    fontSize: 12,
+                    color: Theme.of(context).disabledColor,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 FilledButton.tonal(
@@ -107,7 +113,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
         label: l10n.addProvider,
         child: FloatingActionButton(
           onPressed: _showAddDialog,
-          child: const Icon(Icons.add),
+          child: const Icon(AppIcons.add),
         ),
       ),
     );
@@ -180,7 +186,8 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                     decoration: InputDecoration(
                       labelText: l10n.apiKey,
                       suffixIcon: const ExcludeSemantics(
-                          child: Icon(Icons.visibility_off),),
+                        child: Icon(AppIcons.visibilityOff),
+                      ),
                     ),
                     obscureText: true,
                   ),
@@ -272,7 +279,8 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   decoration: InputDecoration(
                     labelText: l10n.newApiKeyHint,
                     suffixIcon: const ExcludeSemantics(
-                        child: Icon(Icons.visibility_off),),
+                      child: Icon(AppIcons.visibilityOff),
+                    ),
                   ),
                   obscureText: true,
                 ),
@@ -341,7 +349,8 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
           message: success
               ? l10n.connectionSuccessful
               : l10n.connectionFailed(
-                  result['error']?.toString() ?? 'Unknown error',),
+                  result['error']?.toString() ?? 'Unknown error',
+                ),
           type: success ? SnackBarType.info : SnackBarType.error,
         );
       }
@@ -419,7 +428,7 @@ class _LLMConfigCard extends StatelessWidget {
     return SettingsGroup(
       children: [
         SettingsItem(
-          icon: Icons.smart_toy_outlined,
+          icon: AppIcons.ai,
           title: cfg.name,
           subtitle: '${cfg.provider} - ${cfg.model}',
           trailing: Row(
@@ -438,13 +447,15 @@ class _LLMConfigCard extends StatelessWidget {
                   child: Text(
                     l10n.defaultLabel,
                     style: TextStyle(
-                        fontSize: 11, color: colorScheme.onPrimaryContainer,),
+                      fontSize: 11,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
                   ),
                 ),
               A11yUtils.labeledButton(
                 label: l10n.testConnection,
                 child: IconButton(
-                  icon: const Icon(Icons.wifi_tethering_outlined, size: 20),
+                  icon: const Icon(AppIcons.wifiTethering, size: 20),
                   tooltip: l10n.testConnection,
                   onPressed: id.isEmpty ? null : onTest,
                 ),
@@ -452,7 +463,7 @@ class _LLMConfigCard extends StatelessWidget {
               A11yUtils.labeledButton(
                 label: l10n.delete,
                 child: IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20),
+                  icon: const Icon(AppIcons.deleteOutline, size: 20),
                   tooltip: l10n.delete,
                   onPressed: id.isEmpty ? null : onDelete,
                 ),

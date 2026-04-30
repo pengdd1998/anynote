@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../settings/domain/plan_model.dart';
@@ -53,7 +54,7 @@ class _PlanContent extends ConsumerWidget {
                 Row(
                   children: [
                     Icon(
-                      Icons.workspace_premium_outlined,
+                      AppIcons.workspacePremium,
                       color: colorScheme.onPrimaryContainer,
                     ),
                     const SizedBox(width: 8),
@@ -150,7 +151,8 @@ class _PlanContent extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(Icons.verified, color: colorScheme.onTertiaryContainer),
+                  Icon(AppIcons.verified,
+                      color: colorScheme.onTertiaryContainer),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

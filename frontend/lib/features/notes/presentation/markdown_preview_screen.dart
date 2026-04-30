@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/constants/app_durations.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/toc_extractor.dart';
 import '../../../l10n/app_localizations.dart';
@@ -352,33 +353,33 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
     final codeBlockBg =
         isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill;
     final codeBlockText =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
     final styleSheet = MarkdownStyleSheet(
       p: TextStyle(
         fontSize: 16,
         height: 1.6,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h1: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h2: TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.bold,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h3: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h4: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w600,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       code: TextStyle(
         fontSize: 14,
@@ -390,12 +391,13 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
         color: codeBlockBg,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: isDark ? const Color(0xFF3D3835) : const Color(0xFFE8DFD5),
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
         ),
       ),
       codeblockAlign: WrapAlignment.start,
       blockquote: TextStyle(
-        color: isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
+        color:
+            isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
         fontStyle: FontStyle.italic,
       ),
       blockquoteDecoration: BoxDecoration(
@@ -403,11 +405,12 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
         borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       listBullet: TextStyle(
-        color: isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
+        color:
+            isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
       ),
       tableBody: TextStyle(
         fontSize: 14,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
     );
 
@@ -456,9 +459,8 @@ class _CodeBlockBuilder extends MarkdownElementBuilder {
 
     final bgColor = isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill;
     final textColor =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
-    final borderColor =
-        isDark ? const Color(0xFF3D3835) : const Color(0xFFE8DFD5);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -544,7 +546,7 @@ class _LatexParagraphBuilder extends MarkdownElementBuilder {
   Widget _buildBlockLatex(BuildContext context, String expression) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -566,7 +568,7 @@ class _LatexParagraphBuilder extends MarkdownElementBuilder {
     final children = <InlineSpan>[];
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
     final placeholderPattern = RegExp(
       '(${RegExp.escape(blockPlaceholderPrefix)}\\d+|${RegExp.escape(inlinePlaceholderPrefix)}\\d+)',

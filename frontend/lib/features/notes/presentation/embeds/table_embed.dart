@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 import '../../../../core/constants/app_durations.dart';
+import '../../../../core/theme/app_colors.dart';
 
 const String _tableEmbedKey = 'table';
 
@@ -217,9 +218,9 @@ class _TableBlockWidgetState extends State<TableBlockWidget> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252220) : Colors.white,
+        color: isDark ? AppColors.darkCardBg : Colors.white,
         border: Border.all(
-          color: isDark ? const Color(0xFF332E2B) : const Color(0xFFE5DED5),
+          color: isDark ? AppColors.darkDivider : const Color(0xFFE5DED5),
         ),
         borderRadius: BorderRadius.circular(4),
       ),
@@ -229,7 +230,7 @@ class _TableBlockWidgetState extends State<TableBlockWidget> {
           scrollDirection: Axis.vertical,
           child: Table(
             border: TableBorder.all(
-              color: isDark ? const Color(0xFF332E2B) : const Color(0xFFE5DED5),
+              color: isDark ? AppColors.darkDivider : const Color(0xFFE5DED5),
               width: 1,
             ),
             defaultColumnWidth: const FixedColumnWidth(120),

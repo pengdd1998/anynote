@@ -608,7 +608,7 @@ class SettingsItem extends StatelessWidget {
         children: [
           const SizedBox(width: 12),
           // Icon in warm-tinted circle
-          _IconCircle(icon: icon, color: iconColor),
+          IconCircle(icon: icon, color: iconColor),
           const SizedBox(width: 12),
           // Title and subtitle
           Expanded(
@@ -672,7 +672,7 @@ class DestructiveSettingsItem extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 12),
-          _IconCircle(icon: icon, color: errorColor),
+          IconCircle(icon: icon, color: errorColor),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -741,12 +741,15 @@ class _SettingsItemRaw extends StatelessWidget {
   }
 }
 
-/// A 32x32 circle with a warm-tinted fill containing a settings icon.
-class _IconCircle extends StatelessWidget {
+/// A 32x32 circle with a tinted fill containing an icon.
+///
+/// Used by settings items and sync sections. Optional [color] defaults to the
+/// theme's primary color. Circle fill uses 12% alpha (light) / 15% alpha (dark).
+class IconCircle extends StatelessWidget {
   final IconData icon;
   final Color? color;
 
-  const _IconCircle({required this.icon, this.color});
+  const IconCircle({super.key, required this.icon, this.color});
 
   @override
   Widget build(BuildContext context) {

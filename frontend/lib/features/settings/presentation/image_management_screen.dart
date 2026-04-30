@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
@@ -144,7 +145,7 @@ class ImageManagementScreen extends ConsumerWidget {
                   Row(
                     children: [
                       Icon(
-                        Icons.photo_library_outlined,
+                        AppIcons.photoLibrary,
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 12),
@@ -182,7 +183,7 @@ class ImageManagementScreen extends ConsumerWidget {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.cleaning_services_outlined),
+                  leading: const Icon(AppIcons.cleaningServices),
                   title: Text(l10n.cleanupOrphaned),
                   subtitle: Text(
                     l10n.orphanedImages,
@@ -193,7 +194,7 @@ class ImageManagementScreen extends ConsumerWidget {
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
                   leading: Icon(
-                    Icons.delete_forever_outlined,
+                    AppIcons.deleteForeverOutline,
                     color: Theme.of(context).colorScheme.error,
                   ),
                   title: Text(
@@ -250,7 +251,8 @@ class ImageManagementScreen extends ConsumerWidget {
         } catch (e) {
           // Skip files that cannot be deleted.
           debugPrint(
-              '[ImageManagementScreen] failed to delete orphaned file: $e',);
+            '[ImageManagementScreen] failed to delete orphaned file: $e',
+          );
         }
       }
     }

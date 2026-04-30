@@ -4,6 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/app_info_provider.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/app_components.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -26,7 +27,7 @@ class AboutSection extends ConsumerWidget {
         SettingsGroup(
           children: [
             SettingsItem(
-              icon: Icons.info_outline,
+              icon: AppIcons.infoOutline,
               title: l10n.version,
               subtitle: appInfoAsync.when(
                 data: (info) => '${info.version} (${info.buildNumber})',
@@ -35,15 +36,15 @@ class AboutSection extends ConsumerWidget {
               ),
             ),
             SettingsItem(
-              icon: Icons.privacy_tip_outlined,
+              icon: AppIcons.privacyTip,
               title: l10n.privacyPolicy,
-              trailing: const Icon(Icons.chevron_right, size: 20),
+              trailing: const Icon(AppIcons.chevronRight, size: 20),
               onTap: () => _showPrivacyPolicy(context),
             ),
             SettingsItem(
-              icon: Icons.description_outlined,
+              icon: AppIcons.description,
               title: l10n.termsOfService,
-              trailing: const Icon(Icons.chevron_right, size: 20),
+              trailing: const Icon(AppIcons.chevronRight, size: 20),
               onTap: () => _showTermsOfService(context),
             ),
           ],

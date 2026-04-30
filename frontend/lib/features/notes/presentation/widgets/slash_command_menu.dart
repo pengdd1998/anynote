@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 import '../../../../core/constants/app_durations.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../embeds/table_embed.dart';
 
@@ -471,7 +472,9 @@ class SlashCommandMenuState extends State<SlashCommandMenu> {
           child: Text(
             AppLocalizations.of(context)!.slashNoResults,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ),
         ),
@@ -519,7 +522,7 @@ class SlashCommandMenuState extends State<SlashCommandMenu> {
     return Material(
       elevation: 8,
       borderRadius: BorderRadius.circular(8),
-      color: isDark ? const Color(0xFF252220) : const Color(0xFFFFFDFB),
+      color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
       shadowColor: Colors.black.withValues(alpha: 0.3),
       child: ConstrainedBox(
         constraints: const BoxConstraints(
@@ -547,7 +550,7 @@ class SlashCommandMenuState extends State<SlashCommandMenu> {
 
     final iconColor = isSelected
         ? colorScheme.primary
-        : (isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54));
+        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
 
     final textColor = isSelected
         ? colorScheme.primary

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error.dart';
 import '../../../../core/notifications/push_service.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/app_components.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -22,7 +23,7 @@ class SignOutSection extends ConsumerWidget {
     return SettingsGroup(
       children: [
         DestructiveSettingsItem(
-          icon: Icons.logout,
+          icon: AppIcons.logout,
           title: l10n.signOut,
           onTap: () => _confirmSignOut(context, ref),
         ),

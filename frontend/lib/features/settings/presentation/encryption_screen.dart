@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/backup/backup_service.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
@@ -522,22 +523,22 @@ class _EncryptedItemsGroup extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SettingsItem(
-                    icon: Icons.note_outlined,
+                    icon: AppIcons.notes,
                     title: l10n.notes,
                     subtitle: l10n.itemsCount(counts['notes'] ?? 0),
                   ),
                   SettingsItem(
-                    icon: Icons.label_outline,
+                    icon: AppIcons.tag,
                     title: l10n.tagsLabel,
                     subtitle: l10n.itemsCount(counts['tags'] ?? 0),
                   ),
                   SettingsItem(
-                    icon: Icons.folder_outlined,
+                    icon: AppIcons.folder,
                     title: l10n.collectionsLabel,
                     subtitle: l10n.itemsCount(counts['collections'] ?? 0),
                   ),
                   SettingsItem(
-                    icon: Icons.auto_awesome_outlined,
+                    icon: AppIcons.compose,
                     title: l10n.aiContent,
                     subtitle: l10n.itemsCount(counts['ai_content'] ?? 0),
                   ),
@@ -557,22 +558,22 @@ class _EncryptedItemsGroup extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SettingsItem(
-                    icon: Icons.note_outlined,
+                    icon: AppIcons.notes,
                     title: l10n.notes,
                     subtitle: '--',
                   ),
                   SettingsItem(
-                    icon: Icons.label_outline,
+                    icon: AppIcons.tag,
                     title: l10n.tagsLabel,
                     subtitle: '--',
                   ),
                   SettingsItem(
-                    icon: Icons.folder_outlined,
+                    icon: AppIcons.folder,
                     title: l10n.collectionsLabel,
                     subtitle: '--',
                   ),
                   SettingsItem(
-                    icon: Icons.auto_awesome_outlined,
+                    icon: AppIcons.compose,
                     title: l10n.aiContent,
                     subtitle: '--',
                   ),
@@ -671,10 +672,10 @@ class _PasswordManagementSection extends StatelessWidget {
         SettingsGroup(
           children: [
             SettingsItem(
-              icon: Icons.key_outlined,
+              icon: AppIcons.key,
               title: l10n.changePassword,
               subtitle: l10n.reEncryptsData,
-              trailing: const Icon(Icons.chevron_right, size: 20),
+              trailing: const Icon(AppIcons.chevronRight, size: 20),
               onTap: isChangingPassword ? null : onChangePassword,
             ),
           ],
@@ -769,7 +770,7 @@ class _StatusCard extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            isActive ? Icons.verified_user : Icons.warning_amber,
+            isActive ? AppIcons.verifiedUser : AppIcons.warning,
             size: 48,
             color: statusColor,
           ),
@@ -845,7 +846,7 @@ class _CrossPlatformWarningCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline, size: 20, color: warningColor),
+              Icon(AppIcons.infoOutline, size: 20, color: warningColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -920,7 +921,7 @@ class _DangerZoneGroup extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: isDeleting ? null : onDeleteAll,
-                icon: Icon(Icons.delete_forever, color: errorColor),
+                icon: Icon(AppIcons.deleteForever, color: errorColor),
                 label: Text(
                   l10n.deleteAllLocalData,
                   style: TextStyle(color: errorColor),
@@ -935,7 +936,7 @@ class _DangerZoneGroup extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: isDeleting ? null : onExportBackup,
-                icon: const Icon(Icons.download),
+                icon: const Icon(AppIcons.download),
                 label: Text(l10n.exportEncryptedBackup),
               ),
             ),
@@ -944,7 +945,7 @@ class _DangerZoneGroup extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: isDeleting ? null : onImportBackup,
-                icon: const Icon(Icons.upload),
+                icon: const Icon(AppIcons.uploadIcon),
                 label: Text(l10n.importEncryptedBackup),
               ),
             ),
@@ -1021,13 +1022,13 @@ class _RecoveryKeyDisplay extends ConsumerWidget {
                     );
                     AppSnackBar.info(context, message: l10n.recoveryKeyCopied);
                   },
-                  icon: const Icon(Icons.copy, size: 16),
+                  icon: const Icon(AppIcons.copy, size: 16),
                   label: Text(l10n.copyToClipboard),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: onHidden,
-                  icon: const Icon(Icons.visibility_off, size: 16),
+                  icon: const Icon(AppIcons.visibilityOff, size: 16),
                   label: Text(l10n.hide),
                 ),
               ],

@@ -1,6 +1,8 @@
 # Build stage
 FROM golang:1.25-alpine AS builder
 
+ENV GOPROXY=https://mirrors.tencent.com/go,direct
+
 RUN apk add --no-cache gcc musl-dev git
 
 WORKDIR /app

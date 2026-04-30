@@ -11,6 +11,7 @@ import '../../../core/import/apple_notes_import.dart';
 import '../../../core/import/import_models.dart';
 import '../../../core/import/markdown_import_service.dart';
 import '../../../core/import/text_import.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
@@ -57,17 +58,17 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                 ButtonSegment(
                   value: _ImportFormat.markdown,
                   label: Text(l10n.importMarkdown),
-                  icon: const Icon(Icons.description_outlined),
+                  icon: const Icon(AppIcons.description),
                 ),
                 ButtonSegment(
                   value: _ImportFormat.appleNotes,
                   label: Text(l10n.importAppleNotes),
-                  icon: const Icon(Icons.apple),
+                  icon: const Icon(AppIcons.apple),
                 ),
                 ButtonSegment(
                   value: _ImportFormat.plainText,
                   label: Text(l10n.importTextFiles),
-                  icon: const Icon(Icons.text_snippet_outlined),
+                  icon: const Icon(AppIcons.textSnippet),
                 ),
               ],
               selected: {_selectedFormat},
@@ -130,7 +131,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
               SettingsGroup(
                 children: [
                   SettingsItem(
-                    icon: Icons.insert_drive_file_outlined,
+                    icon: AppIcons.insertDriveFile,
                     title: l10n.selectFiles,
                     subtitle: l10n.selectMdFilesSubtitle,
                     trailing: _markdownState.isImporting
@@ -139,13 +140,13 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.chevron_right, size: 20),
+                        : const Icon(AppIcons.chevronRight, size: 20),
                     onTap: _markdownState.isImporting
                         ? null
                         : _importMarkdownFiles,
                   ),
                   SettingsItem(
-                    icon: Icons.folder_open_outlined,
+                    icon: AppIcons.folderOpen,
                     title: l10n.selectFolder,
                     subtitle: l10n.importMdFolderSubtitle,
                     trailing: _markdownState.isImporting
@@ -154,7 +155,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.chevron_right, size: 20),
+                        : const Icon(AppIcons.chevronRight, size: 20),
                     onTap: _markdownState.isImporting
                         ? null
                         : _importMarkdownFolder,
@@ -429,7 +430,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
               SettingsGroup(
                 children: [
                   SettingsItem(
-                    icon: Icons.folder_open_outlined,
+                    icon: AppIcons.folderOpen,
                     title: l10n.selectFolder,
                     subtitle: l10n.selectAppleNotesFolderSubtitle,
                     trailing: _appleNotesState.isImporting
@@ -438,7 +439,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.chevron_right, size: 20),
+                        : const Icon(AppIcons.chevronRight, size: 20),
                     onTap: _appleNotesState.isImporting
                         ? null
                         : _importAppleNotesFolder,
@@ -547,7 +548,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
               SettingsGroup(
                 children: [
                   SettingsItem(
-                    icon: Icons.insert_drive_file_outlined,
+                    icon: AppIcons.insertDriveFile,
                     title: l10n.selectFiles,
                     subtitle: l10n.selectTxtFilesSubtitle,
                     trailing: _plainTextState.isImporting
@@ -556,12 +557,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.chevron_right, size: 20),
+                        : const Icon(AppIcons.chevronRight, size: 20),
                     onTap:
                         _plainTextState.isImporting ? null : _importTextFiles,
                   ),
                   SettingsItem(
-                    icon: Icons.folder_open_outlined,
+                    icon: AppIcons.folderOpen,
                     title: l10n.selectFolder,
                     subtitle: l10n.importTxtFolderSubtitle,
                     trailing: _plainTextState.isImporting
@@ -570,7 +571,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.chevron_right, size: 20),
+                        : const Icon(AppIcons.chevronRight, size: 20),
                     onTap:
                         _plainTextState.isImporting ? null : _importTextFolder,
                   ),
@@ -813,14 +814,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
           SettingsGroup(
             children: [
               SettingsItem(
-                icon: Icons.check_circle_outline,
+                icon: AppIcons.checkCircleOutline,
                 iconColor: Colors.green,
                 title: l10n.itemsRestored,
                 subtitle: l10n.noteCount(result.importedCount),
               ),
               if (result.skippedCount > 0)
                 SettingsItem(
-                  icon: Icons.skip_next_outlined,
+                  icon: AppIcons.skipNext,
                   iconColor: Colors.orange,
                   title: l10n.itemsSkipped,
                   subtitle: l10n.fileCount(result.skippedCount),
@@ -828,7 +829,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
               if (result.hasErrors) ...[
                 for (final error in result.errors.take(5))
                   SettingsItem(
-                    icon: Icons.error_outline,
+                    icon: AppIcons.errorOutline,
                     iconColor: theme.colorScheme.error,
                     title: _basename(error.filePath),
                     subtitle: error.message,

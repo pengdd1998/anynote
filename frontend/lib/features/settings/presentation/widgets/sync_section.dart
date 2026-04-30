@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/platform/platform_utils.dart';
 import '../../../../core/sync/background_sync_service.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/app_components.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -78,7 +79,7 @@ class _BackgroundSyncTile extends StatelessWidget {
             child: Row(
               children: [
                 const SizedBox(width: 12),
-                _IconCircle(icon: Icons.sync, color: colorScheme.primary),
+                IconCircle(icon: AppIcons.sync, color: colorScheme.primary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -113,29 +114,6 @@ class _BackgroundSyncTile extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Reusable icon circle matching the style from [app_components.dart].
-class _IconCircle extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-
-  const _IconCircle({required this.icon, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.15 : 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, size: 18, color: color),
     );
   }
 }

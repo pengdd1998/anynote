@@ -5,13 +5,11 @@ import 'package:anynote/core/widgets/pressable_scale.dart';
 
 void main() {
   group('PressableScale', () {
-    /// Pumps a PressableScale wrapping a simple Text child.
     Future<void> pumpPressable(
       WidgetTester tester, {
       VoidCallback? onPressed,
       Widget? child,
       double scaleDown = 0.95,
-      Duration duration = const Duration(milliseconds: 100),
     }) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -19,7 +17,6 @@ void main() {
             body: PressableScale(
               onPressed: onPressed,
               scaleDown: scaleDown,
-              duration: duration,
               child: child ?? const Text('Tap me'),
             ),
           ),
@@ -64,25 +61,23 @@ void main() {
         onPressed: null,
       );
 
-      // Tapping with a null callback should not throw.
       await tester.tap(find.text('Tap me'));
     });
 
     // -- Scale animation structure ------------------------------------
 
-    testWidgets('contains AnimatedScale widget', (tester) async {
+    testWidgets('contains Transform.scale for press feedback', (tester) async {
       await pumpPressable(tester);
 
-      expect(find.byType(AnimatedScale), findsOneWidget);
+      expect(find.byType(Transform), findsWidgets);
     });
 
-    testWidgets('AnimatedScale starts at scale 1.0', (tester) async {
+    testWidgets('Transform.scale starts at scale 1.0', (tester) async {
       await pumpPressable(tester);
 
-      final animatedScale = tester.widget<AnimatedScale>(
-        find.byType(AnimatedScale),
-      );
-      expect(animatedScale.scale, 1.0);
+      final transform = tester.widget<Transform>(find.byType(Transform).first);
+      // Matrix4 scale at (0,0) should be 1.0 initially.
+      expect(transform.transform.getMaxScaleOnAxis(), 1.0);
     });
 
     testWidgets('contains GestureDetector for tap handling', (tester) async {
@@ -97,66 +92,52 @@ void main() {
       await pumpPressable(
         tester,
         onPressed: () {},
-        duration: Duration.zero,
       );
 
-      // Simulate a tap-down by performing a press-and-hold.
       final gesture =
           await tester.startGesture(tester.getCenter(find.text('Tap me')));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // The AnimatedScale should now have the scaleDown value.
-      final animatedScale = tester.widget<AnimatedScale>(
-        find.byType(AnimatedScale),
-      );
-      expect(animatedScale.scale, 0.95);
+      final transform = tester.widget<Transform>(find.byType(Transform).first);
+      // Scale should be close to scaleDown (0.95) after spring settles.
+      expect(transform.transform.getMaxScaleOnAxis(), closeTo(0.95, 0.01));
 
       await gesture.up();
-      await tester.pump();
+      await tester.pumpAndSettle();
     });
 
     testWidgets('scales back to 1.0 on tap up', (tester) async {
       await pumpPressable(
         tester,
         onPressed: () {},
-        duration: Duration.zero,
       );
 
-      // Press down.
       final gesture =
           await tester.startGesture(tester.getCenter(find.text('Tap me')));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // Release.
       await gesture.up();
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      final animatedScale = tester.widget<AnimatedScale>(
-        find.byType(AnimatedScale),
-      );
-      expect(animatedScale.scale, 1.0);
+      final transform = tester.widget<Transform>(find.byType(Transform).first);
+      expect(transform.transform.getMaxScaleOnAxis(), closeTo(1.0, 0.01));
     });
 
     testWidgets('scales back to 1.0 on tap cancel', (tester) async {
       await pumpPressable(
         tester,
         onPressed: () {},
-        duration: Duration.zero,
       );
 
-      // Press down.
       final gesture =
           await tester.startGesture(tester.getCenter(find.text('Tap me')));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // Cancel instead of completing the tap.
       await gesture.cancel();
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      final animatedScale = tester.widget<AnimatedScale>(
-        find.byType(AnimatedScale),
-      );
-      expect(animatedScale.scale, 1.0);
+      final transform = tester.widget<Transform>(find.byType(Transform).first);
+      expect(transform.transform.getMaxScaleOnAxis(), closeTo(1.0, 0.01));
     });
 
     // -- Custom scale factor ------------------------------------------
@@ -166,59 +147,28 @@ void main() {
         tester,
         onPressed: () {},
         scaleDown: 0.8,
-        duration: Duration.zero,
       );
 
-      // Press down to trigger the scaled state.
       final gesture =
           await tester.startGesture(tester.getCenter(find.text('Tap me')));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      final animatedScale = tester.widget<AnimatedScale>(
-        find.byType(AnimatedScale),
-      );
-      expect(animatedScale.scale, 0.8);
+      final transform = tester.widget<Transform>(find.byType(Transform).first);
+      expect(transform.transform.getMaxScaleOnAxis(), closeTo(0.8, 0.01));
 
       await gesture.up();
-      await tester.pump();
-    });
-
-    // -- Animation curve and duration ---------------------------------
-
-    testWidgets('AnimatedScale uses easeOutCubic curve', (tester) async {
-      await pumpPressable(tester);
-
-      final animatedScale = tester.widget<AnimatedScale>(
-        find.byType(AnimatedScale),
-      );
-      expect(animatedScale.curve, Curves.easeOutCubic);
-    });
-
-    testWidgets('AnimatedScale uses provided duration', (tester) async {
-      const customDuration = Duration(milliseconds: 200);
-      await pumpPressable(
-        tester,
-        onPressed: () {},
-        duration: customDuration,
-      );
-
-      final animatedScale = tester.widget<AnimatedScale>(
-        find.byType(AnimatedScale),
-      );
-      expect(animatedScale.duration, customDuration);
+      await tester.pumpAndSettle();
     });
 
     // -- Rapid tap stability ------------------------------------------
 
-    testWidgets('handles rapid consecutive taps without error',
-        (tester) async {
+    testWidgets('handles rapid consecutive taps without error', (tester) async {
       var tapCount = 0;
       await pumpPressable(
         tester,
         onPressed: () => tapCount++,
       );
 
-      // Tap several times quickly.
       for (var i = 0; i < 5; i++) {
         await tester.tap(find.text('Tap me'));
         await tester.pump();

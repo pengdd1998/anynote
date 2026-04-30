@@ -9,6 +9,7 @@ import '../../../core/backup/backup_verifier.dart';
 import '../../../core/backup/restore_service.dart';
 import '../../../core/backup/restore_strategy.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
@@ -82,7 +83,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
       children: [
         const SizedBox(height: 24),
         Icon(
-          Icons.file_open_outlined,
+          AppIcons.fileOpen,
           size: 64,
           color: Theme.of(context).disabledColor,
         ),
@@ -101,7 +102,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         const SizedBox(height: 32),
         FilledButton.icon(
           onPressed: _pickBackupFile,
-          icon: const Icon(Icons.folder_open),
+          icon: const Icon(AppIcons.folderOpen),
           label: Text(l10n.browseFiles),
         ),
         if (_selectedFilePath != null) ...[
@@ -109,7 +110,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
           SettingsGroup(
             children: [
               SettingsItem(
-                icon: Icons.description_outlined,
+                icon: AppIcons.description,
                 title: l10n.selectedFile,
                 subtitle: _selectedFilePath!.split('/').last,
               ),
@@ -150,23 +151,23 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
           SettingsGroup(
             children: [
               SettingsItem(
-                icon: Icons.info_outline,
+                icon: AppIcons.infoOutline,
                 title: l10n.backupFormat,
                 subtitle: info.format,
               ),
               SettingsItem(
-                icon: Icons.numbers,
+                icon: AppIcons.numbers,
                 title: l10n.backupVersion,
                 subtitle: '${info.version}',
               ),
               if (info.exportedAt != null)
                 SettingsItem(
-                  icon: Icons.calendar_today,
+                  icon: AppIcons.calendarToday,
                   title: l10n.exportDate,
                   subtitle: info.exportedAt!,
                 ),
               SettingsItem(
-                icon: Icons.inventory_2_outlined,
+                icon: AppIcons.inventory,
                 title: l10n.totalItems,
                 subtitle: '${info.totalItems}',
               ),
@@ -177,22 +178,22 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
           SettingsGroup(
             children: [
               SettingsItem(
-                icon: Icons.note_outlined,
+                icon: AppIcons.notes,
                 title: l10n.notes,
                 subtitle: '${info.noteCount}',
               ),
               SettingsItem(
-                icon: Icons.label_outline,
+                icon: AppIcons.tag,
                 title: l10n.tagsLabel,
                 subtitle: '${info.tagCount}',
               ),
               SettingsItem(
-                icon: Icons.folder_outlined,
+                icon: AppIcons.folder,
                 title: l10n.collectionsLabel,
                 subtitle: '${info.collectionCount}',
               ),
               SettingsItem(
-                icon: Icons.auto_awesome_outlined,
+                icon: AppIcons.compose,
                 title: l10n.aiContent,
                 subtitle: '${info.contentCount}',
               ),
@@ -208,7 +209,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
             children: [
               for (final error in info.errors)
                 SettingsItem(
-                  icon: Icons.error_outline,
+                  icon: AppIcons.errorOutline,
                   title: error,
                   iconColor: theme.colorScheme.error,
                 ),
@@ -256,22 +257,22 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         SettingsGroup(
           children: [
             SettingsItem(
-              icon: Icons.note_outlined,
+              icon: AppIcons.notes,
               title: l10n.notesToRestore,
               subtitle: '${preview.noteCount}',
             ),
             SettingsItem(
-              icon: Icons.label_outline,
+              icon: AppIcons.tag,
               title: l10n.tagsToRestore,
               subtitle: '${preview.tagCount}',
             ),
             SettingsItem(
-              icon: Icons.folder_outlined,
+              icon: AppIcons.folder,
               title: l10n.collectionsToRestore,
               subtitle: '${preview.collectionCount}',
             ),
             SettingsItem(
-              icon: Icons.auto_awesome_outlined,
+              icon: AppIcons.compose,
               title: l10n.contentsToRestore,
               subtitle: '${preview.contentCount}',
             ),
@@ -286,13 +287,13 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
             children: [
               if (preview.earliestDate != null)
                 SettingsItem(
-                  icon: Icons.calendar_today,
+                  icon: AppIcons.calendarToday,
                   title: l10n.earliestDate,
                   subtitle: _formatDate(preview.earliestDate!),
                 ),
               if (preview.latestDate != null)
                 SettingsItem(
-                  icon: Icons.event,
+                  icon: AppIcons.event,
                   title: l10n.latestDate,
                   subtitle: _formatDate(preview.latestDate!),
                 ),
@@ -314,7 +315,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.check_circle_outline,
+                  AppIcons.checkCircleOutline,
                   color: Colors.green.shade600,
                   size: 20,
                 ),
@@ -338,7 +339,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
             children: [
               for (int i = 0; i < preview.noteTitles.length && i < 10; i++)
                 SettingsItem(
-                  icon: Icons.note_outlined,
+                  icon: AppIcons.notes,
                   title: preview.noteTitles[i],
                 ),
               if (preview.noteTitles.length > 10)
@@ -412,19 +413,19 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
                     value: ConflictStrategy.overwrite,
                     title: l10n.strategyOverwrite,
                     subtitle: l10n.strategyOverwriteDesc,
-                    icon: Icons.sync,
+                    icon: AppIcons.sync,
                   ),
                   _StrategyOption(
                     value: ConflictStrategy.skip,
                     title: l10n.strategySkip,
                     subtitle: l10n.strategySkipDesc,
-                    icon: Icons.skip_next,
+                    icon: AppIcons.skipNext,
                   ),
                   _StrategyOption(
                     value: ConflictStrategy.keepBoth,
                     title: l10n.strategyKeepBoth,
                     subtitle: l10n.strategyKeepBothDesc,
-                    icon: Icons.content_copy,
+                    icon: AppIcons.contentCopy,
                   ),
                 ],
               ),
@@ -448,7 +449,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
           child: Row(
             children: [
               Icon(
-                Icons.info_outline,
+                AppIcons.infoOutline,
                 size: 20,
                 color: theme.colorScheme.tertiary,
               ),
@@ -547,7 +548,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
       children: [
         // Result status icon.
         Icon(
-          hasErrors ? Icons.warning_amber : Icons.check_circle_outline,
+          hasErrors ? AppIcons.warning : AppIcons.checkCircleOutline,
           size: 64,
           color: hasErrors ? Colors.orange : Colors.green,
         ),
@@ -564,18 +565,18 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         SettingsGroup(
           children: [
             SettingsItem(
-              icon: Icons.check_circle_outline,
+              icon: AppIcons.checkCircleOutline,
               title: l10n.itemsRestored,
               subtitle: '${result.restored}',
               iconColor: Colors.green,
             ),
             SettingsItem(
-              icon: Icons.skip_next,
+              icon: AppIcons.skipNext,
               title: l10n.itemsSkipped,
               subtitle: '${result.skipped}',
             ),
             SettingsItem(
-              icon: Icons.merge_type,
+              icon: AppIcons.mergeType,
               title: l10n.conflictsFound,
               subtitle: '${result.conflicts}',
               iconColor: result.conflicts > 0 ? Colors.orange : null,
@@ -591,7 +592,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
             children: [
               for (final error in result.errors)
                 SettingsItem(
-                  icon: Icons.error_outline,
+                  icon: AppIcons.errorOutline,
                   title: error,
                   iconColor: theme.colorScheme.error,
                 ),
@@ -812,11 +813,11 @@ class _StepIndicator extends StatelessWidget {
     final theme = Theme.of(context);
     // Step labels are internal identifiers and not shown in the UI.
     const steps = [
-      _StepData(Icons.folder_open, 'File', _RestoreStep.selectFile),
-      _StepData(Icons.verified, 'Verify', _RestoreStep.verify),
-      _StepData(Icons.preview, 'Preview', _RestoreStep.preview),
-      _StepData(Icons.settings, 'Strategy', _RestoreStep.strategy),
-      _StepData(Icons.restore, 'Restore', _RestoreStep.restore),
+      _StepData(AppIcons.folderOpen, 'File', _RestoreStep.selectFile),
+      _StepData(AppIcons.verified, 'Verify', _RestoreStep.verify),
+      _StepData(AppIcons.previewIcon, 'Preview', _RestoreStep.preview),
+      _StepData(AppIcons.settings, 'Strategy', _RestoreStep.strategy),
+      _StepData(AppIcons.restore, 'Restore', _RestoreStep.restore),
     ];
 
     final currentIndex = steps.indexWhere(
@@ -915,7 +916,7 @@ class _VerificationStatusCard extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            isValid ? Icons.check_circle : Icons.warning_amber,
+            isValid ? AppIcons.checkCircleFilled : AppIcons.warning,
             size: 48,
             color: statusColor,
           ),
@@ -969,7 +970,7 @@ class _ConflictWarningCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.warning_amber, color: warningColor, size: 20),
+              const Icon(AppIcons.warning, color: warningColor, size: 20),
               const SizedBox(width: 8),
               Text(
                 l10n.conflictsDetected(preview.totalConflicts),
@@ -982,17 +983,25 @@ class _ConflictWarningCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           if (preview.existingNoteCount > 0)
-            _conflictRow(Icons.note_outlined,
-                l10n.existingNotesCount(preview.existingNoteCount),),
+            _conflictRow(
+              AppIcons.notes,
+              l10n.existingNotesCount(preview.existingNoteCount),
+            ),
           if (preview.existingTagCount > 0)
-            _conflictRow(Icons.label_outline,
-                l10n.existingTagsCount(preview.existingTagCount),),
+            _conflictRow(
+              AppIcons.tag,
+              l10n.existingTagsCount(preview.existingTagCount),
+            ),
           if (preview.existingCollectionCount > 0)
-            _conflictRow(Icons.folder_outlined,
-                l10n.existingCollectionsCount(preview.existingCollectionCount),),
+            _conflictRow(
+              AppIcons.folder,
+              l10n.existingCollectionsCount(preview.existingCollectionCount),
+            ),
           if (preview.existingContentCount > 0)
-            _conflictRow(Icons.auto_awesome_outlined,
-                l10n.existingContentsCount(preview.existingContentCount),),
+            _conflictRow(
+              AppIcons.compose,
+              l10n.existingContentsCount(preview.existingContentCount),
+            ),
         ],
       ),
     );

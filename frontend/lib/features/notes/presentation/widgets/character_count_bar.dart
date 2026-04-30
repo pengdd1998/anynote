@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/accessibility/a11y_utils.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Animated word/character count bar displayed at the bottom of the editor.
@@ -38,8 +39,9 @@ class CharacterCountBar extends StatelessWidget {
     // Use warm secondary color for the caption text.
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final captionColor = isDark
-        ? const Color(0xFFA3988E) // warm medium grey (WCAG AA on dark surface)
-        : const Color(0xFF6B5E54); // warm brown-grey
+        ? AppColors
+            .darkTextSecondary // warm medium grey (WCAG AA on dark surface)
+        : AppColors.lightTextSecondary; // warm brown-grey
 
     return SafeArea(
       top: false,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'section_fold_controller.dart';
 
@@ -43,11 +44,10 @@ class SectionFoldBar extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF252220) : const Color(0xFFFFFDFB),
+            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
             border: Border(
               bottom: BorderSide(
-                color:
-                    isDark ? const Color(0xFF332E2B) : const Color(0xFFF0E8DF),
+                color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
                 width: 1,
               ),
             ),

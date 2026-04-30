@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_components.dart';
 import '../data/notification_preferences.dart';
 
@@ -27,7 +28,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
           SettingsGroup(
             children: [
               _NotificationSwitchTile(
-                icon: Icons.alarm_outlined,
+                icon: AppIcons.alarm,
                 title: 'Reminders',
                 subtitle: 'Get notified when a note reminder is due',
                 value: prefs.reminderNotifications,
@@ -38,7 +39,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 },
               ),
               _NotificationSwitchTile(
-                icon: Icons.sync_problem_outlined,
+                icon: AppIcons.syncProblem,
                 title: 'Sync Conflicts',
                 subtitle: 'Alert when sync conflicts need resolution',
                 value: prefs.syncConflictNotifications,
@@ -49,7 +50,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 },
               ),
               _NotificationSwitchTile(
-                icon: Icons.person_add_outlined,
+                icon: AppIcons.personAdd,
                 title: 'Collaboration & Sharing',
                 subtitle: 'Notify when someone shares a note with you',
                 value: prefs.shareNotifications,
@@ -60,7 +61,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 },
               ),
               _NotificationSwitchTile(
-                icon: Icons.notifications_active_outlined,
+                icon: AppIcons.notificationsActive,
                 title: 'Push Notifications',
                 subtitle: 'Receive push notifications on your device',
                 value: prefs.pushNotifications,

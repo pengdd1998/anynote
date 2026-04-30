@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_durations.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'writing_stats.dart';
 
@@ -34,12 +35,12 @@ class WritingStatsBar extends StatelessWidget {
 
     // Caption color: warm muted tone matching the app theme.
     final captionColor =
-        isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54);
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     // Semi-transparent background.
     final backgroundColor = isDark
-        ? const Color(0xFF1A1816).withValues(alpha: 0.85)
-        : const Color(0xFFFFFDFB).withValues(alpha: 0.85);
+        ? AppColors.darkSurface.withValues(alpha: 0.85)
+        : AppColors.lightCardBg.withValues(alpha: 0.85);
 
     if (!isVisible) {
       // When hidden, show only the toggle button.
@@ -65,7 +66,7 @@ class WritingStatsBar extends StatelessWidget {
           color: backgroundColor,
           border: Border(
             top: BorderSide(
-              color: isDark ? const Color(0xFF332E2B) : const Color(0xFFF0E8DF),
+              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
               width: 0.5,
             ),
           ),

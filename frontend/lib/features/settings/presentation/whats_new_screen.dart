@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/changelog.dart';
+import '../../../core/theme/app_icons.dart';
 
 /// A dialog that displays the changelog for the current app version.
 ///
@@ -65,7 +66,7 @@ class WhatsNewDialog extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.auto_awesome,
+                    AppIcons.composeFilled,
                     color: colorScheme.primary,
                     size: 22,
                   ),
@@ -109,7 +110,7 @@ class WhatsNewDialog extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.only(top: 2),
                               child: Icon(
-                                Icons.check_circle,
+                                AppIcons.checkCircleFilled,
                                 size: 18,
                                 color: colorScheme.primary,
                               ),

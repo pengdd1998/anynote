@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/locale/locale_provider.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/theme/animation_config.dart';
 import '../../../core/theme/app_theme.dart';
@@ -54,10 +55,10 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsGroup(
                       children: [
                         SettingsItem(
-                          icon: Icons.smart_toy_outlined,
+                          icon: AppIcons.ai,
                           title: l10n.llmConfiguration,
                           subtitle: l10n.configureAIProviders,
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/llm'),
                         ),
                         const _AiQuotaSection(),
@@ -82,10 +83,10 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsGroup(
                       children: [
                         SettingsItem(
-                          icon: Icons.share_outlined,
+                          icon: AppIcons.share,
                           title: l10n.platformConnections,
                           subtitle: l10n.manageConnectedPlatforms,
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/platforms'),
                         ),
                       ],
@@ -109,16 +110,16 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsGroup(
                       children: [
                         SettingsItem(
-                          icon: Icons.shield_outlined,
+                          icon: AppIcons.shield,
                           title: l10n.encryptionSettings,
                           subtitle: l10n.e2eEncryptionActive,
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/security'),
                         ),
                         SettingsItem(
-                          icon: Icons.label_outline,
+                          icon: AppIcons.tag,
                           title: l10n.manageTags,
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/tags'),
                         ),
                       ],
@@ -164,10 +165,10 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsGroup(
                       children: [
                         SettingsItem(
-                          icon: Icons.notifications_outlined,
+                          icon: AppIcons.notification,
                           title: 'Notifications',
                           subtitle: 'Configure notification preferences',
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/notifications'),
                         ),
                       ],
@@ -191,37 +192,37 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsGroup(
                       children: [
                         SettingsItem(
-                          icon: Icons.file_upload_outlined,
+                          icon: AppIcons.fileUpload,
                           title: l10n.importNotes,
                           subtitle: l10n.importNotesDesc,
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => _showImportSheet(context),
                         ),
                         SettingsItem(
-                          icon: Icons.file_download_outlined,
+                          icon: AppIcons.fileDownload,
                           title: l10n.exportAllNotes,
                           subtitle: l10n.exportAllNotesDesc,
                           onTap: () => _showBatchExportDialog(context, ref),
                         ),
                         SettingsItem(
-                          icon: Icons.restore_outlined,
+                          icon: AppIcons.restore,
                           title: l10n.restoreFromBackup,
                           subtitle: l10n.restoreFromBackupDesc,
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/restore'),
                         ),
                         SettingsItem(
-                          icon: Icons.photo_library_outlined,
+                          icon: AppIcons.photoLibrary,
                           title: l10n.imageManagement,
                           subtitle: l10n.totalStorage,
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/images'),
                         ),
                         SettingsItem(
-                          icon: Icons.description_outlined,
+                          icon: AppIcons.description,
                           title: l10n.templateManagement,
                           subtitle: l10n.templates,
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/templates'),
                         ),
                       ],
@@ -251,9 +252,9 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsGroup(
                       children: [
                         SettingsItem(
-                          icon: Icons.keyboard_outlined,
+                          icon: AppIcons.keyboard,
                           title: l10n.keyboardShortcuts,
-                          trailing: const Icon(Icons.chevron_right, size: 20),
+                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/shortcuts'),
                         ),
                       ],
@@ -348,7 +349,7 @@ class _SettingsItemWithSwitch extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Row(
             children: [
-              _IconCircle(icon: icon),
+              IconCircle(icon: icon),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -388,30 +389,6 @@ class _SettingsItemWithSwitch extends StatelessWidget {
   }
 }
 
-/// Icon circle widget reused from settings item.
-class _IconCircle extends StatelessWidget {
-  final IconData icon;
-
-  const _IconCircle({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: isDark ? 0.15 : 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, size: 18, color: colorScheme.primary),
-    );
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Extracted section widgets — each watches only the providers it needs,
 // preventing rebuilds in sibling sections when an unrelated provider changes.
@@ -437,7 +414,7 @@ class _AiQuotaSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final quotaAsync = ref.watch(aiQuotaProvider);
     return SettingsItem(
-      icon: Icons.data_usage_outlined,
+      icon: AppIcons.dataUsage,
       title: l10n.aiQuota,
       subtitle: quotaAsync.when(
         data: (quota) {
@@ -459,7 +436,7 @@ class _SyncStatusSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final syncStatusAsync = ref.watch(syncStatusProvider);
     return SettingsItem(
-      icon: Icons.cloud_outlined,
+      icon: AppIcons.cloud,
       title: l10n.syncStatus,
       subtitle: syncStatusAsync.when(
         data: (status) {
@@ -496,10 +473,10 @@ class _LanguageSection extends ConsumerWidget {
           SettingsGroup(
             children: [
               SettingsItem(
-                icon: Icons.language,
+                icon: AppIcons.language,
                 title: l10n.language,
                 subtitle: _getLanguageDisplayName(locale, l10n),
-                trailing: const Icon(Icons.chevron_right, size: 20),
+                trailing: const Icon(AppIcons.chevronRight, size: 20),
                 onTap: () => _showLanguageDialog(context, ref),
               ),
             ],
@@ -534,8 +511,8 @@ class _LanguageSection extends ConsumerWidget {
             child: ListTile(
               leading: Icon(
                 currentLocale.languageCode == 'en'
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
+                    ? AppIcons.radioChecked
+                    : AppIcons.radioUnchecked,
               ),
               title: Text(l10n.english),
               contentPadding: EdgeInsets.zero,
@@ -549,8 +526,8 @@ class _LanguageSection extends ConsumerWidget {
             child: ListTile(
               leading: Icon(
                 currentLocale.languageCode == 'zh'
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
+                    ? AppIcons.radioChecked
+                    : AppIcons.radioUnchecked,
               ),
               title: Text(l10n.chinese),
               contentPadding: EdgeInsets.zero,
@@ -564,8 +541,8 @@ class _LanguageSection extends ConsumerWidget {
             child: ListTile(
               leading: Icon(
                 currentLocale.languageCode == 'ja'
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
+                    ? AppIcons.radioChecked
+                    : AppIcons.radioUnchecked,
               ),
               title: Text(l10n.japanese),
               contentPadding: EdgeInsets.zero,
@@ -579,8 +556,8 @@ class _LanguageSection extends ConsumerWidget {
             child: ListTile(
               leading: Icon(
                 currentLocale.languageCode == 'ko'
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
+                    ? AppIcons.radioChecked
+                    : AppIcons.radioUnchecked,
               ),
               title: Text(l10n.korean),
               contentPadding: EdgeInsets.zero,
@@ -612,10 +589,10 @@ class _AppearanceSection extends ConsumerWidget {
           SettingsGroup(
             children: [
               SettingsItem(
-                icon: Icons.palette_outlined,
+                icon: AppIcons.palette,
                 title: l10n.theme,
                 subtitle: _getThemeDisplayName(themeOption, l10n),
-                trailing: const Icon(Icons.chevron_right, size: 20),
+                trailing: const Icon(AppIcons.chevronRight, size: 20),
                 onTap: () => _showThemeDialog(context, ref),
               ),
               _ReduceMotionItem(l10n: l10n),
@@ -627,7 +604,9 @@ class _AppearanceSection extends ConsumerWidget {
   }
 
   static String _getThemeDisplayName(
-      ThemeOption option, AppLocalizations l10n,) {
+    ThemeOption option,
+    AppLocalizations l10n,
+  ) {
     return switch (option) {
       ThemeOption.light => l10n.themeLight,
       ThemeOption.dark => l10n.themeDark,
@@ -705,9 +684,7 @@ class _AppearanceSection extends ConsumerWidget {
       },
       child: ListTile(
         leading: Icon(
-          isSelected
-              ? Icons.radio_button_checked
-              : Icons.radio_button_unchecked,
+          isSelected ? AppIcons.radioChecked : AppIcons.radioUnchecked,
           color: isHighContrast ? null : null,
         ),
         title: Text(
@@ -737,7 +714,7 @@ class _ReduceMotionItem extends ConsumerWidget {
         final isEnabled = override ?? systemDisabled;
 
         return _SettingsItemWithSwitch(
-          icon: Icons.animation_outlined,
+          icon: AppIcons.animation,
           title: l10n.reduceMotion,
           subtitle: override == null
               ? l10n.reduceMotionSystem

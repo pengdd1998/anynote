@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/error_state_widget.dart';
@@ -22,10 +23,10 @@ class _PlatformConnectionScreenState
     extends ConsumerState<PlatformConnectionScreen> {
   // Static icon mapping for known platforms.
   static const _platformIcons = <String, IconData>{
-    'xiaohongshu': Icons.camera_alt,
-    'wechat': Icons.chat,
-    'zhihu': Icons.question_answer,
-    'medium': Icons.article,
+    'xiaohongshu': AppIcons.camera,
+    'wechat': AppIcons.chat,
+    'zhihu': AppIcons.questionAnswer,
+    'medium': AppIcons.article,
   };
 
   bool _isConnecting = false;
@@ -46,7 +47,7 @@ class _PlatformConnectionScreenState
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.share_outlined,
+                    AppIcons.share,
                     size: 48,
                     color: Theme.of(context).disabledColor,
                   ),
@@ -245,7 +246,7 @@ class _PlatformConnectionScreenState
               // Display a placeholder icon. In production, decode qrCodeData
               // into an actual QR image using a QR rendering package.
               child: const Center(
-                child: Icon(Icons.qr_code_2, size: 120),
+                child: Icon(AppIcons.qrCode, size: 120),
               ),
             ),
             const SizedBox(height: 16),
@@ -305,7 +306,7 @@ class _PlatformCard extends StatelessWidget {
     final displayName = platform.displayName ?? platform.platform;
     final connected = platform.isConnected;
     final platformKey = platform.platform.toLowerCase();
-    final icon = platformIcons[platformKey] ?? Icons.language;
+    final icon = platformIcons[platformKey] ?? AppIcons.language;
 
     // Determine trailing widget based on connection state.
     Widget trailing;
@@ -320,7 +321,7 @@ class _PlatformCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.check_circle,
+            AppIcons.checkCircleFilled,
             color: colorScheme.primary,
             size: 20,
           ),
