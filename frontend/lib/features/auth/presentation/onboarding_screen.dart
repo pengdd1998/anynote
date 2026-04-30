@@ -6,10 +6,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_durations.dart';
 import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/notifications/local_notification_service.dart';
+import '../../../main.dart';
 
 /// Four-page onboarding screen with interactive guided walkthrough.
 ///
@@ -134,6 +136,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _markSeenAndGo(String route) async {
     const storage = FlutterSecureStorage();
     await storage.write(key: 'has_seen_onboarding', value: 'true');
+    // Update in-memory provider so the router redirect does not send
+    // the user back to onboarding on the next navigation.
+    globalContainer.read(hasSeenOnboardingProvider.notifier).state = true;
     if (mounted) {
       context.go(route);
     }
@@ -156,12 +161,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Warm background -- use explicit colors matching AppTheme surfaces.
-    const scaffoldBgLight = Color(0xFFFAF8F5);
-    const scaffoldBgDark = Color(0xFF1A1614);
+    // Background -- use explicit colors matching AppTheme surfaces.
+    const scaffoldBgLight = AppColors.lightSurface;
+    const scaffoldBgDark = AppColors.darkSurface;
     final scaffoldBg = isDark ? scaffoldBgDark : scaffoldBgLight;
 
-    final inactiveDotColor = isDark ? const Color(0xFF4A4340) : _warmGreyDot;
+    final inactiveDotColor = isDark ? AppColors.darkDisabled : _warmGreyDot;
 
     return Scaffold(
       backgroundColor: scaffoldBg,

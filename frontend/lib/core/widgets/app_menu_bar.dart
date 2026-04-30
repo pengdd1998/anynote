@@ -6,6 +6,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../platform/platform_utils.dart';
+import '../theme/app_colors.dart';
 import 'sidebar_provider.dart';
 
 /// Desktop-only menu bar for AnyNote.
@@ -413,7 +414,7 @@ class AppMenuBar extends ConsumerWidget {
       applicationIcon: const Icon(
         Icons.lock_outline,
         size: 48,
-        color: Color(0xFFC4956A),
+        color: AppColors.primary,
       ),
       children: [
         Text(

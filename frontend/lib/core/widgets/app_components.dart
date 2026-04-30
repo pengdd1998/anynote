@@ -801,6 +801,7 @@ class _StaggeredGroupState extends State<StaggeredGroup>
   late final AnimationController _controller;
   late final Animation<double> _opacity;
   late final Animation<Offset> _slide;
+  late final Animation<double> _scale;
   Timer? _delayTimer;
   bool _hasStartedAnimation = false;
 
@@ -811,11 +812,15 @@ class _StaggeredGroupState extends State<StaggeredGroup>
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
-    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
     _slide = Tween<Offset>(
       begin: const Offset(0, 0.03),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _scale = Tween<double>(
+      begin: 0.98,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
   }
 
   @override
@@ -853,7 +858,10 @@ class _StaggeredGroupState extends State<StaggeredGroup>
       opacity: _opacity,
       child: SlideTransition(
         position: _slide,
-        child: widget.child,
+        child: ScaleTransition(
+          scale: _scale,
+          child: widget.child,
+        ),
       ),
     );
   }

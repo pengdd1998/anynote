@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/error_state_widget.dart';
@@ -237,8 +238,8 @@ class _PlatformConnectionScreenState
               height: 200,
               decoration: BoxDecoration(
                 color: Theme.of(context).brightness == Brightness.light
-                    ? const Color(0xFFF5F0EB)
-                    : const Color(0xFF2C2826),
+                    ? AppColors.lightInputFill
+                    : AppColors.darkInputFill,
                 borderRadius: BorderRadius.circular(12),
               ),
               // Display a placeholder icon. In production, decode qrCodeData

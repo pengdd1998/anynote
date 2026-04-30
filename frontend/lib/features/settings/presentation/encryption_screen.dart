@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/backup/backup_service.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
@@ -144,7 +145,8 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 }
               } catch (e) {
                 debugPrint(
-                    '[EncryptionScreen] password verification failed: $e',);
+                  '[EncryptionScreen] password verification failed: $e',
+                );
                 nav.pop();
                 if (mounted) {
                   AppSnackBar.error(context, message: l10n.verificationFailed);
@@ -232,8 +234,10 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (!verified) {
                   nav.pop();
                   if (mounted) {
-                    AppSnackBar.error(context,
-                        message: l10n.currentPasswordIncorrect,);
+                    AppSnackBar.error(
+                      context,
+                      message: l10n.currentPasswordIncorrect,
+                    );
                   }
                   return;
                 }
@@ -245,14 +249,18 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (mounted) {
                   // Refresh the encryption status.
                   ref.read(encryptionStatusProvider.notifier).refresh();
-                  AppSnackBar.info(context,
-                      message: l10n.passwordChangedSuccessfully,);
+                  AppSnackBar.info(
+                    context,
+                    message: l10n.passwordChangedSuccessfully,
+                  );
                 }
               } catch (e) {
                 nav.pop();
                 if (mounted) {
-                  AppSnackBar.error(context,
-                      message: l10n.failedToChangePassword(e.toString()),);
+                  AppSnackBar.error(
+                    context,
+                    message: l10n.failedToChangePassword(e.toString()),
+                  );
                 }
               } finally {
                 if (mounted) {
@@ -362,8 +370,10 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
               } catch (e) {
                 nav.pop();
                 if (mounted) {
-                  AppSnackBar.error(context,
-                      message: l10n.failedToDeleteData(e.toString()),);
+                  AppSnackBar.error(
+                    context,
+                    message: l10n.failedToDeleteData(e.toString()),
+                  );
                 }
               } finally {
                 if (mounted) setState(() => _isDeleting = false);
@@ -411,8 +421,10 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       );
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context,
-            message: l10n.backupExportFailed(e.toString()),);
+        AppSnackBar.error(
+          context,
+          message: l10n.backupExportFailed(e.toString()),
+        );
       }
     }
   }
@@ -473,8 +485,10 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context,
-            message: l10n.backupImportFailed(e.toString()),);
+        AppSnackBar.error(
+          context,
+          message: l10n.backupImportFailed(e.toString()),
+        );
       }
     }
   }
@@ -985,8 +999,8 @@ class _RecoveryKeyDisplay extends ConsumerWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: theme.brightness == Brightness.light
-                    ? const Color(0xFFF5F0EB)
-                    : const Color(0xFF2C2826),
+                    ? AppColors.lightInputFill
+                    : AppColors.darkInputFill,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SelectableText(

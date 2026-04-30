@@ -1,49 +1,45 @@
 import 'package:flutter/material.dart';
 
-/// Warm, elegant design system for AnyNote.
+import 'app_colors.dart';
+
+/// Design system for AnyNote — "Pastel + Pop Accent".
 ///
-/// Brand personality: warm, private, elegant.
-/// Light mode evokes high-quality cream paper; dark mode evokes lamplight.
-/// Neutrals are always tinted warm -- no clinical whites or cold greys.
-/// Accent color is used sparingly for interactive elements and status.
-///
-/// References: Bear Notes (warmth, simplicity), Day One (elegance, personal feel).
+/// Light surfaces use soft lavender blush; dark surfaces use deep plum-black.
+/// Primary accent is vivid coral; secondary is fresh mint.
+/// All text tiers meet WCAG AA 4.5:1 contrast on their respective surfaces.
 class AppTheme {
   AppTheme._();
 
   // ---------------------------------------------------------------------------
-  // Seed color -- warm terracotta / caramel
+  // Seed color -- vivid coral
   // ---------------------------------------------------------------------------
-  static const _warmSeed = Color(0xFFC4956A);
+  static const _coralSeed = AppColors.primary;
 
   // ---------------------------------------------------------------------------
-  // Light palette
+  // Light palette (delegates to AppColors)
   // ---------------------------------------------------------------------------
-  static const _lightSurface = Color(0xFFFAF8F5); // Warm cream paper
-  static const lightCardBg = Color(0xFFFFFDFB); // Warm white
-  static const _lightTextPrimary = Color(0xFF2C2520); // Warm near-black
-  static const _lightTextSecondary = Color(0xFF6B5E54); // Warm brown-grey
-  static const _lightTextTertiary =
-      Color(0xFF7A6E62); // Warm muted grey (WCAG AA 4.5:1 on _lightSurface)
-  static const lightInputFill = Color(0xFFF5F0EB); // Warm beige
-  static const lightBorder = Color(0xFFE8DFD5); // Warm border
-  static const lightDivider = Color(0xFFF0E8DF); // Warm divider
-  static const _lightDisabled = Color(0xFFC9BFB4); // Warm disabled
+  static const _lightSurface = AppColors.lightSurface;
+  static const lightCardBg = AppColors.lightCardBg;
+  static const _lightTextPrimary = AppColors.lightTextPrimary;
+  static const _lightTextSecondary = AppColors.lightTextSecondary;
+  static const _lightTextTertiary = AppColors.lightTextTertiary;
+  static const lightInputFill = AppColors.lightInputFill;
+  static const lightBorder = AppColors.lightBorder;
+  static const lightDivider = AppColors.lightDivider;
+  static const _lightDisabled = AppColors.lightDisabled;
 
   // ---------------------------------------------------------------------------
-  // Dark palette
+  // Dark palette (delegates to AppColors)
   // ---------------------------------------------------------------------------
-  static const _darkSurface = Color(0xFF1A1614); // Deep warm charcoal
-  static const darkCardBg = Color(0xFF252220); // Warm dark grey
-  static const _darkTextPrimary = Color(0xFFF5F0EB); // Warm white
-  static const _darkTextSecondary =
-      Color(0xFFA3988E); // Warm medium grey (WCAG AA 4.5:1 on _darkSurface)
-  static const _darkTextTertiary =
-      Color(0xFF9E9288); // Warm dark muted (WCAG AA 4.5:1 on _darkSurface)
-  static const darkInputFill = Color(0xFF2C2826); // Warm dark fill
-  static const darkBorder = Color(0xFF3D3835); // Warm dark border
-  static const _darkDivider = Color(0xFF332E2B); // Warm dark divider
-  static const _darkDisabled = Color(0xFF4A4340); // Warm dark disabled
+  static const _darkSurface = AppColors.darkSurface;
+  static const darkCardBg = AppColors.darkCardBg;
+  static const _darkTextPrimary = AppColors.darkTextPrimary;
+  static const _darkTextSecondary = AppColors.darkTextSecondary;
+  static const _darkTextTertiary = AppColors.darkTextTertiary;
+  static const darkInputFill = AppColors.darkInputFill;
+  static const darkBorder = AppColors.darkBorder;
+  static const _darkDivider = AppColors.darkDivider;
+  static const _darkDisabled = AppColors.darkDisabled;
 
   // ---------------------------------------------------------------------------
   // High contrast palette (WCAG AAA 7:1)
@@ -102,7 +98,7 @@ class AppTheme {
   // ---------------------------------------------------------------------------
   static ThemeData lightTheme() {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _warmSeed,
+      seedColor: _coralSeed,
       brightness: Brightness.light,
       surface: _lightSurface,
     );
@@ -425,7 +421,7 @@ class AppTheme {
   // ---------------------------------------------------------------------------
   static ThemeData darkTheme() {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _warmSeed,
+      seedColor: _coralSeed,
       brightness: Brightness.dark,
       surface: _darkSurface,
     );
@@ -764,24 +760,23 @@ class AppTheme {
   static ThemeData highContrastLightTheme() {
     const surfaceWhite = Color(0xFFFFFFFF);
     const pureBlack = Color(0xFF000000);
-    const primaryBlue =
-        Color(0xFF0000FF); // Standard blue for interactive elements
-    const errorRed = Color(0xFFCC0000); // High contrast error
+    const primaryCoral = AppColors.hcPrimary;
+    const errorRed = Color(0xFFCC0000);
 
     final colorScheme = ColorScheme(
       brightness: Brightness.light,
-      primary: primaryBlue,
+      primary: primaryCoral,
       onPrimary: surfaceWhite,
-      primaryContainer: primaryBlue.withValues(alpha: 0.15),
-      onPrimaryContainer: primaryBlue,
-      secondary: primaryBlue,
+      primaryContainer: primaryCoral.withValues(alpha: 0.15),
+      onPrimaryContainer: primaryCoral,
+      secondary: primaryCoral,
       onSecondary: surfaceWhite,
-      secondaryContainer: primaryBlue.withValues(alpha: 0.15),
-      onSecondaryContainer: primaryBlue,
-      tertiary: primaryBlue,
+      secondaryContainer: primaryCoral.withValues(alpha: 0.15),
+      onSecondaryContainer: primaryCoral,
+      tertiary: primaryCoral,
       onTertiary: surfaceWhite,
-      tertiaryContainer: primaryBlue.withValues(alpha: 0.15),
-      onTertiaryContainer: primaryBlue,
+      tertiaryContainer: primaryCoral.withValues(alpha: 0.15),
+      onTertiaryContainer: primaryCoral,
       error: errorRed,
       onError: surfaceWhite,
       errorContainer: errorRed.withValues(alpha: 0.15),
@@ -818,23 +813,22 @@ class AppTheme {
   static ThemeData highContrastDarkTheme() {
     const surfaceBlack = Color(0xFF000000);
     const pureWhite = Color(0xFFFFFFFF);
-    const primaryBlue =
-        Color(0xFF6699FF); // Lighter blue for dark mode visibility
-    const errorRed = Color(0xFFFF6666); // Lighter red for dark mode visibility
+    const primaryCoral = AppColors.hcDarkPrimary;
+    const errorRed = Color(0xFFFF6666);
 
     final colorScheme = ColorScheme(
       brightness: Brightness.dark,
-      primary: primaryBlue,
+      primary: primaryCoral,
       onPrimary: surfaceBlack,
-      primaryContainer: primaryBlue.withValues(alpha: 0.2),
+      primaryContainer: primaryCoral.withValues(alpha: 0.2),
       onPrimaryContainer: pureWhite,
-      secondary: primaryBlue,
+      secondary: primaryCoral,
       onSecondary: surfaceBlack,
-      secondaryContainer: primaryBlue.withValues(alpha: 0.2),
+      secondaryContainer: primaryCoral.withValues(alpha: 0.2),
       onSecondaryContainer: pureWhite,
-      tertiary: primaryBlue,
+      tertiary: primaryCoral,
       onTertiary: surfaceBlack,
-      tertiaryContainer: primaryBlue.withValues(alpha: 0.2),
+      tertiaryContainer: primaryCoral.withValues(alpha: 0.2),
       onTertiaryContainer: pureWhite,
       error: errorRed,
       onError: surfaceBlack,

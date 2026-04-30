@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// Accessibility utility helpers for the AnyNote app.
 ///
 /// Provides semantic label generators, touch target enforcement, and contrast
@@ -232,7 +234,7 @@ class A11yUtils {
     Color? focusColor,
     double borderRadius = 12.0,
   }) {
-    final effectiveFocusColor = focusColor ?? const Color(0xFFC4956A);
+    final effectiveFocusColor = focusColor ?? AppColors.primary;
     return InputDecoration(
       labelText: labelText,
       hintText: hintText,
@@ -330,9 +332,12 @@ class A11yUtils {
   /// `withAlpha()` or `withOpacity()`. Returns the resulting opaque color.
   static Color compositeColor(Color foreground, Color background) {
     final alpha = foreground.a;
-    final r = (foreground.r * alpha + background.r * (1 - alpha)).clamp(0.0, 1.0);
-    final g = (foreground.g * alpha + background.g * (1 - alpha)).clamp(0.0, 1.0);
-    final b = (foreground.b * alpha + background.b * (1 - alpha)).clamp(0.0, 1.0);
+    final r =
+        (foreground.r * alpha + background.r * (1 - alpha)).clamp(0.0, 1.0);
+    final g =
+        (foreground.g * alpha + background.g * (1 - alpha)).clamp(0.0, 1.0);
+    final b =
+        (foreground.b * alpha + background.b * (1 - alpha)).clamp(0.0, 1.0);
     return Color.from(alpha: 1.0, red: r, green: g, blue: b);
   }
 }

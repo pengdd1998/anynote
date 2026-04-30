@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/theme/app_icons.dart';
 import '../core/theme/page_transitions.dart';
 import '../core/widgets/adaptive_scaffold.dart';
 import '../core/widgets/offline_banner.dart';
@@ -604,23 +605,23 @@ class _PhoneShell extends StatelessWidget {
               _onDestinationSelected(context, index),
           destinations: [
             NavigationDestination(
-              icon: const Icon(Icons.note_outlined),
-              selectedIcon: const Icon(Icons.note),
+              icon: const Icon(AppIcons.notes),
+              selectedIcon: const Icon(AppIcons.notesFilled),
               label: l10n?.notesTabLabel ?? 'Notes',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.auto_awesome_outlined),
-              selectedIcon: const Icon(Icons.auto_awesome),
+              icon: const Icon(AppIcons.compose),
+              selectedIcon: const Icon(AppIcons.composeFilled),
               label: l10n?.composeTabLabel ?? 'Compose',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.publish_outlined),
-              selectedIcon: const Icon(Icons.publish),
+              icon: const Icon(AppIcons.publish),
+              selectedIcon: const Icon(AppIcons.publishFilled),
               label: l10n?.publishTabLabel ?? 'Publish',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.settings_outlined),
-              selectedIcon: const Icon(Icons.settings),
+              icon: const Icon(AppIcons.settings),
+              selectedIcon: const Icon(AppIcons.settingsFilled),
               label: l10n?.settingsTabLabel ?? 'Settings',
             ),
           ],
@@ -665,12 +666,12 @@ class _DesktopShell extends ConsumerWidget {
                 icon: Tooltip(
                   message: notesLabel,
                   preferBelow: false,
-                  child: const Icon(Icons.note_outlined),
+                  child: const Icon(AppIcons.notes),
                 ),
                 selectedIcon: Tooltip(
                   message: notesLabel,
                   preferBelow: false,
-                  child: const Icon(Icons.note),
+                  child: const Icon(AppIcons.notesFilled),
                 ),
                 label: Text(notesLabel),
               ),
@@ -678,12 +679,12 @@ class _DesktopShell extends ConsumerWidget {
                 icon: Tooltip(
                   message: composeLabel,
                   preferBelow: false,
-                  child: const Icon(Icons.auto_awesome_outlined),
+                  child: const Icon(AppIcons.compose),
                 ),
                 selectedIcon: Tooltip(
                   message: composeLabel,
                   preferBelow: false,
-                  child: const Icon(Icons.auto_awesome),
+                  child: const Icon(AppIcons.composeFilled),
                 ),
                 label: Text(composeLabel),
               ),
@@ -691,12 +692,12 @@ class _DesktopShell extends ConsumerWidget {
                 icon: Tooltip(
                   message: publishLabel,
                   preferBelow: false,
-                  child: const Icon(Icons.publish_outlined),
+                  child: const Icon(AppIcons.publish),
                 ),
                 selectedIcon: Tooltip(
                   message: publishLabel,
                   preferBelow: false,
-                  child: const Icon(Icons.publish),
+                  child: const Icon(AppIcons.publishFilled),
                 ),
                 label: Text(publishLabel),
               ),
@@ -704,12 +705,12 @@ class _DesktopShell extends ConsumerWidget {
                 icon: Tooltip(
                   message: settingsLabel,
                   preferBelow: false,
-                  child: const Icon(Icons.settings_outlined),
+                  child: const Icon(AppIcons.settings),
                 ),
                 selectedIcon: Tooltip(
                   message: settingsLabel,
                   preferBelow: false,
-                  child: const Icon(Icons.settings),
+                  child: const Icon(AppIcons.settingsFilled),
                 ),
                 label: Text(settingsLabel),
               ),
@@ -790,7 +791,7 @@ class _DeferredLoaderState extends State<_DeferredLoader> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.error_outline,
+                AppIcons.error,
                 size: 48,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

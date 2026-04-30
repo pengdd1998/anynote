@@ -5,6 +5,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../constants/app_durations.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import 'app_snackbar.dart';
 import 'mermaid_template.dart';
@@ -113,7 +114,7 @@ class _MermaidRendererState extends State<MermaidRenderer> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(
-        isDark ? const Color(0xFF1A1614) : Colors.white,
+        isDark ? AppColors.darkSurface : Colors.white,
       )
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -161,7 +162,8 @@ class _MermaidRendererState extends State<MermaidRenderer> {
           } catch (e) {
             // Ignore malformed messages.
             debugPrint(
-                '[MermaidRenderer] failed to parse JS channel message: $e',);
+              '[MermaidRenderer] failed to parse JS channel message: $e',
+            );
           }
         },
       );
@@ -197,9 +199,9 @@ class _MermaidRendererState extends State<MermaidRenderer> {
     final bgColor = isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill;
     final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
     final textColor =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final secondaryColor =
-        isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54);
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     // Decide which body to show.
     final bool showWebView = !_isWeb && !_webViewFailed && !_showSource;
@@ -292,8 +294,8 @@ class _MermaidRendererState extends State<MermaidRenderer> {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: isDark
-                      ? const Color(0xFFA3988E)
-                      : const Color(0xFF6B5E54),
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
                 ),
               ),
             ),
@@ -338,7 +340,7 @@ class _ToggleSourceButton extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final secondaryColor =
-        isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54);
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return InkWell(
       onTap: onToggle,
@@ -391,7 +393,7 @@ class _CopyButtonState extends State<_CopyButton> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final secondaryColor =
-        isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54);
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return InkWell(
       onTap: () {

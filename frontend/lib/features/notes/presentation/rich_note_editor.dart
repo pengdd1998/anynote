@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/database/daos/snippets_dao.dart';
 import 'embeds/table_embed.dart';
 import 'embeds/table_picker_dialog.dart';
@@ -336,7 +337,7 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
           Divider(
             height: 1,
             thickness: 1,
-            color: isDark ? const Color(0xFF332E2B) : const Color(0xFFF0E8DF),
+            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
           ),
         Expanded(child: _buildEditorArea(context)),
       ],
@@ -356,15 +357,18 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
       ),
       iconButtonUnselectedData: quill.IconButtonData(
         color: isDark
-            ? const Color(0xFFA3988E) // warm medium grey (WCAG AA on dark)
-            : const Color(0xFF6B5E54), // warm brown-grey (light theme)
+            ? AppColors.darkTextSecondary // warm medium grey (WCAG AA on dark)
+            : AppColors.lightTextSecondary, // warm brown-grey (light theme)
       ),
     );
   }
 
   /// Builds the formatting toolbar with warm styling and shortcut tooltips.
   Widget _buildToolbar(
-      BuildContext context, quill.QuillIconTheme iconTheme, bool isDark,) {
+    BuildContext context,
+    quill.QuillIconTheme iconTheme,
+    bool isDark,
+  ) {
     return quill.QuillSimpleToolbar(
       controller: widget.controller,
       config: quill.QuillSimpleToolbarConfig(
@@ -396,9 +400,9 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
         showSubscript: false,
         showSuperscript: false,
         showSmallButton: false,
-        color: isDark ? const Color(0xFF252220) : const Color(0xFFFFFDFB),
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
         sectionDividerColor:
-            isDark ? const Color(0xFF332E2B) : const Color(0xFFF0E8DF),
+            isDark ? AppColors.darkDivider : AppColors.lightDivider,
         sectionDividerSpace: 8,
         iconTheme: iconTheme,
         buttonOptions: _buildToolbarButtonOptions(iconTheme),
@@ -415,7 +419,8 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
 
   /// Builds the toolbar button options with warm icon theme and shortcut tooltips.
   quill.QuillSimpleToolbarButtonOptions _buildToolbarButtonOptions(
-      quill.QuillIconTheme iconTheme,) {
+    quill.QuillIconTheme iconTheme,
+  ) {
     return quill.QuillSimpleToolbarButtonOptions(
       base: quill.QuillToolbarBaseButtonOptions(iconTheme: iconTheme),
       bold: quill.QuillToolbarToggleStyleButtonOptions(

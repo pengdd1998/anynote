@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import 'mermaid_renderer.dart' show MermaidRenderer, extractMermaidBlocks;
 
@@ -137,9 +138,9 @@ class MarkdownPreview extends StatelessWidget {
 
     // Warm code block background colors matching the design system.
     final codeBlockBg =
-        isDark ? const Color(0xFF1A1614) : const Color(0xFFF5F0EB);
+        isDark ? AppColors.darkSurface : AppColors.lightInputFill;
     final codeBlockText =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
     // If LaTeX expressions exist, build a Column that interleaves
     // MarkdownBody segments with Math widgets.
@@ -168,57 +169,59 @@ class MarkdownPreview extends StatelessWidget {
       p: TextStyle(
         fontSize: 16,
         height: 1.6,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h1: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h2: TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.bold,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h3: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h4: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w600,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       code: TextStyle(
         fontSize: 14,
         fontFamily: 'monospace',
         backgroundColor:
-            isDark ? const Color(0xFF2C2826) : const Color(0xFFF5F0EB),
+            isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
         color: codeBlockText,
       ),
       codeblockDecoration: BoxDecoration(
         color: codeBlockBg,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: isDark ? const Color(0xFF3D3835) : const Color(0xFFE8DFD5),
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
         ),
       ),
       codeblockAlign: WrapAlignment.start,
       blockquote: TextStyle(
-        color: isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
+        color:
+            isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
         fontStyle: FontStyle.italic,
       ),
       blockquoteDecoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2826) : const Color(0xFFF5F0EB),
+        color: isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
         borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       listBullet: TextStyle(
-        color: isDark ? const Color(0xFFA3988E) : const Color(0xFF6B5E54),
+        color:
+            isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
       ),
       tableBody: TextStyle(
         fontSize: 14,
-        color: isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520),
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
     );
   }
@@ -234,11 +237,11 @@ class MarkdownPreview extends StatelessWidget {
     bool isDark,
   ) {
     final textColor =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final codeBlockBg =
-        isDark ? const Color(0xFF1A1614) : const Color(0xFFF5F0EB);
+        isDark ? AppColors.darkSurface : AppColors.lightInputFill;
     final codeBlockText =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final styleSheet = _buildStyleSheet(
       isDark: isDark,
       codeBlockBg: codeBlockBg,
@@ -356,11 +359,11 @@ class MarkdownPreview extends StatelessWidget {
     bool isDark,
   ) {
     final textColor =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final codeBlockBg =
-        isDark ? const Color(0xFF1A1614) : const Color(0xFFF5F0EB);
+        isDark ? AppColors.darkSurface : AppColors.lightInputFill;
     final codeBlockText =
-        isDark ? const Color(0xFFF5F0EB) : const Color(0xFF2C2520);
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final styleSheet = _buildStyleSheet(
       isDark: isDark,
       codeBlockBg: codeBlockBg,
