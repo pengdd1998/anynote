@@ -78,6 +78,11 @@ final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/notes',
   redirect: (context, state) {
+    // Container not yet initialized (first frame). Skip redirect to avoid
+    // LateInitializationError — the microtask in initState will set
+    // containerReady and trigger a rebuild that re-evaluates this redirect.
+    if (!containerReady) return null;
+
     final isLoggedIn = globalContainer.read(authStateProvider);
     final isAuthRoute = state.matchedLocation.startsWith('/auth');
     final isOnboarding = state.matchedLocation == '/onboarding';
@@ -784,9 +789,11 @@ class _DeferredLoaderState extends State<_DeferredLoader> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n?.failedToLoadDeferred ?? 'Failed to load',

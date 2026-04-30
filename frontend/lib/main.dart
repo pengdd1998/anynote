@@ -39,6 +39,11 @@ import 'routing/app_router.dart';
 /// (e.g. GoRouter redirect) can read providers.
 late final ProviderContainer globalContainer;
 
+/// Whether [globalContainer] has been assigned and is safe to read.
+/// GoRouter redirect guards on this to avoid [LateInitializationError]
+/// during the first frame before [Future.microtask] completes.
+bool containerReady = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -93,14 +98,23 @@ void main() async {
   );
 
   // Initialize local notification service for scheduled reminders.
-  // This must happen before the UI loads so the plugin is ready to receive
-  // notification tap events.
+  // Wrapped in try/catch because native plugin failures (missing config,
+  // permission issues) should not prevent the app from launching.
   final localNotificationService = LocalNotificationService();
-  await localNotificationService.init();
+  try {
+    await localNotificationService.init();
+  } catch (e, st) {
+    ErrorReporter.instance.reportError(e, st, context: 'notification_init');
+  }
 
   // Load any previously-stored tokens so the auth interceptor has them
-  // available on the very first request.
-  apiClient.loadStoredTokens();
+  // available on the very first request. Wrapped in try/catch because
+  // FlutterSecureStorage can throw on devices with corrupted Android Keystore.
+  try {
+    await apiClient.loadStoredTokens();
+  } catch (e, st) {
+    ErrorReporter.instance.reportError(e, st, context: 'token_load');
+  }
 
   runZonedGuarded(() {
     runApp(
@@ -142,6 +156,7 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
     Future.microtask(() {
       if (mounted) {
         globalContainer = ProviderScope.containerOf(context);
+        containerReady = true;
         // If tokens were previously stored, mark the user as authenticated
         // so the router redirect does not kick them back to login.
         final api = globalContainer.read(apiClientProvider);
