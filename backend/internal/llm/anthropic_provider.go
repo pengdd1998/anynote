@@ -124,7 +124,7 @@ func (p *AnthropicProvider) ChatStream(ctx context.Context, apiKey, baseURL stri
 			return nil, fmt.Errorf("reading error response body: %w", err)
 		}
 		slog.Warn("Anthropic returned non-OK status", "status", resp.StatusCode, "body_len", len(respBody))
-		return nil, fmt.Errorf("Anthropic returned status %d", resp.StatusCode)
+		return nil, fmt.Errorf("anthropic returned status %d", resp.StatusCode)
 	}
 
 	ch := make(chan domain.StreamChunk, 64)
@@ -253,7 +253,7 @@ func (p *AnthropicProvider) Chat(ctx context.Context, apiKey, baseURL string, re
 
 	if resp.StatusCode != http.StatusOK {
 		slog.Warn("Anthropic returned non-OK status", "status", resp.StatusCode, "body_len", len(respBody))
-		return nil, fmt.Errorf("Anthropic returned status %d", resp.StatusCode)
+		return nil, fmt.Errorf("anthropic returned status %d", resp.StatusCode)
 	}
 
 	var aResp anthropicResponse

@@ -339,7 +339,6 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 	}
 
 	return nil, fmt.Errorf("LLM request failed after %d retries: %w", maxRetries, lastErr)
-
 }
 // requestTimeout returns the configured timeout or a 120s default.
 func requestTimeout(cfg time.Duration) time.Duration {
