@@ -98,7 +98,7 @@ services:
       - MASTER_ENCRYPTION_KEY=${MASTER_ENCRYPTION_KEY:-dev-master-key-change-in-production}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - QWEN_API_KEY=${QWEN_API_KEY:-}
-      - PORT=${PORT:-8080}
+      - PORT=${PORT:-36661}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - WS_ALLOWED_ORIGINS=${WS_ALLOWED_ORIGINS:-}
     depends_on:

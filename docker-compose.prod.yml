@@ -201,10 +201,10 @@ services:
       MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       QWEN_API_KEY: ${QWEN_API_KEY:-}
-      PORT: ${PORT:-8080}
+      PORT: ${PORT:-36661}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
-      - "${PORT:-8080}:8080"
+      - "${PORT:-36661}:36661"
     # Override base file -- no source mount in production
     volumes: []
     depends_on:
@@ -213,7 +213,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${PORT:-8080}/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${PORT:-36661}/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3

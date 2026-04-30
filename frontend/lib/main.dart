@@ -87,13 +87,11 @@ void main() async {
   }
 
   // Initialize API client with compile-time base URL.
-  // Release builds MUST pass --dart-define=API_BASE_URL=https://your-server.com
-  // Debug builds default to localhost for convenience.
+  // Default API server. Override at build time with --dart-define=API_BASE_URL=...
   final apiClient = ApiClient(
     baseUrl: const String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue:
-          kReleaseMode ? 'https://api.anynote.app' : 'http://localhost:8080',
+      defaultValue: 'http://175.178.66.207:36661',
     ),
   );
 
