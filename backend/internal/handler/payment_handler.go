@@ -56,11 +56,13 @@ func (h *PaymentHandler) CreateCheckout(w http.ResponseWriter, r *http.Request) 
 	writeJSON(w, http.StatusOK, resp)
 }
 
+const maxWebhookBodySize = 1 << 20 // 1 MB — Stripe webhooks are well under this
+
 // HandleWebhook handles POST /api/v1/payments/webhook.
 // Processes Stripe webhook events. This endpoint does NOT require authentication
 // because Stripe calls it directly.
 func (h *PaymentHandler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
-	payload, err := io.ReadAll(r.Body)
+	payload, err := io.ReadAll(io.LimitReader(r.Body, maxWebhookBodySize))
 	if err != nil {
 		writeError(w, r, http.StatusBadRequest, "read_error", "Failed to read request body")
 		return

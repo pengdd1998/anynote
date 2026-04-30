@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../main.dart';
+import '../../features/settings/data/settings_providers.dart';
 
 /// Queue status snapshot for UI consumption.
 class OfflineQueueStatus {
@@ -65,14 +66,14 @@ class OfflineQueueService extends AsyncNotifier<OfflineQueueStatus> {
     await _refreshStatus();
   }
 
-  /// Process the offline queue — marks pending ops as completed
-  /// (actual sync integration is handled by the sync engine).
+  /// Process the offline queue by delegating to the [SyncQueueManager],
+  /// which runs each operation through the [SyncEngine] for actual sync.
   Future<void> processQueue() async {
-    final db = ref.read(databaseProvider);
-    final dao = db.syncOperationsDao;
-    final pending = await dao.getPendingOperations();
-    for (final op in pending) {
-      await dao.markCompleted(op.id);
+    try {
+      final queueManager = ref.read(syncQueueManagerProvider);
+      await queueManager.processQueue();
+    } catch (e) {
+      debugPrint('[OfflineQueueService] processQueue failed: $e');
     }
     await _refreshStatus();
   }

@@ -14,6 +14,14 @@ import '../domain/chat_session.dart';
 class AIChatRepository {
   final compose.AIRepository _aiRepo;
 
+  /// Maximum conversation history messages sent to the LLM (excluding system).
+  /// Older messages are dropped to stay within context window limits.
+  static const int _maxHistoryMessages = 40;
+
+  /// Approximate character limit for the entire message payload.
+  /// Prevents hitting API token limits with very long conversations.
+  static const int _maxPayloadChars = 100000;
+
   AIChatRepository(this._aiRepo);
 
   /// Build the system prompt for a chat session, including note context
@@ -50,13 +58,7 @@ class AIChatRepository {
     String userMessage, {
     CancelToken? cancelToken,
   }) async {
-    final systemPrompt = _buildSystemPrompt(session);
-    final apiMessages = <compose.ChatMessage>[
-      compose.ChatMessage(role: 'system', content: systemPrompt),
-      ...session.messages.whereType<ChatMessage>().map(_toComposeMessage),
-      compose.ChatMessage(role: 'user', content: userMessage),
-    ];
-
+    final apiMessages = _buildApiMessages(session, userMessage);
     return _aiRepo.chat(
       apiMessages,
       cancelToken: cancelToken,
@@ -69,20 +71,69 @@ class AIChatRepository {
     String userMessage, {
     CancelToken? cancelToken,
   }) async* {
-    final systemPrompt = _buildSystemPrompt(session);
-
-    final allMessages = <compose.ChatMessage>[
-      compose.ChatMessage(role: 'system', content: systemPrompt),
-      ...session.messages.whereType<ChatMessage>().map(_toComposeMessage),
-      compose.ChatMessage(role: 'user', content: userMessage),
-    ];
-
+    final apiMessages = _buildApiMessages(session, userMessage);
     await for (final chunk in _aiRepo.chatStream(
-      allMessages,
+      apiMessages,
       cancelToken: cancelToken,
     )) {
       yield chunk;
     }
+  }
+
+  /// Builds the complete message list with system prompt, truncated history,
+  /// and the new user message. Applies both message count and character limits.
+  List<compose.ChatMessage> _buildApiMessages(
+    ChatSession session,
+    String userMessage,
+  ) {
+    final systemPrompt = _buildSystemPrompt(session);
+    final history = session.messages
+        .whereType<ChatMessage>()
+        .map(_toComposeMessage)
+        .toList();
+
+    // Keep only the most recent messages within the limit.
+    final truncated = history.length > _maxHistoryMessages
+        ? history.sublist(history.length - _maxHistoryMessages)
+        : history;
+
+    final messages = <compose.ChatMessage>[
+      compose.ChatMessage(role: 'system', content: systemPrompt),
+      ...truncated,
+      compose.ChatMessage(role: 'user', content: userMessage),
+    ];
+
+    // If total payload exceeds character budget, trim oldest messages further.
+    return _trimToCharLimit(messages, _maxPayloadChars);
+  }
+
+  /// Trims messages from the front (after system prompt) until the total
+  /// character count is within [maxChars]. The system prompt and user message
+  /// are always preserved.
+  static List<compose.ChatMessage> _trimToCharLimit(
+    List<compose.ChatMessage> messages,
+    int maxChars,
+  ) {
+    int totalChars() => messages.fold<int>(
+          0,
+          (sum, m) => sum + m.content.length,
+        );
+
+    if (totalChars() <= maxChars) return messages;
+
+    // Keep system (index 0) and user message (last), trim middle.
+    final system = messages.first;
+    final user = messages.last;
+    final middle = messages.sublist(1, messages.length - 1);
+
+    var budget = maxChars - system.content.length - user.content.length;
+    final kept = <compose.ChatMessage>[];
+    for (var i = middle.length - 1; i >= 0 && budget > 0; i--) {
+      kept.insert(0, middle[i]);
+      budget -= middle[i].content.length;
+    }
+
+    return [system, ...kept, user];
   }
 }
 

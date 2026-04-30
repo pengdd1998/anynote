@@ -5,9 +5,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,6 +17,82 @@ import (
 
 	"github.com/anynote/backend/internal/domain"
 )
+
+// ErrBlockedURL is returned when a user-provided BaseURL resolves to a
+// blocked address (internal/reserved IP or non-HTTPS scheme).
+var ErrBlockedURL = errors.New("blocked LLM base URL: must use HTTPS and resolve to a public IP")
+
+// validateBaseURLFn can be overridden in tests to bypass SSRF validation.
+var validateBaseURLFn = validateBaseURLImpl
+
+// validateBaseURL ensures the given URL uses HTTPS and resolves to a non-reserved
+// IP address. This prevents SSRF attacks via user-provided LLM BaseURLs.
+func validateBaseURL(rawURL string) error {
+	return validateBaseURLFn(rawURL)
+}
+
+func validateBaseURLImpl(rawURL string) error {
+	if rawURL == "" {
+		return nil
+	}
+
+	scheme, host, err := parseSchemeAndHost(rawURL)
+	if err != nil {
+		return fmt.Errorf("invalid base URL: %w", err)
+	}
+
+	if scheme != "https" {
+		return fmt.Errorf("%w: scheme must be https, got %q", ErrBlockedURL, scheme)
+	}
+
+	if host == "" {
+		return fmt.Errorf("%w: empty host", ErrBlockedURL)
+	}
+
+	// Resolve hostname and check against reserved ranges.
+	ips, err := net.LookupIP(host)
+	if err != nil {
+		return fmt.Errorf("%w: DNS lookup failed for %q: %w", ErrBlockedURL, host, err)
+	}
+
+	for _, ip := range ips {
+		if !isPublicIP(ip) {
+			return fmt.Errorf("%w: host %q resolves to reserved IP %s", ErrBlockedURL, host, ip)
+		}
+	}
+
+	return nil
+}
+
+func parseSchemeAndHost(rawURL string) (scheme, host string, err error) {
+	schemeEnd := strings.Index(rawURL, "://")
+	if schemeEnd < 0 {
+		return "", "", fmt.Errorf("missing scheme")
+	}
+	scheme = rawURL[:schemeEnd]
+	rest := rawURL[schemeEnd+3:]
+	host = rest
+	if at := strings.IndexAny(host, "/?#"); at >= 0 {
+		host = host[:at]
+	}
+	// Strip port
+	if at := strings.LastIndex(host, ":"); at >= 0 {
+		host = host[:at]
+	}
+	// Strip brackets for IPv6
+	host = strings.TrimPrefix(host, "[")
+	host = strings.TrimSuffix(host, "]")
+	return scheme, host, nil
+}
+
+// isPublicIP returns false for loopback, link-local, private, and unspecified IPs.
+func isPublicIP(ip net.IP) bool {
+	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
+		ip.IsUnspecified() || ip.IsPrivate() {
+		return false
+	}
+	return true
+}
 
 // OpenAICompatProvider implements Provider for OpenAI-compatible APIs.
 // Covers: OpenAI, DeepSeek, Qwen, and any OpenAI-compatible endpoint.
@@ -43,6 +121,10 @@ func (p *OpenAICompatProvider) Name() string { return "openai_compat" }
 func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL string, req ChatRequest) (<-chan domain.StreamChunk, error) {
 	req.Stream = true
 
+	if err := validateBaseURL(baseURL); err != nil {
+		return nil, err
+	}
+
 	// Streaming connections are never retried -- doing so would duplicate
 	// output the client has already started consuming.
 	body, err := json.Marshal(req)
@@ -54,7 +136,7 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 	// transport pool is not disrupted. The derived context is handed off to
 	// the background goroutine below, so cancel must NOT be deferred here --
 	// it must be called only after the goroutine finishes reading.
-	streamCtx, cancel := context.WithTimeout(ctx, 120*time.Second)
+	streamCtx, cancel := context.WithTimeout(ctx, requestTimeout(req.Timeout))
 
 	url := strings.TrimRight(baseURL, "/") + "/chat/completions"
 	httpReq, err := http.NewRequestWithContext(streamCtx, http.MethodPost, url, bytes.NewReader(body))
@@ -79,7 +161,8 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 		if err != nil {
 			return nil, fmt.Errorf("reading error response body: %w", err)
 		}
-		return nil, fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
+		slog.Warn("LLM returned non-OK status", "status", resp.StatusCode, "body_len", len(respBody))
+		return nil, fmt.Errorf("LLM returned status %d", resp.StatusCode)
 	}
 
 	ch := make(chan domain.StreamChunk, 64)
@@ -146,6 +229,10 @@ func (p *OpenAICompatProvider) ChatStream(ctx context.Context, apiKey, baseURL s
 func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string, req ChatRequest) (*ChatResponse, error) {
 	req.Stream = false
 
+	if err := validateBaseURL(baseURL); err != nil {
+		return nil, err
+	}
+
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("marshal request: %w", err)
@@ -158,7 +245,7 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 
 	// Use context timeout instead of client-level Timeout so the shared
 	// transport pool is not disrupted.
-	ctx, cancel := context.WithTimeout(ctx, 120*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, requestTimeout(req.Timeout))
 	defer cancel()
 
 	var lastErr error
@@ -203,12 +290,12 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 		if resp.StatusCode == http.StatusBadRequest ||
 			resp.StatusCode == http.StatusUnauthorized ||
 			resp.StatusCode == http.StatusForbidden {
-			return nil, fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
+			return nil, fmt.Errorf("LLM returned status %d", resp.StatusCode)
 		}
 
 		// Retriable server/rate-limit errors
 		if isRetriable(resp.StatusCode) {
-			lastErr = fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
+			lastErr = fmt.Errorf("LLM returned status %d", resp.StatusCode)
 
 			// Respect Retry-After header for 429 responses
 			if resp.StatusCode == http.StatusTooManyRequests {
@@ -227,7 +314,7 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 
 		// Any other non-OK status is not retried
 		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("LLM returned %d: %s", resp.StatusCode, string(respBody))
+			return nil, fmt.Errorf("LLM returned status %d", resp.StatusCode)
 		}
 
 		// Success path
@@ -252,6 +339,14 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 	}
 
 	return nil, fmt.Errorf("LLM request failed after %d retries: %w", maxRetries, lastErr)
+
+}
+// requestTimeout returns the configured timeout or a 120s default.
+func requestTimeout(cfg time.Duration) time.Duration {
+	if cfg > 0 {
+		return cfg
+	}
+	return 120 * time.Second
 }
 
 // ── Retry helpers ──────────────────────────────────

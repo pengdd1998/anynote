@@ -81,10 +81,10 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			notifH = NewNotificationHandler(services.Notification)
 		}
 
-	// Device identity handler (uses DeviceRepo directly for CRUD).
+	// Device identity handler.
 	var deviceH *DeviceHandler
-	if services.DeviceRepo != nil {
-		deviceH = NewDeviceHandler(services.DeviceRepo)
+	if services.Device != nil {
+		deviceH = NewDeviceHandler(services.Device)
 	}
 
 	// Rate limiters
@@ -272,7 +272,7 @@ type Services struct {
 	Collab       service.CollabService
 	Payment      service.PaymentService
 	Notification service.NotificationService
-	DeviceRepo    *repository.DeviceRepository
+	Device        service.DeviceService
 	CollabRepo    *repository.CollabRepository
 	CollabOpsRepo *repository.CollabOperationsRepository
 }
@@ -293,7 +293,8 @@ func registerPprofRoutes(r chi.Router) {
 	pprofPassword := os.Getenv("PPROF_PASSWORD")
 
 	if pprofPassword == "" {
-		log.Println("[WARN] pprof endpoints enabled WITHOUT password protection -- this is insecure for production")
+		log.Println("[WARN] pprof enabled but PPROF_PASSWORD not set -- endpoints NOT registered for security")
+		return
 	}
 
 	r.Route("/debug", func(r chi.Router) {

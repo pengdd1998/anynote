@@ -135,7 +135,7 @@ func TestValidate_Success(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-16ch",
+			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "a-valid-master-key-32-bytes-long!!",
 		},
 	}
@@ -188,7 +188,7 @@ func TestValidate_ShortMasterKey(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-16ch",
+			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "short",
 		},
 	}
@@ -203,7 +203,7 @@ func TestValidate_MasterKey_HexEncoded(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-16ch",
+			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
 		},
 	}
@@ -217,7 +217,7 @@ func TestValidate_MasterKey_ShortHexEncoded(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-16ch",
+			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "0123456789abcdef0123456789abcdef",
 		},
 	}
@@ -230,7 +230,7 @@ func TestValidate_MasterKey_ShortHexEncoded(t *testing.T) {
 func TestValidate_MissingDatabaseURL(t *testing.T) {
 	cfg := &Config{
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-16ch",
+			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "a-valid-master-key-32-bytes-long!!",
 		},
 	}

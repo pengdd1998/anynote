@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/anynote/backend/internal/domain"
 	"github.com/anynote/backend/internal/service"
 	"github.com/go-chi/chi/v5"
@@ -16,7 +18,7 @@ import (
 const (
 	maxEncryptedContentLen = 1_048_576 // 1 MB
 	maxEncryptedTitleLen   = 500
-	maxShareKeyHashLen     = 256
+	maxShareKeyHashLen     = 256 // bcrypt hashes are ~60 chars, but allow margin
 )
 
 type ShareHandler struct {
@@ -64,6 +66,18 @@ func (h *ShareHandler) CreateShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Re-hash the client-provided hash with bcrypt for secure storage.
+	// The client sends SHA-256(password); we bcrypt that before storing
+	// so that a database leak does not allow fast brute-force attacks.
+	if req.HasPassword {
+		bcryptHash, bErr := bcrypt.GenerateFromPassword([]byte(req.ShareKeyHash), bcrypt.DefaultCost)
+		if bErr != nil {
+			writeError(w, r, http.StatusInternalServerError, "hash_error", "Failed to hash share password")
+			return
+		}
+		req.ShareKeyHash = string(bcryptHash)
+	}
+
 	resp, err := h.shareService.CreateShare(r.Context(), userID, req)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "create_error", "Failed to create shared note")
@@ -75,8 +89,8 @@ func (h *ShareHandler) CreateShare(w http.ResponseWriter, r *http.Request) {
 
 // GetShare retrieves a shared note by ID. No authentication required.
 // If the share has a password (HasPassword=true), the client must send the
-// password via the X-Share-Password header or share_password query parameter.
-// The password is hashed and compared against the stored ShareKeyHash.
+// password via the X-Share-Password header.
+// The password is hashed and compared against the stored bcrypt hash.
 // Returns the encrypted blob; the client must decrypt locally.
 func (h *ShareHandler) GetShare(w http.ResponseWriter, r *http.Request) {
 	shareID := chi.URLParam(r, "id")
@@ -98,23 +112,27 @@ func (h *ShareHandler) GetShare(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If the share is password-protected, verify the password hash.
+	// Password must be sent via the X-Share-Password header (not query param,
+	// which leaks to access logs and browser history).
 	if resp.HasPassword {
 		providedPassword := r.Header.Get("X-Share-Password")
 		if providedPassword == "" {
-			providedPassword = r.URL.Query().Get("share_password")
-		}
-		if providedPassword == "" {
-			writeError(w, r, http.StatusForbidden, "password_required", "This shared note requires a password")
+			writeError(w, r, http.StatusForbidden, "password_required", "This shared note requires a password. Send it via X-Share-Password header.")
 			return
 		}
 
-		// Hash the provided password and compare with stored hash using
-		// constant-time comparison to prevent timing side-channel attacks.
-		hash := sha256.Sum256([]byte(providedPassword))
-		providedHash := hex.EncodeToString(hash[:])
-		if subtle.ConstantTimeCompare([]byte(providedHash), []byte(resp.ShareKeyHash)) != 1 {
-			writeError(w, r, http.StatusForbidden, "wrong_password", "Incorrect password")
-			return
+		// Hash the provided password with SHA-256 (matching client behavior),
+		// then verify against the stored bcrypt hash.
+		shaHash := sha256.Sum256([]byte(providedPassword))
+		providedHash := hex.EncodeToString(shaHash[:])
+
+		stored := []byte(resp.ShareKeyHash)
+		if err := bcrypt.CompareHashAndPassword(stored, []byte(providedHash)); err != nil {
+			// Fallback: legacy shares used plain SHA-256 comparison.
+			if subtle.ConstantTimeCompare([]byte(providedHash), stored) != 1 {
+				writeError(w, r, http.StatusForbidden, "wrong_password", "Incorrect password")
+				return
+			}
 		}
 	}
 

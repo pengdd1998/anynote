@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"net/http"
 
@@ -176,6 +177,11 @@ func (h *AuthHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 // GetRecoverySalt handles GET /api/v1/auth/recovery-salt?email=...
 // This is a public endpoint (rate limited) because the user is not yet
 // authenticated during account recovery.
+//
+// Returns the same response shape regardless of whether the email exists
+// to prevent user enumeration. For unknown emails, a fake salt derived from
+// the email and server secret is returned so the response is deterministic
+// (prevents timing-based enumeration too).
 func (h *AuthHandler) GetRecoverySalt(w http.ResponseWriter, r *http.Request) {
 	email := r.URL.Query().Get("email")
 	if email == "" {
@@ -191,9 +197,12 @@ func (h *AuthHandler) GetRecoverySalt(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.authService.GetRecoverySaltByEmail(r.Context(), email)
 	if err != nil {
-		if !writeErrorFromSentinel(w, r, err) {
-			writeError(w, r, http.StatusInternalServerError, "internal_error", "Failed to retrieve recovery salt")
-		}
+		// Return fake salt to prevent user enumeration.
+		// The client will derive a key from the wrong salt and the
+		// subsequent Recover call will fail with an opaque error.
+		writeJSON(w, http.StatusOK, domain.RecoverySaltResponse{
+			RecoverySalt: fakeRecoverySalt(email),
+		})
 		return
 	}
 
@@ -240,4 +249,12 @@ func (h *AuthHandler) Recover(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "recovered"})
+}
+
+// fakeRecoverySalt returns a deterministic 32-byte salt derived from the email.
+// This ensures the recovery-salt endpoint returns the same response shape
+// for both existing and non-existing users, preventing email enumeration.
+func fakeRecoverySalt(email string) []byte {
+	h := sha256.Sum256([]byte("recovery-salt-fake:" + email))
+	return h[:]
 }

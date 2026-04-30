@@ -66,7 +66,7 @@ func (h *PlatformHandler) Connect(w http.ResponseWriter, r *http.Request) {
 	// Start the auth flow and get the QR code.
 	authRef, qrPNG, err := h.platformService.StartAuth(r.Context(), userID, platformName, h.masterKey)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "connect_error", fmt.Sprintf("Failed to start auth: %s", err.Error()))
+		writeError(w, r, http.StatusInternalServerError, "connect_error", "Failed to start platform authentication")
 		return
 	}
 

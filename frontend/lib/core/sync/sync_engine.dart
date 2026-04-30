@@ -169,6 +169,7 @@ class SyncEngine {
     final notifier = SyncProgressNotifier.instance;
     final items = <SyncPushItem>[];
     final deviceId = await getDeviceId();
+    var encryptionFailures = 0;
 
     // Gather and encrypt unsynced notes (parallel)
     final unsyncedNotes = await _db.notesDao.getUnsyncedNotes();
@@ -186,6 +187,7 @@ class SyncEngine {
         );
       }),
     );
+    encryptionFailures += noteResults.where((r) => r == null).length;
     items.addAll(noteResults.whereType<SyncPushItem>());
 
     // Gather and encrypt unsynced tags (parallel)
@@ -204,6 +206,7 @@ class SyncEngine {
         );
       }),
     );
+    encryptionFailures += tagResults.where((r) => r == null).length;
     items.addAll(tagResults.whereType<SyncPushItem>());
 
     // Gather and encrypt unsynced collections (parallel)
@@ -223,6 +226,7 @@ class SyncEngine {
         );
       }),
     );
+    encryptionFailures += collectionResults.where((r) => r == null).length;
     items.addAll(collectionResults.whereType<SyncPushItem>());
 
     // Gather and encrypt unsynced generated contents (parallel)
@@ -241,6 +245,7 @@ class SyncEngine {
         );
       }),
     );
+    encryptionFailures += contentResults.where((r) => r == null).length;
     items.addAll(contentResults.whereType<SyncPushItem>());
 
     // Gather and encrypt unsynced images (parallel)
@@ -267,10 +272,21 @@ class SyncEngine {
         );
       }),
     );
+    encryptionFailures += imageResults.where((r) => r == null).length;
     items.addAll(imageResults.whereType<SyncPushItem>());
 
+    if (encryptionFailures > 0) {
+      debugPrint(
+        '[SyncEngine] $encryptionFailures items failed encryption and were skipped',
+      );
+    }
+
     if (items.isEmpty) {
-      return SyncPushResponse(accepted: [], conflicts: []);
+      return SyncPushResponse(
+        accepted: [],
+        conflicts: [],
+        encryptionFailures: encryptionFailures,
+      );
     }
 
     notifier.emit(
@@ -287,7 +303,10 @@ class SyncEngine {
     );
 
     // Parse the server JSON response into a typed SyncPushResponse.
-    final response = _parsePushResponse(rawResponse as Map<String, dynamic>);
+    final response = _parsePushResponse(
+      rawResponse as Map<String, dynamic>,
+      encryptionFailures: encryptionFailures,
+    );
 
     // Mark accepted items as synced (O(1) lookup + batch per type)
     final itemById = {for (final item in items) item.itemId: item};
@@ -614,7 +633,10 @@ class SyncEngine {
   }
 
   /// Parse the push response JSON from the server.
-  SyncPushResponse _parsePushResponse(Map<String, dynamic> json) {
+  SyncPushResponse _parsePushResponse(
+    Map<String, dynamic> json, {
+    int encryptionFailures = 0,
+  }) {
     final acceptedRaw = json['accepted'] as List<dynamic>? ?? [];
     final conflictsRaw = json['conflicts'] as List<dynamic>? ?? [];
 
@@ -628,6 +650,7 @@ class SyncEngine {
             ),
           )
           .toList(),
+      encryptionFailures: encryptionFailures,
     );
   }
 }
@@ -704,8 +727,13 @@ class SyncPushItem {
 class SyncPushResponse {
   final List<String> accepted;
   final List<SyncConflict> conflicts;
+  final int encryptionFailures;
 
-  SyncPushResponse({required this.accepted, required this.conflicts});
+  SyncPushResponse({
+    required this.accepted,
+    required this.conflicts,
+    this.encryptionFailures = 0,
+  });
 }
 
 class SyncConflict {

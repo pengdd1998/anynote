@@ -162,13 +162,20 @@ class ErrorMapper {
 
   /// Attempt to extract a user-facing message from the Dio error response body.
   ///
-  /// The backend typically returns JSON like `{"error": "message"}` or
-  /// `{"message": "message"}`.
+  /// The backend returns errors as `{"error": {"code": "...", "message": "..."}}`
+  /// or occasionally as `{"error": "message"}` or `{"message": "message"}`.
   static String? _extractServerMessage(DioException e) {
     try {
       final data = e.response?.data;
       if (data is Map<String, dynamic>) {
-        return data['error'] as String? ?? data['message'] as String?;
+        final error = data['error'];
+        if (error is Map<String, dynamic>) {
+          return error['message'] as String?;
+        }
+        if (error is String) {
+          return error;
+        }
+        return data['message'] as String?;
       }
       return null;
     } catch (e) {

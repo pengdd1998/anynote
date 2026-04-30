@@ -144,10 +144,24 @@ class ApiClient {
 
       _refreshCompleter!.complete(newAccessToken);
       return newAccessToken;
+    } on DioException catch (e) {
+      // Only clear tokens for definitive auth failures (401/403 from the
+      // refresh endpoint). Network errors, timeouts, and server errors are
+      // transient -- clearing tokens would cause an unnecessary logout.
+      final status = e.response?.statusCode;
+      if (status == 401 || status == 403) {
+        debugPrint(
+            '[ApiClient] refresh token rejected ($status), clearing tokens');
+        await _clearAllTokens();
+      } else {
+        debugPrint('[ApiClient] token refresh failed (transient): $e');
+        // Do NOT clear tokens for network/server errors.
+      }
+      _refreshCompleter!.complete(null);
+      return null;
     } catch (e) {
-      // Refresh failed -- clear all tokens.
-      debugPrint('[ApiClient] token refresh failed: $e');
-      await _clearAllTokens();
+      // Non-Dio errors (unlikely but safe fallback): don't clear tokens.
+      debugPrint('[ApiClient] token refresh failed (unexpected): $e');
       _refreshCompleter!.complete(null);
       return null;
     } finally {
@@ -645,8 +659,12 @@ class _AuthInterceptor extends Interceptor {
           handler.next(retryErr);
         }
       } else {
-        // Refresh failed -- clear tokens and redirect to login.
-        _navigateToLogin();
+        // Refresh failed. Only redirect to login if tokens were actually
+        // cleared (i.e. this was an auth failure, not a transient network error).
+        // Tokens are preserved on transient failures so the next request can retry.
+        if (_client._accessToken == null) {
+          _navigateToLogin();
+        }
         handler.reject(err);
       }
     } else {

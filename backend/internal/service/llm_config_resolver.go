@@ -2,13 +2,15 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/anynote/backend/internal/llm"
 )
+
+const defaultLLMTimeout int64 = int64(120 * time.Second)
 
 // UserLLMConfig resolves the user's active LLM configuration.
 // If the user has an active config with a valid (decryptable) API key, it returns
@@ -38,7 +40,7 @@ func UserLLMConfig(
 		Model:       userCfg.Model,
 		MaxTokens:   userCfg.MaxTokens,
 		Temperature: userCfg.Temperature,
-		Timeout:     120 * 1e9, // 120s in nanoseconds
+		Timeout:     defaultLLMTimeout,
 	}
 
 	return cfg, nil
@@ -63,7 +65,15 @@ func CheckSharedModeQuota(
 	quotaSvc QuotaService,
 ) error {
 	if !rateLimiter.Allow(userIDStr) {
-		return fmt.Errorf("quota exceeded")
+		return ErrQuotaExceeded
+	}
+
+	// Check daily quota BEFORE incrementing.
+	quota, err := quotaSvc.GetQuota(ctx, userID)
+	if err != nil {
+		slog.Warn("failed to check quota, allowing request", "user_id", userIDStr, "error", err)
+	} else if quota != nil && quota.DailyUsed >= quota.DailyLimit {
+		return ErrQuotaExceeded
 	}
 
 	if err := quotaSvc.IncrementUsage(ctx, userID); err != nil {

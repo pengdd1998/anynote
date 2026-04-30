@@ -300,7 +300,7 @@ func main() {
 		Collab:       collabSvc,
 		Payment:      paymentSvc,
 		Notification: notificationSvc,
-		DeviceRepo:    deviceRepo,
+		Device:        service.NewDeviceService(deviceRepo),
 		CollabRepo:    collabRepo,
 		CollabOpsRepo: collabOpsRepo,
 	}

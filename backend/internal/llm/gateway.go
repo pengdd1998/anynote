@@ -35,9 +35,12 @@ func NewGateway() *Gateway {
 	}
 
 	compat := NewOpenAICompatProvider(nil)
-	for _, name := range []string{"openai", "deepseek", "qwen", "anthropic", "custom"} {
+	for _, name := range []string{"openai", "deepseek", "qwen", "custom"} {
 		gw.Register(name, compat)
 	}
+
+	// Anthropic uses its own Messages API format, distinct from OpenAI.
+	gw.Register("anthropic", NewAnthropicProvider(nil))
 
 	return gw
 }
@@ -95,6 +98,9 @@ func (g *Gateway) ChatStream(ctx context.Context, cfg GatewayConfig, req ChatReq
 	}
 	if req.MaxTokens == nil {
 		req.MaxTokens = &cfg.MaxTokens
+	}
+	if req.Timeout <= 0 && cfg.Timeout > 0 {
+		req.Timeout = time.Duration(cfg.Timeout)
 	}
 	req.Stream = true
 
@@ -173,6 +179,9 @@ type ChatRequest struct {
 	Temperature *float32             `json:"temperature,omitempty"`
 	MaxTokens   *int                 `json:"max_tokens,omitempty"`
 	Stream      bool                 `json:"stream"`
+
+	// Timeout is the per-request context timeout (not sent to provider).
+	Timeout time.Duration `json:"-"`
 
 	// Retry configuration (not sent to provider; used internally by retry logic)
 	MaxRetries     int           `json:"-"`

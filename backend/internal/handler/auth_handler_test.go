@@ -1100,6 +1100,8 @@ func TestAuthHandler_GetRecoverySalt_InvalidEmail(t *testing.T) {
 }
 
 func TestAuthHandler_GetRecoverySalt_UserNotFound(t *testing.T) {
+	// Non-existing email should still return 200 with a fake salt
+	// to prevent user enumeration.
 	svc := &mockAuthService{
 		getRecoverySaltByEmail: func(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
 			return nil, service.ErrUserNotFound
@@ -1113,8 +1115,17 @@ func TestAuthHandler_GetRecoverySalt_UserNotFound(t *testing.T) {
 
 	router.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusNotFound {
-		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusNotFound, rec.Body.String())
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	// Verify the response contains a recovery_salt field (fake salt).
+	var body map[string]interface{}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("failed to parse response body: %v", err)
+	}
+	if _, ok := body["recovery_salt"]; !ok {
+		t.Error("response should contain recovery_salt for anti-enumeration")
 	}
 }
 

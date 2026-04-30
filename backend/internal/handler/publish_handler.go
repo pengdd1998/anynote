@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	maxPublishTitleLen = 500
-	maxPublishTags     = 50
-	maxPublishTagLen   = 100
+	maxPublishTitleLen   = 500
+	maxPublishContentLen = 10_000_000 // 10 MB
+	maxPublishTags       = 50
+	maxPublishTagLen     = 100
 )
 
 type PublishHandler struct {
@@ -59,6 +60,11 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 
 	if len(req.Title) > maxPublishTitleLen {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "Title must be at most 500 characters")
+		return
+	}
+
+	if len(req.Content) > maxPublishContentLen {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "Content must be at most 10 MB")
 		return
 	}
 

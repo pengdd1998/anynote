@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/anynote/backend/internal/domain"
 )
@@ -42,20 +43,35 @@ For create_note, include in result: {title: "...", content: "..."}
 `
 
 func (s *aiAgentService) ExecuteAction(ctx context.Context, userID string, req domain.AIAgentRequest) (*domain.AIAgentResponse, error) {
-	// Build the prompt from the action and context.
-	actionPrompt := fmt.Sprintf("Action: %s\n", req.Action)
+	// Build the prompt from the action and context using structured delimiters
+	// to isolate user-supplied content from the system prompt.
+	var promptBuf strings.Builder
+	promptBuf.WriteString("<user-request>\n")
+	promptBuf.WriteString("Action: ")
+	promptBuf.WriteString(sanitizeAgentInput(req.Action))
+	promptBuf.WriteString("\n")
 
 	if len(req.NoteIDs) > 0 {
-		actionPrompt += fmt.Sprintf("Note IDs: %v\n", req.NoteIDs)
+		promptBuf.WriteString("Note IDs: ")
+		promptBuf.WriteString(sanitizeAgentInput(fmt.Sprintf("%v", req.NoteIDs)))
+		promptBuf.WriteString("\n")
 	}
 
 	if contextData, err := json.Marshal(req.Context); err == nil && len(contextData) > 2 {
-		actionPrompt += fmt.Sprintf("Context: %s\n", string(contextData))
+		promptBuf.WriteString("Context: ")
+		promptBuf.WriteString(sanitizeAgentInput(string(contextData)))
+		promptBuf.WriteString("\n")
 	}
 
 	if params, err := json.Marshal(req.Parameters); err == nil && len(params) > 2 {
-		actionPrompt += fmt.Sprintf("Parameters: %s\n", string(params))
+		promptBuf.WriteString("Parameters: ")
+		promptBuf.WriteString(sanitizeAgentInput(string(params)))
+		promptBuf.WriteString("\n")
 	}
+
+	promptBuf.WriteString("</user-request>")
+
+	actionPrompt := promptBuf.String()
 
 	// Route through the existing AI proxy.
 	proxyReq := domain.AIProxyRequest{
@@ -105,4 +121,18 @@ func (s *aiAgentService) ExecuteAction(ctx context.Context, userID string, req d
 		Status: "completed",
 		Result: result,
 	}, nil
+}
+
+// sanitizeAgentInput strips delimiter-like patterns from user-supplied agent
+// input to prevent delimiter-injection attacks. The structured delimiters
+// (<user-request>, </user-request>) are reserved for the system prompt.
+func sanitizeAgentInput(input string) string {
+	s := strings.ReplaceAll(input, "<user-request>", "")
+	s = strings.ReplaceAll(s, "</user-request>", "")
+	// Strip common prompt-injection prefixes
+	s = strings.ReplaceAll(s, "Ignore previous instructions", "")
+	s = strings.ReplaceAll(s, "ignore previous instructions", "")
+	s = strings.ReplaceAll(s, "System:", "")
+	s = strings.ReplaceAll(s, "system:", "")
+	return s
 }

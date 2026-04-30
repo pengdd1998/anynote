@@ -7,17 +7,17 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/anynote/backend/internal/domain"
-	"github.com/anynote/backend/internal/repository"
+	"github.com/anynote/backend/internal/service"
 )
 
 // DeviceHandler handles HTTP requests for device identity management.
 type DeviceHandler struct {
-	deviceRepo *repository.DeviceRepository
+	deviceSvc service.DeviceService
 }
 
 // NewDeviceHandler creates a new DeviceHandler.
-func NewDeviceHandler(deviceRepo *repository.DeviceRepository) *DeviceHandler {
-	return &DeviceHandler{deviceRepo: deviceRepo}
+func NewDeviceHandler(deviceSvc service.DeviceService) *DeviceHandler {
+	return &DeviceHandler{deviceSvc: deviceSvc}
 }
 
 // registerDeviceBody is the expected JSON body for POST /api/v1/devices/register.
@@ -61,7 +61,7 @@ func (h *DeviceHandler) RegisterDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	device, err := h.deviceRepo.RegisterDevice(r.Context(), userID.String(), req.DeviceID, req.DeviceName, req.Platform)
+	device, err := h.deviceSvc.RegisterDevice(r.Context(), userID, req.DeviceID, req.DeviceName, req.Platform)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "register_error", "Failed to register device")
 		return
@@ -79,7 +79,7 @@ func (h *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	devices, err := h.deviceRepo.ListDevices(r.Context(), userID.String())
+	devices, err := h.deviceSvc.ListDevices(r.Context(), userID)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "list_error", "Failed to list devices")
 		return
@@ -110,7 +110,7 @@ func (h *DeviceHandler) DeleteDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.deviceRepo.DeleteDevice(r.Context(), userID.String(), deviceID); err != nil {
+	if err := h.deviceSvc.DeleteDevice(r.Context(), userID, deviceID); err != nil {
 		writeError(w, r, http.StatusNotFound, "not_found", "Device not found")
 		return
 	}

@@ -261,8 +261,8 @@ func (c *Config) Validate() error {
 	if c.Auth.JWTSecret == "" {
 		return fmt.Errorf("JWT_SECRET is required but not set")
 	}
-	if len(c.Auth.JWTSecret) < 16 {
-		return fmt.Errorf("JWT_SECRET must be at least 16 characters, got %d", len(c.Auth.JWTSecret))
+	if len(c.Auth.JWTSecret) < 32 {
+		return fmt.Errorf("JWT_SECRET must be at least 32 characters, got %d", len(c.Auth.JWTSecret))
 	}
 	if c.Auth.MasterEncryptionKey == "" {
 		return fmt.Errorf("MASTER_ENCRYPTION_KEY is required but not set")

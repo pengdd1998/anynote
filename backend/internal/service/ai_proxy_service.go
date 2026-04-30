@@ -92,6 +92,10 @@ func (s *aiProxyService) Proxy(ctx context.Context, userID string, req domain.AI
 		return nil, err
 	}
 
+	// In shared mode, strip user-provided system messages to prevent
+	// system prompt override attacks. The server controls the system prompt.
+	req.Messages = stripSystemMessages(req.Messages)
+
 	// 3. Use server default LLM
 	chatReq := s.toChatRequest(req, s.defaultCfg)
 	ch, err := s.gateway.ChatStream(ctx, s.defaultCfg, chatReq)
@@ -133,4 +137,17 @@ func (s *aiProxyService) toChatRequest(req domain.AIProxyRequest, cfg llm.Gatewa
 		MaxTokens:   req.MaxTokens,
 		Stream:      req.Stream,
 	}
+}
+
+// stripSystemMessages removes all messages with role "system" from the slice.
+// Used in shared mode to prevent users from injecting or overriding the system
+// prompt, which could be used to bypass safety guardrails or extract the prompt.
+func stripSystemMessages(msgs []domain.ChatMessage) []domain.ChatMessage {
+	filtered := make([]domain.ChatMessage, 0, len(msgs))
+	for _, m := range msgs {
+		if m.Role != "system" {
+			filtered = append(filtered, m)
+		}
+	}
+	return filtered
 }

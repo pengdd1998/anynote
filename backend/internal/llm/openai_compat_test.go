@@ -15,6 +15,11 @@ import (
 	"github.com/anynote/backend/internal/domain"
 )
 
+func init() {
+	// Bypass SSRF URL validation in tests (httptest uses http://127.0.0.1).
+	validateBaseURLFn = func(string) error { return nil }
+}
+
 // ---------------------------------------------------------------------------
 // Chat tests with httptest mock server
 // ---------------------------------------------------------------------------

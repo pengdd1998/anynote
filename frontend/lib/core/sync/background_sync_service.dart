@@ -56,16 +56,16 @@ void callbackDispatcher() {
           return true;
         }
 
-        // Store the latest sync version so the next foreground sync can
-        // skip these items. The actual blob processing (decryption, FTS5
-        // indexing) is deferred to the foreground SyncEngine which has
-        // access to the crypto service.
+        // Store the latest sync version in SharedPreferences (not in the
+        // sync_meta table) so the foreground SyncEngine can use it as a hint.
+        // We do NOT advance syncMeta here because the blobs have not been
+        // processed — advancing would cause the foreground sync to skip them,
+        // resulting in silent data loss.
         //
-        // We do NOT store the blobs themselves in the database here because
-        // doing so without proper decryption would leave orphaned encrypted
-        // rows. The foreground pull will re-fetch these same blobs and
-        // process them correctly.
-        await db.syncMetaDao.updateSyncMeta('all', response.latestVersion);
+        // The foreground SyncEngine will pull blobs starting from its own
+        // sinceVersion and process them with the crypto service.
+        await prefs.setInt(
+            'background_sync_latest_version', response.latestVersion);
 
         if (kDebugMode) {
           debugPrint(
