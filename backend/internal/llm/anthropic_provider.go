@@ -315,7 +315,7 @@ func (p *AnthropicProvider) Chat(ctx context.Context, apiKey, baseURL string, re
 		}, nil
 	}
 
-	return nil, fmt.Errorf("Anthropic request failed after %d retries: %w", maxRetries, lastErr)
+	return nil, fmt.Errorf("anthropic request failed after %d retries: %w", maxRetries, lastErr)
 }
 
 // anthropicResponse is the Anthropic Messages API response format.
