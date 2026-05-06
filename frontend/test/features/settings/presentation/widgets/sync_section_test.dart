@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:anynote/core/sync/background_sync_service.dart';
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/settings/presentation/widgets/sync_section.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 
@@ -137,7 +138,7 @@ void main() {
     testWidgets('renders sync icon', (tester) async {
       await pumpSyncSection(tester);
 
-      expect(find.byIcon(Icons.sync), findsOneWidget);
+      expect(find.byIcon(AppIcons.sync), findsOneWidget);
     });
 
     testWidgets('tapping switch toggles value', (tester) async {

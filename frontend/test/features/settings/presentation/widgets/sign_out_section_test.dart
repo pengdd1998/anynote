@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/settings/presentation/widgets/sign_out_section.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 
@@ -28,7 +29,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Sign Out'), findsOneWidget);
-      expect(find.byIcon(Icons.logout), findsOneWidget);
+      expect(find.byIcon(AppIcons.logout), findsOneWidget);
     });
 
     testWidgets('tapping Sign Out shows confirmation dialog', (tester) async {
@@ -96,7 +97,7 @@ void main() {
 
       // The DestructiveSettingsItem renders text with the error color.
       // Verify that the logout icon and text are present.
-      final logoutIcon = find.byIcon(Icons.logout);
+      final logoutIcon = find.byIcon(AppIcons.logout);
       expect(logoutIcon, findsOneWidget);
     });
 

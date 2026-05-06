@@ -24,6 +24,25 @@ void main() {
       );
     }
 
+    /// Finds the [Transform] that wraps the child content inside
+    /// [PressableScale], avoiding ancestor [Transform]s from [MaterialApp].
+    Finder findScaleTransform(WidgetTester tester) {
+      final childFinder = find.text('Tap me');
+      return find.ancestor(
+        of: childFinder,
+        matching: find.byType(Transform),
+      );
+    }
+
+    /// Reads the X-axis scale factor from the [Transform] wrapping the child.
+    double readScale(WidgetTester tester) {
+      final transform =
+          tester.widget<Transform>(findScaleTransform(tester).first);
+      // Transform.scale only scales X and Y; Z stays at 1.0, so
+      // getMaxScaleOnAxis() always returns 1.0. Read the X entry directly.
+      return transform.transform.entry(0, 0);
+    }
+
     // -- Child rendering ----------------------------------------------
 
     testWidgets('renders child widget', (tester) async {
@@ -69,15 +88,13 @@ void main() {
     testWidgets('contains Transform.scale for press feedback', (tester) async {
       await pumpPressable(tester);
 
-      expect(find.byType(Transform), findsWidgets);
+      expect(findScaleTransform(tester), findsWidgets);
     });
 
     testWidgets('Transform.scale starts at scale 1.0', (tester) async {
       await pumpPressable(tester);
 
-      final transform = tester.widget<Transform>(find.byType(Transform).first);
-      // Matrix4 scale at (0,0) should be 1.0 initially.
-      expect(transform.transform.getMaxScaleOnAxis(), 1.0);
+      expect(readScale(tester), 1.0);
     });
 
     testWidgets('contains GestureDetector for tap handling', (tester) async {
@@ -96,11 +113,13 @@ void main() {
 
       final gesture =
           await tester.startGesture(tester.getCenter(find.text('Tap me')));
-      await tester.pumpAndSettle();
+      // Pump a frame so the GestureDetector processes the pointer-down event
+      // and fires onTapDown, which starts the spring animation.
+      await tester.pump();
+      // Pump real-time frames so the SpringSimulation can advance.
+      await tester.pump(const Duration(milliseconds: 300));
 
-      final transform = tester.widget<Transform>(find.byType(Transform).first);
-      // Scale should be close to scaleDown (0.95) after spring settles.
-      expect(transform.transform.getMaxScaleOnAxis(), closeTo(0.95, 0.01));
+      expect(readScale(tester), closeTo(0.95, 0.01));
 
       await gesture.up();
       await tester.pumpAndSettle();
@@ -114,13 +133,14 @@ void main() {
 
       final gesture =
           await tester.startGesture(tester.getCenter(find.text('Tap me')));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
       await gesture.up();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      final transform = tester.widget<Transform>(find.byType(Transform).first);
-      expect(transform.transform.getMaxScaleOnAxis(), closeTo(1.0, 0.01));
+      expect(readScale(tester), closeTo(1.0, 0.01));
     });
 
     testWidgets('scales back to 1.0 on tap cancel', (tester) async {
@@ -131,13 +151,14 @@ void main() {
 
       final gesture =
           await tester.startGesture(tester.getCenter(find.text('Tap me')));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
       await gesture.cancel();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      final transform = tester.widget<Transform>(find.byType(Transform).first);
-      expect(transform.transform.getMaxScaleOnAxis(), closeTo(1.0, 0.01));
+      expect(readScale(tester), closeTo(1.0, 0.01));
     });
 
     // -- Custom scale factor ------------------------------------------
@@ -151,10 +172,10 @@ void main() {
 
       final gesture =
           await tester.startGesture(tester.getCenter(find.text('Tap me')));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      final transform = tester.widget<Transform>(find.byType(Transform).first);
-      expect(transform.transform.getMaxScaleOnAxis(), closeTo(0.8, 0.01));
+      expect(readScale(tester), closeTo(0.8, 0.01));
 
       await gesture.up();
       await tester.pumpAndSettle();

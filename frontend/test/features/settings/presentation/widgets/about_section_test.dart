@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:anynote/core/providers/app_info_provider.dart';
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/settings/presentation/widgets/about_section.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 
@@ -66,14 +67,14 @@ void main() {
 
       expect(find.text('Privacy Policy'), findsOneWidget);
       // Chevron trailing icon indicates tappable navigation.
-      expect(find.byIcon(Icons.privacy_tip_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.privacyTip), findsOneWidget);
     });
 
     testWidgets('renders terms of service item', (tester) async {
       await pumpAboutSection(tester);
 
       expect(find.text('Terms of Service'), findsOneWidget);
-      expect(find.byIcon(Icons.description_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.description), findsOneWidget);
     });
 
     testWidgets('tapping privacy policy opens a dialog', (tester) async {
@@ -111,7 +112,7 @@ void main() {
     testWidgets('shows info icon for version row', (tester) async {
       await pumpAboutSection(tester);
 
-      expect(find.byIcon(Icons.info_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.infoOutline), findsOneWidget);
     });
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/constants/changelog.dart';
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/settings/presentation/whats_new_screen.dart';
 
 void main() {
@@ -65,9 +66,9 @@ void main() {
           expect(find.text(entry), findsOneWidget);
         }
 
-        // Each entry row has a check_circle icon.
+        // Each entry row has a checkCircleFilled icon.
         expect(
-          find.byIcon(Icons.check_circle),
+          find.byIcon(AppIcons.checkCircleFilled),
           findsNWidgets(entries.length),
         );
       }
@@ -98,7 +99,7 @@ void main() {
       expect(find.text('Got it!'), findsNothing);
     });
 
-    testWidgets('shows auto_awesome icon in header', (tester) async {
+    testWidgets('shows sparkle icon in header', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -110,7 +111,7 @@ void main() {
       await tester.tap(find.byType(ElevatedButton));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.auto_awesome), findsOneWidget);
+      expect(find.byIcon(AppIcons.composeFilled), findsOneWidget);
     });
 
     testWidgets('dialog is not dismissible by tapping outside', (tester) async {
@@ -154,11 +155,11 @@ void main() {
       expect(find.text("What's New"), findsOneWidget);
       expect(find.text('Got it!'), findsOneWidget);
 
-      // If the current version has no entries, there should be no check_circle
-      // icons (other than the header's auto_awesome).
+      // If the current version has no entries, there should be no checkCircleFilled
+      // icons (other than the header's composeFilled).
       final entries = Changelog.entries[Changelog.kCurrentVersion] ?? [];
       if (entries.isEmpty) {
-        expect(find.byIcon(Icons.check_circle), findsNothing);
+        expect(find.byIcon(AppIcons.checkCircleFilled), findsNothing);
       }
     });
 

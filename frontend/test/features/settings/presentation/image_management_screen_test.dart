@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/settings/presentation/image_management_screen.dart';
 import '../../../helpers/test_app_helper.dart';
 
@@ -72,7 +73,7 @@ void main() {
       // Image count.
       expect(find.textContaining('12'), findsOneWidget);
       // Photo library icon.
-      expect(find.byIcon(Icons.photo_library_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.photoLibrary), findsOneWidget);
 
       await handle.dispose();
     });
@@ -94,8 +95,8 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
-      expect(find.byIcon(Icons.cleaning_services_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.delete_forever_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.cleaningServices), findsOneWidget);
+      expect(find.byIcon(AppIcons.deleteForeverOutline), findsOneWidget);
 
       await handle.dispose();
     });
