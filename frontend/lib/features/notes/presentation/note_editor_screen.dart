@@ -17,6 +17,7 @@ import '../../../main.dart';
 import '../../../core/collab/crdt_text.dart';
 import '../../../core/collab/presence_indicator.dart';
 import '../../../core/collab/ws_client.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../features/collab/presentation/share_dialog.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/tts/speech_service.dart';
@@ -1615,8 +1616,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (kIsWeb) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      AppSnackBar.error(context,
-          message: l10n.failedToAddImage('Not available on web'),);
+      AppSnackBar.error(
+        context,
+        message: l10n.failedToAddImage('Not available on web'),
+      );
       return;
     }
 
@@ -1679,7 +1682,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      AppSnackBar.error(context, message: l10n.failedToAddImage(e.toString()));
+      AppSnackBar.error(context,
+          message: l10n.failedToAddImage(
+              ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)));
     }
   }
 
@@ -1692,8 +1697,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (kIsWeb) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      AppSnackBar.error(context,
-          message: l10n.failedToAddImage('Not available on web'),);
+      AppSnackBar.error(
+        context,
+        message: l10n.failedToAddImage('Not available on web'),
+      );
       return;
     }
 
@@ -1721,12 +1728,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // Could not read an image from clipboard.
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      AppSnackBar.error(context,
-          message: l10n.failedToAddImage('No image found in clipboard'),);
+      AppSnackBar.error(
+        context,
+        message: l10n.failedToAddImage('No image found in clipboard'),
+      );
     } catch (e) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      AppSnackBar.error(context, message: l10n.failedToAddImage(e.toString()));
+      AppSnackBar.error(context,
+          message: l10n.failedToAddImage(
+              ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)));
     }
   }
 
@@ -1788,7 +1799,7 @@ class _SaveStatusChip extends StatelessWidget {
       );
     } else {
       label = l10n.statusSaved;
-      color = Colors.green;
+      color = AppColors.success;
       icon = Icon(Icons.check_circle, size: 14, color: color);
     }
 

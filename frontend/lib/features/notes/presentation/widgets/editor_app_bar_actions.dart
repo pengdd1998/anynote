@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../l10n/app_localizations.dart';
-import '../../../../core/tts/speech_service.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/collab/presence_indicator.dart';
+import '../../../../core/tts/speech_service.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Configuration object holding all callbacks needed by the editor AppBar
 /// actions. Extracted from 31 positional parameters into a single data class
@@ -467,7 +468,7 @@ class _AppBarSaveStatus extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Tooltip(
           message: l10n.statusSaved,
-          child: const Icon(Icons.check_circle, size: 16, color: Colors.green),
+          child: Icon(Icons.check_circle, size: 16, color: AppColors.success),
         ),
       ),
     );

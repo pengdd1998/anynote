@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../crypto/crypto_service.dart';
 import '../database/app_database.dart';
+import '../error/error.dart';
 import 'restore_strategy.dart';
 
 /// Service for restoring data from encrypted backup files with conflict
@@ -60,8 +61,8 @@ class RestoreService {
     final decrypted = await _crypto.decryptForItem(backupKeyId, encryptedData);
     if (decrypted == null) {
       throw StateError(
-          'Failed to decrypt backup. The encryption keys may not match.',);
-
+        'Failed to decrypt backup. The encryption keys may not match.',
+      );
     }
 
     final backupDataMap = jsonDecode(decrypted) as Map<String, dynamic>;
@@ -83,19 +84,19 @@ class RestoreService {
     final existingTagIds = existingTags.map((t) => t.id).toSet();
 
     final existingCollections = await _db.collectionsDao.getAllCollections();
-    final existingCollectionIds =
-        existingCollections.map((c) => c.id).toSet();
+    final existingCollectionIds = existingCollections.map((c) => c.id).toSet();
 
     final existingContentList = await _db.generatedContentsDao.getAll();
-    final existingContentIds =
-        existingContentList.map((c) => c.id).toSet();
+    final existingContentIds = existingContentList.map((c) => c.id).toSet();
 
     // 4. Restore notes.
-    onProgress?.call(RestoreProgress(
-      current: current,
-      total: totalItems,
-      step: 'notes',
-    ),);
+    onProgress?.call(
+      RestoreProgress(
+        current: current,
+        total: totalItems,
+        step: 'notes',
+      ),
+    );
 
     for (final noteJson in notes) {
       current++;
@@ -108,11 +109,13 @@ class RestoreService {
           switch (strategy) {
             case ConflictStrategy.skip:
               skipped++;
-              onProgress?.call(RestoreProgress(
-                current: current,
-                total: totalItems,
-                step: 'notes',
-              ),);
+              onProgress?.call(
+                RestoreProgress(
+                  current: current,
+                  total: totalItems,
+                  step: 'notes',
+                ),
+              );
               continue;
 
             case ConflictStrategy.overwrite:
@@ -177,14 +180,16 @@ class RestoreService {
         }
       } catch (e) {
         final id = n['id'];
-        errors.add('Note ${id ?? 'unknown'}: ${e.toString()}');
+        errors.add('Note ${id ?? 'unknown'}: ${ErrorMapper.map(e)}');
       }
 
-      onProgress?.call(RestoreProgress(
-        current: current,
-        total: totalItems,
-        step: 'notes',
-      ),);
+      onProgress?.call(
+        RestoreProgress(
+          current: current,
+          total: totalItems,
+          step: 'notes',
+        ),
+      );
     }
 
     // 5. Restore tags.
@@ -199,11 +204,13 @@ class RestoreService {
           switch (strategy) {
             case ConflictStrategy.skip:
               skipped++;
-              onProgress?.call(RestoreProgress(
-                current: current,
-                total: totalItems,
-                step: 'tags',
-              ),);
+              onProgress?.call(
+                RestoreProgress(
+                  current: current,
+                  total: totalItems,
+                  step: 'tags',
+                ),
+              );
               continue;
 
             case ConflictStrategy.overwrite:
@@ -244,14 +251,16 @@ class RestoreService {
           restored++;
         }
       } catch (e) {
-        errors.add('Tag $tagId: ${e.toString()}');
+        errors.add('Tag $tagId: ${ErrorMapper.map(e)}');
       }
 
-      onProgress?.call(RestoreProgress(
-        current: current,
-        total: totalItems,
-        step: 'tags',
-      ),);
+      onProgress?.call(
+        RestoreProgress(
+          current: current,
+          total: totalItems,
+          step: 'tags',
+        ),
+      );
     }
 
     // 6. Restore collections.
@@ -266,11 +275,13 @@ class RestoreService {
           switch (strategy) {
             case ConflictStrategy.skip:
               skipped++;
-              onProgress?.call(RestoreProgress(
-                current: current,
-                total: totalItems,
-                step: 'collections',
-              ),);
+              onProgress?.call(
+                RestoreProgress(
+                  current: current,
+                  total: totalItems,
+                  step: 'collections',
+                ),
+              );
               continue;
 
             case ConflictStrategy.overwrite:
@@ -311,14 +322,16 @@ class RestoreService {
           restored++;
         }
       } catch (e) {
-        errors.add('Collection $colId: ${e.toString()}');
+        errors.add('Collection $colId: ${ErrorMapper.map(e)}');
       }
 
-      onProgress?.call(RestoreProgress(
-        current: current,
-        total: totalItems,
-        step: 'collections',
-      ),);
+      onProgress?.call(
+        RestoreProgress(
+          current: current,
+          total: totalItems,
+          step: 'collections',
+        ),
+      );
     }
 
     // 7. Restore AI-generated contents.
@@ -333,11 +346,13 @@ class RestoreService {
           switch (strategy) {
             case ConflictStrategy.skip:
               skipped++;
-              onProgress?.call(RestoreProgress(
-                current: current,
-                total: totalItems,
-                step: 'contents',
-              ),);
+              onProgress?.call(
+                RestoreProgress(
+                  current: current,
+                  total: totalItems,
+                  step: 'contents',
+                ),
+              );
               continue;
 
             case ConflictStrategy.overwrite:
@@ -364,8 +379,7 @@ class RestoreService {
                 id: newId,
                 encryptedBody: newEncryptedBody,
                 plainBody: plainBody,
-                platformStyle:
-                    (c['platform_style'] as String?) ?? 'generic',
+                platformStyle: (c['platform_style'] as String?) ?? 'generic',
                 aiModelUsed: (c['ai_model_used'] as String?) ?? '',
               );
               restored++;
@@ -375,21 +389,22 @@ class RestoreService {
             id: contentId,
             encryptedBody: c['encrypted_body'] as String,
             plainBody: c['plain_body'] as String?,
-            platformStyle:
-                (c['platform_style'] as String?) ?? 'generic',
+            platformStyle: (c['platform_style'] as String?) ?? 'generic',
             aiModelUsed: (c['ai_model_used'] as String?) ?? '',
           );
           restored++;
         }
       } catch (e) {
-        errors.add('Content $contentId: ${e.toString()}');
+        errors.add('Content $contentId: ${ErrorMapper.map(e)}');
       }
 
-      onProgress?.call(RestoreProgress(
-        current: current,
-        total: totalItems,
-        step: 'contents',
-      ),);
+      onProgress?.call(
+        RestoreProgress(
+          current: current,
+          total: totalItems,
+          step: 'contents',
+        ),
+      );
     }
 
     return RestoreResult(

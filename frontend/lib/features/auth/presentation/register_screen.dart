@@ -12,6 +12,7 @@ import '../../../core/crypto/master_key.dart';
 import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/notifications/push_service.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_snackbar.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -131,8 +132,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             children: [
               Text(
                 l10n.recoveryKeyInstructions,
-                style: const TextStyle(
-                  color: Colors.orange,
+                style: TextStyle(
+                  color: AppColors.warning,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -140,7 +141,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: SelectableText(
@@ -308,8 +309,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
                         l10n.encryptionNotice,
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).disabledColor),
                       ),
                     ),
                     FilledButton(

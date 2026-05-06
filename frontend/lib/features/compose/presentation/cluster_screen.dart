@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/alpha_constants.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Displays AI-generated note clusters and lets the user select which
 /// clusters to include in the outline generation step.
@@ -68,7 +69,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
             const SizedBox(height: 8),
             Text(
               l10n.analyzingNotes(session.selectedNoteIds.length, session.topic),
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor),
               textAlign: TextAlign.center,
             ),
           ],
@@ -120,7 +121,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                 child: Text(
                   l10n.foundThemesSelect(session.clusters.length),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade700,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -148,7 +149,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                     borderRadius: BorderRadius.circular(12),
                     side: isSelected
                         ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
-                        : BorderSide(color: Colors.grey.shade200),
+                        : BorderSide(color: Theme.of(context).colorScheme.outline),
                   ),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
@@ -183,14 +184,14 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                                 const SizedBox(height: 6),
                                 Text(
                                   cluster.summary,
-                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor, fontSize: 13),
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
                                   l10n.notesCount(cluster.noteIndices.length),
-                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                                  style: TextStyle(color: Theme.of(context).disabledColor, fontSize: 12),
                                 ),
                               ],
                             ),
@@ -213,7 +214,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
               children: [
                 Text(
                   l10n.clustersSelected(session.selectedClusterIndices.length),
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor),
                 ),
                 const Spacer(),
                 FilledButton.icon(

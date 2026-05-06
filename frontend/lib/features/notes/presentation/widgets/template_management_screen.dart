@@ -108,7 +108,7 @@ class _TemplateManagementScreenState
                       child: Center(
                         child: Text(
                           l10n.noTemplates,
-                          style: TextStyle(color: Colors.grey.shade500),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
                       ),
                     )
@@ -124,17 +124,16 @@ class _TemplateManagementScreenState
   }
 
   Widget _buildSectionHeader(String title, IconData icon) {
-    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: theme.colorScheme.primary),
+          Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
           Text(
             title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.primary,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -148,7 +147,6 @@ class _TemplateManagementScreenState
     AppLocalizations l10n, {
     required bool isBuiltIn,
   }) {
-    final theme = Theme.of(context);
     final catColor = _categoryColor(template.category);
     final catLabel = _categoryLabel(template.category, l10n);
 
@@ -190,7 +188,7 @@ class _TemplateManagementScreenState
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 12,
-          color: Colors.grey.shade600,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       trailing: PopupMenuButton<String>(
@@ -226,10 +224,10 @@ class _TemplateManagementScreenState
               value: 'delete',
               child: ListTile(
                 leading:
-                    Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                    Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
                 title: Text(
                   l10n.deleteTemplate,
-                  style: TextStyle(color: theme.colorScheme.error),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
                 contentPadding: EdgeInsets.zero,
               ),

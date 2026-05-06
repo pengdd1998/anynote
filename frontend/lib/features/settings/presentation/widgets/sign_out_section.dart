@@ -73,7 +73,12 @@ class SignOutSection extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        AppSnackBar.error(context, message: l10n.signOutFailed(e.toString()));
+        AppSnackBar.error(
+          context,
+          message: l10n.signOutFailed(
+            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+          ),
+        );
       }
     }
   }

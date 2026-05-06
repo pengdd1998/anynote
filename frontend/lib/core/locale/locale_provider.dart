@@ -1,6 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:ui';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../l10n/app_localizations.dart';
 
 /// Key used to persist the user's locale choice in SharedPreferences.
 const _kLocaleKey = 'app_locale';
@@ -16,8 +19,25 @@ final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {
 
 /// Notifier that manages the locale with persistence.
 class LocaleNotifier extends StateNotifier<Locale> {
-  LocaleNotifier() : super(const Locale('en')) {
+  LocaleNotifier() : super(_detectInitialLocale()) {
     _loadSavedLocale();
+  }
+
+  /// Detect the best initial locale from the system before any async
+  /// storage read completes. This prevents the UI from briefly showing
+  /// English when the user's device is set to zh/ja/ko.
+  static Locale _detectInitialLocale() {
+    final systemLocale = PlatformDispatcher.instance.locale;
+    final languageCode = systemLocale.languageCode;
+
+    // Check if the system locale is one of our supported languages.
+    for (final supported in AppLocalizations.supportedLocales) {
+      if (supported.languageCode == languageCode) {
+        return supported;
+      }
+    }
+    // Fallback: let MaterialApp handle locale resolution.
+    return systemLocale;
   }
 
   Future<void> _loadSavedLocale() async {
@@ -26,9 +46,7 @@ class LocaleNotifier extends StateNotifier<Locale> {
     if (saved != null) {
       state = Locale(saved);
     }
-    // If no saved preference, the default 'en' remains.
-    // The MaterialApp will use system locale as fallback when the
-    // provider value does not match any supported locale.
+    // If no saved preference, keep the detected system locale.
   }
 
   /// Persist and apply a new locale.
@@ -42,6 +60,6 @@ class LocaleNotifier extends StateNotifier<Locale> {
   Future<void> clearLocale() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kLocaleKey);
-    state = const Locale('en');
+    state = _detectInitialLocale();
   }
 }

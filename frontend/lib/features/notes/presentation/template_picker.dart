@@ -7,6 +7,7 @@ import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/seed_templates.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Callback invoked when the user selects a template.
 /// Returns the template content with placeholders resolved.
@@ -131,13 +132,13 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
   Color _categoryColor(String category) {
     switch (category) {
       case 'work':
-        return Colors.blue;
+        return AppColors.info;
       case 'personal':
-        return Colors.green;
+        return AppColors.success;
       case 'creative':
-        return Colors.purple;
+        return AppColors.primary;
       default:
-        return Colors.grey;
+        return AppColors.info;
     }
   }
 
@@ -286,12 +287,13 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
     required bool canDelete,
   }) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     if (templates.isEmpty) {
       return Center(
         child: Text(
           l10n.noTemplates,
-          style: TextStyle(color: Colors.grey.shade500),
+          style: TextStyle(color: theme.disabledColor),
         ),
       );
     }
@@ -365,7 +367,8 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey.shade600,
+                        color: theme.textTheme.bodySmall?.color ??
+                            theme.disabledColor,
                       ),
                     ),
                   ],
@@ -397,7 +400,8 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey.shade600,
+                        color: theme.textTheme.bodySmall?.color ??
+                            theme.disabledColor,
                         height: 1.4,
                       ),
                     ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// Visual indicator for the sync status of a single item (note, tag, etc.).
 ///
 /// States:
@@ -40,20 +42,20 @@ class SyncStatusBadge extends StatelessWidget {
     if (hasConflict) {
       return (
         icon: Icons.cloud_off,
-        color: Colors.red,
+        color: AppColors.error,
         tooltip: 'Sync conflict',
       );
     }
     if (isSynced) {
       return (
         icon: Icons.cloud_done,
-        color: Colors.green,
+        color: AppColors.success,
         tooltip: 'Synced',
       );
     }
     return (
       icon: Icons.cloud_upload,
-      color: Colors.orange,
+      color: AppColors.warning,
       tooltip: 'Pending sync',
     );
   }

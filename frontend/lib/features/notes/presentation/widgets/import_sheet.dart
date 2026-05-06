@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/crypto/crypto_service.dart';
+import '../../../../core/error/error.dart';
 import '../../../../core/import/import_models.dart';
 import '../../../../core/import/markdown_import_service.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -400,7 +401,8 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
             skippedCount++;
           }
         } catch (e) {
-          errors.add(ImportError(filePath: path, message: e.toString()));
+          errors.add(ImportError(
+              filePath: path, message: ErrorMapper.map(e).toString()));
           skippedCount++;
         }
       }
@@ -421,7 +423,9 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
           _isImporting = false;
         });
         _showError(
-          AppLocalizations.of(context)!.importFailed(e.toString()),
+          AppLocalizations.of(context)!.importFailed(
+            ErrorDisplay.userMessage(ErrorMapper.map(e)),
+          ),
         );
       }
     }
@@ -482,7 +486,9 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
           _isImporting = false;
         });
         _showError(
-          AppLocalizations.of(context)!.importFailed(e.toString()),
+          AppLocalizations.of(context)!.importFailed(
+            ErrorDisplay.userMessage(ErrorMapper.map(e)),
+          ),
         );
       }
     }
@@ -539,7 +545,9 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
           _isImporting = false;
         });
         _showError(
-          AppLocalizations.of(context)!.importFailed(e.toString()),
+          AppLocalizations.of(context)!.importFailed(
+            ErrorDisplay.userMessage(ErrorMapper.map(e)),
+          ),
         );
       }
     }

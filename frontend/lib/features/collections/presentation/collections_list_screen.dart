@@ -14,6 +14,7 @@ import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../settings/data/settings_providers.dart';
+import '../../../core/theme/app_colors.dart';
 
 class CollectionsListScreen extends ConsumerStatefulWidget {
   const CollectionsListScreen({super.key});
@@ -170,7 +171,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
         background: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 24),
-          color: Colors.red,
+          color: Theme.of(context).colorScheme.error,
           child: const Icon(Icons.delete, color: Colors.white),
         ),
         confirmDismiss: (direction) async {

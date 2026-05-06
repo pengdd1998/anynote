@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/error/error.dart';
 import '../../../core/import/apple_notes_import.dart';
 import '../../../core/import/import_models.dart';
 import '../../../core/import/markdown_import_service.dart';
@@ -16,6 +17,7 @@ import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Import format options available on this screen.
 enum _ImportFormat { markdown, appleNotes, plainText }
@@ -224,7 +226,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             notes.add(note);
           }
         } catch (e) {
-          errors.add(ImportError(filePath: path, message: e.toString()));
+          errors.add(ImportError(
+              filePath: path, message: ErrorMapper.map(e).toString()));
           skipped++;
         }
       }
@@ -250,7 +253,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
               importedCount: 0,
               skippedCount: 0,
               errors: [
-                ImportError(filePath: '', message: e.toString()),
+                ImportError(
+                    filePath: '', message: ErrorMapper.map(e).toString()),
               ],
             ),
           );
@@ -300,7 +304,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             result: ImportResult(
               importedCount: 0,
               skippedCount: 0,
-              errors: [ImportError(filePath: result, message: e.toString())],
+              errors: [
+                ImportError(
+                  filePath: result,
+                  message: ErrorMapper.map(e).toString(),
+                ),
+              ],
             ),
           );
         });
@@ -498,7 +507,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             result: ImportResult(
               importedCount: 0,
               skippedCount: 0,
-              errors: [ImportError(filePath: result, message: e.toString())],
+              errors: [
+                ImportError(
+                  filePath: result,
+                  message: ErrorMapper.map(e).toString(),
+                ),
+              ],
             ),
           );
         });
@@ -640,7 +654,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             notes.add(note);
           }
         } catch (e) {
-          errors.add(ImportError(filePath: path, message: e.toString()));
+          errors.add(ImportError(
+              filePath: path, message: ErrorMapper.map(e).toString()));
           skipped++;
         }
       }
@@ -666,7 +681,10 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
               importedCount: 0,
               skippedCount: 0,
               errors: [
-                ImportError(filePath: '', message: e.toString()),
+                ImportError(
+                  filePath: '',
+                  message: ErrorMapper.map(e).toString(),
+                ),
               ],
             ),
           );
@@ -718,7 +736,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             result: ImportResult(
               importedCount: 0,
               skippedCount: 0,
-              errors: [ImportError(filePath: result, message: e.toString())],
+              errors: [
+                ImportError(
+                  filePath: result,
+                  message: ErrorMapper.map(e).toString(),
+                ),
+              ],
             ),
           );
         });
@@ -815,14 +838,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             children: [
               SettingsItem(
                 icon: AppIcons.checkCircleOutline,
-                iconColor: Colors.green,
+                iconColor: AppColors.success,
                 title: l10n.itemsRestored,
                 subtitle: l10n.noteCount(result.importedCount),
               ),
               if (result.skippedCount > 0)
                 SettingsItem(
                   icon: AppIcons.skipNext,
-                  iconColor: Colors.orange,
+                  iconColor: AppColors.warning,
                   title: l10n.itemsSkipped,
                   subtitle: l10n.fileCount(result.skippedCount),
                 ),

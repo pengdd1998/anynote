@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/sync/offline_queue_service.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'sync_queue_sheet.dart';
 
@@ -24,8 +25,9 @@ class SyncStatusIndicator extends ConsumerWidget {
 
     return queueStatusAsync.when(
       data: (status) => _buildIndicator(context, status, l10n, theme),
-      loading: () => _buildDot(context, Colors.grey, 'Synced', theme),
-      error: (_, __) => _buildDot(context, Colors.grey, 'Synced', theme),
+      loading: () => _buildDot(context, theme.disabledColor, 'Synced', theme),
+      error: (_, __) =>
+          _buildDot(context, theme.disabledColor, 'Synced', theme),
     );
   }
 
@@ -46,12 +48,12 @@ class SyncStatusIndicator extends ConsumerWidget {
     if (status.hasPending) {
       return _buildDot(
         context,
-        Colors.orange,
+        AppColors.warning,
         l10n.pendingSync(status.pendingCount),
         theme,
       );
     }
-    return _buildDot(context, Colors.green, 'Synced', theme);
+    return _buildDot(context, AppColors.success, 'Synced', theme);
   }
 
   Widget _buildDot(

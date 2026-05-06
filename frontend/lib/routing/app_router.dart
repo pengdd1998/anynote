@@ -108,7 +108,9 @@ final appRouter = GoRouter(
     // Check if onboarding has been seen.
     if (!isAuthRoute && !isOnboarding) {
       final hasSeen = globalContainer.read(hasSeenOnboardingProvider);
-      if (!hasSeen) return '/onboarding';
+      // null = still loading from secure storage, don't redirect yet.
+      if (hasSeen == null) return null;
+      if (hasSeen == false) return '/onboarding';
       return '/auth/login';
     }
 

@@ -177,14 +177,14 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
                 child: Icon(
                   Icons.error_outline,
                   size: 48,
-                  color: Colors.red.shade300,
+                  color: Theme.of(context).colorScheme.error,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
               ),
               const SizedBox(height: 16),
               FilledButton.tonal(
@@ -233,7 +233,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
           // Dates.
           Text(
             '${_formatDate(older.createdAt)} -> ${_formatDate(newer.createdAt)}',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           // Summary stats.
@@ -242,7 +242,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
               l10n.noChanges,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontStyle: FontStyle.italic,
               ),
             )
@@ -289,7 +289,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       return Center(
         child: Text(
           l10n.noChanges,
-          style: TextStyle(color: Colors.grey.shade500),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       );
     }
@@ -305,8 +305,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
   }
 
   Widget _buildDiffLine(DiffLine line) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     Color backgroundColor;
     Color textColor;
@@ -329,7 +328,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
         break;
       case DiffType.unchanged:
         backgroundColor = Colors.transparent;
-        textColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
+        textColor = isDark ? Theme.of(context).colorScheme.onSurfaceVariant : Theme.of(context).colorScheme.onSurfaceVariant;
         prefix = ' ';
         break;
     }
@@ -468,7 +467,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       if (mounted) {
         AppSnackBar.error(
           context,
-          message: l10n.failedToRestore(e.toString()),
+          message: l10n.failedToRestore(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
         );
       }
     }

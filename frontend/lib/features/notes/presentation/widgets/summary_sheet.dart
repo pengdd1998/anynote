@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/error/error.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../compose/data/ai_repository.dart';
 
@@ -80,7 +81,7 @@ class _SummaryNotifier extends StateNotifier<_SummaryState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: ErrorMapper.map(e).toString(),
       );
     }
   }
@@ -208,7 +209,7 @@ class SummarySheet extends ConsumerWidget {
               l10n.summaryPromptDesc,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.grey.shade500,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
             ),

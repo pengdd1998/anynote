@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/database/daos/note_properties_dao.dart';
+import '../../../core/error/error.dart';
 import '../../../core/notifications/reminder_service.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
@@ -22,21 +23,35 @@ class RemindersScreen extends ConsumerWidget {
       ),
       body: remindersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline,
+        error: (e, _) {
+          final l10n = AppLocalizations.of(context)!;
+          final appError = ErrorMapper.map(e);
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
                   size: 48,
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withValues(alpha: 0.4),),
-              const SizedBox(height: 16),
-              Text(e.toString(), textAlign: TextAlign.center),
-            ],
-          ),
-        ),
+                      .withValues(alpha: 0.4),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  ErrorDisplay.userMessage(appError, l10n),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.tonal(
+                  onPressed: () => ref.invalidate(upcomingRemindersProvider),
+                  child: Text(l10n.retry),
+                ),
+              ],
+            ),
+          );
+        },
         data: (reminders) {
           if (reminders.isEmpty) {
             return _buildEmptyState(context, l10n);

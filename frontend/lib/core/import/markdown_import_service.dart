@@ -14,6 +14,7 @@ import '../database/daos/note_properties_dao.dart';
 import '../storage/image_storage.dart';
 import '../../features/notes/domain/markdown_export_service.dart';
 import 'import_models.dart';
+import '../error/error.dart';
 
 /// Configuration options for the import pipeline.
 class ImportOptions {
@@ -266,7 +267,7 @@ class MarkdownImportService {
         _errors.add(
           ImportError(
             filePath: imported.sourcePath,
-            message: e.toString(),
+            message: ErrorMapper.map(e).toString(),
           ),
         );
       }

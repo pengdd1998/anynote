@@ -2145,5 +2145,26 @@
   "statusSaved": "已保存",
   "statusUnsaved": "未保存",
   "statusSaving": "保存中...",
-  "selectItemToView": "选择一个项目以查看"
+  "selectItemToView": "选择一个项目以查看",
+
+  "syncConflicts": "同步冲突",
+  "noConflicts": "没有需要解决的冲突",
+  "conflictItem": "项目：{itemId}",
+  "serverVersion": "服务器版本：{version}",
+  "keepLocal": "保留本地",
+  "keepServer": "保留服务器",
+  "keepBoth": "保留两者",
+  "findInNote": "在笔记中查找",
+  "replaceWith": "替换为",
+  "noMatches": "无匹配",
+  "matchCount": "{current} / {total}",
+  "findPrevious": "上一个匹配",
+  "findNext": "下一个匹配",
+  "replaceMatch": "替换",
+  "replaceAllMatches": "全部替换",
+  "closeFindBar": "关闭查找栏",
+  "codeBlock": "代码块",
+  "checklist": "待办清单",
+  "indent": "增加缩进",
+  "outdent": "减少缩进"
 }

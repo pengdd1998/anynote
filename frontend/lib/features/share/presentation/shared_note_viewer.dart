@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/error/exceptions.dart';
 import '../../../core/share/share_service.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Screen for viewing a shared note.
 ///
@@ -222,6 +223,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
   }
 
   Widget _buildErrorState(ThemeData theme) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
@@ -239,7 +241,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
             const SizedBox(height: 8),
             Text(
               l10n.linkCorruptedExpired,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              style: TextStyle(color: theme.textTheme.bodySmall?.color ?? theme.disabledColor, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],
@@ -249,6 +251,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
   }
 
   Widget _buildPasswordInput(ThemeData theme) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -264,7 +267,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
           const SizedBox(height: 8),
           Text(
             l10n.enterPasswordToView,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+            style: TextStyle(color: theme.textTheme.bodySmall?.color ?? theme.disabledColor, fontSize: 14),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -323,14 +326,14 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
               Icon(
                 Icons.visibility_outlined,
                 size: 14,
-                color: Colors.grey.shade500,
+                color: theme.disabledColor,
               ),
               const SizedBox(width: 4),
               Text(
                 _isServerShare == true
                     ? l10n.sharedViaLink
                     : l10n.sharedNote,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                style: TextStyle(fontSize: 12, color: theme.disabledColor),
               ),
             ],
           ),
@@ -351,7 +354,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
                     theme.colorScheme.surfaceContainerHighest,
               ),
               blockquote: TextStyle(
-                color: Colors.grey.shade600,
+                color: theme.textTheme.bodySmall?.color ?? theme.disabledColor,
                 fontStyle: FontStyle.italic,
               ),
             ),

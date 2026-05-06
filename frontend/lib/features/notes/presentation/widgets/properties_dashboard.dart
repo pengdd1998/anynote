@@ -399,7 +399,7 @@ class _StatusKanbanSection extends StatelessWidget {
           return _StatusColumn(
             status: entry.key,
             notes: notes,
-            color: statusColors[entry.key] ?? Colors.grey,
+            color: statusColors[entry.key] ?? colorScheme.onSurfaceVariant,
             icon: statusIcons[entry.key] ?? Icons.help_outline,
             l10n: l10n,
           );

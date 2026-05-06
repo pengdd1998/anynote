@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../database/app_database.dart';
 import '../database/daos/sync_operations_dao.dart';
+import '../error/error.dart';
 import 'sync_engine.dart';
 
 /// Manages a persistent queue of sync operations with retry logic and
@@ -130,7 +131,7 @@ class SyncQueueManager {
     } catch (e) {
       await _dao.markFailed(
         op.id,
-        e.toString(),
+        ErrorMapper.map(e).toString(),
         op.retryCount,
         op.maxRetries,
       );

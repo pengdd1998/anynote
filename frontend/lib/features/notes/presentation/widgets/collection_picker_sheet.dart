@@ -125,7 +125,7 @@ class _CollectionPickerSheetState extends ConsumerState<CollectionPickerSheet> {
                           child: Text(
                             l10n.noCollections,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey.shade500,
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         )

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_icons.dart';
 import 'exceptions.dart';
 
 /// Utility class for displaying errors to the user in a consistent manner.
@@ -27,7 +29,9 @@ class ErrorDisplay {
       SnackBar(
         content: Row(
           children: [
-            Icon(errorIcon(error), color: Colors.white, size: 20),
+            Icon(errorIcon(error),
+                color: Colors.white,
+                size: 20), // white icon on colored snackbar bg
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -152,22 +156,22 @@ class ErrorDisplay {
   /// Get an appropriate icon for the given error type.
   static IconData errorIcon(AppException error) {
     return switch (error) {
-      NetworkException() => Icons.wifi_off,
-      ServerException() => Icons.cloud_off,
-      AuthException() => Icons.lock_outline,
-      ForbiddenException() => Icons.block,
-      NotFoundException() => Icons.search_off,
-      RateLimitException() => Icons.hourglass_empty,
-      ValidationException() => Icons.error_outline,
-      ConflictException() => Icons.sync_problem,
-      CryptoLockedException() => Icons.lock_outline,
-      CryptoKeyDerivationException() => Icons.vpn_key_off,
-      CryptoOperationException() => Icons.enhanced_encryption,
-      SyncConflictException() => Icons.sync_problem,
-      SyncException() => Icons.sync_disabled,
-      StorageException() => Icons.storage,
-      UnknownException() => Icons.help_outline,
-      _ => Icons.error_outline,
+      NetworkException() => AppIcons.wifiTethering,
+      ServerException() => AppIcons.cloudOff,
+      AuthException() => AppIcons.lock,
+      ForbiddenException() => AppIcons.shield,
+      NotFoundException() => AppIcons.search,
+      RateLimitException() => AppIcons.history,
+      ValidationException() => AppIcons.errorOutline,
+      ConflictException() => AppIcons.syncProblem,
+      CryptoLockedException() => AppIcons.lock,
+      CryptoKeyDerivationException() => AppIcons.key,
+      CryptoOperationException() => AppIcons.shield,
+      SyncConflictException() => AppIcons.syncProblem,
+      SyncException() => AppIcons.sync,
+      StorageException() => AppIcons.inventory,
+      UnknownException() => AppIcons.help,
+      _ => AppIcons.errorOutline,
     };
   }
 
@@ -196,10 +200,10 @@ class ErrorDisplay {
   static Color _snackBarColor(AppException error) {
     return switch (error) {
       NetworkException() => const Color(0xFF424242),
-      AuthException() => Colors.orange.shade800,
-      RateLimitException() => Colors.orange.shade800,
-      CryptoException() => Colors.red.shade800,
-      _ => Colors.red.shade700,
+      AuthException() => AppColors.warning,
+      RateLimitException() => AppColors.warning,
+      CryptoException() => AppColors.error,
+      _ => AppColors.error,
     };
   }
 }

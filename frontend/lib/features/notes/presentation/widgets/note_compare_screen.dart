@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/crypto/crypto_service.dart';
+import '../../../../core/error/error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
-import '../../../../core/crypto/crypto_service.dart';
 import '../../domain/text_diff.dart';
 
 /// Decrypted note data used for note comparison.
@@ -97,10 +98,11 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
       _errorMessage = null;
     });
 
+    final l10n = AppLocalizations.of(context)!;
+
     try {
       final db = ref.read(databaseProvider);
       final crypto = ref.read(cryptoServiceProvider);
-      final l10n = AppLocalizations.of(context)!;
 
       // Load both notes in parallel.
       final results = await Future.wait([
@@ -139,7 +141,7 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString();
+          _errorMessage = ErrorDisplay.userMessage(ErrorMapper.map(e), l10n);
           _isLoading = false;
         });
       }
@@ -225,6 +227,7 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
     }
 
     if (_errorMessage != null) {
+      final theme = Theme.of(context);
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -235,14 +238,17 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
                 child: Icon(
                   Icons.error_outline,
                   size: 48,
-                  color: Colors.red.shade300,
+                  color: theme.colorScheme.error,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 16),
               FilledButton.tonal(
@@ -270,6 +276,7 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
   }
 
   Widget _buildDiffHeader(AppLocalizations l10n, TextDiff diff) {
+    final theme = Theme.of(context);
     final left = _leftNote!;
     final right = _rightNote!;
 
@@ -331,14 +338,20 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
               Expanded(
                 child: Text(
                   _formatDate(left.updatedAt),
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
                   _formatDate(right.updatedAt),
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
@@ -350,14 +363,17 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
               l10n.noChanges,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey.shade600,
+                color: theme.colorScheme.onSurfaceVariant,
                 fontStyle: FontStyle.italic,
               ),
             )
           else
             Text(
               l10n.linesChanged(diff.linesAdded, diff.linesRemoved),
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
         ],
       ),
@@ -366,10 +382,11 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
 
   Widget _buildDiffContent(AppLocalizations l10n, TextDiff diff) {
     if (diff.lines.isEmpty) {
+      final theme = Theme.of(context);
       return Center(
         child: Text(
           l10n.noChanges,
-          style: TextStyle(color: Colors.grey.shade500),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
     }
@@ -494,7 +511,7 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
         prefix = '-';
       case DiffType.unchanged:
         backgroundColor = Colors.transparent;
-        textColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
+        textColor = theme.colorScheme.onSurfaceVariant;
         prefix = ' ';
     }
 

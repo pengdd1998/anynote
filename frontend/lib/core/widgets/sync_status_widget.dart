@@ -7,6 +7,7 @@ import '../error/connectivity_provider.dart';
 import '../constants/app_durations.dart';
 import '../sync/sync_lifecycle.dart';
 import '../sync/sync_progress.dart';
+import '../theme/app_colors.dart';
 
 /// Compact sync status widget for use in the app bar.
 ///
@@ -136,7 +137,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
   Color _colorForState(bool isOffline, bool isSyncing, BuildContext context) {
     if (isOffline) return Theme.of(context).colorScheme.error;
     if (isSyncing) return Theme.of(context).colorScheme.primary;
-    return Colors.green;
+    return AppColors.success;
   }
 
   String _tooltipForState(
@@ -205,7 +206,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
                 label: isOffline
                     ? (l10n?.offlineLabel ?? 'Offline')
                     : (l10n?.connectedLabel ?? 'Connected'),
-                valueColor: isOffline ? theme.colorScheme.error : Colors.green,
+                valueColor: isOffline ? theme.colorScheme.error : AppColors.success,
               ),
               const SizedBox(height: 8),
               _buildDetailRow(

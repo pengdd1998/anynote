@@ -12,6 +12,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/search_providers.dart';
 import '../../notes/domain/search_query_parser.dart';
+import '../../../core/theme/app_colors.dart';
 
 class AdvancedSearchScreen extends ConsumerStatefulWidget {
   const AdvancedSearchScreen({super.key});
@@ -282,7 +283,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
                 child: Text(
                   l10n.resultsCount('${results.length}'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor,
                       ),
                 ),
               ),
@@ -337,7 +338,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
             const SizedBox(height: 4),
             Text(
               time,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
             ),
           ],
         ),
@@ -380,7 +381,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
                   style: TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 12,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor,
                   ),
                 ),
                 trailing: IconButton(
@@ -436,7 +437,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
                   Text(
                     l10n.searchHistory,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor,
                         ),
                   ),
                   TextButton(

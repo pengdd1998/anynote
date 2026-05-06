@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/error/error.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/discover_providers.dart';
+import '../../../core/theme/app_colors.dart';
 
 // ── Screen ─────────────────────────────────────────
 
@@ -80,7 +82,9 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       });
       AppSnackBar.error(
         context,
-        message: AppLocalizations.of(context)?.failedToLoadMore(e.toString()) ??
+        message: AppLocalizations.of(context)?.failedToLoadMore(
+                ErrorDisplay.userMessage(
+                    ErrorMapper.map(e), AppLocalizations.of(context)!)) ??
             'Failed to load more: $e',
       );
     }
@@ -245,7 +249,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+          Icon(Icons.error_outline,
+              size: 48, color: Theme.of(context).colorScheme.error),
           const SizedBox(height: 12),
           Text(
             l10n.failedToLoadDiscoverFeed,
@@ -254,7 +259,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           const SizedBox(height: 8),
           Text(
             '$error',
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            style:
+                TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -286,7 +292,6 @@ class _DiscoverCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final shareId = item['id'] as String;
     final encryptedTitle = item['encrypted_title'] as String? ?? '';
@@ -340,9 +345,9 @@ class _DiscoverCard extends ConsumerWidget {
                       encryptedTitle.isNotEmpty
                           ? encryptedTitle
                           : l10n.encryptedNote,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -352,7 +357,7 @@ class _DiscoverCard extends ConsumerWidget {
                     Icon(
                       Icons.lock_outline,
                       size: 16,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ],
                 ],
@@ -365,28 +370,29 @@ class _DiscoverCard extends ConsumerWidget {
                   Icon(
                     Icons.visibility_outlined,
                     size: 14,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '$viewCount',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                   ),
                   const SizedBox(width: 16),
                   if (timeAgo.isNotEmpty) ...[
                     Icon(
                       Icons.schedule,
                       size: 14,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       timeAgo,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                     ),
                   ],
                 ],
@@ -400,7 +406,7 @@ class _DiscoverCard extends ConsumerWidget {
                     icon: isHearted ? Icons.favorite : Icons.favorite_border,
                     count: heartCount,
                     isActive: isHearted,
-                    activeColor: Colors.red,
+                    activeColor: Theme.of(context).colorScheme.error,
                     onTap: () => onReact(shareId, 'heart'),
                   ),
                   const SizedBox(width: 12),
@@ -408,7 +414,7 @@ class _DiscoverCard extends ConsumerWidget {
                     icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                     count: bookmarkCount,
                     isActive: isBookmarked,
-                    activeColor: theme.colorScheme.primary,
+                    activeColor: Theme.of(context).colorScheme.primary,
                     onTap: () => onReact(shareId, 'bookmark'),
                   ),
                 ],
@@ -440,8 +446,8 @@ class _ReactionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = isActive ? activeColor : theme.colorScheme.onSurfaceVariant;
+    final color =
+        isActive ? activeColor : Theme.of(context).colorScheme.onSurfaceVariant;
 
     return InkWell(
       onTap: onTap,

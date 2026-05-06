@@ -6,6 +6,7 @@ import '../../../core/theme/alpha_constants.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Full text editor with AI-generated content displayed via streaming.
 ///
@@ -168,7 +169,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                 const Spacer(),
                 Text(
                   l10n.charsCount(session.draft.length),
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
                 ),
               ],
             ),
@@ -221,7 +222,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
         SafeArea(
           child: Container(
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
               color: Theme.of(context).scaffoldBackgroundColor,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -250,7 +251,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                 // Word count
                 Text(
                   l10n.wordsCount(_countWords(session.draft)),
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
                 ),
                 const SizedBox(width: 12),
 

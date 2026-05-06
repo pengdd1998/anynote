@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 
@@ -56,6 +57,7 @@ class _NoteComparePickerState extends ConsumerState<NoteComparePicker> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final filtered = _filteredNotes;
 
     return DraggableScrollableSheet(
@@ -114,8 +116,8 @@ class _NoteComparePickerState extends ConsumerState<NoteComparePicker> {
                   style: TextStyle(
                     fontSize: 12,
                     color: _selectedIds.length > 2
-                        ? Colors.orange.shade700
-                        : Colors.grey.shade500,
+                        ? AppColors.warning
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -148,7 +150,9 @@ class _NoteComparePickerState extends ConsumerState<NoteComparePicker> {
                       ? Center(
                           child: Text(
                             l10n.noNotesYet,
-                            style: TextStyle(color: Colors.grey.shade500),
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         )
                       : ListView.builder(
@@ -187,7 +191,7 @@ class _NoteComparePickerState extends ConsumerState<NoteComparePicker> {
                                 _formatDate(updatedAt),
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.grey.shade500,
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               controlAffinity: ListTileControlAffinity.leading,

@@ -14,6 +14,7 @@ import '../network/api_client.dart';
 import '../storage/image_storage.dart';
 import 'conflict_resolver.dart';
 import 'sync_progress.dart';
+import '../error/error.dart';
 
 /// Sync engine orchestrates bidirectional sync between client and server
 /// with full E2E encryption.
@@ -88,7 +89,7 @@ class SyncEngine {
             SyncFailedItem(
               itemId: '',
               itemType: '',
-              error: e.toString(),
+              error: ErrorMapper.map(e).toString(),
             ),
           ],
         ),

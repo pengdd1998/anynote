@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/daos/note_properties_dao.dart';
+import '../../../../core/error/error.dart';
 import '../../../../core/notifications/reminder_service.dart';
 import '../../../../l10n/app_localizations.dart';
 

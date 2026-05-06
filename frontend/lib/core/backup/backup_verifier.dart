@@ -4,6 +4,7 @@ import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 import '../crypto/crypto_service.dart';
+import '../error/error.dart';
 
 /// Metadata about a backup file after verification.
 class BackupInfo {
@@ -197,7 +198,7 @@ class BackupVerifier {
       return BackupInfo(
         format: '',
         backupKeyId: '',
-        errors: ['Invalid backup file format: ${e.toString()}'],
+        errors: ['Invalid backup file format: ${ErrorMapper.map(e)}'],
       );
     }
 
@@ -259,7 +260,7 @@ class BackupVerifier {
               'The encryption key may not match the backup.');
         }
       } catch (e) {
-        errors.add('Decryption failed: ${e.toString()}');
+        errors.add('Decryption failed: ${ErrorMapper.map(e)}');
       }
     } else {
       // Cannot verify inner contents without encryption key.
@@ -390,7 +391,8 @@ class BackupVerifier {
         } catch (e) {
           // Skip unparseable dates.
           debugPrint(
-              '[BackupVerifier] skipped unparseable date "$createdAt": $e',);
+            '[BackupVerifier] skipped unparseable date "$createdAt": $e',
+          );
         }
       }
     }

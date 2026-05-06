@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/error/error.dart';
 import '../../../../core/export/pdf_export_service.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 
@@ -400,7 +401,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context, message: l10n.exportFailed(e.toString()));
+        AppSnackBar.error(context, message: l10n.exportFailed(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)));
       }
     } finally {
       if (mounted) {
@@ -421,7 +422,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
       await PdfExportService.printPdf(title, widget.content);
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context, message: l10n.exportFailed(e.toString()));
+        AppSnackBar.error(context, message: l10n.exportFailed(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)));
       }
     } finally {
       if (mounted) {
@@ -473,7 +474,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context, message: l10n.exportFailed(e.toString()));
+        AppSnackBar.error(context, message: l10n.exportFailed(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)));
       }
     } finally {
       if (mounted) {

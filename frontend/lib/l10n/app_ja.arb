@@ -2145,5 +2145,26 @@
   "statusSaved": "保存済み",
   "statusUnsaved": "未保存",
   "statusSaving": "保存中...",
-  "selectItemToView": "項目を選択して表示"
+  "selectItemToView": "項目を選択して表示",
+
+  "syncConflicts": "同期の競合",
+  "noConflicts": "解決すべき競合はありません",
+  "conflictItem": "アイテム：{itemId}",
+  "serverVersion": "サーバーのバージョン：{version}",
+  "keepLocal": "ローカルを保持",
+  "keepServer": "サーバーを保持",
+  "keepBoth": "両方を保持",
+  "findInNote": "ノート内を検索",
+  "replaceWith": "置換後の文字列",
+  "noMatches": "一致なし",
+  "matchCount": "{current} / {total}",
+  "findPrevious": "前の一致",
+  "findNext": "次の一致",
+  "replaceMatch": "置換",
+  "replaceAllMatches": "すべて置換",
+  "closeFindBar": "検索バーを閉じる",
+  "codeBlock": "コードブロック",
+  "checklist": "チェックリスト",
+  "indent": "インデント",
+  "outdent": "インデント解除"
 }

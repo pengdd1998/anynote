@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/error/error.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -110,7 +111,7 @@ class _SnippetEditorSheetState extends State<SnippetEditorSheet> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context, message: e.toString());
+        AppSnackBar.error(context, message: ErrorMapper.map(e).toString());
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -177,8 +178,10 @@ class _SheetHandleBar extends StatelessWidget {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color:
-              Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+          color: Theme.of(context)
+              .colorScheme
+              .onSurfaceVariant
+              .withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(2),
         ),
       ),

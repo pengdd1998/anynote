@@ -268,7 +268,8 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
       if (mounted) {
         AppSnackBar.error(
           context,
-          message: l10n.failedToRestore(e.toString()),
+          message: l10n.failedToRestore(
+              ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
         );
       }
     }
@@ -314,6 +315,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
 
   Widget _buildBody() {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -330,7 +332,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                 child: Icon(
                   Icons.error_outline,
                   size: 48,
-                  color: Colors.red.shade300,
+                  color: theme.colorScheme.error,
                 ),
               ),
               const SizedBox(height: 16),
@@ -342,7 +344,8 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
               ),
               const SizedBox(height: 16),
               FilledButton.tonal(
@@ -361,19 +364,19 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ExcludeSemantics(
-              child: Icon(Icons.history, size: 64, color: Colors.grey.shade300),
+              child: Icon(Icons.history, size: 64, color: theme.disabledColor),
             ),
             const SizedBox(height: 16),
             Text(
               l10n.noVersionsYet,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey.shade500,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
             ),
             const SizedBox(height: 8),
             Text(
               l10n.versionsSavedAutomatically,
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+              style: TextStyle(color: theme.disabledColor, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],
@@ -440,7 +443,8 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                 ),
                 subtitle: Text(
                   _buildSubtitle(version, l10n),
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(
+                      fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
                 trailing: _buildTrailing(isCurrent, isSelected),
                 onTap: () {

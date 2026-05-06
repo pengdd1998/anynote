@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/error/error.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state_widget.dart';
@@ -250,7 +251,7 @@ class _SuggestionTile extends ConsumerWidget {
       if (context.mounted) {
         AppSnackBar.error(
           context,
-          message: l10n?.failedToCreateLink(e.toString()) ??
+          message: l10n?.failedToCreateLink(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n!)) ??
               'Failed to create link: $e',
         );
       }

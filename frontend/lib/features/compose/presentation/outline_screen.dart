@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
 import '../domain/outline_model.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Displays the AI-generated outline with expandable sections.
 ///
@@ -89,7 +90,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
             const SizedBox(height: 8),
             Text(
               l10n.buildingStructureFromClusters(session.selectedClusterIndices.length),
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor),
             ),
           ],
         ),
@@ -155,11 +156,11 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              Icon(Icons.info_outline, size: 16, color: Colors.grey.shade500),
+              Icon(Icons.info_outline, size: 16, color: Theme.of(context).disabledColor),
               const SizedBox(width: 6),
               Text(
                 l10n.sectionsDragToReorder(outline.sections.length),
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                style: TextStyle(color: Theme.of(context).disabledColor, fontSize: 13),
               ),
             ],
           ),
@@ -197,7 +198,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                   childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   leading: ReorderableDragStartListener(
                     index: index,
-                    child: Icon(Icons.drag_handle, color: Colors.grey.shade400),
+                    child: Icon(Icons.drag_handle, color: Theme.of(context).disabledColor),
                   ),
                   title: Row(
                     children: [
@@ -239,7 +240,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.only(top: 6),
-                              child: Icon(Icons.circle, size: 6, color: Colors.grey.shade400),
+                              child: Icon(Icons.circle, size: 6, color: Theme.of(context).disabledColor),
                             ),
                             const SizedBox(width: 8),
                             Expanded(child: Text(point, style: const TextStyle(fontSize: 13))),
@@ -251,7 +252,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                       const SizedBox(height: 8),
                       Text(
                         l10n.fromCluster(section.sourceCluster! + 1),
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                        style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
                       ),
                     ],
                   ],

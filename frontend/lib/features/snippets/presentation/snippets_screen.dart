@@ -9,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import 'snippet_detail_sheet.dart';
 import 'snippet_editor_sheet.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Provider that exposes the SnippetsDao from the global database.
 final snippetsDaoProvider = Provider<SnippetsDao>((ref) {
@@ -88,7 +89,6 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final snippetsAsync = ref.watch(allSnippetsProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -121,7 +121,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
               filterFn: _applyFilters,
               onSnippetTap: _showDetail,
               onSnippetLongPress: _showContextMenu,
-              theme: theme,
+              theme: Theme.of(context),
               l10n: l10n,
             ),
           ),
@@ -214,10 +214,11 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              leading: Icon(Icons.delete_outline,
+                  color: Theme.of(context).colorScheme.error),
               title: Text(
                 l10n.deleteSnippet,
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               onTap: () async {
                 Navigator.pop(context);
@@ -303,8 +304,10 @@ class _SnippetsFilterBar extends StatelessWidget {
               Expanded(
                 child: DropdownButton<String>(
                   value: languageFilter,
-                  hint: Text(l10n.allLanguages,
-                      style: const TextStyle(fontSize: 13),),
+                  hint: Text(
+                    l10n.allLanguages,
+                    style: const TextStyle(fontSize: 13),
+                  ),
                   isExpanded: true,
                   underline: const SizedBox.shrink(),
                   items: [
@@ -326,8 +329,10 @@ class _SnippetsFilterBar extends StatelessWidget {
               Expanded(
                 child: DropdownButton<String>(
                   value: categoryFilter,
-                  hint: Text(l10n.allCategories,
-                      style: const TextStyle(fontSize: 13),),
+                  hint: Text(
+                    l10n.allCategories,
+                    style: const TextStyle(fontSize: 13),
+                  ),
                   isExpanded: true,
                   underline: const SizedBox.shrink(),
                   items: [
@@ -381,13 +386,18 @@ class _SnippetsListBody extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.code_off_outlined,
-                    size: 64, color: theme.disabledColor,),
+                Icon(
+                  Icons.code_off_outlined,
+                  size: 64,
+                  color: Theme.of(context).disabledColor,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   l10n.noSnippets,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(color: theme.disabledColor),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(color: Theme.of(context).disabledColor),
                 ),
               ],
             ),
@@ -426,7 +436,6 @@ class _SnippetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final codePreview = _buildCodePreview(snippet.code);
 
@@ -443,7 +452,9 @@ class _SnippetCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     snippet.title,
-                    style: theme.textTheme.titleSmall
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
                         ?.copyWith(fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -455,14 +466,15 @@ class _SnippetCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.secondaryContainer,
+                      color: Theme.of(context).colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       snippet.language,
                       style: TextStyle(
                         fontSize: 11,
-                        color: theme.colorScheme.onSecondaryContainer,
+                        color:
+                            Theme.of(context).colorScheme.onSecondaryContainer,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -471,8 +483,10 @@ class _SnippetCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   l10n.usageCount(snippet.usageCount),
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.disabledColor),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: Theme.of(context).disabledColor),
                 ),
               ],
             ),
@@ -480,8 +494,8 @@ class _SnippetCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 snippet.description,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -491,7 +505,9 @@ class _SnippetCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
                     .withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -500,7 +516,7 @@ class _SnippetCard extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 12,
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.4,
                 ),
                 maxLines: 3,

@@ -185,7 +185,8 @@ class _TagPickerSheetState extends ConsumerState<TagPickerSheet> {
               padding: const EdgeInsets.all(24),
               child: Text(
                 l10n.noTagsYet,
-                style: TextStyle(color: Colors.grey.shade500),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             )
           else

@@ -174,7 +174,8 @@ class _SplitNotePickerSheetState extends ConsumerState<SplitNotePickerSheet> {
                         padding: const EdgeInsets.all(32),
                         child: Text(
                           l10n.noNotesFound,
-                          style: TextStyle(color: Colors.grey.shade500),
+                          style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant),
                         ),
                       )
                     : ListView.builder(

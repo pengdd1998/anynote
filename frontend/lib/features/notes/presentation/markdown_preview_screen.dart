@@ -192,7 +192,7 @@ class _MarkdownPreviewScreenState extends ConsumerState<MarkdownPreviewScreen> {
                       child: Icon(
                         Icons.error_outline,
                         size: 48,
-                        color: Colors.red.shade300,
+                        color: Theme.of(context).colorScheme.error,
                       ),
                     ),
                     const SizedBox(height: 16),

@@ -6,6 +6,7 @@ import '../../../../core/sync/offline_queue_service.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Bottom sheet showing sync queue details: status overview, failed operations
 /// with error messages, retry and clear buttons.
@@ -120,7 +121,7 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
                     label: l10n.pendingOperations,
                     count: queueStatus.pendingCount,
                     icon: Icons.schedule,
-                    color: Colors.orange,
+                    color: AppColors.warning,
                   ),
                   const SizedBox(width: 12),
                   _buildStatusCard(
@@ -146,13 +147,13 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
                               Icon(
                                 Icons.check_circle_outline,
                                 size: 48,
-                                color: Colors.grey.shade400,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 l10n.noPendingOperations,
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.grey.shade500,
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],

@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/error/error.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
+import '../../../core/theme/app_colors.dart';
 
 class CollectionDetailScreen extends ConsumerStatefulWidget {
   final String collectionId;
@@ -87,7 +89,7 @@ class _CollectionDetailScreenState
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _error = e.toString();
+          _error = ErrorMapper.map(e).toString();
         });
       }
     }
@@ -135,7 +137,8 @@ class _CollectionDetailScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+            Icon(Icons.error_outline,
+                size: 48, color: Theme.of(context).colorScheme.error),
             const SizedBox(height: 16),
             Text(
               displayError,
@@ -146,8 +149,9 @@ class _CollectionDetailScreenState
               _error!,
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 13,),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 16),
             FilledButton.tonal(
@@ -191,7 +195,7 @@ class _CollectionDetailScreenState
           background: Container(
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 24),
-            color: Colors.orange,
+            color: AppColors.warning,
             child: const Icon(Icons.remove_circle_outline, color: Colors.white),
           ),
           confirmDismiss: (direction) async {
@@ -238,8 +242,9 @@ class _CollectionDetailScreenState
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 12,),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   )
                 : null,
             leading: ReorderableDragStartListener(
@@ -462,7 +467,9 @@ class _CollectionDetailScreenState
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        color: Colors.grey.shade600,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                         fontSize: 12,
                                       ),
                                     )

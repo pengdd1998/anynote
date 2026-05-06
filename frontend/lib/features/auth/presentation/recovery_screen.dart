@@ -220,8 +220,10 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
                     const SizedBox(height: 8),
                     Text(
                       l10n.recoveryKeyFormatHint,
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 24),
                     FilledButton(

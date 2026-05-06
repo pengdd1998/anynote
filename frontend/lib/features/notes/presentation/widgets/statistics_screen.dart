@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../search/data/statistics_providers.dart';
 import '../../domain/note_statistics.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Screen displaying note statistics and writing insights.
 ///
@@ -78,7 +79,8 @@ class StatisticsScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+                Icon(Icons.error_outline,
+                    size: 48, color: Theme.of(context).colorScheme.error),
                 const SizedBox(height: 16),
                 Text(
                   l10n?.failedToLoadNote ?? 'Error loading statistics',
@@ -87,7 +89,9 @@ class StatisticsScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   err.toString(),
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 13),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -214,7 +218,6 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -239,26 +242,32 @@ class _StatCard extends StatelessWidget {
               children: [
                 Text(
                   value,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha(150),
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withAlpha(150),
+                      ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (subtitle != null)
                   Text(
                     subtitle!,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(100),
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withAlpha(100),
+                        ),
                   ),
               ],
             ),
@@ -281,8 +290,7 @@ class _WritingStreakCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
@@ -295,15 +303,15 @@ class _WritingStreakCard extends StatelessWidget {
                 Icon(
                   Icons.local_fire_department_outlined,
                   color: streak.currentStreak > 0
-                      ? Colors.orange
+                      ? AppColors.warning
                       : colorScheme.onSurface.withAlpha(100),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   l10n?.writingStreak ?? 'Writing Streak',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),
@@ -317,17 +325,17 @@ class _WritingStreakCard extends StatelessWidget {
                       Text(
                         l10n?.currentStreak(streak.currentStreak) ??
                             'Current: ${streak.currentStreak} days',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         l10n?.longestStreak(streak.longestStreak) ??
                             'Longest: ${streak.longestStreak} days',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withAlpha(150),
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurface.withAlpha(150),
+                            ),
                       ),
                     ],
                   ),
@@ -339,15 +347,15 @@ class _WritingStreakCard extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withAlpha(25),
+                      color: AppColors.warning.withAlpha(25),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${streak.currentStreak}',
-                      style: theme.textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.warning,
+                          ),
                     ),
                   ),
               ],
@@ -424,8 +432,7 @@ class _MonthlyActivityChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     // Build last 12 months list, including months with zero notes.
     final now = DateTime.now();
@@ -448,9 +455,9 @@ class _MonthlyActivityChart extends StatelessWidget {
           children: [
             Text(
               l10n?.monthlyActivity ?? 'Monthly Activity',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -577,9 +584,7 @@ class _TopTagsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (topTags.isEmpty) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
@@ -589,9 +594,9 @@ class _TopTagsSection extends StatelessWidget {
           children: [
             Text(
               l10n?.topTags ?? 'Top Tags',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -644,9 +649,7 @@ class _TopCollectionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (topCollections.isEmpty) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final maxCount = topCollections.first.noteCount;
 
     return Card(
@@ -657,9 +660,9 @@ class _TopCollectionsSection extends StatelessWidget {
           children: [
             Text(
               l10n?.topCollections ?? 'Top Collections',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 12),
             ...topCollections.map((col) {
@@ -683,9 +686,10 @@ class _TopCollectionsSection extends StatelessWidget {
                         ),
                         Text(
                           '${col.noteCount} ($percent%)',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withAlpha(150),
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurface.withAlpha(150),
+                                  ),
                         ),
                       ],
                     ),
@@ -737,9 +741,7 @@ class _StatusDistributionSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (distribution.isEmpty) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final total = distribution.values.fold<int>(0, (sum, c) => sum + c);
 
     return Card(
@@ -750,9 +752,9 @@ class _StatusDistributionSection extends StatelessWidget {
           children: [
             Text(
               l10n?.statusDistribution ?? 'Status Distribution',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 16),
             // Stacked horizontal bar
@@ -798,7 +800,7 @@ class _StatusDistributionSection extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       '${entry.key} (${entry.value})',
-                      style: theme.textTheme.bodySmall,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
                 );
@@ -833,9 +835,7 @@ class _PriorityDistributionSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (distribution.isEmpty) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final total = distribution.values.fold<int>(0, (sum, c) => sum + c);
 
     // Build segments for the donut painter.
@@ -863,9 +863,9 @@ class _PriorityDistributionSection extends StatelessWidget {
           children: [
             Text(
               l10n?.priorityDistribution ?? 'Priority Distribution',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -883,14 +883,15 @@ class _PriorityDistributionSection extends StatelessWidget {
                     child: CustomPaint(
                       painter: _DonutChartPainter(
                         segments: segments,
-                        centerColor: theme.cardColor,
+                        centerColor: Theme.of(context).cardColor,
                       ),
                       child: Center(
                         child: Text(
                           total.toString(),
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ),
                     ),
@@ -917,14 +918,17 @@ class _PriorityDistributionSection extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 seg.label,
-                                style: theme.textTheme.bodySmall,
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ),
                             Text(
                               '${seg.value}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
                           ],
                         ),
@@ -1016,8 +1020,7 @@ class _KnowledgeGraphSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
@@ -1031,9 +1034,9 @@ class _KnowledgeGraphSection extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   l10n?.knowledgeGraphStats ?? 'Knowledge Graph',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),
@@ -1081,9 +1084,9 @@ class _KnowledgeGraphSection extends StatelessWidget {
                   Expanded(
                     child: Text(
                       l10n?.mostConnectedNote ?? 'Most Connected',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withAlpha(150),
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withAlpha(150),
+                          ),
                     ),
                   ),
                   Flexible(
@@ -1092,18 +1095,18 @@ class _KnowledgeGraphSection extends StatelessWidget {
                           ? l10n?.untitled ?? 'Untitled'
                           : stats.mostConnectedNote!.noteTitle,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     '${stats.mostConnectedNote!.linkCount}',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colorScheme.tertiary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: colorScheme.tertiary,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ],
               ),
@@ -1128,17 +1131,16 @@ class _MiniStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
         Icon(icon, size: 20, color: colorScheme.primary),
         const SizedBox(height: 4),
         Text(
           value,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 2),
         Text(
@@ -1146,9 +1148,9 @@ class _MiniStat extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: colorScheme.onSurface.withAlpha(150),
-          ),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurface.withAlpha(150),
+              ),
         ),
       ],
     );

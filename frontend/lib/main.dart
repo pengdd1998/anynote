@@ -378,14 +378,16 @@ final _hasSeenOnboardingFutureProvider = FutureProvider<bool>((ref) async {
   return (await storage.read(key: 'has_seen_onboarding')) == 'true';
 });
 
-/// Synchronous provider: true once onboarding has been completed.
-/// Defaults to false (show onboarding) until the async read resolves.
-final hasSeenOnboardingProvider = StateProvider<bool>((ref) {
-  // Kick off the async read.
+/// Synchronous provider: `true` once onboarding has been completed,
+/// `false` if the user has not seen onboarding, `null` while loading.
+///
+/// The GoRouter redirect treats `null` as "do not redirect yet",
+/// preventing the race condition where the async storage read has not
+/// completed but the redirect already sees `false` and flashes onboarding.
+final hasSeenOnboardingProvider = StateProvider<bool?>((ref) {
   final asyncValue = ref.watch(_hasSeenOnboardingFutureProvider);
-  // Extract the value synchronously if available.
   if (asyncValue is AsyncData<bool>) {
     return asyncValue.value;
   }
-  return false;
+  return null; // still loading
 });

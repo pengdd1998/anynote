@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
@@ -62,12 +63,12 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
                         Icon(
                           Icons.filter_list_off,
                           size: 48,
-                          color: Colors.grey.shade400,
+                          color: Theme.of(context).disabledColor,
                         ),
                         const SizedBox(height: 12),
                         Text(
                           l10n.noPublicationsWithStatus(_statusFilter ?? ''),
-                          style: TextStyle(color: Colors.grey.shade500),
+                          style: TextStyle(color: Theme.of(context).disabledColor),
                         ),
                         const SizedBox(height: 16),
                         OutlinedButton(
@@ -116,11 +117,11 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
     final errorMessage = item['error_message']?.toString() ?? '';
 
     final statusColor = switch (status) {
-      'published' => Colors.green,
-      'failed' => Colors.red,
-      'publishing' => Colors.orange,
-      'pending' => Colors.grey,
-      _ => Colors.grey,
+      'published' => AppColors.success,
+      'failed' => AppColors.error,
+      'publishing' => AppColors.warning,
+      'pending' => AppColors.info,
+      _ => AppColors.info,
     };
 
     final statusIcon = switch (status) {
@@ -164,13 +165,16 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
             const SizedBox(height: 4),
             Text(
               '${l10n.platform}: $platform',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(
+                  fontSize: 13,
+                  color:
+                      Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor),
             ),
             if (createdAt.isNotEmpty) ...[
               const SizedBox(height: 2),
               Text(
                 '${l10n.created}: $createdAt',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
               ),
             ],
             if (platformURL.isNotEmpty) ...[
@@ -197,14 +201,14 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50,
+                  color: Theme.of(context).colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   errorMessage,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.red.shade700,
+                    color: Theme.of(context).colorScheme.error,
                   ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
@@ -272,7 +276,7 @@ class _PublishDetailSheet extends ConsumerWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).dividerColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -311,7 +315,7 @@ class _PublishDetailSheet extends ConsumerWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
             child: SelectableText(
@@ -347,7 +351,7 @@ class _PublishDetailSheet extends ConsumerWidget {
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor,
               ),
             ),
           ),

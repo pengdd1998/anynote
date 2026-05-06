@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/error/error.dart';
 import '../../../main.dart';
 
 /// State for an AI agent action execution.
@@ -50,7 +51,7 @@ class AgentNotifier extends StateNotifier<AgentState> {
       });
       state = AgentState(result: resp);
     } catch (e) {
-      state = AgentState(error: e.toString());
+      state = AgentState(error: ErrorMapper.map(e).toString());
     }
   }
 

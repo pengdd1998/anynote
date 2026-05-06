@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/error/error.dart';
 import '../../../core/theme/alpha_constants.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
@@ -73,7 +75,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           Icon(
                             Icons.share_outlined,
                             size: 36,
-                            color: Colors.grey.shade400,
+                            color: Theme.of(context).disabledColor,
                           ),
                           const SizedBox(height: 8),
                           Text(l10n.noPlatformsConnected),
@@ -122,8 +124,10 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           title: Text(name),
                           subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
                           trailing: isSelected
-                              ? const Icon(Icons.check_circle,
-                                  color: Colors.green,)
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: AppColors.success,
+                                )
                               : null,
                           onTap: () {
                             setState(() {
@@ -152,16 +156,16 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         Icon(
                           ErrorDisplay.errorIcon(appError),
                           size: 36,
-                          color: Colors.red,
+                          color: Theme.of(context).colorScheme.error,
                         ),
                         const SizedBox(height: 8),
                         Text(l10n.failedToLoadPlatforms),
                         const SizedBox(height: 4),
                         Text(
                           ErrorDisplay.userMessage(appError, l10n),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: Theme.of(context).disabledColor,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -200,12 +204,13 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           Icon(
                             Icons.publish_outlined,
                             size: 48,
-                            color: Colors.grey.shade400,
+                            color: Theme.of(context).disabledColor,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             l10n.noPublicationsYet,
-                            style: TextStyle(color: Colors.grey.shade500),
+                            style: TextStyle(
+                                color: Theme.of(context).disabledColor),
                           ),
                         ],
                       ),
@@ -246,7 +251,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         Icon(
                           ErrorDisplay.errorIcon(appError),
                           size: 36,
-                          color: Colors.red,
+                          color: Theme.of(context).colorScheme.error,
                         ),
                         const SizedBox(height: 8),
                         Text(ErrorDisplay.userMessage(appError, l10n)),
@@ -314,7 +319,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                 l10n.selectPlatformToPublish,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey.shade600,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
             if (state.error != null)
@@ -335,16 +340,17 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                   children: [
                     const Icon(
                       Icons.check_circle,
-                      color: Colors.green,
+                      color: AppColors.success,
                       size: 16,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       l10n.publishedStatus(
-                          state.result?['status'] ?? 'pending',),
+                        state.result?['status'] ?? 'pending',
+                      ),
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.green,
+                        color: AppColors.success,
                       ),
                     ),
                   ],
@@ -360,7 +366,8 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: Colors
+                              .white, // white on primary button is correct
                         ),
                       )
                     : Text(l10n.publish),
@@ -381,11 +388,11 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
     final platformURL = item['platform_url']?.toString() ?? '';
 
     final statusColor = switch (status) {
-      'published' => Colors.green,
-      'failed' => Colors.red,
-      'publishing' => Colors.orange,
-      'pending' => Colors.grey,
-      _ => Colors.grey,
+      'published' => AppColors.success,
+      'failed' => AppColors.error,
+      'publishing' => AppColors.warning,
+      'pending' => AppColors.info,
+      _ => AppColors.info,
     };
 
     final statusIcon = switch (status) {
@@ -422,8 +429,10 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                     onPressed: () async {
                       final uri = Uri.parse(platformURL);
                       if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri,
-                            mode: LaunchMode.externalApplication,);
+                        await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     },
                   ),

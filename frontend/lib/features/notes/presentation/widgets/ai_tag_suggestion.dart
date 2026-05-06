@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/error/error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../compose/data/ai_repository.dart';
 
@@ -91,7 +92,8 @@ class _TagSuggestionNotifier extends StateNotifier<_TagSuggestionState> {
         suggestedTags: tags,
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+          isLoading: false, error: ErrorMapper.map(e).toString());
     }
   }
 
@@ -241,6 +243,8 @@ class AiTagSuggestionSheet extends ConsumerWidget {
     AppLocalizations l10n,
     _TagSuggestionState state,
   ) {
+    final theme = Theme.of(context);
+
     if (state.isLoading) {
       return Center(
         child: Column(
@@ -250,7 +254,10 @@ class AiTagSuggestionSheet extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               l10n.analyzingContent,
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
@@ -264,12 +271,19 @@ class AiTagSuggestionSheet extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: 12),
               Text(
                 state.error!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 16),
               FilledButton.tonal(
@@ -296,16 +310,17 @@ class AiTagSuggestionSheet extends ConsumerWidget {
               Icon(
                 Icons.label_outline,
                 size: 48,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant
-                    .withValues(alpha: 0.3),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
               ),
               const SizedBox(height: 12),
               Text(
                 l10n.tapSuggestTagsDesc,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
               ),
             ],
           ),
@@ -325,7 +340,7 @@ class AiTagSuggestionSheet extends ConsumerWidget {
                 Text(
                   l10n.selectTagsToApply,
                   style: TextStyle(
-                    color: Colors.grey.shade600,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 13,
                   ),
                 ),
@@ -343,9 +358,8 @@ class AiTagSuggestionSheet extends ConsumerWidget {
                             .read(_tagSuggestionProvider.notifier)
                             .toggleTag(tag);
                       },
-                      selectedColor:
-                          Theme.of(context).colorScheme.primaryContainer,
-                      checkmarkColor: Theme.of(context).colorScheme.primary,
+                      selectedColor: theme.colorScheme.primaryContainer,
+                      checkmarkColor: theme.colorScheme.primary,
                     );
                   }).toList(),
                 ),

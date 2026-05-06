@@ -9,7 +9,20 @@
     "orientation": "portrait-primary",
     "scope": "/",
     "prefer_related_applications": false,
-    "categories": ["productivity", "utilities"],
+    "categories": [
+        "productivity",
+        "utilities"
+    ],
+    "share_target": {
+        "action": "/share/received",
+        "method": "POST",
+        "enctype": "multipart/form-data",
+        "params": {
+            "title": "title",
+            "text": "text",
+            "url": "url"
+        }
+    },
     "icons": [
         {
             "src": "icons/Icon-192.png",
@@ -33,15 +46,5 @@
             "type": "image/png",
             "purpose": "maskable"
         }
-    ],
-    "share_target": {
-        "action": "/share/received",
-        "method": "POST",
-        "enctype": "multipart/form-data",
-        "params": {
-            "title": "title",
-            "text": "text",
-            "url": "url"
-        }
-    }
+    ]
 }

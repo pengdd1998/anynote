@@ -9,12 +9,14 @@ import '../../../core/backup/backup_verifier.dart';
 import '../../../core/backup/restore_service.dart';
 import '../../../core/backup/restore_strategy.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/error/error.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/settings_providers.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Multi-step restore screen that guides the user through:
 /// 1. File selection
@@ -316,14 +318,14 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
               children: [
                 Icon(
                   AppIcons.checkCircleOutline,
-                  color: Colors.green.shade600,
+                  color: AppColors.success,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     l10n.noConflictsDetected,
-                    style: TextStyle(color: Colors.green.shade600),
+                    style: TextStyle(color: AppColors.success),
                   ),
                 ),
               ],
@@ -550,7 +552,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         Icon(
           hasErrors ? AppIcons.warning : AppIcons.checkCircleOutline,
           size: 64,
-          color: hasErrors ? Colors.orange : Colors.green,
+          color: hasErrors ? AppColors.warning : AppColors.success,
         ),
         const SizedBox(height: 16),
         Text(
@@ -568,7 +570,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
               icon: AppIcons.checkCircleOutline,
               title: l10n.itemsRestored,
               subtitle: '${result.restored}',
-              iconColor: Colors.green,
+              iconColor: AppColors.success,
             ),
             SettingsItem(
               icon: AppIcons.skipNext,
@@ -579,7 +581,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
               icon: AppIcons.mergeType,
               title: l10n.conflictsFound,
               subtitle: '${result.conflicts}',
-              iconColor: result.conflicts > 0 ? Colors.orange : null,
+              iconColor: result.conflicts > 0 ? AppColors.warning : null,
             ),
           ],
         ),
@@ -634,7 +636,9 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         final l10n = AppLocalizations.of(context)!;
         AppSnackBar.error(
           context,
-          message: l10n.filePickerError(e.toString()),
+          message: l10n.filePickerError(
+            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+          ),
         );
       }
     }
@@ -662,7 +666,9 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         setState(() => _isProcessing = false);
         AppSnackBar.error(
           context,
-          message: l10n.verificationFailedError(e.toString()),
+          message: l10n.verificationFailedError(
+            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+          ),
         );
       }
     }
@@ -704,7 +710,9 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         setState(() => _isProcessing = false);
         AppSnackBar.error(
           context,
-          message: l10n.backupImportFailed(e.toString()),
+          message: l10n.backupImportFailed(
+            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+          ),
         );
       }
     }
@@ -758,7 +766,9 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         setState(() => _isProcessing = false);
         AppSnackBar.error(
           context,
-          message: l10n.backupImportFailed(e.toString()),
+          message: l10n.backupImportFailed(
+            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+          ),
         );
         // Go back to strategy step so user can retry.
         setState(() => _currentStep = _RestoreStep.strategy);
@@ -901,7 +911,7 @@ class _VerificationStatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isValid = info.isValid && info.canDecrypt;
-    final statusColor = isValid ? Colors.green : Colors.orange;
+    final statusColor = isValid ? AppColors.success : AppColors.warning;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -953,7 +963,7 @@ class _ConflictWarningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const warningColor = Colors.orange;
+    const warningColor = AppColors.warning;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -1012,7 +1022,7 @@ class _ConflictWarningCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.orange.shade700),
+          Icon(icon, size: 16, color: AppColors.warning),
           const SizedBox(width: 8),
           Text(text, style: const TextStyle(fontSize: 13)),
         ],

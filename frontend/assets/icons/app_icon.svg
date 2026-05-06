@@ -1,30 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <!-- AnyNote App Icon - Placeholder -->
-  <!-- Replace with production icon before generating launcher icons -->
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1A1A2E;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#16213E;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#2B1D3B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#161120;stop-opacity:1" />
     </linearGradient>
+    <linearGradient id="noteFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FCFAFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EDE7F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D94848;stop-opacity:1" />
+    </linearGradient>
+    <filter id="noteShadow" x="-4%" y="-2%" width="108%" height="110%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
   </defs>
 
   <!-- Background rounded square -->
   <rect x="48" y="48" width="928" height="928" rx="192" ry="192" fill="url(#bg)" />
 
-  <!-- Note sheet shape -->
-  <path d="M 280 200 L 680 200 Q 740 200 740 260 L 740 764 Q 740 824 680 824 L 344 824 Q 284 824 284 764 L 284 260 Q 284 200 280 200 Z"
-        fill="#E8E8F0" stroke="none" />
+  <!-- Note sheet with shadow -->
+  <g filter="url(#noteShadow)">
+    <path d="M 290 200 L 650 200 Q 690 200 690 240 L 690 730 Q 690 770 650 770 L 330 770 Q 290 770 290 730 L 290 200 Z"
+          fill="url(#noteFill)" />
+  </g>
 
   <!-- Folded corner -->
-  <path d="M 680 200 L 680 260 Q 680 280 700 280 L 740 260 Z" fill="#C8C8D8" />
+  <path d="M 650 200 L 650 240 Q 650 258 668 260 L 690 240 Z" fill="#D7CCE8" />
 
-  <!-- Lines representing text -->
-  <rect x="340" y="340" width="300" height="16" rx="8" fill="#A0A0B8" />
-  <rect x="340" y="400" width="260" height="16" rx="8" fill="#A0A0B8" />
-  <rect x="340" y="460" width="320" height="16" rx="8" fill="#A0A0B8" />
-  <rect x="340" y="520" width="200" height="16" rx="8" fill="#A0A0B8" />
-  <rect x="340" y="580" width="280" height="16" rx="8" fill="#A0A0B8" />
+  <!-- Text lines (bolder for small-size legibility) -->
+  <rect x="345" y="320" width="290" height="18" rx="9" fill="#B8A9D4" opacity="0.7" />
+  <rect x="345" y="370" width="250" height="18" rx="9" fill="#B8A9D4" opacity="0.7" />
+  <rect x="345" y="420" width="300" height="18" rx="9" fill="#B8A9D4" opacity="0.7" />
+  <rect x="345" y="470" width="190" height="18" rx="9" fill="#B8A9D4" opacity="0.7" />
 
-  <!-- Letter A accent -->
-  <text x="512" y="780" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="180" fill="#4A6CF7" opacity="0.9">A</text>
+  <!-- Shield shape -->
+  <path d="M 570 440 L 570 610 Q 570 730 670 770 Q 770 730 770 610 L 770 440 Z"
+        fill="url(#shieldFill)" />
+
+  <!-- Lock body inside shield -->
+  <rect x="640" y="560" width="60" height="50" rx="10" fill="white" opacity="0.95" />
+  <!-- Lock shackle -->
+  <path d="M 653 560 L 653 535 Q 653 505 670 505 Q 687 505 687 535 L 687 560"
+        fill="none" stroke="white" stroke-width="10" stroke-linecap="round" opacity="0.95" />
+  <!-- Keyhole -->
+  <circle cx="670" cy="587" r="9" fill="#D94848" />
 </svg>

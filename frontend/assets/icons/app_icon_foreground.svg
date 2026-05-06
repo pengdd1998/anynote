@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="noteFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FCFAFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EDE7F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D94848;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shieldInner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2B1D3B;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#2B1D3B;stop-opacity:0.3" />
+    </linearGradient>
+  </defs>
+
+  <!-- Note sheet -->
+  <path d="M 260 220 L 660 220 Q 700 220 700 260 L 700 744 Q 700 784 660 784 L 300 784 Q 260 784 260 744 L 260 220 Z"
+        fill="url(#noteFill)" />
+
+  <!-- Folded corner -->
+  <path d="M 660 220 L 660 260 Q 660 275 675 278 L 700 260 L 660 220 Z" fill="#D7CCE8" />
+
+  <!-- Text lines -->
+  <rect x="320" y="340" width="280" height="14" rx="7" fill="#B8A9D4" opacity="0.6" />
+  <rect x="320" y="390" width="240" height="14" rx="7" fill="#B8A9D4" opacity="0.6" />
+  <rect x="320" y="440" width="290" height="14" rx="7" fill="#B8A9D4" opacity="0.6" />
+  <rect x="320" y="490" width="180" height="14" rx="7" fill="#B8A9D4" opacity="0.6" />
+
+  <!-- Shield shape -->
+  <path d="M 560 460 L 560 620 Q 560 740 660 780 Q 760 740 760 620 L 760 460 Z"
+        fill="url(#shieldFill)" />
+
+  <!-- Shield inner highlight -->
+  <path d="M 585 485 L 585 625 Q 585 725 660 760 Q 735 725 735 625 L 735 485 Z"
+        fill="url(#shieldInner)" />
+
+  <!-- Lock icon inside shield -->
+  <rect x="630" y="570" width="60" height="50" rx="10" fill="white" opacity="0.95" />
+  <path d="M 643 570 L 643 545 Q 643 515 660 515 Q 677 515 677 545 L 677 570"
+        fill="none" stroke="white" stroke-width="9" stroke-linecap="round" opacity="0.95" />
+  <circle cx="660" cy="597" r="8" fill="#D94848" />
+</svg>

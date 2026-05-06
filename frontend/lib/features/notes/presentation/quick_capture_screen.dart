@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_durations.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
 import '../../../l10n/app_localizations.dart';
@@ -257,9 +258,9 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
       Icons.keyboard_double_arrow_down,
     ];
     const colors = [
-      Colors.red,
-      Colors.orange,
-      Colors.green,
+      AppColors.error,
+      AppColors.warning,
+      AppColors.success,
     ];
 
     showModalBottomSheet(
@@ -306,7 +307,8 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                   leading: Icon(icons[index], color: colors[index]),
                   title: Text(priorityLabels[index]),
                   trailing: isSelected
-                      ? const Icon(Icons.check_circle, color: Colors.blue)
+                      ? Icon(Icons.check_circle,
+                          color: Theme.of(context).colorScheme.primary)
                       : null,
                   onTap: () {
                     setState(() {
@@ -513,8 +515,10 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
             Padding(
               padding: const EdgeInsets.only(left: 4, top: 6, bottom: 6),
               child: Chip(
-                label: Text(AppLocalizations.of(context)!
-                    .tagsCountLabel(_selectedTagIds.length),),
+                label: Text(
+                  AppLocalizations.of(context)!
+                      .tagsCountLabel(_selectedTagIds.length),
+                ),
                 avatar: const Icon(Icons.label, size: 14),
                 deleteIcon: const Icon(Icons.close, size: 14),
                 onDeleted: () {
@@ -565,11 +569,11 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                             ? Icons.keyboard_double_arrow_down
                             : Icons.flag_outlined,
                 color: _selectedPriority == 'High'
-                    ? Colors.red
+                    ? AppColors.error
                     : _selectedPriority == 'Medium'
-                        ? Colors.orange
+                        ? AppColors.warning
                         : _selectedPriority == 'Low'
-                            ? Colors.green
+                            ? AppColors.success
                             : null,
               ),
               tooltip: l10n.setPriority,

@@ -13,6 +13,7 @@ import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../data/compose_providers.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Home screen for the AI Compose feature.
 ///
@@ -57,7 +58,7 @@ class ComposeScreen extends ConsumerWidget {
                     Text(
                       l10n.aiComposeDesc,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Theme.of(context).disabledColor),
                     ),
                     const SizedBox(height: 20),
                     PressableScale(
@@ -96,12 +97,18 @@ class ComposeScreen extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.article_outlined,
-                              size: 48, color: Colors.grey.shade400,),
+                          Icon(
+                            Icons.article_outlined,
+                            size: 48,
+                            color: Theme.of(context).disabledColor,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             l10n.noCompositionsYet,
-                            style: TextStyle(color: Colors.grey.shade500),
+                            style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -146,15 +153,22 @@ class ComposeScreen extends ConsumerWidget {
                                   Padding(
                                     padding: const EdgeInsets.only(right: 8),
                                     child: Chip(
-                                      label: Text(platform,
-                                          style: const TextStyle(fontSize: 11),),
+                                      label: Text(
+                                        platform,
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
                                       visualDensity: VisualDensity.compact,
                                     ),
                                   ),
-                                Text(time,
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade500,),),
+                                Text(
+                                  time,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                ),
                               ],
                             ),
                             onTap: () =>
@@ -179,13 +193,14 @@ class ComposeScreen extends ConsumerWidget {
                         Icon(
                           ErrorDisplay.errorIcon(appError),
                           size: 36,
-                          color: Colors.grey.shade400,
+                          color: Theme.of(context).disabledColor,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           ErrorDisplay.userMessage(appError, l10n),
                           style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,),
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -312,8 +327,10 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
                 children: [
-                  Text(l10n.newComposition,
-                      style: Theme.of(context).textTheme.titleLarge,),
+                  Text(
+                    l10n.newComposition,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -349,7 +366,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 ),
                 items: _platformOptions(l10n)
                     .map(
-                        (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)),)
+                      (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)),
+                    )
                     .toList(),
                 onChanged: (v) {
                   if (v != null) {
@@ -367,14 +385,17 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
                 children: [
-                  Text(l10n.selectNotes,
-                      style: Theme.of(context).textTheme.titleSmall,),
+                  Text(
+                    l10n.selectNotes,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     l10n.selectedCount(_selectedIds.length),
                     style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 13,),
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -386,8 +407,10 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 data: (notes) {
                   if (notes.isEmpty) {
                     return Center(
-                      child: Text(l10n.noNotesAvailableCreate,
-                          textAlign: TextAlign.center,),
+                      child: Text(
+                        l10n.noNotesAvailableCreate,
+                        textAlign: TextAlign.center,
+                      ),
                     );
                   }
 
@@ -406,10 +429,16 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
 
                       return CheckboxListTile(
                         value: isSelected,
-                        title: Text(title,
-                            maxLines: 1, overflow: TextOverflow.ellipsis,),
-                        subtitle: Text(preview,
-                            maxLines: 1, overflow: TextOverflow.ellipsis,),
+                        title: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          preview,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         onChanged: (checked) {
                           setState(() {
                             if (checked == true) {
@@ -443,7 +472,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                         Icon(
                           ErrorDisplay.errorIcon(appError),
                           size: 36,
-                          color: Colors.grey.shade400,
+                          color: Theme.of(context).disabledColor,
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -609,8 +638,10 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: Chip(
-                      label: Text(widget.platform,
-                          style: const TextStyle(fontSize: 11),),
+                      label: Text(
+                        widget.platform,
+                        style: const TextStyle(fontSize: 11),
+                      ),
                       visualDensity: VisualDensity.compact,
                     ),
                   ),

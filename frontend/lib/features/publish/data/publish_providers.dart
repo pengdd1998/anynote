@@ -1,14 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../main.dart';
 
 // ── Publish History ──────────────────────────────────
 
 /// Manages the publish history list.
-class PublishHistoryNotifier
-    extends AsyncNotifier<List<Map<String, dynamic>>> {
+class PublishHistoryNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   @override
   Future<List<Map<String, dynamic>>> build() async {
     final api = ref.read(apiClientProvider);
@@ -46,9 +46,8 @@ class ConnectedPlatformsNotifier
   }
 }
 
-final connectedPlatformsProvider =
-    AsyncNotifierProvider<ConnectedPlatformsNotifier,
-        List<Map<String, dynamic>>>(
+final connectedPlatformsProvider = AsyncNotifierProvider<
+    ConnectedPlatformsNotifier, List<Map<String, dynamic>>>(
   ConnectedPlatformsNotifier.new,
 );
 
@@ -113,7 +112,7 @@ class PublishActionNotifier extends StateNotifier<PublishActionState> {
         error: e.message ?? 'Network error occurred',
       );
     } catch (e) {
-      state = PublishActionState(error: e.toString());
+      state = PublishActionState(error: ErrorMapper.map(e).toString());
     }
   }
 

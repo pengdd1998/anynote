@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/seed_templates.dart';
+import '../../../core/error/error.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -621,7 +622,7 @@ class _RecentDailyNotesList extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text(e.toString())),
+            error: (e, _) => Center(child: Text(ErrorDisplay.userMessage(ErrorMapper.map(e), AppLocalizations.of(context)!))),
           ),
         ),
       ],

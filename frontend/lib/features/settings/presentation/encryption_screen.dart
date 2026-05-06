@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/backup/backup_service.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/error/error.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_components.dart';
@@ -260,7 +261,9 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (mounted) {
                   AppSnackBar.error(
                     context,
-                    message: l10n.failedToChangePassword(e.toString()),
+                    message: l10n.failedToChangePassword(
+                      ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+                    ),
                   );
                 }
               } finally {
@@ -373,7 +376,9 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 if (mounted) {
                   AppSnackBar.error(
                     context,
-                    message: l10n.failedToDeleteData(e.toString()),
+                    message: l10n.failedToDeleteData(
+                      ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+                    ),
                   );
                 }
               } finally {
@@ -424,7 +429,9 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       if (mounted) {
         AppSnackBar.error(
           context,
-          message: l10n.backupExportFailed(e.toString()),
+          message: l10n.backupExportFailed(
+            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+          ),
         );
       }
     }
@@ -488,7 +495,9 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       if (mounted) {
         AppSnackBar.error(
           context,
-          message: l10n.backupImportFailed(e.toString()),
+          message: l10n.backupImportFailed(
+            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+          ),
         );
       }
     }

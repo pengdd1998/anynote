@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/error/error.dart';
 import '../../../compose/data/ai_repository.dart';
 
 // ── Writing Assist State ───────────────────────────
@@ -76,7 +77,7 @@ class _WritingAssistNotifier extends StateNotifier<_WritingAssistState> {
 
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: ErrorMapper.map(e).toString());
     }
   }
 
@@ -198,7 +199,7 @@ class WritingAssistSheet extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               l10n.checkingGrammar,
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
             ),
           ],
         ),
@@ -212,12 +213,12 @@ class WritingAssistSheet extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
+              Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
               const SizedBox(height: 12),
               Text(
                 state.error!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
               ),
               const SizedBox(height: 16),
               FilledButton.tonal(
@@ -253,7 +254,7 @@ class WritingAssistSheet extends ConsumerWidget {
               Text(
                 l10n.writingPolishDesc,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
               ),
             ],
           ),
@@ -276,14 +277,14 @@ class WritingAssistSheet extends ConsumerWidget {
                     Icon(
                       Icons.article_outlined,
                       size: 14,
-                      color: Colors.grey.shade500,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       l10n.original,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
@@ -294,7 +295,7 @@ class WritingAssistSheet extends ConsumerWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -302,7 +303,7 @@ class WritingAssistSheet extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.5,
-                      color: Colors.grey.shade700,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     maxLines: 8,
                     overflow: TextOverflow.ellipsis,

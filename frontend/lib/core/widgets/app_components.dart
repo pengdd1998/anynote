@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import '../error/error.dart';
 import '../theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 // =============================================================================
 // AppEmptyState
@@ -62,28 +63,26 @@ class AppEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: theme.disabledColor),
+            Icon(icon, size: 64, color: Theme.of(context).disabledColor),
             const SizedBox(height: 16),
             Text(
               title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.textTheme.bodySmall?.color,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: TextStyle(color: theme.disabledColor),
+                style: TextStyle(color: Theme.of(context).disabledColor),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -144,12 +143,11 @@ class _AppLoadingCardState extends State<AppLoadingCard>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     // Warm-tinted shimmer: uses theme surface colors for a cohesive feel.
-    final baseColor = theme.brightness == Brightness.light
+    final baseColor = Theme.of(context).brightness == Brightness.light
         ? AppTheme.lightDivider
         : AppTheme.darkInputFill;
-    final highlightColor = theme.brightness == Brightness.light
+    final highlightColor = Theme.of(context).brightness == Brightness.light
         ? AppTheme.lightInputFill
         : AppTheme.darkBorder;
 
@@ -287,7 +285,6 @@ class AppErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final icon = ErrorDisplay.errorIcon(error);
     final message =
         ErrorDisplay.userMessage(error, AppLocalizations.of(context));
@@ -298,19 +295,20 @@ class AppErrorCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 36, color: theme.colorScheme.error),
+            Icon(icon, size: 36, color: Theme.of(context).colorScheme.error),
             const SizedBox(height: 8),
             Text(
               title ??
                   (AppLocalizations.of(context)?.somethingWentWrong ??
                       'Something went wrong'),
-              style: theme.textTheme.titleSmall,
+              style: Theme.of(context).textTheme.titleSmall,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
               message,
-              style: TextStyle(fontSize: 12, color: theme.disabledColor),
+              style: TextStyle(
+                  fontSize: 12, color: Theme.of(context).disabledColor),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -380,7 +378,7 @@ class AppSyncBadge extends StatelessWidget {
     if (hasConflict) {
       return (
         icon: Icons.cloud_off,
-        color: Colors.red,
+        color: AppColors.error,
         tooltip: l10n?.syncConflictBadge ?? 'Sync conflict',
         label: l10n?.conflictLabel ?? 'Conflict',
       );
@@ -388,14 +386,14 @@ class AppSyncBadge extends StatelessWidget {
     if (isSynced) {
       return (
         icon: Icons.cloud_done,
-        color: Colors.green,
+        color: AppColors.success,
         tooltip: l10n?.syncedLabel ?? 'Synced',
         label: l10n?.syncedLabel ?? 'Synced',
       );
     }
     return (
       icon: Icons.cloud_upload,
-      color: Colors.orange,
+      color: AppColors.warning,
       tooltip: l10n?.pendingSyncBadge ?? 'Pending sync',
       label: l10n?.pendingSyncLabel ?? 'Pending',
     );
@@ -433,8 +431,6 @@ class AppSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
@@ -445,7 +441,7 @@ class AppSectionHeader extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: theme.colorScheme.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -480,10 +476,10 @@ class SettingsGroupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     // Use tertiary text color: in light mode it is a warm muted grey,
     // in dark mode it is a warm darker muted tone.
-    final color = theme.textTheme.bodySmall?.color ?? theme.disabledColor;
+    final color = Theme.of(context).textTheme.bodySmall?.color ??
+        Theme.of(context).disabledColor;
 
     return Semantics(
       header: true,
@@ -524,8 +520,7 @@ class SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Warm card background and border matching the theme card tokens.
     final cardColor = isDark ? AppTheme.darkCardBg : AppTheme.lightCardBg;
@@ -598,8 +593,7 @@ class SettingsItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return _SettingsItemRaw(
       onTap: onTap,
@@ -617,18 +611,18 @@ class SettingsItem extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface,
-                  ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurface,
+                      ),
                 ),
                 if (subtitle != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       subtitle!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
                     ),
                   ),
               ],
@@ -663,8 +657,7 @@ class DestructiveSettingsItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final errorColor = theme.colorScheme.error;
+    final errorColor = Theme.of(context).colorScheme.error;
 
     return _SettingsItemRaw(
       onTap: onTap,
@@ -680,18 +673,18 @@ class DestructiveSettingsItem extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: errorColor,
-                  ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: errorColor,
+                      ),
                 ),
                 if (subtitle != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       subtitle!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: errorColor.withValues(alpha: 0.7),
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: errorColor.withValues(alpha: 0.7),
+                          ),
                     ),
                   ),
               ],
@@ -718,8 +711,8 @@ class _SettingsItemRaw extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final splashColor = theme.colorScheme.primary.withValues(alpha: 0.08);
+    final splashColor =
+        Theme.of(context).colorScheme.primary.withValues(alpha: 0.08);
 
     return Semantics(
       button: onTap != null,
@@ -753,10 +746,9 @@ class IconCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final effectiveColor = color ?? colorScheme.primary;
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: 32,

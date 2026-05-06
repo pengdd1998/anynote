@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_durations.dart';
+import '../../../core/error/error.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
@@ -609,7 +610,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                         child: Container(
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: Theme.of(context).colorScheme.error,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           constraints: const BoxConstraints(
@@ -1622,9 +1623,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       if (!context.mounted) return;
       // Close progress dialog.
       Navigator.pop(context);
+      final l10n = AppLocalizations.of(context)!;
       AppSnackBar.error(
         context,
-        message: AppLocalizations.of(context)!.importFailed(e.toString()),
+        message: l10n
+            .importFailed(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
       );
     }
   }

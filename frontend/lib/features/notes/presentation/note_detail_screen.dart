@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -153,7 +154,7 @@ class NoteDetailScreen extends ConsumerWidget {
                           Icon(
                             ErrorDisplay.errorIcon(appError),
                             size: 48,
-                            color: Colors.red.shade300,
+                            color: Theme.of(context).colorScheme.error,
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -165,10 +166,11 @@ class NoteDetailScreen extends ConsumerWidget {
                             ErrorDisplay.userMessage(appError, l10n),
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 13,),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 13,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           FilledButton.tonal(
@@ -211,7 +213,9 @@ class NoteDetailScreen extends ConsumerWidget {
                             Icon(
                               Icons.access_time,
                               size: 14,
-                              color: Colors.grey.shade500,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -223,7 +227,9 @@ class NoteDetailScreen extends ConsumerWidget {
                               ),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade500,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                               ),
                             ),
                             if (!data.isSynced) ...[
@@ -231,14 +237,14 @@ class NoteDetailScreen extends ConsumerWidget {
                               Icon(
                                 Icons.cloud_off,
                                 size: 14,
-                                color: Colors.orange.shade300,
+                                color: AppColors.warning,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 l10n.notSynced,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.orange.shade300,
+                                  color: AppColors.warning,
                                 ),
                               ),
                             ],
@@ -408,7 +414,9 @@ class NoteDetailScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        AppSnackBar.error(context, message: l10n.exportFailed(e.toString()));
+        AppSnackBar.error(context,
+            message: l10n.exportFailed(
+                ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)));
       }
     }
   }

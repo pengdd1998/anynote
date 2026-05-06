@@ -6,9 +6,11 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../l10n/app_localizations.dart';
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/error/error.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/decrypted_note.dart';
 
 /// Placeholder shown in the detail pane when no note is selected on desktop.
@@ -17,18 +19,22 @@ class InlineDetailPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.article_outlined, size: 64, color: Colors.grey.shade400),
+          Icon(
+            Icons.article_outlined,
+            size: 64,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context)!.selectNoteToView,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(color: Colors.grey.shade500),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -86,6 +92,8 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
       _error = null;
     });
 
+    final l10n = AppLocalizations.of(context)!;
+
     try {
       final note = await widget.db.notesDao.getNoteById(widget.noteId);
       if (!mounted) return;
@@ -97,7 +105,6 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
         return;
       }
 
-      final l10n = AppLocalizations.of(context)!;
       String title = note.plainTitle ?? l10n.untitled;
       String content = note.plainContent ?? '';
 
@@ -129,7 +136,7 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = ErrorDisplay.userMessage(ErrorMapper.map(e), l10n);
           _isLoading = false;
         });
       }
@@ -139,6 +146,7 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -151,16 +159,23 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.failedToLoadNote,
-                style: Theme.of(context).textTheme.titleMedium,
+                style: theme.textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               Text(
                 _error!,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 16),
               FilledButton.tonal(onPressed: _loadNote, child: Text(l10n.retry)),
@@ -187,9 +202,9 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
                   _data!.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               IconButton(
@@ -224,27 +239,29 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
                     Icon(
                       Icons.access_time,
                       size: 14,
-                      color: Colors.grey.shade500,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'Updated ${_data!.updatedAt.toLocal().toString().substring(0, 16)}',
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     if (!_data!.isSynced) ...[
                       const SizedBox(width: 12),
                       Icon(
                         Icons.cloud_off,
                         size: 14,
-                        color: Colors.orange.shade300,
+                        color: AppColors.warning,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         l10n.notSynced,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.orange.shade300,
+                          color: AppColors.warning,
                         ),
                       ),
                     ],
@@ -288,10 +305,10 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
                     code: TextStyle(
                       fontSize: 13,
                       backgroundColor:
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                          theme.colorScheme.surfaceContainerHighest,
                     ),
                     blockquote: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: theme.colorScheme.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
