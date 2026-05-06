@@ -218,7 +218,10 @@ func main() {
 		slog.Info("AI proxy configured without fallback LLM", "default", cfg.LLM.Default.Provider)
 	}
 	llmConfigSvc := service.NewLLMConfigService(llmConfigRepo, gateway, masterKey)
-	publishSvc := service.NewPublishService(publishLogRepo, nil, service.WithPublishPushService(pushSvc))
+	publishSvc := service.NewPublishService(publishLogRepo, nil,
+		service.WithPublishPushService(pushSvc),
+		service.WithPublishMasterKey(masterKey),
+	)
 
 	// Initialize platform adapters and registry
 	platformRegistry := platform.NewRegistry()

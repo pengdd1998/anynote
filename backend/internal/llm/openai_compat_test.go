@@ -20,6 +20,18 @@ func init() {
 	validateBaseURLFn = func(string) error { return nil }
 }
 
+// testHTTPClient returns an *http.Client without SSRF-safe transport so that
+// httptest servers (which bind to 127.0.0.1) remain reachable in unit tests.
+func testHTTPClient() *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 20,
+			IdleConnTimeout:     90 * time.Second,
+		},
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Chat tests with httptest mock server
 // ---------------------------------------------------------------------------
@@ -68,7 +80,7 @@ func TestOpenAICompat_Chat_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "test-api-key", server.URL, ChatRequest{
 		Model:    "gpt-4",
 		Messages: []domain.ChatMessage{{Role: "user", Content: "Hello"}},
@@ -94,7 +106,7 @@ func TestOpenAICompat_Chat_NonRetryable400(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
 		Messages: []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:     3,
@@ -121,7 +133,7 @@ func TestOpenAICompat_Chat_NonRetryable401(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(context.Background(), "bad-key", server.URL, ChatRequest{
 		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:    3,
@@ -144,7 +156,7 @@ func TestOpenAICompat_Chat_NonRetryable403(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
 		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:    3,
@@ -183,7 +195,7 @@ func TestOpenAICompat_Chat_RetryOn429(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
 		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:    3,
@@ -223,7 +235,7 @@ func TestOpenAICompat_Chat_RetryOn503(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
 		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:    3,
@@ -263,7 +275,7 @@ func TestOpenAICompat_Chat_RetryOn502(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
 		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:    3,
@@ -286,7 +298,7 @@ func TestOpenAICompat_Chat_RetryExhausted(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
 		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:    2,
@@ -332,7 +344,7 @@ func TestOpenAICompat_Chat_RetryAfterHeader(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
 		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:    3,
@@ -374,7 +386,7 @@ func TestOpenAICompat_Chat_RetryOn504(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
 		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:    3,
@@ -431,7 +443,7 @@ func TestOpenAICompat_ChatStream_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	ch, err := provider.ChatStream(context.Background(), "stream-key", server.URL, ChatRequest{
 		Model:    "gpt-4",
 		Messages: []domain.ChatMessage{{Role: "user", Content: "Hello"}},
@@ -467,7 +479,7 @@ func TestOpenAICompat_ChatStream_NonOKStatus(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.ChatStream(context.Background(), "key", server.URL, ChatRequest{
 		Messages: []domain.ChatMessage{{Role: "user", Content: "test"}},
 		Stream:   true,
@@ -490,7 +502,7 @@ func TestOpenAICompat_ChatStream_NotRetriedOnError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.ChatStream(context.Background(), "key", server.URL, ChatRequest{
 		Messages: []domain.ChatMessage{{Role: "user", Content: "test"}},
 		Stream:   true,
@@ -514,7 +526,7 @@ func TestOpenAICompat_ChatStream_EmptyStream(t *testing.T) {
 	}))
 	defer server.Close()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	ch, err := provider.ChatStream(context.Background(), "key", server.URL, ChatRequest{
 		Messages: []domain.ChatMessage{{Role: "user", Content: "test"}},
 		Stream:   true,
@@ -658,7 +670,7 @@ func TestOpenAICompat_Chat_ContextCancelled(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
-	provider := NewOpenAICompatProvider(nil)
+	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(ctx, "key", server.URL, ChatRequest{
 		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:    0,

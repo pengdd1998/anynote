@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -10,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/anynote/backend/internal/domain"
+	"github.com/anynote/backend/internal/llm"
 )
 
 // ErrNotOwner is returned when a user attempts to access a resource
@@ -44,9 +46,10 @@ type PublishLogRepository interface {
 }
 
 type publishService struct {
-	logRepo PublishLogRepository
-	queue   QueueEnqueuer
-	pushSvc PushService // optional; nil means no push notifications
+	logRepo   PublishLogRepository
+	queue     QueueEnqueuer
+	pushSvc   PushService // optional; nil means no push notifications
+	masterKey []byte      // server master key for encrypting publish content at rest
 }
 
 // NewPublishService creates a publish service with the given log repository.
@@ -71,14 +74,61 @@ func WithPublishPushService(pushSvc PushService) PublishServiceOption {
 	return func(s *publishService) { s.pushSvc = pushSvc }
 }
 
+// WithPublishMasterKey sets the server master key for encrypting publish
+// content at rest.
+func WithPublishMasterKey(key []byte) PublishServiceOption {
+	return func(s *publishService) { s.masterKey = key }
+}
+
+// encryptField encrypts a string with AES-256-GCM and returns base64.
+// Returns the plaintext unchanged if masterKey is nil or input is empty.
+func (s *publishService) encryptField(plaintext string) (string, error) {
+	if plaintext == "" || len(s.masterKey) == 0 {
+		return plaintext, nil
+	}
+	ciphertext, err := llm.EncryptAPIKey(plaintext, s.masterKey)
+	if err != nil {
+		return "", fmt.Errorf("encrypt publish field: %w", err)
+	}
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// decryptField decrypts a base64-encoded AES-256-GCM ciphertext.
+// Returns the input unchanged if masterKey is nil, or if the input is not
+// valid base64 (legacy plaintext data from before encryption was added).
+func (s *publishService) decryptField(encoded string) (string, error) {
+	if encoded == "" || len(s.masterKey) == 0 {
+		return encoded, nil
+	}
+	ciphertext, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		// Not base64 -- assume legacy plaintext data.
+		return encoded, nil
+	}
+	plaintext, err := llm.DecryptAPIKey(ciphertext, s.masterKey)
+	if err != nil {
+		return "", fmt.Errorf("decrypt publish field: %w", err)
+	}
+	return plaintext, nil
+}
+
 func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req PublishRequest) (*domain.PublishLog, error) {
+	encTitle, err := s.encryptField(req.Title)
+	if err != nil {
+		return nil, err
+	}
+	encContent, err := s.encryptField(req.Content)
+	if err != nil {
+		return nil, err
+	}
+
 	log := &domain.PublishLog{
-		ID:      uuid.New(),
-		UserID:  userID,
+		ID:       uuid.New(),
+		UserID:   userID,
 		Platform: req.Platform,
-		Title:   req.Title,
-		Content: req.Content,
-		Status:  "pending",
+		Title:    encTitle,
+		Content:  encContent,
+		Status:   "pending",
 	}
 
 	if err := s.logRepo.Create(ctx, log); err != nil {
@@ -91,8 +141,8 @@ func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req Publ
 			"user_id":        userID.String(),
 			"platform":       req.Platform,
 			"publish_log_id": log.ID.String(),
-			"title":          req.Title,
-			"content":        req.Content,
+			"title":          encTitle,
+			"content":        encContent,
 			"tags":           req.Tags,
 		}
 
@@ -116,7 +166,7 @@ func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req Publ
 			defer cancel()
 			payload := PushPayload{
 				Title:    "Publishing Started",
-				Body:     fmt.Sprintf("Publishing to %s: %s", req.Platform, req.Title),
+				Body:     fmt.Sprintf("Publishing to %s", req.Platform),
 				Priority: "normal",
 				Data: map[string]interface{}{
 					"type":           "publish_started",
@@ -134,7 +184,21 @@ func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req Publ
 }
 
 func (s *publishService) GetHistory(ctx context.Context, userID uuid.UUID) ([]domain.PublishLog, error) {
-	return s.logRepo.ListByUser(ctx, userID)
+	logs, err := s.logRepo.ListByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	for i := range logs {
+		logs[i].Title, err = s.decryptField(logs[i].Title)
+		if err != nil {
+			return nil, err
+		}
+		logs[i].Content, err = s.decryptField(logs[i].Content)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return logs, nil
 }
 
 func (s *publishService) GetByID(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*domain.PublishLog, error) {
@@ -144,6 +208,15 @@ func (s *publishService) GetByID(ctx context.Context, userID uuid.UUID, id uuid.
 	}
 	if publishLog.UserID != userID {
 		return nil, ErrNotOwner
+	}
+	// Decrypt content for the caller.
+	publishLog.Title, err = s.decryptField(publishLog.Title)
+	if err != nil {
+		return nil, err
+	}
+	publishLog.Content, err = s.decryptField(publishLog.Content)
+	if err != nil {
+		return nil, err
 	}
 	return publishLog, nil
 }

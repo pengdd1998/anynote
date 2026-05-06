@@ -25,9 +25,11 @@ func TestQuotaRepository_DocumentsExpectedBehavior(t *testing.T) {
 		t.Log("documented: Create upserts quota record")
 	})
 
-	t.Run("IncrementUsage_increments_counter", func(t *testing.T) {
-		// UPDATE user_quotas SET daily_ai_used = daily_ai_used + 1, updated_at = NOW() WHERE user_id = $1
-		t.Log("documented: IncrementUsage atomically increments daily_ai_used")
+	t.Run("TryIncrementUsage_atomic_check_and_increment", func(t *testing.T) {
+		// UPDATE user_quotas SET daily_ai_used = daily_ai_used + 1, updated_at = NOW()
+		// WHERE user_id = $1 AND daily_ai_used < daily_ai_limit
+		// RETURNING daily_ai_used
+		t.Log("documented: TryIncrementUsage atomically checks limit and increments daily_ai_used")
 	})
 
 	t.Run("ResetIfNeeded_resets_daily", func(t *testing.T) {
@@ -71,13 +73,16 @@ func (m *mockQuotaRepo) Create(ctx context.Context, quota *domain.UserQuota) err
 	return nil
 }
 
-func (m *mockQuotaRepo) IncrementUsage(ctx context.Context, userID uuid.UUID) error {
+func (m *mockQuotaRepo) TryIncrementUsage(ctx context.Context, userID uuid.UUID) (bool, error) {
 	q, ok := m.quotas[userID]
 	if !ok {
-		return errors.New("quota not found")
+		return false, errors.New("quota not found")
+	}
+	if q.DailyAIUsed >= q.DailyAILimit {
+		return false, nil
 	}
 	q.DailyAIUsed++
-	return nil
+	return true, nil
 }
 
 func (m *mockQuotaRepo) ResetIfNeeded(ctx context.Context, userID uuid.UUID) error {
@@ -140,20 +145,50 @@ func TestMockQuotaRepo_GetByUserID_NotFound(t *testing.T) {
 	}
 }
 
-func TestMockQuotaRepo_IncrementUsage(t *testing.T) {
+func TestMockQuotaRepo_TryIncrementUsage(t *testing.T) {
 	repo := newMockQuotaRepo()
 	ctx := context.Background()
 	userID := uuid.New()
 
 	repo.Create(ctx, &domain.UserQuota{UserID: userID, DailyAILimit: 50, DailyAIUsed: 0})
 
-	repo.IncrementUsage(ctx, userID)
-	repo.IncrementUsage(ctx, userID)
-	repo.IncrementUsage(ctx, userID)
+	ok, _ := repo.TryIncrementUsage(ctx, userID)
+	if !ok {
+		t.Error("first TryIncrementUsage should succeed")
+	}
+	ok, _ = repo.TryIncrementUsage(ctx, userID)
+	if !ok {
+		t.Error("second TryIncrementUsage should succeed")
+	}
+	ok, _ = repo.TryIncrementUsage(ctx, userID)
+	if !ok {
+		t.Error("third TryIncrementUsage should succeed")
+	}
 
 	q, _ := repo.GetByUserID(ctx, userID)
 	if q.DailyAIUsed != 3 {
 		t.Errorf("DailyAIUsed = %d, want 3", q.DailyAIUsed)
+	}
+}
+
+func TestMockQuotaRepo_TryIncrementUsage_QuotaExceeded(t *testing.T) {
+	repo := newMockQuotaRepo()
+	ctx := context.Background()
+	userID := uuid.New()
+
+	repo.Create(ctx, &domain.UserQuota{UserID: userID, DailyAILimit: 3, DailyAIUsed: 3})
+
+	ok, err := repo.TryIncrementUsage(ctx, userID)
+	if err != nil {
+		t.Fatalf("TryIncrementUsage should not return error on quota exceeded: %v", err)
+	}
+	if ok {
+		t.Error("TryIncrementUsage should return false when quota is exceeded")
+	}
+
+	q, _ := repo.GetByUserID(ctx, userID)
+	if q.DailyAIUsed != 3 {
+		t.Errorf("DailyAIUsed should remain at 3, got %d", q.DailyAIUsed)
 	}
 }
 
@@ -162,7 +197,7 @@ func TestMockQuotaRepo_ResetIfNeeded(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()
 
-	// Quota last reset 2 days ago — should reset.
+	// Quota last reset 2 days ago -- should reset.
 	repo.Create(ctx, &domain.UserQuota{
 		UserID: userID, DailyAILimit: 50, DailyAIUsed: 30,
 		QuotaResetAt: time.Now().Add(-48 * time.Hour),
@@ -181,7 +216,7 @@ func TestMockQuotaRepo_ResetIfNeeded_RecentNotReset(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()
 
-	// Quota last reset 1 hour ago — should NOT reset.
+	// Quota last reset 1 hour ago -- should NOT reset.
 	repo.Create(ctx, &domain.UserQuota{
 		UserID: userID, DailyAILimit: 50, DailyAIUsed: 30,
 		QuotaResetAt: time.Now().Add(-1 * time.Hour),

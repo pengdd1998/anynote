@@ -26,11 +26,7 @@ type AnthropicProvider struct {
 func NewAnthropicProvider(client *http.Client) *AnthropicProvider {
 	if client == nil {
 		client = &http.Client{
-			Transport: &http.Transport{
-				MaxIdleConns:        100,
-				MaxIdleConnsPerHost: 20,
-				IdleConnTimeout:     90 * time.Second,
-			},
+			Transport: newSSRFSafeTransport(),
 		}
 	}
 	return &AnthropicProvider{httpClient: client}
@@ -227,54 +223,99 @@ func (p *AnthropicProvider) Chat(ctx context.Context, apiKey, baseURL string, re
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
+	maxRetries := 3
+	retryBaseDelay := time.Second
+
 	ctx, cancel := context.WithTimeout(ctx, requestTimeout(req.Timeout))
 	defer cancel()
 
 	url := strings.TrimRight(baseURL, "/") + "/v1/messages"
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			delay := retryBackoff(attempt, retryBaseDelay)
+			slog.Info("retrying Anthropic request", "attempt", attempt, "delay", delay)
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(delay):
+			}
+		}
+
+		httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+		if err != nil {
+			return nil, fmt.Errorf("create request: %w", err)
+		}
+		httpReq.Header.Set("Content-Type", "application/json")
+		httpReq.Header.Set("x-api-key", apiKey)
+		httpReq.Header.Set("anthropic-version", "2023-06-01")
+
+		resp, err := p.httpClient.Do(httpReq)
+		if err != nil {
+			lastErr = fmt.Errorf("send request: %w", err)
+			slog.Warn("Anthropic request network error", "attempt", attempt, "error", err)
+			continue
+		}
+
+		respBody, readErr := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
+		_ = resp.Body.Close()
+		if readErr != nil {
+			lastErr = fmt.Errorf("reading response body: %w", readErr)
+			continue
+		}
+
+		// Non-retriable client errors
+		if resp.StatusCode == http.StatusBadRequest ||
+			resp.StatusCode == http.StatusUnauthorized ||
+			resp.StatusCode == http.StatusForbidden {
+			return nil, fmt.Errorf("anthropic returned status %d", resp.StatusCode)
+		}
+
+		// Retriable server/rate-limit errors
+		if isRetriable(resp.StatusCode) {
+			lastErr = fmt.Errorf("anthropic returned status %d", resp.StatusCode)
+			if resp.StatusCode == http.StatusTooManyRequests {
+				if after := parseRetryAfter(resp.Header.Get("Retry-After")); after > 0 {
+					retryBaseDelay = after
+				}
+			}
+			slog.Warn("Anthropic returned retriable status",
+				"status", resp.StatusCode,
+				"attempt", attempt,
+				"max_retries", maxRetries,
+			)
+			continue
+		}
+
+		// Any other non-OK status is not retried
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("anthropic returned status %d", resp.StatusCode)
+		}
+
+		// Success path
+		var aResp anthropicResponse
+		if err := json.Unmarshal(respBody, &aResp); err != nil {
+			return nil, fmt.Errorf("parse response: %w", err)
+		}
+
+		content := ""
+		if len(aResp.Content) > 0 {
+			content = aResp.Content[0].Text
+		}
+
+		return &ChatResponse{
+			Content: content,
+			Model:   aResp.Model,
+			Usage: Usage{
+				PromptTokens:     aResp.Usage.InputTokens,
+				CompletionTokens: aResp.Usage.OutputTokens,
+				TotalTokens:      aResp.Usage.InputTokens + aResp.Usage.OutputTokens,
+			},
+		}, nil
 	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("x-api-key", apiKey)
-	httpReq.Header.Set("anthropic-version", "2023-06-01")
-
-	resp, err := p.httpClient.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("send request: %w", err)
-	}
-
-	respBody, err := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
-	_ = resp.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("reading response body: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		slog.Warn("Anthropic returned non-OK status", "status", resp.StatusCode, "body_len", len(respBody))
-		return nil, fmt.Errorf("anthropic returned status %d", resp.StatusCode)
-	}
-
-	var aResp anthropicResponse
-	if err := json.Unmarshal(respBody, &aResp); err != nil {
-		return nil, fmt.Errorf("parse response: %w", err)
-	}
-
-	content := ""
-	if len(aResp.Content) > 0 {
-		content = aResp.Content[0].Text
-	}
-
-	return &ChatResponse{
-		Content: content,
-		Model:   aResp.Model,
-		Usage: Usage{
-			PromptTokens:     aResp.Usage.InputTokens,
-			CompletionTokens: aResp.Usage.OutputTokens,
-			TotalTokens:      aResp.Usage.InputTokens + aResp.Usage.OutputTokens,
-		},
-	}, nil
+	return nil, fmt.Errorf("Anthropic request failed after %d retries: %w", maxRetries, lastErr)
 }
 
 // anthropicResponse is the Anthropic Messages API response format.

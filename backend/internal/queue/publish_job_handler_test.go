@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,9 +12,24 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/anynote/backend/internal/domain"
+	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
 	"github.com/anynote/backend/internal/service"
 )
+
+// testEncryptField encrypts a plaintext string with the given master key and
+// returns the base64-encoded ciphertext. Used in tests to simulate the
+// encryption that the publish service applies before enqueuing.
+func testEncryptField(plaintext string, masterKey []byte) string {
+	if plaintext == "" {
+		return ""
+	}
+	ct, err := llm.EncryptAPIKey(plaintext, masterKey)
+	if err != nil {
+		panic(fmt.Sprintf("testEncryptField: %v", err))
+	}
+	return base64.StdEncoding.EncodeToString(ct)
+}
 
 // ---------------------------------------------------------------------------
 // Mocks for publish job handler dependencies
@@ -149,8 +165,8 @@ func TestPublishJobHandler_HandleTask_Success(t *testing.T) {
 		UserID:       userID.String(),
 		Platform:     "mock",
 		PublishLogID: logID.String(),
-		Title:        "Test Title",
-		Content:      "Test Content",
+		Title:        testEncryptField("Test Title", masterKey),
+		Content:      testEncryptField("Test Content", masterKey),
 		Tags:         []string{"test"},
 	}
 
@@ -295,8 +311,8 @@ func TestPublishJobHandler_HandleTask_PublishFails(t *testing.T) {
 		UserID:       userID.String(),
 		Platform:     "mock",
 		PublishLogID: logID.String(),
-		Title:        "Test",
-		Content:      "Content",
+		Title:        testEncryptField("Test", masterKey),
+		Content:      testEncryptField("Content", masterKey),
 	}
 
 	data, _ := json.Marshal(payload)
@@ -347,8 +363,8 @@ func TestPublishJobHandler_HandleTask_UpdateStatusError(t *testing.T) {
 		UserID:       userID.String(),
 		Platform:     "mock",
 		PublishLogID: logID.String(),
-		Title:        "Test",
-		Content:      "Content",
+		Title:        testEncryptField("Test", masterKey),
+		Content:      testEncryptField("Content", masterKey),
 	}
 
 	data, _ := json.Marshal(payload)
@@ -484,8 +500,8 @@ func TestPublishJobHandler_HandleTask_Success_SendsPush(t *testing.T) {
 		UserID:       userID.String(),
 		Platform:     "mock",
 		PublishLogID: logID.String(),
-		Title:        "Test",
-		Content:      "Content",
+		Title:        testEncryptField("Test", masterKey),
+		Content:      testEncryptField("Content", masterKey),
 	}
 
 	data, _ := json.Marshal(payload)
@@ -544,8 +560,8 @@ func TestPublishJobHandler_HandleTask_Failure_SendsPush(t *testing.T) {
 		UserID:       userID.String(),
 		Platform:     "mock",
 		PublishLogID: logID.String(),
-		Title:        "Test",
-		Content:      "Content",
+		Title:        testEncryptField("Test", masterKey),
+		Content:      testEncryptField("Content", masterKey),
 	}
 
 	data, _ := json.Marshal(payload)
@@ -598,8 +614,8 @@ func TestPublishJobHandler_HandleTask_NoPushService(t *testing.T) {
 		UserID:       userID.String(),
 		Platform:     "mock",
 		PublishLogID: logID.String(),
-		Title:        "Test",
-		Content:      "Content",
+		Title:        testEncryptField("Test", masterKey),
+		Content:      testEncryptField("Content", masterKey),
 	}
 
 	data, _ := json.Marshal(payload)
@@ -641,8 +657,8 @@ func TestPublishJobHandler_HandleTask_PushErrorDoesNotAffectJob(t *testing.T) {
 		UserID:       userID.String(),
 		Platform:     "mock",
 		PublishLogID: logID.String(),
-		Title:        "Test",
-		Content:      "Content",
+		Title:        testEncryptField("Test", masterKey),
+		Content:      testEncryptField("Content", masterKey),
 	}
 
 	data, _ := json.Marshal(payload)

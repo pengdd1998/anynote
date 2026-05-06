@@ -86,13 +86,15 @@ void main() async {
     ErrorReporter.instance.reportError(e, st, context: 'database_init');
   }
 
-  // Initialize API client with compile-time base URL.
-  // Default API server. Override at build time with --dart-define=API_BASE_URL=...
+  // Initialize API client.
+  // Priority: --dart-define=API_BASE_URL > kDebugMode default > production.
+  final String envApiUrl = const String.fromEnvironment('API_BASE_URL');
   final apiClient = ApiClient(
-    baseUrl: const String.fromEnvironment(
-      'API_BASE_URL',
-      defaultValue: 'http://175.178.66.207:36661',
-    ),
+    baseUrl: envApiUrl.isNotEmpty
+        ? envApiUrl
+        : (kDebugMode
+            ? 'http://10.0.2.2:36661'
+            : 'http://175.178.66.207:36661'),
   );
 
   // Initialize local notification service for scheduled reminders.

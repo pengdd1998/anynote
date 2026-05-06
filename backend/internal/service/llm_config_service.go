@@ -47,6 +47,11 @@ func (s *llmConfigService) Create(ctx context.Context, userID uuid.UUID, cfg dom
 	cfg.ID = uuid.New()
 	cfg.UserID = userID
 
+	// Validate BaseURL to prevent SSRF at config-save time.
+	if err := llm.ValidateBaseURL(cfg.BaseURL); err != nil {
+		return nil, fmt.Errorf("invalid base URL: %w", err)
+	}
+
 	// Encrypt API key before storage
 	encryptedKey, err := llm.EncryptAPIKey(cfg.DecryptedKey, s.masterKey)
 	if err != nil {
@@ -69,6 +74,13 @@ func (s *llmConfigService) Update(ctx context.Context, userID uuid.UUID, cfg dom
 	}
 	if existing.UserID != userID {
 		return nil, fmt.Errorf("unauthorized")
+	}
+
+	// Validate BaseURL if it is being updated.
+	if cfg.BaseURL != "" {
+		if err := llm.ValidateBaseURL(cfg.BaseURL); err != nil {
+			return nil, fmt.Errorf("invalid base URL: %w", err)
+		}
 	}
 
 	if cfg.DecryptedKey != "" {

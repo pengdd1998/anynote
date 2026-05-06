@@ -41,7 +41,10 @@ func (m *mockQuotaService) GetQuota(ctx context.Context, userID uuid.UUID) (*dom
 }
 
 func (m *mockQuotaService) IncrementUsage(ctx context.Context, userID uuid.UUID) error {
-	return m.incrementErr
+	if m.incrementErr != nil {
+		return m.incrementErr
+	}
+	return nil
 }
 
 // ---------------------------------------------------------------------------

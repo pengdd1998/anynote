@@ -135,8 +135,8 @@ func (r *zeroCostQuotaRepo) Create(_ context.Context, _ *domain.UserQuota) error
 	return nil
 }
 
-func (r *zeroCostQuotaRepo) IncrementUsage(_ context.Context, _ uuid.UUID) error {
-	return nil
+func (r *zeroCostQuotaRepo) TryIncrementUsage(_ context.Context, _ uuid.UUID) (bool, error) {
+	return true, nil
 }
 
 func (r *zeroCostQuotaRepo) ResetIfNeeded(_ context.Context, _ uuid.UUID) error {

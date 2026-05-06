@@ -84,6 +84,7 @@ type routerStubQuotaService struct{}
 func (s *routerStubQuotaService) GetQuota(ctx context.Context, userID uuid.UUID) (*domain.QuotaResponse, error) {
 	return nil, nil
 }
+
 func (s *routerStubQuotaService) IncrementUsage(ctx context.Context, userID uuid.UUID) error {
 	return nil
 }

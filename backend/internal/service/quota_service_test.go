@@ -16,10 +16,10 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockQuotaRepo struct {
-	getByUserIDFn     func(ctx context.Context, userID uuid.UUID) (*domain.UserQuota, error)
-	createFn          func(ctx context.Context, quota *domain.UserQuota) error
-	incrementUsageFn  func(ctx context.Context, userID uuid.UUID) error
-	resetIfNeededFn   func(ctx context.Context, userID uuid.UUID) error
+	getByUserIDFn    func(ctx context.Context, userID uuid.UUID) (*domain.UserQuota, error)
+	createFn         func(ctx context.Context, quota *domain.UserQuota) error
+	incrementUsageFn func(ctx context.Context, userID uuid.UUID) (bool, error)
+	resetIfNeededFn  func(ctx context.Context, userID uuid.UUID) error
 }
 
 func (m *mockQuotaRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (*domain.UserQuota, error) {
@@ -36,11 +36,11 @@ func (m *mockQuotaRepo) Create(ctx context.Context, quota *domain.UserQuota) err
 	return errors.New("not implemented")
 }
 
-func (m *mockQuotaRepo) IncrementUsage(ctx context.Context, userID uuid.UUID) error {
+func (m *mockQuotaRepo) TryIncrementUsage(ctx context.Context, userID uuid.UUID) (bool, error) {
 	if m.incrementUsageFn != nil {
 		return m.incrementUsageFn(ctx, userID)
 	}
-	return errors.New("not implemented")
+	return false, errors.New("not implemented")
 }
 
 func (m *mockQuotaRepo) ResetIfNeeded(ctx context.Context, userID uuid.UUID) error {
@@ -171,12 +171,12 @@ func TestQuotaService_IncrementUsage_Success(t *testing.T) {
 			resetCalled = true
 			return nil
 		},
-		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) error {
+		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) (bool, error) {
 			if uid != userID {
 				t.Errorf("userID = %v, want %v", uid, userID)
 			}
 			incrementCalled = true
-			return nil
+			return true, nil
 		},
 	}
 
@@ -193,12 +193,31 @@ func TestQuotaService_IncrementUsage_Success(t *testing.T) {
 	}
 }
 
+func TestQuotaService_IncrementUsage_QuotaExceeded(t *testing.T) {
+	userID := uuid.New()
+
+	repo := &mockQuotaRepo{
+		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) (bool, error) {
+			return false, nil // quota exceeded: false, no error
+		},
+	}
+
+	svc := NewQuotaService(repo)
+	err := svc.IncrementUsage(context.Background(), userID)
+	if err == nil {
+		t.Error("expected ErrQuotaExceeded when TryIncrementUsage returns false")
+	}
+	if err != ErrQuotaExceeded {
+		t.Errorf("expected ErrQuotaExceeded, got %v", err)
+	}
+}
+
 func TestQuotaService_IncrementUsage_IncrementError(t *testing.T) {
 	userID := uuid.New()
 
 	repo := &mockQuotaRepo{
-		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) error {
-			return errors.New("quota exceeded")
+		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) (bool, error) {
+			return false, errors.New("db error")
 		},
 	}
 
@@ -217,9 +236,9 @@ func TestQuotaService_IncrementUsage_ResetErrorIgnored(t *testing.T) {
 		resetIfNeededFn: func(ctx context.Context, uid uuid.UUID) error {
 			return errors.New("reset failed")
 		},
-		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) error {
+		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) (bool, error) {
 			incrementCalled = true
-			return nil
+			return true, nil
 		},
 	}
 
@@ -255,8 +274,8 @@ func TestQuotaService_ResetCache_SkipsDuplicateCalls(t *testing.T) {
 				QuotaResetAt: time.Now().Add(24 * time.Hour),
 			}, nil
 		},
-		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) error {
-			return nil
+		incrementUsageFn: func(ctx context.Context, uid uuid.UUID) (bool, error) {
+			return true, nil
 		},
 	}
 
@@ -287,9 +306,9 @@ func TestQuotaService_ResetCache_SkipsDuplicateCalls(t *testing.T) {
 
 func TestQuotaPlanLimits(t *testing.T) {
 	limits := map[string]int{
-		"free":      50,
-		"pro":       500,
-		"lifetime":  500,
+		"free":     50,
+		"pro":      500,
+		"lifetime": 500,
 	}
 
 	for plan, expectedLimit := range limits {

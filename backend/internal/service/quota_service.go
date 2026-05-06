@@ -19,7 +19,7 @@ type QuotaService interface {
 type QuotaRepository interface {
 	GetByUserID(ctx context.Context, userID uuid.UUID) (*domain.UserQuota, error)
 	Create(ctx context.Context, quota *domain.UserQuota) error
-	IncrementUsage(ctx context.Context, userID uuid.UUID) error
+	TryIncrementUsage(ctx context.Context, userID uuid.UUID) (bool, error)
 	ResetIfNeeded(ctx context.Context, userID uuid.UUID) error
 }
 
@@ -84,5 +84,12 @@ func (s *quotaService) GetQuota(ctx context.Context, userID uuid.UUID) (*domain.
 
 func (s *quotaService) IncrementUsage(ctx context.Context, userID uuid.UUID) error {
 	s.resetIfNeeded(ctx, userID)
-	return s.quotaRepo.IncrementUsage(ctx, userID)
+	ok, err := s.quotaRepo.TryIncrementUsage(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrQuotaExceeded
+	}
+	return nil
 }

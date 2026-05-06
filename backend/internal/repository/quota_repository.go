@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/anynote/backend/internal/domain"
@@ -46,13 +48,25 @@ func (r *QuotaRepository) Create(ctx context.Context, quota *domain.UserQuota) e
 	return err
 }
 
-func (r *QuotaRepository) IncrementUsage(ctx context.Context, userID uuid.UUID) error {
-	_, err := r.pool.Exec(ctx,
+// TryIncrementUsage atomically increments daily_ai_used if the user has not
+// exceeded their daily limit. Returns false without error if quota is exceeded.
+// This eliminates the TOCTOU race between a quota read and a separate increment.
+func (r *QuotaRepository) TryIncrementUsage(ctx context.Context, userID uuid.UUID) (bool, error) {
+	var dailyUsed int
+	err := r.pool.QueryRow(ctx,
 		`UPDATE user_quotas
 		 SET daily_ai_used = daily_ai_used + 1, updated_at = NOW()
-		 WHERE user_id = $1`, userID,
-	)
-	return err
+		 WHERE user_id = $1 AND daily_ai_used < daily_ai_limit
+		 RETURNING daily_ai_used`, userID,
+	).Scan(&dailyUsed)
+	if err != nil {
+		// pgx: no rows means the WHERE condition didn't match (quota exceeded)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *QuotaRepository) ResetIfNeeded(ctx context.Context, userID uuid.UUID) error {

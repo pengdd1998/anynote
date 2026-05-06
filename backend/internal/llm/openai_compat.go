@@ -31,6 +31,11 @@ func validateBaseURL(rawURL string) error {
 	return validateBaseURLFn(rawURL)
 }
 
+// ValidateBaseURL is the exported version for use by other packages (e.g., LLM config service).
+func ValidateBaseURL(rawURL string) error {
+	return validateBaseURLFn(rawURL)
+}
+
 func validateBaseURLImpl(rawURL string) error {
 	if rawURL == "" {
 		return nil
@@ -94,6 +99,37 @@ func isPublicIP(ip net.IP) bool {
 	return true
 }
 
+// newSSRFSafeTransport creates an *http.Transport with a custom DialContext
+// that re-validates resolved IPs at connection time. This closes the DNS
+// rebinding window between validateBaseURL and the actual TCP connect.
+func newSSRFSafeTransport() *http.Transport {
+	dialer := &net.Dialer{
+		Timeout:   10 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+	return &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			host, port, err := net.SplitHostPort(addr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid address %q: %w", addr, err)
+			}
+			ips, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+			if err != nil {
+				return nil, fmt.Errorf("DNS lookup for %q: %w", host, err)
+			}
+			for _, ipAddr := range ips {
+				if !isPublicIP(ipAddr.IP) {
+					return nil, fmt.Errorf("%w: resolved %q to reserved IP %s at connection time", ErrBlockedURL, host, ipAddr.IP)
+				}
+			}
+			return dialer.DialContext(ctx, network, net.JoinHostPort(host, port))
+		},
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 20,
+		IdleConnTimeout:     90 * time.Second,
+	}
+}
+
 // OpenAICompatProvider implements Provider for OpenAI-compatible APIs.
 // Covers: OpenAI, DeepSeek, Qwen, and any OpenAI-compatible endpoint.
 type OpenAICompatProvider struct {
@@ -106,11 +142,7 @@ type OpenAICompatProvider struct {
 func NewOpenAICompatProvider(client *http.Client) *OpenAICompatProvider {
 	if client == nil {
 		client = &http.Client{
-			Transport: &http.Transport{
-				MaxIdleConns:        100,
-				MaxIdleConnsPerHost: 20,
-				IdleConnTimeout:     90 * time.Second,
-			},
+			Transport: newSSRFSafeTransport(),
 		}
 	}
 	return &OpenAICompatProvider{httpClient: client}

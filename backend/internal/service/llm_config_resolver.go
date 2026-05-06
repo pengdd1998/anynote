@@ -68,16 +68,10 @@ func CheckSharedModeQuota(
 		return ErrQuotaExceeded
 	}
 
-	// Check daily quota BEFORE incrementing.
-	quota, err := quotaSvc.GetQuota(ctx, userID)
-	if err != nil {
-		slog.Warn("failed to check quota, allowing request", "user_id", userIDStr, "error", err)
-	} else if quota != nil && quota.DailyUsed >= quota.DailyLimit {
-		return ErrQuotaExceeded
-	}
-
+	// Atomic check-and-increment: IncrementUsage returns ErrQuotaExceeded
+	// when the daily limit is reached.
 	if err := quotaSvc.IncrementUsage(ctx, userID); err != nil {
-		slog.Error("failed to increment AI usage", "user_id", userIDStr, "error", err)
+		return err
 	}
 
 	return nil

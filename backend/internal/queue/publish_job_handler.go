@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -9,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 
+	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
 	"github.com/anynote/backend/internal/service"
 )
@@ -121,11 +123,30 @@ func (h *PublishJobHandler) HandleTask(ctx context.Context, t *asynq.Task) error
 		return nil // Non-retriable
 	}
 
+	// Decrypt title and content before publishing. The service encrypts these
+	// fields at rest and passes the encrypted (base64) values through the queue.
+	title, err := h.decryptField(payload.Title)
+	if err != nil {
+		slog.Error("publish job: failed to decrypt title", "publish_log_id", payload.PublishLogID, "error", err)
+		if updateErr := h.publishRepo.UpdateStatus(ctx, logID, "failed", "failed to decrypt title", ""); updateErr != nil {
+			slog.Error("publish job: failed to update status", "publish_log_id", payload.PublishLogID, "error", updateErr)
+		}
+		return nil // Non-retriable: decryption failure will not resolve on retry
+	}
+	content, err := h.decryptField(payload.Content)
+	if err != nil {
+		slog.Error("publish job: failed to decrypt content", "publish_log_id", payload.PublishLogID, "error", err)
+		if updateErr := h.publishRepo.UpdateStatus(ctx, logID, "failed", "failed to decrypt content", ""); updateErr != nil {
+			slog.Error("publish job: failed to update status", "publish_log_id", payload.PublishLogID, "error", updateErr)
+		}
+		return nil // Non-retriable: decryption failure will not resolve on retry
+	}
+
 	// Execute publish using the encrypted auth data.
 	// The adapter internally decrypts the auth data using the master key.
 	params := platform.PublishParams{
-		Title:   payload.Title,
-		Content: payload.Content,
+		Title:   title,
+		Content: content,
 		Tags:    payload.Tags,
 	}
 
@@ -207,4 +228,23 @@ func (h *PublishJobHandler) sendPublishPush(ctx context.Context, userID, platfor
 			"error", err,
 		)
 	}
+}
+
+// decryptField decrypts a base64-encoded AES-256-GCM ciphertext using the
+// master key. Returns the input unchanged if the input is not valid base64
+// (legacy plaintext data from before encryption was added).
+func (h *PublishJobHandler) decryptField(encoded string) (string, error) {
+	if encoded == "" || len(h.masterKey) == 0 {
+		return encoded, nil
+	}
+	ciphertext, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		// Not base64 -- assume legacy plaintext data.
+		return encoded, nil
+	}
+	plaintext, err := llm.DecryptAPIKey(ciphertext, h.masterKey)
+	if err != nil {
+		return "", fmt.Errorf("decrypt publish field: %w", err)
+	}
+	return plaintext, nil
 }
