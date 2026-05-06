@@ -1,0 +1,128 @@
+# AnyNote Server Deployment
+#
+# Deploys only the AnyNote application services (server, worker, chrome).
+# Connects to shared infrastructure (postgres, redis, minio) via the
+# `shared-infra` external network managed by infra/docker-compose.yml.
+#
+# Pulls pre-built images from GitHub Container Registry:
+#   docker compose -f docker-compose.deploy.yml pull
+#   docker compose -f docker-compose.deploy.yml up -d
+#
+# Requires ghcr.io login:
+#   echo $TOKEN | docker login ghcr.io -u USER --password-stdin
+
+services:
+  server:
+    image: ghcr.io/pengdd1998/anynote/server:${IMAGE_TAG:-latest}
+    container_name: anynote-server
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://anynote:${POSTGRES_PASSWORD:-changeme}@postgres:5432/anynote?sslmode=disable
+      REDIS_URL: redis://redis:6379/1
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      QWEN_API_KEY: ${QWEN_API_KEY:-}
+      PORT: "36661"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "${PORT:-36661}:36661"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:36661/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "10"
+    networks:
+      - shared-infra
+
+  worker:
+    image: ghcr.io/pengdd1998/anynote/worker:${IMAGE_TAG:-latest}
+    container_name: anynote-worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://anynote:${POSTGRES_PASSWORD:-changeme}@postgres:5432/anynote?sslmode=disable
+      REDIS_URL: redis://redis:6379/1
+      CHROME_WS_URL: ws://chrome:9222
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      - server
+      - chrome
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep -q worker || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "10"
+    networks:
+      - shared-infra
+      - anynote-backend
+
+  chrome:
+    image: chromedp/headless-shell:latest
+    container_name: anynote-chrome
+    restart: unless-stopped
+    environment:
+      - CHROME_FLAGS=--no-sandbox --disable-gpu --disable-dev-shm-usage --disable-setuid-sandbox
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    networks:
+      - anynote-backend
+
+networks:
+  shared-infra:
+    name: shared-infra
+    external: true
+  anynote-backend:
+    name: anynote-backend
+    driver: bridge
+    internal: true

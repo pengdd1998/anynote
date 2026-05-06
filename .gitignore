@@ -71,6 +71,7 @@ docker-compose.override.yml
 docker-compose.*.yml
 !docker-compose.yml
 !docker-compose.prod.yml
+!docker-compose.deploy.yml
 
 # ── Frontend: Flutter / Dart ──────────────────────────────────
 # Build output
