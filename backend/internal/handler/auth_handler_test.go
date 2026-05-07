@@ -198,7 +198,7 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 		Username:    "alice",
 		AuthKeyHash: []byte("hash"),
 		Salt:        []byte("salt"),
-		RecoveryKey: []byte("recovery"),
+		RecoveryKey: "recovery",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
@@ -243,6 +243,7 @@ func TestAuthHandler_Register_DuplicateEmail(t *testing.T) {
 		Email:       "alice@example.com",
 		Username:    "alice",
 		AuthKeyHash: []byte("hash"),
+			RecoveryKey: "recovery",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
@@ -275,6 +276,7 @@ func TestAuthHandler_Register_DuplicateUsername(t *testing.T) {
 		Email:       "alice@example.com",
 		Username:    "alice",
 		AuthKeyHash: []byte("hash"),
+		RecoveryKey: "recovery",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
@@ -625,6 +627,7 @@ func TestAuthHandler_Register_InternalError(t *testing.T) {
 		Email:       "alice@example.com",
 		Username:    "alice",
 		AuthKeyHash: []byte("hash"),
+		RecoveryKey: "recovery",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
@@ -800,7 +803,7 @@ func TestAuthHandler_Register_ResponseStructure(t *testing.T) {
 		Username:    "alice",
 		AuthKeyHash: []byte("hash"),
 		Salt:        []byte("salt"),
-		RecoveryKey: []byte("recovery"),
+		RecoveryKey: "recovery",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))

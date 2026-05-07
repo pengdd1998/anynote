@@ -393,7 +393,7 @@ func TestRegisterRequest_JSONFields(t *testing.T) {
 		Username:     "user1",
 		AuthKeyHash:  []byte{1, 2, 3},
 		Salt:         []byte{4, 5, 6},
-		RecoveryKey:  []byte{7, 8, 9},
+		RecoveryKey:  "test recovery key phrase",
 		RecoverySalt: []byte{10, 11, 12},
 	}
 

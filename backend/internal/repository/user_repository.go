@@ -27,10 +27,15 @@ func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
 		return err
 	}
 
+	hashedRecoveryKey, err := bcrypt.GenerateFromPassword(user.RecoveryKey, bcryptCost)
+	if err != nil {
+		return err
+	}
+
 	_, err = r.pool.Exec(ctx,
 		`INSERT INTO users (id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, plan)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-		user.ID, user.Email, user.Username, hashedAuthKey, user.Salt, user.RecoveryKey, user.RecoverySalt, user.Plan,
+		user.ID, user.Email, user.Username, hashedAuthKey, user.Salt, hashedRecoveryKey, user.RecoverySalt, user.Plan,
 	)
 	return err
 }

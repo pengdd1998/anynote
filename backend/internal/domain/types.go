@@ -269,7 +269,7 @@ type RegisterRequest struct {
 	Username     string `json:"username"`
 	AuthKeyHash  []byte `json:"auth_key_hash"`   // Client-derived: HKDF(master_key, "auth")
 	Salt         []byte `json:"salt"`
-	RecoveryKey  []byte `json:"recovery_key"`    // Encrypted recovery key
+	RecoveryKey  string `json:"recovery_key"`    // BIP-39 mnemonic
 	RecoverySalt []byte `json:"recovery_salt"`   // Random 32-byte salt for recovery key derivation
 }
 

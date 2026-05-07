@@ -139,7 +139,7 @@ func TestAuthService_Register_Success(t *testing.T) {
 		Username:    "alice",
 		AuthKeyHash: hash,
 		Salt:        salt,
-		RecoveryKey: []byte("recovery-key"),
+		RecoveryKey: "recovery-key",
 	})
 	if err != nil {
 		t.Fatalf("Register: %v", err)
@@ -174,7 +174,7 @@ func TestAuthService_Register_DuplicateEmail(t *testing.T) {
 		Username:    "alice",
 		AuthKeyHash: hash,
 		Salt:        []byte("salt"),
-		RecoveryKey: []byte("recovery"),
+		RecoveryKey: "recovery",
 	}
 
 	if _, err := svc.Register(context.Background(), req); err != nil {
@@ -186,7 +186,7 @@ func TestAuthService_Register_DuplicateEmail(t *testing.T) {
 		Username:    "alice2",
 		AuthKeyHash: hash,
 		Salt:        []byte("salt2"),
-		RecoveryKey: []byte("recovery2"),
+		RecoveryKey: "recovery2",
 	})
 	if !errors.Is(err, ErrEmailExists) {
 		t.Errorf("second Register error = %v, want ErrEmailExists", err)
@@ -203,7 +203,7 @@ func TestAuthService_Register_RepoError(t *testing.T) {
 		Username:    "bob",
 		AuthKeyHash: mustHashAuthKey("key"),
 		Salt:        []byte("salt"),
-		RecoveryKey: []byte("recovery"),
+		RecoveryKey: "recovery",
 	})
 	if err == nil {
 		t.Error("expected error when repo.Create fails")
@@ -294,7 +294,7 @@ func TestAuthService_RefreshToken_Success(t *testing.T) {
 		Username:    "erin",
 		AuthKeyHash: mustHashAuthKey("key"),
 		Salt:        []byte("salt"),
-		RecoveryKey: []byte("recovery"),
+		RecoveryKey: "recovery",
 	})
 	if err != nil {
 		t.Fatalf("Register: %v", err)
@@ -332,7 +332,7 @@ func TestAuthService_RefreshToken_ExpiredToken(t *testing.T) {
 		Username:    "frank",
 		AuthKeyHash: mustHashAuthKey("key"),
 		Salt:        []byte("salt"),
-		RecoveryKey: []byte("recovery"),
+		RecoveryKey: "recovery",
 	})
 	if err != nil {
 		t.Fatalf("Register: %v", err)
@@ -391,7 +391,7 @@ func TestAuthService_RefreshToken_RejectsAccessToken(t *testing.T) {
 		Username:    "heidi",
 		AuthKeyHash: mustHashAuthKey("key"),
 		Salt:        []byte("salt"),
-		RecoveryKey: []byte("recovery"),
+		RecoveryKey: "recovery",
 	})
 	if err != nil {
 		t.Fatalf("Register: %v", err)
@@ -413,7 +413,7 @@ func TestAuthService_GeneratedTokensContainType(t *testing.T) {
 		Username:    "ivan",
 		AuthKeyHash: mustHashAuthKey("key"),
 		Salt:        []byte("salt"),
-		RecoveryKey: []byte("recovery"),
+		RecoveryKey: "recovery",
 	})
 	if err != nil {
 		t.Fatalf("Register: %v", err)

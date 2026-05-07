@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// Design system for AnyNote — "Pastel + Pop Accent".
+/// Design system for AnyNote — "Warm White / Deep Navy".
 ///
-/// Light surfaces use soft lavender blush; dark surfaces use deep plum-black.
-/// Primary accent is vivid coral; secondary is fresh mint.
+/// Light mode: warm white surfaces like high-quality paper, with warm neutrals.
+/// Dark mode: deep navy/charcoal with warm undertones, like writing by lamplight.
+/// Primary accent is warm coral-amber for interactive elements and status.
 /// All text tiers meet WCAG AA 4.5:1 contrast on their respective surfaces.
 class AppTheme {
   AppTheme._();

@@ -1,24 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
+    <!-- Deep navy background gradient (dark mode aesthetic) -->
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2B1D3B;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#161120;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#1A1E2E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#252A3D;stop-opacity:1" />
     </linearGradient>
+
+    <!-- Note sheet: warm paper gradient -->
     <linearGradient id="noteFill" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#FCFAFF;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#EDE7F6;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#FAF8F5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F2EFE9;stop-opacity:1" />
     </linearGradient>
+
+    <!-- Shield: warm coral-amber gradient -->
     <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#D94848;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#E8A84C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D9774A;stop-opacity:1" />
     </linearGradient>
+
+    <!-- Soft shadow with warm tint -->
     <filter id="noteShadow" x="-4%" y="-2%" width="108%" height="110%">
-      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000000" flood-opacity="0.25"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#3A3228" flood-opacity="0.15"/>
     </filter>
   </defs>
 
   <!-- Background rounded square -->
   <rect x="48" y="48" width="928" height="928" rx="192" ry="192" fill="url(#bg)" />
+
+  <!-- Subtle inner glow for depth (warm amber tint) -->
+  <rect x="48" y="48" width="928" height="928" rx="192" ry="192"
+        fill="none" stroke="#D9774A" stroke-width="2" opacity="0.1"/>
 
   <!-- Note sheet with shadow -->
   <g filter="url(#noteShadow)">
@@ -26,16 +37,16 @@
           fill="url(#noteFill)" />
   </g>
 
-  <!-- Folded corner -->
-  <path d="M 650 200 L 650 240 Q 650 258 668 260 L 690 240 Z" fill="#D7CCE8" />
+  <!-- Folded corner (warm accent) -->
+  <path d="M 650 200 L 650 240 Q 650 258 668 260 L 690 240 Z" fill="#E8D9CB" />
 
-  <!-- Text lines (bolder for small-size legibility) -->
-  <rect x="345" y="320" width="290" height="18" rx="9" fill="#B8A9D4" opacity="0.7" />
-  <rect x="345" y="370" width="250" height="18" rx="9" fill="#B8A9D4" opacity="0.7" />
-  <rect x="345" y="420" width="300" height="18" rx="9" fill="#B8A9D4" opacity="0.7" />
-  <rect x="345" y="470" width="190" height="18" rx="9" fill="#B8A9D4" opacity="0.7" />
+  <!-- Text lines (warm brown for warmth) -->
+  <rect x="345" y="320" width="290" height="18" rx="9" fill="#8C8070" opacity="0.6" />
+  <rect x="345" y="370" width="250" height="18" rx="9" fill="#8C8070" opacity="0.6" />
+  <rect x="345" y="420" width="300" height="18" rx="9" fill="#8C8070" opacity="0.6" />
+  <rect x="345" y="470" width="190" height="18" rx="9" fill="#8C8070" opacity="0.6" />
 
-  <!-- Shield shape -->
+  <!-- Shield shape (privacy symbol) -->
   <path d="M 570 440 L 570 610 Q 570 730 670 770 Q 770 730 770 610 L 770 440 Z"
         fill="url(#shieldFill)" />
 
@@ -44,6 +55,6 @@
   <!-- Lock shackle -->
   <path d="M 653 560 L 653 535 Q 653 505 670 505 Q 687 505 687 535 L 687 560"
         fill="none" stroke="white" stroke-width="10" stroke-linecap="round" opacity="0.95" />
-  <!-- Keyhole -->
-  <circle cx="670" cy="587" r="9" fill="#D94848" />
+  <!-- Keyhole (warm coral) -->
+  <circle cx="670" cy="587" r="9" fill="#B86035" />
 </svg>

@@ -116,7 +116,7 @@ func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) 
 		Username:     req.Username,
 		AuthKeyHash:  req.AuthKeyHash,
 		Salt:         req.Salt,
-		RecoveryKey:  req.RecoveryKey,
+		RecoveryKey:  []byte(req.RecoveryKey),
 		RecoverySalt: req.RecoverySalt,
 		Plan:         "free",
 		CreatedAt:    time.Now(),

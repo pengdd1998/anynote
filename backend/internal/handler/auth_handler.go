@@ -47,8 +47,12 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "salt must be at most 64 bytes")
 		return
 	}
-	if len(req.RecoveryKey) > 1024 {
-		writeError(w, r, http.StatusBadRequest, "validation_error", "recovery_key must be at most 1024 bytes")
+	if req.RecoveryKey == "" {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "recovery_key is required")
+		return
+	}
+	if len(req.RecoveryKey) > 256 {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "recovery_key must be at most 256 characters")
 		return
 	}
 	if len(req.RecoverySalt) > 64 {

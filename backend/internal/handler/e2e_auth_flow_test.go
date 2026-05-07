@@ -158,7 +158,7 @@ func TestE2EAuthFlow(t *testing.T) {
 			Username:    testUsername,
 			AuthKeyHash: testAuthKeyHash,
 			Salt:        []byte("salt"),
-			RecoveryKey: []byte("recovery"),
+			RecoveryKey: "recovery",
 		})
 
 		resp, err := client.Post(server.URL+"/api/v1/auth/register", "application/json", bytes.NewReader(body))
@@ -400,6 +400,7 @@ func TestE2EAuthFlow_RegisterThenDuplicateEmail(t *testing.T) {
 		Email:       "dup@example.com",
 		Username:    "dupuser",
 		AuthKeyHash: []byte("hash"),
+		RecoveryKey: "recovery",
 	})
 
 	// First registration should succeed.

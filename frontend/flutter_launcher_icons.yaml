@@ -19,12 +19,13 @@ flutter_launcher_icons:
 
   image_path: "assets/icons/app_icon.png"
 
-  adaptive_icon_background: "#2B1D3B"
+  # Deep navy background (warm, not cold purple)
+  adaptive_icon_background: "#1A1E2E"
   adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
 
   ios_settings:
     remove_alpha: true
 
   web_settings:
-    background_color: "#2B1D3B"
-    theme_color: "#2B1D3B"
+    background_color: "#1A1E2E"
+    theme_color: "#1A1E2E"
