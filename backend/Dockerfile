@@ -14,7 +14,7 @@ COPY . .
 ARG VERSION=dev
 ARG COMMIT=none
 RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT}" \
+    -ldflags="-s -w -X github.com/anynote/backend/internal/handler.Version=${VERSION} -X main.Commit=${COMMIT}" \
     -o /server ./cmd/server
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /migrate ./cmd/migrate
 
