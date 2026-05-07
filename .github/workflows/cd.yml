@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME_SERVER: ${{ github.repository }}/server
@@ -84,7 +88,7 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 45m
+          command_timeout: 20m
           envs: VERSION,ACTOR,GHCR_TOKEN
           script: |
             set -euo pipefail
@@ -94,6 +98,27 @@ jobs:
 
             echo "=== Deploying AnyNote $VERSION ==="
 
+            # --- Resource guards ---
+            AVAIL_MEM=$(free -m | awk '/Mem:/{print $7}')
+            if [ "$AVAIL_MEM" -lt 300 ]; then
+              echo "Insufficient memory (${AVAIL_MEM}MB available, need 300MB). Aborting deploy."
+              exit 1
+            fi
+            echo "Memory OK: ${AVAIL_MEM}MB available"
+
+            DISK_AVAIL=$(df / | tail -1 | awk '{print $4}')
+            if [ "$DISK_AVAIL" -lt 524288 ]; then
+              echo "Low disk (${DISK_AVAIL}KB), pruning..."
+              docker system prune -af 2>/dev/null || true
+              docker builder prune -f --filter "until=24h" 2>/dev/null || true
+              DISK_AVAIL=$(df / | tail -1 | awk '{print $4}')
+              if [ "$DISK_AVAIL" -lt 524288 ]; then
+                echo "Still low disk after prune (${DISK_AVAIL}KB). Aborting deploy."
+                exit 1
+              fi
+            fi
+            echo "Disk OK: ${DISK_AVAIL}KB available"
+
             cd /home/ubuntu/projects/any-note
             git fetch --tags --force
             git checkout -f "$VERSION"
@@ -101,7 +126,7 @@ jobs:
             # Log into GHCR
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
 
-            # Pull only app images (skip chrome — already on server, rarely changes)
+            # Pull images sequentially to avoid memory spikes
             pull_with_retry() {
               local image=$1 max=3 n=1
               while [ $n -le $max ]; do
@@ -115,9 +140,8 @@ jobs:
               return 1
             }
 
-            pull_with_retry "$REGISTRY/server:$TAG" &
-            pull_with_retry "$REGISTRY/worker:$TAG" &
-            wait
+            pull_with_retry "$REGISTRY/server:$TAG"
+            pull_with_retry "$REGISTRY/worker:$TAG"
 
             echo "Images pulled. Starting deploy..."
 
@@ -160,8 +184,9 @@ jobs:
               sleep 2
             done
 
-            # Cleanup old images
+            # Cleanup
             echo "Cleaning up..."
-            docker image prune -af --filter "until=24h" 2>/dev/null || true
+            docker image prune -f 2>/dev/null || true
+            docker builder prune -f --filter "until=24h" 2>/dev/null || true
 
             echo "=== Deploy complete ==="
