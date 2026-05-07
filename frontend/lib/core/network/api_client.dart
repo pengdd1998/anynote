@@ -185,7 +185,18 @@ class ApiClient {
   // ── Auth API ──────────────────────────────────────
 
   Future<AuthResponse> register(RegisterRequest req) async {
-    final res = await _dio.post('/api/v1/auth/register', data: req.toJson());
+    // Convert hex authKeyHash to base64 for backend compatibility
+    final authKeyHashBytes = _hexToBytes(req.authKeyHash);
+    final saltBytes = _hexToBytes(req.salt);
+
+    final res = await _dio.post('/api/v1/auth/register', data: {
+      'email': req.email,
+      'username': req.username,
+      'auth_key_hash': base64Encode(authKeyHashBytes),
+      'salt': base64Encode(saltBytes),
+      'recovery_key': req.recoveryKey,
+      if (req.recoverySalt != null) 'recovery_salt': req.recoverySalt,
+    });
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
     await storeAccessTokenSecure(authRes.accessToken);
@@ -194,7 +205,13 @@ class ApiClient {
   }
 
   Future<AuthResponse> login(LoginRequest req) async {
-    final res = await _dio.post('/api/v1/auth/login', data: req.toJson());
+    // Convert hex authKeyHash to base64 for backend compatibility
+    final authKeyHashBytes = _hexToBytes(req.authKeyHash);
+
+    final res = await _dio.post('/api/v1/auth/login', data: {
+      'email': req.email,
+      'auth_key_hash': base64Encode(authKeyHashBytes),
+    });
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
     await storeAccessTokenSecure(authRes.accessToken);
@@ -780,4 +797,22 @@ class DeviceDto {
         platform: json['platform'] as String,
         lastSeen: DateTime.parse(json['last_seen'] as String),
       );
+}
+
+/// Converts a hex string to bytes.
+///
+/// Used to convert hex-encoded hashes to base64 for backend compatibility.
+/// The backend expects base64 for []byte fields in JSON.
+Uint8List _hexToBytes(String hex) {
+  hex = hex.toLowerCase().replaceAll(RegExp(r'[^0-9a-f]'), '');
+  if (hex.length % 2 != 0) {
+    throw ArgumentError('Invalid hex string: length must be even');
+  }
+  final result = Uint8List(hex.length ~/ 2);
+  for (var i = 0; i < result.length; i++) {
+    final firstDigit = int.parse(hex[i * 2], radix: 16);
+    final secondDigit = int.parse(hex[i * 2 + 1], radix: 16);
+    result[i] = (firstDigit << 4) + secondDigit;
+  }
+  return result;
 }
