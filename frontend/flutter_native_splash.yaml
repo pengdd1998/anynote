@@ -4,16 +4,12 @@
 #
 # Prerequisites:
 #   1. Add flutter_native_splash to dev_dependencies in pubspec.yaml
-#   2. Place splash logo images in assets/icons/
-#   3. Run: dart run flutter_native_splash:create
+#   2. Run: dart run flutter_native_splash:create
 
 flutter_native_splash:
   # Warm white for light mode, deep navy for dark mode
   color: "#FAF8F5"
   color_dark: "#1A1E2E"
-
-  image: assets/icons/splash_logo.png
-  image_dark: assets/icons/splash_logo_dark.png
 
   android: true
   ios: true
@@ -24,8 +20,6 @@ flutter_native_splash:
   web_image_mode: center
 
   android_12:
-    image: assets/icons/splash_logo.png
-    image_dark: assets/icons/splash_logo_dark.png
     color: "#FAF8F5"
     color_dark: "#1A1E2E"
     icon_background_color: "#FAF8F5"
