@@ -17,22 +17,13 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT}" \
     -o /worker ./cmd/worker
 
-# Runtime stage -- includes Chromium for chromedp platform publishing
+# Runtime stage
+# Worker connects to Chrome via CDP websocket (CHROME_WS_URL) — no embedded Chromium needed.
 FROM alpine:3.20
 
 RUN apk add --no-cache \
     ca-certificates \
-    tzdata \
-    chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ttf-freefont \
-    su-exec
-
-# Tell chromedp where to find the Chromium binary.
-ENV CHROME_BIN=/usr/bin/chromium-browser
-ENV CHROME_PATH=/usr/bin/chromium-browser
+    tzdata
 
 COPY --from=builder /worker /app/worker
 COPY entrypoint-worker.sh /app/entrypoint-worker.sh
