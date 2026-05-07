@@ -97,7 +97,7 @@ services:
       - anynote-backend
 
   chrome:
-    image: chromedp/headless-shell:latest
+    image: chromedp/headless-shell:stable
     container_name: anynote-chrome
     restart: unless-stopped
     environment:

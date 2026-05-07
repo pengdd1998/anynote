@@ -84,10 +84,13 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 20m
+          command_timeout: 30m
           envs: VERSION,ACTOR,GHCR_TOKEN
           script: |
             set -euo pipefail
+
+            TAG="${VERSION#v}"
+            REGISTRY="ghcr.io/pengdd1998/anynote"
 
             echo "=== Deploying AnyNote $VERSION ==="
 
@@ -95,11 +98,28 @@ jobs:
             git fetch --tags --force
             git checkout -f "$VERSION"
 
-            # Log into GitHub Container Registry to pull pre-built images
+            # Log into GHCR
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
 
-            # Pull pre-built images from GitHub Actions build job
-            IMAGE_TAG="${VERSION#v}" docker compose -f docker-compose.deploy.yml pull
+            # Pull only app images (skip chrome — already on server, rarely changes)
+            pull_with_retry() {
+              local image=$1 max=3 n=1
+              while [ $n -le $max ]; do
+                echo "Pulling $image (attempt $n/$max)..."
+                if docker pull "$image"; then return 0; fi
+                echo "Pull failed, retrying in 10s..."
+                sleep 10
+                n=$((n + 1))
+              done
+              echo "ERROR: Failed to pull $image after $max attempts"
+              return 1
+            }
+
+            pull_with_retry "$REGISTRY/server:$TAG" &
+            pull_with_retry "$REGISTRY/worker:$TAG" &
+            wait
+
+            echo "Images pulled. Starting deploy..."
 
             # Ensure shared infrastructure is running
             docker compose -f infra/docker-compose.yml up -d
@@ -120,13 +140,13 @@ jobs:
 
             # Run migrations
             echo "Running migrations..."
-            IMAGE_TAG="${VERSION#v}" docker compose -f docker-compose.deploy.yml run --rm --no-deps server /app/migrate up || true
+            IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml run --rm --no-deps server /app/migrate up || true
 
-            # Start services with pre-built images
+            # Start services
             echo "Starting services..."
-            IMAGE_TAG="${VERSION#v}" docker compose -f docker-compose.deploy.yml up -d
+            IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml up -d
 
-            # Health check
+            # Health check (60s window)
             echo "Health check..."
             for i in $(seq 1 30); do
               if curl -sf http://localhost:36661/health > /dev/null 2>&1; then
@@ -134,10 +154,10 @@ jobs:
                 break
               fi
               if [ "$i" -eq 30 ]; then
-                echo "WARNING: Health check failed after 30s"
-                IMAGE_TAG="${VERSION#v}" docker compose -f docker-compose.deploy.yml logs --tail=20 server
+                echo "WARNING: Health check failed after 60s"
+                IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml logs --tail=20 server
               fi
-              sleep 1
+              sleep 2
             done
 
             # Cleanup old images
