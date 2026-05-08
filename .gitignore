@@ -133,6 +133,9 @@ minio_data/
 # ── Documentation (local only) ────────────────────────────────
 doc/*
 *.md
+!CLAUDE.md
+!.impeccable.md
+!PRODUCT-ANALYSIS.md
 !README.md
 !CHANGELOG.md
 !doc/api.md
