@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Centralized color tokens for the "Warm White / Deep Navy" aesthetic.
+/// Centralized color tokens for the "Warm White / Warm Dark" aesthetic.
 ///
 /// Light mode: warm white surfaces like high-quality paper, with warm neutrals.
-/// Dark mode: deep navy/charcoal with warm undertones, like writing by lamplight.
+/// Dark mode: warm dark brown/charcoal, like writing by lamplight.
 /// Accent: warm coral-amber for interactive elements and status.
 ///
 /// All text tiers meet WCAG AA 4.5:1 contrast on their respective surfaces.
@@ -51,31 +51,31 @@ class AppColors {
   /// OKLCH: L=55%, C=0.02, H=35° — ~4.6:1 contrast
   static const lightTextTertiary = Color(0xFF8C8070);
 
-  // ── Dark palette (deep navy/charcoal, warm undertones) ──────────────────
+  // ── Dark palette (warm dark brown/charcoal, like lamplight) ──────────────
 
-  /// Surface: deep navy with warmth (not cold black/purple)
-  /// OKLCH: L=14%, C=0.025, H=250° → warm navy
-  static const darkSurface = Color(0xFF1A1E2E);
+  /// Surface: warm dark brown (not cold black/purple)
+  /// OKLCH: L=14%, C=0.025, H=30° → warm brown
+  static const darkSurface = Color(0xFF1E1A16);
 
-  /// Card background: slightly lighter navy
-  /// OKLCH: L=18%, C=0.022, H=250°
-  static const darkCardBg = Color(0xFF252A3D);
+  /// Card background: slightly lighter warm brown
+  /// OKLCH: L=18%, C=0.022, H=30°
+  static const darkCardBg = Color(0xFF252119);
 
-  /// Input fill: mid navy
-  /// OKLCH: L=22%, C=0.02, H=250°
-  static const darkInputFill = Color(0xFF2D3247);
+  /// Input fill: mid warm brown
+  /// OKLCH: L=22%, C=0.02, H=30°
+  static const darkInputFill = Color(0xFF2A2520);
 
-  /// Border: warm navy-grey
-  /// OKLCH: L=35%, C=0.018, H=250°
-  static const darkBorder = Color(0xFF4A5068);
+  /// Border: warm brown-grey
+  /// OKLCH: L=35%, C=0.018, H=30°
+  static const darkBorder = Color(0xFF3D3630);
 
-  /// Divider: subtle navy line
-  /// OKLCH: L=28%, C=0.015, H=250°
-  static const darkDivider = Color(0xFF3D4359);
+  /// Divider: subtle warm brown line
+  /// OKLCH: L=28%, C=0.015, H=30°
+  static const darkDivider = Color(0xFF342E28);
 
-  /// Disabled state: warm navy-grey
-  /// OKLCH: L=40%, C=0.015, H=250°
-  static const darkDisabled = Color(0xFF585E75);
+  /// Disabled state: warm brown-grey
+  /// OKLCH: L=40%, C=0.015, H=30°
+  static const darkDisabled = Color(0xFF504840);
 
   // Dark text tiers (WCAG AA on darkSurface)
 
@@ -159,27 +159,27 @@ class AppColors {
 
   // ── Semantic variants for dark mode ───────────────────────────────────────
 
-  /// Error background (dark mode)
-  static const darkErrorBg = Color(0xFF3A2828);
+  /// Error background (dark mode) — warm dark red
+  static const darkErrorBg = Color(0xFF2E1E1C);
 
-  /// Error border (dark mode)
-  static const darkErrorBorder = Color(0xFF503838);
+  /// Error border (dark mode) — warm red border
+  static const darkErrorBorder = Color(0xFF48302C);
 
-  /// Success background (dark mode)
-  static const darkSuccessBg = Color(0xFF283830);
+  /// Success background (dark mode) — warm dark green
+  static const darkSuccessBg = Color(0xFF1E2E22);
 
-  /// Success border (dark mode)
-  static const darkSuccessBorder = Color(0xFF385040);
+  /// Success border (dark mode) — warm green border
+  static const darkSuccessBorder = Color(0xFF2C4832);
 
-  /// Warning background (dark mode)
-  static const darkWarningBg = Color(0xFF3A3028);
+  /// Warning background (dark mode) — warm dark amber
+  static const darkWarningBg = Color(0xFF2E2820);
 
-  /// Warning border (dark mode)
-  static const darkWarningBorder = Color(0xFF504038);
+  /// Warning border (dark mode) — warm amber border
+  static const darkWarningBorder = Color(0xFF48382E);
 
-  /// Info background (dark mode)
-  static const darkInfoBg = Color(0xFF283038);
+  /// Info background (dark mode) — warm dark blue
+  static const darkInfoBg = Color(0xFF222830);
 
-  /// Info border (dark mode)
-  static const darkInfoBorder = Color(0xFF384050);
+  /// Info border (dark mode) — warm blue border
+  static const darkInfoBorder = Color(0xFF2E3848);
 }

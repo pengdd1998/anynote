@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Property filter bottom sheet.
 ///
-/// Allows the user to filter notes by status and priority properties.
+/// Allows the user to filter notes by status, priority, and tags.
 class NotesFilterSheet extends StatelessWidget {
   final String? statusFilter;
   final String? priorityFilter;
+  final Set<String>? tagFilter;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
+  final ValueChanged<String>? onTagChanged;
+  final List<Tag> allTags;
 
   const NotesFilterSheet({
     super.key,
     this.statusFilter,
     this.priorityFilter,
+    this.tagFilter,
     required this.onStatusChanged,
     required this.onPriorityChanged,
+    this.onTagChanged,
+    this.allTags = const [],
   });
 
   static const List<String> statusOptions = [
@@ -70,11 +77,19 @@ class NotesFilterSheet extends StatelessWidget {
                   style: theme.textTheme.titleLarge,
                 ),
                 const Spacer(),
-                if (statusFilter != null || priorityFilter != null)
+                if (statusFilter != null ||
+                    priorityFilter != null ||
+                    (tagFilter != null && tagFilter!.isNotEmpty))
                   TextButton(
                     onPressed: () {
                       onStatusChanged(null);
                       onPriorityChanged(null);
+                      // Clear all tags by toggling each selected tag off.
+                      if (tagFilter != null) {
+                        for (final tagId in tagFilter!) {
+                          onTagChanged?.call(tagId);
+                        }
+                      }
                     },
                     child: Text(l10n.clearAll),
                   ),
@@ -141,6 +156,44 @@ class NotesFilterSheet extends StatelessWidget {
               ],
             ),
           ),
+          const Divider(),
+          // Tags filter section
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.tagsFilter,
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(height: 12),
+                if (allTags.isEmpty)
+                  Text(
+                    l10n.noTagsAvailable,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: allTags.map((tag) {
+                      final isSelected = tagFilter?.contains(tag.id) == true;
+                      return FilterChip(
+                        label: Text(tag.plainName ?? '...'),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          onTagChanged?.call(tag.id);
+                        },
+                        selectedColor: theme.colorScheme.tertiaryContainer,
+                      );
+                    }).toList(),
+                  ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
         ],
       ),
@@ -152,8 +205,11 @@ class NotesFilterSheet extends StatelessWidget {
     required BuildContext context,
     String? statusFilter,
     String? priorityFilter,
+    Set<String>? tagFilter,
+    List<Tag> allTags = const [],
     required ValueChanged<String?> onStatusChanged,
     required ValueChanged<String?> onPriorityChanged,
+    ValueChanged<String>? onTagChanged,
   }) {
     showModalBottomSheet(
       context: context,
@@ -163,6 +219,8 @@ class NotesFilterSheet extends StatelessWidget {
       builder: (ctx) => NotesFilterSheet(
         statusFilter: statusFilter,
         priorityFilter: priorityFilter,
+        tagFilter: tagFilter,
+        allTags: allTags,
         onStatusChanged: (status) {
           onStatusChanged(status);
           Navigator.pop(ctx);
@@ -171,6 +229,12 @@ class NotesFilterSheet extends StatelessWidget {
           onPriorityChanged(priority);
           Navigator.pop(ctx);
         },
+        onTagChanged: onTagChanged != null
+            ? (tagId) {
+                onTagChanged(tagId);
+                // Do NOT pop — user may want to select multiple tags.
+              }
+            : null,
       ),
     );
   }
@@ -183,25 +247,33 @@ class NotesFilterSheet extends StatelessWidget {
 class NotesFilterBar extends StatelessWidget {
   final String? statusFilter;
   final String? priorityFilter;
+  final Set<String>? tagFilter;
+  final List<Tag> allTags;
   final VoidCallback onFilterTap;
   final VoidCallback onStatusCleared;
   final VoidCallback onPriorityCleared;
+  final ValueChanged<String>? onTagCleared;
   final VoidCallback onClearAll;
 
   const NotesFilterBar({
     super.key,
     this.statusFilter,
     this.priorityFilter,
+    this.tagFilter,
+    this.allTags = const [],
     required this.onFilterTap,
     required this.onStatusCleared,
     required this.onPriorityCleared,
+    this.onTagCleared,
     required this.onClearAll,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final hasFilters = statusFilter != null || priorityFilter != null;
+    final hasTags = tagFilter != null && tagFilter!.isNotEmpty;
+    final hasFilters =
+        statusFilter != null || priorityFilter != null || hasTags;
 
     if (!hasFilters) {
       // Show collapsed filter button when no filters are active
@@ -247,6 +319,19 @@ class NotesFilterBar extends StatelessWidget {
                 avatar: const Icon(Icons.priority_high, size: 12),
               ),
             ),
+          if (tagFilter != null)
+            for (final tagId in tagFilter!)
+              ...allTags.where((tag) => tag.id == tagId).map(
+                    (tag) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Chip(
+                        label: Text(tag.plainName ?? '...'),
+                        deleteIcon: const Icon(Icons.close, size: 16),
+                        onDeleted: () => onTagCleared?.call(tagId),
+                        avatar: const Icon(Icons.label, size: 12),
+                      ),
+                    ),
+                  ),
           Padding(
             padding: const EdgeInsets.only(left: 8),
             child: TextButton.icon(

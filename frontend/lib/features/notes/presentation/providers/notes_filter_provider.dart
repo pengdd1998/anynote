@@ -29,3 +29,10 @@ final notesPriorityFilterProvider = StateProvider<String?>(
 final notesCollectionFilterProvider = StateProvider<String?>(
   (ref) => null,
 );
+
+/// Active tag filter (null = no filter, Set<String> = selected tag IDs).
+///
+/// When set, only notes that have at least one of the selected tags are shown.
+final notesTagFilterProvider = StateProvider<Set<String>?>(
+  (ref) => null,
+);

@@ -155,6 +155,15 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   /// Active priority filter (null = no filter).
   String? _priorityFilter;
 
+  /// Active tag filter (null = no filter, Set<String> = selected tag IDs).
+  Set<String>? _tagFilter;
+
+  /// All tags loaded for the tag filter UI.
+  List<Tag> _allTags = [];
+
+  /// Subscription to all tags for the filter.
+  StreamSubscription<List<Tag>>? _tagsSubscription;
+
   /// Cache of note ID -> properties for filtering.
   final Map<String, List<NoteProperty>> _propertiesCache = {};
 
@@ -176,6 +185,13 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     _scrollController.addListener(_onScroll);
     if (widget.autoLoad) {
       _loadInitialNotes();
+      // Load all tags for the tag filter UI.
+      final db = ref.read(databaseProvider);
+      _tagsSubscription = db.tagsDao.watchAllTags().listen((tags) {
+        if (mounted) {
+          setState(() => _allTags = tags);
+        }
+      });
     }
   }
 
@@ -186,6 +202,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _pageSubscription?.cancel();
+    _tagsSubscription?.cancel();
     super.dispose();
   }
 
@@ -201,7 +218,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     List<Note> notes,
     AppDatabase db,
   ) async {
-    if (_statusFilter == null && _priorityFilter == null) {
+    if (_statusFilter == null &&
+        _priorityFilter == null &&
+        (_tagFilter == null || _tagFilter!.isEmpty)) {
       return notes;
     }
 
@@ -247,6 +266,19 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       if (matchesStatus && matchesPriority) {
         filtered.add(note);
       }
+    }
+
+    // Apply tag filter as a second pass using the tags cache.
+    if (_tagFilter != null && _tagFilter!.isNotEmpty) {
+      final tagFiltered = <Note>[];
+      for (final note in filtered) {
+        final noteTags = _tagsCache[note.id] ?? [];
+        final noteTagIds = noteTags.map((t) => t.id).toSet();
+        if (noteTagIds.intersection(_tagFilter!).isNotEmpty) {
+          tagFiltered.add(note);
+        }
+      }
+      return tagFiltered;
     }
 
     return filtered;
@@ -668,6 +700,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     context.push('/trash');
                   case 'command_palette':
                     showCommandPalette();
+                  case 'select_notes':
+                    setState(() => _isSelectionMode = true);
                   case 'advanced_search':
                     context.push('/search');
                   case 'collections':
@@ -710,6 +744,14 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     leading: const Icon(AppIcons.keyboard),
                     title: Text(l10n.commandPalette),
                     subtitle: const Text('Ctrl+K'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'select_notes',
+                  child: ListTile(
+                    leading: const Icon(AppIcons.checkCircle),
+                    title: Text(l10n.selectNotes),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
@@ -843,20 +885,40 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               NotesFilterBar(
                 statusFilter: _statusFilter,
                 priorityFilter: _priorityFilter,
+                tagFilter: _tagFilter,
+                allTags: _allTags,
                 onFilterTap: () => NotesFilterSheet.show(
                   context: context,
                   statusFilter: _statusFilter,
                   priorityFilter: _priorityFilter,
+                  tagFilter: _tagFilter,
+                  allTags: _allTags,
                   onStatusChanged: (status) =>
                       setState(() => _statusFilter = status),
                   onPriorityChanged: (priority) =>
                       setState(() => _priorityFilter = priority),
+                  onTagChanged: (tagId) {
+                    setState(() {
+                      _tagFilter ??= {};
+                      if (_tagFilter!.contains(tagId)) {
+                        _tagFilter!.remove(tagId);
+                        if (_tagFilter!.isEmpty) _tagFilter = null;
+                      } else {
+                        _tagFilter!.add(tagId);
+                      }
+                    });
+                  },
                 ),
                 onStatusCleared: () => setState(() => _statusFilter = null),
                 onPriorityCleared: () => setState(() => _priorityFilter = null),
+                onTagCleared: (tagId) => setState(() {
+                  _tagFilter = _tagFilter?..remove(tagId);
+                  if (_tagFilter?.isEmpty ?? true) _tagFilter = null;
+                }),
                 onClearAll: () => setState(() {
                   _statusFilter = null;
                   _priorityFilter = null;
+                  _tagFilter = null;
                 }),
               ),
             // Main content
@@ -1012,7 +1074,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting &&
                 _statusFilter != null ||
-            _priorityFilter != null) {
+            _priorityFilter != null ||
+            (_tagFilter != null && _tagFilter!.isNotEmpty)) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -1020,7 +1083,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         final sorted = _sortNotes(filtered);
 
         if (filtered.isEmpty &&
-            (_statusFilter != null || _priorityFilter != null)) {
+            (_statusFilter != null ||
+                _priorityFilter != null ||
+                (_tagFilter != null && _tagFilter!.isNotEmpty))) {
           return EmptyState(
             icon: Icons.filter_list_off,
             title: l10n.noMatchingNotes,
@@ -1219,9 +1284,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       controller: _scrollController,
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 280,
-        mainAxisExtent: 180,
+        mainAxisExtent: 220,
         crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+        mainAxisSpacing: 12,
       ),
       itemCount: notes.length + (showLoader ? 1 : 0),
       padding: const EdgeInsets.only(bottom: 80),

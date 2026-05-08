@@ -29,7 +29,7 @@ import '../../../core/widgets/keyboard_shortcuts.dart';
 import '../../../core/widgets/markdown_preview.dart';
 import '../../collab/providers/collab_provider.dart';
 import 'widgets/backlinks_sheet.dart';
-import 'widgets/character_count_bar.dart';
+import 'package:anynote/core/accessibility/a11y_utils.dart';
 import 'widgets/command_palette.dart';
 import 'widgets/related_notes_sheet.dart';
 import 'widgets/collab_cursors_widget.dart';
@@ -51,7 +51,6 @@ import 'widgets/folded_outline_view.dart';
 import 'widgets/section_fold_bar.dart';
 import 'widgets/section_fold_controller.dart';
 import 'widgets/writing_stats.dart';
-import 'widgets/writing_stats_bar.dart';
 import 'widgets/reminder_picker_sheet.dart';
 import 'widgets/print_preview_sheet.dart';
 import 'widgets/editor_drop_target.dart';
@@ -1110,33 +1109,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 .toList(),
           ),
 
-        // Writing stats bar (detailed stats: word/char/reading time/lines/paragraphs).
-        WritingStatsBar(
+        // Consolidated bottom status bar.
+        _EditorBottomBar(
+          isSaving: _isSaving,
+          isDirty: _isDirty,
+          wordCount: _wordCount,
+          charCount: _charCount,
           stats: _writingStats,
-          isVisible: _isWritingStatsVisible,
-          onToggleVisibility: () {
-            setState(() => _isWritingStatsVisible = !_isWritingStatsVisible);
-          },
-        ),
-
-        // Consolidated status row: save status (left) + word/char count (right).
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            children: [
-              _SaveStatusChip(
-                isSaving: _isSaving,
-                isDirty: _isDirty,
-              ),
-              const Spacer(),
-              CharacterCountBar(
-                wordCount: _wordCount,
-                charCount: _charCount,
-                isZenMode: _isZenMode,
-                onToggleZenMode: _toggleZenMode,
-              ),
-            ],
-          ),
+          isStatsExpanded: _isWritingStatsVisible,
+          onToggleStats: () =>
+              setState(() => _isWritingStatsVisible = !_isWritingStatsVisible),
+          isZenMode: _isZenMode,
+          onToggleZenMode: _toggleZenMode,
         ),
         // TTS player bar (only visible when speaking).
         const TtsPlayerBar(),
@@ -1758,20 +1742,124 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 }
 
-/// A compact save status chip shown at the bottom of the editor.
+/// Consolidated bottom bar for the editor.
 ///
-/// Displays one of three states:
-/// - Green checkmark + "Saved" when content is saved.
-/// - Amber dot + "Unsaved" when there are unsaved changes.
-/// - Spinning indicator + "Saving..." when actively saving.
-class _SaveStatusChip extends StatelessWidget {
+/// Combines save status, word/char counts (expanded: full writing stats),
+/// stats toggle, and zen mode toggle into a single compact row (~36px).
+class _EditorBottomBar extends StatelessWidget {
+  final bool isSaving;
+  final bool isDirty;
+  final int wordCount;
+  final int charCount;
+  final WritingStats stats;
+  final bool isStatsExpanded;
+  final VoidCallback onToggleStats;
+  final bool isZenMode;
+  final VoidCallback onToggleZenMode;
+
+  const _EditorBottomBar({
+    required this.isSaving,
+    required this.isDirty,
+    required this.wordCount,
+    required this.charCount,
+    required this.stats,
+    required this.isStatsExpanded,
+    required this.onToggleStats,
+    required this.isZenMode,
+    required this.onToggleZenMode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final captionColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    return SafeArea(
+      top: false,
+      bottom: true,
+      child: Container(
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            // Save status chip (compact inline).
+            _CompactSaveChip(isSaving: isSaving, isDirty: isDirty),
+            const SizedBox(width: 12),
+            // Stats section.
+            if (isStatsExpanded) ...[
+              _StatText(l10n.wordCount(stats.wordCount), captionColor),
+              _StatSep(captionColor),
+              _StatText(l10n.charCount(stats.charCount), captionColor),
+              _StatSep(captionColor),
+              _StatText(_formatReadingTime(l10n), captionColor),
+              _StatSep(captionColor),
+              _StatText(l10n.lineCount(stats.lineCount), captionColor),
+              _StatSep(captionColor),
+              _StatText(
+                  l10n.paragraphCount(stats.paragraphCount), captionColor),
+            ] else ...[
+              _StatText(l10n.wordCount(wordCount), captionColor),
+              _StatSep(captionColor),
+              _StatText(l10n.charCount(charCount), captionColor),
+            ],
+            const Spacer(),
+            // Stats toggle.
+            Semantics(
+              button: true,
+              label: l10n.toggleWritingStats,
+              child: IconButton(
+                icon: Icon(
+                  isStatsExpanded ? Icons.bar_chart : Icons.bar_chart_outlined,
+                  size: 16,
+                  color: captionColor,
+                ),
+                tooltip: l10n.toggleWritingStats,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                onPressed: onToggleStats,
+              ),
+            ),
+            // Zen mode toggle (visible when not in zen mode).
+            if (!isZenMode)
+              A11yUtils.ensureTouchTarget(
+                child: Semantics(
+                  button: true,
+                  label: l10n.enterZenMode,
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.fullscreen,
+                      size: 18,
+                      color: captionColor,
+                    ),
+                    tooltip: l10n.enterZenMode,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 24),
+                    onPressed: onToggleZenMode,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatReadingTime(AppLocalizations l10n) {
+    final totalSeconds = stats.estimatedReadingTime.inSeconds;
+    if (totalSeconds < 60) return l10n.lessThan1Min;
+    return l10n.readingTime(stats.estimatedReadingTime.inMinutes);
+  }
+}
+
+/// Compact inline save status indicator (no padding wrapper).
+class _CompactSaveChip extends StatelessWidget {
   final bool isSaving;
   final bool isDirty;
 
-  const _SaveStatusChip({
-    required this.isSaving,
-    required this.isDirty,
-  });
+  const _CompactSaveChip({required this.isSaving, required this.isDirty});
 
   @override
   Widget build(BuildContext context) {
@@ -1786,46 +1874,83 @@ class _SaveStatusChip extends StatelessWidget {
       label = l10n.statusSaving;
       color = colorScheme.tertiary;
       icon = SizedBox(
-        width: 12,
-        height: 12,
-        child: CircularProgressIndicator(
-          strokeWidth: 1.5,
-          color: color,
-        ),
+        width: 10,
+        height: 10,
+        child: CircularProgressIndicator(strokeWidth: 1.5, color: color),
       );
     } else if (isDirty) {
       label = l10n.statusUnsaved;
       color = colorScheme.error;
       icon = Container(
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-        ),
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       );
     } else {
       label = l10n.statusSaved;
       color = AppColors.success;
-      icon = Icon(Icons.check_circle, size: 14, color: color);
+      icon = Icon(Icons.check_circle, size: 12, color: color);
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          icon,
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: color,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        icon,
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: color,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Stat text with animated transitions.
+class _StatText extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _StatText(this.text, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: AppDurations.shortAnimation,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
+      child: Text(
+        text,
+        key: ValueKey(text),
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 11,
+          color: color,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    );
+  }
+}
+
+/// Thin separator between stats.
+class _StatSep extends StatelessWidget {
+  final Color color;
+  const _StatSep(this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(
+        '|',
+        style: TextStyle(color: color.withValues(alpha: 0.3), fontSize: 10),
       ),
     );
   }
