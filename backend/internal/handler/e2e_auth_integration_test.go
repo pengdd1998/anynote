@@ -47,7 +47,7 @@ func TestE2EIntegration_AuthLifecycle(t *testing.T) {
 			Username:     testUsername,
 			AuthKeyHash:  testAuthKeyHash,
 			Salt:         []byte("testsalt-testsalt-testsalt-testsalt"),
-			RecoveryKey:  []byte("testrecoverykey-testrecoverykey-test"),
+			RecoveryKey:  "testrecoverykey-testrecoverykey-test",
 			RecoverySalt: []byte("recoverysalt-recoverysalt-recover"),
 		})
 
@@ -250,7 +250,7 @@ func TestE2EIntegration_AuthDuplicateEmail(t *testing.T) {
 			Username:     uname,
 			AuthKeyHash:  []byte("auth-key-hash-32-bytes-for-test!!"),
 			Salt:         []byte("salt-value-salt-value-salt-value-s"),
-			RecoveryKey:  []byte("recovery-key-recovery-key-recovery-"),
+			RecoveryKey:  "recovery-key-recovery-key-recovery-",
 			RecoverySalt: []byte("recovery-salt-recovery-salt-recover"),
 		})
 		return body
@@ -302,7 +302,7 @@ func TestE2EIntegration_AuthInvalidLogin(t *testing.T) {
 		Username:     username,
 		AuthKeyHash:  []byte("correct-auth-key-hash-32-bytes-long!"),
 		Salt:         []byte("salt-value-salt-value-salt-value-s"),
-		RecoveryKey:  []byte("recovery-key-recovery-key-recovery-"),
+		RecoveryKey:  "recovery-key-recovery-key-recovery-",
 		RecoverySalt: []byte("recovery-salt-recovery-salt-recover"),
 	})
 	resp, err := client.Post(srv.Server.URL+"/api/v1/auth/register", "application/json", bytes.NewReader(regBody))
