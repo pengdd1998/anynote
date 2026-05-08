@@ -14,7 +14,6 @@ import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../settings/data/settings_providers.dart';
-import '../../../core/theme/app_colors.dart';
 
 class CollectionsListScreen extends ConsumerStatefulWidget {
   const CollectionsListScreen({super.key});
@@ -230,21 +229,22 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
           padding: const EdgeInsets.only(top: 4),
           child: Row(
             children: [
-              Icon(Icons.note_outlined,
-                  size: 14,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurfaceVariant
-                      .withValues(alpha: 0.5),),
+              Icon(
+                Icons.note_outlined,
+                size: 14,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
               const SizedBox(width: 4),
               Text(
                 l10n.noteCount(noteCount),
                 style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withValues(alpha: 0.5),),
+                  fontSize: 12,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
               ),
             ],
           ),
@@ -269,10 +269,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
             SyncStatusBadge(isSynced: collection.isSynced),
           ],
         ),
-        leading: Icon(
-          Icons.folder,
-          color: colColor,
-        ),
+        leading: Icon(Icons.folder, color: colColor),
         onTap: () => context.push('/collections/${collection.id}'),
         onLongPress: () => _showCollectionEditMenu(collection, db),
       ),
@@ -326,20 +323,19 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                   Icon(
                     Icons.note_outlined,
                     size: 14,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     l10n.noteCount(noteCount),
                     style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurfaceVariant
-                            .withValues(alpha: 0.5),),
+                      fontSize: 12,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    ),
                   ),
                   const Spacer(),
                   // Color indicator dot.
@@ -395,8 +391,8 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                     child: Text(
                       collection.plainTitle ?? l10n.untitledCollection,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],

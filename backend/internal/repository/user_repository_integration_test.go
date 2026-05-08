@@ -129,9 +129,6 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	if string(got.Salt) != string(original.Salt) {
 		t.Errorf("Salt mismatch")
 	}
-	if string(got.RecoveryKey) != string(original.RecoveryKey) {
-		t.Errorf("RecoveryKey mismatch")
-	}
 	if string(got.RecoverySalt) != string(original.RecoverySalt) {
 		t.Errorf("RecoverySalt mismatch")
 	}
@@ -140,6 +137,15 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	// plaintext value we passed in.
 	if string(got.AuthKeyHash) == string(original.AuthKeyHash) {
 		t.Error("AuthKeyHash should be bcrypt-hashed, but matched plaintext")
+	}
+
+	// RecoveryKey is also bcrypt-hashed by Create, so it must differ from
+	// the plaintext value and verify correctly via bcrypt.
+	if string(got.RecoveryKey) == string(original.RecoveryKey) {
+		t.Error("RecoveryKey should be bcrypt-hashed, but matched plaintext")
+	}
+	if err := bcrypt.CompareHashAndPassword(got.RecoveryKey, original.RecoveryKey); err != nil {
+		t.Errorf("RecoveryKey bcrypt verification failed: %v", err)
 	}
 
 	// Timestamps should be non-zero.
@@ -194,15 +200,20 @@ func TestUserRepository_GetByID(t *testing.T) {
 	if string(got.Salt) != string(original.Salt) {
 		t.Errorf("Salt mismatch")
 	}
-	if string(got.RecoveryKey) != string(original.RecoveryKey) {
-		t.Errorf("RecoveryKey mismatch")
-	}
 	if string(got.RecoverySalt) != string(original.RecoverySalt) {
 		t.Errorf("RecoverySalt mismatch")
 	}
 	// AuthKeyHash is bcrypt-hashed; must differ from plaintext.
 	if string(got.AuthKeyHash) == string(original.AuthKeyHash) {
 		t.Error("AuthKeyHash should be bcrypt-hashed, but matched plaintext")
+	}
+	// RecoveryKey is also bcrypt-hashed by Create; must differ from plaintext
+	// and verify correctly via bcrypt.
+	if string(got.RecoveryKey) == string(original.RecoveryKey) {
+		t.Error("RecoveryKey should be bcrypt-hashed, but matched plaintext")
+	}
+	if err := bcrypt.CompareHashAndPassword(got.RecoveryKey, original.RecoveryKey); err != nil {
+		t.Errorf("RecoveryKey bcrypt verification failed: %v", err)
 	}
 }
 

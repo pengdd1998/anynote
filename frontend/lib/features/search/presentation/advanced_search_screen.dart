@@ -12,7 +12,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/search_providers.dart';
 import '../../notes/domain/search_query_parser.dart';
-import '../../../core/theme/app_colors.dart';
 
 class AdvancedSearchScreen extends ConsumerStatefulWidget {
   const AdvancedSearchScreen({super.key});
@@ -149,9 +148,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
               ),
             ],
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(28)),
           filled: true,
         ),
         onChanged: (value) {
@@ -224,9 +221,9 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
         children: [
           Text(
             l10n.searchOperators,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           ...hints.map(
@@ -234,9 +231,9 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
                 hint,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
               ),
             ),
           ),
@@ -244,8 +241,8 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
           Text(
             l10n.searchOperatorsExample,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
         ],
       ),
@@ -283,8 +280,10 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
                 child: Text(
                   l10n.resultsCount('${results.length}'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor,
-                      ),
+                    color:
+                        Theme.of(context).textTheme.bodySmall?.color ??
+                        Theme.of(context).disabledColor,
+                  ),
                 ),
               ),
             ),
@@ -301,9 +300,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(
-        child: Text(l10n.searchError('$error')),
-      ),
+      error: (error, _) => Center(child: Text(l10n.searchError('$error'))),
     );
   }
 
@@ -338,7 +335,10 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
             const SizedBox(height: 4),
             Text(
               time,
-              style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).disabledColor,
+              ),
             ),
           ],
         ),
@@ -381,7 +381,9 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
                   style: TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 12,
-                    color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor,
+                    color:
+                        Theme.of(context).textTheme.bodySmall?.color ??
+                        Theme.of(context).disabledColor,
                   ),
                 ),
                 trailing: IconButton(
@@ -437,8 +439,10 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
                   Text(
                     l10n.searchHistory,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor,
-                        ),
+                      color:
+                          Theme.of(context).textTheme.bodySmall?.color ??
+                          Theme.of(context).disabledColor,
+                    ),
                   ),
                   TextButton(
                     onPressed: () async {
@@ -467,8 +471,9 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
                       onPressed: () async {
                         final prefs = await SharedPreferences.getInstance();
                         // ignore: unnecessary_non_null_assertion
-                        final existing =
-                            prefs.getStringList('recent_searches')!;
+                        final existing = prefs.getStringList(
+                          'recent_searches',
+                        )!;
                         existing.remove(query);
                         await prefs.setStringList('recent_searches', existing);
                         ref.invalidate(recentSearchesProvider);
@@ -615,10 +620,9 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
         TextSpan(
           text: text.substring(index, index + query.length),
           style: TextStyle(
-            backgroundColor: Theme.of(context)
-                .colorScheme
-                .primaryContainer
-                .withValues(alpha: 0.4),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withValues(alpha: 0.4),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -665,17 +669,14 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen>
             text: parts[i],
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              backgroundColor: Theme.of(context)
-                  .colorScheme
-                  .primaryContainer
-                  .withValues(alpha: 0.4),
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.4),
             ),
           ),
         );
       } else {
-        spans.add(
-          TextSpan(text: parts[i]),
-        );
+        spans.add(TextSpan(text: parts[i]));
       }
     }
 

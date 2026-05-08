@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/daos/note_properties_dao.dart';
-import '../../../../core/error/error.dart';
 import '../../../../core/notifications/reminder_service.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -14,11 +13,7 @@ class ReminderPickerSheet extends ConsumerStatefulWidget {
   final String noteId;
   final String? noteTitle;
 
-  const ReminderPickerSheet({
-    super.key,
-    required this.noteId,
-    this.noteTitle,
-  });
+  const ReminderPickerSheet({super.key, required this.noteId, this.noteTitle});
 
   @override
   ConsumerState<ReminderPickerSheet> createState() =>
@@ -81,10 +76,7 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
               ),
             ),
           ),
-          Text(
-            l10n.setReminder,
-            style: theme.textTheme.titleMedium,
-          ),
+          Text(l10n.setReminder, style: theme.textTheme.titleMedium),
           const SizedBox(height: 16),
 
           if (_isLoading)
@@ -140,13 +132,9 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
             const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(
-                  child: _buildDatePickerTile(context, l10n),
-                ),
+                Expanded(child: _buildDatePickerTile(context, l10n)),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: _buildTimePickerTile(context, l10n),
-                ),
+                Expanded(child: _buildTimePickerTile(context, l10n)),
               ],
             ),
             const SizedBox(height: 16),

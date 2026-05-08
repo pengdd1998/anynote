@@ -9,7 +9,6 @@ import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/discover_providers.dart';
-import '../../../core/theme/app_colors.dart';
 
 // ── Screen ─────────────────────────────────────────
 
@@ -82,9 +81,13 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       });
       AppSnackBar.error(
         context,
-        message: AppLocalizations.of(context)?.failedToLoadMore(
-                ErrorDisplay.userMessage(
-                    ErrorMapper.map(e), AppLocalizations.of(context)!)) ??
+        message:
+            AppLocalizations.of(context)?.failedToLoadMore(
+              ErrorDisplay.userMessage(
+                ErrorMapper.map(e),
+                AppLocalizations.of(context)!,
+              ),
+            ) ??
             'Failed to load more: $e',
       );
     }
@@ -115,16 +118,17 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final wasActive = reactionState[stateKey] ?? false;
 
     // Optimistic update.
-    ref.read(reactionStateProvider(shareId).notifier).update(
-          (state) => {...state, stateKey: !wasActive},
-        );
+    ref
+        .read(reactionStateProvider(shareId).notifier)
+        .update((state) => {...state, stateKey: !wasActive});
 
     // Update local counts optimistically.
     final itemIndex = _allItems.indexWhere((item) => item['id'] == shareId);
     if (itemIndex >= 0) {
       final item = Map<String, dynamic>.from(_allItems[itemIndex]);
-      final countKey =
-          reactionType == 'heart' ? 'reaction_heart' : 'reaction_bookmark';
+      final countKey = reactionType == 'heart'
+          ? 'reaction_heart'
+          : 'reaction_bookmark';
       item[countKey] = (item[countKey] as int? ?? 0) + (wasActive ? -1 : 1);
       setState(() {
         _allItems[itemIndex] = item;
@@ -137,15 +141,16 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
       // Update with server truth.
       final active = result['active'] as bool;
-      ref.read(reactionStateProvider(shareId).notifier).update(
-            (state) => {...state, stateKey: active},
-          );
+      ref
+          .read(reactionStateProvider(shareId).notifier)
+          .update((state) => {...state, stateKey: active});
 
       final count = result['count'] as int;
       if (itemIndex >= 0) {
         final item = Map<String, dynamic>.from(_allItems[itemIndex]);
-        final countKey =
-            reactionType == 'heart' ? 'reaction_heart' : 'reaction_bookmark';
+        final countKey = reactionType == 'heart'
+            ? 'reaction_heart'
+            : 'reaction_bookmark';
         item[countKey] = count;
         setState(() {
           _allItems[itemIndex] = item;
@@ -154,13 +159,14 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     } catch (e) {
       if (!mounted) return;
       // Revert optimistic update.
-      ref.read(reactionStateProvider(shareId).notifier).update(
-            (state) => {...state, stateKey: wasActive},
-          );
+      ref
+          .read(reactionStateProvider(shareId).notifier)
+          .update((state) => {...state, stateKey: wasActive});
       if (itemIndex >= 0) {
         final item = Map<String, dynamic>.from(_allItems[itemIndex]);
-        final countKey =
-            reactionType == 'heart' ? 'reaction_heart' : 'reaction_bookmark';
+        final countKey = reactionType == 'heart'
+            ? 'reaction_heart'
+            : 'reaction_bookmark';
         item[countKey] = (item[countKey] as int? ?? 0) + (wasActive ? 1 : -1);
         setState(() {
           _allItems[itemIndex] = item;
@@ -181,9 +187,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final feedAsync = ref.watch(discoverFeedProvider(0));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.discoverFeed),
-      ),
+      appBar: AppBar(title: Text(l10n.discoverFeed)),
       body: feedAsync.when(
         data: (initialItems) {
           // Seed items on first load.
@@ -249,8 +253,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline,
-              size: 48, color: Theme.of(context).colorScheme.error),
+          Icon(
+            Icons.error_outline,
+            size: 48,
+            color: Theme.of(context).colorScheme.error,
+          ),
           const SizedBox(height: 12),
           Text(
             l10n.failedToLoadDiscoverFeed,
@@ -259,8 +266,10 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           const SizedBox(height: 8),
           Text(
             '$error',
-            style:
-                TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).disabledColor,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -285,10 +294,7 @@ class _DiscoverCard extends ConsumerWidget {
   final Map<String, dynamic> item;
   final void Function(String shareId, String reactionType) onReact;
 
-  const _DiscoverCard({
-    required this.item,
-    required this.onReact,
-  });
+  const _DiscoverCard({required this.item, required this.onReact});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -346,8 +352,8 @@ class _DiscoverCard extends ConsumerWidget {
                           ? encryptedTitle
                           : l10n.encryptedNote,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -376,8 +382,8 @@ class _DiscoverCard extends ConsumerWidget {
                   Text(
                     '$viewCount',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   if (timeAgo.isNotEmpty) ...[
@@ -390,9 +396,8 @@ class _DiscoverCard extends ConsumerWidget {
                     Text(
                       timeAgo,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ],
@@ -446,8 +451,9 @@ class _ReactionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isActive ? activeColor : Theme.of(context).colorScheme.onSurfaceVariant;
+    final color = isActive
+        ? activeColor
+        : Theme.of(context).colorScheme.onSurfaceVariant;
 
     return InkWell(
       onTap: onTap,

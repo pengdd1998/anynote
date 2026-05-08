@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
 import '../domain/outline_model.dart';
-import '../../../core/theme/app_colors.dart';
 
 /// Displays the AI-generated outline with expandable sections.
 ///
@@ -89,8 +88,14 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
             Text(l10n.generatingOutline),
             const SizedBox(height: 8),
             Text(
-              l10n.buildingStructureFromClusters(session.selectedClusterIndices.length),
-              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor),
+              l10n.buildingStructureFromClusters(
+                session.selectedClusterIndices.length,
+              ),
+              style: TextStyle(
+                color:
+                    Theme.of(context).textTheme.bodySmall?.color ??
+                    Theme.of(context).disabledColor,
+              ),
             ),
           ],
         ),
@@ -105,7 +110,11 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(session.error!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
@@ -156,11 +165,18 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              Icon(Icons.info_outline, size: 16, color: Theme.of(context).disabledColor),
+              Icon(
+                Icons.info_outline,
+                size: 16,
+                color: Theme.of(context).disabledColor,
+              ),
               const SizedBox(width: 6),
               Text(
                 l10n.sectionsDragToReorder(outline.sections.length),
-                style: TextStyle(color: Theme.of(context).disabledColor, fontSize: 13),
+                style: TextStyle(
+                  color: Theme.of(context).disabledColor,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -174,7 +190,9 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
             buildDefaultDragHandles: false,
             itemCount: outline.sections.length,
             onReorder: (oldIndex, newIndex) {
-              ref.read(composeSessionProvider.notifier).reorderSection(oldIndex, newIndex);
+              ref
+                  .read(composeSessionProvider.notifier)
+                  .reorderSection(oldIndex, newIndex);
             },
             itemBuilder: (context, index) {
               final section = outline.sections[index];
@@ -198,18 +216,25 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                   childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   leading: ReorderableDragStartListener(
                     index: index,
-                    child: Icon(Icons.drag_handle, color: Theme.of(context).disabledColor),
+                    child: Icon(
+                      Icons.drag_handle,
+                      color: Theme.of(context).disabledColor,
+                    ),
                   ),
                   title: Row(
                     children: [
                       CircleAvatar(
                         radius: 14,
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
                         child: Text(
                           '${index + 1}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ),
@@ -229,30 +254,47 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           l10n.keyPoints,
-                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 6),
-                      ...section.points.map((point) => Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Icon(Icons.circle, size: 6, color: Theme.of(context).disabledColor),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(point, style: const TextStyle(fontSize: 13))),
-                          ],
+                      ...section.points.map(
+                        (point) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Icon(
+                                  Icons.circle,
+                                  size: 6,
+                                  color: Theme.of(context).disabledColor,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  point,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),),
+                      ),
                     ],
                     if (section.sourceCluster != null) ...[
                       const SizedBox(height: 8),
                       Text(
                         l10n.fromCluster(section.sourceCluster! + 1),
-                        style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).disabledColor,
+                        ),
                       ),
                     ],
                   ],
@@ -278,7 +320,9 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                   onPressed: session.isLoading
                       ? null
                       : () async {
-                          await ref.read(composeSessionProvider.notifier).expandToDraft();
+                          await ref
+                              .read(composeSessionProvider.notifier)
+                              .expandToDraft();
                           if (!context.mounted) return;
                           context.push('/compose/editor/${widget.sessionId}');
                         },
@@ -314,12 +358,14 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
             onPressed: () {
               final newTitle = _titleController.text.trim();
               if (newTitle.isNotEmpty && session.outline != null) {
-                ref.read(composeSessionProvider.notifier).updateOutline(
-                  OutlineModel(
-                    title: newTitle,
-                    sections: session.outline!.sections,
-                  ),
-                );
+                ref
+                    .read(composeSessionProvider.notifier)
+                    .updateOutline(
+                      OutlineModel(
+                        title: newTitle,
+                        sections: session.outline!.sections,
+                      ),
+                    );
               }
               Navigator.pop(context);
             },

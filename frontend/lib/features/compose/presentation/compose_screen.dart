@@ -13,7 +13,6 @@ import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../data/compose_providers.dart';
-import '../../../core/theme/app_colors.dart';
 
 /// Home screen for the AI Compose feature.
 ///
@@ -106,9 +105,10 @@ class ComposeScreen extends ConsumerWidget {
                           Text(
                             l10n.noCompositionsYet,
                             style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
@@ -121,9 +121,9 @@ class ComposeScreen extends ConsumerWidget {
                       final item = items[index];
                       final title =
                           item.plainBody != null && item.plainBody!.length > 80
-                              ? '${item.plainBody!.substring(0, 80)}...'
-                              // Use localized untitled fallback
-                              : item.plainBody ?? l10n.untitled;
+                          ? '${item.plainBody!.substring(0, 80)}...'
+                          // Use localized untitled fallback
+                          : item.plainBody ?? l10n.untitled;
                       final time = _formatTime(context, item.updatedAt);
                       final platform = item.platformStyle;
 
@@ -164,9 +164,9 @@ class ComposeScreen extends ConsumerWidget {
                                   time,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ],
@@ -244,10 +244,8 @@ class ComposeScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _ContentPreviewSheet(
-        content: content,
-        platform: platform,
-      ),
+      builder: (context) =>
+          _ContentPreviewSheet(content: content, platform: platform),
     );
   }
 
@@ -281,12 +279,12 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
 
   // Platform options with localized display names resolved at build time.
   List<(String, String)> _platformOptions(AppLocalizations l10n) => [
-        ('generic', l10n.platformGeneric),
-        ('xhs', l10n.platformXhs),
-        ('twitter', l10n.platformTwitter),
-        ('blog', l10n.platformBlog),
-        ('linkedin', l10n.platformLinkedin),
-      ];
+    ('generic', l10n.platformGeneric),
+    ('xhs', l10n.platformXhs),
+    ('twitter', l10n.platformTwitter),
+    ('blog', l10n.platformBlog),
+    ('linkedin', l10n.platformLinkedin),
+  ];
 
   @override
   void dispose() {
@@ -313,10 +311,9 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurfaceVariant
-                      .withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -421,7 +418,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                       final note = notes[index];
                       // Use localized untitled fallback
                       final title = note.plainTitle ?? l10n.untitled;
-                      final preview = note.plainContent != null &&
+                      final preview =
+                          note.plainContent != null &&
                               note.plainContent!.length > 60
                           ? '${note.plainContent!.substring(0, 60)}...'
                           : note.plainContent ?? '';
@@ -495,13 +493,14 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                   child: FilledButton.icon(
                     onPressed:
                         _selectedIds.isEmpty || _topicController.text.isEmpty
-                            ? null
-                            : () {
-                                Navigator.pop(context);
-                                final sessionId =
-                                    ref.read(startComposeSessionProvider)();
-                                context.push('/compose/cluster/$sessionId');
-                              },
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                            final sessionId = ref.read(
+                              startComposeSessionProvider,
+                            )();
+                            context.push('/compose/cluster/$sessionId');
+                          },
                     icon: const Icon(Icons.auto_awesome),
                     label: Text(l10n.startComposing),
                   ),
@@ -520,10 +519,7 @@ class _ContentPreviewSheet extends ConsumerStatefulWidget {
   final String content;
   final String platform;
 
-  const _ContentPreviewSheet({
-    required this.content,
-    required this.platform,
-  });
+  const _ContentPreviewSheet({required this.content, required this.platform});
 
   @override
   ConsumerState<_ContentPreviewSheet> createState() =>
@@ -615,10 +611,9 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant
-                    .withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/alpha_constants.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
-import '../../../core/theme/app_colors.dart';
 
 /// Displays AI-generated note clusters and lets the user select which
 /// clusters to include in the outline generation step.
@@ -68,8 +67,15 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              l10n.analyzingNotes(session.selectedNoteIds.length, session.topic),
-              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor),
+              l10n.analyzingNotes(
+                session.selectedNoteIds.length,
+                session.topic,
+              ),
+              style: TextStyle(
+                color:
+                    Theme.of(context).textTheme.bodySmall?.color ??
+                    Theme.of(context).disabledColor,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -85,7 +91,11 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 session.error!,
@@ -115,7 +125,11 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: Row(
             children: [
-              Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary, size: 20),
+              Icon(
+                Icons.auto_awesome,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -143,18 +157,26 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Card(
                   color: isSelected
-                      ? Theme.of(context).colorScheme.primaryContainer.withAlpha(AppAlpha.semiBold)
+                      ? Theme.of(context).colorScheme.primaryContainer
+                            .withAlpha(AppAlpha.semiBold)
                       : null,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: isSelected
-                        ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
-                        : BorderSide(color: Theme.of(context).colorScheme.outline),
+                        ? BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 2,
+                          )
+                        : BorderSide(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
                   ),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
-                      ref.read(composeSessionProvider.notifier).toggleClusterSelection(index);
+                      ref
+                          .read(composeSessionProvider.notifier)
+                          .toggleClusterSelection(index);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -164,7 +186,9 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                           Checkbox(
                             value: isSelected,
                             onChanged: (v) {
-                              ref.read(composeSessionProvider.notifier).toggleClusterSelection(index);
+                              ref
+                                  .read(composeSessionProvider.notifier)
+                                  .toggleClusterSelection(index);
                             },
                           ),
                           const SizedBox(width: 8),
@@ -174,24 +198,42 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                               children: [
                                 Text(
                                   cluster.name,
-                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   cluster.theme,
-                                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13),
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    fontSize: 13,
+                                  ),
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
                                   cluster.summary,
-                                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor, fontSize: 13),
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall?.color ??
+                                        Theme.of(context).disabledColor,
+                                    fontSize: 13,
+                                  ),
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
                                   l10n.notesCount(cluster.noteIndices.length),
-                                  style: TextStyle(color: Theme.of(context).disabledColor, fontSize: 12),
+                                  style: TextStyle(
+                                    color: Theme.of(context).disabledColor,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -214,14 +256,22 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
               children: [
                 Text(
                   l10n.clustersSelected(session.selectedClusterIndices.length),
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor),
+                  style: TextStyle(
+                    color:
+                        Theme.of(context).textTheme.bodySmall?.color ??
+                        Theme.of(context).disabledColor,
+                  ),
                 ),
                 const Spacer(),
                 FilledButton.icon(
-                  onPressed: session.selectedClusterIndices.isEmpty || session.isLoading
+                  onPressed:
+                      session.selectedClusterIndices.isEmpty ||
+                          session.isLoading
                       ? null
                       : () async {
-                          await ref.read(composeSessionProvider.notifier).generateOutline();
+                          await ref
+                              .read(composeSessionProvider.notifier)
+                              .generateOutline();
                           if (!context.mounted) return;
                           context.push('/compose/outline/${widget.sessionId}');
                         },

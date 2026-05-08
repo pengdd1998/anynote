@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/error/error.dart';
 import '../../../core/theme/alpha_constants.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
@@ -92,23 +91,23 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                 }
                 return Column(
                   children: platforms.map((p) {
-                    final name = p['name']?.toString() ??
+                    final name =
+                        p['name']?.toString() ??
                         p['platform']?.toString() ??
                         l10n.unknown;
                     final platformKey =
                         p['key']?.toString() ?? name.toLowerCase();
                     final icon = _platformIcons[platformKey] ?? Icons.language;
-                    final subtitle = p['display_name']?.toString() ??
+                    final subtitle =
+                        p['display_name']?.toString() ??
                         p['subtitle']?.toString() ??
                         '';
                     final isSelected = _selectedPlatform == platformKey;
 
                     return Card(
                       color: isSelected
-                          ? Theme.of(context)
-                              .colorScheme
-                              .primaryContainer
-                              .withAlpha(AppAlpha.bold)
+                          ? Theme.of(context).colorScheme.primaryContainer
+                                .withAlpha(AppAlpha.bold)
                           : null,
                       child: Semantics(
                         button: true,
@@ -118,9 +117,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           isSelected ? '. ${l10n.selectedLabel}' : '',
                         ),
                         child: ListTile(
-                          leading: CircleAvatar(
-                            child: Icon(icon, size: 20),
-                          ),
+                          leading: CircleAvatar(child: Icon(icon, size: 20)),
                           title: Text(name),
                           subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
                           trailing: isSelected
@@ -210,7 +207,8 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                           Text(
                             l10n.noPublicationsYet,
                             style: TextStyle(
-                                color: Theme.of(context).disabledColor),
+                              color: Theme.of(context).disabledColor,
+                            ),
                           ),
                         ],
                       ),
@@ -227,9 +225,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                         padding: const EdgeInsets.only(top: 8),
                         child: OutlinedButton(
                           onPressed: () => context.push('/publish/history'),
-                          child: Text(
-                            l10n.viewAll(history.length),
-                          ),
+                          child: Text(l10n.viewAll(history.length)),
                         ),
                       ),
                   ],
@@ -440,10 +436,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
               : Semantics(
                   label: l10n.statusLabel(status),
                   child: Chip(
-                    label: Text(
-                      status,
-                      style: const TextStyle(fontSize: 11),
-                    ),
+                    label: Text(status, style: const TextStyle(fontSize: 11)),
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
@@ -470,7 +463,9 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         .toList();
 
     try {
-      await ref.read(publishActionProvider.notifier).publish(
+      await ref
+          .read(publishActionProvider.notifier)
+          .publish(
             platform: _selectedPlatform!,
             title: title,
             content: content,
@@ -511,9 +506,6 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
   }
 
   Widget _sectionHeader(BuildContext context, String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium,
-    );
+    return Text(title, style: Theme.of(context).textTheme.titleMedium);
   }
 }

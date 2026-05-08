@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/error/exceptions.dart';
 import '../../../core/share/share_service.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../core/theme/app_colors.dart';
 
 /// Screen for viewing a shared note.
 ///
@@ -179,9 +178,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.shareNote),
-      ),
+      appBar: AppBar(title: Text(l10n.shareNote)),
       body: _buildBody(theme),
     );
   }
@@ -241,7 +238,10 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
             const SizedBox(height: 8),
             Text(
               l10n.linkCorruptedExpired,
-              style: TextStyle(color: theme.textTheme.bodySmall?.color ?? theme.disabledColor, fontSize: 14),
+              style: TextStyle(
+                color: theme.textTheme.bodySmall?.color ?? theme.disabledColor,
+                fontSize: 14,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -260,14 +260,14 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
         children: [
           Icon(Icons.lock_outline, size: 64, color: theme.colorScheme.primary),
           const SizedBox(height: 16),
-          Text(
-            l10n.passwordRequiredTitle,
-            style: theme.textTheme.titleLarge,
-          ),
+          Text(l10n.passwordRequiredTitle, style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(
             l10n.enterPasswordToView,
-            style: TextStyle(color: theme.textTheme.bodySmall?.color ?? theme.disabledColor, fontSize: 14),
+            style: TextStyle(
+              color: theme.textTheme.bodySmall?.color ?? theme.disabledColor,
+              fontSize: 14,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -330,9 +330,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
               ),
               const SizedBox(width: 4),
               Text(
-                _isServerShare == true
-                    ? l10n.sharedViaLink
-                    : l10n.sharedNote,
+                _isServerShare == true ? l10n.sharedViaLink : l10n.sharedNote,
                 style: TextStyle(fontSize: 12, color: theme.disabledColor),
               ),
             ],
@@ -350,8 +348,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
               h3: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               code: TextStyle(
                 fontSize: 14,
-                backgroundColor:
-                    theme.colorScheme.surfaceContainerHighest,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
               ),
               blockquote: TextStyle(
                 color: theme.textTheme.bodySmall?.color ?? theme.disabledColor,
