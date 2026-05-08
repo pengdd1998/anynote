@@ -5,6 +5,24 @@ All notable changes to AnyNote will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] — 2026-05-08
+
+### Added
+
+- **Tag Filter**: Filter notes by tags with multi-select FilterChips, tag section in filter sheet, active tag chips in filter bar, OR logic for multi-tag selection, `notesTagFilterProvider` for state management
+- **Select Notes Entry**: Added "Select Notes" entry to overflow menu for batch selection accessibility
+
+### Changed
+
+- **Dark Mode Palette**: Recolored from cool blue (H=250) to warm brown (H~30) for consistent "writing by lamplight" aesthetic across light/dark themes — updated 6 surface colors + 8 semantic variants in `app_colors.dart`
+- **Editor Bottom Chrome**: Consolidated WritingStatsBar + CharacterCountBar into single compact `_EditorBottomBar` (~36px), collapsed view (save status + word/char count) and expanded view (adds reading time, lines, paragraphs), saves ~36px vertical space
+- **Grid View**: Increased card height from 180px to 220px to prevent content truncation
+- **Card Spacing**: Increased vertical spacing from 8px to 12px for visual balance with horizontal spacing
+
+### Fixed
+
+- Dark mode color consistency: aligned dark palette warm undertones with light mode's warm theme for cohesive visual experience across all screens
+
 ## [2.2.1] — 2026-04-29
 
 ### Fixed
