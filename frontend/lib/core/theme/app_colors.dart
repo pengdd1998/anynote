@@ -26,8 +26,8 @@ class AppColors {
   static const lightInputFill = Color(0xFFF2EFE9);
 
   /// Border: warm grey-brown
-  /// OKLCH: L=72%, C=0.015, H=35°
-  static const lightBorder = Color(0xFFC4B8A8);
+  /// OKLCH: L=62%, C=0.025, H=35°
+  static const lightBorder = Color(0xFFA89880);
 
   /// Divider: subtle warm line
   /// OKLCH: L=88%, C=0.008, H=35°

@@ -23,6 +23,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String? _error;
 
   Future<void> _submit() async {
@@ -191,7 +192,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               // Server update failed; local keys are already migrated.
               // The user will log in with v2 params next time.
               debugPrint(
-                  '[LoginScreen] server KDF migration update failed: $e',);
+                '[LoginScreen] server KDF migration update failed: $e',
+              );
             }
 
             if (mounted) {
@@ -251,109 +253,134 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: FocusTraversalGroup(
-                policy: OrderedTraversalPolicy(),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Semantics(
-                      label: l10n.loginScreenLabel,
-                      child: Icon(
-                        Icons.lock_outline,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.welcomeBack,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.signInToVault,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    if (_error != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Semantics(
-                          liveRegion: true,
-                          label: l10n.errorLabel(_error!),
-                          child: Text(
-                            _error!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Form(
+                    key: _formKey,
+                    child: FocusTraversalGroup(
+                      policy: OrderedTraversalPolicy(),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Semantics(
+                            label: l10n.loginScreenLabel,
+                            child: Icon(
+                              Icons.lock_outline,
+                              size: 64,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          Text(
+                            l10n.welcomeBack,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.signInToVault,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 32),
+                          if (_error != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Semantics(
+                                liveRegion: true,
+                                label: l10n.errorLabel(_error!),
+                                child: Text(
+                                  _error!,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          FocusTraversalOrder(
+                            order: const NumericFocusOrder(1),
+                            child: TextFormField(
+                              controller: _emailController,
+                              autofocus: true,
+                              autofillHints: const [AutofillHints.email],
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: l10n.email,
+                                prefixIcon: const Icon(Icons.email_outlined),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                              validator: (v) => v?.isEmpty ?? true
+                                  ? l10n.emailRequired
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          FocusTraversalOrder(
+                            order: const NumericFocusOrder(2),
+                            child: TextFormField(
+                              controller: _passwordController,
+                              autofillHints: const [AutofillHints.password],
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _submit(),
+                              decoration: InputDecoration(
+                                labelText: l10n.password,
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
+                                  tooltip: _obscurePassword
+                                      ? 'Show password'
+                                      : 'Hide password',
+                                ),
+                              ),
+                              obscureText: _obscurePassword,
+                              validator: (v) => v?.isEmpty ?? true
+                                  ? l10n.passwordRequired
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            onPressed: _isLoading ? null : _submit,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(l10n.signIn),
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: () => context.push('/auth/register'),
+                            child: Text(l10n.noAccountRegister),
+                          ),
+                          TextButton(
+                            onPressed: () => context.push('/auth/recover'),
+                            child: Text(l10n.recoverFromBackup),
+                          ),
+                        ],
                       ),
-                    FocusTraversalOrder(
-                      order: const NumericFocusOrder(1),
-                      child: TextFormField(
-                        controller: _emailController,
-                        autofillHints: const [AutofillHints.email],
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l10n.email,
-                          prefixIcon: const Icon(Icons.email_outlined),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) =>
-                            v?.isEmpty ?? true ? l10n.emailRequired : null,
-                      ),
                     ),
-                    const SizedBox(height: 16),
-                    FocusTraversalOrder(
-                      order: const NumericFocusOrder(2),
-                      child: TextFormField(
-                        controller: _passwordController,
-                        autofillHints: const [AutofillHints.password],
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _submit(),
-                        decoration: InputDecoration(
-                          labelText: l10n.password,
-                          prefixIcon: const Icon(Icons.lock_outline),
-                        ),
-                        obscureText: true,
-                        validator: (v) =>
-                            v?.isEmpty ?? true ? l10n.passwordRequired : null,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _isLoading ? null : _submit,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(l10n.signIn),
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () => context.go('/auth/register'),
-                      child: Text(l10n.noAccountRegister),
-                    ),
-                    TextButton(
-                      onPressed: () => context.go('/auth/recover'),
-                      child: Text(l10n.recoverFromBackup),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

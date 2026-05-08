@@ -116,6 +116,14 @@ dev_dependencies:
 flutter:
   generate: true
   uses-material-design: true
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/inter/Inter-Regular.otf
+        - asset: assets/fonts/inter/Inter-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/inter/Inter-Bold.otf
+          weight: 700
   assets:
     - assets/
     - assets/fonts/

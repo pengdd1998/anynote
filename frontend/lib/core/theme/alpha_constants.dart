@@ -24,7 +24,7 @@ class AppAlpha {
   static const int heavy = 100;
 
   /// Near-opaque secondary text (e.g. date labels).
-  static const int prominent = 115;
+  static const int prominent = 180;
 
   /// Almost opaque body text (e.g. preview text).
   static const int nearOpaque = 153;

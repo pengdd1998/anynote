@@ -257,13 +257,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-                  if (!isLastPage) ...[
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () => _markSeenAndGo('/auth/login'),
-                      child: Text(l10n.skip),
-                    ),
-                  ],
                 ],
               ),
             ),

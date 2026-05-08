@@ -2,6 +2,7 @@ import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/accessibility/a11y_utils.dart';
 import '../../../../core/database/app_database.dart';
@@ -112,65 +113,76 @@ class NoteCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
               )
             : null,
-        child: GestureDetector(
-          onLongPressStart: onLongPress != null
-              ? (details) => onLongPress!(details.globalPosition)
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress != null
+              ? () {
+                  HapticFeedback.mediumImpact();
+                  final renderBox = context.findRenderObject() as RenderBox?;
+                  final offset =
+                      renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
+                  onLongPress!(
+                    Offset(
+                      offset.dx + (renderBox?.size.width ?? 0) / 2,
+                      offset.dy + (renderBox?.size.height ?? 0) / 2,
+                    ),
+                  );
+                }
               : null,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            splashColor: colorScheme.primary.withAlpha(AppAlpha.light),
-            highlightColor: colorScheme.primary.withAlpha(AppAlpha.subtle),
-            child: Stack(
-              children: [
-                Padding(
-                  padding: _isGrid
-                      ? const EdgeInsets.all(12)
-                      : const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12,),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTitleRow(context, theme, colorScheme),
-                      // Property badges (status, priority, dates)
-                      if (!skipPropertyBadges)
-                        PropertyBadges(
-                          noteId: note.id,
-                          onStatusTap: onStatusTap,
-                          onPriorityTap: onPriorityTap,
-                        ),
-                      SizedBox(height: _isGrid ? 8 : 6),
-                      _buildPreview(theme, colorScheme, preview),
-                      if (tags.isNotEmpty)
-                        Padding(
-                          padding: EdgeInsets.only(top: _isGrid ? 4 : 6),
-                          child: TagChipsRow(tags: tags),
-                        ),
-                      SizedBox(height: _isGrid ? 4 : 6),
-                      _buildDate(theme, colorScheme),
-                    ],
-                  ),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          splashColor: colorScheme.primary.withAlpha(AppAlpha.light),
+          highlightColor: colorScheme.primary.withAlpha(AppAlpha.subtle),
+          child: Stack(
+            children: [
+              Padding(
+                padding: _isGrid
+                    ? const EdgeInsets.all(12)
+                    : const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTitleRow(context, theme, colorScheme),
+                    // Property badges (status, priority, dates)
+                    if (!skipPropertyBadges)
+                      PropertyBadges(
+                        noteId: note.id,
+                        onStatusTap: onStatusTap,
+                        onPriorityTap: onPriorityTap,
+                      ),
+                    SizedBox(height: _isGrid ? 8 : 6),
+                    _buildPreview(theme, colorScheme, preview),
+                    if (tags.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(top: _isGrid ? 4 : 6),
+                        child: TagChipsRow(tags: tags),
+                      ),
+                    SizedBox(height: _isGrid ? 4 : 6),
+                    _buildDate(theme, colorScheme),
+                  ],
                 ),
-                // Checkbox overlay when selected
-                if (isSelected)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      padding: const EdgeInsets.all(4),
-                      child: Icon(
-                        Icons.check,
-                        color: colorScheme.onPrimary,
-                        size: _isGrid ? 16 : 20,
-                      ),
+              ),
+              // Checkbox overlay when selected
+              if (isSelected)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.check,
+                      color: colorScheme.onPrimary,
+                      size: _isGrid ? 16 : 20,
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),

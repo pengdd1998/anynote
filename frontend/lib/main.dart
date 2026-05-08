@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,7 @@ import 'core/sync/sync_lifecycle.dart';
 import 'core/sync/background_sync_service.dart';
 import 'core/error/connectivity_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_colors.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/theme/animation_config.dart';
 import 'core/widgets/app_menu_bar.dart';
@@ -309,30 +311,54 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
             minScaleFactor: 0.8,
             maxScaleFactor: 2.0,
             child: ErrorBoundary(
-              child: Stack(
-                children: [
-                  MaterialApp.router(
-                    title: 'AnyNote',
-                    debugShowCheckedModeBanner: false,
-                    showSemanticsDebugger: false,
-                    theme: selectThemeData(
-                          themeOption,
-                          MediaQuery.platformBrightnessOf(context),
-                        ) ??
-                        AppTheme.lightTheme(),
-                    darkTheme: AppTheme.darkTheme(),
-                    highContrastTheme: AppTheme.highContrastLightTheme(),
-                    highContrastDarkTheme: AppTheme.highContrastDarkTheme(),
-                    themeMode: selectThemeMode(themeOption),
-                    routerConfig: appRouter,
-                    localizationsDelegates:
-                        AppLocalizations.localizationsDelegates,
-                    supportedLocales: AppLocalizations.supportedLocales,
-                    locale: locale,
-                  ),
-                  // Command palette overlay rendered on top of all screens.
-                  const CommandPaletteOverlay(),
-                ],
+              child: Builder(
+                builder: (context) {
+                  final brightness = MediaQuery.platformBrightnessOf(context);
+                  return AnnotatedRegion<SystemUiOverlayStyle>(
+                    value: SystemUiOverlayStyle(
+                      statusBarColor: Colors.transparent,
+                      statusBarIconBrightness: brightness == Brightness.dark
+                          ? Brightness.light
+                          : Brightness.dark,
+                      statusBarBrightness: brightness == Brightness.dark
+                          ? Brightness.dark
+                          : Brightness.light,
+                      systemNavigationBarColor: brightness == Brightness.dark
+                          ? AppColors.darkSurface
+                          : AppColors.lightSurface,
+                      systemNavigationBarIconBrightness:
+                          brightness == Brightness.dark
+                              ? Brightness.light
+                              : Brightness.dark,
+                    ),
+                    child: Stack(
+                      children: [
+                        MaterialApp.router(
+                          title: 'AnyNote',
+                          debugShowCheckedModeBanner: false,
+                          showSemanticsDebugger: false,
+                          theme: selectThemeData(
+                                themeOption,
+                                MediaQuery.platformBrightnessOf(context),
+                              ) ??
+                              AppTheme.lightTheme(),
+                          darkTheme: AppTheme.darkTheme(),
+                          highContrastTheme: AppTheme.highContrastLightTheme(),
+                          highContrastDarkTheme:
+                              AppTheme.highContrastDarkTheme(),
+                          themeMode: selectThemeMode(themeOption),
+                          routerConfig: appRouter,
+                          localizationsDelegates:
+                              AppLocalizations.localizationsDelegates,
+                          supportedLocales: AppLocalizations.supportedLocales,
+                          locale: locale,
+                        ),
+                        // Command palette overlay rendered on top of all screens.
+                        const CommandPaletteOverlay(),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ),

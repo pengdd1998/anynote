@@ -662,6 +662,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       pm.end('note_save');
       // Mark content as saved after successful persistence.
       if (mounted) {
+        HapticFeedback.lightImpact();
         setState(() => _isDirty = false);
       }
     } catch (e) {
@@ -1118,18 +1119,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           },
         ),
 
-        // Save status indicator.
-        _SaveStatusChip(
-          isSaving: _isSaving,
-          isDirty: _isDirty,
-        ),
-
-        // Compact word / character count bar with zen mode toggle.
-        CharacterCountBar(
-          wordCount: _wordCount,
-          charCount: _charCount,
-          isZenMode: _isZenMode,
-          onToggleZenMode: _toggleZenMode,
+        // Consolidated status row: save status (left) + word/char count (right).
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            children: [
+              _SaveStatusChip(
+                isSaving: _isSaving,
+                isDirty: _isDirty,
+              ),
+              const Spacer(),
+              CharacterCountBar(
+                wordCount: _wordCount,
+                charCount: _charCount,
+                isZenMode: _isZenMode,
+                onToggleZenMode: _toggleZenMode,
+              ),
+            ],
+          ),
         ),
         // TTS player bar (only visible when speaking).
         const TtsPlayerBar(),

@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_durations.dart';
 import '../../../core/error/error.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
@@ -27,7 +28,6 @@ import '../../../core/widgets/master_detail_layout.dart';
 import '../../../core/widgets/offline_banner.dart';
 import '../../../core/widgets/sidebar_provider.dart';
 import '../../../core/widgets/app_snackbar.dart';
-import '../../../core/widgets/pressable_scale.dart';
 import 'widgets/sync_status_indicator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -583,58 +583,16 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             ),
             // Done button to exit selection mode
             IconButton(
-              icon: const Icon(Icons.close),
+              icon: const Icon(AppIcons.close),
               tooltip: l10n.done,
               onPressed: _exitSelectionMode,
             ),
           ] else ...[
             // Sync status indicator (green/yellow/red dot + label)
             const SyncStatusIndicator(),
-            // Trash icon with badge count
-            StreamBuilder<int>(
-              stream: db.notesDao.watchDeletedNotesCount(),
-              builder: (context, snapshot) {
-                final count = snapshot.data ?? 0;
-                return Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      tooltip: l10n.trash,
-                      onPressed: () => context.push('/trash'),
-                    ),
-                    if (count > 0)
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.error,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            count > 99 ? '99+' : count.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
             // Sort menu (frequently used, stays as a top-level button)
             PopupMenuButton<String>(
-              icon: const Icon(Icons.sort),
+              icon: const Icon(AppIcons.sort),
               tooltip: l10n.sortNotes,
               onSelected: (value) {
                 setState(() => _sortOption = value);
@@ -677,23 +635,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 setState(() => _isGridView = !_isGridView);
               },
             ),
-            // Advanced search (visible when searching)
-            if (_isSearching)
-              IconButton(
-                icon: const Icon(Icons.tune),
-                tooltip: l10n.advancedSearch,
-                onPressed: () => context.push('/search'),
-              ),
-            // Command palette trigger
-            if (!_isSelectionMode)
-              IconButton(
-                icon: const Icon(Icons.keyboard_command_key),
-                tooltip: '${l10n.commandPalette} (Ctrl+K)',
-                onPressed: showCommandPalette,
-              ),
             // Search toggle
             IconButton(
-              icon: Icon(_isSearching ? Icons.close : Icons.search),
+              icon: Icon(_isSearching ? AppIcons.close : AppIcons.search),
               tooltip: _isSearching
                   ? l10n.closeSearch
                   : '${l10n.searchNotesTooltip} (Ctrl+F)',
@@ -720,6 +664,12 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               tooltip: l10n.moreActions,
               onSelected: (value) {
                 switch (value) {
+                  case 'trash':
+                    context.push('/trash');
+                  case 'command_palette':
+                    showCommandPalette();
+                  case 'advanced_search':
+                    context.push('/search');
                   case 'collections':
                     context.push('/collections');
                   case 'graph':
@@ -745,6 +695,34 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 }
               },
               itemBuilder: (context) => [
+                // --- Quick actions (moved from top-level icons) ---
+                PopupMenuItem(
+                  value: 'trash',
+                  child: ListTile(
+                    leading: const Icon(AppIcons.deleteOutline),
+                    title: Text(l10n.trash),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'command_palette',
+                  child: ListTile(
+                    leading: const Icon(AppIcons.keyboard),
+                    title: Text(l10n.commandPalette),
+                    subtitle: const Text('Ctrl+K'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                if (_isSearching)
+                  PopupMenuItem(
+                    value: 'advanced_search',
+                    child: ListTile(
+                      leading: const Icon(Icons.tune),
+                      title: Text(l10n.advancedSearch),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                const PopupMenuDivider(),
                 // --- View section ---
                 PopupMenuItem(
                   value: 'collections',
@@ -979,15 +957,21 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     duration: AppDurations.mediumAnimation,
                     child: IgnorePointer(
                       ignoring: !_showFab,
-                      child: PressableScale(
-                        onPressed: () => _showCreateOptions(context),
-                        child: Semantics(
-                          button: true,
-                          label: l10n.createNewNote,
+                      child: Semantics(
+                        button: true,
+                        label: l10n.createNewNote,
+                        child: GestureDetector(
+                          onLongPress: () {
+                            HapticFeedback.mediumImpact();
+                            _showCreateOptions(context);
+                          },
                           child: FloatingActionButton(
-                            onPressed: () => _showCreateOptions(context),
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              context.push('/notes/new');
+                            },
                             tooltip: l10n.createNewNote,
-                            child: const Icon(Icons.add),
+                            child: const Icon(AppIcons.add),
                           ),
                         ),
                       ),
@@ -1014,7 +998,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     if (_notes.isEmpty) {
       return EmptyState(
-        icon: Icons.note_add_outlined,
+        icon: AppIcons.noteAdd,
         title: l10n.noNotesYet,
         subtitle: l10n.tapToCapture,
         actionLabel: l10n.newNote,
@@ -1661,7 +1645,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             ),
             const SizedBox(height: 8),
             ListTile(
-              leading: const Icon(Icons.note_add_outlined),
+              leading: const Icon(AppIcons.noteAdd),
               title: Text(l10n.blankNote),
               onTap: () {
                 Navigator.pop(ctx);
@@ -1815,6 +1799,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     );
 
     if (confirmed == true) {
+      HapticFeedback.mediumImpact();
       await db.notesDao.bulkSoftDelete(_selectedNoteIds.toList());
 
       if (!mounted) return;

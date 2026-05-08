@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
@@ -52,57 +54,58 @@ class AppTheme {
   // ---------------------------------------------------------------------------
   // Typography scale
   // ---------------------------------------------------------------------------
-  static const _fontFamily = 'SF Pro Display';
+  static String get _fontFamily => Platform.isIOS ? 'SF Pro Display' : 'Inter';
 
-  static const TextStyle _display = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 28,
-    fontWeight: FontWeight.w700, // bold
-    height: 1.21,
-    letterSpacing: -0.5,
-  );
+  static TextStyle get _display => TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 36,
+        fontWeight: FontWeight.w700, // bold
+        height: 1.21,
+        letterSpacing: -0.5,
+      );
 
-  static const TextStyle _headline = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 22,
-    fontWeight: FontWeight.w600, // semibold
-    height: 1.27,
-    letterSpacing: -0.3,
-  );
+  static TextStyle get _headline => TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 22,
+        fontWeight: FontWeight.w600, // semibold
+        height: 1.27,
+        letterSpacing: -0.3,
+      );
 
-  static const TextStyle _title = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 17,
-    fontWeight: FontWeight.w600, // semibold
-    height: 1.29,
-    letterSpacing: -0.2,
-  );
+  static TextStyle get _title => TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 17,
+        fontWeight: FontWeight.w600, // semibold
+        height: 1.29,
+        letterSpacing: -0.2,
+      );
 
-  static const TextStyle _body = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 15,
-    fontWeight: FontWeight.w400, // regular
-    height: 1.47,
-    letterSpacing: -0.1,
-  );
+  static TextStyle get _body => TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 15,
+        fontWeight: FontWeight.w400, // regular
+        height: 1.47,
+        letterSpacing: -0.1,
+      );
 
-  static const TextStyle _caption = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 13,
-    fontWeight: FontWeight.w400, // regular
-    height: 1.38,
-    letterSpacing: 0.0,
-  );
+  static TextStyle get _caption => TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 13,
+        fontWeight: FontWeight.w400, // regular
+        height: 1.38,
+        letterSpacing: 0.0,
+      );
 
   // ---------------------------------------------------------------------------
   // Light theme
   // ---------------------------------------------------------------------------
   static ThemeData lightTheme() {
-    final colorScheme = ColorScheme.fromSeed(
+    var colorScheme = ColorScheme.fromSeed(
       seedColor: _coralSeed,
       brightness: Brightness.light,
       surface: _lightSurface,
     );
+    colorScheme = colorScheme.copyWith(onPrimary: const Color(0xFF3A2218));
 
     return ThemeData(
       useMaterial3: true,
@@ -114,10 +117,10 @@ class AppTheme {
       // -- Typography --------------------------------------------------------
       textTheme: TextTheme(
         displayLarge: _display,
-        displayMedium: _display.copyWith(fontSize: 26),
-        displaySmall: _display.copyWith(fontSize: 24),
-        headlineLarge: _headline,
-        headlineMedium: _headline.copyWith(fontSize: 20),
+        displayMedium: _display.copyWith(fontSize: 32),
+        displaySmall: _display.copyWith(fontSize: 28),
+        headlineLarge: _headline.copyWith(fontSize: 26),
+        headlineMedium: _headline,
         headlineSmall: _headline.copyWith(fontSize: 18),
         titleLarge: _title,
         titleMedium: _title.copyWith(fontSize: 15, fontWeight: FontWeight.w500),
@@ -132,7 +135,7 @@ class AppTheme {
       ),
 
       // -- App Bar -----------------------------------------------------------
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0.5,
@@ -155,7 +158,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(radiusMedium),
           side: const BorderSide(color: lightBorder),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
 
       // -- Floating Action Button --------------------------------------------
@@ -172,7 +175,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: lightInputFill,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 15,
           color: _lightTextTertiary,
@@ -209,10 +212,10 @@ class AppTheme {
           disabledBackgroundColor: _lightDisabled,
           disabledForegroundColor: _lightTextTertiary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusSmall),
+            borderRadius: BorderRadius.circular(radiusMedium),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -228,7 +231,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(radiusSmall),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w500,
@@ -243,7 +246,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(radiusSmall),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w500,
@@ -255,7 +258,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: lightInputFill,
         selectedColor: colorScheme.primaryContainer,
-        labelStyle: const TextStyle(
+        labelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 13,
           fontWeight: FontWeight.w500,
@@ -281,12 +284,12 @@ class AppTheme {
         unselectedItemColor: _lightTextSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: const TextStyle(
+        selectedLabelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: const TextStyle(
+        unselectedLabelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 11,
           fontWeight: FontWeight.w400,
@@ -309,7 +312,7 @@ class AppTheme {
               color: colorScheme.primary,
             );
           }
-          return const TextStyle(
+          return TextStyle(
             fontFamily: _fontFamily,
             fontSize: 11,
             fontWeight: FontWeight.w400,
@@ -328,7 +331,7 @@ class AppTheme {
       // -- Snack Bar ---------------------------------------------------------
       snackBarTheme: SnackBarThemeData(
         backgroundColor: darkCardBg,
-        contentTextStyle: const TextStyle(
+        contentTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           color: _darkTextPrimary,
@@ -347,7 +350,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLarge),
         ),
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -393,12 +396,12 @@ class AppTheme {
         unselectedLabelColor: _lightTextSecondary,
         indicatorColor: colorScheme.primary,
         indicatorSize: TabBarIndicatorSize.label,
-        labelStyle: const TextStyle(
+        labelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: const TextStyle(
+        unselectedLabelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w400,
@@ -437,10 +440,10 @@ class AppTheme {
       // -- Typography --------------------------------------------------------
       textTheme: TextTheme(
         displayLarge: _display,
-        displayMedium: _display.copyWith(fontSize: 26),
-        displaySmall: _display.copyWith(fontSize: 24),
-        headlineLarge: _headline,
-        headlineMedium: _headline.copyWith(fontSize: 20),
+        displayMedium: _display.copyWith(fontSize: 32),
+        displaySmall: _display.copyWith(fontSize: 28),
+        headlineLarge: _headline.copyWith(fontSize: 26),
+        headlineMedium: _headline,
         headlineSmall: _headline.copyWith(fontSize: 18),
         titleLarge: _title,
         titleMedium: _title.copyWith(fontSize: 15, fontWeight: FontWeight.w500),
@@ -455,7 +458,7 @@ class AppTheme {
       ),
 
       // -- App Bar -----------------------------------------------------------
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0.5,
@@ -478,7 +481,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(radiusMedium),
           side: const BorderSide(color: darkBorder),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
 
       // -- Floating Action Button --------------------------------------------
@@ -495,7 +498,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: darkInputFill,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 15,
           color: _darkTextTertiary,
@@ -532,10 +535,10 @@ class AppTheme {
           disabledBackgroundColor: _darkDisabled,
           disabledForegroundColor: _darkTextTertiary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusSmall),
+            borderRadius: BorderRadius.circular(radiusMedium),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -551,7 +554,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(radiusSmall),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w500,
@@ -566,7 +569,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(radiusSmall),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w500,
@@ -578,7 +581,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: darkInputFill,
         selectedColor: colorScheme.primaryContainer,
-        labelStyle: const TextStyle(
+        labelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 13,
           fontWeight: FontWeight.w500,
@@ -604,12 +607,12 @@ class AppTheme {
         unselectedItemColor: _darkTextSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: const TextStyle(
+        selectedLabelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: const TextStyle(
+        unselectedLabelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 11,
           fontWeight: FontWeight.w400,
@@ -632,7 +635,7 @@ class AppTheme {
               color: colorScheme.primary,
             );
           }
-          return const TextStyle(
+          return TextStyle(
             fontFamily: _fontFamily,
             fontSize: 11,
             fontWeight: FontWeight.w400,
@@ -651,7 +654,7 @@ class AppTheme {
       // -- Snack Bar ---------------------------------------------------------
       snackBarTheme: SnackBarThemeData(
         backgroundColor: lightCardBg,
-        contentTextStyle: const TextStyle(
+        contentTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           color: _lightTextPrimary,
@@ -670,7 +673,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLarge),
         ),
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -716,12 +719,12 @@ class AppTheme {
         unselectedLabelColor: _darkTextSecondary,
         indicatorColor: colorScheme.primary,
         indicatorSize: TabBarIndicatorSize.label,
-        labelStyle: const TextStyle(
+        labelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: const TextStyle(
+        unselectedLabelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w400,
@@ -870,10 +873,10 @@ class AppTheme {
       // -- Typography --------------------------------------------------------
       textTheme: TextTheme(
         displayLarge: _display,
-        displayMedium: _display.copyWith(fontSize: 26),
-        displaySmall: _display.copyWith(fontSize: 24),
-        headlineLarge: _headline,
-        headlineMedium: _headline.copyWith(fontSize: 20),
+        displayMedium: _display.copyWith(fontSize: 32),
+        displaySmall: _display.copyWith(fontSize: 28),
+        headlineLarge: _headline.copyWith(fontSize: 26),
+        headlineMedium: _headline,
         headlineSmall: _headline.copyWith(fontSize: 18),
         titleLarge: _title,
         titleMedium: _title.copyWith(fontSize: 15, fontWeight: FontWeight.w500),
@@ -914,7 +917,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(radiusMedium),
           side: BorderSide(color: border, width: 2), // Thicker borders for HC
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
 
       // -- Floating Action Button --------------------------------------------
@@ -969,11 +972,11 @@ class AppTheme {
           disabledBackgroundColor: textSecondary.withValues(alpha: 0.3),
           disabledForegroundColor: textSecondary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusSmall),
+            borderRadius: BorderRadius.circular(radiusMedium),
             side: BorderSide(color: border, width: 1),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -989,7 +992,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(radiusSmall),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -1004,7 +1007,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(radiusSmall),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -1042,12 +1045,12 @@ class AppTheme {
         unselectedItemColor: textPrimary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: const TextStyle(
+        selectedLabelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 11,
           fontWeight: FontWeight.w700,
         ),
-        unselectedLabelStyle: const TextStyle(
+        unselectedLabelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 11,
           fontWeight: FontWeight.w600,
@@ -1161,12 +1164,12 @@ class AppTheme {
         unselectedLabelColor: textPrimary,
         indicatorColor: colorScheme.primary,
         indicatorSize: TabBarIndicatorSize.label,
-        labelStyle: const TextStyle(
+        labelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w700,
         ),
-        unselectedLabelStyle: const TextStyle(
+        unselectedLabelStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/alpha_constants.dart';
@@ -215,6 +216,7 @@ class DismissibleNoteCard extends StatelessWidget {
         },
         onDismissed: (direction) {
           if (direction == DismissDirection.endToStart) {
+            HapticFeedback.mediumImpact();
             db.notesDao.softDeleteNote(note.id);
             AppSnackBar.info(
               context,
