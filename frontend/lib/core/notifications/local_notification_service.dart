@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -49,7 +50,21 @@ class LocalNotificationService {
     try {
       // Initialize timezone database for scheduled notifications.
       tz.initializeTimeZones();
-      tz.setLocalLocation(tz.getLocation(DateTime.now().timeZoneName));
+
+      // Get the local timezone using flutter_native_timezone which returns
+      // proper IANA timezone names (e.g., "America/Chicago", "Asia/Shanghai")
+      // instead of platform-specific abbreviations like "CST".
+      final String localTimeZone = await FlutterNativeTimezone.getLocalTimezone();
+
+      // Set the local location for the timezone package.
+      // If the timezone is not found in the database, fall back to UTC.
+      try {
+        tz.setLocalLocation(tz.getLocation(localTimeZone));
+      } catch (_) {
+        // If timezone lookup fails, fall back to UTC.
+        debugPrint('Warning: Timezone "$localTimeZone" not found, falling back to UTC');
+        tz.setLocalLocation(tz.UTC);
+      }
 
       // Android configuration.
       const androidSettings =
