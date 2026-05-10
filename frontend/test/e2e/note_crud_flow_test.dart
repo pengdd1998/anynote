@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/notes/presentation/notes_list_screen.dart';
 import '../helpers/test_app_helper.dart';
 
@@ -51,27 +52,26 @@ void main() {
 
       // FAB should be visible with the add icon.
       expect(_mainFabFinder(), findsOneWidget);
-      expect(find.byIcon(Icons.add), findsOneWidget);
+      expect(find.byIcon(AppIcons.add), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('shows create options bottom sheet when FAB is tapped',
-        (tester) async {
+    testWidgets('navigates to editor when FAB is tapped', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
 
-      // Tap the FAB to open create options.
+      // Tap the FAB to navigate to the editor.
       await tester.tap(_mainFabFinder());
       await tester.pumpAndSettle();
 
-      // A bottom sheet should appear with blank note option.
-      expect(find.byType(BottomSheet), findsOneWidget);
+      // Should navigate away from the notes list (route pushed).
+      expect(find.byType(NotesListScreen), findsNothing);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -104,7 +104,7 @@ void main() {
       );
 
       // Search icon should be visible.
-      expect(find.byIcon(Icons.search), findsOneWidget);
+      expect(find.byIcon(AppIcons.search), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();

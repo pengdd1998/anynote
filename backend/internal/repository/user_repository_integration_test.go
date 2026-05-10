@@ -144,7 +144,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	if string(got.RecoveryKey) == string(original.RecoveryKey) {
 		t.Error("RecoveryKey should be bcrypt-hashed, but matched plaintext")
 	}
-	if err := bcrypt.CompareHashAndPassword(got.RecoveryKey, original.RecoveryKey); err != nil {
+	if err := bcrypt.CompareHashAndPassword(got.RecoveryKey, hashRecoveryKey(original.RecoveryKey)); err != nil {
 		t.Errorf("RecoveryKey bcrypt verification failed: %v", err)
 	}
 
@@ -212,7 +212,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 	if string(got.RecoveryKey) == string(original.RecoveryKey) {
 		t.Error("RecoveryKey should be bcrypt-hashed, but matched plaintext")
 	}
-	if err := bcrypt.CompareHashAndPassword(got.RecoveryKey, original.RecoveryKey); err != nil {
+	if err := bcrypt.CompareHashAndPassword(got.RecoveryKey, hashRecoveryKey(original.RecoveryKey)); err != nil {
 		t.Errorf("RecoveryKey bcrypt verification failed: %v", err)
 	}
 }

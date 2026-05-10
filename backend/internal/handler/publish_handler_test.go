@@ -107,7 +107,7 @@ func TestPublishHandler_Publish_Success(t *testing.T) {
 
 	body, _ := json.Marshal(publishRequest{
 		Platform:      "xiaohongshu",
-		ContentItemID: "item-123",
+		ContentItemID: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 		Title:         "My Note",
 		Content:       "Note content",
 		Tags:          []string{"tag1", "tag2"},
