@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/error/exceptions.dart';
+import 'package:anynote/core/theme/app_colors.dart';
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/core/widgets/app_components.dart';
 
 void main() {
@@ -247,8 +249,8 @@ void main() {
         ),
       );
 
-      // ErrorDisplay.errorIcon(NetworkException) returns Icons.wifi_off.
-      expect(find.byIcon(Icons.wifi_off), findsOneWidget);
+      // ErrorDisplay.errorIcon(NetworkException) returns AppIcons.wifiTethering.
+      expect(find.byIcon(AppIcons.wifiTethering), findsOneWidget);
     });
 
     testWidgets('renders error message from ErrorDisplay', (tester) async {
@@ -363,8 +365,8 @@ void main() {
         ),
       );
 
-      // ErrorDisplay.errorIcon(AuthException) returns Icons.lock_outline.
-      expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+      // ErrorDisplay.errorIcon(AuthException) returns AppIcons.lock.
+      expect(find.byIcon(AppIcons.lock), findsOneWidget);
     });
   });
 
@@ -392,11 +394,12 @@ void main() {
       );
     }
 
-    testWidgets('synced state shows cloud_done with green', (tester) async {
+    testWidgets('synced state shows cloud_done with success color',
+        (tester) async {
       await pumpBadge(tester, isSynced: true);
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_done));
-      expect(icon.color, Colors.green);
+      expect(icon.color, AppColors.success);
       expect(icon.size, 16);
     });
 
@@ -407,11 +410,12 @@ void main() {
       expect(tooltip.message, 'Synced');
     });
 
-    testWidgets('pending state shows cloud_upload with orange', (tester) async {
+    testWidgets('pending state shows cloud_upload with warning color',
+        (tester) async {
       await pumpBadge(tester, isSynced: false);
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_upload));
-      expect(icon.color, Colors.orange);
+      expect(icon.color, AppColors.warning);
     });
 
     testWidgets('pending state tooltip says "Pending sync"', (tester) async {
@@ -421,11 +425,12 @@ void main() {
       expect(tooltip.message, 'Pending sync');
     });
 
-    testWidgets('conflict state shows cloud_off with red', (tester) async {
+    testWidgets('conflict state shows cloud_off with error color',
+        (tester) async {
       await pumpBadge(tester, isSynced: false, hasConflict: true);
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_off));
-      expect(icon.color, Colors.red);
+      expect(icon.color, AppColors.error);
     });
 
     testWidgets('conflict state tooltip says "Sync conflict"', (tester) async {
@@ -458,8 +463,12 @@ void main() {
 
     testWidgets('shows label text when showLabel is true (conflict)',
         (tester) async {
-      await pumpBadge(tester,
-          isSynced: false, hasConflict: true, showLabel: true,);
+      await pumpBadge(
+        tester,
+        isSynced: false,
+        hasConflict: true,
+        showLabel: true,
+      );
 
       expect(find.text('Conflict'), findsOneWidget);
     });

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/notes/presentation/notes_list_screen.dart';
 import '../../../helpers/test_app_helper.dart';
 
@@ -36,7 +37,7 @@ void main() {
       );
 
       // Search icon should be visible.
-      expect(find.byIcon(Icons.search), findsOneWidget);
+      expect(find.byIcon(AppIcons.search), findsOneWidget);
 
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));
@@ -73,7 +74,7 @@ void main() {
       );
 
       // Tap the search button.
-      await tester.tap(find.byIcon(Icons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await tester.pumpAndSettle();
 
       // A TextField should now be visible for search input.
@@ -117,20 +118,21 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('shows sort popup menu button', (tester) async {
+    testWidgets('shows sort options inside overflow menu', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
 
-      // Sort PopupMenuButton (with sort icon) should be present.
+      // Sort is now inside the overflow "more" menu. The overflow
+      // PopupMenuButton (with more_vert icon) should be present.
       expect(
         find.byWidgetPredicate(
           (w) =>
               w is PopupMenuButton<String> &&
               w.icon is Icon &&
-              (w.icon as Icon).icon == Icons.sort,
+              (w.icon as Icon).icon == Icons.more_vert,
         ),
         findsOneWidget,
       );

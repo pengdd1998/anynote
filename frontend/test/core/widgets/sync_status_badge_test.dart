@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/theme/app_colors.dart';
 import 'package:anynote/core/widgets/sync_status_badge.dart';
 
 void main() {
@@ -36,11 +37,11 @@ void main() {
       expect(find.byIcon(Icons.cloud_off), findsNothing);
     });
 
-    testWidgets('synced state has green color', (tester) async {
+    testWidgets('synced state has success color', (tester) async {
       await pumpBadge(tester, isSynced: true);
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_done));
-      expect(icon.color, Colors.green);
+      expect(icon.color, AppColors.success);
     });
 
     testWidgets('synced state has correct tooltip', (tester) async {
@@ -61,7 +62,8 @@ void main() {
 
     // -- Pending (not synced) state -----------------------------------
 
-    testWidgets('shows cloud_upload icon when isSynced is false', (tester) async {
+    testWidgets('shows cloud_upload icon when isSynced is false',
+        (tester) async {
       await pumpBadge(tester, isSynced: false);
 
       expect(find.byIcon(Icons.cloud_upload), findsOneWidget);
@@ -69,11 +71,11 @@ void main() {
       expect(find.byIcon(Icons.cloud_off), findsNothing);
     });
 
-    testWidgets('pending state has orange color', (tester) async {
+    testWidgets('pending state has warning color', (tester) async {
       await pumpBadge(tester, isSynced: false);
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_upload));
-      expect(icon.color, Colors.orange);
+      expect(icon.color, AppColors.warning);
     });
 
     testWidgets('pending state has correct tooltip', (tester) async {
@@ -87,7 +89,8 @@ void main() {
 
     // -- Conflict state -----------------------------------------------
 
-    testWidgets('shows cloud_off icon when hasConflict is true', (tester) async {
+    testWidgets('shows cloud_off icon when hasConflict is true',
+        (tester) async {
       await pumpBadge(tester, isSynced: false, hasConflict: true);
 
       expect(find.byIcon(Icons.cloud_off), findsOneWidget);
@@ -95,11 +98,11 @@ void main() {
       expect(find.byIcon(Icons.cloud_upload), findsNothing);
     });
 
-    testWidgets('conflict state has red color', (tester) async {
+    testWidgets('conflict state has error color', (tester) async {
       await pumpBadge(tester, isSynced: false, hasConflict: true);
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_off));
-      expect(icon.color, Colors.red);
+      expect(icon.color, AppColors.error);
     });
 
     testWidgets('conflict state has correct tooltip', (tester) async {
@@ -121,7 +124,7 @@ void main() {
       expect(find.byIcon(Icons.cloud_done), findsNothing);
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_off));
-      expect(icon.color, Colors.red);
+      expect(icon.color, AppColors.error);
     });
 
     // -- Semantics ----------------------------------------------------
@@ -130,10 +133,12 @@ void main() {
       await pumpBadge(tester, isSynced: true);
 
       final semantics = tester.widget<Semantics>(
-        find.byWidgetPredicate((w) =>
-            w is Semantics &&
-            w.properties.label != null &&
-            w.properties.label!.isNotEmpty,),
+        find.byWidgetPredicate(
+          (w) =>
+              w is Semantics &&
+              w.properties.label != null &&
+              w.properties.label!.isNotEmpty,
+        ),
       );
       expect(semantics.properties.label, 'Synced');
     });
@@ -146,10 +151,12 @@ void main() {
       );
 
       final semantics = tester.widget<Semantics>(
-        find.byWidgetPredicate((w) =>
-            w is Semantics &&
-            w.properties.label != null &&
-            w.properties.label!.isNotEmpty,),
+        find.byWidgetPredicate(
+          (w) =>
+              w is Semantics &&
+              w.properties.label != null &&
+              w.properties.label!.isNotEmpty,
+        ),
       );
       expect(semantics.properties.label, 'Note is synced to server');
     });
@@ -165,10 +172,12 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.byWidgetPredicate((w) =>
-            w is Semantics &&
-            w.properties.label != null &&
-            w.properties.label!.isNotEmpty,),
+        find.byWidgetPredicate(
+          (w) =>
+              w is Semantics &&
+              w.properties.label != null &&
+              w.properties.label!.isNotEmpty,
+        ),
         findsOneWidget,
       );
       expect(find.byType(Icon), findsOneWidget);

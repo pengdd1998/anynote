@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/error/error_display.dart';
 import 'package:anynote/core/error/exceptions.dart';
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 
 void main() {
@@ -67,7 +68,8 @@ void main() {
       expect(msg, contains('30 seconds'));
     });
 
-    test('RateLimitException without retryAfterSeconds uses generic message', () {
+    test('RateLimitException without retryAfterSeconds uses generic message',
+        () {
       const error = RateLimitException(message: 'Too many');
       final msg = ErrorDisplay.userMessage(error);
       expect(msg, contains('Too many requests'));
@@ -78,7 +80,10 @@ void main() {
     test('ValidationException with fieldErrors joins values', () {
       const error = ValidationException(
         message: 'Invalid',
-        fieldErrors: {'email': 'Invalid email format', 'name': 'Name is required'},
+        fieldErrors: {
+          'email': 'Invalid email format',
+          'name': 'Name is required'
+        },
       );
       final msg = ErrorDisplay.userMessage(error);
       expect(msg, contains('Invalid email format'));
@@ -158,79 +163,79 @@ void main() {
   // ===========================================================================
 
   group('ErrorDisplay.errorIcon', () {
-    test('NetworkException returns wifi_off icon', () {
+    test('NetworkException returns wifiTethering icon', () {
       const error = NetworkException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.wifi_off);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.wifiTethering);
     });
 
-    test('ServerException returns cloud_off icon', () {
+    test('ServerException returns cloudOff icon', () {
       const error = ServerException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.cloud_off);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.cloudOff);
     });
 
-    test('AuthException returns lock_outline icon', () {
+    test('AuthException returns lock icon', () {
       const error = AuthException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.lock_outline);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.lock);
     });
 
-    test('ForbiddenException returns block icon', () {
+    test('ForbiddenException returns shield icon', () {
       const error = ForbiddenException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.block);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.shield);
     });
 
-    test('NotFoundException returns search_off icon', () {
+    test('NotFoundException returns search icon', () {
       const error = NotFoundException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.search_off);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.search);
     });
 
-    test('RateLimitException returns hourglass_empty icon', () {
+    test('RateLimitException returns history icon', () {
       const error = RateLimitException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.hourglass_empty);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.history);
     });
 
-    test('ValidationException returns error_outline icon', () {
+    test('ValidationException returns errorOutline icon', () {
       const error = ValidationException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.error_outline);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.errorOutline);
     });
 
-    test('ConflictException returns sync_problem icon', () {
+    test('ConflictException returns syncProblem icon', () {
       const error = ConflictException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.sync_problem);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.syncProblem);
     });
 
-    test('CryptoLockedException returns lock_outline icon', () {
+    test('CryptoLockedException returns lock icon', () {
       const error = CryptoLockedException();
-      expect(ErrorDisplay.errorIcon(error), Icons.lock_outline);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.lock);
     });
 
-    test('CryptoKeyDerivationException returns vpn_key_off icon', () {
+    test('CryptoKeyDerivationException returns key icon', () {
       const error = CryptoKeyDerivationException();
-      expect(ErrorDisplay.errorIcon(error), Icons.vpn_key_off);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.key);
     });
 
-    test('CryptoOperationException returns enhanced_encryption icon', () {
+    test('CryptoOperationException returns shield icon', () {
       const error = CryptoOperationException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.enhanced_encryption);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.shield);
     });
 
-    test('SyncConflictException returns sync_problem icon', () {
+    test('SyncConflictException returns syncProblem icon', () {
       const error = SyncConflictException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.sync_problem);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.syncProblem);
     });
 
-    test('SyncException returns sync_disabled icon', () {
+    test('SyncException returns sync icon', () {
       const error = SyncException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.sync_disabled);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.sync);
     });
 
-    test('StorageException returns storage icon', () {
+    test('StorageException returns inventory icon', () {
       const error = StorageException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.storage);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.inventory);
     });
 
-    test('UnknownException returns help_outline icon', () {
+    test('UnknownException returns help icon', () {
       const error = UnknownException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), Icons.help_outline);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.help);
     });
   });
 
@@ -278,7 +283,8 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
     });
 
-    testWidgets('SnackBar does not show Retry when onRetry is null', (tester) async {
+    testWidgets('SnackBar does not show Retry when onRetry is null',
+        (tester) async {
       const error = ServerException(message: 'Server down');
 
       await tester.pumpWidget(
@@ -380,7 +386,8 @@ void main() {
   // ===========================================================================
 
   group('ErrorDisplay.showErrorDialog', () {
-    testWidgets('displays dialog with error message and Dismiss button', (tester) async {
+    testWidgets('displays dialog with error message and Dismiss button',
+        (tester) async {
       const error = ServerException(message: 'Server error');
 
       await tester.pumpWidget(
@@ -406,12 +413,14 @@ void main() {
       // Dialog title.
       expect(find.text('Server Error'), findsOneWidget);
       // Dialog body.
-      expect(find.text('A server error occurred. Please try again later.'), findsOneWidget);
+      expect(find.text('A server error occurred. Please try again later.'),
+          findsOneWidget);
       // Dismiss button always present.
       expect(find.text('Dismiss'), findsOneWidget);
     });
 
-    testWidgets('dialog with Retry button when onRetry is provided', (tester) async {
+    testWidgets('dialog with Retry button when onRetry is provided',
+        (tester) async {
       const error = NetworkException(message: 'No internet');
 
       await tester.pumpWidget(
@@ -443,7 +452,8 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
     });
 
-    testWidgets('Retry in dialog invokes callback and closes dialog', (tester) async {
+    testWidgets('Retry in dialog invokes callback and closes dialog',
+        (tester) async {
       const error = AuthException(message: 'expired');
       bool retryCalled = false;
 
@@ -483,7 +493,8 @@ void main() {
     });
 
     testWidgets('Dismiss closes dialog without invoking retry', (tester) async {
-      const error = RateLimitException(message: 'rate limited', retryAfterSeconds: 10);
+      const error =
+          RateLimitException(message: 'rate limited', retryAfterSeconds: 10);
       bool retryCalled = false;
 
       await tester.pumpWidget(
@@ -521,7 +532,8 @@ void main() {
       expect(find.text('Rate Limited'), findsNothing);
     });
 
-    testWidgets('dialog shows correct title for each error type', (tester) async {
+    testWidgets('dialog shows correct title for each error type',
+        (tester) async {
       // Spot-check a few error type dialog titles.
       final errorTitles = <AppException, String>{
         const NetworkException(message: 'net'): 'Connection Error',

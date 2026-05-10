@@ -197,9 +197,10 @@ func TestPublishHandler_Publish_ServiceError(t *testing.T) {
 	router := setupPublishRouter(svc)
 
 	body, _ := json.Marshal(publishRequest{
-		Platform: "xiaohongshu",
-		Title:    "Test",
-		Content:  "Content",
+		Platform:      "xiaohongshu",
+		ContentItemID: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		Title:         "Test",
+		Content:       "Content",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/publish", bytes.NewReader(body))

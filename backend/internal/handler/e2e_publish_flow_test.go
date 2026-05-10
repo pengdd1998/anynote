@@ -438,9 +438,10 @@ func TestE2EPublishFlow_PublishError(t *testing.T) {
 	defer server.Close()
 
 	body, _ := json.Marshal(publishRequest{
-		Platform: "xiaohongshu",
-		Title:    "Test",
-		Content:  "Content",
+		Platform:      "xiaohongshu",
+		ContentItemID: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		Title:         "Test",
+		Content:       "Content",
 	})
 
 	req, err := http.NewRequest(http.MethodPost, server.URL+"/api/v1/publish", bytes.NewReader(body))
