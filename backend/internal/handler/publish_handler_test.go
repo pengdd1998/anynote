@@ -22,9 +22,10 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockPublishService struct {
-	publishFn  func(ctx context.Context, userID uuid.UUID, req service.PublishRequest) (*domain.PublishLog, error)
-	historyFn  func(ctx context.Context, userID uuid.UUID) ([]domain.PublishLog, error)
-	getByIDFn  func(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*domain.PublishLog, error)
+	publishFn        func(ctx context.Context, userID uuid.UUID, req service.PublishRequest) (*domain.PublishLog, error)
+	historyFn        func(ctx context.Context, userID uuid.UUID) ([]domain.PublishLog, error)
+	getByIDFn        func(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*domain.PublishLog, error)
+	isValidPlatformFn func(name string) bool
 }
 
 func (m *mockPublishService) Publish(ctx context.Context, userID uuid.UUID, req service.PublishRequest) (*domain.PublishLog, error) {
@@ -46,6 +47,13 @@ func (m *mockPublishService) GetByID(ctx context.Context, userID uuid.UUID, id u
 		return m.getByIDFn(ctx, userID, id)
 	}
 	return nil, errors.New("not implemented")
+}
+
+func (m *mockPublishService) IsValidPlatform(name string) bool {
+	if m.isValidPlatformFn != nil {
+		return m.isValidPlatformFn(name)
+	}
+	return true // default: accept all platforms
 }
 
 // ---------------------------------------------------------------------------

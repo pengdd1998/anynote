@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -45,6 +46,13 @@ func (h *SyncHandler) Pull(w http.ResponseWriter, r *http.Request) {
 	if cursor < 0 {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "cursor must be non-negative")
 		return
+	}
+
+	// When both since and cursor are provided, cursor takes precedence.
+	// This allows a client to resume pagination from a previous response
+	// without re-specifying the original since timestamp.
+	if since > 0 && cursor > 0 {
+		slog.Debug("sync pull: both since and cursor provided, cursor takes precedence", "since", since, "cursor", cursor)
 	}
 
 	// Parse optional limit (default 100, max 500).

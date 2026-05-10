@@ -2166,5 +2166,9 @@
   "codeBlock": "コードブロック",
   "checklist": "チェックリスト",
   "indent": "インデント",
-  "outdent": "インデント解除"
+  "outdent": "インデント解除",
+
+  "showPassword": "パスワードを表示",
+  "hidePassword": "パスワードを非表示",
+  "fabCreateTooltip": "新しいメモを作成（長押しでその他のオプション）"
 }

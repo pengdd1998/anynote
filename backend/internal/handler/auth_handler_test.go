@@ -89,6 +89,15 @@ func (m *mockAuthService) RecoverAccount(ctx context.Context, req *domain.Recove
 	return errors.New("not implemented")
 }
 
+func (m *mockAuthService) FakeRecoverySalt(email string) []byte {
+	// Use a simple HMAC for test determinism.
+	mac := make([]byte, 32)
+	for i := range mac {
+		mac[i] = byte(i) ^ email[0]
+	}
+	return mac
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

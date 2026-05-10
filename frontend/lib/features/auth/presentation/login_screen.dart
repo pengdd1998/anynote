@@ -341,8 +341,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     () => _obscurePassword = !_obscurePassword,
                                   ),
                                   tooltip: _obscurePassword
-                                      ? 'Show password'
-                                      : 'Hide password',
+                                      ? l10n.showPassword
+                                      : l10n.hidePassword,
                                 ),
                               ),
                               obscureText: _obscurePassword,

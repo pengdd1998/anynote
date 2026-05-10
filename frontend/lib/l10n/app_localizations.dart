@@ -7689,6 +7689,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Outdent'**
   String get outdent;
+
+  /// Tooltip for password visibility toggle when password is hidden
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// Tooltip for password visibility toggle when password is visible
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
+  /// Tooltip for the create-note FAB mentioning long press
+  ///
+  /// In en, this message translates to:
+  /// **'Create new note (long press for more options)'**
+  String get fabCreateTooltip;
 }
 
 class _AppLocalizationsDelegate

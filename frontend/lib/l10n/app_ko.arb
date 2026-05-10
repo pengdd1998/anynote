@@ -1398,5 +1398,9 @@
   "replaceMatch": "바꾸기",
   "replaceWith": "바꿀 내용",
   "serverVersion": "서버 버전: {version}",
-  "syncConflicts": "동기화 충돌"
+  "syncConflicts": "동기화 충돌",
+
+  "showPassword": "비밀번호 표시",
+  "hidePassword": "비밀번호 숨기기",
+  "fabCreateTooltip": "새 메모 만들기 (길게 누르면 더 많은 옵션)"
 }

@@ -3,6 +3,8 @@ package service
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -36,6 +38,11 @@ type AuthService interface {
 	GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error)
 	GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error)
 	RecoverAccount(ctx context.Context, req *domain.RecoverRequest) error
+	// FakeRecoverySalt returns a deterministic 32-byte salt derived from the
+	// email using HMAC-SHA256 with the server's JWT secret. Used to produce
+	// consistent fake salts for non-existing users without revealing a static
+	// prefix pattern.
+	FakeRecoverySalt(email string) []byte
 }
 
 type UserRepository interface {
@@ -124,6 +131,7 @@ func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) 
 	}
 
 	if err := s.userRepo.Create(ctx, user); err != nil {
+		slog.Error("auth: failed to create user", "email", req.Email, "error", err)
 		return nil, err
 	}
 
@@ -320,7 +328,9 @@ func (s *authService) RecoverAccount(ctx context.Context, req *domain.RecoverReq
 	}
 
 	// Verify the provided recovery key against the stored bcrypt hash.
-	if err := bcrypt.CompareHashAndPassword(user.RecoveryKey, []byte(req.RecoveryKey)); err != nil {
+	// Pre-hash with SHA-256 to match the registration flow.
+	recoveryKeyHash := sha256.Sum256([]byte(req.RecoveryKey))
+	if err := bcrypt.CompareHashAndPassword(user.RecoveryKey, recoveryKeyHash[:]); err != nil {
 		return ErrInvalidRecoveryKey
 	}
 
@@ -404,4 +414,14 @@ func (s *authService) extractJTI(tokenStr string) string {
 	}
 	jti, _ := claims["jti"].(string)
 	return jti
+}
+
+// FakeRecoverySalt returns a deterministic 32-byte salt derived from the email
+// using HMAC-SHA256 with the server's JWT secret as the key. This replaces the
+// previous static-prefix SHA-256 approach to prevent recognition of fake salts
+// by their fixed prefix pattern.
+func (s *authService) FakeRecoverySalt(email string) []byte {
+	mac := hmac.New(sha256.New, []byte(s.jwtSecret))
+	mac.Write([]byte(email))
+	return mac.Sum(nil)
 }

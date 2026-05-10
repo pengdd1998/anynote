@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_durations.dart';
@@ -179,6 +180,13 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   /// Title of the note in the secondary pane (for the header bar).
   String? _splitViewNoteTitle;
 
+  /// Cached result of property filtering, rebuilt only when filter inputs change.
+  List<Note> _filteredNotes = [];
+
+  /// Tracks the filter signature used to produce [_filteredNotes].
+  /// When this no longer matches the current filters, the cache is stale.
+  String? _lastFilterSignature;
+
   @override
   void initState() {
     super.initState();
@@ -204,6 +212,19 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     _pageSubscription?.cancel();
     _tagsSubscription?.cancel();
     super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // LRU cache helper
+  // ---------------------------------------------------------------------------
+
+  /// Retrieve a value from [cache], re-inserting it to approximate LRU eviction.
+  /// LinkedHashMap iteration order is insertion order, so re-inserting moves
+  /// the entry to the end (most recently used).
+  T? _cacheGet<T>(Map<String, T> cache, String key) {
+    final value = cache.remove(key);
+    if (value != null) cache[key] = value;
+    return value;
   }
 
   // ---------------------------------------------------------------------------
@@ -243,7 +264,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     final filtered = <Note>[];
 
     for (final note in notes) {
-      final properties = _propertiesCache[note.id] ?? [];
+      final properties = _cacheGet(_propertiesCache, note.id) ?? [];
 
       bool matchesStatus = true;
       bool matchesPriority = true;
@@ -272,7 +293,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     if (_tagFilter != null && _tagFilter!.isNotEmpty) {
       final tagFiltered = <Note>[];
       for (final note in filtered) {
-        final noteTags = _tagsCache[note.id] ?? [];
+        final noteTags = _cacheGet(_tagsCache, note.id) ?? [];
         final noteTagIds = noteTags.map((t) => t.id).toSet();
         if (noteTagIds.intersection(_tagFilter!).isNotEmpty) {
           tagFiltered.add(note);
@@ -622,41 +643,6 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           ] else ...[
             // Sync status indicator (green/yellow/red dot + label)
             const SyncStatusIndicator(),
-            // Sort menu (frequently used, stays as a top-level button)
-            PopupMenuButton<String>(
-              icon: const Icon(AppIcons.sort),
-              tooltip: l10n.sortNotes,
-              onSelected: (value) {
-                setState(() => _sortOption = value);
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'updated_newest',
-                  child: Text(l10n.updatedNewest),
-                ),
-                PopupMenuItem(
-                  value: 'updated_oldest',
-                  child: Text(l10n.updatedOldest),
-                ),
-                PopupMenuItem(
-                  value: 'created_newest',
-                  child: Text(l10n.createdNewest),
-                ),
-                PopupMenuItem(
-                  value: 'created_oldest',
-                  child: Text(l10n.createdOldest),
-                ),
-                PopupMenuItem(
-                  value: 'title_az',
-                  child: Text(l10n.titleAZ),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'custom',
-                  child: Text(l10n.sortCustom),
-                ),
-              ],
-            ),
             // Grid/List toggle
             IconButton(
               icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
@@ -696,6 +682,20 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               tooltip: l10n.moreActions,
               onSelected: (value) {
                 switch (value) {
+                  // Sort options
+                  case 'sort_updated_newest':
+                    setState(() => _sortOption = 'updated_newest');
+                  case 'sort_updated_oldest':
+                    setState(() => _sortOption = 'updated_oldest');
+                  case 'sort_created_newest':
+                    setState(() => _sortOption = 'created_newest');
+                  case 'sort_created_oldest':
+                    setState(() => _sortOption = 'created_oldest');
+                  case 'sort_title_az':
+                    setState(() => _sortOption = 'title_az');
+                  case 'sort_custom':
+                    setState(() => _sortOption = 'custom');
+                  // Other actions
                   case 'trash':
                     context.push('/trash');
                   case 'command_palette':
@@ -729,7 +729,105 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 }
               },
               itemBuilder: (context) => [
-                // --- Quick actions (moved from top-level icons) ---
+                // --- Sort section ---
+                PopupMenuItem(
+                  value: 'sort_updated_newest',
+                  child: ListTile(
+                    leading: Icon(
+                      AppIcons.sort,
+                      color: _sortOption == 'updated_newest'
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                    title: Text(l10n.updatedNewest),
+                    trailing: _sortOption == 'updated_newest'
+                        ? const Icon(Icons.check, size: 18)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'sort_updated_oldest',
+                  child: ListTile(
+                    leading: Icon(
+                      AppIcons.sort,
+                      color: _sortOption == 'updated_oldest'
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                    title: Text(l10n.updatedOldest),
+                    trailing: _sortOption == 'updated_oldest'
+                        ? const Icon(Icons.check, size: 18)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'sort_created_newest',
+                  child: ListTile(
+                    leading: Icon(
+                      AppIcons.sort,
+                      color: _sortOption == 'created_newest'
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                    title: Text(l10n.createdNewest),
+                    trailing: _sortOption == 'created_newest'
+                        ? const Icon(Icons.check, size: 18)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'sort_created_oldest',
+                  child: ListTile(
+                    leading: Icon(
+                      AppIcons.sort,
+                      color: _sortOption == 'created_oldest'
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                    title: Text(l10n.createdOldest),
+                    trailing: _sortOption == 'created_oldest'
+                        ? const Icon(Icons.check, size: 18)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'sort_title_az',
+                  child: ListTile(
+                    leading: Icon(
+                      AppIcons.sort,
+                      color: _sortOption == 'title_az'
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                    title: Text(l10n.titleAZ),
+                    trailing: _sortOption == 'title_az'
+                        ? const Icon(Icons.check, size: 18)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'sort_custom',
+                  child: ListTile(
+                    leading: Icon(
+                      AppIcons.sort,
+                      color: _sortOption == 'custom'
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                    title: Text(l10n.sortCustom),
+                    trailing: _sortOption == 'custom'
+                        ? const Icon(Icons.check, size: 18)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuDivider(),
+                // --- Quick actions ---
                 PopupMenuItem(
                   value: 'trash',
                   child: ListTile(
@@ -1032,7 +1130,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                               HapticFeedback.lightImpact();
                               context.push('/notes/new');
                             },
-                            tooltip: l10n.createNewNote,
+                            tooltip: l10n.fabCreateTooltip,
                             child: const Icon(AppIcons.add),
                           ),
                         ),
@@ -1068,78 +1166,78 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       );
     }
 
-    // Use FutureBuilder for async property filtering
-    return FutureBuilder<List<Note>>(
-      future: _applyPropertyFilters(_notes, db),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting &&
-                _statusFilter != null ||
+    // Rebuild filtered notes only when filter inputs change, not on every build.
+    final filterSignature =
+        '${_statusFilter ?? ""}|${_priorityFilter ?? ""}|${_tagFilter?.join(",") ?? ""}';
+    if (filterSignature != _lastFilterSignature) {
+      _lastFilterSignature = filterSignature;
+      // Fire-and-forget: _applyPropertyFilters is fast (cached) and will
+      // call setState when complete.  While waiting, use the previous result.
+      _applyPropertyFilters(_notes, db).then((filtered) {
+        if (mounted) {
+          setState(() => _filteredNotes = filtered);
+        }
+      });
+    }
+
+    final filtered = _filteredNotes.isEmpty && _lastFilterSignature == null
+        ? _notes
+        : _filteredNotes;
+    final sorted = _sortNotes(filtered);
+
+    if (filtered.isEmpty &&
+        (_statusFilter != null ||
             _priorityFilter != null ||
-            (_tagFilter != null && _tagFilter!.isNotEmpty)) {
-          return const Center(child: CircularProgressIndicator());
-        }
+            (_tagFilter != null && _tagFilter!.isNotEmpty))) {
+      return EmptyState(
+        icon: Icons.filter_list_off,
+        title: l10n.noMatchingNotes,
+        subtitle: l10n.tryChangingFilters,
+      );
+    }
 
-        final filtered = snapshot.data ?? _notes;
-        final sorted = _sortNotes(filtered);
-
-        if (filtered.isEmpty &&
-            (_statusFilter != null ||
-                _priorityFilter != null ||
-                (_tagFilter != null && _tagFilter!.isNotEmpty))) {
-          return EmptyState(
-            icon: Icons.filter_list_off,
-            title: l10n.noMatchingNotes,
-            subtitle: l10n.tryChangingFilters,
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: () async {
-            final notifier = ref.read(syncStatusProvider.notifier);
-            await notifier.sync();
-            _resetAndReload();
-          },
-          child: Column(
-            children: [
-              // Show reorder hint when in custom sort mode.
-              if (_isCustomSort && !_isGridView)
-                Material(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSecondaryContainer,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.reorderModeHint,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSecondaryContainer,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              Expanded(
-                child: _isGridView
-                    ? _buildNotesGrid(sorted, db, isSearchMode: false)
-                    : _buildNotesList(sorted, db, isSearchMode: false),
-              ),
-            ],
-          ),
-        );
+    return RefreshIndicator(
+      onRefresh: () async {
+        final notifier = ref.read(syncStatusProvider.notifier);
+        await notifier.sync();
+        _resetAndReload();
       },
+      child: Column(
+        children: [
+          // Show reorder hint when in custom sort mode.
+          if (_isCustomSort && !_isGridView)
+            Material(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.reorderModeHint,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color:
+                            Theme.of(context).colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          Expanded(
+            child: _isGridView
+                ? _buildNotesGrid(sorted, db, isSearchMode: false)
+                : _buildNotesList(sorted, db, isSearchMode: false),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1207,7 +1305,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             db: db,
             isGrid: false,
             time: _formatTime(note.updatedAt),
-            tags: _tagsCache[note.id] ?? [],
+            tags: _cacheGet(_tagsCache, note.id) ?? [],
             isSelected: false,
             disableSwipe: true,
             onTap: () => _onNoteTap(note.id),
@@ -1216,7 +1314,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             untitled: AppLocalizations.of(context)!.untitled,
             onStatusTap: () => _cycleStatus(note.id, db),
             onPriorityTap: () => _cyclePriority(note.id, db),
-            isLocked: _lockedCache[note.id] ?? false,
+            isLocked: _cacheGet(_lockedCache, note.id) ?? false,
             trailing: ReorderableDragStartListener(
               index: index,
               child: Padding(
@@ -1327,8 +1425,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   }) {
     final l10n = AppLocalizations.of(context)!;
     final time = _formatTime(note.updatedAt);
-    final tags = _tagsCache[note.id] ?? [];
-    final isLocked = _lockedCache[note.id] ?? false;
+    final tags = _cacheGet(_tagsCache, note.id) ?? [];
+    final isLocked = _cacheGet(_lockedCache, note.id) ?? false;
     final isSelected = _isSelectionMode
         ? _selectedNoteIds.contains(note.id)
         : _selectedNoteId == note.id;
@@ -2067,6 +2165,6 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
     if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
     if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
-    return '${dt.month}/${dt.day}';
+    return DateFormat.MMMd().format(dt);
   }
 }

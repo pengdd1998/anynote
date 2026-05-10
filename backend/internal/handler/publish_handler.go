@@ -6,6 +6,7 @@ import (
 
 	"github.com/anynote/backend/internal/service"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 const (
@@ -43,8 +44,18 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, err := uuid.Parse(req.ContentItemID); err != nil {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "content_item_id must be a valid UUID")
+		return
+	}
+
 	if req.Platform == "" {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "Platform is required")
+		return
+	}
+
+	if !h.publishService.IsValidPlatform(req.Platform) {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "Unsupported platform")
 		return
 	}
 
@@ -90,6 +101,12 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusInternalServerError, "publish_error", "Failed to publish")
 		return
 	}
+
+	// Strip encrypted content from the response. The publish service stores
+	// Title and Content as AES-256-GCM encrypted blobs; the client should
+	// never receive these ciphertexts.
+	log.Title = ""
+	log.Content = ""
 
 	writeJSON(w, http.StatusAccepted, log)
 }

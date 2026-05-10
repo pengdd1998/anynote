@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"crypto/sha256"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -21,13 +22,20 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 // bcryptCost is the bcrypt work factor. OWASP recommends cost 12+.
 const bcryptCost = 12
 
+// hashRecoveryKey pre-hashes a BIP-39 mnemonic with SHA-256 so the result
+// fits within bcrypt's 72-byte limit.
+func hashRecoveryKey(key []byte) []byte {
+	h := sha256.Sum256(key)
+	return h[:]
+}
+
 func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
 	hashedAuthKey, err := bcrypt.GenerateFromPassword(user.AuthKeyHash, bcryptCost)
 	if err != nil {
 		return err
 	}
 
-	hashedRecoveryKey, err := bcrypt.GenerateFromPassword(user.RecoveryKey, bcryptCost)
+	hashedRecoveryKey, err := bcrypt.GenerateFromPassword(hashRecoveryKey(user.RecoveryKey), bcryptCost)
 	if err != nil {
 		return err
 	}

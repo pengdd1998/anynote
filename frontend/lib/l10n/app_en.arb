@@ -4341,5 +4341,14 @@
   "@indent": { "description": "Tooltip for indent toolbar button" },
 
   "outdent": "Outdent",
-  "@outdent": { "description": "Tooltip for outdent toolbar button" }
+  "@outdent": { "description": "Tooltip for outdent toolbar button" },
+
+  "showPassword": "Show password",
+  "@showPassword": { "description": "Tooltip for password visibility toggle when password is hidden" },
+
+  "hidePassword": "Hide password",
+  "@hidePassword": { "description": "Tooltip for password visibility toggle when password is visible" },
+
+  "fabCreateTooltip": "Create new note (long press for more options)",
+  "@fabCreateTooltip": { "description": "Tooltip for the create-note FAB mentioning long press" }
 }

@@ -172,8 +172,8 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 			// Publish (rate limited by user)
 			r.With(RateLimitMiddleware(publishRateLimiter, UserIDKeyFunc, time.Minute)).Post("/publish", publishH.Publish)
-			r.Get("/publish/history", publishH.History)
-			r.Get("/publish/{id}", publishH.GetByID)
+			r.With(RateLimitMiddleware(publishRateLimiter, UserIDKeyFunc, time.Minute)).Get("/publish/history", publishH.History)
+			r.With(RateLimitMiddleware(publishRateLimiter, UserIDKeyFunc, time.Minute)).Get("/publish/{id}", publishH.GetByID)
 
 			// Platform connections
 			r.Get("/platforms", platformH.List)

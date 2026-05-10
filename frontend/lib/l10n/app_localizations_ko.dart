@@ -4149,4 +4149,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get outdent => 'Outdent';
+
+  @override
+  String get showPassword => '비밀번호 표시';
+
+  @override
+  String get hidePassword => '비밀번호 숨기기';
+
+  @override
+  String get fabCreateTooltip => '새 메모 만들기 (길게 누르면 더 많은 옵션)';
 }

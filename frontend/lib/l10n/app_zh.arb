@@ -2166,5 +2166,9 @@
   "codeBlock": "代码块",
   "checklist": "待办清单",
   "indent": "增加缩进",
-  "outdent": "减少缩进"
+  "outdent": "减少缩进",
+
+  "showPassword": "显示密码",
+  "hidePassword": "隐藏密码",
+  "fabCreateTooltip": "新建笔记（长按显示更多选项）"
 }

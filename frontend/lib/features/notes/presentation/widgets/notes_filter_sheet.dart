@@ -276,7 +276,10 @@ class NotesFilterBar extends StatelessWidget {
         statusFilter != null || priorityFilter != null || hasTags;
 
     if (!hasFilters) {
-      // Show collapsed filter button when no filters are active
+      // Show collapsed filter button when no filters are active.
+      // Uses a subtle outline and tinted background so the chip stands out
+      // against the surface background even when no filters are selected.
+      final colorScheme = Theme.of(context).colorScheme;
       return Container(
         height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -284,9 +287,17 @@ class NotesFilterBar extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: FilterChip(
             label: Text(l10n.filter),
-            avatar: const Icon(Icons.filter_list, size: 16),
+            avatar: Icon(
+              Icons.filter_list,
+              size: 16,
+              color: colorScheme.onSurfaceVariant,
+            ),
             onSelected: (_) => onFilterTap(),
             selected: false,
+            side: BorderSide(
+              color: colorScheme.outlineVariant,
+            ),
+            backgroundColor: colorScheme.surfaceContainerLow,
           ),
         ),
       );

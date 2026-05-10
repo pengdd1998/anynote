@@ -4147,4 +4147,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get outdent => 'Outdent';
+
+  @override
+  String get showPassword => 'パスワードを表示';
+
+  @override
+  String get hidePassword => 'パスワードを非表示';
+
+  @override
+  String get fabCreateTooltip => '新しいメモを作成（長押しでその他のオプション）';
 }

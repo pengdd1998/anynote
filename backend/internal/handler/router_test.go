@@ -45,6 +45,9 @@ func (s *routerStubAuthService) GetRecoverySaltByEmail(ctx context.Context, emai
 func (s *routerStubAuthService) RecoverAccount(ctx context.Context, req *domain.RecoverRequest) error {
 	return nil
 }
+func (s *routerStubAuthService) FakeRecoverySalt(email string) []byte {
+	return make([]byte, 32)
+}
 
 // routerStubSyncService implements service.SyncService.
 type routerStubSyncService struct{}
@@ -125,6 +128,9 @@ func (s *routerStubPublishService) GetHistory(ctx context.Context, userID uuid.U
 }
 func (s *routerStubPublishService) GetByID(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*domain.PublishLog, error) {
 	return nil, nil
+}
+func (s *routerStubPublishService) IsValidPlatform(name string) bool {
+	return true
 }
 
 // routerStubPlatformService implements service.PlatformService.

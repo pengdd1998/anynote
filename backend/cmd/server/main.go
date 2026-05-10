@@ -218,15 +218,18 @@ func main() {
 		slog.Info("AI proxy configured without fallback LLM", "default", cfg.LLM.Default.Provider)
 	}
 	llmConfigSvc := service.NewLLMConfigService(llmConfigRepo, gateway, masterKey)
-	publishSvc := service.NewPublishService(publishLogRepo, nil,
-		service.WithPublishPushService(pushSvc),
-		service.WithPublishMasterKey(masterKey),
-	)
 
-	// Initialize platform adapters and registry
+	// Initialize platform adapters and registry before publish service
+	// so the valid platform names can be passed to publish validation.
 	platformRegistry := platform.NewRegistry()
 	appsetup.RegisterDefaultAdapters(platformRegistry, cfg.Chrome.WSURL)
 	slog.Info("registered platform adapters", "platforms", platformRegistry.List())
+
+	publishSvc := service.NewPublishService(publishLogRepo, nil,
+		service.WithPublishPushService(pushSvc),
+		service.WithPublishMasterKey(masterKey),
+		service.WithValidPlatforms(platformRegistry.List()),
+	)
 
 	platformSvc := service.NewPlatformService(platformConnRepo, platformRegistry)
 	shareSvc := service.NewShareService(sharedNoteRepo)

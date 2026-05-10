@@ -28,6 +28,7 @@ type PublishService interface {
 	Publish(ctx context.Context, userID uuid.UUID, req PublishRequest) (*domain.PublishLog, error)
 	GetHistory(ctx context.Context, userID uuid.UUID) ([]domain.PublishLog, error)
 	GetByID(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*domain.PublishLog, error)
+	IsValidPlatform(name string) bool
 }
 
 type PublishRequest struct {
@@ -46,10 +47,11 @@ type PublishLogRepository interface {
 }
 
 type publishService struct {
-	logRepo   PublishLogRepository
-	queue     QueueEnqueuer
-	pushSvc   PushService // optional; nil means no push notifications
-	masterKey []byte      // server master key for encrypting publish content at rest
+	logRepo        PublishLogRepository
+	queue          QueueEnqueuer
+	pushSvc        PushService // optional; nil means no push notifications
+	masterKey      []byte      // server master key for encrypting publish content at rest
+	validPlatforms map[string]struct{} // set of registered platform names
 }
 
 // NewPublishService creates a publish service with the given log repository.
@@ -78,6 +80,16 @@ func WithPublishPushService(pushSvc PushService) PublishServiceOption {
 // content at rest.
 func WithPublishMasterKey(key []byte) PublishServiceOption {
 	return func(s *publishService) { s.masterKey = key }
+}
+
+// WithValidPlatforms sets the set of allowed platform names for publish
+// requests. Names are normalized to lowercase.
+func WithValidPlatforms(names []string) PublishServiceOption {
+	m := make(map[string]struct{}, len(names))
+	for _, n := range names {
+		m[n] = struct{}{}
+	}
+	return func(s *publishService) { s.validPlatforms = m }
 }
 
 // encryptField encrypts a string with AES-256-GCM and returns base64.
@@ -219,4 +231,18 @@ func (s *publishService) GetByID(ctx context.Context, userID uuid.UUID, id uuid.
 		return nil, err
 	}
 	return publishLog, nil
+}
+
+// IsValidPlatform returns true if the given platform name is in the registered
+// set. When no valid platforms are configured (validPlatforms is nil), all
+// non-empty names are accepted for backward compatibility.
+func (s *publishService) IsValidPlatform(name string) bool {
+	if name == "" {
+		return false
+	}
+	if len(s.validPlatforms) == 0 {
+		return true
+	}
+	_, ok := s.validPlatforms[name]
+	return ok
 }

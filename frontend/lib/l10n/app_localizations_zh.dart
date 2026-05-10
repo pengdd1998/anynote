@@ -4134,4 +4134,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get outdent => 'Outdent';
+
+  @override
+  String get showPassword => '显示密码';
+
+  @override
+  String get hidePassword => '隐藏密码';
+
+  @override
+  String get fabCreateTooltip => '新建笔记（长按显示更多选项）';
 }

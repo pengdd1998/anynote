@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"crypto/sha256"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/anynote/backend/internal/domain"
@@ -63,6 +63,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.authService.Register(r.Context(), req)
 	if err != nil {
 		if !writeErrorFromSentinel(w, r, err) {
+			slog.Error("auth: registration failed", "error", err, "path", r.URL.Path)
 			writeError(w, r, http.StatusInternalServerError, "internal_error", "Registration failed")
 		}
 		return
@@ -94,6 +95,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.authService.Login(r.Context(), req)
 	if err != nil {
 		if !writeErrorFromSentinel(w, r, err) {
+			slog.Error("auth: login failed", "error", err, "path", r.URL.Path)
 			writeError(w, r, http.StatusInternalServerError, "internal_error", "Login failed")
 		}
 		return
@@ -205,7 +207,7 @@ func (h *AuthHandler) GetRecoverySalt(w http.ResponseWriter, r *http.Request) {
 		// The client will derive a key from the wrong salt and the
 		// subsequent Recover call will fail with an opaque error.
 		writeJSON(w, http.StatusOK, domain.RecoverySaltResponse{
-			RecoverySalt: fakeRecoverySalt(email),
+			RecoverySalt: h.authService.FakeRecoverySalt(email),
 		})
 		return
 	}
@@ -253,12 +255,4 @@ func (h *AuthHandler) Recover(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "recovered"})
-}
-
-// fakeRecoverySalt returns a deterministic 32-byte salt derived from the email.
-// This ensures the recovery-salt endpoint returns the same response shape
-// for both existing and non-existing users, preventing email enumeration.
-func fakeRecoverySalt(email string) []byte {
-	h := sha256.Sum256([]byte("recovery-salt-fake:" + email))
-	return h[:]
 }
