@@ -166,6 +166,10 @@ jobs:
             echo "Running migrations..."
             IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml run --rm --no-deps server /app/migrate up || true
 
+            # Stop existing containers before recreating (avoids name conflict)
+            echo "Stopping existing services..."
+            IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml down --remove-orphans 2>/dev/null || true
+
             # Start services
             echo "Starting services..."
             IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml up -d
