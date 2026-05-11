@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
-import '../../../core/error/error.dart';
+import '../../../core/error/error.dart' show ErrorDisplay;
 import '../../../core/theme/alpha_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -112,7 +112,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                         if (context.mounted) {
                           AppSnackBar.error(
                             context,
-                            message: l10n.failedToRestoreError(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
+                            message: l10n.failedToRestoreError(ErrorDisplay.displayMessage(e, l10n)),
                           );
                         }
                       }
@@ -152,7 +152,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                       } catch (e) {
                         AppSnackBar.error(
                           context,
-                          message: l10n.failedToDeleteError(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
+                          message: l10n.failedToDeleteError(ErrorDisplay.displayMessage(e, l10n)),
                         );
                       }
                     }
@@ -327,7 +327,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                   if (context.mounted) {
                     AppSnackBar.error(
                       context,
-                      message: l10n.failedToRestoreError(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
+                      message: l10n.failedToRestoreError(ErrorDisplay.displayMessage(e, l10n)),
                     );
                   }
                 }
@@ -378,7 +378,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                     if (context.mounted) {
                       AppSnackBar.error(
                         context,
-                        message: l10n.failedToDeleteError(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
+                        message: l10n.failedToDeleteError(ErrorDisplay.displayMessage(e, l10n)),
                       );
                     }
                   }

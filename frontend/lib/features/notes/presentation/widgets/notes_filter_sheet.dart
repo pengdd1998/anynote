@@ -13,6 +13,7 @@ class NotesFilterSheet extends StatelessWidget {
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
   final ValueChanged<String>? onTagChanged;
+  final VoidCallback? onClearAll;
   final List<Tag> allTags;
 
   const NotesFilterSheet({
@@ -23,6 +24,7 @@ class NotesFilterSheet extends StatelessWidget {
     required this.onStatusChanged,
     required this.onPriorityChanged,
     this.onTagChanged,
+    this.onClearAll,
     this.allTags = const [],
   });
 
@@ -82,14 +84,8 @@ class NotesFilterSheet extends StatelessWidget {
                     (tagFilter != null && tagFilter!.isNotEmpty))
                   TextButton(
                     onPressed: () {
-                      onStatusChanged(null);
-                      onPriorityChanged(null);
-                      // Clear all tags by toggling each selected tag off.
-                      if (tagFilter != null) {
-                        for (final tagId in tagFilter!) {
-                          onTagChanged?.call(tagId);
-                        }
-                      }
+                      onClearAll?.call();
+                      Navigator.pop(context);
                     },
                     child: Text(l10n.clearAll),
                   ),
@@ -210,6 +206,7 @@ class NotesFilterSheet extends StatelessWidget {
     required ValueChanged<String?> onStatusChanged,
     required ValueChanged<String?> onPriorityChanged,
     ValueChanged<String>? onTagChanged,
+    VoidCallback? onClearAll,
   }) {
     showModalBottomSheet(
       context: context,
@@ -235,6 +232,7 @@ class NotesFilterSheet extends StatelessWidget {
                 // Do NOT pop — user may want to select multiple tags.
               }
             : null,
+        onClearAll: onClearAll,
       ),
     );
   }
@@ -271,6 +269,7 @@ class NotesFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final tagById = {for (final tag in allTags) tag.id: tag};
     final hasTags = tagFilter != null && tagFilter!.isNotEmpty;
     final hasFilters =
         statusFilter != null || priorityFilter != null || hasTags;
@@ -332,17 +331,16 @@ class NotesFilterBar extends StatelessWidget {
             ),
           if (tagFilter != null)
             for (final tagId in tagFilter!)
-              ...allTags.where((tag) => tag.id == tagId).map(
-                    (tag) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Chip(
-                        label: Text(tag.plainName ?? '...'),
-                        deleteIcon: const Icon(Icons.close, size: 16),
-                        onDeleted: () => onTagCleared?.call(tagId),
-                        avatar: const Icon(Icons.label, size: 12),
-                      ),
-                    ),
+              if (tagById[tagId] case final tag?)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Chip(
+                    label: Text(tag.plainName ?? '...'),
+                    deleteIcon: const Icon(Icons.close, size: 16),
+                    onDeleted: () => onTagCleared?.call(tagId),
+                    avatar: const Icon(Icons.label, size: 12),
                   ),
+                ),
           Padding(
             padding: const EdgeInsets.only(left: 8),
             child: TextButton.icon(

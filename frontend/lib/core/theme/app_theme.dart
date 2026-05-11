@@ -54,12 +54,13 @@ class AppTheme {
   // ---------------------------------------------------------------------------
   // Typography scale
   // ---------------------------------------------------------------------------
-  static String get _fontFamily => Platform.isIOS ? 'SF Pro Display' : 'Inter';
+  static final String _fontFamily =
+      Platform.isIOS ? 'SF Pro Display' : 'Inter';
 
   static TextStyle get _display => TextStyle(
         fontFamily: _fontFamily,
         fontSize: 36,
-        fontWeight: FontWeight.w700, // bold
+        fontWeight: FontWeight.w700,
         height: 1.21,
         letterSpacing: -0.5,
       );
@@ -67,7 +68,7 @@ class AppTheme {
   static TextStyle get _headline => TextStyle(
         fontFamily: _fontFamily,
         fontSize: 22,
-        fontWeight: FontWeight.w600, // semibold
+        fontWeight: FontWeight.w600,
         height: 1.27,
         letterSpacing: -0.3,
       );
@@ -75,7 +76,7 @@ class AppTheme {
   static TextStyle get _title => TextStyle(
         fontFamily: _fontFamily,
         fontSize: 17,
-        fontWeight: FontWeight.w600, // semibold
+        fontWeight: FontWeight.w600,
         height: 1.29,
         letterSpacing: -0.2,
       );
@@ -83,7 +84,7 @@ class AppTheme {
   static TextStyle get _body => TextStyle(
         fontFamily: _fontFamily,
         fontSize: 15,
-        fontWeight: FontWeight.w400, // regular
+        fontWeight: FontWeight.w400,
         height: 1.47,
         letterSpacing: -0.1,
       );
@@ -91,7 +92,7 @@ class AppTheme {
   static TextStyle get _caption => TextStyle(
         fontFamily: _fontFamily,
         fontSize: 13,
-        fontWeight: FontWeight.w400, // regular
+        fontWeight: FontWeight.w400,
         height: 1.38,
         letterSpacing: 0.0,
       );

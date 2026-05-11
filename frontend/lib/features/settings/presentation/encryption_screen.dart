@@ -262,7 +262,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   AppSnackBar.error(
                     context,
                     message: l10n.failedToChangePassword(
-                      ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+                      ErrorDisplay.displayMessage(e, l10n),
                     ),
                   );
                 }
@@ -377,7 +377,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                   AppSnackBar.error(
                     context,
                     message: l10n.failedToDeleteData(
-                      ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+                      ErrorDisplay.displayMessage(e, l10n),
                     ),
                   );
                 }
@@ -430,7 +430,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
         AppSnackBar.error(
           context,
           message: l10n.backupExportFailed(
-            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+            ErrorDisplay.displayMessage(e, l10n),
           ),
         );
       }
@@ -496,7 +496,7 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
         AppSnackBar.error(
           context,
           message: l10n.backupImportFailed(
-            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+            ErrorDisplay.displayMessage(e, l10n),
           ),
         );
       }

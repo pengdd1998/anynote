@@ -622,7 +622,7 @@ class _RecentDailyNotesList extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text(ErrorDisplay.userMessage(ErrorMapper.map(e), AppLocalizations.of(context)!))),
+            error: (e, _) => Center(child: Text(ErrorDisplay.displayMessage(e, AppLocalizations.of(context)!))),
           ),
         ),
       ],

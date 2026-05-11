@@ -76,7 +76,7 @@ class SignOutSection extends ConsumerWidget {
         AppSnackBar.error(
           context,
           message: l10n.signOutFailed(
-            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+            ErrorDisplay.displayMessage(e, l10n),
           ),
         );
       }

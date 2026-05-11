@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_durations.dart';
-import '../../../core/error/error.dart';
+import '../../../core/error/error.dart' show ErrorDisplay;
 import '../../../core/theme/app_icons.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
@@ -730,102 +730,12 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               },
               itemBuilder: (context) => [
                 // --- Sort section ---
-                PopupMenuItem(
-                  value: 'sort_updated_newest',
-                  child: ListTile(
-                    leading: Icon(
-                      AppIcons.sort,
-                      color: _sortOption == 'updated_newest'
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    title: Text(l10n.updatedNewest),
-                    trailing: _sortOption == 'updated_newest'
-                        ? const Icon(Icons.check, size: 18)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'sort_updated_oldest',
-                  child: ListTile(
-                    leading: Icon(
-                      AppIcons.sort,
-                      color: _sortOption == 'updated_oldest'
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    title: Text(l10n.updatedOldest),
-                    trailing: _sortOption == 'updated_oldest'
-                        ? const Icon(Icons.check, size: 18)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'sort_created_newest',
-                  child: ListTile(
-                    leading: Icon(
-                      AppIcons.sort,
-                      color: _sortOption == 'created_newest'
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    title: Text(l10n.createdNewest),
-                    trailing: _sortOption == 'created_newest'
-                        ? const Icon(Icons.check, size: 18)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'sort_created_oldest',
-                  child: ListTile(
-                    leading: Icon(
-                      AppIcons.sort,
-                      color: _sortOption == 'created_oldest'
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    title: Text(l10n.createdOldest),
-                    trailing: _sortOption == 'created_oldest'
-                        ? const Icon(Icons.check, size: 18)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'sort_title_az',
-                  child: ListTile(
-                    leading: Icon(
-                      AppIcons.sort,
-                      color: _sortOption == 'title_az'
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    title: Text(l10n.titleAZ),
-                    trailing: _sortOption == 'title_az'
-                        ? const Icon(Icons.check, size: 18)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'sort_custom',
-                  child: ListTile(
-                    leading: Icon(
-                      AppIcons.sort,
-                      color: _sortOption == 'custom'
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    title: Text(l10n.sortCustom),
-                    trailing: _sortOption == 'custom'
-                        ? const Icon(Icons.check, size: 18)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
+                _buildSortMenuItem('sort_updated_newest', l10n.updatedNewest, AppIcons.sort),
+                _buildSortMenuItem('sort_updated_oldest', l10n.updatedOldest, AppIcons.sort),
+                _buildSortMenuItem('sort_created_newest', l10n.createdNewest, AppIcons.sort),
+                _buildSortMenuItem('sort_created_oldest', l10n.createdOldest, AppIcons.sort),
+                _buildSortMenuItem('sort_title_az', l10n.titleAZ, AppIcons.sort),
+                _buildSortMenuItem('sort_custom', l10n.sortCustom, AppIcons.sort),
                 const PopupMenuDivider(),
                 // --- Quick actions ---
                 PopupMenuItem(
@@ -1006,6 +916,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                       }
                     });
                   },
+                  onClearAll: () => setState(() {
+                    _statusFilter = null;
+                    _priorityFilter = null;
+                    _tagFilter = null;
+                  }),
                 ),
                 onStatusCleared: () => setState(() => _statusFilter = null),
                 onPriorityCleared: () => setState(() => _priorityFilter = null),
@@ -1774,7 +1689,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       AppSnackBar.error(
         context,
         message: l10n
-            .importFailed(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
+            .importFailed(ErrorDisplay.displayMessage(e, l10n)),
       );
     }
   }
@@ -2166,5 +2081,24 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
     if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
     return DateFormat.MMMd().format(dt);
+  }
+
+  /// Build a sort-option menu item with a check indicator for the active sort.
+  PopupMenuItem<String> _buildSortMenuItem(
+    String value,
+    String label,
+    IconData icon,
+  ) {
+    final isSelected = _sortOption == value;
+    final primary = Theme.of(context).colorScheme.primary;
+    return PopupMenuItem<String>(
+      value: value,
+      child: ListTile(
+        leading: Icon(icon, color: isSelected ? primary : null),
+        title: Text(label),
+        trailing: isSelected ? const Icon(Icons.check, size: 18) : null,
+        contentPadding: EdgeInsets.zero,
+      ),
+    );
   }
 }

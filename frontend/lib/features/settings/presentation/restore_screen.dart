@@ -637,7 +637,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         AppSnackBar.error(
           context,
           message: l10n.filePickerError(
-            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+            ErrorDisplay.displayMessage(e, l10n),
           ),
         );
       }
@@ -667,7 +667,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         AppSnackBar.error(
           context,
           message: l10n.verificationFailedError(
-            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+            ErrorDisplay.displayMessage(e, l10n),
           ),
         );
       }
@@ -711,7 +711,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         AppSnackBar.error(
           context,
           message: l10n.backupImportFailed(
-            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+            ErrorDisplay.displayMessage(e, l10n),
           ),
         );
       }
@@ -767,7 +767,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
         AppSnackBar.error(
           context,
           message: l10n.backupImportFailed(
-            ErrorDisplay.userMessage(ErrorMapper.map(e), l10n),
+            ErrorDisplay.displayMessage(e, l10n),
           ),
         );
         // Go back to strategy step so user can retry.

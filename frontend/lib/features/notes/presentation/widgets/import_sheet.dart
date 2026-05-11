@@ -424,7 +424,7 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
         });
         _showError(
           AppLocalizations.of(context)!.importFailed(
-            ErrorDisplay.userMessage(ErrorMapper.map(e)),
+            ErrorDisplay.displayMessage(e),
           ),
         );
       }
@@ -487,7 +487,7 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
         });
         _showError(
           AppLocalizations.of(context)!.importFailed(
-            ErrorDisplay.userMessage(ErrorMapper.map(e)),
+            ErrorDisplay.displayMessage(e),
           ),
         );
       }
@@ -546,7 +546,7 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
         });
         _showError(
           AppLocalizations.of(context)!.importFailed(
-            ErrorDisplay.userMessage(ErrorMapper.map(e)),
+            ErrorDisplay.displayMessage(e),
           ),
         );
       }

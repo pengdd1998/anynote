@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/constants/app_durations.dart';
-import '../../../../core/error/error.dart';
+import '../../../../core/error/error.dart' show ErrorDisplay;
 import '../../../../core/platform/platform_utils.dart';
 import '../../../../core/storage/image_storage.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -79,7 +79,7 @@ class _EditorDropTargetState extends ConsumerState<EditorDropTarget> {
           if (mounted) {
             AppSnackBar.error(
               context,
-              message: l10n.failedToAddImage(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
+              message: l10n.failedToAddImage(ErrorDisplay.displayMessage(e, l10n)),
             );
           }
         }

@@ -220,7 +220,6 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
   }
 
   Widget _buildErrorState(ThemeData theme) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
@@ -251,7 +250,6 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
   }
 
   Widget _buildPasswordInput(ThemeData theme) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(32),

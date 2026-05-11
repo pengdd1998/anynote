@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error.dart';
+import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../compose/data/ai_repository.dart';
 
@@ -265,38 +266,11 @@ class AiTagSuggestionSheet extends ConsumerWidget {
     }
 
     if (state.error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                state.error!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.tonal(
-                onPressed: () {
-                  ref
-                      .read(_tagSuggestionProvider.notifier)
-                      .suggestTags(content);
-                },
-                child: Text(l10n.retry),
-              ),
-            ],
-          ),
-        ),
+      return ErrorStateWidget(
+        message: state.error!,
+        onRetry: () {
+          ref.read(_tagSuggestionProvider.notifier).suggestTags(content);
+        },
       );
     }
 

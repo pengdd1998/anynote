@@ -6,6 +6,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/theme/app_colors.dart';
@@ -133,33 +134,11 @@ class _CollectionDetailScreenState
       final displayError = _error == 'collectionNotFound'
           ? l10n.collectionNotFound
           : l10n.failedToLoadCollection;
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline,
-                size: 48, color: Theme.of(context).colorScheme.error),
-            const SizedBox(height: 16),
-            Text(
-              displayError,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _error!,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.tonal(
-              onPressed: _loadData,
-              child: Text(l10n.retry),
-            ),
-          ],
-        ),
+      return ErrorStateWidget(
+        message: _error == 'collectionNotFound'
+            ? displayError
+            : '$displayError\n$_error',
+        onRetry: _loadData,
       );
     }
 

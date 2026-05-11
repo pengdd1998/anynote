@@ -9,7 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/database/app_database.dart';
-import '../../../../core/error/error.dart';
+import '../../../../core/error/error.dart' show ErrorDisplay;
 import '../../../../core/export/pdf_export_service.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/markdown_export_service.dart';
@@ -433,7 +433,7 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
       }
     } catch (e) {
       if (mounted) {
-        _showError(l10n.exportFailed(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)));
+        _showError(l10n.exportFailed(ErrorDisplay.displayMessage(e, l10n)));
       }
     } finally {
       if (mounted) {

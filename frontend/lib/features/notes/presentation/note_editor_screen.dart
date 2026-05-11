@@ -1675,7 +1675,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       final l10n = AppLocalizations.of(context)!;
       AppSnackBar.error(context,
           message: l10n.failedToAddImage(
-              ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)));
+              ErrorDisplay.displayMessage(e, l10n)));
     }
   }
 
@@ -1728,7 +1728,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       final l10n = AppLocalizations.of(context)!;
       AppSnackBar.error(context,
           message: l10n.failedToAddImage(
-              ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)));
+              ErrorDisplay.displayMessage(e, l10n)));
     }
   }
 

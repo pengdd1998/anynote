@@ -1,0 +1,142 @@
+import 'package:flutter/material.dart';
+
+/// A reusable password text field with a built-in visibility toggle.
+///
+/// Wraps a [TextFormField] with obscure text and a suffix icon button that
+/// toggles between visible and hidden states. Encapsulates the `_obscure`
+/// boolean state so callers do not need to manage it.
+class PasswordTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String? labelText;
+  final String? hintText;
+  final String? errorText;
+  final Widget? prefixIcon;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final Iterable<String>? autofillHints;
+  final void Function(String)? onFieldSubmitted;
+  final String? Function(String?)? validator;
+  final bool enabled;
+  final bool autofocus;
+  final String? obscuringCharacter;
+  final String? showPasswordTooltip;
+  final String? hidePasswordTooltip;
+
+  const PasswordTextField({
+    super.key,
+    required this.controller,
+    this.labelText,
+    this.hintText,
+    this.errorText,
+    this.prefixIcon,
+    this.focusNode,
+    this.textInputAction,
+    this.autofillHints,
+    this.onFieldSubmitted,
+    this.validator,
+    this.enabled = true,
+    this.autofocus = false,
+    this.obscuringCharacter,
+    this.showPasswordTooltip,
+    this.hidePasswordTooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _PasswordField(
+      key: ValueKey(controller.hashCode),
+      controller: controller,
+      labelText: labelText,
+      hintText: hintText,
+      errorText: errorText,
+      prefixIcon: prefixIcon,
+      focusNode: focusNode,
+      textInputAction: textInputAction,
+      autofillHints: autofillHints,
+      onFieldSubmitted: onFieldSubmitted,
+      validator: validator,
+      enabled: enabled,
+      autofocus: autofocus,
+      obscuringCharacter: obscuringCharacter,
+      showPasswordTooltip: showPasswordTooltip,
+      hidePasswordTooltip: hidePasswordTooltip,
+    );
+  }
+}
+
+class _PasswordField extends StatefulWidget {
+  final TextEditingController controller;
+  final String? labelText;
+  final String? hintText;
+  final String? errorText;
+  final Widget? prefixIcon;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final Iterable<String>? autofillHints;
+  final void Function(String)? onFieldSubmitted;
+  final String? Function(String?)? validator;
+  final bool enabled;
+  final bool autofocus;
+  final String? obscuringCharacter;
+  final String? showPasswordTooltip;
+  final String? hidePasswordTooltip;
+
+  const _PasswordField({
+    super.key,
+    required this.controller,
+    this.labelText,
+    this.hintText,
+    this.errorText,
+    this.prefixIcon,
+    this.focusNode,
+    this.textInputAction,
+    this.autofillHints,
+    this.onFieldSubmitted,
+    this.validator,
+    this.enabled = true,
+    this.autofocus = false,
+    this.obscuringCharacter,
+    this.showPasswordTooltip,
+    this.hidePasswordTooltip,
+  });
+
+  @override
+  State<_PasswordField> createState() => _PasswordFieldState();
+}
+
+class _PasswordFieldState extends State<_PasswordField> {
+  bool _obscure = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: widget.controller,
+      obscureText: _obscure,
+      focusNode: widget.focusNode,
+      textInputAction: widget.textInputAction,
+      autofillHints: widget.autofillHints,
+      onFieldSubmitted: widget.onFieldSubmitted,
+      validator: widget.validator,
+      enabled: widget.enabled,
+      autofocus: widget.autofocus,
+      obscuringCharacter: widget.obscuringCharacter ?? '•',
+      decoration: InputDecoration(
+        labelText: widget.labelText,
+        hintText: widget.hintText,
+        errorText: widget.errorText,
+        prefixIcon: widget.prefixIcon,
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscure
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+          ),
+          onPressed: () => setState(() => _obscure = !_obscure),
+          tooltip: _obscure
+              ? widget.showPasswordTooltip
+              : widget.hidePasswordTooltip,
+        ),
+      ),
+    );
+  }
+}

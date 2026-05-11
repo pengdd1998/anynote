@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_icons.dart';
+import 'error_mapper.dart';
 import 'exceptions.dart';
 
 /// Utility class for displaying errors to the user in a consistent manner.
@@ -87,6 +88,11 @@ class ErrorDisplay {
         ],
       ),
     );
+  }
+
+  /// Convenience: map any exception and return a user-friendly message.
+  static String displayMessage(Object error, [AppLocalizations? l10n]) {
+    return userMessage(ErrorMapper.map(error), l10n);
   }
 
   /// Get a human-friendly message for the given error.

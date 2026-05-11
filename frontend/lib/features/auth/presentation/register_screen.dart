@@ -14,6 +14,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/notifications/push_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/password_text_field.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -29,8 +30,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
   String? _error;
   String? _recoveryKey;
 
@@ -280,28 +279,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           const SizedBox(height: 16),
                           FocusTraversalOrder(
                             order: const NumericFocusOrder(3),
-                            child: TextFormField(
+                            child: PasswordTextField(
                               controller: _passwordController,
+                              labelText: l10n.password,
+                              prefixIcon: const Icon(Icons.lock_outline),
                               autofillHints: const [AutofillHints.newPassword],
                               textInputAction: TextInputAction.next,
-                              decoration: InputDecoration(
-                                labelText: l10n.password,
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                  ),
-                                  onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword,
-                                  ),
-                                  tooltip: _obscurePassword
-                                      ? 'Show password'
-                                      : 'Hide password',
-                                ),
-                              ),
-                              obscureText: _obscurePassword,
+                              showPasswordTooltip: 'Show password',
+                              hidePasswordTooltip: 'Hide password',
                               validator: (v) => (v?.length ?? 0) < 8
                                   ? l10n.passwordMinLength
                                   : null,
@@ -310,30 +295,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           const SizedBox(height: 16),
                           FocusTraversalOrder(
                             order: const NumericFocusOrder(4),
-                            child: TextFormField(
+                            child: PasswordTextField(
                               controller: _confirmPasswordController,
+                              labelText: l10n.confirmPassword,
+                              prefixIcon: const Icon(Icons.lock_outline),
                               autofillHints: const [AutofillHints.newPassword],
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _submit(),
-                              decoration: InputDecoration(
-                                labelText: l10n.confirmPassword,
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscureConfirmPassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                  ),
-                                  onPressed: () => setState(
-                                    () => _obscureConfirmPassword =
-                                        !_obscureConfirmPassword,
-                                  ),
-                                  tooltip: _obscureConfirmPassword
-                                      ? 'Show password'
-                                      : 'Hide password',
-                                ),
-                              ),
-                              obscureText: _obscureConfirmPassword,
+                              showPasswordTooltip: 'Show password',
+                              hidePasswordTooltip: 'Hide password',
                               validator: (v) => v != _passwordController.text
                                   ? l10n.passwordsDoNotMatch
                                   : null,

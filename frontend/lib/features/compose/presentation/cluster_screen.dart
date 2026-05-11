@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/alpha_constants.dart';
+import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
 
@@ -85,35 +86,13 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
 
     // Error state
     if (session.error != null && session.clusters.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                session.error!,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () {
-                  ref.read(composeSessionProvider.notifier).clearError();
-                  _hasTriggeredClustering = false;
-                  _triggerClustering();
-                },
-                child: Text(l10n.retry),
-              ),
-            ],
-          ),
-        ),
+      return ErrorStateWidget(
+        message: session.error!,
+        onRetry: () {
+          ref.read(composeSessionProvider.notifier).clearError();
+          _hasTriggeredClustering = false;
+          _triggerClustering();
+        },
       );
     }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
+import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -269,7 +270,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         AppSnackBar.error(
           context,
           message: l10n.failedToRestore(
-              ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
+              ErrorDisplay.displayMessage(e, l10n)),
         );
       }
     }
@@ -322,39 +323,9 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ExcludeSemantics(
-                child: Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: theme.colorScheme.error,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.failedToLoadVersions,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.tonal(
-                onPressed: _loadVersions,
-                child: Text(l10n.retry),
-              ),
-            ],
-          ),
-        ),
+      return ErrorStateWidget(
+        message: '${l10n.failedToLoadVersions}\n$_errorMessage',
+        onRetry: _loadVersions,
       );
     }
 

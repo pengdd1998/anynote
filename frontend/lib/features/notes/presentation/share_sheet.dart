@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/share/share_service.dart';
 import '../../../core/widgets/app_snackbar.dart';
-import '../../../core/error/error.dart';
+import '../../../core/error/error.dart' show ErrorDisplay;
 
 /// Bottom sheet for creating a shared note link.
 ///
@@ -78,7 +78,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = l10n.failedToCreateShareLink(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n));
+          _error = l10n.failedToCreateShareLink(ErrorDisplay.displayMessage(e, l10n));
           _isCreating = false;
         });
       }

@@ -328,7 +328,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
         break;
       case DiffType.unchanged:
         backgroundColor = Colors.transparent;
-        textColor = isDark ? Theme.of(context).colorScheme.onSurfaceVariant : Theme.of(context).colorScheme.onSurfaceVariant;
+        textColor = Theme.of(context).colorScheme.onSurfaceVariant;
         prefix = ' ';
         break;
     }
@@ -467,7 +467,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       if (mounted) {
         AppSnackBar.error(
           context,
-          message: l10n.failedToRestore(ErrorDisplay.userMessage(ErrorMapper.map(e), l10n)),
+          message: l10n.failedToRestore(ErrorDisplay.displayMessage(e, l10n)),
         );
       }
     }

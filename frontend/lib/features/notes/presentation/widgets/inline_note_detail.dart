@@ -8,8 +8,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/database/app_database.dart';
-import '../../../../core/error/error.dart';
+import '../../../../core/error/error.dart' show ErrorDisplay;
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/decrypted_note.dart';
 
@@ -136,7 +137,7 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = ErrorDisplay.userMessage(ErrorMapper.map(e), l10n);
+          _error = ErrorDisplay.displayMessage(e, l10n);
           _isLoading = false;
         });
       }
@@ -153,35 +154,9 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
     }
 
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: theme.colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.failedToLoadNote,
-                style: theme.textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _error!,
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.tonal(onPressed: _loadNote, child: Text(l10n.retry)),
-            ],
-          ),
-        ),
+      return ErrorStateWidget(
+        message: '${l10n.failedToLoadNote}\n$_error',
+        onRetry: _loadNote,
       );
     }
 

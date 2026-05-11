@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/crypto/crypto_service.dart';
-import '../../../../core/error/error.dart';
+import '../../../../core/error/error.dart' show ErrorDisplay;
+import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../domain/text_diff.dart';
@@ -141,7 +142,7 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = ErrorDisplay.userMessage(ErrorMapper.map(e), l10n);
+          _errorMessage = ErrorDisplay.displayMessage(e, l10n);
           _isLoading = false;
         });
       }
@@ -227,37 +228,9 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
     }
 
     if (_errorMessage != null) {
-      final theme = Theme.of(context);
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ExcludeSemantics(
-                child: Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: theme.colorScheme.error,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.tonal(
-                onPressed: _loadNotes,
-                child: Text(AppLocalizations.of(context)!.retry),
-              ),
-            ],
-          ),
-        ),
+      return ErrorStateWidget(
+        message: _errorMessage!,
+        onRetry: _loadNotes,
       );
     }
 

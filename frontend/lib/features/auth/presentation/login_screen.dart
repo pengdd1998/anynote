@@ -10,6 +10,7 @@ import '../../../core/crypto/master_key.dart';
 import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/notifications/push_service.dart';
+import '../../../core/widgets/password_text_field.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -23,7 +24,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _obscurePassword = true;
   String? _error;
 
   Future<void> _submit() async {
@@ -323,29 +323,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const SizedBox(height: 16),
                           FocusTraversalOrder(
                             order: const NumericFocusOrder(2),
-                            child: TextFormField(
+                            child: PasswordTextField(
                               controller: _passwordController,
+                              labelText: l10n.password,
+                              prefixIcon: const Icon(Icons.lock_outline),
                               autofillHints: const [AutofillHints.password],
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _submit(),
-                              decoration: InputDecoration(
-                                labelText: l10n.password,
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                  ),
-                                  onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword,
-                                  ),
-                                  tooltip: _obscurePassword
-                                      ? l10n.showPassword
-                                      : l10n.hidePassword,
-                                ),
-                              ),
-                              obscureText: _obscurePassword,
+                              showPasswordTooltip: l10n.showPassword,
+                              hidePasswordTooltip: l10n.hidePassword,
                               validator: (v) => v?.isEmpty ?? true
                                   ? l10n.passwordRequired
                                   : null,
