@@ -37,6 +37,10 @@ jobs:
       - name: Install system dependencies (libsodium for crypto tests)
         run: sudo apt-get update && sudo apt-get install -y libsodium-dev
 
+      - name: Generate Drift code
+        working-directory: frontend
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Backend tests
         working-directory: backend
         run: go test ./... -race -count=1
