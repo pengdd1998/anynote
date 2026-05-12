@@ -18,7 +18,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -o /worker ./cmd/worker
 
 # Runtime stage
-# Worker connects to Chrome via CDP websocket (CHROME_WS_URL) — no embedded Chromium needed.
+# Worker connects to Chrome via CDP websocket (CHROME_WS_URL).
+# When CHROME_WS_URL is set externally (e.g. ws://chrome:9222), the
+# entrypoint skips local Chromium startup and execs the worker directly.
 FROM alpine:3.20
 
 RUN apk add --no-cache \

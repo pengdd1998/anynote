@@ -4,13 +4,18 @@
 # Use with an override file for the target environment:
 #
 #   Development:
-#     docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
+#     docker compose up -d
+#     (docker-compose.override.yml is loaded automatically)
 #
-#   Production:
-#     docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#   Production (CD pipeline):
+#     docker compose -f infra/docker-compose.yml up -d          # shared infra
+#     docker compose -f docker-compose.deploy.yml up -d         # app services
 #
-# When no override file is specified, Docker Compose automatically reads
-# docker-compose.override.yml if it exists.
+# Files in this project:
+#   docker-compose.yml           — base definitions (all services)
+#   docker-compose.override.yml  — dev overrides (ports, debug, volume mounts)
+#   docker-compose.deploy.yml    — production app services (pulls from ghcr.io)
+#   infra/docker-compose.yml     — shared infrastructure (postgres, redis, minio)
 
 services:
   postgres:

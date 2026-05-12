@@ -1,10 +1,14 @@
 #!/bin/sh
 set -e
 
-# Start Chromium in headless mode on the default DevTools port.
-# The worker process will connect to it via ws://127.0.0.1:9222.
-# We run Chromium as a non-root user if possible; falling back to
-# --no-sandbox when running as root (common in containers).
+# If CHROME_WS_URL is already set (external Chrome container), skip local startup.
+if [ -n "${CHROME_WS_URL}" ]; then
+    echo "Using external Chrome: ${CHROME_WS_URL}"
+    exec "$@"
+fi
+
+# Otherwise, start a local Chromium instance (development mode).
+# Requires chromium-browser installed in the container image.
 
 CHROMIUM="/usr/bin/chromium-browser"
 PORT="${CHROME_PORT:-9222}"
@@ -15,7 +19,7 @@ if [ "$(id -u)" = "0" ]; then
     CHROMIUM_FLAGS="${CHROMIUM_FLAGS} --no-sandbox"
 fi
 
-echo "Starting Chromium on port ${PORT}..."
+echo "Starting local Chromium on port ${PORT}..."
 ${CHROMIUM} ${CHROMIUM_FLAGS} &
 CHROME_PID=$!
 
@@ -36,11 +40,8 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# Export the WebSocket URL so the worker config picks it up.
 export CHROME_WS_URL="ws://127.0.0.1:${PORT}"
 
-# Execute the worker binary (passed as CMD).
-# Run the worker and capture its exit code, then let the trap clean up.
 echo "Starting worker with CHROME_WS_URL=${CHROME_WS_URL}..."
 "$@"
 WORKER_EXIT=$?
