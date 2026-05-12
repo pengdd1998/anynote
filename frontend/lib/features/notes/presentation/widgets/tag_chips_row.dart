@@ -22,7 +22,7 @@ class TagChipsRow extends StatelessWidget {
     return Wrap(
       spacing: 4,
       runSpacing: 2,
-      children: displayTags.map((tag) {
+      children: displayTags.map<Widget>((tag) {
         return Semantics(
           label: A11yUtils.semanticLabelForTag(name: tag.plainName ?? '...'),
           child: Chip(

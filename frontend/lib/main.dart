@@ -331,8 +331,10 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                               ? Brightness.light
                               : Brightness.dark,
                     ),
-                    child: Stack(
-                      children: [
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Stack(
+                        children: [
                         MaterialApp.router(
                           title: 'AnyNote',
                           debugShowCheckedModeBanner: false,
@@ -354,8 +356,9 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                           locale: locale,
                         ),
                         // Command palette overlay rendered on top of all screens.
-                        const CommandPaletteOverlay(),
-                      ],
+                          const CommandPaletteOverlay(),
+                        ],
+                      ),
                     ),
                   );
                 },

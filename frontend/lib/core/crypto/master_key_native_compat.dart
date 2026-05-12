@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -54,35 +55,37 @@ Future<Uint8List> deriveMasterKeyImpl(
     );
   }
 
-  final passwordBytes = Int8List.fromList(utf8.encode(password));
-
   // Select KDF parameters based on version.
   // Version 1 (legacy): opsLimitModerate + memLimitInteractive.
   // Version 2 (current): opsLimitSensitive + memLimitModerate (OWASP-aligned).
   final int opsLimit;
   final int memLimit;
   if (kdfVersion == null || kdfVersion >= kdfVersionNative) {
-    // Current default: OWASP-aligned parameters.
     opsLimit = sodium.crypto.pwhash.opsLimitSensitive;
     memLimit = sodium.crypto.pwhash.memLimitModerate;
   } else {
-    // Legacy fallback for migrating existing users.
     opsLimit = sodium.crypto.pwhash.opsLimitModerate;
     memLimit = sodium.crypto.pwhash.memLimitInteractive;
   }
 
-  final key = sodium.crypto.pwhash.call(
-    password: passwordBytes,
-    salt: pwhashSalt,
-    outLen: 32,
-    opsLimit: opsLimit,
-    memLimit: memLimit,
-    alg: CryptoPwhashAlgorithm.argon2id13,
-  );
-
-  final result = key.extractBytes();
-  key.dispose();
-  return result;
+  // Run Argon2id in a background isolate to avoid blocking the UI thread.
+  // The KDF takes ~1.5s with OWASP parameters, causing 90+ skipped frames
+  // when run on the main isolate.
+  return Isolate.run(() async {
+    final bgSodium = await SodiumSumoInit.init();
+    final passwordBytes = Int8List.fromList(utf8.encode(password));
+    final key = bgSodium.crypto.pwhash.call(
+      password: passwordBytes,
+      salt: pwhashSalt,
+      outLen: 32,
+      opsLimit: opsLimit,
+      memLimit: memLimit,
+      alg: CryptoPwhashAlgorithm.argon2id13,
+    );
+    final result = key.extractBytes();
+    key.dispose();
+    return result;
+  });
 }
 
 /// Derive auth key using BLAKE2b(masterKey, "anynote-auth-key").
