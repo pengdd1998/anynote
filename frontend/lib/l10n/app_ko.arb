@@ -1402,5 +1402,10 @@
 
   "showPassword": "비밀번호 표시",
   "hidePassword": "비밀번호 숨기기",
-  "fabCreateTooltip": "새 메모 만들기 (길게 누르면 더 많은 옵션)"
+  "fabCreateTooltip": "새 메모 만들기 (길게 누르면 더 많은 옵션)",
+
+  "publishToPlatform": "플랫폼에 게시",
+  "polishContent": "다듬기",
+  "selectPlatformFirst": "플랫폼을 먼저 선택하세요",
+  "notePublishedSuccess": "메모가 게시되었습니다!"
 }

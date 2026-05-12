@@ -4085,70 +4085,70 @@ class AppLocalizationsKo extends AppLocalizations {
   String get selectItemToView => '항목을 선택하여 보기';
 
   @override
-  String get syncConflicts => 'Sync Conflicts';
+  String get syncConflicts => '동기화 충돌';
 
   @override
-  String get noConflicts => 'No conflicts to resolve';
+  String get noConflicts => '해결할 충돌이 없습니다';
 
   @override
   String conflictItem(String itemId) {
-    return 'Item: $itemId';
+    return '항목: $itemId';
   }
 
   @override
   String serverVersion(int version) {
-    return 'Server version: $version';
+    return '서버 버전: $version';
   }
 
   @override
-  String get keepLocal => 'Keep Local';
+  String get keepLocal => '로컬 유지';
 
   @override
-  String get keepServer => 'Keep Server';
+  String get keepServer => '서버 유지';
 
   @override
-  String get keepBoth => 'Keep Both';
+  String get keepBoth => '둘 다 유지';
 
   @override
-  String get findInNote => 'Find in note';
+  String get findInNote => '노트에서 찾기';
 
   @override
-  String get replaceWith => 'Replace with';
+  String get replaceWith => '바꿀 내용';
 
   @override
-  String get noMatches => 'No matches';
+  String get noMatches => '일치 항목 없음';
 
   @override
   String matchCount(int current, int total) {
-    return '$current of $total';
+    return '$total 중 $current';
   }
 
   @override
-  String get findPrevious => 'Previous match';
+  String get findPrevious => '이전 일치';
 
   @override
-  String get findNext => 'Next match';
+  String get findNext => '다음 일치';
 
   @override
-  String get replaceMatch => 'Replace';
+  String get replaceMatch => '바꾸기';
 
   @override
-  String get replaceAllMatches => 'Replace all';
+  String get replaceAllMatches => '모두 바꾸기';
 
   @override
-  String get closeFindBar => 'Close find bar';
+  String get closeFindBar => '찾기 바 닫기';
 
   @override
-  String get codeBlock => 'Code block';
+  String get codeBlock => '코드 블록';
 
   @override
-  String get checklist => 'Checklist';
+  String get checklist => '체크리스트';
 
   @override
-  String get indent => 'Indent';
+  String get indent => '들여쓰기';
 
   @override
-  String get outdent => 'Outdent';
+  String get outdent => '내어쓰기';
 
   @override
   String get showPassword => '비밀번호 표시';
@@ -4158,4 +4158,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get fabCreateTooltip => '새 메모 만들기 (길게 누르면 더 많은 옵션)';
+
+  @override
+  String get publishToPlatform => '플랫폼에 게시';
+
+  @override
+  String get polishContent => '다듬기';
+
+  @override
+  String get selectPlatformFirst => '플랫폼을 먼저 선택하세요';
+
+  @override
+  String get notePublishedSuccess => '메모가 게시되었습니다!';
 }

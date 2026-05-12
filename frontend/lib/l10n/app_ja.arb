@@ -2170,5 +2170,10 @@
 
   "showPassword": "パスワードを表示",
   "hidePassword": "パスワードを非表示",
-  "fabCreateTooltip": "新しいメモを作成（長押しでその他のオプション）"
+  "fabCreateTooltip": "新しいメモを作成（長押しでその他のオプション）",
+
+  "publishToPlatform": "プラットフォームに公開",
+  "polishContent": "推敲",
+  "selectPlatformFirst": "プラットフォームを選択してください",
+  "notePublishedSuccess": "メモを公開しました！"
 }

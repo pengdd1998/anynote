@@ -7707,6 +7707,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create new note (long press for more options)'**
   String get fabCreateTooltip;
+
+  /// Menu item and sheet title for publishing a note to a social platform
+  ///
+  /// In en, this message translates to:
+  /// **'Publish to Platform'**
+  String get publishToPlatform;
+
+  /// Button to AI-polish note content before publishing
+  ///
+  /// In en, this message translates to:
+  /// **'Polish'**
+  String get polishContent;
+
+  /// Validation message when trying to publish without selecting a platform
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a platform first'**
+  String get selectPlatformFirst;
+
+  /// Success message after publishing a note to a platform
+  ///
+  /// In en, this message translates to:
+  /// **'Note published successfully!'**
+  String get notePublishedSuccess;
 }
 
 class _AppLocalizationsDelegate

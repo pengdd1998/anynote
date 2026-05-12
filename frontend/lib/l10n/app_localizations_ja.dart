@@ -4083,70 +4083,70 @@ class AppLocalizationsJa extends AppLocalizations {
   String get selectItemToView => '項目を選択して表示';
 
   @override
-  String get syncConflicts => 'Sync Conflicts';
+  String get syncConflicts => '同期の競合';
 
   @override
-  String get noConflicts => 'No conflicts to resolve';
+  String get noConflicts => '解決すべき競合はありません';
 
   @override
   String conflictItem(String itemId) {
-    return 'Item: $itemId';
+    return 'アイテム：$itemId';
   }
 
   @override
   String serverVersion(int version) {
-    return 'Server version: $version';
+    return 'サーバーのバージョン：$version';
   }
 
   @override
-  String get keepLocal => 'Keep Local';
+  String get keepLocal => 'ローカルを保持';
 
   @override
-  String get keepServer => 'Keep Server';
+  String get keepServer => 'サーバーを保持';
 
   @override
-  String get keepBoth => 'Keep Both';
+  String get keepBoth => '両方を保持';
 
   @override
-  String get findInNote => 'Find in note';
+  String get findInNote => 'ノート内を検索';
 
   @override
-  String get replaceWith => 'Replace with';
+  String get replaceWith => '置換後の文字列';
 
   @override
-  String get noMatches => 'No matches';
+  String get noMatches => '一致なし';
 
   @override
   String matchCount(int current, int total) {
-    return '$current of $total';
+    return '$current / $total';
   }
 
   @override
-  String get findPrevious => 'Previous match';
+  String get findPrevious => '前の一致';
 
   @override
-  String get findNext => 'Next match';
+  String get findNext => '次の一致';
 
   @override
-  String get replaceMatch => 'Replace';
+  String get replaceMatch => '置換';
 
   @override
-  String get replaceAllMatches => 'Replace all';
+  String get replaceAllMatches => 'すべて置換';
 
   @override
-  String get closeFindBar => 'Close find bar';
+  String get closeFindBar => '検索バーを閉じる';
 
   @override
-  String get codeBlock => 'Code block';
+  String get codeBlock => 'コードブロック';
 
   @override
-  String get checklist => 'Checklist';
+  String get checklist => 'チェックリスト';
 
   @override
-  String get indent => 'Indent';
+  String get indent => 'インデント';
 
   @override
-  String get outdent => 'Outdent';
+  String get outdent => 'インデント解除';
 
   @override
   String get showPassword => 'パスワードを表示';
@@ -4156,4 +4156,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get fabCreateTooltip => '新しいメモを作成（長押しでその他のオプション）';
+
+  @override
+  String get publishToPlatform => 'プラットフォームに公開';
+
+  @override
+  String get polishContent => '推敲';
+
+  @override
+  String get selectPlatformFirst => 'プラットフォームを選択してください';
+
+  @override
+  String get notePublishedSuccess => 'メモを公開しました！';
 }

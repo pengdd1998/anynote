@@ -4350,5 +4350,17 @@
   "@hidePassword": { "description": "Tooltip for password visibility toggle when password is visible" },
 
   "fabCreateTooltip": "Create new note (long press for more options)",
-  "@fabCreateTooltip": { "description": "Tooltip for the create-note FAB mentioning long press" }
+  "@fabCreateTooltip": { "description": "Tooltip for the create-note FAB mentioning long press" },
+
+  "publishToPlatform": "Publish to Platform",
+  "@publishToPlatform": { "description": "Menu item and sheet title for publishing a note to a social platform" },
+
+  "polishContent": "Polish",
+  "@polishContent": { "description": "Button to AI-polish note content before publishing" },
+
+  "selectPlatformFirst": "Please select a platform first",
+  "@selectPlatformFirst": { "description": "Validation message when trying to publish without selecting a platform" },
+
+  "notePublishedSuccess": "Note published successfully!",
+  "@notePublishedSuccess": { "description": "Success message after publishing a note to a platform" }
 }

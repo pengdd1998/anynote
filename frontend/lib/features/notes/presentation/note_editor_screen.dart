@@ -42,6 +42,7 @@ import 'widgets/summary_sheet.dart';
 import 'widgets/ai_tag_suggestion.dart';
 import 'widgets/translation_sheet.dart';
 import 'widgets/writing_assist_sheet.dart';
+import '../../../features/publish/presentation/widgets/publish_from_editor_sheet.dart';
 import 'widgets/wiki_link_picker_sheet.dart';
 import 'widgets/properties_sheet.dart';
 import 'embeds/transclusion_embed.dart';
@@ -815,7 +816,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     // Zen mode: use a full-screen scaffold with no chrome.
     // The AnimatedBuilder fades app bar and bottom elements in/out.
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) _saveNote();
+      },
+      child: Scaffold(
       // In zen mode, extend behind the status bar / navigation bar.
       extendBodyBehindAppBar: _isZenMode,
       extendBody: _isZenMode,
@@ -825,7 +831,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 tooltip: l10n.saveAndClose,
-                onPressed: () => context.pop(),
+                onPressed: () {
+                  _saveNote();
+                  context.pop();
+                },
               ),
               actions: EditorAppBarActions.buildActions(
                 context,
@@ -892,10 +901,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     await _saveNote();
                     if (context.mounted) context.pop();
                   },
+                  onPublishToPlatform: () => _showPublishSheet(context),
                 ),
               ),
             ),
       body: _buildBody(context, l10n, colorScheme),
+      ),
     );
   }
 
@@ -1597,6 +1608,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         noteId: _noteId!,
         db: ref.read(databaseProvider),
         crypto: ref.read(cryptoServiceProvider),
+      ),
+    );
+  }
+
+  void _showPublishSheet(BuildContext context) async {
+    await _saveNote();
+    if (!mounted || _noteId == null) return;
+
+    final db = ref.read(databaseProvider);
+    final tags = await db.tagsDao.getTagsForNote(_noteId!);
+    if (!mounted) return;
+    // ignore: use_build_context_synchronously
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => PublishFromEditorSheet(
+        title: _titleController.text.trim(),
+        content: _extractPlainText(),
+        initialTags: tags.map((t) => t.plainName).whereType<String>().toList(),
       ),
     );
   }

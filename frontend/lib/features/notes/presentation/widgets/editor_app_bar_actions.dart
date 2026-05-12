@@ -41,6 +41,7 @@ class EditorActionsConfig {
   final VoidCallback onToggleFocusMode;
   final VoidCallback onToggleZenMode;
   final VoidCallback onSaveAndClose;
+  final VoidCallback? onPublishToPlatform;
 
   const EditorActionsConfig({
     required this.noteId,
@@ -74,6 +75,7 @@ class EditorActionsConfig {
     required this.onToggleFocusMode,
     required this.onToggleZenMode,
     required this.onSaveAndClose,
+    this.onPublishToPlatform,
   });
 }
 
@@ -212,6 +214,19 @@ class EditorAppBarActions {
               child: ListTile(
                 leading: const Icon(Icons.print_outlined),
                 title: Text(l10n.printNote),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+
+          const PopupMenuDivider(),
+
+          // --- Publish section ---
+          if (!config.isNew && config.noteId != null)
+            PopupMenuItem(
+              value: 'publish',
+              child: ListTile(
+                leading: const Icon(Icons.publish_outlined),
+                title: Text(l10n.publishToPlatform),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -383,6 +398,8 @@ class EditorAppBarActions {
         config.onShare();
       case 'print':
         config.onPrint();
+      case 'publish':
+        config.onPublishToPlatform?.call();
       case 'ai_summary':
         config.onAiAction('summary');
       case 'ai_tags':

@@ -2170,5 +2170,10 @@
 
   "showPassword": "显示密码",
   "hidePassword": "隐藏密码",
-  "fabCreateTooltip": "新建笔记（长按显示更多选项）"
+  "fabCreateTooltip": "新建笔记（长按显示更多选项）",
+
+  "publishToPlatform": "发布到平台",
+  "polishContent": "润色",
+  "selectPlatformFirst": "请先选择平台",
+  "notePublishedSuccess": "笔记发布成功！"
 }

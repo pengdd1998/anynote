@@ -4070,70 +4070,70 @@ class AppLocalizationsZh extends AppLocalizations {
   String get selectItemToView => '选择一个项目以查看';
 
   @override
-  String get syncConflicts => 'Sync Conflicts';
+  String get syncConflicts => '同步冲突';
 
   @override
-  String get noConflicts => 'No conflicts to resolve';
+  String get noConflicts => '没有需要解决的冲突';
 
   @override
   String conflictItem(String itemId) {
-    return 'Item: $itemId';
+    return '项目：$itemId';
   }
 
   @override
   String serverVersion(int version) {
-    return 'Server version: $version';
+    return '服务器版本：$version';
   }
 
   @override
-  String get keepLocal => 'Keep Local';
+  String get keepLocal => '保留本地';
 
   @override
-  String get keepServer => 'Keep Server';
+  String get keepServer => '保留服务器';
 
   @override
-  String get keepBoth => 'Keep Both';
+  String get keepBoth => '保留两者';
 
   @override
-  String get findInNote => 'Find in note';
+  String get findInNote => '在笔记中查找';
 
   @override
-  String get replaceWith => 'Replace with';
+  String get replaceWith => '替换为';
 
   @override
-  String get noMatches => 'No matches';
+  String get noMatches => '无匹配';
 
   @override
   String matchCount(int current, int total) {
-    return '$current of $total';
+    return '$current / $total';
   }
 
   @override
-  String get findPrevious => 'Previous match';
+  String get findPrevious => '上一个匹配';
 
   @override
-  String get findNext => 'Next match';
+  String get findNext => '下一个匹配';
 
   @override
-  String get replaceMatch => 'Replace';
+  String get replaceMatch => '替换';
 
   @override
-  String get replaceAllMatches => 'Replace all';
+  String get replaceAllMatches => '全部替换';
 
   @override
-  String get closeFindBar => 'Close find bar';
+  String get closeFindBar => '关闭查找栏';
 
   @override
-  String get codeBlock => 'Code block';
+  String get codeBlock => '代码块';
 
   @override
-  String get checklist => 'Checklist';
+  String get checklist => '待办清单';
 
   @override
-  String get indent => 'Indent';
+  String get indent => '增加缩进';
 
   @override
-  String get outdent => 'Outdent';
+  String get outdent => '减少缩进';
 
   @override
   String get showPassword => '显示密码';
@@ -4143,4 +4143,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fabCreateTooltip => '新建笔记（长按显示更多选项）';
+
+  @override
+  String get publishToPlatform => '发布到平台';
+
+  @override
+  String get polishContent => '润色';
+
+  @override
+  String get selectPlatformFirst => '请先选择平台';
+
+  @override
+  String get notePublishedSuccess => '笔记发布成功！';
 }

@@ -4365,4 +4365,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fabCreateTooltip =>
       'Create new note (long press for more options)';
+
+  @override
+  String get publishToPlatform => 'Publish to Platform';
+
+  @override
+  String get polishContent => 'Polish';
+
+  @override
+  String get selectPlatformFirst => 'Please select a platform first';
+
+  @override
+  String get notePublishedSuccess => 'Note published successfully!';
 }
