@@ -308,7 +308,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                   title: Text(priorityLabels[index]),
                   trailing: isSelected
                       ? Icon(Icons.check_circle,
-                          color: Theme.of(context).colorScheme.primary)
+                          color: Theme.of(context).colorScheme.primary,)
                       : null,
                   onTap: () {
                     setState(() {

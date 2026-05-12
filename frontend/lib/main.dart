@@ -90,7 +90,7 @@ void main() async {
 
   // Initialize API client.
   // Priority: --dart-define=API_BASE_URL > kDebugMode default > production.
-  final String envApiUrl = const String.fromEnvironment('API_BASE_URL');
+  const String envApiUrl = String.fromEnvironment('API_BASE_URL');
   final apiClient = ApiClient(
     baseUrl: envApiUrl.isNotEmpty
         ? envApiUrl

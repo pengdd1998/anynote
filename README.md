@@ -115,7 +115,7 @@ docker compose up -d postgres redis minio chrome
 
 ```bash
 cd backend && go mod tidy
-make dev-server    # API server on :8080
+make dev-server    # API server on :36661
 make dev-worker    # Background job worker (separate terminal)
 make migrate       # Run database migrations
 ```

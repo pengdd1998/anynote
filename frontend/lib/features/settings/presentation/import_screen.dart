@@ -227,7 +227,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
           }
         } catch (e) {
           errors.add(ImportError(
-              filePath: path, message: ErrorMapper.map(e).toString()));
+              filePath: path, message: ErrorMapper.map(e).toString(),),);
           skipped++;
         }
       }
@@ -254,7 +254,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
               skippedCount: 0,
               errors: [
                 ImportError(
-                    filePath: '', message: ErrorMapper.map(e).toString()),
+                    filePath: '', message: ErrorMapper.map(e).toString(),),
               ],
             ),
           );
@@ -655,7 +655,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
           }
         } catch (e) {
           errors.add(ImportError(
-              filePath: path, message: ErrorMapper.map(e).toString()));
+              filePath: path, message: ErrorMapper.map(e).toString(),),);
           skipped++;
         }
       }

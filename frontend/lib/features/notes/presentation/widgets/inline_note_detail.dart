@@ -226,7 +226,7 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
                     ),
                     if (!_data!.isSynced) ...[
                       const SizedBox(width: 12),
-                      Icon(
+                      const Icon(
                         Icons.cloud_off,
                         size: 14,
                         color: AppColors.warning,
@@ -234,7 +234,7 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
                       const SizedBox(width: 4),
                       Text(
                         l10n.notSynced,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.warning,
                         ),

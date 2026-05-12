@@ -270,7 +270,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         AppSnackBar.error(
           context,
           message: l10n.failedToRestore(
-              ErrorDisplay.displayMessage(e, l10n)),
+              ErrorDisplay.displayMessage(e, l10n),),
         );
       }
     }
@@ -415,7 +415,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                 subtitle: Text(
                   _buildSubtitle(version, l10n),
                   style: TextStyle(
-                      fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                      fontSize: 12, color: theme.colorScheme.onSurfaceVariant,),
                 ),
                 trailing: _buildTrailing(isCurrent, isSelected),
                 onTap: () {

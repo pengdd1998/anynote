@@ -308,7 +308,7 @@ class AppErrorCard extends StatelessWidget {
             Text(
               message,
               style: TextStyle(
-                  fontSize: 12, color: Theme.of(context).disabledColor),
+                  fontSize: 12, color: Theme.of(context).disabledColor,),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[

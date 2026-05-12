@@ -168,7 +168,7 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
               style: TextStyle(
                   fontSize: 13,
                   color:
-                      Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor),
+                      Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor,),
             ),
             if (createdAt.isNotEmpty) ...[
               const SizedBox(height: 2),

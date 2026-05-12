@@ -316,7 +316,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   AppIcons.checkCircleOutline,
                   color: AppColors.success,
                   size: 20,
@@ -325,7 +325,7 @@ class _RestoreScreenState extends ConsumerState<RestoreScreen> {
                 Expanded(
                   child: Text(
                     l10n.noConflictsDetected,
-                    style: TextStyle(color: AppColors.success),
+                    style: const TextStyle(color: AppColors.success),
                   ),
                 ),
               ],

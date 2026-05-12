@@ -151,7 +151,7 @@ class ApiClient {
       final status = e.response?.statusCode;
       if (status == 401 || status == 403) {
         debugPrint(
-            '[ApiClient] refresh token rejected ($status), clearing tokens');
+            '[ApiClient] refresh token rejected ($status), clearing tokens',);
         await _clearAllTokens();
       } else {
         debugPrint('[ApiClient] token refresh failed (transient): $e');
@@ -196,7 +196,7 @@ class ApiClient {
       'salt': base64Encode(saltBytes),
       'recovery_key': req.recoveryKey,
       if (req.recoverySalt != null) 'recovery_salt': req.recoverySalt,
-    });
+    },);
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
     await storeAccessTokenSecure(authRes.accessToken);
@@ -211,7 +211,7 @@ class ApiClient {
     final res = await _dio.post('/api/v1/auth/login', data: {
       'email': req.email,
       'auth_key_hash': base64Encode(authKeyHashBytes),
-    });
+    },);
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
     await storeAccessTokenSecure(authRes.accessToken);

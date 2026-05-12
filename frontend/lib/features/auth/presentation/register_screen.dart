@@ -133,7 +133,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             children: [
               Text(
                 l10n.recoveryKeyInstructions,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.warning,
                   fontWeight: FontWeight.w500,
                 ),

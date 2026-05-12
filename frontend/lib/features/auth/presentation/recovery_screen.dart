@@ -223,7 +223,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
                       style: TextStyle(
                           fontSize: 12,
                           color:
-                              Theme.of(context).colorScheme.onSurfaceVariant),
+                              Theme.of(context).colorScheme.onSurfaceVariant,),
                     ),
                     const SizedBox(height: 24),
                     FilledButton(

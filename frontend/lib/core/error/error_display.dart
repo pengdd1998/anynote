@@ -32,7 +32,7 @@ class ErrorDisplay {
           children: [
             Icon(errorIcon(error),
                 color: Colors.white,
-                size: 20), // white icon on colored snackbar bg
+                size: 20,), // white icon on colored snackbar bg
             const SizedBox(width: 12),
             Expanded(
               child: Text(

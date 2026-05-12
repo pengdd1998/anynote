@@ -82,7 +82,7 @@ void main() {
         message: 'Invalid',
         fieldErrors: {
           'email': 'Invalid email format',
-          'name': 'Name is required'
+          'name': 'Name is required',
         },
       );
       final msg = ErrorDisplay.userMessage(error);
@@ -414,7 +414,7 @@ void main() {
       expect(find.text('Server Error'), findsOneWidget);
       // Dialog body.
       expect(find.text('A server error occurred. Please try again later.'),
-          findsOneWidget);
+          findsOneWidget,);
       // Dismiss button always present.
       expect(find.text('Dismiss'), findsOneWidget);
     });

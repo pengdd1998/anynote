@@ -234,7 +234,7 @@ class NoteDetailScreen extends ConsumerWidget {
                             ),
                             if (!data.isSynced) ...[
                               const SizedBox(width: 12),
-                              Icon(
+                              const Icon(
                                 Icons.cloud_off,
                                 size: 14,
                                 color: AppColors.warning,
@@ -242,7 +242,7 @@ class NoteDetailScreen extends ConsumerWidget {
                               const SizedBox(width: 4),
                               Text(
                                 l10n.notSynced,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.warning,
                                 ),
@@ -416,7 +416,7 @@ class NoteDetailScreen extends ConsumerWidget {
       if (context.mounted) {
         AppSnackBar.error(context,
             message: l10n.exportFailed(
-                ErrorDisplay.displayMessage(e, l10n)));
+                ErrorDisplay.displayMessage(e, l10n),),);
       }
     }
   }

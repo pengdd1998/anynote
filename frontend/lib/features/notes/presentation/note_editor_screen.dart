@@ -822,90 +822,92 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (didPop) _saveNote();
       },
       child: Scaffold(
-      // In zen mode, extend behind the status bar / navigation bar.
-      extendBodyBehindAppBar: _isZenMode,
-      extendBody: _isZenMode,
-      appBar: _isZenMode
-          ? null
-          : AppBar(
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                tooltip: l10n.saveAndClose,
-                onPressed: () {
-                  _saveNote();
-                  context.pop();
-                },
-              ),
-              actions: EditorAppBarActions.buildActions(
-                context,
-                ref,
-                EditorActionsConfig(
-                  noteId: _noteId,
-                  isNew: _isNew,
-                  isLocked: _isLocked,
-                  isSaving: _isSaving,
-                  isDirty: _isDirty,
-                  useRichEditor: _useRichEditor,
-                  isPreview: _isPreview,
-                  isFoldView: _isFoldView,
-                  isTypewriterScroll: _isTypewriterScroll,
-                  isFocusMode: _isFocusMode,
-                  isZenMode: _isZenMode,
-                  hasReminder: _currentReminder != null,
-                  onToggleLock: _toggleLock,
-                  onShowReminderPicker: () => _showReminderPicker(context),
-                  onToggleRichEditor: () {
-                    setState(() => _useRichEditor = !_useRichEditor);
+        // In zen mode, extend behind the status bar / navigation bar.
+        extendBodyBehindAppBar: _isZenMode,
+        extendBody: _isZenMode,
+        appBar: _isZenMode
+            ? null
+            : AppBar(
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: l10n.saveAndClose,
+                  onPressed: () {
+                    _saveNote();
+                    context.pop();
                   },
-                  onTogglePreview: () {
-                    final newValue = !_isPreview;
-                    setState(() => _isPreview = newValue);
-                    _savePreviewPreference(newValue);
-                  },
-                  onToggleFoldView: () {
-                    setState(() => _isFoldView = !_isFoldView);
-                  },
-                  onReadAloud: () {
-                    final speechState =
-                        ref.read(speechStateProvider).valueOrNull ??
-                            SpeechState.stopped;
-                    final service = ref.read(speechServiceProvider);
-                    if (speechState != SpeechState.stopped) {
-                      service.stop();
-                    } else {
-                      final content = _extractPlainText();
-                      if (content.isNotEmpty) service.speak(content);
-                    }
-                  },
-                  onShowTagPicker: () => _showTagPicker(context),
-                  onShowBacklinks: () => _showBacklinks(context),
-                  onShowRelatedNotes: () => _showRelatedNotes(context),
-                  onShowProperties: () => _showProperties(context),
-                  onShare: () {
-                    if (_noteId != null) {
-                      showShareBottomSheet(context, _noteId!);
-                    }
-                  },
-                  onPrint: () => _showPrintPreview(context),
-                  onPickImage: () => _pickImage(context),
-                  onPasteImage: () => _pasteImageFromClipboard(context),
-                  onAiAction: (value) => _handleAiAction(context, value),
-                  onToggleTypewriterScroll: () {
-                    setState(() => _isTypewriterScroll = !_isTypewriterScroll);
-                  },
-                  onToggleFocusMode: () {
-                    setState(() => _isFocusMode = !_isFocusMode);
-                  },
-                  onToggleZenMode: _toggleZenMode,
-                  onSaveAndClose: () async {
-                    await _saveNote();
-                    if (context.mounted) context.pop();
-                  },
-                  onPublishToPlatform: () => _showPublishSheet(context),
+                ),
+                actions: EditorAppBarActions.buildActions(
+                  context,
+                  ref,
+                  EditorActionsConfig(
+                    noteId: _noteId,
+                    isNew: _isNew,
+                    isLocked: _isLocked,
+                    isSaving: _isSaving,
+                    isDirty: _isDirty,
+                    useRichEditor: _useRichEditor,
+                    isPreview: _isPreview,
+                    isFoldView: _isFoldView,
+                    isTypewriterScroll: _isTypewriterScroll,
+                    isFocusMode: _isFocusMode,
+                    isZenMode: _isZenMode,
+                    hasReminder: _currentReminder != null,
+                    onToggleLock: _toggleLock,
+                    onShowReminderPicker: () => _showReminderPicker(context),
+                    onToggleRichEditor: () {
+                      setState(() => _useRichEditor = !_useRichEditor);
+                    },
+                    onTogglePreview: () {
+                      final newValue = !_isPreview;
+                      setState(() => _isPreview = newValue);
+                      _savePreviewPreference(newValue);
+                    },
+                    onToggleFoldView: () {
+                      setState(() => _isFoldView = !_isFoldView);
+                    },
+                    onReadAloud: () {
+                      final speechState =
+                          ref.read(speechStateProvider).valueOrNull ??
+                              SpeechState.stopped;
+                      final service = ref.read(speechServiceProvider);
+                      if (speechState != SpeechState.stopped) {
+                        service.stop();
+                      } else {
+                        final content = _extractPlainText();
+                        if (content.isNotEmpty) service.speak(content);
+                      }
+                    },
+                    onShowTagPicker: () => _showTagPicker(context),
+                    onShowBacklinks: () => _showBacklinks(context),
+                    onShowRelatedNotes: () => _showRelatedNotes(context),
+                    onShowProperties: () => _showProperties(context),
+                    onShare: () {
+                      if (_noteId != null) {
+                        showShareBottomSheet(context, _noteId!);
+                      }
+                    },
+                    onPrint: () => _showPrintPreview(context),
+                    onPickImage: () => _pickImage(context),
+                    onPasteImage: () => _pasteImageFromClipboard(context),
+                    onAiAction: (value) => _handleAiAction(context, value),
+                    onToggleTypewriterScroll: () {
+                      setState(
+                        () => _isTypewriterScroll = !_isTypewriterScroll,
+                      );
+                    },
+                    onToggleFocusMode: () {
+                      setState(() => _isFocusMode = !_isFocusMode);
+                    },
+                    onToggleZenMode: _toggleZenMode,
+                    onSaveAndClose: () async {
+                      await _saveNote();
+                      if (context.mounted) context.pop();
+                    },
+                    onPublishToPlatform: () => _showPublishSheet(context),
+                  ),
                 ),
               ),
-            ),
-      body: _buildBody(context, l10n, colorScheme),
+        body: _buildBody(context, l10n, colorScheme),
       ),
     );
   }
@@ -1618,8 +1620,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     final db = ref.read(databaseProvider);
     final tags = await db.tagsDao.getTagsForNote(_noteId!);
-    if (!mounted) return;
-    // ignore: use_build_context_synchronously
+    if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1707,9 +1708,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      AppSnackBar.error(context,
-          message: l10n.failedToAddImage(
-              ErrorDisplay.displayMessage(e, l10n)));
+      AppSnackBar.error(
+        context,
+        message: l10n.failedToAddImage(
+          ErrorDisplay.displayMessage(e, l10n),
+        ),
+      );
     }
   }
 
@@ -1760,9 +1764,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      AppSnackBar.error(context,
-          message: l10n.failedToAddImage(
-              ErrorDisplay.displayMessage(e, l10n)));
+      AppSnackBar.error(
+        context,
+        message: l10n.failedToAddImage(
+          ErrorDisplay.displayMessage(e, l10n),
+        ),
+      );
     }
   }
 
@@ -1832,7 +1839,9 @@ class _EditorBottomBar extends StatelessWidget {
               _StatText(l10n.lineCount(stats.lineCount), captionColor),
               _StatSep(captionColor),
               _StatText(
-                  l10n.paragraphCount(stats.paragraphCount), captionColor),
+                l10n.paragraphCount(stats.paragraphCount),
+                captionColor,
+              ),
             ] else ...[
               _StatText(l10n.wordCount(wordCount), captionColor),
               _StatSep(captionColor),

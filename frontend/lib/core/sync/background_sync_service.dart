@@ -65,7 +65,7 @@ void callbackDispatcher() {
         // The foreground SyncEngine will pull blobs starting from its own
         // sinceVersion and process them with the crypto service.
         await prefs.setInt(
-            'background_sync_latest_version', response.latestVersion);
+            'background_sync_latest_version', response.latestVersion,);
 
         if (kDebugMode) {
           debugPrint(

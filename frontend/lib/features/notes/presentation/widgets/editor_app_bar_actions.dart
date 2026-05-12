@@ -485,7 +485,7 @@ class _AppBarSaveStatus extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Tooltip(
           message: l10n.statusSaved,
-          child: Icon(Icons.check_circle, size: 16, color: AppColors.success),
+          child: const Icon(Icons.check_circle, size: 16, color: AppColors.success),
         ),
       ),
     );

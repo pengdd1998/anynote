@@ -94,7 +94,7 @@ class _TagSuggestionNotifier extends StateNotifier<_TagSuggestionState> {
       );
     } catch (e) {
       state = state.copyWith(
-          isLoading: false, error: ErrorMapper.map(e).toString());
+          isLoading: false, error: ErrorMapper.map(e).toString(),);
     }
   }
 

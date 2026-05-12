@@ -175,7 +175,7 @@ class _SplitNotePickerSheetState extends ConsumerState<SplitNotePickerSheet> {
                         child: Text(
                           l10n.noNotesFound,
                           style: TextStyle(
-                              color: theme.colorScheme.onSurfaceVariant),
+                              color: theme.colorScheme.onSurfaceVariant,),
                         ),
                       )
                     : ListView.builder(

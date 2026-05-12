@@ -152,7 +152,7 @@ class _PlanContent extends ConsumerWidget {
               child: Row(
                 children: [
                   Icon(AppIcons.verified,
-                      color: colorScheme.onTertiaryContainer),
+                      color: colorScheme.onTertiaryContainer,),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
