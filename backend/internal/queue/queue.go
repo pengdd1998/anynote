@@ -5,10 +5,32 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hibiken/asynq"
 )
+
+// ParseAsynqRedisOpt parses a redis:// or rediss:// URL into an asynq-compatible RedisClientOpt.
+func ParseAsynqRedisOpt(redisURL string) (asynq.RedisClientOpt, error) {
+	u, err := url.Parse(redisURL)
+	if err != nil {
+		return asynq.RedisClientOpt{}, fmt.Errorf("parse redis url: %w", err)
+	}
+	opt := asynq.RedisClientOpt{Addr: u.Host}
+	if u.User != nil {
+		opt.Password, _ = u.User.Password()
+	}
+	if dbStr := strings.TrimPrefix(u.Path, "/"); dbStr != "" {
+		if db, err := strconv.Atoi(dbStr); err == nil {
+			opt.DB = db
+		}
+	}
+	return opt, nil
+}
 
 const (
 	TaskTypeAIProxy           = "ai:proxy"
@@ -26,7 +48,12 @@ type Service struct {
 
 // New creates a new queue service.
 func New(redisURL string) *Service {
-	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisURL})
+	opt, err := ParseAsynqRedisOpt(redisURL)
+	if err != nil {
+		slog.Error("failed to parse redis url for asynq", "error", err)
+		opt = asynq.RedisClientOpt{Addr: redisURL}
+	}
+	client := asynq.NewClient(opt)
 	mux := asynq.NewServeMux()
 
 	return &Service{
@@ -116,8 +143,12 @@ func (s *Service) RegisterHandlers(aiHandler *AIJobHandler, publishHandler *Publ
 
 // Run starts the worker process.
 func (s *Service) Run(redisURL string) error {
+	opt, err := ParseAsynqRedisOpt(redisURL)
+	if err != nil {
+		return fmt.Errorf("parse redis url: %w", err)
+	}
 	srv := asynq.NewServer(
-		asynq.RedisClientOpt{Addr: redisURL},
+		opt,
 		asynq.Config{
 			Concurrency: 10,
 			Queues: map[string]int{
@@ -135,8 +166,12 @@ func (s *Service) Run(redisURL string) error {
 // down gracefully. The caller should handle the error returned by Start (e.g.
 // if the Redis connection fails).
 func (s *Service) Start(redisURL string) error {
+	opt, err := ParseAsynqRedisOpt(redisURL)
+	if err != nil {
+		return fmt.Errorf("parse redis url: %w", err)
+	}
 	s.server = asynq.NewServer(
-		asynq.RedisClientOpt{Addr: redisURL},
+		opt,
 		asynq.Config{
 			Concurrency: 10,
 			Queues: map[string]int{

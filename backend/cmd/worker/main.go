@@ -72,9 +72,12 @@ func main() {
 	slog.Info("connected to PostgreSQL")
 
 	// Connect to Redis (for AI result storage)
-	rdb := redis.NewClient(&redis.Options{
-		Addr: cfg.Redis.URL,
-	})
+	redisOpts, err := redis.ParseURL(cfg.Redis.URL)
+	if err != nil {
+		slog.Error("failed to parse redis url", "error", err)
+		os.Exit(1)
+	}
+	rdb := redis.NewClient(redisOpts)
 	defer rdb.Close()
 
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
@@ -186,8 +189,13 @@ func main() {
 
 	// Schedule periodic expired shared notes cleanup via asynq (hourly).
 	go func() {
+		asynqOpt, parseErr := queue.ParseAsynqRedisOpt(cfg.Redis.URL)
+		if parseErr != nil {
+			slog.Error("failed to parse redis url for scheduler", "error", parseErr)
+			return
+		}
 		scheduler := asynq.NewScheduler(
-			asynq.RedisClientOpt{Addr: cfg.Redis.URL},
+			asynqOpt,
 			&asynq.SchedulerOpts{},
 		)
 		_, schedErr := scheduler.Register("@hourly", asynq.NewTask(queue.TaskCleanupExpiredShares, nil))
