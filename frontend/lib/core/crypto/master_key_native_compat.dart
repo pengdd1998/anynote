@@ -71,6 +71,26 @@ Future<Uint8List> deriveMasterKeyImpl(
   // Run Argon2id in a background isolate to avoid blocking the UI thread.
   // The KDF takes ~1.5s with OWASP parameters, causing 90+ skipped frames
   // when run on the main isolate.
+  //
+  // In test environments where sodium is already initialized, run synchronously
+  // to avoid isolate initialization issues (test platform not available in isolate).
+  if (_sodiumInstance != null) {
+    // Already initialized: run synchronously (test environment or subsequent calls)
+    final passwordBytes = Int8List.fromList(utf8.encode(password));
+    final key = sodium.crypto.pwhash.call(
+      password: passwordBytes,
+      salt: pwhashSalt,
+      outLen: 32,
+      opsLimit: opsLimit,
+      memLimit: memLimit,
+      alg: CryptoPwhashAlgorithm.argon2id13,
+    );
+    final result = key.extractBytes();
+    key.dispose();
+    return result;
+  }
+
+  // Not yet initialized: run in isolate (production code path)
   return Isolate.run(() async {
     final bgSodium = await SodiumSumoInit.init();
     final passwordBytes = Int8List.fromList(utf8.encode(password));
