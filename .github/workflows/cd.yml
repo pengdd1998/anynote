@@ -45,6 +45,8 @@ jobs:
           make
           sudo make install
           sudo ldconfig
+          # Set LD_LIBRARY_PATH for Flutter tests to find libsodium
+          echo "LD_LIBRARY_PATH=/usr/local/lib" >> $GITHUB_ENV
 
       - name: Generate Drift code
         working-directory: frontend
@@ -60,6 +62,8 @@ jobs:
 
       - name: Flutter tests
         working-directory: frontend
+        env:
+          LD_LIBRARY_PATH: /usr/local/lib
         run: flutter test
 
   build-and-push:
