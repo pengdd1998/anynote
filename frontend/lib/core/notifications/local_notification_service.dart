@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -51,10 +51,11 @@ class LocalNotificationService {
       // Initialize timezone database for scheduled notifications.
       tz.initializeTimeZones();
 
-      // Get the local timezone using flutter_native_timezone which returns
+      // Get the local timezone using flutter_timezone which returns
       // proper IANA timezone names (e.g., "America/Chicago", "Asia/Shanghai")
       // instead of platform-specific abbreviations like "CST".
-      final String localTimeZone = await FlutterNativeTimezone.getLocalTimezone();
+      final currentTimeZone = await FlutterTimezone.getLocalTimezone();
+      final String localTimeZone = currentTimeZone.toString();
 
       // Set the local location for the timezone package.
       // If the timezone is not found in the database, fall back to UTC.
@@ -62,7 +63,9 @@ class LocalNotificationService {
         tz.setLocalLocation(tz.getLocation(localTimeZone));
       } catch (_) {
         // If timezone lookup fails, fall back to UTC.
-        debugPrint('Warning: Timezone "$localTimeZone" not found, falling back to UTC');
+        debugPrint(
+          'Warning: Timezone "$localTimeZone" not found, falling back to UTC',
+        );
         tz.setLocalLocation(tz.UTC);
       }
 
@@ -93,13 +96,14 @@ class LocalNotificationService {
       if (PlatformUtils.isAndroid) {
         final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
-        await androidPlugin
-            ?.createNotificationChannel(const AndroidNotificationChannel(
-          'note_reminders',
-          'Note Reminders',
-          description: 'Notifications for note reminders',
-          importance: Importance.high,
-        ),);
+        await androidPlugin?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'note_reminders',
+            'Note Reminders',
+            description: 'Notifications for note reminders',
+            importance: Importance.high,
+          ),
+        );
       }
 
       _initialized = true;
