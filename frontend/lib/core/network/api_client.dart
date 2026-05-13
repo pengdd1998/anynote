@@ -764,12 +764,12 @@ class SyncPullResponseDto {
   final List<dynamic> blobs;
   final int latestVersion;
 
-  SyncPullResponseDto({required this.blobs, required this.latestVersion});
+  SyncPullResponseDto({this.blobs = const [], this.latestVersion = 0});
 
   factory SyncPullResponseDto.fromJson(Map<String, dynamic> json) =>
       SyncPullResponseDto(
-        blobs: json['blobs'] as List,
-        latestVersion: json['latest_version'] as int,
+        blobs: (json['blobs'] as List<dynamic>?) ?? [],
+        latestVersion: json['latest_version'] as int? ?? 0,
       );
 }
 

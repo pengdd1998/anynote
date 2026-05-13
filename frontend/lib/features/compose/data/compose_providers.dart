@@ -143,6 +143,13 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   ComposeSessionNotifier(this._ref, String sessionId)
       : super(ComposeSessionState(sessionId: sessionId));
 
+  /// Reset state for a new composition session while keeping the notifier alive.
+  void resetForNewSession() {
+    cancel();
+    _isProcessing = false;
+    state = ComposeSessionState(sessionId: const Uuid().v4());
+  }
+
   AIRepository get _aiRepo => _ref.read(aiRepositoryProvider);
   PromptBuilder get _promptBuilder => PromptBuilder();
 

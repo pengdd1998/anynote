@@ -221,6 +221,8 @@ class ComposeScreen extends ConsumerWidget {
     WidgetRef ref,
     AsyncValue<List<dynamic>> notesAsync,
   ) {
+    // Reset the session so the note selector starts with clean state.
+    ref.read(composeSessionProvider.notifier).resetForNewSession();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -276,6 +278,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   final _topicController = TextEditingController();
   String _platformStyle = 'generic';
   final Set<String> _selectedIds = {};
+  late final VoidCallback _routeListener;
 
   // Platform options with localized display names resolved at build time.
   List<(String, String)> _platformOptions(AppLocalizations l10n) => [
@@ -287,7 +290,26 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _routeListener = () {
+      if (!mounted) return;
+      final location = GoRouterState.of(context).uri.path;
+      if (!location.startsWith('/compose')) {
+        Navigator.pop(context);
+      }
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      GoRouter.of(context).routerDelegate.addListener(_routeListener);
+    });
+  }
+
+  @override
   void dispose() {
+    try {
+      GoRouter.of(context).routerDelegate.removeListener(_routeListener);
+    } catch (_) {}
     _topicController.dispose();
     super.dispose();
   }
@@ -495,11 +517,11 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                         _selectedIds.isEmpty || _topicController.text.isEmpty
                         ? null
                         : () {
-                            Navigator.pop(context);
                             final sessionId = ref.read(
-                              startComposeSessionProvider,
-                            )();
+                              composeSessionProvider,
+                            ).sessionId;
                             context.push('/compose/cluster/$sessionId');
+                            Navigator.pop(context);
                           },
                     icon: const Icon(Icons.auto_awesome),
                     label: Text(l10n.startComposing),
