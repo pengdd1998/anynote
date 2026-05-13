@@ -79,6 +79,13 @@
 - **Workaround**: Uninstall old version first
 - **Status**: Expected behavior — production releases will use consistent signing
 
+### Issue #4: Sync Lifecycle Null Cast Error (NEW)
+- **Severity**: High
+- **Logcat**: `[SyncLifecycle] sync cycle failed: type 'Null' is not a subtype of type 'List<dynamic>' in type cast`
+- **Frequency**: Recurring every 5 minutes
+- **Impact**: Notes remain in "Pending sync" state indefinitely. Sync never completes successfully.
+- **Status**: Needs investigation — null safety issue in sync response parsing
+
 ## Performance Metrics (Release Build)
 
 | Metric | Value | Target | Status |
