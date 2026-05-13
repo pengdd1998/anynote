@@ -139,7 +139,7 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 30m
+          command_timeout: 60m
           envs: VERSION,ACTOR,GHCR_TOKEN
           script: |
             set -euo pipefail
@@ -191,8 +191,11 @@ jobs:
               return 1
             }
 
-            pull_with_retry "$REGISTRY/server:$TAG"
-            pull_with_retry "$REGISTRY/worker:$TAG"
+            pull_with_retry "$REGISTRY/server:$TAG" &
+            SERVER_PULL=$!
+            pull_with_retry "$REGISTRY/worker:$TAG" &
+            WORKER_PULL=$!
+            wait $SERVER_PULL && wait $WORKER_PULL
 
             echo "Images pulled. Starting deploy..."
 
