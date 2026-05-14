@@ -308,14 +308,14 @@ class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return TextStyle(
               fontFamily: _fontFamily,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: colorScheme.primary,
             );
           }
           return TextStyle(
             fontFamily: _fontFamily,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w400,
             color: _lightTextSecondary,
           );

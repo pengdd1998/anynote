@@ -200,11 +200,14 @@ class NoteDetailScreen extends ConsumerWidget {
                           data.title,
                           style: Theme.of(context)
                               .textTheme
-                              .headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                              .headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                height: 1.3,
+                              ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Semantics(
                         label:
                             '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))}${data.isSynced ? '' : ', ${l10n.notSynced}'}',
@@ -212,12 +215,12 @@ class NoteDetailScreen extends ConsumerWidget {
                           children: [
                             Icon(
                               Icons.access_time,
-                              size: 14,
+                              size: 16,
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurfaceVariant,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 6),
                             Text(
                               l10n.updatedDate(
                                 data.updatedAt
@@ -226,7 +229,8 @@ class NoteDetailScreen extends ConsumerWidget {
                                     .substring(0, 16),
                               ),
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
+                                letterSpacing: 0.2,
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurfaceVariant,
@@ -236,14 +240,15 @@ class NoteDetailScreen extends ConsumerWidget {
                               const SizedBox(width: 12),
                               const Icon(
                                 Icons.cloud_off,
-                                size: 14,
+                                size: 16,
                                 color: AppColors.warning,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 l10n.notSynced,
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 13,
+                                  letterSpacing: 0.2,
                                   color: AppColors.warning,
                                 ),
                               ),
@@ -251,7 +256,17 @@ class NoteDetailScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const Divider(height: 32),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outlineVariant
+                              .withAlpha(40),
+                        ),
+                      ),
                       Semantics(
                         label: l10n.noteContent,
                         child: MarkdownPreview(

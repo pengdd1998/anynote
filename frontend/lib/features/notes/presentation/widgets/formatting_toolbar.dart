@@ -54,18 +54,17 @@ class FormattingToolbar extends StatelessWidget {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: colorScheme.surfaceContainerHigh,
         border: Border(
           bottom: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-            width: 1,
+            color: colorScheme.outlineVariant.withAlpha(30),
+            width: 0.5,
           ),
         ),
       ),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
+      child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        children: [
+        child: Row(children: [
           // --- Text style group ---
           _FormatButton(
             icon: Icons.format_bold,
@@ -219,6 +218,7 @@ class FormattingToolbar extends StatelessWidget {
             onPressed: () => quillController.redo(),
           ),
         ],
+        ),
       ),
     );
   }
@@ -226,11 +226,15 @@ class FormattingToolbar extends StatelessWidget {
   Widget _groupDivider(ColorScheme colorScheme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: VerticalDivider(
-        width: 1,
-        indent: 10,
-        endIndent: 10,
-        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+      child: Center(
+        child: Container(
+          width: 3,
+          height: 3,
+          decoration: BoxDecoration(
+            color: colorScheme.onSurfaceVariant.withAlpha(60),
+            shape: BoxShape.circle,
+          ),
+        ),
       ),
     );
   }
@@ -336,9 +340,12 @@ class _FormatButton extends StatelessWidget {
       color: isActive ? colorScheme.primary : colorScheme.onSurfaceVariant,
       style: IconButton.styleFrom(
         backgroundColor: isActive
-            ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+            ? colorScheme.primaryContainer.withAlpha(50)
             : Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        foregroundColor: isActive
+            ? colorScheme.primary
+            : colorScheme.onSurfaceVariant,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       onPressed: onPressed,
     );

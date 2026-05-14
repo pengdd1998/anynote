@@ -91,28 +91,30 @@ class NoteCard extends StatelessWidget {
             : note.plainContent ?? '';
     final noteColor = _noteColor;
 
-    // When the note has a color, show a left border accent in list layout
-    // or a top border accent in grid layout.
-    final card = Card(
-      color: isSelected
-          ? colorScheme.primaryContainer.withAlpha(AppAlpha.bold)
-          : null,
-      margin: _isGrid ? const EdgeInsets.all(4) : EdgeInsets.zero,
-      child: Container(
-        // Colored left/top accent border via decoration.
-        decoration: noteColor != null
-            ? BoxDecoration(
-                border: Border(
-                  left: _isGrid
-                      ? BorderSide.none
-                      : BorderSide(color: noteColor, width: 4),
-                  top: _isGrid
-                      ? BorderSide(color: noteColor, width: 4)
-                      : BorderSide.none,
-                ),
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              )
+    final card = Container(
+      margin: _isGrid
+          ? const EdgeInsets.all(4)
+          : const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? colorScheme.primaryContainer.withAlpha(AppAlpha.bold)
+            : colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: isSelected
+            ? Border.all(color: colorScheme.primary.withAlpha(60), width: 1.5)
             : null,
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withAlpha(isSelected ? 18 : 10),
+            blurRadius: isSelected ? 8 : 4,
+            offset: Offset(0, isSelected ? 2 : 1),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        clipBehavior: Clip.antiAlias,
         child: GestureDetector(
           onLongPressStart: onLongPress != null
               ? (details) {
@@ -122,56 +124,78 @@ class NoteCard extends StatelessWidget {
               : null,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
             splashColor: colorScheme.primary.withAlpha(AppAlpha.light),
             highlightColor: colorScheme.primary.withAlpha(AppAlpha.subtle),
             child: Stack(
               children: [
+                // Color accent bar on left (list) or top (grid)
+                if (noteColor != null)
+                  Positioned(
+                    left: _isGrid ? 0 : null,
+                    top: _isGrid ? 0 : null,
+                    child: Container(
+                      width: _isGrid ? double.infinity : 4,
+                      height: _isGrid ? 4 : double.infinity,
+                      decoration: BoxDecoration(
+                        color: noteColor,
+                        borderRadius: _isGrid
+                            ? const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                topRight: Radius.circular(16),
+                              )
+                            : const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                              ),
+                      ),
+                    ),
+                  ),
                 Padding(
                   padding: _isGrid
-                      ? const EdgeInsets.all(12)
-                      : const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                      ? const EdgeInsets.fromLTRB(12, 16, 12, 12)
+                      : EdgeInsets.only(
+                          left: noteColor != null ? 20 : 16,
+                          right: 16,
+                          top: 14,
+                          bottom: 14,
                         ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTitleRow(context, theme, colorScheme),
-                      // Property badges (status, priority, dates)
                       if (!skipPropertyBadges)
                         PropertyBadges(
                           noteId: note.id,
                           onStatusTap: onStatusTap,
                           onPriorityTap: onPriorityTap,
                         ),
-                      SizedBox(height: _isGrid ? 8 : 6),
+                      SizedBox(height: _isGrid ? 8 : 8),
                       _buildPreview(theme, colorScheme, preview),
                       if (tags.isNotEmpty)
                         Padding(
-                          padding: EdgeInsets.only(top: _isGrid ? 4 : 6),
+                          padding: EdgeInsets.only(top: _isGrid ? 4 : 8),
                           child: TagChipsRow(tags: tags),
                         ),
-                      SizedBox(height: _isGrid ? 4 : 6),
+                      SizedBox(height: _isGrid ? 6 : 10),
                       _buildDate(theme, colorScheme),
                     ],
                   ),
                 ),
-                // Checkbox overlay when selected
                 if (isSelected)
                   Positioned(
-                    top: 8,
-                    right: 8,
+                    top: 10,
+                    right: 10,
                     child: Container(
                       decoration: BoxDecoration(
                         color: colorScheme.primary,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       padding: const EdgeInsets.all(4),
                       child: Icon(
                         Icons.check,
                         color: colorScheme.onPrimary,
-                        size: _isGrid ? 16 : 20,
+                        size: _isGrid ? 16 : 18,
                       ),
                     ),
                   ),
@@ -190,12 +214,7 @@ class NoteCard extends StatelessWidget {
         isSynced: note.isSynced,
       ),
       button: true,
-      child: _isGrid
-          ? card
-          : Material(
-              color: Colors.transparent,
-              child: card,
-            ),
+      child: card,
     );
   }
 
@@ -258,10 +277,10 @@ class NoteCard extends StatelessWidget {
             style: (_isGrid
                     ? theme.textTheme.titleSmall
                     : theme.textTheme.titleLarge)
-                ?.copyWith(fontWeight: FontWeight.w600),
+                ?.copyWith(fontWeight: _isGrid ? FontWeight.w600 : FontWeight.w700),
           ),
         ),
-        SyncStatusBadge(isSynced: note.isSynced),
+        SyncStatusBadge(isSynced: note.isSynced, iconSize: _isGrid ? 16 : 18),
       ],
     );
   }
@@ -277,7 +296,7 @@ class NoteCard extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: (_isGrid ? theme.textTheme.bodySmall : theme.textTheme.bodyMedium)
           ?.copyWith(
-        color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
+        color: colorScheme.onSurface.withAlpha(AppAlpha.prominent),
       ),
     );
 
@@ -312,12 +331,25 @@ class NoteCard extends StatelessWidget {
   }
 
   Widget _buildDate(ThemeData theme, ColorScheme colorScheme) {
-    return Text(
-      time,
-      style: (_isGrid ? theme.textTheme.labelSmall : theme.textTheme.bodySmall)
-          ?.copyWith(
-        color: colorScheme.onSurface.withAlpha(AppAlpha.prominent),
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.schedule,
+          size: _isGrid ? 12 : 13,
+          color: colorScheme.onSurfaceVariant.withAlpha(AppAlpha.medium),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          time,
+          style: (_isGrid
+                  ? theme.textTheme.labelSmall
+                  : theme.textTheme.bodySmall)
+              ?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }

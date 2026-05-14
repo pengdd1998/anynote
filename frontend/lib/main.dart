@@ -99,6 +99,12 @@ void main() async {
             : 'http://175.178.66.207:36661'),
   );
 
+  // Wire up auth failure callback so the interceptor can reset app-level
+  // auth state (Riverpod providers) when tokens are cleared after a 401.
+  apiClient.onAuthFailure = () {
+    globalContainer.read(authStateProvider.notifier).state = false;
+  };
+
   // Initialize local notification service for scheduled reminders.
   // Wrapped in try/catch because native plugin failures (missing config,
   // permission issues) should not prevent the app from launching.
@@ -159,12 +165,18 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
       if (mounted) {
         globalContainer = ProviderScope.containerOf(context);
         containerReady = true;
-        // If tokens were previously stored, mark the user as authenticated
-        // so the router redirect does not kick them back to login.
+        // Restore auth state from stored tokens BEFORE triggering the
+        // router refresh. This ordering is critical — if the refresh fires
+        // first, the redirect sees authStateProvider == false and may
+        // redirect an authenticated user to login/onboarding.
         final api = globalContainer.read(apiClientProvider);
         if (api.accessToken != null) {
           globalContainer.read(authStateProvider.notifier).state = true;
         }
+        // Now trigger router redirect re-evaluation. On the first frame
+        // the redirect was skipped (containerReady == false), which may
+        // have left an unauthenticated user on /notes.
+        routerRefreshNotifier.value = DateTime.now();
         // Initialize sync lifecycle (auto-starts periodic sync if authed).
         // Also attempts to unlock crypto from stored keys.
         globalContainer.read(syncLifecycleProvider);
@@ -303,6 +315,16 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
     final themeOption = ref.watch(themeOptionProvider);
+
+    // When the onboarding provider transitions from null (loading) to a value,
+    // trigger a router refresh so the redirect can re-evaluate. This handles
+    // the case where the first-frame refresh fired before the async secure
+    // storage read completed.
+    ref.listen(hasSeenOnboardingProvider, (prev, next) {
+      if (prev == null && next != null && containerReady) {
+        routerRefreshNotifier.value = DateTime.now();
+      }
+    });
 
     return AppKeyboardShortcuts(
       child: AnimationConfigInjector(

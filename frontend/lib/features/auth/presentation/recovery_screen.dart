@@ -238,7 +238,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
                     ),
                     const SizedBox(height: 16),
                     TextButton(
-                      onPressed: () => context.go('/auth/login'),
+                      onPressed: () => context.push('/auth/login'),
                       child: Text(l10n.backToSignIn),
                     ),
                   ],

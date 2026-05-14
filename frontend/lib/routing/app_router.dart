@@ -75,9 +75,17 @@ import '../features/snippets/presentation/snippets_screen.dart';
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Notifier used to trigger router redirect re-evaluation after the
+/// Riverpod container is ready. Without this, the first frame skips the
+/// redirect (containerReady == false), landing the user on /notes even
+/// when unauthenticated, and the redirect is never re-triggered for the
+/// current route.
+final routerRefreshNotifier = ValueNotifier<Object?>(null);
+
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/notes',
+  refreshListenable: routerRefreshNotifier,
   redirect: (context, state) {
     // Container not yet initialized (first frame). Skip redirect to avoid
     // LateInitializationError — the microtask in initState will set

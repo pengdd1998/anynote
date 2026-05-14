@@ -1024,23 +1024,59 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     },
                   ),
 
-                // Title field.
-                Semantics(
-                  label: l10n.noteTitle,
-                  child: TextField(
-                    controller: _titleController,
-                    readOnly: _isLocked,
-                    decoration: InputDecoration(
-                      hintText: l10n.title,
-                      border: InputBorder.none,
-                    ),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                // Title field — clean, Bear/Notion-style with no visible container.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Semantics(
+                    label: l10n.noteTitle,
+                    child: TextField(
+                      controller: _titleController,
+                      readOnly: _isLocked,
+                      decoration: InputDecoration(
+                        hintText: l10n.title,
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        hintStyle: TextStyle(
+                          color: colorScheme.onSurface.withAlpha(60),
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                        ),
+                      ),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
                   ),
                 ),
-                const Divider(),
+                // Subtle coral accent + divider separator.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withAlpha(40),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: colorScheme.outlineVariant.withAlpha(25),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Expanded(
                   child: EditorDropTarget(
                     noteId: _noteId!,
@@ -1096,7 +1132,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                               maxLines: null,
                                               style: const TextStyle(
                                                 fontSize: 16,
-                                                height: 1.6,
+                                                height: 1.7,
                                               ),
                                               onChanged: (_) =>
                                                   _scheduleTypewriterScroll(),
@@ -1821,8 +1857,17 @@ class _EditorBottomBar extends StatelessWidget {
       top: false,
       bottom: true,
       child: Container(
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant.withAlpha(30),
+              width: 0.5,
+            ),
+          ),
+        ),
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
             // Save status chip (compact inline).
@@ -1943,7 +1988,7 @@ class _CompactSaveChip extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 11,
             color: color,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
@@ -1973,7 +2018,7 @@ class _StatText extends StatelessWidget {
         key: ValueKey(text),
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 12,
           color: color,
           fontFeatures: const [FontFeature.tabularFigures()],
         ),

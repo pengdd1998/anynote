@@ -31,6 +31,10 @@ class ApiClient {
   /// Completer used as a mutex to prevent concurrent token refresh attempts.
   Completer<String?>? _refreshCompleter;
 
+  /// Callback invoked when authentication fails (401 + refresh failure).
+  /// Used to reset app-level auth state (e.g., Riverpod providers).
+  void Function()? onAuthFailure;
+
   ApiClient({required String baseUrl})
       : _secureStorage = const FlutterSecureStorage(),
         _dio = Dio(
@@ -690,7 +694,9 @@ class _AuthInterceptor extends Interceptor {
   }
 
   /// Navigate to the login screen using go_router's global key.
+  /// Also invokes [ApiClient.onAuthFailure] to reset app-level auth state.
   void _navigateToLogin() {
+    _client.onAuthFailure?.call();
     final context = rootNavigatorKey.currentContext;
     if (context != null && context.mounted) {
       context.go('/auth/login');

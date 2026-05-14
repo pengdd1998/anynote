@@ -248,6 +248,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             order: const NumericFocusOrder(1),
                             child: TextFormField(
                               controller: _emailController,
+                              autofocus: true,
                               autofillHints: const [AutofillHints.email],
                               textInputAction: TextInputAction.next,
                               decoration: InputDecoration(

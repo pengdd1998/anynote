@@ -1015,6 +1015,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                             );
                           },
                           tooltip: l10n.scrollToTop,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(12)),
+                          ),
+                          elevation: 2,
                           child: const Icon(Icons.arrow_upward),
                         ),
                       ),
@@ -1046,6 +1051,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                               context.push('/notes/new');
                             },
                             tooltip: l10n.fabCreateTooltip,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(16)),
+                            ),
+                            elevation: 3,
                             child: const Icon(AppIcons.add),
                           ),
                         ),

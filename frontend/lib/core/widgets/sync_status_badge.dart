@@ -18,11 +18,15 @@ class SyncStatusBadge extends StatelessWidget {
   /// Optional semantic label for accessibility.
   final String? semanticLabel;
 
+  /// Icon size in logical pixels. Defaults to 16.
+  final double iconSize;
+
   const SyncStatusBadge({
     super.key,
     required this.isSynced,
     this.hasConflict = false,
     this.semanticLabel,
+    this.iconSize = 16,
   });
 
   @override
@@ -33,7 +37,7 @@ class SyncStatusBadge extends StatelessWidget {
       message: props.tooltip,
       child: Semantics(
         label: semanticLabel ?? props.tooltip,
-        child: Icon(props.icon, size: 16, color: props.color),
+        child: Icon(props.icon, size: iconSize, color: props.color),
       ),
     );
   }

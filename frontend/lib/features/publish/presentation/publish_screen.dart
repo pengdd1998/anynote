@@ -60,32 +60,107 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // Hero card for publishing
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(context)
+                        .colorScheme
+                        .tertiaryContainer
+                        .withAlpha(40),
+                    Theme.of(context).colorScheme.surface,
+                  ],
+                ),
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .tertiaryContainer
+                          .withAlpha(AppAlpha.bold),
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(
+                      Icons.publish,
+                      size: 32,
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.publish,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.noPlatformsConnected,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).disabledColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
             // Connected platforms section
             _sectionHeader(context, l10n.connectedPlatforms),
             const SizedBox(height: 8),
             platformsAsync.when(
               data: (platforms) {
                 if (platforms.isEmpty) {
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.share_outlined,
-                            size: 36,
-                            color: Theme.of(context).disabledColor,
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withAlpha(30),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 24,
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withAlpha(60),
                           ),
-                          const SizedBox(height: 8),
-                          Text(l10n.noPlatformsConnected),
-                          const SizedBox(height: 8),
-                          OutlinedButton(
-                            onPressed: () =>
-                                context.push('/settings/platforms'),
-                            child: Text(l10n.connectAPlatform),
+                          padding: const EdgeInsets.all(12),
+                          child: Icon(
+                            Icons.add_link_outlined,
+                            size: 24,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l10n.noPlatformsConnected,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.tonal(
+                          onPressed: () =>
+                              context.push('/settings/platforms'),
+                          child: Text(l10n.connectAPlatform),
+                        ),
+                      ],
                     ),
                   );
                 }

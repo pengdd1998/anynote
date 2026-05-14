@@ -8,11 +8,16 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error.dart';
+import '../../../core/theme/alpha_constants.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../data/compose_providers.dart';
+
+/// Guard to prevent multiple bottom sheet invocations on rapid tap.
+final _noteSelectorShowingProvider = StateProvider<bool>((ref) => false);
 
 /// Home screen for the AI Compose feature.
 ///
@@ -39,14 +44,44 @@ class ComposeScreen extends ConsumerWidget {
           children: [
             // Hero card
             Card(
-              child: Padding(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(AppTheme.radiusLarge),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius:
+                      BorderRadius.circular(AppTheme.radiusLarge),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withAlpha(AppAlpha.light),
+                      Theme.of(context).colorScheme.surface,
+                    ],
+                  ),
+                ),
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.primary,
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withAlpha(AppAlpha.bold),
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: Icon(
+                        Icons.auto_awesome,
+                        size: 36,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -57,7 +92,8 @@ class ComposeScreen extends ConsumerWidget {
                     Text(
                       l10n.aiComposeDesc,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Theme.of(context).disabledColor),
+                      style: TextStyle(
+                          color: Theme.of(context).disabledColor,),
                     ),
                     const SizedBox(height: 20),
                     PressableScale(
@@ -68,7 +104,11 @@ class ComposeScreen extends ConsumerWidget {
                         label: l10n.startComposing,
                         child: FilledButton.icon(
                           onPressed: () =>
-                              _showNoteSelector(context, ref, notesAsync),
+                              _showNoteSelector(
+                                context,
+                                ref,
+                                notesAsync,
+                              ),
                           icon: const Icon(Icons.add),
                           label: Text(l10n.startComposing),
                         ),
@@ -221,6 +261,10 @@ class ComposeScreen extends ConsumerWidget {
     WidgetRef ref,
     AsyncValue<List<dynamic>> notesAsync,
   ) {
+    // Debounce: prevent multiple bottom sheet invocations.
+    if (ref.read(_noteSelectorShowingProvider)) return;
+    ref.read(_noteSelectorShowingProvider.notifier).state = true;
+
     // Reset the session so the note selector starts with clean state.
     ref.read(composeSessionProvider.notifier).resetForNewSession();
     showModalBottomSheet(
@@ -231,7 +275,9 @@ class ComposeScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => _NoteSelectorSheet(notesAsync: notesAsync),
-    );
+    ).whenComplete(() {
+      ref.read(_noteSelectorShowingProvider.notifier).state = false;
+    });
   }
 
   /// Shows a preview of the generated content with copy and save-as-note actions.
