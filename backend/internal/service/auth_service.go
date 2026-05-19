@@ -48,6 +48,7 @@ type AuthService interface {
 type UserRepository interface {
 	Create(ctx context.Context, user *domain.User) error
 	GetByEmail(ctx context.Context, email string) (*domain.User, error)
+	GetByUsername(ctx context.Context, username string) (*domain.User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]byte, error)
@@ -115,6 +116,11 @@ func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) 
 	// Check email uniqueness
 	if existing, _ := s.userRepo.GetByEmail(ctx, req.Email); existing != nil {
 		return nil, ErrEmailExists
+	}
+
+	// Check username uniqueness
+	if existing, _ := s.userRepo.GetByUsername(ctx, req.Username); existing != nil {
+		return nil, ErrUsernameExists
 	}
 
 	user := &domain.User{

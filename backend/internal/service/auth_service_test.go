@@ -18,15 +18,17 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockUserRepo struct {
-	users       map[string]*domain.User // keyed by email
-	usersByID   map[uuid.UUID]*domain.User
+	users         map[string]*domain.User // keyed by email
+	usersByID     map[uuid.UUID]*domain.User
+	usersByUsername map[string]*domain.User
 	createErr   error
 }
 
 func newMockUserRepo() *mockUserRepo {
 	return &mockUserRepo{
-		users:     make(map[string]*domain.User),
-		usersByID: make(map[uuid.UUID]*domain.User),
+		users:           make(map[string]*domain.User),
+		usersByID:       make(map[uuid.UUID]*domain.User),
+		usersByUsername: make(map[string]*domain.User),
 	}
 }
 
@@ -36,11 +38,20 @@ func (m *mockUserRepo) Create(ctx context.Context, user *domain.User) error {
 	}
 	m.users[user.Email] = user
 	m.usersByID[user.ID] = user
+	m.usersByUsername[user.Username] = user
 	return nil
 }
 
 func (m *mockUserRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	u, ok := m.users[email]
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	return u, nil
+}
+
+func (m *mockUserRepo) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
+	u, ok := m.usersByUsername[username]
 	if !ok {
 		return nil, errors.New("user not found")
 	}
@@ -61,6 +72,7 @@ func (m *mockUserRepo) Delete(ctx context.Context, id uuid.UUID) error {
 		return errors.New("user not found")
 	}
 	delete(m.users, u.Email)
+	delete(m.usersByUsername, u.Username)
 	delete(m.usersByID, id)
 	return nil
 }

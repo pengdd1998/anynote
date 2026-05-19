@@ -85,6 +85,20 @@ func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
+	row := r.pool.QueryRow(ctx,
+		`SELECT id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, plan, created_at, updated_at
+		 FROM users WHERE username = $1`, username,
+	)
+
+	var u domain.User
+	err := row.Scan(&u.ID, &u.Email, &u.Username, &u.AuthKeyHash, &u.Salt, &u.RecoveryKey, &u.RecoverySalt, &u.Plan, &u.CreatedAt, &u.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
 // GetRecoverySalt returns the recovery_salt for the given user ID.
 // Returns nil slice (not NULL) for legacy users without a stored salt.
 func (r *UserRepository) GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]byte, error) {
