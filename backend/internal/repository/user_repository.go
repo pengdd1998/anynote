@@ -125,6 +125,18 @@ func (r *UserRepository) GetRecoverySaltByEmail(ctx context.Context, email strin
 	return salt, nil
 }
 
+// GetSaltByEmail returns the Argon2id salt for the given email.
+func (r *UserRepository) GetSaltByEmail(ctx context.Context, email string) ([]byte, error) {
+	var salt []byte
+	err := r.pool.QueryRow(ctx,
+		`SELECT salt FROM users WHERE email = $1`, email,
+	).Scan(&salt)
+	if err != nil {
+		return nil, err
+	}
+	return salt, nil
+}
+
 // UpdateAuthCredentials replaces the stored auth_key_hash and salt for the
 // given user. This is used during account recovery to set a new password.
 func (r *UserRepository) UpdateAuthCredentials(ctx context.Context, userID uuid.UUID, hashedPassword, salt string) error {

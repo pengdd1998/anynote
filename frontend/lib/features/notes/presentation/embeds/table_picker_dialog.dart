@@ -45,7 +45,7 @@ class _TablePickerDialogState extends State<TablePickerDialog> {
       title: Text(AppLocalizations.of(context)!.insertTable),
       content: SizedBox(
         width: 280,
-        height: 300,
+        height: 370,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

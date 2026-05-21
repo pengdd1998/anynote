@@ -38,6 +38,10 @@ type AuthService interface {
 	GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error)
 	GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error)
 	RecoverAccount(ctx context.Context, req *domain.RecoverRequest) error
+	GetSaltByEmail(ctx context.Context, email string) (*domain.SaltResponse, error)
+	// FakeSalt returns a deterministic fake salt for non-existing emails to
+	// prevent user enumeration via the /salt endpoint.
+	FakeSalt(email string) []byte
 	// FakeRecoverySalt returns a deterministic 32-byte salt derived from the
 	// email using HMAC-SHA256 with the server's JWT secret. Used to produce
 	// consistent fake salts for non-existing users without revealing a static
@@ -53,6 +57,7 @@ type UserRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]byte, error)
 	GetRecoverySaltByEmail(ctx context.Context, email string) ([]byte, error)
+	GetSaltByEmail(ctx context.Context, email string) ([]byte, error)
 	UpdateAuthCredentials(ctx context.Context, userID uuid.UUID, hashedPassword, salt string) error
 	GetRecoveryKeyByEmail(ctx context.Context, email string) ([]byte, error)
 }
@@ -323,6 +328,16 @@ func (s *authService) GetRecoverySaltByEmail(ctx context.Context, email string) 
 	return &domain.RecoverySaltResponse{RecoverySalt: salt}, nil
 }
 
+// GetSaltByEmail returns the Argon2id salt for the given email.
+// Used by clients to re-derive the master key after app reinstall.
+func (s *authService) GetSaltByEmail(ctx context.Context, email string) (*domain.SaltResponse, error) {
+	salt, err := s.userRepo.GetSaltByEmail(ctx, email)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+	return &domain.SaltResponse{Salt: salt}, nil
+}
+
 // RecoverAccount verifies the recovery key against the stored hash and updates
 // the user's password credentials. The recovery key comparison uses
 // bcrypt.CompareHashAndPassword because the stored recovery_key was hashed
@@ -429,5 +444,14 @@ func (s *authService) extractJTI(tokenStr string) string {
 func (s *authService) FakeRecoverySalt(email string) []byte {
 	mac := hmac.New(sha256.New, []byte(s.jwtSecret))
 	mac.Write([]byte(email))
+	return mac.Sum(nil)
+}
+
+// FakeSalt returns a deterministic 32-byte fake salt for non-existing emails.
+// Uses a "login-salt:" prefix in the HMAC input so the output differs from
+// FakeRecoverySalt for the same email.
+func (s *authService) FakeSalt(email string) []byte {
+	mac := hmac.New(sha256.New, []byte(s.jwtSecret))
+	mac.Write([]byte("login-salt:" + email))
 	return mac.Sum(nil)
 }

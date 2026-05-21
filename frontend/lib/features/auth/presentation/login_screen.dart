@@ -10,7 +10,12 @@ import '../../../core/crypto/master_key.dart';
 import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/notifications/push_service.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/password_text_field.dart';
+import '../../../core/widgets/pressable_scale.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -35,13 +40,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      // Step 1: Retrieve stored salt (set during registration).
-      final salt = await MasterKeyManager.getStoredSalt();
-      if (salt == null) {
-        if (!mounted) return;
-        final l10n = AppLocalizations.of(context)!;
-        setState(() => _error = l10n.noEncryptionKeys);
-        return;
+      // Step 1: Retrieve salt for key derivation.
+      // Try local storage first (fast path). After app reinstall, local storage
+      // is wiped, so fall back to fetching from the server by email.
+      final api = ref.read(apiClientProvider);
+      final localSalt = await MasterKeyManager.getStoredSalt();
+      final Uint8List salt;
+      if (localSalt != null) {
+        salt = localSalt;
+      } else {
+        final serverSalt = await api.getSalt(_emailController.text.trim());
+        if (serverSalt == null) {
+          if (!mounted) return;
+          final l10n = AppLocalizations.of(context)!;
+          setState(() => _error = l10n.noEncryptionKeys);
+          return;
+        }
+        salt = serverSalt;
       }
 
       // Step 2: Check KDF version to handle parameter migration.
@@ -55,7 +70,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Step 3: Derive master key and attempt login.
       // Try current KDF parameters first. If the user's key was derived with
       // old params and this fails, retry with legacy parameters.
-      final api = ref.read(apiClientProvider);
       Uint8List masterKey;
       int usedKdfVersion;
 
@@ -251,12 +265,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final accentBg = isDark
+        ? AppColors.accentLavender.withValues(alpha: 0.12)
+        : AppColors.accentLavenderBg;
+
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
@@ -268,41 +288,76 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Semantics(
-                            label: l10n.loginScreenLabel,
-                            child: Icon(
-                              Icons.lock_outline,
-                              size: 64,
-                              color: Theme.of(context).colorScheme.primary,
+                          // -- Illustration --
+                          Center(
+                            child: Semantics(
+                              label: l10n.loginScreenLabel,
+                              child: Container(
+                                width: 88,
+                                height: 88,
+                                decoration: BoxDecoration(
+                                  color: accentBg,
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg),
+                                ),
+                                child: Icon(
+                                  Icons.lock_outline,
+                                  size: 40,
+                                  color: primaryColor,
+                                ),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 16),
+
+                          const SizedBox(height: AppSpacing.xl),
+
+                          // -- Welcome headline --
                           Text(
                             l10n.welcomeBack,
-                            style: Theme.of(context).textTheme.headlineMedium,
+                            style: AppTextStyles.display.copyWith(
+                              fontSize: 30,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 8),
+
+                          const SizedBox(height: AppSpacing.sm),
+
                           Text(
                             l10n.signInToVault,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: AppTextStyles.body.copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextTertiary
+                                  : AppColors.lightTextTertiary,
+                              height: 1.5,
+                            ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 32),
+
+                          const SizedBox(height: AppSpacing.xl),
+
+                          // -- Error message --
                           if (_error != null)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.md,),
                               child: Semantics(
                                 liveRegion: true,
                                 label: l10n.errorLabel(_error!),
                                 child: Text(
                                   _error!,
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.error,
+                                  style: AppTextStyles.body.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.error,
                                   ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
+
+                          // -- Email field --
                           FocusTraversalOrder(
                             order: const NumericFocusOrder(1),
                             child: TextFormField(
@@ -311,8 +366,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               autofillHints: const [AutofillHints.email],
                               textInputAction: TextInputAction.next,
                               decoration: InputDecoration(
-                                labelText: l10n.email,
-                                prefixIcon: const Icon(Icons.email_outlined),
+                                hintText: l10n.email,
+                                prefixIcon:
+                                    const Icon(Icons.email_outlined),
                               ),
                               keyboardType: TextInputType.emailAddress,
                               validator: (v) => v?.isEmpty ?? true
@@ -320,14 +376,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   : null,
                             ),
                           ),
-                          const SizedBox(height: 16),
+
+                          const SizedBox(height: AppSpacing.s12),
+
+                          // -- Password field --
                           FocusTraversalOrder(
                             order: const NumericFocusOrder(2),
                             child: PasswordTextField(
                               controller: _passwordController,
-                              labelText: l10n.password,
-                              prefixIcon: const Icon(Icons.lock_outline),
-                              autofillHints: const [AutofillHints.password],
+                              hintText: l10n.password,
+                              prefixIcon:
+                                  const Icon(Icons.lock_outline),
+                              autofillHints: const [
+                                AutofillHints.password,
+                              ],
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _submit(),
                               showPasswordTooltip: l10n.showPassword,
@@ -337,27 +399,99 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   : null,
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          FilledButton(
+
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // -- Sign in button --
+                          PressableScale(
                             onPressed: _isLoading ? null : _submit,
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Text(l10n.signIn),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.pill),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 16,),
+                              decoration: BoxDecoration(
+                                color: primaryColor,
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.pill),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: primaryColor
+                                        .withValues(alpha: 0.25),
+                                    offset: const Offset(0, 4),
+                                    blurRadius: 16,
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child:
+                                            CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        l10n.signIn,
+                                        style: AppTextStyles.body
+                                            .copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () => context.push('/auth/register'),
-                            child: Text(l10n.noAccountRegister),
+
+                          const SizedBox(height: AppSpacing.xl),
+
+                          // -- Divider with spacing --
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  color: isDark
+                                      ? AppColors.darkDivider
+                                      : AppColors.lightDivider,
+                                ),
+                              ),
+                            ],
                           ),
+
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // -- Alternative actions --
                           TextButton(
-                            onPressed: () => context.push('/auth/recover'),
-                            child: Text(l10n.recoverFromBackup),
+                            onPressed: () =>
+                                context.push('/auth/register'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: primaryColor,
+                            ),
+                            child: Text(
+                              l10n.noAccountRegister,
+                              style: AppTextStyles.body.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+
+                          TextButton(
+                            onPressed: () =>
+                                context.push('/auth/recover'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: isDark
+                                  ? AppColors.darkTextTertiary
+                                  : AppColors.lightTextTertiary,
+                            ),
+                            child: Text(
+                              l10n.recoverFromBackup,
+                              style: AppTextStyles.caption,
+                            ),
                           ),
                         ],
                       ),

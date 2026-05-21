@@ -22,24 +22,29 @@ class WikiLinkEmbedBuilder extends quill.EmbedBuilder {
 
   @override
   Widget build(BuildContext context, quill.EmbedContext embedContext) {
-    final node = embedContext.node;
-    final data = node.value.data;
+    try {
+      final node = embedContext.node;
+      final data = node.value.data;
 
-    if (data == null) {
+      if (data == null) {
+        return const SizedBox.shrink();
+      }
+
+      final linkData = _parseLinkData(data);
+      if (linkData == null) {
+        return const _BrokenWikiLinkWidget(displayText: '??');
+      }
+
+      return WikiLinkWidget(
+        noteId: linkData['noteId'] as String?,
+        title: linkData['title'] as String?,
+        readOnly: embedContext.readOnly,
+        textStyle: embedContext.textStyle,
+      );
+    } catch (e) {
+      debugPrint('[WikiLinkEmbed] build error: $e');
       return const SizedBox.shrink();
     }
-
-    final linkData = _parseLinkData(data);
-    if (linkData == null) {
-      return const _BrokenWikiLinkWidget(displayText: '??');
-    }
-
-    return WikiLinkWidget(
-      noteId: linkData['noteId'] as String?,
-      title: linkData['title'] as String?,
-      readOnly: embedContext.readOnly,
-      textStyle: embedContext.textStyle,
-    );
   }
 
   /// Parses wiki link data from the embed node.

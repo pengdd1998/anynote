@@ -31,6 +31,7 @@ type mockAuthService struct {
 	getRecoverySaltFn      func(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error)
 	getRecoverySaltByEmail func(ctx context.Context, email string) (*domain.RecoverySaltResponse, error)
 	recoverAccountFn       func(ctx context.Context, req *domain.RecoverRequest) error
+	getSaltByEmailFn       func(ctx context.Context, email string) (*domain.SaltResponse, error)
 }
 
 func (m *mockAuthService) Register(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error) {
@@ -98,6 +99,21 @@ func (m *mockAuthService) FakeRecoverySalt(email string) []byte {
 	return mac
 }
 
+func (m *mockAuthService) GetSaltByEmail(ctx context.Context, email string) (*domain.SaltResponse, error) {
+	if m.getSaltByEmailFn != nil {
+		return m.getSaltByEmailFn(ctx, email)
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (m *mockAuthService) FakeSalt(email string) []byte {
+	mac := make([]byte, 32)
+	for i := range mac {
+		mac[i] = byte(i) ^ email[0] ^ 0xAA
+	}
+	return mac
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -115,6 +131,7 @@ func setupAuthRouter(svc *mockAuthService) *chi.Mux {
 	r.Route("/api/v1/auth", func(r chi.Router) {
 		r.Post("/register", h.Register)
 		r.Post("/login", h.Login)
+		r.Get("/salt", h.GetSalt)
 		r.Post("/refresh", h.RefreshToken)
 		r.Get("/recovery-salt", h.GetRecoverySalt)
 	})

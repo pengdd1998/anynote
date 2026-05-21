@@ -191,16 +191,21 @@ class ApiClient {
   Future<AuthResponse> register(RegisterRequest req) async {
     // Convert hex authKeyHash to base64 for backend compatibility
     final authKeyHashBytes = _hexToBytes(req.authKeyHash);
-    final saltBytes = _hexToBytes(req.salt);
 
-    final res = await _dio.post('/api/v1/auth/register', data: {
+    final body = {
       'email': req.email,
       'username': req.username,
       'auth_key_hash': base64Encode(authKeyHashBytes),
-      'salt': base64Encode(saltBytes),
+      'salt': req.salt,
       'recovery_key': req.recoveryKey,
       if (req.recoverySalt != null) 'recovery_salt': req.recoverySalt,
-    },);
+    };
+    debugPrint('[Register] request body keys: ${body.keys.toList()}');
+    debugPrint('[Register] auth_key_hash length: ${body['auth_key_hash'].toString().length}');
+    debugPrint('[Register] salt: ${body['salt']}');
+    debugPrint('[Register] recovery_salt: ${body['recovery_salt']}');
+
+    final res = await _dio.post('/api/v1/auth/register', data: body);
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
     await storeAccessTokenSecure(authRes.accessToken);
@@ -251,6 +256,20 @@ class ApiClient {
     );
     final data = res.data as Map<String, dynamic>;
     final saltBase64 = data['recovery_salt'] as String?;
+    if (saltBase64 == null || saltBase64.isEmpty) return null;
+    return base64Decode(saltBase64);
+  }
+
+  /// Fetch the Argon2id salt from the server for login key derivation.
+  /// No authentication required (public endpoint, rate-limited by IP).
+  /// Used after app reinstall when local salt has been wiped.
+  Future<Uint8List?> getSalt(String email) async {
+    final res = await _dio.get(
+      '/api/v1/auth/salt',
+      queryParameters: {'email': email},
+    );
+    final data = res.data as Map<String, dynamic>;
+    final saltBase64 = data['salt'] as String?;
     if (saltBase64 == null || saltBase64.isEmpty) return null;
     return base64Decode(saltBase64);
   }

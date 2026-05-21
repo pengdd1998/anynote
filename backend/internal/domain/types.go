@@ -286,6 +286,14 @@ type RecoverySaltResponse struct {
 	RecoverySalt []byte `json:"recovery_salt"`
 }
 
+// SaltResponse is returned by GET /api/v1/auth/salt.
+// The Argon2id salt is not a secret — it only prevents precomputed dictionary
+// attacks.  Exposing it via a public endpoint enables login after client
+// reinstall, matching the approach used by Standard Notes and Bitwarden.
+type SaltResponse struct {
+	Salt []byte `json:"salt"`
+}
+
 type AuthResponse struct {
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`

@@ -21,27 +21,32 @@ class TableEmbedBuilder extends quill.EmbedBuilder {
 
   @override
   Widget build(BuildContext context, quill.EmbedContext embedContext) {
-    final node = embedContext.node;
-    final data = node.value.data;
+    try {
+      final node = embedContext.node;
+      final data = node.value.data;
 
-    if (data == null) {
+      if (data == null) {
+        return const SizedBox.shrink();
+      }
+
+      final tableData = _parseTableData(data);
+      if (tableData == null) {
+        return const SizedBox.shrink();
+      }
+
+      return TableBlockWidget(
+        rows: tableData['rows'] as int? ?? 2,
+        cols: tableData['cols'] as int? ?? 2,
+        cells: tableData['cells'] as List<List<String>>? ?? [],
+        controller: embedContext.controller,
+        readOnly: embedContext.readOnly,
+        textStyle: embedContext.textStyle,
+        embedNode: node,
+      );
+    } catch (e) {
+      debugPrint('[TableEmbed] build error: $e');
       return const SizedBox.shrink();
     }
-
-    final tableData = _parseTableData(data);
-    if (tableData == null) {
-      return const SizedBox.shrink();
-    }
-
-    return TableBlockWidget(
-      rows: tableData['rows'] as int? ?? 2,
-      cols: tableData['cols'] as int? ?? 2,
-      cells: tableData['cells'] as List<List<String>>? ?? [],
-      controller: embedContext.controller,
-      readOnly: embedContext.readOnly,
-      textStyle: embedContext.textStyle,
-      embedNode: node,
-    );
   }
 
   /// Parses table data from the embed node.

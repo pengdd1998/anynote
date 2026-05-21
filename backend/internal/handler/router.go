@@ -105,6 +105,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 		r.Route("/auth", func(r chi.Router) {
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/register", authH.Register)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/login", authH.Login)
+			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Get("/salt", authH.GetSalt)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/refresh", authH.RefreshToken)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Get("/recovery-salt", authH.GetRecoverySalt)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/recover", authH.Recover)

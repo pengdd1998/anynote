@@ -48,6 +48,12 @@ func (s *routerStubAuthService) RecoverAccount(ctx context.Context, req *domain.
 func (s *routerStubAuthService) FakeRecoverySalt(email string) []byte {
 	return make([]byte, 32)
 }
+func (s *routerStubAuthService) GetSaltByEmail(ctx context.Context, email string) (*domain.SaltResponse, error) {
+	return nil, nil
+}
+func (s *routerStubAuthService) FakeSalt(email string) []byte {
+	return make([]byte, 32)
+}
 
 // routerStubSyncService implements service.SyncService.
 type routerStubSyncService struct{}

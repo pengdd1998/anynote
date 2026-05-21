@@ -33,24 +33,29 @@ class TransclusionEmbedBuilder extends quill.EmbedBuilder {
 
   @override
   Widget build(BuildContext context, quill.EmbedContext embedContext) {
-    final node = embedContext.node;
-    final data = node.value.data;
+    try {
+      final node = embedContext.node;
+      final data = node.value.data;
 
-    if (data == null) {
+      if (data == null) {
+        return const SizedBox.shrink();
+      }
+
+      final transclusionData = _parseTransclusionData(data);
+      if (transclusionData == null) {
+        return const _BrokenTransclusionWidget();
+      }
+
+      return TransclusionWidget(
+        noteId: transclusionData['noteId'] as String?,
+        title: transclusionData['title'] as String?,
+        depth: (transclusionData['depth'] as int?) ?? 0,
+        readOnly: embedContext.readOnly,
+      );
+    } catch (e) {
+      debugPrint('[TransclusionEmbed] build error: $e');
       return const SizedBox.shrink();
     }
-
-    final transclusionData = _parseTransclusionData(data);
-    if (transclusionData == null) {
-      return const _BrokenTransclusionWidget();
-    }
-
-    return TransclusionWidget(
-      noteId: transclusionData['noteId'] as String?,
-      title: transclusionData['title'] as String?,
-      depth: (transclusionData['depth'] as int?) ?? 0,
-      readOnly: embedContext.readOnly,
-    );
   }
 
   /// Parses transclusion data from the embed node.

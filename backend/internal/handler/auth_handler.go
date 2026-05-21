@@ -215,6 +215,34 @@ func (h *AuthHandler) GetRecoverySalt(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// GetSalt handles GET /api/v1/auth/salt?email=...
+// Public endpoint (rate limited) for fetching the Argon2id salt needed to
+// derive the master key during login. Returns the same response shape
+// regardless of whether the email exists to prevent user enumeration.
+func (h *AuthHandler) GetSalt(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
+	if email == "" {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "email query parameter is required")
+		return
+	}
+	if err := validateEmail(email); err != nil {
+		if ve, ok := err.(*ValidationError); ok {
+			writeValidationError(w, ve)
+		}
+		return
+	}
+
+	resp, err := h.authService.GetSaltByEmail(r.Context(), email)
+	if err != nil {
+		writeJSON(w, http.StatusOK, domain.SaltResponse{
+			Salt: h.authService.FakeSalt(email),
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
 // Recover handles POST /api/v1/auth/recover.
 // This is a public endpoint (rate limited) because the user is not yet
 // authenticated during account recovery. Validates the recovery key and

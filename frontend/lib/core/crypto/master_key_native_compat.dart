@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -43,6 +42,9 @@ Future<Uint8List> deriveMasterKeyImpl(
   Uint8List salt, [
   int? kdfVersion,
 ]) async {
+  // sodium_libs uses platform channels / FFI setup that only works on the
+  // main isolate, so Argon2id must run here.  The ~1.5 s KDF blocks the UI
+  // briefly during registration/login — an acceptable one-time cost.
   final sodium = await _getSodium();
 
   final Uint8List pwhashSalt;
@@ -55,7 +57,6 @@ Future<Uint8List> deriveMasterKeyImpl(
     );
   }
 
-  // Select KDF parameters based on version.
   // Version 1 (legacy): opsLimitModerate + memLimitInteractive.
   // Version 2 (current): opsLimitSensitive + memLimitModerate (OWASP-aligned).
   final int opsLimit;
@@ -68,44 +69,18 @@ Future<Uint8List> deriveMasterKeyImpl(
     memLimit = sodium.crypto.pwhash.memLimitInteractive;
   }
 
-  // Run Argon2id in a background isolate to avoid blocking the UI thread.
-  // The KDF takes ~1.5s with OWASP parameters, causing 90+ skipped frames
-  // when run on the main isolate.
-  //
-  // In test environments where sodium is already initialized, run synchronously
-  // to avoid isolate initialization issues (test platform not available in isolate).
-  if (_sodiumInstance != null) {
-    // Already initialized: run synchronously (test environment or subsequent calls)
-    final passwordBytes = Int8List.fromList(utf8.encode(password));
-    final key = sodium.crypto.pwhash.call(
-      password: passwordBytes,
-      salt: pwhashSalt,
-      outLen: 32,
-      opsLimit: opsLimit,
-      memLimit: memLimit,
-      alg: CryptoPwhashAlgorithm.argon2id13,
-    );
-    final result = key.extractBytes();
-    key.dispose();
-    return result;
-  }
-
-  // Not yet initialized: run in isolate (production code path)
-  return Isolate.run(() async {
-    final bgSodium = await SodiumSumoInit.init();
-    final passwordBytes = Int8List.fromList(utf8.encode(password));
-    final key = bgSodium.crypto.pwhash.call(
-      password: passwordBytes,
-      salt: pwhashSalt,
-      outLen: 32,
-      opsLimit: opsLimit,
-      memLimit: memLimit,
-      alg: CryptoPwhashAlgorithm.argon2id13,
-    );
-    final result = key.extractBytes();
-    key.dispose();
-    return result;
-  });
+  final passwordBytes = Int8List.fromList(utf8.encode(password));
+  final key = sodium.crypto.pwhash.call(
+    password: passwordBytes,
+    salt: pwhashSalt,
+    outLen: 32,
+    opsLimit: opsLimit,
+    memLimit: memLimit,
+    alg: CryptoPwhashAlgorithm.argon2id13,
+  );
+  final result = key.extractBytes();
+  key.dispose();
+  return result;
 }
 
 /// Derive auth key using BLAKE2b(masterKey, "anynote-auth-key").

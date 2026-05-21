@@ -113,6 +113,14 @@ func (m *mockUserRepo) GetRecoveryKeyByEmail(ctx context.Context, email string) 
 	return u.RecoveryKey, nil
 }
 
+func (m *mockUserRepo) GetSaltByEmail(ctx context.Context, email string) ([]byte, error) {
+	u, ok := m.users[email]
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	return u.Salt, nil
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

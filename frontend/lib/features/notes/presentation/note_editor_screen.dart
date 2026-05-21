@@ -18,6 +18,10 @@ import '../../../core/collab/crdt_text.dart';
 import '../../../core/collab/presence_indicator.dart';
 import '../../../core/collab/ws_client.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../features/collab/presentation/share_dialog.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/tts/speech_service.dart';
@@ -62,7 +66,6 @@ import '../../../core/notifications/reminder_service.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
 import '../../../core/constants/app_durations.dart';
 import '../../../core/widgets/app_snackbar.dart';
-import '../../../core/widgets/offline_banner.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   /// Optional initial content to pre-fill the editor (e.g. from a template).
@@ -102,6 +105,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   String? _noteId;
   bool _isNew = true;
   bool _isSaving = false;
+  bool _isLoadingExisting = false;
   bool _isDirty = false;
   bool _isPreview = false;
   bool _useRichEditor = true;
@@ -184,7 +188,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (widget.initialContent != null && widget.initialContent!.isNotEmpty) {
       _contentController.text = widget.initialContent!;
       // Also set quill controller content so it is available in rich mode.
-      _quillController.document.insert(0, widget.initialContent!);
+      _loadContentIntoQuill(widget.initialContent!);
     }
 
     // Load saved preview mode preference.
@@ -195,6 +199,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     // Post-frame setup: presence room and optional CRDT collab mode.
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Load existing note content before joining presence room etc.
+      if (!_isNew && _noteId != null) {
+        _loadExistingNote();
+      }
       _joinPresenceRoom();
       if (_isCollab) {
         _initCollabMode();
@@ -498,6 +506,90 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // The watcher will update _isLocked reactively.
   }
 
+  /// Load an existing note's title and content from the database,
+  /// decrypt if needed, and populate the editor controllers.
+  Future<void> _loadExistingNote() async {
+    if (_noteId == null) return;
+    if (!mounted) return;
+
+    _isLoadingExisting = true;
+
+    try {
+      final db = ref.read(databaseProvider);
+      final crypto = ref.read(cryptoServiceProvider);
+
+      final note = await db.notesDao.getNoteById(_noteId!);
+      if (!mounted || note == null) {
+        _isLoadingExisting = false;
+        return;
+      }
+
+      String title = note.plainTitle ?? '';
+      String content = note.plainContent ?? '';
+
+      if (crypto.isUnlocked) {
+        final decryptedContent = await crypto.decryptForItem(
+          _noteId!,
+          note.encryptedContent,
+        );
+        if (!mounted) return;
+        if (decryptedContent != null) content = decryptedContent;
+        if (note.encryptedTitle != null) {
+          final decryptedTitle = await crypto.decryptForItem(
+            _noteId!,
+            note.encryptedTitle!,
+          );
+          if (decryptedTitle != null) title = decryptedTitle;
+        }
+      }
+
+      if (!mounted) return;
+
+      _debounce?.cancel();
+      _titleController.text = title;
+      _contentController.text = content;
+      if (content.isNotEmpty) {
+        _loadContentIntoQuill(content);
+      }
+      _isLoadingExisting = false;
+
+      _updateCounts();
+      _isDirty = false;
+    } catch (e) {
+      debugPrint('[NoteEditor] Failed to load existing note: $e');
+      _isLoadingExisting = false;
+    }
+  }
+
+  /// Loads content into the Quill controller, detecting Delta JSON when the
+  /// note was saved in rich editor mode.
+  ///
+  /// Rich editor mode saves via `jsonEncode(delta.toJson())`, producing a
+  /// JSON array like `[{"insert":"text"},{"insert":"\n"}]`. This must be
+  /// parsed back with `Document.fromJson()` instead of inserted as plain text,
+  /// otherwise the user sees raw JSON and embed nodes become invalid.
+  void _loadContentIntoQuill(String content) {
+    if (content.isEmpty) return;
+
+    // Try to parse as Delta JSON (saved by rich editor mode).
+    try {
+      final decoded = jsonDecode(content);
+      if (decoded is List && decoded.isNotEmpty) {
+        final firstOp = decoded.first;
+        // Delta JSON ops always have an 'insert' key.
+        if (firstOp is Map && firstOp.containsKey('insert')) {
+          _quillController.document = quill.Document.fromJson(decoded);
+          return;
+        }
+      }
+    } catch (_) {
+      // Not valid Delta JSON — fall through to plain text insertion.
+    }
+
+    // Plain text or unrecognised format — insert as-is.
+    _quillController.document.insert(0, content);
+  }
+
   /// Recalculate word and character counts from the current editor content.
   /// Also computes the full [WritingStats] for the stats bar.
   void _updateCounts() {
@@ -609,10 +701,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     if (plainText.isEmpty && title.isEmpty) return;
 
-    setState(() {
-      _isSaving = true;
-      _errorMessage = null;
-    });
+    if (!mounted) return;
+    _isSaving = true;
+    _errorMessage = null;
 
     try {
       final db = ref.read(databaseProvider);
@@ -623,7 +714,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       String? encryptedTitle;
 
       if (crypto.isUnlocked) {
-        // Real encryption path: encrypt both title and content with per-item keys
         encryptedContent = await crypto.encryptForItem(noteId, content);
         if (title.isNotEmpty) {
           encryptedTitle = await crypto.encryptForItem(noteId, title);
@@ -631,9 +721,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           encryptedTitle = null;
         }
       } else {
-        // Fallback when encryption is not set up: store plaintext directly.
-        // This should only happen during initial onboarding before the user
-        // has set a password.
         encryptedContent = content;
         encryptedTitle = title.isNotEmpty ? title : null;
       }
@@ -648,7 +735,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         );
         _isNew = false;
       } else {
-        // Save a version snapshot before updating the existing note.
         await _saveVersionSnapshot(db, noteId);
 
         await db.notesDao.updateNote(
@@ -660,27 +746,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         );
       }
       pm.end('note_save');
-      // Mark content as saved after successful persistence.
       if (mounted) {
         HapticFeedback.lightImpact();
-        setState(() => _isDirty = false);
+        _isDirty = false;
       }
     } catch (e) {
-      // Store the error but do not lose the user's input.
-      // The debounced save will retry automatically.
       pm.end('note_save');
       if (mounted) {
         final appError = ErrorMapper.map(e);
-        setState(() {
-          _errorMessage = ErrorDisplay.userMessage(appError);
-        });
+        _errorMessage = ErrorDisplay.userMessage(appError);
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isSaving = false;
-        });
-      }
+      _isSaving = false;
     }
   }
 
@@ -817,23 +894,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Zen mode: use a full-screen scaffold with no chrome.
     // The AnimatedBuilder fades app bar and bottom elements in/out.
     return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) _saveNote();
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          await _saveNote();
+          if (context.mounted) context.pop();
+        }
       },
       child: Scaffold(
-        // In zen mode, extend behind the status bar / navigation bar.
         extendBodyBehindAppBar: _isZenMode,
         extendBody: _isZenMode,
         appBar: _isZenMode
             ? null
             : AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   tooltip: l10n.saveAndClose,
-                  onPressed: () {
-                    _saveNote();
-                    context.pop();
+                  onPressed: () async {
+                    await _saveNote();
+                    if (context.mounted) context.pop();
                   },
                 ),
                 actions: EditorAppBarActions.buildActions(
@@ -917,18 +999,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     AppLocalizations l10n,
     ColorScheme colorScheme,
   ) {
+    // Show loading indicator while fetching existing note content.
+    if (_isLoadingExisting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
-        // Offline banner: shown when device has no connectivity.
-        if (!_isZenMode) const OfflineBanner(),
-        // Formatting toolbar: shown below AppBar when in rich text mode
-        // (not in preview, zen mode, or plain text mode).
-        if (!_isZenMode && _useRichEditor && !_isPreview)
-          FormattingToolbar(
-            quillController: _quillController,
-            onPickImage: () => _pickImage(context),
-            onAiAction: () => _handleAiAction(context, 'summary'),
-          ),
         // Find & replace bar: shown when activated via Ctrl+F / Cmd+F.
         FindReplaceBar(
           isVisible: _showFindReplace,
@@ -943,25 +1022,27 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onReplaceAll: _onFindReplaceAll,
           onClose: _closeFindReplace,
         ),
-        // Error banner (always visible, even in zen mode).
+        // Error banner.
         if (_errorMessage != null)
           Semantics(
             liveRegion: true,
             label: 'Error: $_errorMessage',
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.s16,
+                vertical: AppSpacing.s8,
+              ),
               color: colorScheme.errorContainer,
               child: Text(
                 _errorMessage!,
-                style: TextStyle(
+                style: AppTextStyles.caption.copyWith(
                   color: colorScheme.onErrorContainer,
-                  fontSize: 13,
                 ),
               ),
             ),
           ),
-        // Lock banner: shown when the note is locked (read-only).
+        // Lock banner.
         if (_isLocked)
           MaterialBanner(
             content: GestureDetector(
@@ -973,13 +1054,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     size: 18,
                     color: colorScheme.onSurface,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: Text(
                       l10n.lockedNoteBanner,
-                      style: TextStyle(
+                      style: AppTextStyles.caption.copyWith(
                         color: colorScheme.onSurface,
-                        fontSize: 13,
                       ),
                     ),
                   ),
@@ -993,157 +1073,172 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ),
             ],
             backgroundColor: colorScheme.surfaceContainerHighest,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.s16,
+              vertical: AppSpacing.s4,
+            ),
           ),
         Expanded(
           child: Padding(
             padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
               // In zen mode, add top padding for status bar area.
               top: _isZenMode ? MediaQuery.of(context).padding.top + 8 : 0,
-              bottom: 0,
             ),
-            child: Column(
-              children: [
-                // Zen mode: show a minimal back button + toggles.
-                if (_isZenMode)
-                  ZenModeChrome(
-                    animation: _zenChromeAnimController!,
-                    onExit: _exitZenMode,
-                    onToggle: _toggleZenMode,
-                    isFocusMode: _isFocusMode,
-                    isTypewriterScroll: _isTypewriterScroll,
-                    onToggleFocusMode: () {
-                      setState(() => _isFocusMode = !_isFocusMode);
-                    },
-                    onToggleTypewriterScroll: () {
-                      setState(
-                        () => _isTypewriterScroll = !_isTypewriterScroll,
-                      );
-                    },
-                  ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Column(
+                  children: [
+                    // Zen mode: show a minimal back button + toggles.
+                    if (_isZenMode)
+                      ZenModeChrome(
+                        animation: _zenChromeAnimController!,
+                        onExit: _exitZenMode,
+                        onToggle: _toggleZenMode,
+                        isFocusMode: _isFocusMode,
+                        isTypewriterScroll: _isTypewriterScroll,
+                        onToggleFocusMode: () {
+                          setState(() => _isFocusMode = !_isFocusMode);
+                        },
+                        onToggleTypewriterScroll: () {
+                          setState(
+                            () => _isTypewriterScroll = !_isTypewriterScroll,
+                          );
+                        },
+                      ),
 
-                // Title field — clean, Bear/Notion-style with no visible container.
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Semantics(
-                    label: l10n.noteTitle,
-                    child: TextField(
-                      controller: _titleController,
-                      readOnly: _isLocked,
-                      decoration: InputDecoration(
-                        hintText: l10n.title,
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                        hintStyle: TextStyle(
-                          color: colorScheme.onSurface.withAlpha(60),
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3,
-                        ),
+                    // Title field — large, minimal, no visible container.
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.s8,
+                        AppSpacing.lg,
+                        0,
                       ),
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        height: 1.3,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ),
-                // Subtle coral accent + divider separator.
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 3,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withAlpha(40),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: colorScheme.outlineVariant.withAlpha(25),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: EditorDropTarget(
-                    noteId: _noteId!,
-                    onImageDropped: _handleDroppedImage,
-                    child: FocusHighlight(
-                      isActive: _isFocusMode,
-                      child: _isFoldView
-                          ? _buildFoldView(l10n)
-                          : _buildEditorWithCollabCursors(
-                              context,
-                              l10n,
-                              AnimatedSwitcher(
-                                duration: AppDurations.shortAnimation,
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
-                                child: _isPreview
-                                    ? SingleChildScrollView(
-                                        key: const ValueKey('preview'),
-                                        padding:
-                                            const EdgeInsets.only(bottom: 16),
-                                        child: MarkdownPreview(
-                                          content: _extractPlainText(),
-                                        ),
-                                      )
-                                    : _useRichEditor
-                                        ? KeyedSubtree(
-                                            key: const ValueKey('rich_editor'),
-                                            child: RichEditorWithShortcuts(
-                                              quillController: _quillController,
-                                              focusNode: _editorFocusNode,
-                                              onExitZenMode: _exitZenMode,
-                                              onToggleHeading: _toggleHeading,
-                                              onToggleBulletList:
-                                                  _toggleBulletList,
-                                              onSlashCommand:
-                                                  _handleSlashCommand,
-                                              readOnly: _isLocked,
-                                            ),
-                                          )
-                                        : Semantics(
-                                            key: const ValueKey('plain_editor'),
-                                            label: l10n.noteContent,
-                                            child: TextField(
-                                              controller:
-                                                  _effectiveContentController,
-                                              scrollController:
-                                                  _bodyScrollController,
-                                              readOnly: _isLocked,
-                                              decoration: InputDecoration(
-                                                hintText: l10n.startWriting,
-                                                border: InputBorder.none,
-                                              ),
-                                              maxLines: null,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                height: 1.7,
-                                              ),
-                                              onChanged: (_) =>
-                                                  _scheduleTypewriterScroll(),
-                                            ),
-                                          ),
-                              ),
+                      child: Semantics(
+                        label: l10n.noteTitle,
+                        child: TextField(
+                          controller: _titleController,
+                          readOnly: _isLocked,
+                          decoration: InputDecoration(
+                            hintText: l10n.title,
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            hintStyle: AppTextStyles.display.copyWith(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                              height: 1.3,
+                              color: (isDark
+                                      ? AppColors.darkTextTertiary
+                                      : AppColors.lightTextTertiary)
+                                  .withAlpha(150),
                             ),
+                          ),
+                          style: AppTextStyles.display.copyWith(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            height: 1.3,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+
+                    // Spacing replaces the old accent divider.
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Editor area — fills remaining space.
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        child: EditorDropTarget(
+                          noteId: _noteId!,
+                          onImageDropped: _handleDroppedImage,
+                          child: FocusHighlight(
+                            isActive: _isFocusMode,
+                            child: _isFoldView
+                                ? _buildFoldView(l10n)
+                                : _buildEditorWithCollabCursors(
+                                    context,
+                                    l10n,
+                                    AnimatedSwitcher(
+                                      duration: AppDurations.shortAnimation,
+                                      switchInCurve: Curves.easeOutCubic,
+                                      switchOutCurve: Curves.easeInCubic,
+                                      child: _isPreview
+                                          ? SingleChildScrollView(
+                                              key: const ValueKey('preview'),
+                                              padding: const EdgeInsets.only(
+                                                bottom: AppSpacing.lg,
+                                              ),
+                                              child: MarkdownPreview(
+                                                content: _extractPlainText(),
+                                              ),
+                                            )
+                                          : _useRichEditor
+                                              ? KeyedSubtree(
+                                                  key: const ValueKey(
+                                                    'rich_editor',
+                                                  ),
+                                                  child: RichEditorWithShortcuts(
+                                                    quillController:
+                                                        _quillController,
+                                                    focusNode: _editorFocusNode,
+                                                    onExitZenMode:
+                                                        _exitZenMode,
+                                                    onToggleHeading:
+                                                        _toggleHeading,
+                                                    onToggleBulletList:
+                                                        _toggleBulletList,
+                                                    onSlashCommand:
+                                                        _handleSlashCommand,
+                                                    readOnly: _isLocked,
+                                                  ),
+                                                )
+                                              : Semantics(
+                                                  key: const ValueKey(
+                                                    'plain_editor',
+                                                  ),
+                                                  label: l10n.noteContent,
+                                                  child: TextField(
+                                                    controller:
+                                                        _effectiveContentController,
+                                                    scrollController:
+                                                        _bodyScrollController,
+                                                    readOnly: _isLocked,
+                                                    decoration: InputDecoration(
+                                                      hintText:
+                                                          l10n.startWriting,
+                                                      border: InputBorder.none,
+                                                    ),
+                                                    maxLines: null,
+                                                    style: AppTextStyles.body
+                                                        .copyWith(
+                                                      fontSize: 16,
+                                                      height: 1.8,
+                                                      color: isDark
+                                                          ? AppColors
+                                                              .darkTextPrimary
+                                                          : AppColors
+                                                              .lightTextPrimary,
+                                                    ),
+                                                    onChanged: (_) =>
+                                                        _scheduleTypewriterScroll(),
+                                                  ),
+                                                ),
+                                  ),
+                                ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -1158,6 +1253,45 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 .toList(),
           ),
 
+        // Floating formatting toolbar — only in rich mode, not preview/zen.
+        if (!_isZenMode && _useRichEditor && !_isPreview)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.s16,
+              AppSpacing.s4,
+              AppSpacing.s16,
+              0,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkCardBg
+                        : AppColors.lightCardBg,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    boxShadow: AppShadows.lgOf(Theme.of(context).brightness),
+                    border: Border.all(
+                      color: isDark
+                          ? AppColors.darkBorder.withAlpha(60)
+                          : AppColors.lightBorder.withAlpha(60),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    child: FormattingToolbar(
+                      quillController: _quillController,
+                      onPickImage: () => _pickImage(context),
+                      onAiAction: () =>
+                          _handleAiAction(context, 'summary'),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         // Consolidated bottom status bar.
         _EditorBottomBar(
           isSaving: _isSaving,
@@ -1858,41 +1992,43 @@ class _EditorBottomBar extends StatelessWidget {
       bottom: true,
       child: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLow,
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant.withAlpha(30),
-              width: 0.5,
-            ),
-          ),
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         ),
         height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
         child: Row(
           children: [
             // Save status chip (compact inline).
             _CompactSaveChip(isSaving: isSaving, isDirty: isDirty),
             const SizedBox(width: 12),
-            // Stats section.
-            if (isStatsExpanded) ...[
-              _StatText(l10n.wordCount(stats.wordCount), captionColor),
-              _StatSep(captionColor),
-              _StatText(l10n.charCount(stats.charCount), captionColor),
-              _StatSep(captionColor),
-              _StatText(_formatReadingTime(l10n), captionColor),
-              _StatSep(captionColor),
-              _StatText(l10n.lineCount(stats.lineCount), captionColor),
-              _StatSep(captionColor),
-              _StatText(
-                l10n.paragraphCount(stats.paragraphCount),
-                captionColor,
+            // Stats section — scrollable to prevent overflow on narrow screens.
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    if (isStatsExpanded) ...[
+                      _StatText(l10n.wordCount(stats.wordCount), captionColor),
+                      _StatSep(captionColor),
+                      _StatText(l10n.charCount(stats.charCount), captionColor),
+                      _StatSep(captionColor),
+                      _StatText(_formatReadingTime(l10n), captionColor),
+                      _StatSep(captionColor),
+                      _StatText(l10n.lineCount(stats.lineCount), captionColor),
+                      _StatSep(captionColor),
+                      _StatText(
+                        l10n.paragraphCount(stats.paragraphCount),
+                        captionColor,
+                      ),
+                    ] else ...[
+                      _StatText(l10n.wordCount(wordCount), captionColor),
+                      _StatSep(captionColor),
+                      _StatText(l10n.charCount(charCount), captionColor),
+                    ],
+                  ],
+                ),
               ),
-            ] else ...[
-              _StatText(l10n.wordCount(wordCount), captionColor),
-              _StatSep(captionColor),
-              _StatText(l10n.charCount(charCount), captionColor),
-            ],
-            const Spacer(),
+            ),
             // Stats toggle.
             Semantics(
               button: true,
