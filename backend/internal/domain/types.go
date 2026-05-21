@@ -301,13 +301,6 @@ type AuthResponse struct {
 	User         User      `json:"user"`
 }
 
-// RecoverRequest is the payload for account recovery via recovery key.
-type RecoverRequest struct {
-	Email       string `json:"email"`
-	RecoveryKey string `json:"recovery_key"`
-	NewPassword string `json:"new_password"`
-}
-
 // ── Quota ─────────────────────────────────────────
 
 type QuotaResponse struct {

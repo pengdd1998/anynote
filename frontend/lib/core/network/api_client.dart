@@ -155,7 +155,8 @@ class ApiClient {
       final status = e.response?.statusCode;
       if (status == 401 || status == 403) {
         debugPrint(
-            '[ApiClient] refresh token rejected ($status), clearing tokens',);
+          '[ApiClient] refresh token rejected ($status), clearing tokens',
+        );
         await _clearAllTokens();
       } else {
         debugPrint('[ApiClient] token refresh failed (transient): $e');
@@ -201,7 +202,8 @@ class ApiClient {
       if (req.recoverySalt != null) 'recovery_salt': req.recoverySalt,
     };
     debugPrint('[Register] request body keys: ${body.keys.toList()}');
-    debugPrint('[Register] auth_key_hash length: ${body['auth_key_hash'].toString().length}');
+    debugPrint(
+        '[Register] auth_key_hash length: ${body['auth_key_hash'].toString().length}');
     debugPrint('[Register] salt: ${body['salt']}');
     debugPrint('[Register] recovery_salt: ${body['recovery_salt']}');
 
@@ -217,10 +219,13 @@ class ApiClient {
     // Convert hex authKeyHash to base64 for backend compatibility
     final authKeyHashBytes = _hexToBytes(req.authKeyHash);
 
-    final res = await _dio.post('/api/v1/auth/login', data: {
-      'email': req.email,
-      'auth_key_hash': base64Encode(authKeyHashBytes),
-    },);
+    final res = await _dio.post(
+      '/api/v1/auth/login',
+      data: {
+        'email': req.email,
+        'auth_key_hash': base64Encode(authKeyHashBytes),
+      },
+    );
     final authRes = AuthResponse.fromJson(res.data);
     setAccessToken(authRes.accessToken);
     await storeAccessTokenSecure(authRes.accessToken);
@@ -324,22 +329,6 @@ class ApiClient {
   /// Delete a registered device.
   Future<void> deleteDevice(String deviceId) async {
     await _dio.delete('/api/v1/device-identity/$deviceId');
-  }
-
-  /// Recover account using recovery key.
-  Future<void> recoverAccount({
-    required String email,
-    required String recoveryKey,
-    required String newPassword,
-  }) async {
-    await _dio.post(
-      '/api/v1/auth/recover',
-      data: {
-        'email': email,
-        'recovery_key': recoveryKey,
-        'new_password': newPassword,
-      },
-    );
   }
 
   // ── AI Proxy API ──────────────────────────────────

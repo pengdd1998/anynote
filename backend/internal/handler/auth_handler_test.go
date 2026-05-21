@@ -30,7 +30,6 @@ type mockAuthService struct {
 	deleteAccountFn        func(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error
 	getRecoverySaltFn      func(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error)
 	getRecoverySaltByEmail func(ctx context.Context, email string) (*domain.RecoverySaltResponse, error)
-	recoverAccountFn       func(ctx context.Context, req *domain.RecoverRequest) error
 	getSaltByEmailFn       func(ctx context.Context, email string) (*domain.SaltResponse, error)
 }
 
@@ -81,13 +80,6 @@ func (m *mockAuthService) GetRecoverySaltByEmail(ctx context.Context, email stri
 		return m.getRecoverySaltByEmail(ctx, email)
 	}
 	return nil, errors.New("not implemented")
-}
-
-func (m *mockAuthService) RecoverAccount(ctx context.Context, req *domain.RecoverRequest) error {
-	if m.recoverAccountFn != nil {
-		return m.recoverAccountFn(ctx, req)
-	}
-	return errors.New("not implemented")
 }
 
 func (m *mockAuthService) FakeRecoverySalt(email string) []byte {

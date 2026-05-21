@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"crypto/subtle"
 	"log"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"strconv"
 	"time"
@@ -69,17 +69,17 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	aiAgentH := NewAIAgentHandler(services.AIAgent)
 	collabH := NewCollabHandler(services.Collab)
 
-		// Payment handler (nil-safe: routes are only registered when service is present).
-		var paymentH *PaymentHandler
-		if services.Payment != nil {
-			paymentH = NewPaymentHandler(services.Payment)
-		}
+	// Payment handler (nil-safe: routes are only registered when service is present).
+	var paymentH *PaymentHandler
+	if services.Payment != nil {
+		paymentH = NewPaymentHandler(services.Payment)
+	}
 
-		// Notification handler (nil-safe).
-		var notifH *NotificationHandler
-		if services.Notification != nil {
-			notifH = NewNotificationHandler(services.Notification)
-		}
+	// Notification handler (nil-safe).
+	var notifH *NotificationHandler
+	if services.Notification != nil {
+		notifH = NewNotificationHandler(services.Notification)
+	}
 
 	// Device identity handler.
 	var deviceH *DeviceHandler
@@ -108,7 +108,6 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Get("/salt", authH.GetSalt)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/refresh", authH.RefreshToken)
 			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Get("/recovery-salt", authH.GetRecoverySalt)
-			r.With(RateLimitMiddleware(authRateLimiter, IPKeyFunc, time.Minute)).Post("/recover", authH.Recover)
 		})
 
 		// Public share retrieval (no auth required)
@@ -227,28 +226,28 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 				})
 			})
 
-				// Payments (authenticated)
-				if paymentH != nil {
-					r.Post("/payments/checkout", paymentH.CreateCheckout)
-					r.Get("/payments", paymentH.GetPaymentHistory)
-				}
+			// Payments (authenticated)
+			if paymentH != nil {
+				r.Post("/payments/checkout", paymentH.CreateCheckout)
+				r.Get("/payments", paymentH.GetPaymentHistory)
+			}
 
-				// Notifications
-				if notifH != nil {
-					r.Route("/notifications", func(r chi.Router) {
-						r.Get("/", notifH.ListNotifications)
-						r.Get("/unread-count", notifH.GetUnreadCount)
-						r.Post("/read-all", notifH.MarkAllRead)
-						r.Get("/preferences", notifH.HandleGetPreferences)
-						r.Put("/preferences", notifH.HandleUpdatePreferences)
-						r.Post("/{id}/read", notifH.MarkRead)
-					})
-				}
-		})
-		})
+			// Notifications
+			if notifH != nil {
+				r.Route("/notifications", func(r chi.Router) {
+					r.Get("/", notifH.ListNotifications)
+					r.Get("/unread-count", notifH.GetUnreadCount)
+					r.Post("/read-all", notifH.MarkAllRead)
+					r.Get("/preferences", notifH.HandleGetPreferences)
+					r.Put("/preferences", notifH.HandleUpdatePreferences)
+					r.Post("/{id}/read", notifH.MarkRead)
+				})
+			}
 
-		// Optional pprof endpoints (only when PPROF_ENABLED or DEBUG is set).
-	registerPprofRoutes(r)
+			// Optional pprof endpoints (JWT-authenticated, only when PPROF_ENABLED or DEBUG is set).
+			registerPprofRoutes(r)
+		})
+	})
 
 	return r
 }
@@ -273,61 +272,28 @@ type Services struct {
 	Collab       service.CollabService
 	Payment      service.PaymentService
 	Notification service.NotificationService
-	Device        service.DeviceService
-	CollabRepo    *repository.CollabRepository
+	Device       service.DeviceService
+	CollabRepo   *repository.CollabRepository
 	CollabOpsRepo *repository.CollabOperationsRepository
 }
 
 // registerPprofRoutes mounts /debug/pprof/* endpoints when the PPROF_ENABLED
 // or DEBUG environment variable is set to a truthy value ("1", "true", "yes").
-// In production without these variables the routes are not registered.
-//
-// When PPROF_PASSWORD is set, endpoints are protected by HTTP Basic Auth
-// (username "admin", password from the env var). When PPROF_PASSWORD is not
-// set, the endpoints are accessible without authentication -- in this case
-// ensure the server is behind a firewall or only bound to localhost.
+// Routes are registered inside the authenticated route group, so JWT auth is
+// required to access them. In production without these env vars the routes are
+// not registered.
 func registerPprofRoutes(r chi.Router) {
 	if !isTruthyEnv("PPROF_ENABLED") && !isTruthyEnv("DEBUG") {
 		return
 	}
 
-	pprofPassword := os.Getenv("PPROF_PASSWORD")
-
-	if pprofPassword == "" {
-		log.Println("[WARN] pprof enabled but PPROF_PASSWORD not set -- endpoints NOT registered for security")
-		return
-	}
-
 	r.Route("/debug", func(r chi.Router) {
-		if pprofPassword != "" {
-			r.Use(pprofBasicAuth(pprofPassword))
-		}
-		r.HandleFunc("/pprof/", http.DefaultServeMux.ServeHTTP)
-		r.HandleFunc("/pprof/cmdline", http.DefaultServeMux.ServeHTTP)
-		r.HandleFunc("/pprof/profile", http.DefaultServeMux.ServeHTTP)
-		r.HandleFunc("/pprof/symbol", http.DefaultServeMux.ServeHTTP)
-		r.HandleFunc("/pprof/trace", http.DefaultServeMux.ServeHTTP)
+		r.HandleFunc("/pprof/", pprof.Index)
+		r.HandleFunc("/pprof/cmdline", pprof.Cmdline)
+		r.HandleFunc("/pprof/profile", pprof.Profile)
+		r.HandleFunc("/pprof/symbol", pprof.Symbol)
+		r.HandleFunc("/pprof/trace", pprof.Trace)
 	})
-}
-
-// pprofBasicAuth returns middleware that validates HTTP Basic Auth credentials
-// for pprof endpoints. The username is fixed as "admin" and the password must
-// match the provided string. Timing-safe comparison is used to prevent
-// side-channel attacks.
-func pprofBasicAuth(password string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			user, pass, ok := r.BasicAuth()
-			if !ok ||
-				subtle.ConstantTimeCompare([]byte(user), []byte("admin")) != 1 ||
-				subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
-				w.Header().Set("WWW-Authenticate", `Basic realm="pprof"`)
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-			next.ServeHTTP(w, r)
-		})
-	}
 }
 
 // isTruthyEnv returns true if the environment variable is set to a truthy value

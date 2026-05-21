@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,11 +10,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// pprofAuthHeader returns a Basic Authorization header value for pprof tests.
-func pprofAuthHeader() string {
-	return "Basic " + base64.StdEncoding.EncodeToString([]byte("admin:test-secret"))
-}
-
 // ---------------------------------------------------------------------------
 // registerPprofRoutes tests
 // ---------------------------------------------------------------------------
@@ -23,42 +17,44 @@ func pprofAuthHeader() string {
 func TestPprofRoutes_NotRegisteredByDefault(t *testing.T) {
 	os.Unsetenv("PPROF_ENABLED")
 	os.Unsetenv("DEBUG")
-	os.Unsetenv("PPROF_PASSWORD")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		registerPprofRoutes(r)
+	})
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusNotFound {
-		t.Errorf("GET /debug/pprof/ without env: got %d, want %d", w.Code, http.StatusNotFound)
+		t.Errorf("GET /api/v1/debug/pprof/ without env: got %d, want %d", w.Code, http.StatusNotFound)
 	}
 }
 
 func TestPprofRoutes_RegisteredWithPprofEnabled(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
 
 	pprofEndpoints := []struct {
 		path        string
 		description string
 	}{
-		{"/debug/pprof/", "index"},
-		{"/debug/pprof/cmdline", "cmdline"},
-		{"/debug/pprof/symbol", "symbol"},
+		{"/api/v1/debug/pprof/", "index"},
+		{"/api/v1/debug/pprof/cmdline", "cmdline"},
+		{"/api/v1/debug/pprof/symbol", "symbol"},
 	}
 
 	for _, ep := range pprofEndpoints {
 		t.Run(ep.description, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, ep.path, nil)
-			req.Header.Set("Authorization", pprofAuthHeader())
+			req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
 			w := httptest.NewRecorder()
 			r.ServeHTTP(w, req)
 
@@ -72,77 +68,161 @@ func TestPprofRoutes_RegisteredWithPprofEnabled(t *testing.T) {
 func TestPprofRoutes_RegisteredWithDebugEnv(t *testing.T) {
 	os.Unsetenv("PPROF_ENABLED")
 	os.Setenv("DEBUG", "true")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("DEBUG")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
-	req.Header.Set("Authorization", pprofAuthHeader())
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
 	if w.Code == http.StatusNotFound {
-		t.Error("GET /debug/pprof/ returned 404 when DEBUG env is set")
+		t.Error("GET /api/v1/debug/pprof/ returned 404 when DEBUG env is set")
 	}
 }
 
 func TestPprofRoutes_ProfileEndpointRegistered(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/profile?seconds=1", nil)
-	req.Header.Set("Authorization", pprofAuthHeader())
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/profile?seconds=1", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
 	if w.Code == http.StatusNotFound {
-		t.Error("GET /debug/pprof/profile returned 404")
+		t.Error("GET /api/v1/debug/pprof/profile returned 404")
 	}
 }
 
 func TestPprofRoutes_TraceEndpointRegistered(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/trace", nil)
-	req.Header.Set("Authorization", pprofAuthHeader())
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/trace", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
 	if w.Code == http.StatusNotFound {
-		t.Error("GET /debug/pprof/trace returned 404")
+		t.Error("GET /api/v1/debug/pprof/trace returned 404")
 	}
 }
 
 func TestPprofRoutes_SymbolPostMethod(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
 
-	req := httptest.NewRequest(http.MethodPost, "/debug/pprof/symbol", nil)
-	req.Header.Set("Authorization", pprofAuthHeader())
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/debug/pprof/symbol", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
 	if w.Code == http.StatusNotFound {
-		t.Error("POST /debug/pprof/symbol returned 404")
+		t.Error("POST /api/v1/debug/pprof/symbol returned 404")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// JWT authentication tests
+// ---------------------------------------------------------------------------
+
+// TestPprofRoutes_JWTRequired verifies that pprof endpoints reject requests
+// without a JWT token and accept requests with a valid access token.
+func TestPprofRoutes_JWTRequired(t *testing.T) {
+	os.Setenv("PPROF_ENABLED", "1")
+	defer os.Unsetenv("PPROF_ENABLED")
+
+	r := chi.NewRouter()
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
+
+	// Request without token should get 401.
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("GET /api/v1/debug/pprof/ without token: got %d, want %d", w.Code, http.StatusUnauthorized)
+	}
+
+	// Request with valid access token should succeed.
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code == http.StatusNotFound || w.Code == http.StatusUnauthorized {
+		t.Errorf("GET /api/v1/debug/pprof/ with valid token: got %d, expected success", w.Code)
+	}
+}
+
+// TestPprofRoutes_InvalidTokenRejected verifies that pprof endpoints reject
+// requests with an invalid JWT token.
+func TestPprofRoutes_InvalidTokenRejected(t *testing.T) {
+	os.Setenv("PPROF_ENABLED", "1")
+	defer os.Unsetenv("PPROF_ENABLED")
+
+	r := chi.NewRouter()
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
+	req.Header.Set("Authorization", "Bearer invalid-token-value")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("GET /api/v1/debug/pprof/ with invalid token: got %d, want %d", w.Code, http.StatusUnauthorized)
+	}
+}
+
+// TestPprofRoutes_RefreshTokenRejected verifies that pprof endpoints reject
+// requests using a refresh token instead of an access token.
+func TestPprofRoutes_RefreshTokenRejected(t *testing.T) {
+	os.Setenv("PPROF_ENABLED", "1")
+	defer os.Unsetenv("PPROF_ENABLED")
+
+	r := chi.NewRouter()
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestRefreshToken("test-user"))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("GET /api/v1/debug/pprof/ with refresh token: got %d, want %d", w.Code, http.StatusUnauthorized)
 	}
 }
 
@@ -153,17 +233,16 @@ func TestPprofRoutes_SymbolPostMethod(t *testing.T) {
 func TestRouter_PprofNotRegisteredInProduction(t *testing.T) {
 	os.Unsetenv("PPROF_ENABLED")
 	os.Unsetenv("DEBUG")
-	os.Unsetenv("PPROF_PASSWORD")
 
 	cfg, services, healthH := newTestRouterServices()
 	router := Router(cfg, services, healthH)
 
 	pprofPaths := []string{
-		"/debug/pprof/",
-		"/debug/pprof/cmdline",
-		"/debug/pprof/profile",
-		"/debug/pprof/symbol",
-		"/debug/pprof/trace",
+		"/api/v1/debug/pprof/",
+		"/api/v1/debug/pprof/cmdline",
+		"/api/v1/debug/pprof/profile",
+		"/api/v1/debug/pprof/symbol",
+		"/api/v1/debug/pprof/trace",
 	}
 
 	for _, path := range pprofPaths {
@@ -181,20 +260,31 @@ func TestRouter_PprofNotRegisteredInProduction(t *testing.T) {
 
 func TestRouter_PprofRegisteredWhenEnabled(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	cfg, services, healthH := newTestRouterServices()
 	router := Router(cfg, services, healthH)
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
-	req.Header.Set("Authorization", pprofAuthHeader())
+	// Without JWT: should get 401.
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("GET /api/v1/debug/pprof/ without token: got %d, want %d", w.Code, http.StatusUnauthorized)
+	}
+
+	// With valid JWT: should succeed (not 404, not 401).
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
 	if w.Code == http.StatusNotFound {
-		t.Error("GET /debug/pprof/ returned 404 when PPROF_ENABLED is set")
+		t.Error("GET /api/v1/debug/pprof/ returned 404 when PPROF_ENABLED is set")
+	}
+	if w.Code == http.StatusUnauthorized {
+		t.Error("GET /api/v1/debug/pprof/ returned 401 with valid JWT")
 	}
 }
 
@@ -204,15 +294,16 @@ func TestRouter_PprofRegisteredWhenEnabled(t *testing.T) {
 
 func TestPprofRoutes_ContentType(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
-	req.Header.Set("Authorization", pprofAuthHeader())
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -227,15 +318,16 @@ func TestPprofRoutes_ContentType(t *testing.T) {
 
 func TestPprofRoutes_CmdlineContentType(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/cmdline", nil)
-	req.Header.Set("Authorization", pprofAuthHeader())
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/cmdline", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -255,16 +347,17 @@ func TestPprofRoutes_CmdlineContentType(t *testing.T) {
 func TestPprofRoutes_BothEnvsSet(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
 	os.Setenv("DEBUG", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
 	defer os.Unsetenv("DEBUG")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(AuthMiddleware(testJWTSecret))
+		registerPprofRoutes(r)
+	})
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
-	req.Header.Set("Authorization", pprofAuthHeader())
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
+	req.Header.Set("Authorization", "Bearer "+generateTestToken("test-user"))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -275,14 +368,15 @@ func TestPprofRoutes_BothEnvsSet(t *testing.T) {
 
 func TestPprofRoutes_PprofEnabledEmptyString(t *testing.T) {
 	os.Unsetenv("DEBUG")
-	os.Unsetenv("PPROF_PASSWORD")
 	os.Setenv("PPROF_ENABLED", "")
 	defer os.Unsetenv("PPROF_ENABLED")
 
 	r := chi.NewRouter()
-	registerPprofRoutes(r)
+	r.Route("/api/v1", func(r chi.Router) {
+		registerPprofRoutes(r)
+	})
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/debug/pprof/", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -297,9 +391,7 @@ func TestPprofRoutes_PprofEnabledEmptyString(t *testing.T) {
 
 func TestPprofRoutes_ChiWalk(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	cfg, services, healthH := newTestRouterServices()
 	router := Router(cfg, services, healthH)
@@ -316,11 +408,11 @@ func TestPprofRoutes_ChiWalk(t *testing.T) {
 	})
 
 	expectedPatterns := []string{
-		"GET /debug/pprof/",
-		"GET /debug/pprof/cmdline",
-		"GET /debug/pprof/profile",
-		"GET /debug/pprof/symbol",
-		"GET /debug/pprof/trace",
+		"GET /api/v1/debug/pprof/",
+		"GET /api/v1/debug/pprof/cmdline",
+		"GET /api/v1/debug/pprof/profile",
+		"GET /api/v1/debug/pprof/symbol",
+		"GET /api/v1/debug/pprof/trace",
 	}
 
 	for _, expected := range expectedPatterns {
@@ -340,7 +432,6 @@ func TestPprofRoutes_ChiWalk(t *testing.T) {
 func TestPprofRoutes_ChiWalkNotEnabled(t *testing.T) {
 	os.Unsetenv("PPROF_ENABLED")
 	os.Unsetenv("DEBUG")
-	os.Unsetenv("PPROF_PASSWORD")
 
 	cfg, services, healthH := newTestRouterServices()
 	router := Router(cfg, services, healthH)
@@ -369,9 +460,7 @@ func TestPprofRoutes_ChiWalkNotEnabled(t *testing.T) {
 
 func TestRouter_HealthRoutesWorkWithPprofEnabled(t *testing.T) {
 	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
 	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
 
 	cfg, services, healthH := newTestRouterServices()
 	router := Router(cfg, services, healthH)
@@ -395,36 +484,5 @@ func TestRouter_HealthRoutesWorkWithPprofEnabled(t *testing.T) {
 				t.Errorf("route %s %s returned 404", route.method, route.path)
 			}
 		})
-	}
-}
-
-// TestPprofRoutes_PasswordRequired verifies that pprof endpoints reject
-// unauthenticated requests when PPROF_PASSWORD is set.
-func TestPprofRoutes_PasswordRequired(t *testing.T) {
-	os.Setenv("PPROF_ENABLED", "1")
-	os.Setenv("PPROF_PASSWORD", "test-secret")
-	defer os.Unsetenv("PPROF_ENABLED")
-	defer os.Unsetenv("PPROF_PASSWORD")
-
-	r := chi.NewRouter()
-	registerPprofRoutes(r)
-
-	// Request without auth should get 401.
-	req := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	if w.Code != http.StatusUnauthorized {
-		t.Errorf("GET /debug/pprof/ without auth: got %d, want %d", w.Code, http.StatusUnauthorized)
-	}
-
-	// Request with correct auth should succeed.
-	req = httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
-	req.Header.Set("Authorization", pprofAuthHeader())
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	if w.Code == http.StatusNotFound || w.Code == http.StatusUnauthorized {
-		t.Errorf("GET /debug/pprof/ with correct auth: got %d, expected success", w.Code)
 	}
 }
