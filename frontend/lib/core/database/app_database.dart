@@ -89,7 +89,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration {
@@ -257,6 +257,20 @@ class AppDatabase extends _$AppDatabase {
           );
           await customStatement(
             'CREATE INDEX IF NOT EXISTS idx_note_images_is_synced ON note_images (is_synced)',
+          );
+        }
+        if (from < 18) {
+          // v17 -> v18: Ensure generated_contents table exists and add
+          // performance indexes for notes and tags.
+          await m.createTable(generatedContents);
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_notes_sort_order ON notes (sort_order)',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_notes_updated_pinned ON notes (updated_at, is_pinned)',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_tags_plain_name ON tags (plain_name)',
           );
         }
       },

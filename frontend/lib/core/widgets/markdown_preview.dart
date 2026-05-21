@@ -3,7 +3,9 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 import '../theme/app_colors.dart';
-import '../theme/app_theme.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 import 'mermaid_renderer.dart' show MermaidRenderer, extractMermaidBlocks;
 
 /// Renders markdown content with code highlighting and optional LaTeX math.
@@ -159,69 +161,72 @@ class MarkdownPreview extends StatelessWidget {
     );
   }
 
-  /// Builds the theme-aware MarkdownStyleSheet.
+  /// Builds the theme-aware MarkdownStyleSheet using warm design tokens.
   MarkdownStyleSheet _buildStyleSheet({
     required bool isDark,
     required Color codeBlockBg,
     required Color codeBlockText,
   }) {
+    final textColor =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final secondaryColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
     return MarkdownStyleSheet(
-      p: TextStyle(
-        fontSize: 16,
-        height: 1.6,
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-      ),
-      h1: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-      ),
-      h2: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-      ),
-      h3: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-      ),
-      h4: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-      ),
-      code: TextStyle(
-        fontSize: 14,
+      p: AppTextStyles.body.copyWith(fontSize: 16, height: 1.7, color: textColor),
+      pPadding: const EdgeInsets.only(bottom: AppSpacing.s16),
+      h1: AppTextStyles.display.copyWith(fontSize: 26, height: 1.3, color: textColor),
+      h1Padding: const EdgeInsets.only(top: AppSpacing.s24, bottom: AppSpacing.s12),
+      h2: AppTextStyles.headline.copyWith(fontSize: 23, height: 1.3, color: textColor),
+      h2Padding: const EdgeInsets.only(top: AppSpacing.s24, bottom: AppSpacing.s8),
+      h3: AppTextStyles.headline.copyWith(fontSize: 20, height: 1.35, color: textColor),
+      h3Padding: const EdgeInsets.only(top: AppSpacing.s20, bottom: AppSpacing.s8),
+      h4: AppTextStyles.title.copyWith(fontSize: 18, height: 1.35, color: textColor),
+      h4Padding: const EdgeInsets.only(top: AppSpacing.s16, bottom: AppSpacing.s8),
+      code: AppTextStyles.caption.copyWith(
         fontFamily: 'monospace',
-        backgroundColor:
-            isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
-        color: codeBlockText,
+        fontSize: 14,
+        color: textColor,
+        backgroundColor: isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
       ),
       codeblockDecoration: BoxDecoration(
         color: codeBlockBg,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
+      codeblockPadding: const EdgeInsets.all(AppSpacing.md),
       codeblockAlign: WrapAlignment.start,
-      blockquote: TextStyle(
-        color:
-            isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      blockquote: AppTextStyles.body.copyWith(
+        color: secondaryColor,
         fontStyle: FontStyle.italic,
+        height: 1.7,
       ),
       blockquoteDecoration: BoxDecoration(
         color: isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border(
+          left: BorderSide(
+            color: AppColors.primary.withAlpha(80),
+            width: 3,
+          ),
+        ),
       ),
-      listBullet: TextStyle(
-        color:
-            isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      blockquotePadding: const EdgeInsets.fromLTRB(
+        AppSpacing.md, AppSpacing.s12, AppSpacing.md, AppSpacing.s12,
       ),
-      tableBody: TextStyle(
-        fontSize: 14,
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+      listBullet: AppTextStyles.body.copyWith(color: secondaryColor),
+      listBulletPadding: const EdgeInsets.only(left: AppSpacing.s4),
+      tableBody: AppTextStyles.caption.copyWith(color: textColor),
+      tableHead: AppTextStyles.caption.copyWith(
+        fontWeight: FontWeight.w600,
+        color: textColor,
+      ),
+      horizontalRuleDecoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+            width: 1,
+          ),
+        ),
       ),
     );
   }
@@ -283,14 +288,17 @@ class MarkdownPreview extends StatelessWidget {
         if (index < latexExpressions.length) {
           children.add(
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
               child: Center(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Math.tex(
                     latexExpressions[index].trim(),
                     mathStyle: MathStyle.display,
-                    textStyle: TextStyle(fontSize: 18, color: textColor),
+                    textStyle: AppTextStyles.headline.copyWith(
+                      fontSize: 18,
+                      color: textColor,
+                    ),
                   ),
                 ),
               ),
@@ -309,14 +317,17 @@ class MarkdownPreview extends StatelessWidget {
         if (index < latexExpressions.length) {
           children.add(
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
               child: Center(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Math.tex(
                     latexExpressions[index].trim(),
                     mathStyle: MathStyle.text,
-                    textStyle: TextStyle(fontSize: 16, color: textColor),
+                    textStyle: AppTextStyles.body.copyWith(
+                      fontSize: 16,
+                      color: textColor,
+                    ),
                   ),
                 ),
               ),
@@ -395,14 +406,17 @@ class MarkdownPreview extends StatelessWidget {
         if (index < latexExpressions.length) {
           children.add(
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
               child: Center(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Math.tex(
                     latexExpressions[index].trim(),
                     mathStyle: MathStyle.display,
-                    textStyle: TextStyle(fontSize: 18, color: textColor),
+                    textStyle: AppTextStyles.headline.copyWith(
+                      fontSize: 18,
+                      color: textColor,
+                    ),
                   ),
                 ),
               ),
@@ -414,14 +428,17 @@ class MarkdownPreview extends StatelessWidget {
         if (index < latexExpressions.length) {
           children.add(
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
               child: Center(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Math.tex(
                     latexExpressions[index].trim(),
                     mathStyle: MathStyle.text,
-                    textStyle: TextStyle(fontSize: 16, color: textColor),
+                    textStyle: AppTextStyles.body.copyWith(
+                      fontSize: 16,
+                      color: textColor,
+                    ),
                   ),
                 ),
               ),

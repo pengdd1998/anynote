@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/widgets/app_components.dart';
-import '../../../core/widgets/empty_state.dart';
 import '../../../core/error/error.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../data/discover_providers.dart';
@@ -17,9 +22,6 @@ import '../data/discover_providers.dart';
 /// Displays opt-in public shared notes in a card-based feed.
 /// Supports pull-to-refresh, infinite scroll pagination, and
 /// heart/bookmark reaction toggles.
-///
-/// No authentication is required to view the feed, but reactions
-/// require the user to be logged in.
 class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
 
@@ -76,19 +78,18 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       if (!mounted) return;
       setState(() {
         _isLoadingMore = false;
-        // Don't advance offset on failure so retry can work.
         _currentOffset -= 20;
       });
       AppSnackBar.error(
         context,
         message:
             AppLocalizations.of(context)?.failedToLoadMore(
-              ErrorDisplay.userMessage(
-                ErrorMapper.map(e),
-                AppLocalizations.of(context)!,
-              ),
-            ) ??
-            'Failed to load more: $e',
+                  ErrorDisplay.userMessage(
+                    ErrorMapper.map(e),
+                    AppLocalizations.of(context)!,
+                  ),
+                ) ??
+                'Failed to load more: $e',
       );
     }
   }
@@ -106,7 +107,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         _hasMore = items.length >= 20;
       });
     } catch (e) {
-      // The FutureProvider will surface the error.
       debugPrint('[DiscoverScreen] failed to refresh feed: $e');
     }
   }
@@ -117,12 +117,10 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final reactionState = ref.read(reactionStateProvider(shareId));
     final wasActive = reactionState[stateKey] ?? false;
 
-    // Optimistic update.
     ref
         .read(reactionStateProvider(shareId).notifier)
         .update((state) => {...state, stateKey: !wasActive});
 
-    // Update local counts optimistically.
     final itemIndex = _allItems.indexWhere((item) => item['id'] == shareId);
     if (itemIndex >= 0) {
       final item = Map<String, dynamic>.from(_allItems[itemIndex]);
@@ -139,7 +137,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       final result = await api.toggleReaction(shareId, reactionType);
       if (!mounted) return;
 
-      // Update with server truth.
       final active = result['active'] as bool;
       ref
           .read(reactionStateProvider(shareId).notifier)
@@ -158,7 +155,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      // Revert optimistic update.
       ref
           .read(reactionStateProvider(shareId).notifier)
           .update((state) => {...state, stateKey: wasActive});
@@ -187,10 +183,14 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final feedAsync = ref.watch(discoverFeedProvider(0));
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.discoverFeed)),
+      appBar: AppBar(
+        title: Text(l10n.discoverFeed),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       body: feedAsync.when(
         data: (initialItems) {
-          // Seed items on first load.
           if (_allItems.isEmpty) {
             _allItems = initialItems;
             _hasMore = initialItems.length >= 20;
@@ -218,18 +218,29 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       onRefresh: _refresh,
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.s4,
+          AppSpacing.md,
+          96,
+        ),
         itemCount: _allItems.length + (_hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index >= _allItems.length) {
             return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             );
           }
-          return _DiscoverCard(
-            item: _allItems[index],
-            onReact: _toggleReaction,
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+            child: _DiscoverCard(
+              item: _allItems[index],
+              index: index,
+              onReact: _toggleReaction,
+            ),
           );
         },
       ),
@@ -238,10 +249,15 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
   Widget _buildLoadingSkeleton() {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s4,
+        AppSpacing.md,
+        96,
+      ),
       itemCount: 5,
       itemBuilder: (context, index) => const Padding(
-        padding: EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.only(bottom: AppSpacing.s8),
         child: AppLoadingCard(),
       ),
     );
@@ -249,40 +265,54 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
   Widget _buildErrorState(Object error) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 48,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.failedToLoadDiscoverFeed,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$error',
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).disabledColor,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkErrorBg : AppColors.lightErrorBg,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 28,
+                color: AppColors.error,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          FilledButton.tonal(
-            onPressed: () {
-              _currentOffset = 0;
-              _allItems = [];
-              _hasMore = true;
-              ref.invalidate(discoverFeedProvider(0));
-            },
-            child: Text(l10n.retry),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              l10n.failedToLoadDiscoverFeed,
+              style: AppTextStyles.title,
+            ),
+            const SizedBox(height: AppSpacing.s8),
+            Text(
+              '$error',
+              style: AppTextStyles.caption.copyWith(
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton.tonal(
+              onPressed: () {
+                _currentOffset = 0;
+                _allItems = [];
+                _hasMore = true;
+                ref.invalidate(discoverFeedProvider(0));
+              },
+              child: Text(l10n.retry),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -292,143 +322,194 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
 class _DiscoverCard extends ConsumerWidget {
   final Map<String, dynamic> item;
+  final int index;
   final void Function(String shareId, String reactionType) onReact;
 
-  const _DiscoverCard({required this.item, required this.onReact});
+  const _DiscoverCard({
+    required this.item,
+    required this.index,
+    required this.onReact,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final shareId = item['id'] as String;
     final encryptedTitle = item['encrypted_title'] as String? ?? '';
     final viewCount = item['view_count'] as int? ?? 0;
     final heartCount = item['reaction_heart'] as int? ?? 0;
     final bookmarkCount = item['reaction_bookmark'] as int? ?? 0;
     final hasPassword = item['has_password'] as bool? ?? false;
+    final authorName = item['author_name'] as String? ?? '';
 
     final reactionState = ref.watch(reactionStateProvider(shareId));
     final isHearted = reactionState['$shareId:heart'] ?? false;
     final isBookmarked = reactionState['$shareId:bookmark'] ?? false;
 
+    // Warm pastel cycling
+    const pastelBgs = [
+      AppColors.accentLavenderBg,
+      AppColors.accentYellowBg,
+      AppColors.accentMintBg,
+      AppColors.accentPeachBg,
+    ];
+    const pastelTexts = [
+      AppColors.accentLavenderText,
+      AppColors.accentYellowText,
+      AppColors.accentMintText,
+      AppColors.accentPeachText,
+    ];
+    final accentBg = pastelBgs[index % pastelBgs.length];
+    final accentText = pastelTexts[index % pastelTexts.length];
+
     final createdAt = item['created_at'] as String? ?? '';
-    String timeAgo = '';
-    if (createdAt.isNotEmpty) {
-      try {
-        final dt = DateTime.parse(createdAt);
-        final diff = DateTime.now().difference(dt);
-        if (diff.inMinutes < 1) {
-          timeAgo = l10n.justNow;
-        } else if (diff.inHours < 1) {
-          timeAgo = l10n.minutesAgo(diff.inMinutes);
-        } else if (diff.inDays < 1) {
-          timeAgo = l10n.hoursAgo(diff.inHours);
-        } else if (diff.inDays < 30) {
-          timeAgo = l10n.daysAgo(diff.inDays);
-        } else {
-          timeAgo = l10n.monthsAgo((diff.inDays / 30).round());
-        }
-      } catch (e) {
-        debugPrint('[DiscoverScreen] failed to format time-ago: $e');
-        timeAgo = '';
-      }
-    }
+    final timeAgo = _formatTimeAgo(createdAt, l10n);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/share/$shareId'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title row
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      encryptedTitle.isNotEmpty
-                          ? encryptedTitle
-                          : l10n.encryptedNote,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+    return GestureDetector(
+      onTap: () => context.push('/share/$shareId'),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.s12),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Author row + time
+            Row(
+              children: [
+                // Author avatar
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: accentBg,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    authorName.isNotEmpty ? authorName[0].toUpperCase() : '?',
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: accentText,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.s8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        authorName.isNotEmpty ? authorName : '---',
+                        style: AppTextStyles.caption.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    ],
                   ),
-                  if (hasPassword) ...[
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.lock_outline,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Stats row
-              Row(
-                children: [
-                  Icon(
-                    Icons.visibility_outlined,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
+                ),
+                if (timeAgo.isNotEmpty)
                   Text(
-                    '$viewCount',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    timeAgo,
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  if (timeAgo.isNotEmpty) ...[
-                    Icon(
-                      Icons.schedule,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      timeAgo,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                if (hasPassword) ...[
+                  const SizedBox(width: AppSpacing.s4),
+                  Icon(
+                    Icons.lock_outline,
+                    size: 14,
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
                 ],
-              ),
-              const SizedBox(height: 12),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.s8),
 
-              // Reactions row
-              Row(
-                children: [
-                  _ReactionButton(
-                    icon: isHearted ? Icons.favorite : Icons.favorite_border,
-                    count: heartCount,
-                    isActive: isHearted,
-                    activeColor: Theme.of(context).colorScheme.error,
-                    onTap: () => onReact(shareId, 'heart'),
-                  ),
-                  const SizedBox(width: 12),
-                  _ReactionButton(
-                    icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    count: bookmarkCount,
-                    isActive: isBookmarked,
-                    activeColor: Theme.of(context).colorScheme.primary,
-                    onTap: () => onReact(shareId, 'bookmark'),
-                  ),
-                ],
+            // Title
+            Text(
+              encryptedTitle.isNotEmpty ? encryptedTitle : l10n.encryptedNote,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w600,
               ),
-            ],
-          ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: AppSpacing.s8),
+
+            // Bottom row: views + reactions
+            Row(
+              children: [
+                // Views
+                Icon(
+                  Icons.visibility_outlined,
+                  size: 14,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+                const SizedBox(width: AppSpacing.s4),
+                Text(
+                  '$viewCount',
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 12,
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
+                ),
+                const Spacer(),
+                // Heart
+                _ReactionButton(
+                  icon: isHearted ? Icons.favorite : Icons.favorite_border,
+                  count: heartCount,
+                  isActive: isHearted,
+                  activeColor: AppColors.error,
+                  isDark: isDark,
+                  onTap: () => onReact(shareId, 'heart'),
+                ),
+                const SizedBox(width: AppSpacing.s12),
+                // Bookmark
+                _ReactionButton(
+                  icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  count: bookmarkCount,
+                  isActive: isBookmarked,
+                  activeColor: AppColors.primary,
+                  isDark: isDark,
+                  onTap: () => onReact(shareId, 'bookmark'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  String _formatTimeAgo(String createdAt, AppLocalizations l10n) {
+    if (createdAt.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(createdAt);
+      final diff = DateTime.now().difference(dt);
+      if (diff.inMinutes < 1) return l10n.justNow;
+      if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
+      if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
+      if (diff.inDays < 30) return l10n.daysAgo(diff.inDays);
+      return l10n.monthsAgo((diff.inDays / 30).round());
+    } catch (e) {
+      return '';
+    }
   }
 }
 
@@ -439,6 +520,7 @@ class _ReactionButton extends StatelessWidget {
   final int count;
   final bool isActive;
   final Color activeColor;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _ReactionButton({
@@ -446,6 +528,7 @@ class _ReactionButton extends StatelessWidget {
     required this.count,
     required this.isActive,
     required this.activeColor,
+    required this.isDark,
     required this.onTap,
   });
 
@@ -453,22 +536,32 @@ class _ReactionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isActive
         ? activeColor
-        : Theme.of(context).colorScheme.onSurfaceVariant;
+        : (isDark
+            ? AppColors.darkTextTertiary
+            : AppColors.lightTextTertiary);
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.s8,
+          vertical: 4,
+        ),
+        decoration: isActive
+            ? BoxDecoration(
+                color: activeColor.withAlpha(15),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+              )
+            : null,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: color),
-            const SizedBox(width: 4),
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: AppSpacing.s4),
             Text(
               '$count',
-              style: TextStyle(
-                fontSize: 13,
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 12,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                 color: color,
               ),

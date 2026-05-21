@@ -3,14 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/database/app_database.dart';
-import '../../../core/theme/color_utils.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/color_utils.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/color_picker_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/sync_status_badge.dart';
-import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../settings/data/settings_providers.dart';
@@ -26,10 +30,8 @@ class CollectionsListScreen extends ConsumerStatefulWidget {
 class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
   bool _isGridView = false;
 
-  /// Cache of collection ID -> note count for displaying in cards.
   final Map<String, int> _noteCountCache = {};
 
-  /// Load note count for a single collection and cache it.
   Future<void> _loadNoteCount(String collectionId, AppDatabase db) async {
     if (_noteCountCache.containsKey(collectionId)) return;
     final notes = await db.collectionsDao.getCollectionNotes(collectionId);
@@ -48,8 +50,15 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.collectionsTitle),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
-          const SyncStatusWidget(),
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: l10n.newCollection,
+            onPressed: () => _showCreateCollectionDialog(context, db),
+          ),
           IconButton(
             icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
             tooltip: _isGridView ? l10n.listView : l10n.gridView,
@@ -63,25 +72,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
         stream: db.collectionsDao.watchAllCollections(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(l10n.failedToLoadCollection),
-                  const SizedBox(height: 16),
-                  FilledButton.tonal(
-                    onPressed: () => setState(() {}),
-                    child: Text(l10n.retry),
-                  ),
-                ],
-              ),
-            );
+            return _buildErrorState(l10n);
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -100,7 +91,6 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
             );
           }
 
-          // Trigger note count loading for visible collections.
           for (final collection in collections) {
             _loadNoteCount(collection.id, db);
           }
@@ -116,14 +106,43 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
           );
         },
       ),
-      floatingActionButton: Semantics(
-        button: true,
-        label: l10n.newCollection,
-        child: FloatingActionButton(
-          onPressed: () => _showCreateCollectionDialog(context, db),
-          tooltip: l10n.newCollection,
-          child: const Icon(Icons.add),
-        ),
+    );
+  }
+
+  Widget _buildErrorState(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.lightErrorBg,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: const Icon(
+              Icons.error_outline,
+              size: 28,
+              color: AppColors.error,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            l10n.failedToLoadCollection,
+            style: AppTextStyles.body.copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton.tonal(
+            onPressed: () => setState(() {}),
+            child: Text(l10n.retry),
+          ),
+        ],
       ),
     );
   }
@@ -131,10 +150,18 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
   Widget _buildListView(List<Collection> collections, AppDatabase db) {
     return ListView.builder(
       itemCount: collections.length,
-      padding: const EdgeInsets.only(bottom: 80),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s4,
+        AppSpacing.md,
+        80,
+      ),
       itemBuilder: (context, index) {
         final collection = collections[index];
-        return _buildDismissibleCard(collection, db, isGrid: false);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+          child: _buildDismissibleCard(collection, db, isGrid: false),
+        );
       },
     );
   }
@@ -143,10 +170,17 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.85,
+        mainAxisSpacing: AppSpacing.s8,
+        crossAxisSpacing: AppSpacing.s8,
+        childAspectRatio: 0.9,
       ),
       itemCount: collections.length,
-      padding: const EdgeInsets.only(bottom: 80),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s4,
+        AppSpacing.md,
+        80,
+      ),
       itemBuilder: (context, index) {
         final collection = collections[index];
         return _buildDismissibleCard(collection, db, isGrid: true);
@@ -154,7 +188,6 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     );
   }
 
-  /// Build a collection card wrapped in a Dismissible for swipe-to-delete.
   Widget _buildDismissibleCard(
     Collection collection,
     AppDatabase db, {
@@ -169,20 +202,27 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
         direction: DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 24),
-          color: Theme.of(context).colorScheme.error,
-          child: const Icon(Icons.delete, color: Colors.white),
+          padding: const EdgeInsets.only(right: AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: AppColors.error.withAlpha(20),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: Icon(Icons.delete, color: AppColors.error.withAlpha(150)),
         ),
         confirmDismiss: (direction) async {
           final l10n = AppLocalizations.of(context)!;
           return await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+              ),
               title: Text(l10n.deleteCollectionQuestion),
               content: Text(
                 l10n.deleteCollectionConfirm(
                   collection.plainTitle ?? l10n.untitledCollection,
                 ),
+                style: AppTextStyles.body,
               ),
               actions: [
                 TextButton(
@@ -210,174 +250,211 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     );
   }
 
-  /// List-view card for a collection.
   Widget _buildListCard(Collection collection, AppDatabase db) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final title = collection.plainTitle ?? l10n.untitledCollection;
     final noteCount = _noteCountCache[collection.id] ?? 0;
     final colColor = parseHexColor(collection.color);
 
-    return Card(
-      child: ListTile(
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+    final accentBg = colColor?.withAlpha(25) ??
+        (isDark ? AppColors.darkInputFill : AppColors.lightInputFill);
+
+    return GestureDetector(
+      onTap: () => context.push('/collections/${collection.id}'),
+      onLongPress: () => _showCollectionEditMenu(collection, db),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          boxShadow: AppShadows.smOf(Theme.of(context).brightness),
         ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Row(
-            children: [
-              Icon(
-                Icons.note_outlined,
-                size: 14,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                l10n.noteCount(noteCount),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                ),
-              ),
-            ],
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            // Color edit button.
-            if (colColor != null)
-              IconButton(
-                icon: Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: colColor,
-                    shape: BoxShape.circle,
+            // Folder icon in tinted circle
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: accentBg,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Icon(
+                Icons.folder,
+                color: colColor ?? AppColors.primary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s12),
+            // Title + note count
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.noteCount(noteCount),
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 12,
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Color dot + sync badge
+            if (colColor != null)
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(right: AppSpacing.s8),
+                decoration: BoxDecoration(
+                  color: colColor,
+                  shape: BoxShape.circle,
                 ),
-                tooltip: l10n.noteColor,
-                onPressed: () => _editCollectionColor(collection, db),
               ),
             SyncStatusBadge(isSynced: collection.isSynced),
           ],
         ),
-        leading: Icon(Icons.folder, color: colColor),
-        onTap: () => context.push('/collections/${collection.id}'),
-        onLongPress: () => _showCollectionEditMenu(collection, db),
       ),
     );
   }
 
-  /// Grid-view card for a collection.
   Widget _buildGridCard(Collection collection, AppDatabase db) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final title = collection.plainTitle ?? l10n.untitledCollection;
     final noteCount = _noteCountCache[collection.id] ?? 0;
     final colColor = parseHexColor(collection.color);
 
-    return Card(
-      margin: const EdgeInsets.all(4),
-      child: InkWell(
-        onTap: () => context.push('/collections/${collection.id}'),
-        onLongPress: () => _showCollectionEditMenu(collection, db),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
+    final accentBg = colColor?.withAlpha(25) ??
+        (isDark ? AppColors.darkInputFill : AppColors.lightInputFill);
+
+    return GestureDetector(
+      onTap: () => context.push('/collections/${collection.id}'),
+      onLongPress: () => _showCollectionEditMenu(collection, db),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Folder icon in tinted badge + sync badge
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: accentBg,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Icon(
                     Icons.folder,
-                    color: colColor ?? Theme.of(context).colorScheme.primary,
-                    size: 20,
+                    color: colColor ?? AppColors.primary,
+                    size: 18,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
+                ),
+                const Spacer(),
+                if (colColor != null)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(right: AppSpacing.s4),
+                    decoration: BoxDecoration(
+                      color: colColor,
+                      shape: BoxShape.circle,
                     ),
                   ),
-                  SyncStatusBadge(isSynced: collection.isSynced),
-                ],
+                SyncStatusBadge(isSynced: collection.isSynced),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.s12),
+            // Title
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
-              const SizedBox(height: 12),
-              const Spacer(),
-              Row(
-                children: [
-                  Icon(
-                    Icons.note_outlined,
-                    size: 14,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    l10n.noteCount(noteCount),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  const Spacer(),
-                  // Color indicator dot.
-                  if (colColor != null)
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: colColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                ],
+            ),
+            const Spacer(),
+            // Note count
+            Text(
+              l10n.noteCount(noteCount),
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 12,
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  /// Show edit menu with color picker option on long press.
   void _showCollectionEditMenu(Collection collection, AppDatabase db) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
       ),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with collection name.
+            // Drag handle
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: (isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary)
+                      .withAlpha(80),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s8,
+                AppSpacing.md,
+                AppSpacing.s4,
+              ),
               child: Row(
                 children: [
                   if (collection.color != null)
                     Padding(
-                      padding: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.only(right: AppSpacing.s8),
                       child: Container(
                         width: 16,
                         height: 16,
@@ -390,7 +467,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                   Expanded(
                     child: Text(
                       collection.plainTitle ?? l10n.untitledCollection,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: AppTextStyles.body.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -398,7 +475,12 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                 ],
               ),
             ),
-            const Divider(),
+            Divider(
+              height: 1,
+              color: isDark
+                  ? AppColors.darkDivider.withAlpha(60)
+                  : AppColors.lightDivider.withAlpha(80),
+            ),
             ListTile(
               leading: const Icon(Icons.palette),
               title: Text(l10n.noteColor),
@@ -408,27 +490,26 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
               },
             ),
             ListTile(
-              leading: Icon(
+              leading: const Icon(
                 Icons.delete_outline,
-                color: Theme.of(context).colorScheme.error,
+                color: AppColors.error,
               ),
               title: Text(
                 l10n.delete,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                style: const TextStyle(color: AppColors.error),
               ),
               onTap: () {
                 Navigator.of(ctx).pop();
                 _deleteCollection(collection, db);
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
           ],
         ),
       ),
     );
   }
 
-  /// Open color picker for a collection.
   Future<void> _editCollectionColor(
     Collection collection,
     AppDatabase db,
@@ -438,13 +519,11 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
       currentColor: collection.color,
     );
     if (selectedColor != null && mounted) {
-      // Empty string means remove color.
       final newColor = selectedColor.isEmpty ? null : selectedColor;
       await db.collectionsDao.updateCollectionColor(collection.id, newColor);
     }
   }
 
-  /// Delete a collection after confirmation.
   void _deleteCollection(Collection collection, AppDatabase db) {
     final l10n = AppLocalizations.of(context)!;
     db.collectionsDao.deleteCollection(collection.id);
@@ -452,7 +531,6 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     AppSnackBar.info(context, message: l10n.collectionDeleted);
   }
 
-  /// Show a dialog to create a new collection.
   void _showCreateCollectionDialog(BuildContext context, AppDatabase db) {
     final l10n = AppLocalizations.of(context)!;
     final titleController = TextEditingController();
@@ -460,13 +538,18 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
         title: Text(l10n.newCollection),
         content: TextField(
           controller: titleController,
           decoration: InputDecoration(
             labelText: l10n.collectionTitle,
             hintText: l10n.collectionTitleHint,
-            border: const OutlineInputBorder(),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
           ),
           autofocus: true,
           textCapitalization: TextCapitalization.sentences,
@@ -481,10 +564,8 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
               final title = titleController.text.trim();
               if (title.isEmpty) return;
 
-              // Generate a UUID for the collection.
               final id = _generateId();
 
-              // If crypto is unlocked, encrypt the title.
               final crypto = ref.read(cryptoServiceProvider);
               String encryptedTitle = title;
               if (crypto.isUnlocked) {
@@ -506,7 +587,6 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     );
   }
 
-  /// Generate a unique ID using UUID v4.
   String _generateId() {
     return const Uuid().v4();
   }

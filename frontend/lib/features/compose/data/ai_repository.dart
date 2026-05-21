@@ -30,7 +30,13 @@ class AIRepository {
       },
       cancelToken: cancelToken,
     );
-    return response['content'] as String;
+    final content = response['content'];
+    if (content == null) {
+      throw FormatException(
+        'AI proxy returned unexpected response: ${response.keys.join(', ')}',
+      );
+    }
+    return content as String;
   }
 
   /// Send a streaming chat request.
@@ -52,15 +58,17 @@ class AIRepository {
     );
 
     final stream = response.data?.stream;
-    if (stream == null) return;
+    if (stream == null) {
+      throw FormatException('AI proxy stream returned no data');
+    }
 
     await for (final chunk in stream) {
       final data = utf8.decode(chunk);
-      // Parse SSE format
       for (final line in data.split('\n')) {
         if (line.startsWith('data: ')) {
-          final jsonStr = line.substring(6);
+          final jsonStr = line.substring(6).trim();
           if (jsonStr == '[DONE]') return;
+          if (jsonStr.isEmpty) continue;
           try {
             final json = jsonDecode(jsonStr);
             if (json['content'] != null) {

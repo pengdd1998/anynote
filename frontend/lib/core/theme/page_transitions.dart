@@ -123,6 +123,46 @@ Page<void> slideTransition(Widget child) {
   );
 }
 
+/// Creates a page that slides up from the bottom, like a modal bottom sheet.
+///
+/// Used for overlay-style routes (quick capture) that should feel lightweight.
+/// The page has a translucent dark scrim background.
+CustomTransitionPage<void> bottomSheetTransition(Widget child) {
+  return CustomTransitionPage(
+    barrierDismissible: true,
+    barrierColor: Colors.black54,
+    opaque: false,
+    transitionDuration: _kForwardDuration,
+    reverseTransitionDuration: _kReverseDuration,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final config = AnimationConfig.of(context);
+      if (config.reduceMotion) {
+        return child;
+      }
+
+      final curve = config.curve(Curves.easeOutCubic);
+
+      final slideUp = Tween<Offset>(
+        begin: const Offset(0, 1),
+        end: Offset.zero,
+      ).chain(CurveTween(curve: curve));
+
+      final fadeIn = Tween<double>(begin: 0.0, end: 1.0).chain(
+        CurveTween(curve: curve),
+      );
+
+      return SlideTransition(
+        position: animation.drive(slideUp),
+        child: FadeTransition(
+          opacity: animation.drive(fadeIn),
+          child: child,
+        ),
+      );
+    },
+    child: child,
+  );
+}
+
 /// Custom fade-through transition that cross-fades two pages.
 ///
 /// During the first half of the animation the outgoing page fades out.

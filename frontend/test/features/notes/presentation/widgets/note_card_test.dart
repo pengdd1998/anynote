@@ -37,7 +37,6 @@ Future<void> pumpNoteCard(
     onLongPress: onLongPress,
     untitled: untitled,
     layout: layout,
-    skipPropertyBadges: true, // Avoid timer leaks in tests
   );
 
   await tester.pumpWidget(

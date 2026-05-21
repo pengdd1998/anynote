@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_icons.dart';
-import '../../../l10n/app_localizations.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/plan_model.dart';
 import '../../settings/providers/plan_providers.dart';
 
 /// Plan selection and comparison screen.
 ///
-/// Shows the user's current plan with usage stats, a comparison table
-/// for Free/Pro/Lifetime plans, and upgrade/restore buttons.
+/// Shows the user's current plan with usage stats, individual plan cards
+/// for Free/Pro/Lifetime, and upgrade/restore buttons.
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
 
@@ -20,7 +24,12 @@ class PlanScreen extends ConsumerWidget {
     final planAsync = ref.watch(planInfoProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.planTitle)),
+      appBar: AppBar(
+        title: Text(l10n.planTitle),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       body: planAsync.when(
         data: (plan) => _PlanContent(plan: plan),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -38,135 +47,139 @@ class _PlanContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s4,
+        AppSpacing.md,
+        AppSpacing.xl,
+      ),
       children: [
-        // Current plan banner
-        Card(
-          color: colorScheme.primaryContainer,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      AppIcons.workspacePremium,
-                      color: colorScheme.onPrimaryContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.currentPlan(plan.displayName),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _UsageRow(
-                  label: l10n.planNotesCount,
-                  value: '${plan.noteCount}',
-                  limit: plan.limits.maxNotes == -1
-                      ? l10n.unlimited
-                      : '${plan.limits.maxNotes}',
-                ),
-                _UsageRow(
-                  label: l10n.aiUsage,
-                  value: '${plan.aiDailyUsed}',
-                  limit: plan.limits.aiDailyQuota == -1
-                      ? l10n.unlimited
-                      : '${plan.limits.aiDailyQuota}',
-                ),
-                _UsageRow(
-                  label: l10n.storageUsed,
-                  value: _formatBytes(plan.storageBytes),
-                  limit: plan.limits.maxStorageBytes == -1
-                      ? l10n.unlimited
-                      : _formatBytes(plan.limits.maxStorageBytes),
-                ),
-              ],
-            ),
-          ),
-        ),
+        // ── Current plan hero card ──────────────────────────
+        _CurrentPlanCard(plan: plan),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.lg),
 
-        // Plan comparison table
+        // ── Plan cards ──────────────────────────────────────
         Text(
           l10n.comparePlans,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 12),
-
-        _PlanComparisonCard(
-          currentPlan: plan.plan,
-        ),
-
-        const SizedBox(height: 24),
-
-        // Action buttons
-        if (plan.plan != PlanType.lifetime) ...[
-          FilledButton(
-            onPressed: () => _showUpgradeDialog(context, ref),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            child: Text(l10n.upgrade),
+          style: AppTextStyles.caption.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkTextTertiary
+                : AppColors.lightTextTertiary,
           ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () async {
-              final success =
-                  await ref.read(planInfoProvider.notifier).restorePurchase();
-              if (context.mounted) {
-                if (success) {
-                  AppSnackBar.info(
-                    context,
-                    message: AppLocalizations.of(context)!.planRestored,
-                  );
-                } else {
-                  AppSnackBar.info(
-                    context,
-                    message: AppLocalizations.of(context)!.noCompletedPayments,
-                  );
-                }
-              }
-            },
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        const SizedBox(height: AppSpacing.s8),
+
+        _PlanCard(
+          icon: Icons.explore_outlined,
+          title: l10n.freePlan,
+          price: l10n.freePlan,
+          accentBg: AppColors.accentLavenderBg,
+          accentText: AppColors.accentLavenderText,
+          features: [
+            '${l10n.maxNotes}: 500',
+            '${l10n.aiDailyQuota}: 50',
+            '${l10n.storage}: 100 MB',
+            '${l10n.maxDevices}: 2',
+          ],
+          isCurrent: plan.plan == PlanType.free,
+        ),
+        const SizedBox(height: AppSpacing.s8),
+
+        _PlanCard(
+          icon: Icons.workspace_premium_outlined,
+          title: l10n.proPlan,
+          price: l10n.proPrice,
+          accentBg: AppColors.accentYellowBg,
+          accentText: AppColors.accentYellowText,
+          features: [
+            '${l10n.maxNotes}: 10,000',
+            '${l10n.aiDailyQuota}: 500',
+            '${l10n.storage}: 5 GB',
+            '${l10n.maxDevices}: 5',
+            '${l10n.collaboration}: ${l10n.yes}',
+          ],
+          isCurrent: plan.plan == PlanType.pro,
+          isRecommended: plan.plan == PlanType.free,
+          onTap: plan.plan == PlanType.free
+              ? () => _showUpgradeDialog(context, ref)
+              : null,
+        ),
+        const SizedBox(height: AppSpacing.s8),
+
+        _PlanCard(
+          icon: Icons.diamond_outlined,
+          title: l10n.lifetimePlan,
+          price: l10n.lifetimePrice,
+          accentBg: AppColors.accentMintBg,
+          accentText: AppColors.accentMintText,
+          features: [
+            '${l10n.maxNotes}: ${l10n.unlimited}',
+            '${l10n.aiDailyQuota}: ${l10n.unlimited}',
+            '${l10n.storage}: ${l10n.unlimited}',
+            '${l10n.maxDevices}: ${l10n.unlimited}',
+            '${l10n.collaboration}: ${l10n.yes}',
+            '${l10n.publishing}: ${l10n.yes}',
+          ],
+          isCurrent: plan.plan == PlanType.lifetime,
+          onTap: plan.plan != PlanType.lifetime
+              ? () => _showUpgradeDialog(context, ref)
+              : null,
+        ),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        // ── Action buttons ──────────────────────────────────
+        if (plan.plan != PlanType.lifetime) ...[
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => _showUpgradeDialog(context, ref),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+              ),
+              child: Text(l10n.upgrade),
             ),
-            child: Text(l10n.restorePurchase),
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () async {
+                final success =
+                    await ref.read(planInfoProvider.notifier).restorePurchase();
+                if (context.mounted) {
+                  if (success) {
+                    AppSnackBar.info(
+                      context,
+                      message: AppLocalizations.of(context)!.planRestored,
+                    );
+                  } else {
+                    AppSnackBar.info(
+                      context,
+                      message:
+                          AppLocalizations.of(context)!.noCompletedPayments,
+                    );
+                  }
+                }
+              },
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+              ),
+              child: Text(l10n.restorePurchase),
+            ),
           ),
         ] else ...[
-          Card(
-            color: colorScheme.tertiaryContainer,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(AppIcons.verified,
-                      color: colorScheme.onTertiaryContainer,),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.lifetimeMember,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: colorScheme.onTertiaryContainer,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _LifetimeBadge(l10n: l10n),
         ],
       ],
     );
@@ -174,29 +187,50 @@ class _PlanContent extends ConsumerWidget {
 
   void _showUpgradeDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.selectPlan),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        backgroundColor: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        contentPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          0,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              title: Text(l10n.proPlan),
-              subtitle: Text(l10n.proPlanDescription),
-              trailing: Text(l10n.proPrice),
+            _UpgradeOption(
+              icon: Icons.workspace_premium_outlined,
+              title: l10n.proPlan,
+              subtitle: l10n.proPlanDescription,
+              price: l10n.proPrice,
+              accentBg: AppColors.accentYellowBg,
+              accentText: AppColors.accentYellowText,
               onTap: () {
                 Navigator.pop(ctx);
                 ref.read(planInfoProvider.notifier).startCheckout('pro');
               },
             ),
-            ListTile(
-              title: Text(l10n.lifetimePlan),
-              subtitle: Text(l10n.lifetimePlanDescription),
-              trailing: Text(l10n.lifetimePrice),
+            const SizedBox(height: AppSpacing.s8),
+            _UpgradeOption(
+              icon: Icons.diamond_outlined,
+              title: l10n.lifetimePlan,
+              subtitle: l10n.lifetimePlanDescription,
+              price: l10n.lifetimePrice,
+              accentBg: AppColors.accentMintBg,
+              accentText: AppColors.accentMintText,
               onTap: () {
                 Navigator.pop(ctx);
-                ref.read(planInfoProvider.notifier).startCheckout('lifetime');
+                ref
+                    .read(planInfoProvider.notifier)
+                    .startCheckout('lifetime');
               },
             ),
           ],
@@ -205,6 +239,129 @@ class _PlanContent extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(l10n.cancel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Current plan hero card ─────────────────────────────────────
+
+class _CurrentPlanCard extends StatelessWidget {
+  final PlanInfo plan;
+
+  const _CurrentPlanCard({required this.plan});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final (accentBg, accentText) = switch (plan.plan) {
+      PlanType.free => (AppColors.accentLavenderBg, AppColors.accentLavenderText),
+      PlanType.pro => (AppColors.accentYellowBg, AppColors.accentYellowText),
+      PlanType.lifetime => (AppColors.accentMintBg, AppColors.accentMintText),
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accentBg,
+            accentText.withAlpha(20),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: accentText.withAlpha(40)),
+        boxShadow: [
+          BoxShadow(
+            color: accentText.withAlpha(20),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Plan name row
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: accentText.withAlpha(20),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                ),
+                child: Icon(
+                  plan.plan == PlanType.lifetime
+                      ? Icons.diamond_outlined
+                      : plan.plan == PlanType.pro
+                          ? Icons.workspace_premium_outlined
+                          : Icons.explore_outlined,
+                  size: 20,
+                  color: accentText,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              Text(
+                l10n.currentPlan(plan.displayName),
+                style: AppTextStyles.body.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: accentText,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Usage stats
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.s12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkCardBg.withAlpha(180)
+                  : AppColors.lightCardBg.withAlpha(200),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
+            child: Column(
+              children: [
+                _UsageRow(
+                  icon: Icons.note_outlined,
+                  label: l10n.planNotesCount,
+                  value: '${plan.noteCount}',
+                  limit: plan.limits.maxNotes == -1
+                      ? l10n.unlimited
+                      : '${plan.limits.maxNotes}',
+                  accentText: accentText,
+                ),
+                const SizedBox(height: AppSpacing.s8),
+                _UsageRow(
+                  icon: Icons.auto_awesome,
+                  label: l10n.aiUsage,
+                  value: '${plan.aiDailyUsed}',
+                  limit: plan.limits.aiDailyQuota == -1
+                      ? l10n.unlimited
+                      : '${plan.limits.aiDailyQuota}',
+                  accentText: accentText,
+                ),
+                const SizedBox(height: AppSpacing.s8),
+                _UsageRow(
+                  icon: Icons.storage_outlined,
+                  label: l10n.storageUsed,
+                  value: _formatBytes(plan.storageBytes),
+                  limit: plan.limits.maxStorageBytes == -1
+                      ? l10n.unlimited
+                      : _formatBytes(plan.limits.maxStorageBytes),
+                  accentText: accentText,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -221,97 +378,263 @@ class _PlanContent extends ConsumerWidget {
   }
 }
 
+// ── Usage row with icon ────────────────────────────────────────
+
 class _UsageRow extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
   final String limit;
+  final Color accentText;
 
   const _UsageRow({
+    required this.icon,
     required this.label,
     required this.value,
     required this.limit,
+    required this.accentText,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 14,
+          color: isDark
+              ? AppColors.darkTextTertiary
+              : AppColors.lightTextTertiary,
+        ),
+        const SizedBox(width: AppSpacing.s4),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary,
             ),
           ),
-          Text(
-            '$value / $limit',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+        ),
+        Text(
+          '$value / $limit',
+          style: AppTextStyles.caption.copyWith(
+            fontWeight: FontWeight.w600,
+            color: accentText,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-/// Plan comparison table showing Free vs Pro vs Lifetime.
-class _PlanComparisonCard extends StatelessWidget {
-  final PlanType currentPlan;
+// ── Individual plan card ───────────────────────────────────────
 
-  const _PlanComparisonCard({required this.currentPlan});
+class _PlanCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String price;
+  final Color accentBg;
+  final Color accentText;
+  final List<String> features;
+  final bool isCurrent;
+  final bool isRecommended;
+  final VoidCallback? onTap;
+
+  const _PlanCard({
+    required this.icon,
+    required this.title,
+    required this.price,
+    required this.accentBg,
+    required this.accentText,
+    required this.features,
+    this.isCurrent = false,
+    this.isRecommended = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Feature rows: label, free value, pro value, lifetime value
-    final features = [
-      _FeatureRow(l10n.maxNotes, '500', '10,000', l10n.unlimited),
-      _FeatureRow(l10n.aiDailyQuota, '50', '500', l10n.unlimited),
-      _FeatureRow(l10n.storage, '100 MB', '5 GB', l10n.unlimited),
-      _FeatureRow(l10n.maxDevices, '2', '5', l10n.unlimited),
-      _FeatureRow(l10n.collaboration, l10n.no, l10n.yes, l10n.yes),
-      _FeatureRow(l10n.publishing, l10n.yes, l10n.yes, l10n.yes),
-    ];
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(2),
-          1: FlexColumnWidth(1.2),
-          2: FlexColumnWidth(1.2),
-          3: FlexColumnWidth(1.2),
-        },
-        children: [
-          // Header row
-          TableRow(
-            decoration: BoxDecoration(color: colorScheme.surfaceContainerHigh),
-            children: [
-              const _HeaderCell(''),
-              _HeaderCell(
-                l10n.freePlan,
-                highlight: currentPlan == PlanType.free,
-              ),
-              _HeaderCell(l10n.proPlan, highlight: currentPlan == PlanType.pro),
-              _HeaderCell(
-                l10n.lifetimePlan,
-                highlight: currentPlan == PlanType.lifetime,
-              ),
-            ],
-          ),
-          ...features.map(
-            (f) => TableRow(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.s16),
+        decoration: BoxDecoration(
+          color: isCurrent
+              ? accentBg
+              : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: isCurrent
+              ? Border.all(color: accentText.withAlpha(80), width: 1.5)
+              : isRecommended
+                  ? Border.all(color: accentText.withAlpha(40), width: 1)
+                  : null,
+          boxShadow: isCurrent
+              ? [
+                  BoxShadow(
+                    color: accentText.withAlpha(20),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : AppShadows.smOf(Theme.of(context).brightness),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top row: icon + title + price + badges
+            Row(
               children: [
-                _DataCell(f.label, bold: false),
-                _DataCell(f.free),
-                _DataCell(f.pro),
-                _DataCell(f.lifetime),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isCurrent
+                        ? accentText.withAlpha(20)
+                        : accentBg,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Icon(icon, size: 22, color: accentText),
+                ),
+                const SizedBox(width: AppSpacing.s12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            title,
+                            style: AppTextStyles.body.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (isRecommended) ...[
+                            const SizedBox(width: AppSpacing.s8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: accentText.withAlpha(15),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.pill),
+                              ),
+                              child: Text(
+                                'Recommended',
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: accentText,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      Text(
+                        price,
+                        style: AppTextStyles.caption.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isCurrent)
+                  Icon(Icons.check_circle, size: 20, color: accentText),
               ],
             ),
+
+            const SizedBox(height: AppSpacing.s12),
+
+            // Divider
+            Container(
+              height: 0.5,
+              color: isDark
+                  ? AppColors.darkDivider.withAlpha(40)
+                  : AppColors.lightDivider.withAlpha(60),
+            ),
+            const SizedBox(height: AppSpacing.s12),
+
+            // Features
+            ...features.map((f) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check,
+                        size: 14,
+                        color: accentText.withAlpha(180),
+                      ),
+                      const SizedBox(width: AppSpacing.s8),
+                      Expanded(
+                        child: Text(
+                          f,
+                          style: AppTextStyles.caption.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Lifetime member badge ──────────────────────────────────────
+
+class _LifetimeBadge extends StatelessWidget {
+  final AppLocalizations l10n;
+
+  const _LifetimeBadge({required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      decoration: BoxDecoration(
+        color: AppColors.accentMintBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.accentMintText.withAlpha(40)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.accentMintText.withAlpha(20),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+            ),
+            child: const Icon(
+              Icons.verified,
+              size: 20,
+              color: AppColors.accentMintText,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.s12),
+          Expanded(
+            child: Text(
+              l10n.lifetimeMember,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.accentMintText,
+              ),
+            ),
           ),
         ],
       ),
@@ -319,56 +642,82 @@ class _PlanComparisonCard extends StatelessWidget {
   }
 }
 
-class _FeatureRow {
-  final String label;
-  final String free;
-  final String pro;
-  final String lifetime;
+// ── Upgrade option in dialog ───────────────────────────────────
 
-  const _FeatureRow(this.label, this.free, this.pro, this.lifetime);
-}
+class _UpgradeOption extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String price;
+  final Color accentBg;
+  final Color accentText;
+  final VoidCallback onTap;
 
-class _HeaderCell extends StatelessWidget {
-  final String text;
-  final bool highlight;
-
-  const _HeaderCell(this.text, {this.highlight = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: highlight
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
-            ),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-}
-
-class _DataCell extends StatelessWidget {
-  final String text;
-  final bool bold;
-
-  const _DataCell(this.text, {this.bold = false});
+  const _UpgradeOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.price,
+    required this.accentBg,
+    required this.accentText,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.s12),
+        decoration: BoxDecoration(
+          color: accentBg,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          border: Border.all(color: accentText.withAlpha(30)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: accentText.withAlpha(20),
+                borderRadius: BorderRadius.circular(AppRadius.xs),
+              ),
+              child: Icon(icon, size: 18, color: accentText),
             ),
-        textAlign: TextAlign.center,
+            const SizedBox(width: AppSpacing.s12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.caption.copyWith(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              price,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w700,
+                color: accentText,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

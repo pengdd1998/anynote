@@ -7,6 +7,8 @@ import 'package:drift/drift.dart';
 @TableIndex(name: 'idx_notes_updated_at', columns: {#updatedAt})
 @TableIndex(name: 'idx_notes_is_pinned', columns: {#isPinned})
 @TableIndex(name: 'idx_notes_is_synced', columns: {#isSynced})
+@TableIndex(name: 'idx_notes_sort_order', columns: {#sortOrder})
+@TableIndex(name: 'idx_notes_updated_pinned', columns: {#updatedAt, #isPinned})
 class Notes extends Table {
   /// Client-generated UUID
   TextColumn get id => text()();
@@ -56,6 +58,7 @@ class Notes extends Table {
 /// Tags table - stores encrypted tag names.
 @TableIndex(name: 'idx_tags_is_synced', columns: {#isSynced})
 @TableIndex(name: 'idx_tags_parent_id', columns: {#parentId})
+@TableIndex(name: 'idx_tags_plain_name', columns: {#plainName})
 class Tags extends Table {
   TextColumn get id => text()();
 

@@ -75,7 +75,6 @@ Future<AppDatabase> pumpDismissibleCard(
           onLongPress: onLongPress != null ? (_) => onLongPress() : null,
           onDeleted: onDeleted,
           untitled: 'Untitled',
-          skipPropertyBadges: true,
         ),
       ),
     ),

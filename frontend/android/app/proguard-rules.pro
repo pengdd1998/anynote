@@ -21,14 +21,10 @@
 # ── sodium_libs (native crypto) ─────────────────────────────────
 # Sodium JNI bindings must not be stripped or obfuscated
 -keep class com.goterl.lazycode.** { *; }
--keep class com.goterl.lazycode.lazysodium.** { *; }
 -keepclassmembers class com.goterl.lazycode.** {
     native <methods>;
     public *;
 }
-
-# ── Drift (SQLite ORM) generated code ──────────────────────────
--keep class * extends java.lang.reflect.** { *; }
 
 # ── flutter_secure_storage ─────────────────────────────────────
 -keep class com.it_nomads.fluttersecurestorage.** { *; }
@@ -37,24 +33,17 @@
 -keep class io.github.jgolfault.flutter.sqlite3.** { *; }
 -keep class fr.free.sqlite3.** { *; }
 
-# ── Kotlin reflection (used by serialization libs) ─────────────
--keep class kotlin.reflect.** { *; }
--dontwarn kotlin.reflect.**
-
-# ── General AndroidX ───────────────────────────────────────────
--keep class androidx.** { *; }
--keep interface androidx.** { *; }
--dontwarn androidx.**
-
 # ── Kotlin coroutines (used by some plugins) ────────────────────
 -keepnames class kotlinx.coroutines.internal.MainDispatcherFactory
 -keepnames class kotlinx.coroutines.CoroutineExceptionHandler
 -keepclassmembers class kotlinx.coroutines.** {
-    *;
+    volatile int state;
 }
 
-# ── Firebase ────────────────────────────────────────────────────
--keep class com.google.firebase.** { *; }
+# ── Firebase (only keep messaging + core, not entire SDK) ───────
+-keep class com.google.firebase.messaging.** { *; }
+-keep class com.google.firebase.FirebaseApp { *; }
+-keep class com.google.firebase.iid.** { *; }
 -dontwarn com.google.firebase.**
 
 # ── WorkManager ────────────────────────────────────────────────

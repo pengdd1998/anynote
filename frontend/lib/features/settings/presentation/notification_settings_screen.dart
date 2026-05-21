@@ -1,87 +1,140 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_icons.dart';
-import '../../../core/widgets/app_components.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../data/notification_preferences.dart';
 
 /// Settings screen for configuring notification preferences.
 ///
-/// Displays a list of switch toggles for each notification channel:
+/// Displays grouped switch toggles for each notification channel:
 /// reminders, sync conflicts, share events, and push notifications.
-/// Uses the shared [SettingsGroup] / [SettingsGroupHeader] components
-/// for visual consistency with the main settings screen.
 class NotificationSettingsScreen extends ConsumerWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final l10n = Theme.of(context);
     final prefs = ref.watch(notificationPreferencesProvider);
+    final isDark = l10n.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 32),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.s4,
+          AppSpacing.md,
+          AppSpacing.xl,
+        ),
         children: [
-          const SettingsGroupHeader(title: 'Notification Types'),
-          SettingsGroup(
-            children: [
-              _NotificationSwitchTile(
-                icon: AppIcons.alarm,
-                title: 'Reminders',
-                subtitle: 'Get notified when a note reminder is due',
-                value: prefs.reminderNotifications,
-                onChanged: (value) {
-                  ref
-                      .read(notificationPreferencesProvider.notifier)
-                      .setField('reminderNotifications', value);
-                },
-              ),
-              _NotificationSwitchTile(
-                icon: AppIcons.syncProblem,
-                title: 'Sync Conflicts',
-                subtitle: 'Alert when sync conflicts need resolution',
-                value: prefs.syncConflictNotifications,
-                onChanged: (value) {
-                  ref
-                      .read(notificationPreferencesProvider.notifier)
-                      .setField('syncConflictNotifications', value);
-                },
-              ),
-              _NotificationSwitchTile(
-                icon: AppIcons.personAdd,
-                title: 'Collaboration & Sharing',
-                subtitle: 'Notify when someone shares a note with you',
-                value: prefs.shareNotifications,
-                onChanged: (value) {
-                  ref
-                      .read(notificationPreferencesProvider.notifier)
-                      .setField('shareNotifications', value);
-                },
-              ),
-              _NotificationSwitchTile(
-                icon: AppIcons.notificationsActive,
-                title: 'Push Notifications',
-                subtitle: 'Receive push notifications on your device',
-                value: prefs.pushNotifications,
-                onChanged: (value) {
-                  ref
-                      .read(notificationPreferencesProvider.notifier)
-                      .setField('pushNotifications', value);
-                },
-              ),
-            ],
+          // ── Core notifications ─────────────────────────────
+          const _SectionLabel(label: 'Notification Types'),
+          const SizedBox(height: AppSpacing.s8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+            ),
+            child: Column(
+              children: [
+                _NotificationToggle(
+                  icon: Icons.alarm_outlined,
+                  title: 'Reminders',
+                  subtitle: 'Get notified when a note reminder is due',
+                  value: prefs.reminderNotifications,
+                  accentBg: AppColors.accentLavenderBg,
+                  accentText: AppColors.accentLavenderText,
+                  onChanged: (value) {
+                    ref
+                        .read(notificationPreferencesProvider.notifier)
+                        .setField('reminderNotifications', value);
+                  },
+                ),
+                _Divider(isDark: isDark),
+                _NotificationToggle(
+                  icon: Icons.sync_problem_outlined,
+                  title: 'Sync Conflicts',
+                  subtitle: 'Alert when sync conflicts need resolution',
+                  value: prefs.syncConflictNotifications,
+                  accentBg: AppColors.accentYellowBg,
+                  accentText: AppColors.accentYellowText,
+                  onChanged: (value) {
+                    ref
+                        .read(notificationPreferencesProvider.notifier)
+                        .setField('syncConflictNotifications', value);
+                  },
+                ),
+                _Divider(isDark: isDark),
+                _NotificationToggle(
+                  icon: Icons.person_add_outlined,
+                  title: 'Collaboration & Sharing',
+                  subtitle: 'Notify when someone shares a note with you',
+                  value: prefs.shareNotifications,
+                  accentBg: AppColors.accentMintBg,
+                  accentText: AppColors.accentMintText,
+                  onChanged: (value) {
+                    ref
+                        .read(notificationPreferencesProvider.notifier)
+                        .setField('shareNotifications', value);
+                  },
+                ),
+                _Divider(isDark: isDark),
+                _NotificationToggle(
+                  icon: Icons.notifications_active_outlined,
+                  title: 'Push Notifications',
+                  subtitle: 'Receive push notifications on your device',
+                  value: prefs.pushNotifications,
+                  accentBg: AppColors.accentPeachBg,
+                  accentText: AppColors.accentPeachText,
+                  onChanged: (value) {
+                    ref
+                        .read(notificationPreferencesProvider.notifier)
+                        .setField('pushNotifications', value);
+                  },
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Notification preferences are stored locally and apply across all your devices.',
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // ── Info note ──────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.s12,
+              vertical: AppSpacing.s8,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.accentLavenderBg.withAlpha(80),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: AppColors.accentLavenderText,
+                ),
+                const SizedBox(width: AppSpacing.s8),
+                Expanded(
+                  child: Text(
+                    'Preferences are stored locally and sync across all your devices.',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.accentLavenderText,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -90,55 +143,105 @@ class NotificationSettingsScreen extends ConsumerWidget {
   }
 }
 
-/// A settings row with an inline switch toggle for a notification channel.
-///
-/// Follows the visual pattern of [SettingsItem] but uses [SwitchListTile]
-/// for inline toggle behavior instead of navigation.
-class _NotificationSwitchTile extends StatelessWidget {
+// ── Section label ──────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Text(
+      label,
+      style: AppTextStyles.caption.copyWith(
+        fontWeight: FontWeight.w600,
+        color: isDark
+            ? AppColors.darkTextTertiary
+            : AppColors.lightTextTertiary,
+      ),
+    );
+  }
+}
+
+// ── Inline divider between toggles ─────────────────────────────
+
+class _Divider extends StatelessWidget {
+  final bool isDark;
+  const _Divider({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
+      child: Container(
+        height: 0.5,
+        color: isDark
+            ? AppColors.darkDivider.withAlpha(40)
+            : AppColors.lightDivider.withAlpha(60),
+      ),
+    );
+  }
+}
+
+// ── Notification toggle row ────────────────────────────────────
+
+class _NotificationToggle extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
   final bool value;
+  final Color accentBg;
+  final Color accentText;
   final ValueChanged<bool> onChanged;
 
-  const _NotificationSwitchTile({
+  const _NotificationToggle({
     required this.icon,
     required this.title,
     this.subtitle,
     required this.value,
+    required this.accentBg,
+    required this.accentText,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s8,
+      ),
       child: Row(
         children: [
-          // Icon circle matching SettingsItem style.
+          // Icon badge
           Container(
-            width: 32,
-            height: 32,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color:
-                  colorScheme.primary.withValues(alpha: isDark ? 0.15 : 0.12),
-              shape: BoxShape.circle,
+              color: value ? accentBg : AppColors.darkTextTertiary.withAlpha(8),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
-            child: Icon(icon, size: 18, color: colorScheme.primary),
+            child: Icon(
+              icon,
+              size: 18,
+              color: value
+                  ? accentText
+                  : (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary),
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
+          // Text
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 if (subtitle != null)
@@ -146,15 +249,17 @@ class _NotificationSwitchTile extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       subtitle!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color,
+                      style: AppTextStyles.caption.copyWith(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
                       ),
                     ),
                   ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.s4),
           Semantics(
             hint: title,
             child: Switch(

@@ -12,6 +12,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appTitle => 'AnyNote';
 
   @override
+  String get homeTitle => 'ホーム';
+
+  @override
   String get welcomeBack => 'おかえりなさい';
 
   @override
@@ -1680,13 +1683,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shortcutExitZen => '集中モードを終了 / ダイアログを閉じる';
 
   @override
-  String get notesTabLabel => 'メモ';
+  String get notesTabLabel => 'ホーム';
 
   @override
-  String get composeTabLabel => '作成';
+  String get composeTabLabel => 'プラン';
 
   @override
-  String get publishTabLabel => '公開';
+  String get aiTabLabel => 'AI';
 
   @override
   String get settingsTabLabel => '設定';

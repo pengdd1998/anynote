@@ -161,9 +161,12 @@ final searchResultsProvider =
   }
 
   // Load tags and build preview for each note.
+  final tagsMap = await db.tagsDao.batchGetTagsForNotes(
+    notes.map((n) => n.id).toList(),
+  );
   final results = <AdvancedSearchResult>[];
   for (final note in notes) {
-    final tags = await db.tagsDao.getTagsForNote(note.id);
+    final tags = tagsMap[note.id] ?? [];
     final content = note.plainContent ?? '';
     final preview = _buildPreview(content, filters.query);
     results.add(
@@ -209,17 +212,19 @@ final operatorSearchResultsProvider =
 
   final results = await db.notesDao.advancedSearch(parsed);
 
-  // Enrich with tags.
+  // Enrich with tags (batch query instead of N+1).
+  final tagsMap = await db.tagsDao.batchGetTagsForNotes(
+    results.map((r) => r.note.id).toList(),
+  );
   final enriched = <OperatorSearchResult>[];
   for (final result in results) {
-    final tags = await db.tagsDao.getTagsForNote(result.note.id);
     enriched.add(
       OperatorSearchResult(
         note: result.note,
         rank: result.rank,
         contentSnippet: result.contentSnippet,
         titleSnippet: result.titleSnippet,
-        tags: tags,
+        tags: tagsMap[result.note.id] ?? [],
       ),
     );
   }

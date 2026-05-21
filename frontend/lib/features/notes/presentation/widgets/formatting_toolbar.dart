@@ -53,18 +53,14 @@ class FormattingToolbar extends StatelessWidget {
 
     return Container(
       height: 44,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        border: Border(
-          bottom: BorderSide(
-            color: colorScheme.outlineVariant.withAlpha(30),
-            width: 0.5,
-          ),
-        ),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
-      child: Padding(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Row(children: [
+        child: IntrinsicHeight(
+          child: Row(children: [
           // --- Text style group ---
           _FormatButton(
             icon: Icons.format_bold,
@@ -219,6 +215,7 @@ class FormattingToolbar extends StatelessWidget {
           ),
         ],
         ),
+       ),
       ),
     );
   }

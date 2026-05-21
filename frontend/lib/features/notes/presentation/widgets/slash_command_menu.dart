@@ -584,7 +584,7 @@ class SlashCommandMenuState extends State<SlashCommandMenu> {
               style: TextStyle(
                 fontSize: 12,
                 color:
-                    isDark ? const Color(0xFF7A7068) : const Color(0xFF9B918A),
+                    isDark ? const Color(0xFF8B8B9E) : const Color(0xFF9CA3AF),
               ),
             ),
           ],

@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/locale/locale_provider.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/theme/animation_config.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../notes/presentation/widgets/export_sheet.dart';
@@ -25,7 +28,12 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settings)),
+      appBar: AppBar(
+        title: Text(l10n.settings),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(accountInfoProvider);
@@ -33,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
           ref.invalidate(syncStatusProvider);
         },
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 32),
+          padding: const EdgeInsets.only(bottom: 96),
           children: [
             // -- Account section ------------------------------------------------
             const StaggeredGroup(
@@ -55,7 +63,7 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsGroup(
                       children: [
                         SettingsItem(
-                          icon: AppIcons.ai,
+                          icon: AppIcons.aiRobot,
                           title: l10n.llmConfiguration,
                           subtitle: l10n.configureAIProviders,
                           trailing: const Icon(AppIcons.chevronRight, size: 20),
@@ -291,11 +299,15 @@ class SettingsScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    // Show the new export sheet with ZIP and frontmatter options.
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
+      ),
       builder: (_) => const ExportSheet(
         scope: ExportScope.allNotes,
       ),
@@ -307,6 +319,11 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
+      ),
       builder: (_) => const ImportSheet(),
     );
   }
@@ -330,35 +347,38 @@ class _SettingsItemWithSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 6,
+      ),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
+          color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: theme.brightness == Brightness.dark
-                ? AppTheme.darkBorder
-                : AppTheme.lightBorder,
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.s12,
+            vertical: AppSpacing.s12,
+          ),
           child: Row(
             children: [
               IconCircle(icon: icon),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.s12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurface,
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     if (subtitle != null)
@@ -366,8 +386,10 @@ class _SettingsItemWithSwitch extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
                           subtitle!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.textTheme.bodySmall?.color,
+                          style: AppTextStyles.caption.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextTertiary
+                                : AppColors.lightTextTertiary,
                           ),
                         ),
                       ),
@@ -498,72 +520,143 @@ class _LanguageSection extends ConsumerWidget {
   static void _showLanguageDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final currentLocale = ref.read(localeProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
-      builder: (ctx) => SimpleDialog(
+      builder: (ctx) => AlertDialog(
         title: Text(l10n.language),
-        children: [
-          SimpleDialogOption(
-            onPressed: () {
-              ref.read(localeProvider.notifier).setLocale(const Locale('en'));
-              Navigator.pop(ctx);
-            },
-            child: ListTile(
-              leading: Icon(
-                currentLocale.languageCode == 'en'
-                    ? AppIcons.radioChecked
-                    : AppIcons.radioUnchecked,
-              ),
-              title: Text(l10n.english),
-              contentPadding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        backgroundColor: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        contentPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          0,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _LanguageOption(
+              label: l10n.english,
+              isSelected: currentLocale.languageCode == 'en',
+              onTap: () {
+                ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+                Navigator.pop(ctx);
+              },
+              accentBg: AppColors.accentLavenderBg,
+              accentText: AppColors.accentLavenderText,
             ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              ref.read(localeProvider.notifier).setLocale(const Locale('zh'));
-              Navigator.pop(ctx);
-            },
-            child: ListTile(
-              leading: Icon(
-                currentLocale.languageCode == 'zh'
-                    ? AppIcons.radioChecked
-                    : AppIcons.radioUnchecked,
-              ),
-              title: Text(l10n.chinese),
-              contentPadding: EdgeInsets.zero,
+            _LanguageOption(
+              label: l10n.chinese,
+              isSelected: currentLocale.languageCode == 'zh',
+              onTap: () {
+                ref.read(localeProvider.notifier).setLocale(const Locale('zh'));
+                Navigator.pop(ctx);
+              },
+              accentBg: AppColors.accentYellowBg,
+              accentText: AppColors.accentYellowText,
             ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              ref.read(localeProvider.notifier).setLocale(const Locale('ja'));
-              Navigator.pop(ctx);
-            },
-            child: ListTile(
-              leading: Icon(
-                currentLocale.languageCode == 'ja'
-                    ? AppIcons.radioChecked
-                    : AppIcons.radioUnchecked,
-              ),
-              title: Text(l10n.japanese),
-              contentPadding: EdgeInsets.zero,
+            _LanguageOption(
+              label: l10n.japanese,
+              isSelected: currentLocale.languageCode == 'ja',
+              onTap: () {
+                ref.read(localeProvider.notifier).setLocale(const Locale('ja'));
+                Navigator.pop(ctx);
+              },
+              accentBg: AppColors.accentMintBg,
+              accentText: AppColors.accentMintText,
             ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              ref.read(localeProvider.notifier).setLocale(const Locale('ko'));
-              Navigator.pop(ctx);
-            },
-            child: ListTile(
-              leading: Icon(
-                currentLocale.languageCode == 'ko'
-                    ? AppIcons.radioChecked
-                    : AppIcons.radioUnchecked,
-              ),
-              title: Text(l10n.korean),
-              contentPadding: EdgeInsets.zero,
+            _LanguageOption(
+              label: l10n.korean,
+              isSelected: currentLocale.languageCode == 'ko',
+              onTap: () {
+                ref.read(localeProvider.notifier).setLocale(const Locale('ko'));
+                Navigator.pop(ctx);
+              },
+              accentBg: AppColors.accentPeachBg,
+              accentText: AppColors.accentPeachText,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A single language option row with radio indicator and accent color.
+class _LanguageOption extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Color accentBg;
+  final Color accentText;
+
+  const _LanguageOption({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.accentBg,
+    required this.accentText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.s12,
+            vertical: AppSpacing.s8,
           ),
-        ],
+          decoration: BoxDecoration(
+            color: isSelected ? accentBg : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected
+                      ? accentText.withAlpha(20)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected
+                        ? accentText
+                        : AppColors.darkTextTertiary.withAlpha(60),
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? Center(
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: accentText,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              Text(
+                label,
+                style: AppTextStyles.body.copyWith(
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -619,81 +712,180 @@ class _AppearanceSection extends ConsumerWidget {
   static void _showThemeDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final currentOption = ref.read(themeOptionProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
-      builder: (ctx) => SimpleDialog(
+      builder: (ctx) => AlertDialog(
         title: Text(l10n.theme),
-        children: [
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.light,
-            currentOption: currentOption,
-            label: l10n.themeLight,
-            ref: ref,
-          ),
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.dark,
-            currentOption: currentOption,
-            label: l10n.themeDark,
-            ref: ref,
-          ),
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.system,
-            currentOption: currentOption,
-            label: l10n.themeSystem,
-            ref: ref,
-          ),
-          const Divider(),
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.highContrastLight,
-            currentOption: currentOption,
-            label: l10n.themeHighContrastLight,
-            ref: ref,
-            isHighContrast: true,
-          ),
-          _buildThemeOption(
-            context: ctx,
-            option: ThemeOption.highContrastDark,
-            currentOption: currentOption,
-            label: l10n.themeHighContrastDark,
-            ref: ref,
-            isHighContrast: true,
-          ),
-        ],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        backgroundColor: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        contentPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          0,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ThemeOption(
+              label: l10n.themeLight,
+              icon: Icons.light_mode_outlined,
+              isSelected: currentOption == ThemeOption.light,
+              onTap: () {
+                ref
+                    .read(themeOptionProvider.notifier)
+                    .setThemeOption(ThemeOption.light);
+                Navigator.pop(ctx);
+              },
+              accentBg: AppColors.accentYellowBg,
+              accentText: AppColors.accentYellowText,
+            ),
+            _ThemeOption(
+              label: l10n.themeDark,
+              icon: Icons.dark_mode_outlined,
+              isSelected: currentOption == ThemeOption.dark,
+              onTap: () {
+                ref
+                    .read(themeOptionProvider.notifier)
+                    .setThemeOption(ThemeOption.dark);
+                Navigator.pop(ctx);
+              },
+              accentBg: AppColors.accentLavenderBg,
+              accentText: AppColors.accentLavenderText,
+            ),
+            _ThemeOption(
+              label: l10n.themeSystem,
+              icon: Icons.settings_suggest_outlined,
+              isSelected: currentOption == ThemeOption.system,
+              onTap: () {
+                ref
+                    .read(themeOptionProvider.notifier)
+                    .setThemeOption(ThemeOption.system);
+                Navigator.pop(ctx);
+              },
+              accentBg: AppColors.accentMintBg,
+              accentText: AppColors.accentMintText,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
+              child: Divider(
+                height: 1,
+                color: isDark
+                    ? AppColors.darkDivider.withAlpha(60)
+                    : AppColors.lightDivider.withAlpha(80),
+              ),
+            ),
+            _ThemeOption(
+              label: l10n.themeHighContrastLight,
+              icon: Icons.contrast_outlined,
+              isSelected: currentOption == ThemeOption.highContrastLight,
+              onTap: () {
+                ref
+                    .read(themeOptionProvider.notifier)
+                    .setThemeOption(ThemeOption.highContrastLight);
+                Navigator.pop(ctx);
+              },
+              accentBg: AppColors.accentPeachBg,
+              accentText: AppColors.accentPeachText,
+              isHighContrast: true,
+            ),
+            _ThemeOption(
+              label: l10n.themeHighContrastDark,
+              icon: Icons.contrast,
+              isSelected: currentOption == ThemeOption.highContrastDark,
+              onTap: () {
+                ref
+                    .read(themeOptionProvider.notifier)
+                    .setThemeOption(ThemeOption.highContrastDark);
+                Navigator.pop(ctx);
+              },
+              accentBg: AppColors.accentPeachBg,
+              accentText: AppColors.accentPeachText,
+              isHighContrast: true,
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  static Widget _buildThemeOption({
-    required BuildContext context,
-    required ThemeOption option,
-    required ThemeOption currentOption,
-    required String label,
-    required WidgetRef ref,
-    bool isHighContrast = false,
-  }) {
-    final isSelected = currentOption == option;
-    return SimpleDialogOption(
-      onPressed: () {
-        ref.read(themeOptionProvider.notifier).setThemeOption(option);
-        Navigator.pop(context);
-      },
-      child: ListTile(
-        leading: Icon(
-          isSelected ? AppIcons.radioChecked : AppIcons.radioUnchecked,
-          color: isHighContrast ? null : null,
+/// A single theme option row with radio indicator and icon.
+class _ThemeOption extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Color accentBg;
+  final Color accentText;
+  final bool isHighContrast;
+
+  const _ThemeOption({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+    required this.accentBg,
+    required this.accentText,
+    this.isHighContrast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.s12,
+            vertical: AppSpacing.s8,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected ? accentBg : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? accentText.withAlpha(20)
+                      : AppColors.darkTextTertiary.withAlpha(8),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                ),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: isSelected
+                      ? accentText
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: isHighContrast
+                        ? FontWeight.bold
+                        : (isSelected ? FontWeight.w600 : FontWeight.normal),
+                  ),
+                ),
+              ),
+              if (isSelected)
+                Icon(Icons.check_circle, size: 20, color: accentText),
+            ],
+          ),
         ),
-        title: Text(
-          label,
-          style: isHighContrast
-              ? const TextStyle(fontWeight: FontWeight.bold)
-              : null,
-        ),
-        contentPadding: EdgeInsets.zero,
       ),
     );
   }

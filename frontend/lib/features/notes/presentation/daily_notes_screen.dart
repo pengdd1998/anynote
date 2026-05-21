@@ -7,6 +7,11 @@ import 'package:uuid/uuid.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/seed_templates.dart';
 import '../../../core/error/error.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -141,8 +146,10 @@ class _DailyNotesScreenState extends ConsumerState<DailyNotesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.dailyNotes),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
-          // Jump to Today button
           TextButton.icon(
             onPressed: _goToToday,
             icon: const Icon(Icons.today, size: 18),
@@ -184,7 +191,7 @@ class _DailyNotesScreenState extends ConsumerState<DailyNotesScreen> {
             },
           ),
 
-          const Divider(height: 1),
+          const SizedBox(height: AppSpacing.s8),
 
           // Selected day preview section
           _SelectedDaySection(
@@ -193,7 +200,7 @@ class _DailyNotesScreenState extends ConsumerState<DailyNotesScreen> {
             onOpen: () => _openOrCreateDailyNote(_selectedDate),
           ),
 
-          const Divider(height: 1),
+          const SizedBox(height: AppSpacing.s12),
 
           // Recent daily notes
           Expanded(child: _RecentDailyNotesList()),
@@ -237,7 +244,8 @@ class _DailyNotesScreenState extends ConsumerState<DailyNotesScreen> {
 
     String encryptedContent;
     if (crypto.isUnlocked) {
-      encryptedContent = await crypto.encryptForItem(noteId, resolvedContent);
+      encryptedContent =
+          await crypto.encryptForItem(noteId, resolvedContent);
     } else {
       encryptedContent = resolvedContent;
     }
@@ -286,54 +294,69 @@ class _MonthCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final monthLabel = DateFormat.yMMMM().format(focusedMonth);
     final today = DateTime.now();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.s12,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Month navigation header
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: onPreviousMonth,
                 tooltip: l10n.calendar,
+                style: IconButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                ),
               ),
-              Text(
-                monthLabel,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Center(
+                  child: Text(
+                    monthLabel,
+                    style: AppTextStyles.headline.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: onNextMonth,
                 tooltip: l10n.calendar,
+                style: IconButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s12),
 
           // Weekday headers
-          _buildWeekdayHeaders(theme),
+          _buildWeekdayHeaders(),
 
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.s4),
 
           // Day grid
-          _buildDayGrid(context, theme, today, l10n),
+          _buildDayGrid(context, today, l10n),
         ],
       ),
     );
   }
 
-  Widget _buildWeekdayHeaders(ThemeData theme) {
-    // Use locale-aware short weekday names. Start from Monday.
+  Widget _buildWeekdayHeaders() {
     final weekdays = <String>[];
     for (int i = 1; i <= 7; i++) {
       // i=1 is Monday, i=7 is Sunday
@@ -347,9 +370,9 @@ class _MonthCalendar extends StatelessWidget {
           child: Center(
             child: Text(
               day,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              style: AppTextStyles.caption.copyWith(
                 fontWeight: FontWeight.w500,
+                color: AppColors.lightTextTertiary,
               ),
             ),
           ),
@@ -360,7 +383,6 @@ class _MonthCalendar extends StatelessWidget {
 
   Widget _buildDayGrid(
     BuildContext context,
-    ThemeData theme,
     DateTime today,
     AppLocalizations l10n,
   ) {
@@ -384,55 +406,60 @@ class _MonthCalendar extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(rowCount, (rowIndex) {
-        return Row(
-          children: List.generate(7, (colIndex) {
-            final int cellIndex = rowIndex * 7 + colIndex;
-            final int dayNumber = cellIndex - startWeekday + 1;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.s2),
+          child: Row(
+            children: List.generate(7, (colIndex) {
+              final int cellIndex = rowIndex * 7 + colIndex;
+              final int dayNumber = cellIndex - startWeekday + 1;
 
-            if (dayNumber < 1 || dayNumber > totalDays) {
-              return const Expanded(child: SizedBox(height: 44));
-            }
+              if (dayNumber < 1 || dayNumber > totalDays) {
+                return const Expanded(
+                  child: SizedBox(height: 48),
+                );
+              }
 
-            final date = DateTime(
-              focusedMonth.year,
-              focusedMonth.month,
-              dayNumber,
-            );
-            final dateStr = _dateToString(date);
-            final isToday = date.year == today.year &&
-                date.month == today.month &&
-                date.day == today.day;
-            final isSelected = date.year == selectedDate.year &&
-                date.month == selectedDate.month &&
-                date.day == selectedDate.day;
-            final hasNote = datesWithNotes.contains(dateStr);
+              final date = DateTime(
+                focusedMonth.year,
+                focusedMonth.month,
+                dayNumber,
+              );
+              final dateStr = _dateToString(date);
+              final isToday = date.year == today.year &&
+                  date.month == today.month &&
+                  date.day == today.day;
+              final isSelected = date.year == selectedDate.year &&
+                  date.month == selectedDate.month &&
+                  date.day == selectedDate.day;
+              final hasNote = datesWithNotes.contains(dateStr);
 
-            return Expanded(
-              child: Semantics(
-                button: true,
-                label: l10n.calendarDaySemantics(
-                  _formatLongDate(date),
-                  hasNote ? l10n.dailyNotes : '',
-                ),
-                hint: hasNote ? l10n.dailyNotes : '',
-                child: GestureDetector(
-                  onTap: () => onDateSelected(date),
-                  behavior: HitTestBehavior.opaque,
-                  child: SizedBox(
-                    height: 44,
-                    child: Center(
-                      child: _DayCell(
-                        dayNumber: dayNumber,
-                        isToday: isToday,
-                        isSelected: isSelected,
-                        hasNote: hasNote,
+              return Expanded(
+                child: Semantics(
+                  button: true,
+                  label: l10n.calendarDaySemantics(
+                    _formatLongDate(date),
+                    hasNote ? l10n.dailyNotes : '',
+                  ),
+                  hint: hasNote ? l10n.dailyNotes : '',
+                  child: GestureDetector(
+                    onTap: () => onDateSelected(date),
+                    behavior: HitTestBehavior.opaque,
+                    child: SizedBox(
+                      height: 48,
+                      child: Center(
+                        child: _DayCell(
+                          dayNumber: dayNumber,
+                          isToday: isToday,
+                          isSelected: isSelected,
+                          hasNote: hasNote,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
         );
       }),
     );
@@ -458,52 +485,58 @@ class _DayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
 
-    Color? textColor;
-    Color? bgColor;
-    BoxBorder? border;
+    final Color bg;
+    final Color textColor;
 
     if (isSelected) {
-      bgColor = colorScheme.primary;
-      textColor = colorScheme.onPrimary;
+      bg = primary.withAlpha(30);
+      textColor = primary;
     } else if (isToday) {
-      border = Border.all(color: colorScheme.primary, width: 2);
-      textColor = colorScheme.primary;
+      bg = isDark
+          ? AppColors.darkInputFill
+          : AppColors.lightInputFill;
+      textColor = primary;
     } else {
-      textColor = colorScheme.onSurface;
+      bg = Colors.transparent;
+      textColor = isDark
+          ? AppColors.darkTextPrimary
+          : AppColors.lightTextPrimary;
     }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 38,
+          height: 34,
           decoration: BoxDecoration(
-            color: bgColor,
-            shape: BoxShape.circle,
-            border: border,
+            color: bg,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
           alignment: Alignment.center,
           child: Text(
             '$dayNumber',
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 14,
               color: textColor,
-              fontWeight: isToday || isSelected ? FontWeight.bold : null,
+              fontWeight: isSelected || isToday
+                  ? FontWeight.w600
+                  : FontWeight.w400,
             ),
           ),
         ),
         const SizedBox(height: 2),
         // Dot indicator for notes
         SizedBox(
-          width: 6,
-          height: 6,
+          width: 5,
+          height: 5,
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: hasNote
-                  ? (isSelected ? colorScheme.onPrimary : colorScheme.primary)
+                  ? primary.withAlpha(isSelected ? 200 : 120)
                   : Colors.transparent,
               shape: BoxShape.circle,
             ),
@@ -532,46 +565,106 @@ class _SelectedDaySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final dateStr = _dateToString(selectedDate);
     final hasNote = datesWithNotes.contains(dateStr);
     final displayDate = _formatLongDate(selectedDate);
+    final weekday = DateFormat.EEEE().format(selectedDate);
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  displayDate,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  hasNote ? l10n.openDailyNote : l10n.noDailyNote,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: hasNote
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: GestureDetector(
+        onTap: onOpen,
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
           ),
-          FilledButton.tonalIcon(
-            onPressed: onOpen,
-            icon: Icon(hasNote ? Icons.edit_note : Icons.add),
-            label: Text(
-              hasNote ? l10n.openDailyNote : l10n.createTodaysNote,
-            ),
+          child: Row(
+            children: [
+              // Date badge
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: hasNote
+                      ? primary.withAlpha(15)
+                      : (isDark
+                          ? AppColors.darkInputFill
+                          : AppColors.lightInputFill),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${selectedDate.day}',
+                      style: AppTextStyles.headline.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: hasNote ? primary : null,
+                        height: 1.1,
+                      ),
+                    ),
+                    Text(
+                      weekday.substring(0, 3),
+                      style: AppTextStyles.caption.copyWith(
+                        fontSize: 10,
+                        color: isDark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              // Date info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      displayDate,
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hasNote ? l10n.openDailyNote : l10n.noDailyNote,
+                      style: AppTextStyles.caption.copyWith(
+                        color: hasNote
+                            ? primary
+                            : (isDark
+                                ? AppColors.darkTextTertiary
+                                : AppColors.lightTextTertiary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Action icon
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: primary.withAlpha(15),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(
+                  hasNote ? Icons.edit_note : Icons.add,
+                  size: 20,
+                  color: primary,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -585,7 +678,6 @@ class _RecentDailyNotesList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final recentAsync = ref.watch(recentDailyNotesProvider);
 
     return Column(
@@ -593,12 +685,19 @@ class _RecentDailyNotesList extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.s4,
+            AppSpacing.md,
+            AppSpacing.s8,
+          ),
           child: Text(
             l10n.recentDailyNotes,
-            style: theme.textTheme.titleSmall?.copyWith(
+            style: AppTextStyles.caption.copyWith(
               fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurfaceVariant,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary,
             ),
           ),
         ),
@@ -614,15 +713,26 @@ class _RecentDailyNotesList extends ConsumerWidget {
               }
               return ListView.builder(
                 itemCount: entries.length,
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.md,
+                  right: AppSpacing.md,
+                  bottom: AppSpacing.md,
+                ),
                 itemBuilder: (context, index) {
                   final entry = entries[index];
-                  return _RecentDailyNoteCard(entry: entry);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+                    child: _RecentDailyNoteCard(entry: entry),
+                  );
                 },
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text(ErrorDisplay.displayMessage(e, AppLocalizations.of(context)!))),
+            error: (e, _) => Center(
+              child: Text(
+                ErrorDisplay.displayMessage(e, AppLocalizations.of(context)!),
+              ),
+            ),
           ),
         ),
       ],
@@ -641,7 +751,7 @@ class _RecentDailyNoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Parse the date string for display.
     final dateParts = entry.date.split('-');
@@ -650,7 +760,6 @@ class _RecentDailyNoteCard extends StatelessWidget {
       int.parse(dateParts[1]),
       int.parse(dateParts[2]),
     );
-    final displayDate = DateFormat.yMMMd().format(date);
     final weekday = DateFormat.EEEE().format(date);
 
     // Extract a preview of the content (first non-empty lines).
@@ -663,36 +772,72 @@ class _RecentDailyNoteCard extends StatelessWidget {
         ? '${previewLines.substring(0, 80)}...'
         : previewLines;
 
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: theme.colorScheme.primaryContainer,
-        child: Text(
-          '${date.day}',
-          style: TextStyle(
-            color: theme.colorScheme.onPrimaryContainer,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-      ),
-      title: Text(
-        entry.title.isNotEmpty ? entry.title : displayDate,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      subtitle: Text(
-        '$weekday${preview.isNotEmpty ? ' -- $preview' : ''}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-      trailing: const Icon(Icons.chevron_right, size: 18),
+    final cardBg = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
+
+    return GestureDetector(
       onTap: () => context.push('/notes/${entry.noteId}'),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+        ),
+        child: Row(
+          children: [
+            // Day number badge
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkInputFill
+                    : AppColors.lightInputFill,
+                borderRadius: BorderRadius.circular(AppRadius.xs),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '${date.day}',
+                style: AppTextStyles.title.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s12),
+            // Title + preview
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.title.isNotEmpty ? entry.title : weekday,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (preview.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '$weekday${preview.isNotEmpty ? ' · $preview' : ''}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

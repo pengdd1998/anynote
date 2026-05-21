@@ -11,12 +11,12 @@ class AppIcons {
 
   // ── Navigation (regular / fill pairs) ────────────────────────────────
 
-  static const notes = PhosphorIconsRegular.note;
-  static const notesFilled = PhosphorIconsFill.note;
-  static const compose = PhosphorIconsRegular.sparkle;
-  static const composeFilled = PhosphorIconsFill.sparkle;
-  static const publish = PhosphorIconsRegular.uploadSimple;
-  static const publishFilled = PhosphorIconsFill.uploadSimple;
+  static const notes = PhosphorIconsRegular.house;
+  static const notesFilled = PhosphorIconsFill.house;
+  static const compose = PhosphorIconsRegular.pen;
+  static const composeFilled = PhosphorIconsFill.pen;
+  static const ai = PhosphorIconsRegular.chatCircle;
+  static const aiFilled = PhosphorIconsFill.chatCircle;
   static const settings = PhosphorIconsRegular.gear;
   static const settingsFilled = PhosphorIconsFill.gear;
 
@@ -38,7 +38,7 @@ class AppIcons {
 
   // ── Settings ─────────────────────────────────────────────────────────
 
-  static const ai = PhosphorIconsRegular.robot;
+  static const aiRobot = PhosphorIconsRegular.robot;
   static const dataUsage = PhosphorIconsRegular.chartBar;
   static const shield = PhosphorIconsRegular.shieldChevron;
   static const tag = PhosphorIconsRegular.tag;

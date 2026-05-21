@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/crypto/crypto_service.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/color_utils.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/color_picker_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../../core/crypto/crypto_service.dart';
-import '../../../core/database/app_database.dart';
 import '../../tags/domain/tag_tree_item.dart';
 import 'widgets/tag_reparent_sheet.dart';
 
@@ -24,7 +29,6 @@ class TagsScreen extends ConsumerStatefulWidget {
 class _TagsScreenState extends ConsumerState<TagsScreen> {
   final _tagNameController = TextEditingController();
 
-  /// Tracks which tag IDs are expanded in the tree view.
   final Set<String> _expandedTags = {};
 
   @override
@@ -41,6 +45,9 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.tagsTitle),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           StreamBuilder<List<Tag>>(
             stream: db.tagsDao.watchAllTags(),
@@ -49,6 +56,9 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
               if (tags.isEmpty) return const SizedBox.shrink();
               return PopupMenuButton<String>(
                 tooltip: l10n.moreOptions,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                ),
                 itemBuilder: (ctx) => [
                   PopupMenuItem(
                     value: 'expand_all',
@@ -91,7 +101,6 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
             );
           }
 
-          // Build hierarchical tree from flat tag list.
           final tree = buildTagTree(tags);
           final flatItems = flattenTagTree(tree);
 
@@ -101,11 +110,16 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
             },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s4,
+                AppSpacing.md,
+                96,
+              ),
               itemCount: flatItems.length,
               itemBuilder: (context, index) {
                 final item = flatItems[index];
-                return _buildTagTile(db, item, l10n);
+                return _buildTagChip(item, l10n, db, index);
               },
             ),
           );
@@ -118,97 +132,141 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
           onPressed: () =>
               _showCreateDialog(db, ref.read(cryptoServiceProvider)),
           tooltip: l10n.newTag,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
           child: const Icon(Icons.add),
         ),
       ),
     );
   }
 
-  /// Build a single tree-row tile for a tag.
-  Widget _buildTagTile(
-    AppDatabase db,
+  Widget _buildTagChip(
     TagTreeItem item,
     AppLocalizations l10n,
+    AppDatabase db,
+    int index,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final tag = item.tag;
     final tagColor = parseHexColor(tag.color);
-    final indent = item.level * 24.0;
+    final indent = item.level * 20.0;
     final isExpanded = _expandedTags.contains(tag.id);
+    final hasChildren = item.hasChildren;
 
-    return Semantics(
-      label: l10n.tagItemSemanticLabel(tag.plainName ?? l10n.encrypted),
-      hint: l10n.tagItemSemanticHint,
-      child: InkWell(
+    final accentBg = tagColor?.withAlpha(20) ??
+        (isDark ? AppColors.darkInputFill : AppColors.lightInputFill);
+    final accentText = tagColor ?? AppColors.primary;
+
+    return Padding(
+      padding: EdgeInsets.only(left: indent, bottom: AppSpacing.s8),
+      child: GestureDetector(
         onLongPress: () => _showTagEditMenu(db, tag),
-        child: Padding(
-          padding: EdgeInsets.only(left: 16 + indent),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.s12,
+            vertical: 10,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+          ),
           child: Row(
             children: [
-              // Expand/collapse toggle.
-              SizedBox(
-                width: 28,
-                height: 48,
-                child: item.hasChildren
-                    ? IconButton(
-                        icon: Icon(
-                          isExpanded
-                              ? Icons.keyboard_arrow_down
-                              : Icons.keyboard_arrow_right,
-                          size: 20,
-                        ),
-                        padding: EdgeInsets.zero,
-                        tooltip: isExpanded ? l10n.collapseAll : l10n.expandAll,
-                        onPressed: () {
-                          setState(() {
-                            if (isExpanded) {
-                              _expandedTags.remove(tag.id);
-                            } else {
-                              _expandedTags.add(tag.id);
-                            }
-                          });
-                        },
-                      )
-                    : const SizedBox(width: 28),
-              ),
-              const SizedBox(width: 4),
-              // Color dot.
-              if (tagColor != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: tagColor,
-                      shape: BoxShape.circle,
+              // Expand/collapse toggle
+              if (hasChildren)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      if (isExpanded) {
+                        _expandedTags.remove(tag.id);
+                      } else {
+                        _expandedTags.add(tag.id);
+                      }
+                    });
+                  },
+                  child: AnimatedRotation(
+                    turns: isExpanded ? 0.25 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
                     ),
                   ),
                 )
               else
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Icon(
-                    Icons.label_outline,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                const SizedBox(width: 18),
+              const SizedBox(width: AppSpacing.s8),
+              // Color badge
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: accentBg,
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
-              // Tag name.
+                child: tagColor != null
+                    ? Icon(Icons.label, size: 14, color: accentText)
+                    : Icon(
+                        Icons.label_outline,
+                        size: 14,
+                        color: accentText,
+                      ),
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              // Tag name
               Expanded(
                 child: Text(
                   tag.plainName ?? l10n.encrypted,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-              // Delete button.
-              IconButton(
-                icon: Icon(
-                  Icons.close,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              // Child count badge
+              if (hasChildren)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkInputFill
+                        : AppColors.lightInputFill,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Text(
+                    '${item.children.length}',
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
+                  ),
                 ),
-                onPressed: () => _deleteTag(db, tag),
-                tooltip: l10n.delete,
+              // Delete button
+              GestureDetector(
+                onTap: () => _deleteTag(db, tag),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  margin: const EdgeInsets.only(left: AppSpacing.s4),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withAlpha(12),
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    size: 14,
+                    color: AppColors.error.withAlpha(140),
+                  ),
+                ),
               ),
             ],
           ),
@@ -228,14 +286,21 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
         title: Text(l10n.newTag),
         content: TextField(
           controller: _tagNameController,
           decoration: InputDecoration(
             labelText: l10n.tagName,
             hintText: l10n.tagNameHint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
           ),
           autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
         ),
         actions: [
           TextButton(
@@ -250,7 +315,8 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
               final name = _tagNameController.text.trim();
               if (name.isNotEmpty) {
                 final tagId = const Uuid().v4();
-                final encryptedName = await crypto.encryptForItem(tagId, name);
+                final encryptedName =
+                    await crypto.encryptForItem(tagId, name);
                 await db.tagsDao.createTag(
                   id: tagId,
                   encryptedName: encryptedName,
@@ -269,13 +335,13 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     );
   }
 
-  /// Show create-sub-tag dialog with a pre-selected parent.
   void _showCreateSubTagDialog(
     AppDatabase db,
     CryptoService crypto,
     Tag parentTag,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (!crypto.isUnlocked) {
       AppSnackBar.error(context, message: l10n.unlockRequired);
@@ -285,25 +351,47 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
         title: Text(l10n.createSubTag),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${l10n.tagName} (${parentTag.plainName ?? l10n.encrypted} >)',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.s8,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: (isDark
+                        ? AppColors.darkInputFill
+                        : AppColors.lightInputFill)
+                    .withAlpha(180),
+                borderRadius: BorderRadius.circular(AppRadius.xs),
+              ),
+              child: Text(
+                '${parentTag.plainName ?? l10n.encrypted} >',
+                style: AppTextStyles.caption.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s12),
             TextField(
               controller: _tagNameController,
               decoration: InputDecoration(
                 labelText: l10n.tagName,
                 hintText: l10n.tagNameHint,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
               ),
               autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
             ),
           ],
         ),
@@ -320,7 +408,8 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
               final name = _tagNameController.text.trim();
               if (name.isNotEmpty) {
                 final tagId = const Uuid().v4();
-                final encryptedName = await crypto.encryptForItem(tagId, name);
+                final encryptedName =
+                    await crypto.encryptForItem(tagId, name);
                 await db.tagsDao.createTag(
                   id: tagId,
                   encryptedName: encryptedName,
@@ -332,7 +421,6 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                 Navigator.pop(ctx);
               }
               _tagNameController.clear();
-              // Auto-expand parent so the new child is visible.
               setState(() {
                 _expandedTags.add(parentTag.id);
               });
@@ -344,29 +432,50 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     );
   }
 
-  /// Show edit menu with color picker, sub-tag creation, reparent, and delete
-  /// options on long press.
   void _showTagEditMenu(AppDatabase db, Tag tag) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final crypto = ref.read(cryptoServiceProvider);
 
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
       ),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with tag name.
+            // Drag handle
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: (isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary)
+                      .withAlpha(80),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Header with tag name
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s8,
+                AppSpacing.md,
+                AppSpacing.s4,
+              ),
               child: Row(
                 children: [
                   if (tag.color != null)
                     Padding(
-                      padding: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.only(right: AppSpacing.s8),
                       child: Container(
                         width: 16,
                         height: 16,
@@ -379,16 +488,20 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                   Expanded(
                     child: Text(
                       tag.plainName ?? l10n.encrypted,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(),
-            // Create sub-tag.
+            Divider(
+              height: 1,
+              color: isDark
+                  ? AppColors.darkDivider.withAlpha(60)
+                  : AppColors.lightDivider.withAlpha(80),
+            ),
             ListTile(
               leading: const Icon(Icons.add),
               title: Text(l10n.createSubTag),
@@ -397,7 +510,6 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                 _showCreateSubTagDialog(db, crypto, tag);
               },
             ),
-            // Move to parent (reparent).
             ListTile(
               leading: const Icon(Icons.drive_file_move_outline),
               title: Text(l10n.moveToParent),
@@ -406,7 +518,6 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                 _showReparentSheet(db, tag);
               },
             ),
-            // Color picker.
             ListTile(
               leading: const Icon(Icons.palette),
               title: Text(l10n.noteColor),
@@ -417,33 +528,33 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                   currentColor: tag.color,
                 );
                 if (selectedColor != null && mounted) {
-                  final newColor = selectedColor.isEmpty ? null : selectedColor;
+                  final newColor =
+                      selectedColor.isEmpty ? null : selectedColor;
                   await db.tagsDao.updateTagColor(tag.id, newColor);
                 }
               },
             ),
             ListTile(
-              leading: Icon(
+              leading: const Icon(
                 Icons.delete_outline,
-                color: Theme.of(context).colorScheme.error,
+                color: AppColors.error,
               ),
-              title: Text(
-                l10n.delete,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              title: const Text(
+                'Delete',
+                style: TextStyle(color: AppColors.error),
               ),
               onTap: () {
                 Navigator.of(ctx).pop();
                 _deleteTag(db, tag);
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
           ],
         ),
       ),
     );
   }
 
-  /// Show the reparent bottom sheet for selecting a new parent tag.
   void _showReparentSheet(AppDatabase db, Tag tag) async {
     final allTags = await db.tagsDao.getAllTags();
     if (!mounted) return;
@@ -452,7 +563,9 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
       ),
       builder: (ctx) => DraggableScrollableSheet(
         initialChildSize: 0.6,

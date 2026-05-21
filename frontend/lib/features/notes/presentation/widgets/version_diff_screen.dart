@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../l10n/app_localizations.dart';
-import '../../../../main.dart';
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/error/error.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../main.dart';
 import '../../domain/text_diff.dart';
 
 /// Decrypted version data used for diff comparison.
@@ -25,10 +29,18 @@ class _VersionData {
   });
 }
 
-/// Screen that displays a unified diff between two note versions.
+/// A paired diff line for side-by-side display.
+class _DiffPair {
+  final DiffLine? left;
+  final DiffLine? right;
+
+  const _DiffPair({this.left, this.right});
+}
+
+/// Screen that displays a side-by-side diff between two note versions.
 ///
-/// Shows color-coded lines (green for added, red for removed, default for
-/// unchanged) with summary statistics and restore actions for both versions.
+/// Shows paired content in two columns with soft color-coded backgrounds
+/// (mint for added, warm rose for removed) and restore actions for both versions.
 class VersionDiffScreen extends ConsumerStatefulWidget {
   final String noteId;
   final String olderVersionId;
@@ -69,7 +81,6 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       final crypto = ref.read(cryptoServiceProvider);
       final l10n = AppLocalizations.of(context)!;
 
-      // Load both versions in parallel.
       final results = await Future.wait([
         db.noteVersionsDao.getVersionById(widget.olderVersionId),
         db.noteVersionsDao.getVersionById(widget.newerVersionId),
@@ -88,11 +99,9 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
         return;
       }
 
-      // Decrypt both versions.
       final older = await _decryptVersion(olderRaw, crypto, l10n);
       final newer = await _decryptVersion(newerRaw, crypto, l10n);
 
-      // Compute diff.
       final diff = TextDiff.compute(older.content, newer.content);
 
       if (mounted) {
@@ -147,12 +156,41 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
     );
   }
 
+  /// Build paired entries from unified diff lines for side-by-side display.
+  List<_DiffPair> _buildPairs(TextDiff diff) {
+    final pairs = <_DiffPair>[];
+    int i = 0;
+    while (i < diff.lines.length) {
+      final line = diff.lines[i];
+      if (line.type == DiffType.unchanged) {
+        pairs.add(_DiffPair(left: line, right: line));
+        i++;
+      } else if (line.type == DiffType.removed) {
+        if (i + 1 < diff.lines.length &&
+            diff.lines[i + 1].type == DiffType.added) {
+          pairs.add(_DiffPair(left: line, right: diff.lines[i + 1]));
+          i += 2;
+        } else {
+          pairs.add(_DiffPair(left: line, right: null));
+          i++;
+        }
+      } else {
+        pairs.add(_DiffPair(left: null, right: line));
+        i++;
+      }
+    }
+    return pairs;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.versionDiff),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
       ),
       body: _buildBody(),
       bottomNavigationBar: _diff != null && _olderVersion != null
@@ -167,34 +205,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ExcludeSemantics(
-                child: Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.tonal(
-                onPressed: _loadVersions,
-                child: Text(AppLocalizations.of(context)!.retry),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _buildErrorState();
     }
 
     final l10n = AppLocalizations.of(context)!;
@@ -202,149 +213,318 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
 
     return Column(
       children: [
-        // Header with version info and stats.
         _buildDiffHeader(l10n, diff),
-        const Divider(height: 1),
-        // Diff content.
-        Expanded(child: _buildDiffContent(l10n, diff)),
+        Expanded(child: _buildDiffContent(diff)),
       ],
     );
   }
 
+  Widget _buildErrorState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.lightErrorBg,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 28,
+                color: AppColors.error,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body.copyWith(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton.tonal(
+              onPressed: _loadVersions,
+              child: Text(l10n.retry),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDiffHeader(AppLocalizations l10n, TextDiff diff) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final older = _olderVersion!;
     final newer = _newerVersion!;
+    final primary = Theme.of(context).colorScheme.primary;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s4,
+        AppSpacing.md,
+        AppSpacing.md,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Version comparison label.
-          Text(
-            '${l10n.versionNumber(older.versionNumber)} -> ${l10n.versionNumber(newer.versionNumber)}',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+          // Version pills
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkInputFill
+                      : AppColors.lightInputFill,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
-          ),
-          const SizedBox(height: 4),
-          // Dates.
-          Text(
-            '${_formatDate(older.createdAt)} -> ${_formatDate(newer.createdAt)}',
-            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 8),
-          // Summary stats.
-          if (diff.isIdentical)
-            Text(
-              l10n.noChanges,
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontStyle: FontStyle.italic,
+                child: Text(
+                  l10n.versionNumber(older.versionNumber),
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                ),
               ),
-            )
-          else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
+                child: Icon(
+                  Icons.arrow_forward,
+                  size: 14,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: primary.withAlpha(15),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  l10n.versionNumber(newer.versionNumber),
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: primary,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${_formatDate(older.createdAt)} -> ${_formatDate(newer.createdAt)}',
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 11,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+              ),
+            ],
+          ),
+          // Summary stats
+          if (!diff.isIdentical) ...[
+            const SizedBox(height: AppSpacing.s8),
             Row(
               children: [
                 _buildStatChip(
                   l10n.linesAdded(diff.linesAdded),
-                  Colors.green,
+                  AppColors.accentMintBg,
+                  AppColors.accentMintText,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 _buildStatChip(
                   l10n.linesRemoved(diff.linesRemoved),
-                  Colors.red,
+                  AppColors.lightErrorBg,
+                  AppColors.error,
                 ),
               ],
             ),
+          ] else ...[
+            const SizedBox(height: AppSpacing.s8),
+            Text(
+              l10n.noChanges,
+              style: AppTextStyles.caption.copyWith(
+                fontStyle: FontStyle.italic,
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildStatChip(String label, MaterialColor color) {
+  Widget _buildStatChip(String label, Color bg, Color text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.shade200),
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: AppTextStyles.caption.copyWith(
           fontSize: 11,
-          color: color.shade700,
           fontWeight: FontWeight.w600,
+          color: text,
         ),
       ),
     );
   }
 
-  Widget _buildDiffContent(AppLocalizations l10n, TextDiff diff) {
+  Widget _buildDiffContent(TextDiff diff) {
     if (diff.lines.isEmpty) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return Center(
         child: Text(
-          l10n.noChanges,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          AppLocalizations.of(context)!.noChanges,
+          style: AppTextStyles.body.copyWith(
+            color: isDark
+                ? AppColors.darkTextTertiary
+                : AppColors.lightTextTertiary,
+          ),
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: diff.lines.length,
-      itemBuilder: (context, index) {
-        final line = diff.lines[index];
-        return _buildDiffLine(line);
-      },
+    final pairs = _buildPairs(diff);
+
+    return Scrollbar(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width - AppSpacing.md * 2,
+          child: ListView.builder(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+            itemCount: pairs.length,
+            itemBuilder: (context, index) {
+              return _buildDiffPair(pairs[index]);
+            },
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildDiffLine(DiffLine line) {
+  Widget _buildDiffPair(_DiffPair pair) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasLeft = pair.left != null && pair.left!.type != DiffType.unchanged;
+    final hasRight =
+        pair.right != null && pair.right!.type != DiffType.unchanged;
 
-    Color backgroundColor;
-    Color textColor;
-    String prefix;
+    final leftBg = pair.left?.type == DiffType.removed
+        ? (isDark
+            ? AppColors.error.withAlpha(25)
+            : AppColors.lightErrorBg)
+        : Colors.transparent;
 
-    switch (line.type) {
-      case DiffType.added:
-        backgroundColor = isDark
-            ? Colors.green.shade900.withValues(alpha: 0.3)
-            : Colors.green.shade50;
-        textColor = isDark ? Colors.green.shade200 : Colors.green.shade900;
-        prefix = '+';
-        break;
-      case DiffType.removed:
-        backgroundColor = isDark
-            ? Colors.red.shade900.withValues(alpha: 0.3)
-            : Colors.red.shade50;
-        textColor = isDark ? Colors.red.shade200 : Colors.red.shade900;
-        prefix = '-';
-        break;
-      case DiffType.unchanged:
-        backgroundColor = Colors.transparent;
-        textColor = Theme.of(context).colorScheme.onSurfaceVariant;
-        prefix = ' ';
-        break;
-    }
+    final rightBg = pair.right?.type == DiffType.added
+        ? (isDark
+            ? AppColors.success.withAlpha(25)
+            : AppColors.accentMintBg)
+        : Colors.transparent;
 
-    return Container(
-      width: double.infinity,
-      color: backgroundColor,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
-      child: Text(
-        '$prefix ${line.text}',
-        style: TextStyle(
-          fontSize: 13,
-          fontFamily: 'monospace',
-          height: 1.5,
-          color: textColor,
-        ),
+    final leftTextColor = pair.left?.type == DiffType.removed
+        ? (isDark ? AppColors.error.withAlpha(200) : AppColors.error)
+        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
+
+    final rightTextColor = pair.right?.type == DiffType.added
+        ? (isDark ? AppColors.success.withAlpha(200) : AppColors.accentMintText)
+        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Left column (older version)
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: leftBg,
+                border: hasLeft
+                    ? Border(
+                        left: BorderSide(
+                          color: AppColors.error.withAlpha(80),
+                          width: 3,
+                        ),
+                      )
+                    : null,
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.s12,
+                vertical: 2,
+              ),
+              child: pair.left != null
+                  ? Text(
+                      pair.left!.text.isEmpty ? ' ' : pair.left!.text,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontFamily: 'monospace',
+                        height: 1.5,
+                        color: leftTextColor,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ),
+          // Subtle divider
+          Container(
+            width: 1,
+            color: isDark
+                ? AppColors.darkDivider.withAlpha(60)
+                : AppColors.lightDivider.withAlpha(80),
+          ),
+          // Right column (newer version)
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: rightBg,
+                border: hasRight
+                    ? Border(
+                        left: BorderSide(
+                          color: AppColors.accentMintText.withAlpha(80),
+                          width: 3,
+                        ),
+                      )
+                    : null,
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.s12,
+                vertical: 2,
+              ),
+              child: pair.right != null
+                  ? Text(
+                      pair.right!.text.isEmpty ? ' ' : pair.right!.text,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontFamily: 'monospace',
+                        height: 1.5,
+                        color: rightTextColor,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -355,10 +535,12 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.s8,
+        ),
         child: Row(
           children: [
-            // Restore older version.
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => _confirmRestore(older, l10n),
@@ -369,8 +551,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            // Restore newer version.
+            const SizedBox(width: AppSpacing.s12),
             Expanded(
               child: FilledButton.icon(
                 onPressed: () => _confirmRestore(newer, l10n),
@@ -391,9 +572,13 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
         title: Text(l10n.restoreVersion),
         content: Text(
           l10n.restoreVersionConfirm(version.versionNumber),
+          style: AppTextStyles.body,
         ),
         actions: [
           TextButton(
@@ -421,7 +606,6 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       final crypto = ref.read(cryptoServiceProvider);
       final noteId = widget.noteId;
 
-      // Save current state as a new version before restoring.
       final currentNote = await db.notesDao.getNoteById(noteId);
       if (currentNote != null) {
         final count = await db.noteVersionsDao.getVersionCount(noteId);
@@ -437,16 +621,15 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
           versionNumber: count + 1,
         );
 
-        // Trim old versions (keep last 20).
         await db.noteVersionsDao.deleteVersionsOlderThan(noteId, 20);
       }
 
-      // Encrypt the restored content for the note.
       String encryptedContent = version.content;
       String? encryptedTitle;
 
       if (crypto.isUnlocked && version.content.isNotEmpty) {
-        encryptedContent = await crypto.encryptForItem(noteId, version.content);
+        encryptedContent =
+            await crypto.encryptForItem(noteId, version.content);
       }
       if (crypto.isUnlocked && version.title != l10n.untitled) {
         encryptedTitle = await crypto.encryptForItem(noteId, version.title);
@@ -467,7 +650,8 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       if (mounted) {
         AppSnackBar.error(
           context,
-          message: l10n.failedToRestore(ErrorDisplay.displayMessage(e, l10n)),
+          message:
+              l10n.failedToRestore(ErrorDisplay.displayMessage(e, l10n)),
         );
       }
     }

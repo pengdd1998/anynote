@@ -6,12 +6,13 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/accessibility/a11y_utils.dart';
 import '../../../../core/database/app_database.dart';
-import '../../../../core/theme/alpha_constants.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/color_utils.dart';
-import '../../../../core/widgets/sync_status_badge.dart';
 import '../../../../l10n/app_localizations.dart';
-import 'property_badges.dart';
 import 'tag_chips_row.dart';
 
 /// Layout variant for [NoteCard].
@@ -20,12 +21,11 @@ enum NoteCardLayout {
   grid,
 }
 
-/// Card widget for displaying a note in list or grid layout.
+/// Card widget for displaying a note in list or staggered grid layout.
 ///
-/// Extracted from `NotesListScreen._buildListCard` and
-/// `_buildGridCard`. Layout-specific styling is controlled via
-/// [layout]. All user interactions are forwarded to the parent
-/// via callback parameters.
+/// Uses the warm design system: generous rounded corners (AppRadius.md),
+/// soft diffused shadows, no hard borders, and design token typography.
+/// Image notes render with a prominent clipped image header.
 class NoteCard extends StatelessWidget {
   final Note note;
   final String time;
@@ -41,8 +41,11 @@ class NoteCard extends StatelessWidget {
   /// Whether the note is locked (read-only). Shows a lock icon on the card.
   final bool isLocked;
 
-  /// Test-only: if true, skips rendering PropertyBadges to avoid timer leaks.
-  final bool skipPropertyBadges;
+  /// Pre-loaded properties to avoid per-card database streams in lists.
+  final List<NoteProperty>? properties;
+
+  /// Index in the list, used for auto-cycling pastel colors.
+  final int listIndex;
 
   const NoteCard({
     super.key,
@@ -53,11 +56,12 @@ class NoteCard extends StatelessWidget {
     required this.onTap,
     required this.onLongPress,
     required this.untitled,
-    this.layout = NoteCardLayout.list,
+    this.layout = NoteCardLayout.grid,
     this.onStatusTap,
     this.onPriorityTap,
     this.isLocked = false,
-    this.skipPropertyBadges = false,
+    this.properties,
+    this.listIndex = 0,
   });
 
   bool get _isGrid => layout == NoteCardLayout.grid;
@@ -69,8 +73,36 @@ class NoteCard extends StatelessWidget {
     return parseHexColor(hex);
   }
 
+  static final _pastelColors = <String, Color>{
+    'yellow': AppColors.noteYellow,
+    'purple': AppColors.notePurple,
+    'green': AppColors.noteGreen,
+    'pink': AppColors.notePink,
+    'blue': AppColors.noteBlue,
+    'orange': AppColors.noteOrange,
+  };
+
+  Color _cardBackgroundColor(
+    BuildContext context,
+    Color? noteColor,
+    Color defaultColor,
+  ) {
+    if (noteColor == null) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final pastel =
+          AppColors.notePastels[listIndex % AppColors.notePastels.length];
+      return isDark ? pastel.withAlpha(30) : pastel;
+    }
+    final colorStr = note.color?.toLowerCase();
+    if (colorStr != null) {
+      for (final entry in _pastelColors.entries) {
+        if (colorStr.contains(entry.key)) return entry.value;
+      }
+    }
+    return noteColor.withAlpha(40);
+  }
+
   /// Extract the first image file path from the note content, if any.
-  /// Looks for markdown image references like `![image](file://...)`.
   String? get _firstImagePath {
     final content = note.plainContent;
     if (content == null) return null;
@@ -82,38 +114,36 @@ class NoteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
     final title = note.plainTitle ?? untitled;
-    final previewLen = _isGrid ? 80 : 100;
-    final preview =
-        note.plainContent != null && note.plainContent!.length > previewLen
-            ? '${note.plainContent!.substring(0, previewLen)}...'
-            : note.plainContent ?? '';
     final noteColor = _noteColor;
 
+    final cardBgColor = isSelected
+        ? colorScheme.primaryContainer.withAlpha(60)
+        : _cardBackgroundColor(
+            context,
+            noteColor,
+            colorScheme.surfaceContainerLow,
+          );
+
+    final radius = _isGrid ? AppRadius.md : AppRadius.sm;
+
     final card = Container(
-      margin: _isGrid
-          ? const EdgeInsets.all(4)
-          : const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isSelected
-            ? colorScheme.primaryContainer.withAlpha(AppAlpha.bold)
-            : colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        color: cardBgColor,
+        borderRadius: BorderRadius.circular(radius),
         border: isSelected
-            ? Border.all(color: colorScheme.primary.withAlpha(60), width: 1.5)
+            ? Border.all(
+                color: colorScheme.primary.withAlpha(80),
+                width: 1.5,
+              )
             : null,
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withAlpha(isSelected ? 18 : 10),
-            blurRadius: isSelected ? 8 : 4,
-            offset: Offset(0, isSelected ? 2 : 1),
-          ),
-        ],
+        boxShadow: _isGrid ? AppShadows.smOf(theme.brightness) : null,
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        borderRadius: BorderRadius.circular(radius),
         clipBehavior: Clip.antiAlias,
         child: GestureDetector(
           onLongPressStart: onLongPress != null
@@ -124,83 +154,12 @@ class NoteCard extends StatelessWidget {
               : null,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-            splashColor: colorScheme.primary.withAlpha(AppAlpha.light),
-            highlightColor: colorScheme.primary.withAlpha(AppAlpha.subtle),
-            child: Stack(
-              children: [
-                // Color accent bar on left (list) or top (grid)
-                if (noteColor != null)
-                  Positioned(
-                    left: _isGrid ? 0 : null,
-                    top: _isGrid ? 0 : null,
-                    child: Container(
-                      width: _isGrid ? double.infinity : 4,
-                      height: _isGrid ? 4 : double.infinity,
-                      decoration: BoxDecoration(
-                        color: noteColor,
-                        borderRadius: _isGrid
-                            ? const BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                topRight: Radius.circular(16),
-                              )
-                            : const BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                bottomLeft: Radius.circular(16),
-                              ),
-                      ),
-                    ),
-                  ),
-                Padding(
-                  padding: _isGrid
-                      ? const EdgeInsets.fromLTRB(12, 16, 12, 12)
-                      : EdgeInsets.only(
-                          left: noteColor != null ? 20 : 16,
-                          right: 16,
-                          top: 14,
-                          bottom: 14,
-                        ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTitleRow(context, theme, colorScheme),
-                      if (!skipPropertyBadges)
-                        PropertyBadges(
-                          noteId: note.id,
-                          onStatusTap: onStatusTap,
-                          onPriorityTap: onPriorityTap,
-                        ),
-                      SizedBox(height: _isGrid ? 8 : 8),
-                      _buildPreview(theme, colorScheme, preview),
-                      if (tags.isNotEmpty)
-                        Padding(
-                          padding: EdgeInsets.only(top: _isGrid ? 4 : 8),
-                          child: TagChipsRow(tags: tags),
-                        ),
-                      SizedBox(height: _isGrid ? 6 : 10),
-                      _buildDate(theme, colorScheme),
-                    ],
-                  ),
-                ),
-                if (isSelected)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      padding: const EdgeInsets.all(4),
-                      child: Icon(
-                        Icons.check,
-                        color: colorScheme.onPrimary,
-                        size: _isGrid ? 16 : 18,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            borderRadius: BorderRadius.circular(radius),
+            splashColor: colorScheme.primary.withAlpha(20),
+            highlightColor: colorScheme.primary.withAlpha(10),
+            child: _isGrid
+                ? _buildGridContent(context, theme, isDark, title)
+                : _buildListContent(context, theme, isDark, title),
           ),
         ),
       ),
@@ -218,54 +177,172 @@ class NoteCard extends StatelessWidget {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Grid layout (staggered / masonry)
+  // ---------------------------------------------------------------------------
+
+  Widget _buildGridContent(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    String title,
+  ) {
+    final preview = _previewText(50);
+    final imagePath = _firstImagePath;
+    final hasImage = imagePath != null && !kIsWeb;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Image header — prominent, clipped to top corners
+        if (hasImage)
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadius.md),
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 140,
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          ),
+
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.s12,
+            AppSpacing.s12,
+            AppSpacing.s12,
+            AppSpacing.s8,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title row with pin/lock icons
+              _buildTitleRow(context, theme, isDark, title),
+
+              // Preview text
+              if (preview.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.s4),
+                Text(
+                  preview,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body.copyWith(
+                    fontSize: 13,
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+
+              // Tags
+              if (tags.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.s8),
+                  child: TagChipsRow(tags: tags),
+                ),
+
+              const SizedBox(height: AppSpacing.s4),
+
+              // Date row
+              _buildDateRow(theme, isDark),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // List layout
+  // ---------------------------------------------------------------------------
+
+  Widget _buildListContent(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    String title,
+  ) {
+    final preview = _previewText(100);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.s16,
+        vertical: 14,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTitleRow(context, theme, isDark, title),
+          if (preview.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s8),
+            Text(
+              preview,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.body.copyWith(
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+              ),
+            ),
+          ],
+          if (tags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.s8),
+              child: TagChipsRow(tags: tags),
+            ),
+          const SizedBox(height: AppSpacing.s8),
+          _buildDateRow(theme, isDark),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Shared sub-widgets
+  // ---------------------------------------------------------------------------
+
   Widget _buildTitleRow(
     BuildContext context,
     ThemeData theme,
-    ColorScheme colorScheme,
+    bool isDark,
+    String title,
   ) {
-    final title = note.plainTitle ?? untitled;
-    final l10n = AppLocalizations.of(context);
-    final noteColor = _noteColor;
     return Row(
       children: [
         if (note.isPinned)
           Padding(
-            padding: const EdgeInsets.only(right: 4),
+            padding: const EdgeInsets.only(right: AppSpacing.s4),
             child: Semantics(
-              label: l10n?.pinnedNote,
+              label: AppLocalizations.of(context)?.pinnedNote,
               child: ExcludeSemantics(
                 child: Icon(
                   Icons.push_pin,
                   size: _isGrid ? 14 : 16,
-                  color: colorScheme.primary,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ),
           ),
-        // Lock icon for locked (read-only) notes.
         if (isLocked)
           Padding(
-            padding: const EdgeInsets.only(right: 4),
+            padding: const EdgeInsets.only(right: AppSpacing.s4),
             child: ExcludeSemantics(
               child: Icon(
                 Icons.lock_outline,
                 size: _isGrid ? 12 : 14,
-                color: colorScheme.onSurface.withAlpha(120),
-              ),
-            ),
-          ),
-        // Color dot indicator next to title.
-        if (noteColor != null)
-          Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: ExcludeSemantics(
-              child: Container(
-                width: _isGrid ? 10 : 12,
-                height: _isGrid ? 10 : 12,
-                decoration: BoxDecoration(
-                  color: noteColor,
-                  shape: BoxShape.circle,
-                ),
+                color: (isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary)
+                    .withAlpha(150),
               ),
             ),
           ),
@@ -275,81 +352,54 @@ class NoteCard extends StatelessWidget {
             maxLines: _isGrid ? 2 : 1,
             overflow: TextOverflow.ellipsis,
             style: (_isGrid
-                    ? theme.textTheme.titleSmall
-                    : theme.textTheme.titleLarge)
-                ?.copyWith(fontWeight: _isGrid ? FontWeight.w600 : FontWeight.w700),
+                    ? AppTextStyles.title
+                    : AppTextStyles.headline.copyWith(fontSize: 18))
+                .copyWith(
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+              fontWeight: _isGrid ? FontWeight.w600 : FontWeight.w700,
+            ),
           ),
         ),
-        SyncStatusBadge(isSynced: note.isSynced, iconSize: _isGrid ? 16 : 18),
       ],
     );
   }
 
-  Widget _buildPreview(
-    ThemeData theme,
-    ColorScheme colorScheme,
-    String preview,
-  ) {
-    final text = Text(
-      preview,
-      maxLines: _isGrid ? 4 : 2,
-      overflow: TextOverflow.ellipsis,
-      style: (_isGrid ? theme.textTheme.bodySmall : theme.textTheme.bodyMedium)
-          ?.copyWith(
-        color: colorScheme.onSurface.withAlpha(AppAlpha.prominent),
-      ),
-    );
-
-    if (_isGrid) {
-      final imagePath = _firstImagePath;
-      return Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (imagePath != null && !kIsWeb)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: SizedBox(
-                    height: 120,
-                    width: double.infinity,
-                    child: Image.file(
-                      File(imagePath),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                    ),
-                  ),
-                ),
-              ),
-            Expanded(child: text),
-          ],
-        ),
-      );
-    }
-    return text;
-  }
-
-  Widget _buildDate(ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildDateRow(ThemeData theme, bool isDark) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           Icons.schedule,
-          size: _isGrid ? 12 : 13,
-          color: colorScheme.onSurfaceVariant.withAlpha(AppAlpha.medium),
+          size: _isGrid ? 11 : 13,
+          color: (isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary)
+              .withAlpha(180),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppSpacing.s4),
         Text(
           time,
-          style: (_isGrid
-                  ? theme.textTheme.labelSmall
-                  : theme.textTheme.bodySmall)
-              ?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+          style: AppTextStyles.caption.copyWith(
+            fontSize: _isGrid ? 11 : 12,
+            color: isDark
+                ? AppColors.darkTextTertiary
+                : AppColors.lightTextTertiary,
           ),
         ),
       ],
     );
+  }
+
+  String _previewText(int maxLen) {
+    final content = note.plainContent;
+    if (content == null) return '';
+    // Strip markdown image syntax for preview.
+    final cleaned = content.replaceAll(RegExp(r'!\[.*?\]\(file://[^)]+\)'), '').trim();
+    if (cleaned.isEmpty) return '';
+    return cleaned.length > maxLen
+        ? '${cleaned.substring(0, maxLen)}...'
+        : cleaned;
   }
 }

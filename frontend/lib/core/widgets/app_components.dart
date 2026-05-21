@@ -24,6 +24,11 @@ import '../error/error.dart';
 import '../theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_shadows.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
+import 'card_container.dart';
 
 // =============================================================================
 // AppEmptyState
@@ -45,7 +50,7 @@ import '../theme/app_colors.dart';
 ///   onAction: () => context.push('/notes/new'),
 /// )
 /// ```
-class AppEmptyState extends StatelessWidget {
+class AppEmptyState extends StatefulWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
@@ -62,38 +67,115 @@ class AppEmptyState extends StatelessWidget {
   });
 
   @override
+  State<AppEmptyState> createState() => _AppEmptyStateState();
+}
+
+class _AppEmptyStateState extends State<AppEmptyState>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _scale = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+    _opacity = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (reduceMotion) {
+      _controller.value = 1.0;
+    } else {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 64, color: Theme.of(context).disabledColor),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).textTheme.bodySmall?.color,
+        child: FadeTransition(
+          opacity: _opacity,
+          child: ScaleTransition(
+            scale: _scale,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentLavenderBg,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
-              textAlign: TextAlign.center,
+                  child: Icon(
+                    widget.icon,
+                    size: 32,
+                    color: AppColors.accentLavenderText,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  widget.title,
+                  style: AppTextStyles.title.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (widget.subtitle != null) ...[
+                  const SizedBox(height: AppSpacing.s8),
+                  Text(
+                    widget.subtitle!,
+                    style: AppTextStyles.caption.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                if (widget.actionLabel != null && widget.onAction != null) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  FilledButton.tonal(
+                    onPressed: widget.onAction,
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child: Text(widget.actionLabel!),
+                  ),
+                ],
+              ],
             ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                subtitle!,
-                style: TextStyle(color: Theme.of(context).disabledColor),
-                textAlign: TextAlign.center,
-              ),
-            ],
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 20),
-              FilledButton.tonal(
-                onPressed: onAction,
-                child: Text(actionLabel!),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
@@ -521,22 +603,16 @@ class SettingsGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Warm card background and border matching the theme card tokens.
-    final cardColor = isDark ? AppTheme.darkCardBg : AppTheme.lightCardBg;
     final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
-    return Container(
+    return CardContainer(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: _buildChildren(),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      radius: AppRadius.md,
+      borderColor: borderColor,
+      borderWidth: 1,
+      boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+      child: _buildChildren(),
     );
   }
 
@@ -697,8 +773,8 @@ class DestructiveSettingsItem extends StatelessWidget {
   }
 }
 
-/// Raw tappable row wrapper that provides the warm ink splash highlight.
-class _SettingsItemRaw extends StatelessWidget {
+/// Raw tappable row wrapper with warm ink splash + scale feedback.
+class _SettingsItemRaw extends StatefulWidget {
   final VoidCallback? onTap;
   final String? semanticsLabel;
   final Widget child;
@@ -710,23 +786,47 @@ class _SettingsItemRaw extends StatelessWidget {
   });
 
   @override
+  State<_SettingsItemRaw> createState() => _SettingsItemRawState();
+}
+
+class _SettingsItemRawState extends State<_SettingsItemRaw> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
     final splashColor =
         Theme.of(context).colorScheme.primary.withValues(alpha: 0.08);
 
     return Semantics(
-      button: onTap != null,
-      label: semanticsLabel,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          splashColor: splashColor,
-          highlightColor: splashColor,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-            child: child,
+      button: widget.onTap != null,
+      label: widget.semanticsLabel,
+      child: GestureDetector(
+        onTapDown: widget.onTap != null
+            ? (_) => setState(() => _pressed = true)
+            : null,
+        onTapUp: widget.onTap != null
+            ? (_) => setState(() => _pressed = false)
+            : null,
+        onTapCancel: widget.onTap != null
+            ? () => setState(() => _pressed = false)
+            : null,
+        child: AnimatedScale(
+          scale: _pressed ? 0.98 : 1.0,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeOut,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onTap,
+              splashColor: splashColor,
+              highlightColor: splashColor,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+                child: widget.child,
+              ),
+            ),
           ),
         ),
       ),

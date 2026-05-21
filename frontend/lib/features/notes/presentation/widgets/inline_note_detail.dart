@@ -185,7 +185,7 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
               IconButton(
                 icon: const Icon(Icons.edit_outlined, size: 20),
                 tooltip: l10n.editNote,
-                onPressed: () => context.push('/notes/${widget.noteId}'),
+                onPressed: () => context.push('/notes/${widget.noteId}/edit'),
               ),
               if (widget.onSplitViewToggle != null)
                 IconButton(

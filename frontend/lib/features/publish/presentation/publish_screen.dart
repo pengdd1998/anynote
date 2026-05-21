@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/error/error.dart';
-import '../../../core/theme/alpha_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
@@ -19,12 +22,30 @@ class PublishScreen extends ConsumerStatefulWidget {
 }
 
 class _PublishScreenState extends ConsumerState<PublishScreen> {
-  // Static icon mapping for known platforms.
   static const _platformIcons = <String, IconData>{
     'xiaohongshu': Icons.camera_alt,
     'wechat': Icons.chat,
     'zhihu': Icons.question_answer,
     'medium': Icons.article,
+  };
+
+  static const _platformAccents = <String, _PlatformAccent>{
+    'xiaohongshu': _PlatformAccent(
+      bg: AppColors.accentPeachBg,
+      text: AppColors.accentPeachText,
+    ),
+    'wechat': _PlatformAccent(
+      bg: AppColors.accentMintBg,
+      text: AppColors.accentMintText,
+    ),
+    'zhihu': _PlatformAccent(
+      bg: AppColors.accentLavenderBg,
+      text: AppColors.accentLavenderText,
+    ),
+    'medium': _PlatformAccent(
+      bg: AppColors.accentYellowBg,
+      text: AppColors.accentYellowText,
+    ),
   };
 
   String? _selectedPlatform;
@@ -50,6 +71,9 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.publish),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: const [SyncStatusWidget()],
       ),
       body: RefreshIndicator(
@@ -58,248 +82,73 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
           ref.invalidate(publishHistoryProvider);
         },
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.s4,
+            AppSpacing.md,
+            96,
+          ),
           children: [
-            // Hero card for publishing
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Theme.of(context)
-                        .colorScheme
-                        .tertiaryContainer
-                        .withAlpha(40),
-                    Theme.of(context).colorScheme.surface,
-                  ],
-                ),
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .tertiaryContainer
-                          .withAlpha(AppAlpha.bold),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Icon(
-                      Icons.publish,
-                      size: 32,
-                      color: Theme.of(context).colorScheme.tertiary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.publish,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.noPlatformsConnected,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Theme.of(context).disabledColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Connected platforms section
-            _sectionHeader(context, l10n.connectedPlatforms),
-            const SizedBox(height: 8),
+            // Platform cards
+            _buildSectionLabel(l10n.connectedPlatforms),
+            const SizedBox(height: AppSpacing.s8),
             platformsAsync.when(
               data: (platforms) {
-                if (platforms.isEmpty) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withAlpha(30),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 24,
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest
-                                .withAlpha(60),
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          child: Icon(
-                            Icons.add_link_outlined,
-                            size: 24,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          l10n.noPlatformsConnected,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        FilledButton.tonal(
-                          onPressed: () =>
-                              context.push('/settings/platforms'),
-                          child: Text(l10n.connectAPlatform),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+                if (platforms.isEmpty) return _buildNoPlatforms(l10n);
                 return Column(
                   children: platforms.map((p) {
-                    final name =
-                        p['name']?.toString() ??
-                        p['platform']?.toString() ??
-                        l10n.unknown;
-                    final platformKey =
-                        p['key']?.toString() ?? name.toLowerCase();
-                    final icon = _platformIcons[platformKey] ?? Icons.language;
-                    final subtitle =
-                        p['display_name']?.toString() ??
-                        p['subtitle']?.toString() ??
-                        '';
-                    final isSelected = _selectedPlatform == platformKey;
-
-                    return Card(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primaryContainer
-                                .withAlpha(AppAlpha.bold)
-                          : null,
-                      child: Semantics(
-                        button: true,
-                        label: l10n.platformSemanticLabel(
-                          name,
-                          subtitle.isNotEmpty ? '. $subtitle' : '',
-                          isSelected ? '. ${l10n.selectedLabel}' : '',
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(child: Icon(icon, size: 20)),
-                          title: Text(name),
-                          subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
-                          trailing: isSelected
-                              ? const Icon(
-                                  Icons.check_circle,
-                                  color: AppColors.success,
-                                )
-                              : null,
-                          onTap: () {
-                            setState(() {
-                              _selectedPlatform = platformKey;
-                            });
-                          },
-                        ),
-                      ),
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+                      child: _buildPlatformCard(p, l10n),
                     );
                   }).toList(),
                 );
               },
               loading: () => const Center(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(),
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: AppColors.accentLavenderText,
+                  ),
                 ),
               ),
-              error: (error, _) {
-                final appError = ErrorMapper.map(error);
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Icon(
-                          ErrorDisplay.errorIcon(appError),
-                          size: 36,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(l10n.failedToLoadPlatforms),
-                        const SizedBox(height: 4),
-                        Text(
-                          ErrorDisplay.userMessage(appError, l10n),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).disabledColor,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        FilledButton.tonal(
-                          onPressed: () =>
-                              ref.invalidate(connectedPlatformsProvider),
-                          child: Text(l10n.retry),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+              error: (error, _) => _buildPlatformError(error, l10n),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
 
-            // Publish form section
-            _sectionHeader(context, l10n.publishContent),
-            const SizedBox(height: 8),
-            _buildPublishForm(context, publishState),
+            // Publish form
+            _buildSectionLabel(l10n.publishContent),
+            const SizedBox(height: AppSpacing.s8),
+            _buildPublishForm(publishState),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
 
-            // Recent publications section
-            _sectionHeader(context, l10n.recentPublications),
-            const SizedBox(height: 8),
+            // Recent publications
+            _buildSectionLabel(l10n.recentPublications),
+            const SizedBox(height: AppSpacing.s8),
             historyAsync.when(
               data: (history) {
-                if (history.isEmpty) {
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.publish_outlined,
-                            size: 48,
-                            color: Theme.of(context).disabledColor,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.noPublicationsYet,
-                            style: TextStyle(
-                              color: Theme.of(context).disabledColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-                // Show the 3 most recent
+                if (history.isEmpty) return _buildNoPublications(l10n);
                 final recent = history.take(3).toList();
                 return Column(
                   children: [
-                    ...recent.map((item) => _buildHistoryTile(context, item)),
+                    ...recent.map((item) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+                      child: _buildHistoryCard(item, l10n),
+                    ),),
                     if (history.length > 3)
                       Padding(
-                        padding: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.only(top: AppSpacing.s4),
                         child: OutlinedButton(
                           onPressed: () => context.push('/publish/history'),
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.sm),
+                            ),
+                          ),
                           child: Text(l10n.viewAll(history.length)),
                         ),
                       ),
@@ -308,150 +157,318 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
               },
               loading: () => const Center(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(),
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: AppColors.accentLavenderText,
+                  ),
                 ),
               ),
-              error: (error, _) {
-                final appError = ErrorMapper.map(error);
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Icon(
-                          ErrorDisplay.errorIcon(appError),
-                          size: 36,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(ErrorDisplay.userMessage(appError, l10n)),
-                        const SizedBox(height: 8),
-                        FilledButton.tonal(
-                          onPressed: () =>
-                              ref.invalidate(publishHistoryProvider),
-                          child: Text(l10n.retry),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+              error: (error, _) => _buildHistoryError(error, l10n),
             ),
-
-            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPublishForm(BuildContext context, PublishActionState state) {
+  Widget _buildSectionLabel(String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Text(
+      title,
+      style: AppTextStyles.caption.copyWith(
+        fontWeight: FontWeight.w600,
+        color: isDark
+            ? AppColors.darkTextTertiary
+            : AppColors.lightTextTertiary,
+      ),
+    );
+  }
+
+  Widget _buildPlatformCard(Map<String, dynamic> p, AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final name =
+        p['name']?.toString() ?? p['platform']?.toString() ?? l10n.unknown;
+    final platformKey = p['key']?.toString() ?? name.toLowerCase();
+    final icon = _platformIcons[platformKey] ?? Icons.language;
+    final subtitle =
+        p['display_name']?.toString() ?? p['subtitle']?.toString() ?? '';
+    final isSelected = _selectedPlatform == platformKey;
+    final accent = _platformAccents[platformKey] ??
+        const _PlatformAccent(
+          bg: AppColors.accentLavenderBg,
+          text: AppColors.accentLavenderText,
+        );
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPlatform = platformKey),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.s12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? accent.bg
+              : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: isSelected
+              ? Border.all(color: accent.text.withAlpha(80), width: 1.5)
+              : null,
+          boxShadow: isSelected
+              ? null
+              : AppShadows.smOf(Theme.of(context).brightness),
+        ),
+        child: Row(
+          children: [
+            // Icon badge
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? accent.text.withAlpha(20)
+                    : accent.bg,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Icon(icon, size: 20, color: accent.text),
+            ),
+            const SizedBox(width: AppSpacing.s12),
+            // Name + subtitle
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (subtitle.isNotEmpty)
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            // Selection indicator
+            if (isSelected)
+              Icon(Icons.check_circle, size: 20, color: accent.text),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoPlatforms(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.accentLavenderBg,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: const Icon(
+              Icons.add_link_outlined,
+              size: 28,
+              color: AppColors.accentLavenderText,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          Text(
+            l10n.noPlatformsConnected,
+            style: AppTextStyles.body.copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          FilledButton.tonal(
+            onPressed: () => context.push('/settings/platforms'),
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+            ),
+            child: Text(l10n.connectAPlatform),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlatformError(Object error, AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appError = ErrorMapper.map(error);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkErrorBg : AppColors.lightErrorBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            ErrorDisplay.errorIcon(appError),
+            size: 36,
+            color: AppColors.error.withAlpha(150),
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          Text(l10n.failedToLoadPlatforms),
+          const SizedBox(height: AppSpacing.s4),
+          Text(
+            ErrorDisplay.userMessage(appError, l10n),
+            style: AppTextStyles.caption.copyWith(
+              color: isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          FilledButton.tonal(
+            onPressed: () => ref.invalidate(connectedPlatformsProvider),
+            child: Text(l10n.retry),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPublishForm(PublishActionState state) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final canPublish = _selectedPlatform != null && !state.isLoading;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: l10n.title,
-                border: const OutlineInputBorder(),
-                isDense: true,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _titleController,
+            decoration: InputDecoration(
+              labelText: l10n.title,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          TextField(
+            controller: _contentController,
+            decoration: InputDecoration(
+              labelText: l10n.content,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              alignLabelWithHint: true,
+            ),
+            maxLines: 5,
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          TextField(
+            controller: _tagsController,
+            decoration: InputDecoration(
+              labelText: l10n.tagsCommaSeparated,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              isDense: true,
+              hintText: l10n.tagsHint,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          if (_selectedPlatform == null)
+            Text(
+              l10n.selectPlatformToPublish,
+              style: AppTextStyles.caption.copyWith(
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _contentController,
-              decoration: InputDecoration(
-                labelText: l10n.content,
-                border: const OutlineInputBorder(),
-                alignLabelWithHint: true,
-              ),
-              maxLines: 5,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _tagsController,
-              decoration: InputDecoration(
-                labelText: l10n.tagsCommaSeparated,
-                border: const OutlineInputBorder(),
-                isDense: true,
-                hintText: l10n.tagsHint,
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (_selectedPlatform == null)
-              Text(
-                l10n.selectPlatformToPublish,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).textTheme.bodySmall?.color,
+          if (state.error != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+              child: Text(
+                state.error!,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.error,
                 ),
               ),
-            if (state.error != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  state.error!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.error,
+            ),
+          if (state.result != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.success,
+                    size: 16,
                   ),
-                ),
-              ),
-            if (state.result != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
+                  const SizedBox(width: AppSpacing.s4),
+                  Text(
+                    l10n.publishedStatus(
+                      state.result?['status'] ?? 'pending',
+                    ),
+                    style: AppTextStyles.caption.copyWith(
                       color: AppColors.success,
-                      size: 16,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      l10n.publishedStatus(
-                        state.result?['status'] ?? 'pending',
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.success,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: canPublish ? _handlePublish : null,
-                child: state.isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors
-                              .white, // white on primary button is correct
-                        ),
-                      )
-                    : Text(l10n.publish),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          const SizedBox(height: AppSpacing.s4),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: canPublish ? _handlePublish : null,
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+              ),
+              child: state.isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(l10n.publish),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHistoryTile(BuildContext context, Map<String, dynamic> item) {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildHistoryCard(Map<String, dynamic> item, AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final title = item['title']?.toString() ?? l10n.untitled;
     final platform = item['platform']?.toString() ?? l10n.unknown;
     final status = item['status']?.toString() ?? 'unknown';
@@ -474,48 +491,163 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
       _ => Icons.help_outline,
     };
 
-    return Card(
-      child: Semantics(
-        button: platformURL.isNotEmpty,
-        label: l10n.publishedSemanticLabel(
-          title,
-          platform,
-          status,
-          createdAt.isNotEmpty ? '. $createdAt' : '',
-        ),
-        child: ListTile(
-          leading: Icon(statusIcon, color: statusColor),
-          title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            '$platform${createdAt.isNotEmpty ? ' - $createdAt' : ''}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+      ),
+      child: Row(
+        children: [
+          // Status icon badge
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: statusColor.withAlpha(15),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+            ),
+            child: Icon(statusIcon, size: 18, color: statusColor),
           ),
-          trailing: platformURL.isNotEmpty
-              ? Semantics(
-                  button: true,
-                  label: l10n.openInBrowser,
-                  child: IconButton(
-                    icon: const Icon(Icons.open_in_new, size: 18),
-                    onPressed: () async {
-                      final uri = Uri.parse(platformURL);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(
-                          uri,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    },
-                  ),
-                )
-              : Semantics(
-                  label: l10n.statusLabel(status),
-                  child: Chip(
-                    label: Text(status, style: const TextStyle(fontSize: 11)),
-                    visualDensity: VisualDensity.compact,
+          const SizedBox(width: AppSpacing.s12),
+          // Title + metadata
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-        ),
+                Text(
+                  '$platform${createdAt.isNotEmpty ? ' - $createdAt' : ''}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Action
+          if (platformURL.isNotEmpty)
+            GestureDetector(
+              onTap: () async {
+                final uri = Uri.parse(platformURL);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(
+                    uri,
+                    mode: LaunchMode.externalApplication,
+                  );
+                }
+              },
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkInputFill
+                      : AppColors.lightInputFill,
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                ),
+                child: Icon(
+                  Icons.open_in_new,
+                  size: 16,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: statusColor.withAlpha(12),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+              ),
+              child: Text(
+                status,
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 11,
+                  color: statusColor,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoPublications(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.accentYellowBg,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: const Icon(
+              Icons.publish_outlined,
+              size: 28,
+              color: AppColors.accentYellowText,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          Text(
+            l10n.noPublicationsYet,
+            style: AppTextStyles.body.copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryError(Object error, AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appError = ErrorMapper.map(error);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkErrorBg : AppColors.lightErrorBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            ErrorDisplay.errorIcon(appError),
+            size: 36,
+            color: AppColors.error.withAlpha(150),
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          Text(ErrorDisplay.userMessage(appError, l10n)),
+          const SizedBox(height: AppSpacing.s8),
+          FilledButton.tonal(
+            onPressed: () => ref.invalidate(publishHistoryProvider),
+            child: Text(l10n.retry),
+          ),
+        ],
       ),
     );
   }
@@ -538,9 +670,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         .toList();
 
     try {
-      await ref
-          .read(publishActionProvider.notifier)
-          .publish(
+      await ref.read(publishActionProvider.notifier).publish(
             platform: _selectedPlatform!,
             title: title,
             content: content,
@@ -551,18 +681,14 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
       if (state.result != null && mounted) {
         final l10n = AppLocalizations.of(context)!;
         AppSnackBar.info(context, message: l10n.publishRequestSubmitted);
-        // Clear form on success
         _titleController.clear();
         _contentController.clear();
         _tagsController.clear();
         ref.invalidate(publishHistoryProvider);
-        // Reset publish action after a delay
         Future.delayed(const Duration(seconds: 3), () {
           if (mounted) ref.read(publishActionProvider.notifier).reset();
         });
       } else if (state.error != null && mounted) {
-        // PublishActionNotifier caught an error -- display it via ErrorDisplay.
-        // Since the notifier stores a raw string, we map it generically.
         ErrorDisplay.showSnackBar(
           context,
           ValidationException(message: state.error!),
@@ -579,8 +705,10 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
       }
     }
   }
+}
 
-  Widget _sectionHeader(BuildContext context, String title) {
-    return Text(title, style: Theme.of(context).textTheme.titleMedium);
-  }
+class _PlatformAccent {
+  final Color bg;
+  final Color text;
+  const _PlatformAccent({required this.bg, required this.text});
 }

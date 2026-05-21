@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -13,11 +16,13 @@ import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/export/export_service.dart';
 import '../../../core/widgets/markdown_preview.dart';
-import '../../../core/widgets/offline_banner.dart';
 import '../domain/decrypted_note.dart';
 import 'share_sheet.dart';
 import 'widgets/export_sheet.dart';
 import 'widgets/print_preview_sheet.dart';
+
+/// Maximum content width for comfortable reading.
+const _kMaxContentWidth = 720.0;
 
 class NoteDetailScreen extends ConsumerWidget {
   final String noteId;
@@ -28,10 +33,24 @@ class NoteDetailScreen extends ConsumerWidget {
     final db = ref.read(databaseProvider);
     final crypto = ref.read(cryptoServiceProvider);
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
+          // Edit — primary action, always visible
+          A11yUtils.labeledButton(
+            label: l10n.editNote,
+            child: IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: l10n.editNote,
+              onPressed: () => context.push('/notes/$noteId/edit'),
+            ),
+          ),
+          // Preview
           A11yUtils.labeledButton(
             label: l10n.markdownPreview,
             child: IconButton(
@@ -40,37 +59,44 @@ class NoteDetailScreen extends ConsumerWidget {
               onPressed: () => context.push('/notes/$noteId/preview'),
             ),
           ),
+          // More actions
           A11yUtils.labeledButton(
-            label: l10n.versionHistory,
-            child: IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: l10n.versionHistory,
-              onPressed: () => context.push('/notes/$noteId/history'),
-            ),
-          ),
-          A11yUtils.labeledButton(
-            label: l10n.editNote,
-            child: IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: l10n.editNote,
-              onPressed: () => context.push('/notes/$noteId'),
-            ),
-          ),
-          A11yUtils.labeledButton(
-            label: l10n.deleteNote,
-            child: IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: l10n.deleteNote,
-              onPressed: () => _confirmDelete(context, db),
-            ),
-          ),
-          A11yUtils.labeledButton(
-            label: l10n.exportOrShare,
+            label: l10n.moreActions,
             child: PopupMenuButton<String>(
-              icon: const Icon(Icons.share_outlined),
-              tooltip: l10n.exportOrShare,
-              onSelected: (value) => _onExportSelected(context, ref, value),
+              icon: const Icon(Icons.more_horiz),
+              tooltip: l10n.moreActions,
+              position: PopupMenuPosition.under,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              onSelected: (value) =>
+                  _onActionSelected(context, ref, value, db),
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'history',
+                  child: ListTile(
+                    leading: const Icon(Icons.history),
+                    title: Text(l10n.versionHistory),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.delete_outline,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    title: Text(
+                      l10n.deleteNote,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'share_link',
                   child: ListTile(
@@ -132,160 +158,188 @@ class NoteDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const OfflineBanner(),
-          Expanded(
-            child: FutureBuilder(
-              future: _loadNote(db, crypto, l10n),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+      body: FutureBuilder(
+        future: _loadNote(db, crypto, l10n),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                if (snapshot.hasError) {
-                  final appError = ErrorMapper.map(snapshot.error!);
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            ErrorDisplay.errorIcon(appError),
-                            size: 48,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.failedToLoadNote,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            ErrorDisplay.userMessage(appError, l10n),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton.tonal(
-                            onPressed: () => _loadNote(db, crypto, l10n),
-                            child: Text(l10n.retry),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
+          if (snapshot.hasError) {
+            return _buildErrorState(context, snapshot.error!, l10n, db, crypto);
+          }
 
-                final data = snapshot.data;
-                if (data == null) {
-                  return Center(child: Text(l10n.noteNotFound));
-                }
+          final data = snapshot.data;
+          if (data == null) {
+            return Center(child: Text(l10n.noteNotFound));
+          }
 
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Semantics(
-                        label: l10n.noteTitleLabel(data.title),
-                        header: true,
-                        child: Text(
-                          data.title,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                height: 1.3,
-                              ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Semantics(
-                        label:
-                            '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))}${data.isSynced ? '' : ', ${l10n.notSynced}'}',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.access_time,
-                              size: 16,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              l10n.updatedDate(
-                                data.updatedAt
-                                    .toLocal()
-                                    .toString()
-                                    .substring(0, 16),
-                              ),
-                              style: TextStyle(
-                                fontSize: 13,
-                                letterSpacing: 0.2,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                            ),
-                            if (!data.isSynced) ...[
-                              const SizedBox(width: 12),
-                              const Icon(
-                                Icons.cloud_off,
-                                size: 16,
-                                color: AppColors.warning,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                l10n.notSynced,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  letterSpacing: 0.2,
-                                  color: AppColors.warning,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outlineVariant
-                              .withAlpha(40),
-                        ),
-                      ),
-                      Semantics(
-                        label: l10n.noteContent,
-                        child: MarkdownPreview(
-                          content: data.content,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+          return _buildContent(context, data, isDark);
+        },
       ),
     );
   }
 
-  /// Load the note and decrypt its content.
-  /// Falls back to the plain cache if decryption is not possible.
+  // ---------------------------------------------------------------------------
+  // Content layout — max-width centered, calm reading experience
+  // ---------------------------------------------------------------------------
+
+  Widget _buildContent(BuildContext context, DecryptedNote data, bool isDark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.s8,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // -- Title --
+              Semantics(
+                label: AppLocalizations.of(context)!.noteTitleLabel(data.title),
+                header: true,
+                child: Text(
+                  data.title,
+                  style: AppTextStyles.display.copyWith(
+                    fontSize: 30,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.md),
+
+              // -- Meta row --
+              _buildMetaRow(context, data, isDark),
+
+              const SizedBox(height: AppSpacing.xl),
+
+              // -- Body --
+              Semantics(
+                label: AppLocalizations.of(context)!.noteContent,
+                child: MarkdownPreview(content: data.content),
+              ),
+
+              // Bottom breathing room
+              const SizedBox(height: AppSpacing.xl),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetaRow(
+    BuildContext context,
+    DecryptedNote data,
+    bool isDark,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final metaColor = isDark
+        ? AppColors.darkTextTertiary
+        : AppColors.lightTextTertiary;
+
+    return Row(
+      children: [
+        Icon(Icons.access_time, size: 14, color: metaColor),
+        const SizedBox(width: AppSpacing.s4),
+        Text(
+          l10n.updatedDate(
+            data.updatedAt.toLocal().toString().substring(0, 16),
+          ),
+          style: AppTextStyles.caption.copyWith(
+            color: metaColor,
+            fontSize: 12,
+          ),
+        ),
+        if (!data.isSynced) ...[
+          const SizedBox(width: AppSpacing.s12),
+          const Icon(Icons.cloud_off, size: 14, color: AppColors.warning),
+          const SizedBox(width: AppSpacing.s4),
+          Text(
+            l10n.notSynced,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.warning,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Error state
+  // ---------------------------------------------------------------------------
+
+  Widget _buildErrorState(
+    BuildContext context,
+    Object error,
+    AppLocalizations l10n,
+    AppDatabase db,
+    CryptoService crypto,
+  ) {
+    final appError = ErrorMapper.map(error);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Icon(
+                ErrorDisplay.errorIcon(appError),
+                size: 32,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              l10n.failedToLoadNote,
+              style: AppTextStyles.headline.copyWith(
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              ErrorDisplay.userMessage(appError, l10n),
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body.copyWith(
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            FilledButton.tonal(
+              onPressed: () => _loadNote(db, crypto, l10n),
+              child: Text(l10n.retry),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Note loading + decryption
+  // ---------------------------------------------------------------------------
+
   Future<DecryptedNote?> _loadNote(
     AppDatabase db,
     CryptoService crypto,
@@ -297,9 +351,6 @@ class NoteDetailScreen extends ConsumerWidget {
     String title = note.plainTitle ?? l10n.untitled;
     String content = note.plainContent ?? '';
 
-    // Attempt decryption if crypto is unlocked. This ensures correctness even
-    // if the plain cache was cleared or the note arrived from sync without
-    // populated plain fields.
     if (crypto.isUnlocked) {
       try {
         final decryptedContent =
@@ -316,7 +367,7 @@ class NoteDetailScreen extends ConsumerWidget {
           }
         }
       } on DecryptionException {
-        // Fall back to plain cache values (already set above)
+        // Fall back to plain cache values
       }
     }
 
@@ -328,66 +379,76 @@ class NoteDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _onExportSelected(
+  // ---------------------------------------------------------------------------
+  // Actions dispatch
+  // ---------------------------------------------------------------------------
+
+  void _onActionSelected(
     BuildContext context,
     WidgetRef ref,
     String action,
-  ) async {
-    if (action == 'share_link') {
-      _openShareSheet(context, ref);
-      return;
+    AppDatabase db,
+  ) {
+    switch (action) {
+      case 'history':
+        context.push('/notes/$noteId/history');
+      case 'delete':
+        _confirmDelete(context, db);
+      case 'share_link':
+        _openShareSheet(context, ref);
+      case 'print':
+        _openPrintPreview(context, ref);
+      case 'markdown_frontmatter':
+        _openExportSheet(context, scope: ExportScope.currentNote);
+      case 'export_zip':
+        _openExportSheet(context, scope: ExportScope.allNotes);
+      default:
+        _exportAs(context, ref, action);
     }
+  }
 
-    // Handle the new frontmatter and ZIP export actions via the export sheet.
-    if (action == 'markdown_frontmatter') {
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (_) => ExportSheet(
-          currentNoteId: noteId,
-          scope: ExportScope.currentNote,
-        ),
-      );
-      return;
-    }
+  void _openExportSheet(
+    BuildContext context, {
+    required ExportScope scope,
+  }) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (_) => ExportSheet(
+        currentNoteId: noteId,
+        scope: scope,
+      ),
+    );
+  }
 
-    if (action == 'export_zip') {
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (_) => const ExportSheet(
-          scope: ExportScope.allNotes,
-        ),
-      );
-      return;
-    }
+  void _openPrintPreview(BuildContext context, WidgetRef ref) async {
+    final db = ref.read(databaseProvider);
+    final crypto = ref.read(cryptoServiceProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final noteData = await _loadNote(db, crypto, l10n);
+    if (!context.mounted || noteData == null) return;
+    final note = await db.notesDao.getNoteById(noteId);
+    if (!context.mounted || note == null) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (_) => PrintPreviewSheet(
+        note: note,
+        title: noteData.title,
+        content: noteData.content,
+      ),
+    );
+  }
 
-    if (action == 'print') {
-      final db = ref.read(databaseProvider);
-      final crypto = ref.read(cryptoServiceProvider);
-      final l10n = AppLocalizations.of(context)!;
-      final noteData = await _loadNote(db, crypto, l10n);
-      if (!context.mounted || noteData == null) return;
-      final note = await db.notesDao.getNoteById(noteId);
-      if (!context.mounted || note == null) return;
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (_) => PrintPreviewSheet(
-          note: note,
-          title: noteData.title,
-          content: noteData.content,
-        ),
-      );
-      return;
-    }
-
+  void _exportAs(BuildContext context, WidgetRef ref, String action) async {
     final db = ref.read(databaseProvider);
     final crypto = ref.read(cryptoServiceProvider);
     final l10n = AppLocalizations.of(context)!;
@@ -422,16 +483,14 @@ class NoteDetailScreen extends ConsumerWidget {
       };
 
       if (file != null && context.mounted) {
-        await ExportService.shareFile(
-          file,
-          subject: noteData.title,
-        );
+        await ExportService.shareFile(file, subject: noteData.title);
       }
     } catch (e) {
       if (context.mounted) {
-        AppSnackBar.error(context,
-            message: l10n.exportFailed(
-                ErrorDisplay.displayMessage(e, l10n),),);
+        AppSnackBar.error(
+          context,
+          message: l10n.exportFailed(ErrorDisplay.displayMessage(e, l10n)),
+        );
       }
     }
   }
@@ -449,7 +508,7 @@ class NoteDetailScreen extends ConsumerWidget {
       isScrollControlled: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => ShareSheet(
         title: noteData.title,
@@ -465,6 +524,9 @@ class NoteDetailScreen extends ConsumerWidget {
       builder: (ctx) => Semantics(
         label: l10n.confirmDeleteNoteDialog,
         child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
           title: Text(l10n.deleteNoteDialog),
           content: Text(l10n.deleteNoteDialogMessage),
           actions: [

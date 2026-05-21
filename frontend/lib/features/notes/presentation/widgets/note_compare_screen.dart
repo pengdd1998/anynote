@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/error/error.dart' show ErrorDisplay;
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
@@ -23,14 +27,18 @@ class _NoteData {
   });
 }
 
-/// View mode for the note comparison screen.
-enum _DiffViewMode { unified, sideBySide }
+/// A paired diff line for side-by-side display.
+class _DiffPair {
+  final DiffLine? left;
+  final DiffLine? right;
 
-/// Screen that displays a diff between two arbitrary notes.
+  const _DiffPair({this.left, this.right});
+}
+
+/// Screen that displays a dual-card comparison between two arbitrary notes.
 ///
-/// Shows color-coded lines (green for additions, red for deletions, gray for
-/// unchanged) with summary statistics and a toggle between unified and
-/// side-by-side view modes.
+/// Shows two side-by-side warm cards with synchronized scrolling and soft
+/// color-coded diff highlighting (mint for additions, warm rose for removals).
 class NoteCompareScreen extends ConsumerStatefulWidget {
   final String leftNoteId;
   final String rightNoteId;
@@ -51,46 +59,21 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
   TextDiff? _diff;
   bool _isLoading = true;
   String? _errorMessage;
-  _DiffViewMode _viewMode = _DiffViewMode.unified;
 
-  // Controllers for synchronized scrolling in side-by-side mode.
-  final ScrollController _leftScrollController = ScrollController();
-  final ScrollController _rightScrollController = ScrollController();
-  bool _isSyncingScroll = false;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // Defer _loadNotes() until after the first frame so that
-    // AppLocalizations.of(context) is available (inherited widgets are not
-    // accessible during initState).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _loadNotes();
     });
-    _setupSyncScroll();
   }
 
   @override
   void dispose() {
-    _leftScrollController.dispose();
-    _rightScrollController.dispose();
+    _scrollController.dispose();
     super.dispose();
-  }
-
-  /// Set up bidirectional scroll synchronization for side-by-side mode.
-  void _setupSyncScroll() {
-    _leftScrollController.addListener(() {
-      if (_isSyncingScroll || _viewMode != _DiffViewMode.sideBySide) return;
-      _isSyncingScroll = true;
-      _rightScrollController.jumpTo(_leftScrollController.offset);
-      _isSyncingScroll = false;
-    });
-    _rightScrollController.addListener(() {
-      if (_isSyncingScroll || _viewMode != _DiffViewMode.sideBySide) return;
-      _isSyncingScroll = true;
-      _leftScrollController.jumpTo(_rightScrollController.offset);
-      _isSyncingScroll = false;
-    });
   }
 
   Future<void> _loadNotes() async {
@@ -105,7 +88,6 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
       final db = ref.read(databaseProvider);
       final crypto = ref.read(cryptoServiceProvider);
 
-      // Load both notes in parallel.
       final results = await Future.wait([
         db.notesDao.getNoteById(widget.leftNoteId),
         db.notesDao.getNoteById(widget.rightNoteId),
@@ -124,11 +106,9 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
         return;
       }
 
-      // Decrypt both notes.
       final left = await _decryptNote(leftRaw, crypto, l10n);
       final right = await _decryptNote(rightRaw, crypto, l10n);
 
-      // Compute diff (left = old, right = new).
       final diff = TextDiff.compute(left.content, right.content);
 
       if (mounted) {
@@ -181,42 +161,41 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
     );
   }
 
+  /// Build paired entries from unified diff lines for side-by-side display.
+  List<_DiffPair> _buildPairs(TextDiff diff) {
+    final pairs = <_DiffPair>[];
+    int i = 0;
+    while (i < diff.lines.length) {
+      final line = diff.lines[i];
+      if (line.type == DiffType.unchanged) {
+        pairs.add(_DiffPair(left: line, right: line));
+        i++;
+      } else if (line.type == DiffType.removed) {
+        if (i + 1 < diff.lines.length &&
+            diff.lines[i + 1].type == DiffType.added) {
+          pairs.add(_DiffPair(left: line, right: diff.lines[i + 1]));
+          i += 2;
+        } else {
+          pairs.add(_DiffPair(left: line, right: null));
+          i++;
+        }
+      } else {
+        pairs.add(_DiffPair(left: null, right: line));
+        i++;
+      }
+    }
+    return pairs;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.noteDiff),
-        actions: [
-          if (_diff != null) ...[
-            // View mode toggle.
-            SegmentedButton<_DiffViewMode>(
-              segments: [
-                ButtonSegment(
-                  value: _DiffViewMode.unified,
-                  label: Text(
-                    l10n.unifiedView,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  icon: const Icon(Icons.list, size: 16),
-                ),
-                ButtonSegment(
-                  value: _DiffViewMode.sideBySide,
-                  label: Text(
-                    l10n.sideBySideView,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  icon: const Icon(Icons.vertical_split, size: 16),
-                ),
-              ],
-              selected: {_viewMode},
-              onSelectionChanged: (selected) {
-                setState(() => _viewMode = selected.first);
-              },
-            ),
-            const SizedBox(width: 8),
-          ],
-        ],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
       ),
       body: _buildBody(),
     );
@@ -239,261 +218,311 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
 
     return Column(
       children: [
-        // Header with note titles and stats.
-        _buildDiffHeader(l10n, diff),
-        const Divider(height: 1),
-        // Diff content.
-        Expanded(child: _buildDiffContent(l10n, diff)),
+        // Summary stats row
+        _buildStatsRow(l10n, diff),
+        // Dual card content
+        Expanded(child: _buildDualCards(diff)),
       ],
     );
   }
 
-  Widget _buildDiffHeader(AppLocalizations l10n, TextDiff diff) {
-    final theme = Theme.of(context);
-    final left = _leftNote!;
-    final right = _rightNote!;
+  Widget _buildStatsRow(AppLocalizations l10n, TextDiff diff) {
+    if (diff.isIdentical) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.s4,
+          AppSpacing.md,
+          AppSpacing.s8,
+        ),
+        child: Text(
+          l10n.noChanges,
+          style: AppTextStyles.caption.copyWith(
+            fontStyle: FontStyle.italic,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkTextTertiary
+                : AppColors.lightTextTertiary,
+          ),
+        ),
+      );
+    }
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s4,
+        AppSpacing.md,
+        AppSpacing.s8,
+      ),
+      child: Row(
         children: [
-          // Note title comparison with colored indicators.
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  left.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(
-                width: 4,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  right.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          // Dates.
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _formatDate(left.updatedAt),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  _formatDate(right.updatedAt),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Summary stats.
-          if (diff.isIdentical)
-            Text(
-              l10n.noChanges,
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurfaceVariant,
-                fontStyle: FontStyle.italic,
-              ),
-            )
-          else
-            Text(
-              l10n.linesChanged(diff.linesAdded, diff.linesRemoved),
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurfaceVariant,
+          // Added stat
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.accentMintBg,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              l10n.linesAdded(diff.linesAdded),
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accentMintText,
               ),
             ),
+          ),
+          const SizedBox(width: AppSpacing.s8),
+          // Removed stat
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.lightErrorBg,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              l10n.linesRemoved(diff.linesRemoved),
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.error,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDiffContent(AppLocalizations l10n, TextDiff diff) {
+  Widget _buildDualCards(TextDiff diff) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
+    final left = _leftNote!;
+    final right = _rightNote!;
+
     if (diff.lines.isEmpty) {
-      final theme = Theme.of(context);
       return Center(
         child: Text(
-          l10n.noChanges,
-          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+          AppLocalizations.of(context)!.noChanges,
+          style: AppTextStyles.body.copyWith(
+            color: isDark
+                ? AppColors.darkTextTertiary
+                : AppColors.lightTextTertiary,
+          ),
         ),
       );
     }
 
-    switch (_viewMode) {
-      case _DiffViewMode.unified:
-        return _buildUnifiedView(diff);
-      case _DiffViewMode.sideBySide:
-        return _buildSideBySideView(diff);
-    }
-  }
+    final pairs = _buildPairs(diff);
 
-  /// Unified diff view: a single list showing all diff lines.
-  Widget _buildUnifiedView(TextDiff diff) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: diff.lines.length,
-      itemBuilder: (context, index) {
-        final line = diff.lines[index];
-        return _buildDiffLine(line);
-      },
-    );
-  }
-
-  /// Side-by-side diff view: two synchronized panels.
-  /// Left panel shows removed lines from the left note.
-  /// Right panel shows added lines from the right note.
-  Widget _buildSideBySideView(TextDiff diff) {
-    // Split diff lines into left-only and right-only lists.
-    final leftLines = <DiffLine>[];
-    final rightLines = <DiffLine>[];
-
-    for (final line in diff.lines) {
-      switch (line.type) {
-        case DiffType.unchanged:
-          leftLines.add(line);
-          rightLines.add(line);
-        case DiffType.removed:
-          leftLines.add(line);
-        case DiffType.added:
-          rightLines.add(line);
-      }
-    }
-
-    // Pad the shorter list to ensure scroll sync alignment.
-    final maxLen = leftLines.length > rightLines.length
-        ? leftLines.length
-        : rightLines.length;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Left panel.
-        Expanded(
-          child: ListView.builder(
-            controller: _leftScrollController,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: maxLen,
-            itemBuilder: (context, index) {
-              if (index < leftLines.length) {
-                return _buildDiffLine(leftLines[index], showPrefix: true);
-              }
-              // Empty spacer to keep alignment.
-              return _buildEmptyLine();
-            },
+    return Scrollbar(
+      controller: _scrollController,
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Left card
+              Expanded(
+                child: _buildCard(
+                  title: left.title,
+                  date: _formatDate(left.updatedAt),
+                  accentColor: AppColors.error,
+                  cardBg: cardBg,
+                  isDark: isDark,
+                  pairs: pairs,
+                  side: _DiffSide.left,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s8),
+              // Divider dot
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.darkDivider
+                          : AppColors.lightDivider,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: AppSpacing.s8),
+              // Right card
+              Expanded(
+                child: _buildCard(
+                  title: right.title,
+                  date: _formatDate(right.updatedAt),
+                  accentColor: AppColors.accentMintText,
+                  cardBg: cardBg,
+                  isDark: isDark,
+                  pairs: pairs,
+                  side: _DiffSide.right,
+                ),
+              ),
+            ],
           ),
         ),
-        Container(
-          width: 1,
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
-        // Right panel.
-        Expanded(
-          child: ListView.builder(
-            controller: _rightScrollController,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: maxLen,
-            itemBuilder: (context, index) {
-              if (index < rightLines.length) {
-                return _buildDiffLine(rightLines[index], showPrefix: true);
-              }
-              return _buildEmptyLine();
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Build an empty line placeholder for alignment in side-by-side mode.
-  Widget _buildEmptyLine() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
-      child: const Text(
-        '',
-        style: TextStyle(fontSize: 13, fontFamily: 'monospace', height: 1.5),
       ),
     );
   }
 
-  Widget _buildDiffLine(DiffLine line, {bool showPrefix = false}) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+  Widget _buildCard({
+    required String title,
+    required String date,
+    required Color accentColor,
+    required Color cardBg,
+    required bool isDark,
+    required List<_DiffPair> pairs,
+    required _DiffSide side,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: isDark
+              ? AppColors.darkBorder.withAlpha(60)
+              : AppColors.lightBorder.withAlpha(80),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Card header
+          Container(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.s12,
+              AppSpacing.md,
+              AppSpacing.s8,
+            ),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark
+                      ? AppColors.darkDivider.withAlpha(60)
+                      : AppColors.lightDivider.withAlpha(80),
+                  width: 0.5,
+                ),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: accentColor.withAlpha(150),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.s8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Padding(
+                  padding: const EdgeInsets.only(left: 11),
+                  child: Text(
+                    date,
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Diff lines
+          ...pairs.map((pair) => _buildPairLine(pair, side, isDark)),
+          // Bottom padding
+          const SizedBox(height: AppSpacing.s8),
+        ],
+      ),
+    );
+  }
 
-    Color backgroundColor;
-    Color textColor;
-    String prefix;
+  Widget _buildPairLine(_DiffPair pair, _DiffSide side, bool isDark) {
+    final line = side == _DiffSide.left ? pair.left : pair.right;
+    if (line == null) {
+      // Placeholder for alignment.
+      return const Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 2,
+        ),
+        child: Text(
+          ' ',
+          style: TextStyle(
+            fontSize: 13,
+            fontFamily: 'monospace',
+            height: 1.5,
+            color: Colors.transparent,
+          ),
+        ),
+      );
+    }
 
-    switch (line.type) {
-      case DiffType.added:
-        backgroundColor = isDark
-            ? Colors.green.shade900.withValues(alpha: 0.3)
-            : Colors.green.shade50;
-        textColor = isDark ? Colors.green.shade200 : Colors.green.shade900;
-        prefix = '+';
-      case DiffType.removed:
-        backgroundColor = isDark
-            ? Colors.red.shade900.withValues(alpha: 0.3)
-            : Colors.red.shade50;
-        textColor = isDark ? Colors.red.shade200 : Colors.red.shade900;
-        prefix = '-';
-      case DiffType.unchanged:
-        backgroundColor = Colors.transparent;
-        textColor = theme.colorScheme.onSurfaceVariant;
-        prefix = ' ';
+    final Color bg;
+    final Color textColor;
+    final Color? leftBorder;
+
+    if (line.type == DiffType.unchanged) {
+      bg = Colors.transparent;
+      textColor = isDark
+          ? AppColors.darkTextSecondary
+          : AppColors.lightTextSecondary;
+      leftBorder = null;
+    } else if (line.type == DiffType.removed) {
+      bg = isDark ? AppColors.error.withAlpha(20) : AppColors.lightErrorBg;
+      textColor = isDark ? AppColors.error.withAlpha(200) : AppColors.error;
+      leftBorder = AppColors.error.withAlpha(80);
+    } else {
+      bg = isDark ? AppColors.success.withAlpha(20) : AppColors.accentMintBg;
+      textColor =
+          isDark ? AppColors.success.withAlpha(200) : AppColors.accentMintText;
+      leftBorder = AppColors.accentMintText.withAlpha(80);
     }
 
     return Container(
-      width: double.infinity,
-      color: backgroundColor,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
+      decoration: BoxDecoration(
+        color: bg,
+        border: leftBorder != null
+            ? Border(
+                left: BorderSide(color: leftBorder, width: 2.5),
+              )
+            : null,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 2,
+      ),
       child: Text(
-        '${showPrefix ? prefix : prefix} ${line.text}',
+        line.text.isEmpty ? ' ' : line.text,
         style: TextStyle(
           fontSize: 13,
           fontFamily: 'monospace',
@@ -512,3 +541,6 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
 
   String _pad(int n) => n.toString().padLeft(2, '0');
 }
+
+/// Which side of the comparison we're rendering.
+enum _DiffSide { left, right }

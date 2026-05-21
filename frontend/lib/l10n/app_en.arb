@@ -3,6 +3,9 @@
   "appTitle": "AnyNote",
   "@appTitle": { "description": "Application name displayed in the app bar and title" },
 
+  "homeTitle": "Home",
+  "@homeTitle": { "description": "Title for the Home/Notes screen" },
+
   "welcomeBack": "Welcome Back",
   "@welcomeBack": { "description": "Login screen heading" },
 
@@ -1818,14 +1821,14 @@
   "shortcutExitZen": "Exit Zen Mode / Close Dialog",
   "@shortcutExitZen": { "description": "Shortcut description for exiting zen mode or closing dialog" },
 
-  "notesTabLabel": "Notes",
+  "notesTabLabel": "Home",
   "@notesTabLabel": { "description": "Accessibility label for the Notes navigation tab" },
 
-  "composeTabLabel": "Compose",
+  "composeTabLabel": "Dream Plan",
   "@composeTabLabel": { "description": "Accessibility label for the Compose navigation tab" },
 
-  "publishTabLabel": "Publish",
-  "@publishTabLabel": { "description": "Accessibility label for the Publish navigation tab" },
+  "aiTabLabel": "AI",
+  "@aiTabLabel": { "description": "Accessibility label for the AI Chat navigation tab" },
 
   "settingsTabLabel": "Settings",
   "@settingsTabLabel": { "description": "Accessibility label for the Settings navigation tab" },

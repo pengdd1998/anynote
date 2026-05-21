@@ -1,6 +1,7 @@
 {
 
   "appTitle": "AnyNote",
+  "homeTitle": "首页",
 
   "welcomeBack": "欢迎回来",
 
@@ -1026,11 +1027,11 @@
 
   "shortcutExitZen": "退出专注模式 / 关闭对话框",
 
-  "notesTabLabel": "笔记",
+  "notesTabLabel": "首页",
 
-  "composeTabLabel": "创作",
+  "composeTabLabel": "计划",
 
-  "publishTabLabel": "发布",
+  "aiTabLabel": "AI",
 
   "settingsTabLabel": "设置",
 

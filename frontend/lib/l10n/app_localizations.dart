@@ -108,6 +108,12 @@ abstract class AppLocalizations {
   /// **'AnyNote'**
   String get appTitle;
 
+  /// Title for the Home/Notes screen
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get homeTitle;
+
   /// Login screen heading
   ///
   /// In en, this message translates to:
@@ -3183,20 +3189,20 @@ abstract class AppLocalizations {
   /// Accessibility label for the Notes navigation tab
   ///
   /// In en, this message translates to:
-  /// **'Notes'**
+  /// **'Home'**
   String get notesTabLabel;
 
   /// Accessibility label for the Compose navigation tab
   ///
   /// In en, this message translates to:
-  /// **'Compose'**
+  /// **'Dream Plan'**
   String get composeTabLabel;
 
-  /// Accessibility label for the Publish navigation tab
+  /// Accessibility label for the AI Chat navigation tab
   ///
   /// In en, this message translates to:
-  /// **'Publish'**
-  String get publishTabLabel;
+  /// **'AI'**
+  String get aiTabLabel;
 
   /// Accessibility label for the Settings navigation tab
   ///

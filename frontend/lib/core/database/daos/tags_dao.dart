@@ -73,6 +73,34 @@ class TagsDao extends DatabaseAccessor<AppDatabase> with _$TagsDaoMixin {
     return (select(tags)..where((t) => t.id.isIn(tagIds))).get();
   }
 
+  /// Batch-load tags for multiple notes in a single query.
+  /// Returns a map of noteId -> list of tags.
+  Future<Map<String, List<Tag>>> batchGetTagsForNotes(
+    List<String> noteIds,
+  ) async {
+    if (noteIds.isEmpty) return {};
+
+    final rows = await (select(noteTags)
+          ..where((nt) => nt.noteId.isIn(noteIds)))
+        .get();
+
+    if (rows.isEmpty) return {for (final id in noteIds) id: <Tag>[]};
+
+    final tagIds = rows.map((r) => r.tagId).toSet().toList();
+    final tagRows =
+        await (select(tags)..where((t) => t.id.isIn(tagIds))).get();
+    final tagMap = {for (final t in tagRows) t.id: t};
+
+    final result = <String, List<Tag>>{for (final id in noteIds) id: <Tag>[]};
+    for (final row in rows) {
+      final tag = tagMap[row.tagId];
+      if (tag != null) {
+        (result[row.noteId] ??= []).add(tag);
+      }
+    }
+    return result;
+  }
+
   /// Get unsynced tags.
   Future<List<Tag>> getUnsyncedTags() {
     return (select(tags)..where((t) => t.isSynced.equals(false))).get();
@@ -109,23 +137,30 @@ class TagsDao extends DatabaseAccessor<AppDatabase> with _$TagsDaoMixin {
   }
 
   /// Recursively get all descendant tag IDs of a given tag.
+  ///
+  /// Loads all tags in one query and builds the descendant set in memory
+  /// to avoid N sequential DB queries for deep hierarchies.
   Future<Set<String>> getDescendantTagIds(String tagId) async {
-    final result = <String>{};
-    await _collectDescendants(tagId, result);
-    return result;
-  }
-
-  Future<void> _collectDescendants(
-    String parentId,
-    Set<String> result,
-  ) async {
-    final children =
-        await (select(tags)..where((t) => t.parentId.equals(parentId))).get();
-    for (final child in children) {
-      if (result.add(child.id)) {
-        await _collectDescendants(child.id, result);
+    final allTags = await (select(tags)).get();
+    final byParent = <String, List<Tag>>{};
+    for (final tag in allTags) {
+      final pid = tag.parentId;
+      if (pid != null) {
+        byParent.putIfAbsent(pid, () => []).add(tag);
       }
     }
+
+    final result = <String>{};
+    void collect(String parentId) {
+      for (final child in byParent[parentId] ?? const []) {
+        if (result.add(child.id)) {
+          collect(child.id);
+        }
+      }
+    }
+
+    collect(tagId);
+    return result;
   }
 
   /// Move a tag to a new parent. Pass null to make it root-level.

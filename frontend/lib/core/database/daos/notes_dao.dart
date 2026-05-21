@@ -578,132 +578,22 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       return [];
     }
 
-    // Step 1: Resolve tag IDs from tag name filters.
-    List<String>? tagFilteredIds;
-    if (query.tagFilters.isNotEmpty) {
-      final allTags = await (select(tags)).get();
-      final matchingTagIds = <String>{};
-      for (final tagFilter in query.tagFilters) {
-        final lowerFilter = tagFilter.toLowerCase();
-        for (final tag in allTags) {
-          final plainName = tag.plainName?.toLowerCase() ?? '';
-          if (plainName.startsWith(lowerFilter) || plainName == lowerFilter) {
-            matchingTagIds.add(tag.id);
-          }
-        }
-      }
-      if (matchingTagIds.isEmpty) return [];
+    // Run all filter resolution steps in parallel, then intersect results.
+    // Each resolver returns null if the filter is not active, or a list of
+    // matching note IDs (empty = no matches).
+    final results = await Future.wait([
+      _resolveTagFilter(query),
+      _resolveCollectionFilter(query),
+      _resolveStatusFilter(query),
+      _resolvePriorityFilter(query),
+      _resolveLinksFilter(query),
+      _resolveColorFilter(query),
+    ]);
 
-      // Single query for all matching tags instead of N individual queries.
-      final allTagRows = await (select(noteTags)
-            ..where((nt) => nt.tagId.isIn(matchingTagIds.toList())))
-          .get();
-      // Group note IDs by tag, then intersect to find notes with ALL tags.
-      final notesByTag = <String, Set<String>>{};
-      for (final row in allTagRows) {
-        notesByTag.putIfAbsent(row.tagId, () => <String>{}).add(row.noteId);
-      }
-      if (notesByTag.length < matchingTagIds.length) {
-        return [];
-      }
-      var intersection = notesByTag.values.first.toSet();
-      for (final noteIds in notesByTag.values) {
-        intersection = intersection.intersection(noteIds);
-      }
-      tagFilteredIds = intersection.toList();
-      if (tagFilteredIds.isEmpty) return [];
-    }
-
-    // Step 2: Resolve collection IDs from collection name filters.
-    List<String>? collectionFilteredIds;
-    if (query.collectionFilters.isNotEmpty) {
-      final allCollections = await (select(collections)).get();
-      final matchingCollectionIds = <String>{};
-      for (final colFilter in query.collectionFilters) {
-        final lowerFilter = colFilter.toLowerCase();
-        for (final col in allCollections) {
-          final plainTitle = col.plainTitle?.toLowerCase() ?? '';
-          if (plainTitle.startsWith(lowerFilter) || plainTitle == lowerFilter) {
-            matchingCollectionIds.add(col.id);
-          }
-        }
-      }
-      if (matchingCollectionIds.isEmpty) return [];
-
-      final cnRows = await (select(collectionNotes)
-            ..where(
-              (cn) => cn.collectionId.isIn(matchingCollectionIds.toList()),
-            ))
-          .get();
-      collectionFilteredIds = cnRows.map((cn) => cn.noteId).toSet().toList();
-      if (collectionFilteredIds.isEmpty) return [];
-    }
-
-    // Step 3: Resolve status filter from note_properties.
-    List<String>? statusFilteredIds;
-    if (query.statusFilter != null) {
-      final rows = await (select(noteProperties)
-            ..where(
-              (np) =>
-                  np.key.equals('status') &
-                  np.valueText.equals(query.statusFilter!),
-            ))
-          .get();
-      statusFilteredIds = rows.map((np) => np.noteId).toList();
-      if (statusFilteredIds.isEmpty) return [];
-    }
-
-    // Step 4: Resolve priority filter from note_properties.
-    List<String>? priorityFilteredIds;
-    if (query.priorityFilter != null) {
-      final rows = await (select(noteProperties)
-            ..where(
-              (np) =>
-                  np.key.equals('priority') &
-                  np.valueText.equals(query.priorityFilter!),
-            ))
-          .get();
-      priorityFilteredIds = rows.map((np) => np.noteId).toList();
-      if (priorityFilteredIds.isEmpty) return [];
-    }
-
-    // Step 5: Resolve links filter.
-    List<String>? linksFilteredIds;
-    if (query.hasLinks != null) {
-      if (query.hasLinks!) {
-        // Notes with at least one outbound link (sourceId).
-        final allLinks = await (select(noteLinks)).get();
-        final sourceIds = allLinks.map((nl) => nl.sourceId).toSet();
-        linksFilteredIds = sourceIds.toList();
-        if (linksFilteredIds.isEmpty) return [];
-      } else {
-        // Orphaned notes: notes that have no outbound links.
-        // Get all note IDs, subtract those with outbound links.
-        final allNotes =
-            await (select(notes)..where((n) => n.deletedAt.isNull())).get();
-        final allLinks = await (select(noteLinks)).get();
-        final linkedSourceIds = allLinks.map((nl) => nl.sourceId).toSet();
-        linksFilteredIds = allNotes
-            .where((n) => !linkedSourceIds.contains(n.id))
-            .map((n) => n.id)
-            .toList();
-        if (linksFilteredIds.isEmpty) return [];
-      }
-    }
-
-    // Step 5b: Resolve color filter.
-    List<String>? colorFilteredIds;
-    if (query.colorFilter != null) {
-      // Normalize both the query color and stored color to uppercase for
-      // case-insensitive hex matching.
-      final targetColor = query.colorFilter!.toUpperCase();
-      final allNotes =
-          await (select(notes)..where((n) => n.deletedAt.isNull())).get();
-      colorFilteredIds = allNotes
-          .where((n) => n.color?.toUpperCase() == targetColor)
-          .map((n) => n.id)
-          .toList();
-      if (colorFilteredIds.isEmpty) return [];
+    // Check for early-exit: if any active filter returned an empty list,
+    // there are no matching notes.
+    for (final ids in results) {
+      if (ids != null && ids.isEmpty) return [];
     }
 
     // Step 6: Intersect all filtered ID sets.
@@ -715,12 +605,9 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
           candidateIds == null ? idSet : candidateIds!.intersection(idSet);
     }
 
-    intersect(tagFilteredIds);
-    intersect(collectionFilteredIds);
-    intersect(statusFilteredIds);
-    intersect(priorityFilteredIds);
-    intersect(linksFilteredIds);
-    intersect(colorFilteredIds);
+    for (final ids in results) {
+      intersect(ids);
+    }
 
     if (candidateIds != null && candidateIds!.isEmpty) return [];
 
@@ -956,6 +843,130 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       result[prop.noteId]?.add(prop);
     }
     return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Advanced search filter resolvers (run in parallel)
+  // ---------------------------------------------------------------------------
+
+  /// Resolve note IDs matching tag name filters.
+  /// Returns null if no tag filters are active.
+  Future<List<String>?> _resolveTagFilter(SearchQuery query) async {
+    if (query.tagFilters.isEmpty) return null;
+
+    final allTags = await (select(tags)).get();
+    final matchingTagIds = <String>{};
+    for (final tagFilter in query.tagFilters) {
+      final lowerFilter = tagFilter.toLowerCase();
+      for (final tag in allTags) {
+        final plainName = tag.plainName?.toLowerCase() ?? '';
+        if (plainName.startsWith(lowerFilter) || plainName == lowerFilter) {
+          matchingTagIds.add(tag.id);
+        }
+      }
+    }
+    if (matchingTagIds.isEmpty) return [];
+
+    final allTagRows = await (select(noteTags)
+          ..where((nt) => nt.tagId.isIn(matchingTagIds.toList())))
+        .get();
+    final notesByTag = <String, Set<String>>{};
+    for (final row in allTagRows) {
+      notesByTag.putIfAbsent(row.tagId, () => <String>{}).add(row.noteId);
+    }
+    if (notesByTag.length < matchingTagIds.length) return [];
+
+    var intersection = notesByTag.values.first.toSet();
+    for (final noteIds in notesByTag.values) {
+      intersection = intersection.intersection(noteIds);
+    }
+    return intersection.toList();
+  }
+
+  /// Resolve note IDs matching collection name filters.
+  Future<List<String>?> _resolveCollectionFilter(SearchQuery query) async {
+    if (query.collectionFilters.isEmpty) return null;
+
+    final allCollections = await (select(collections)).get();
+    final matchingCollectionIds = <String>{};
+    for (final colFilter in query.collectionFilters) {
+      final lowerFilter = colFilter.toLowerCase();
+      for (final col in allCollections) {
+        final plainTitle = col.plainTitle?.toLowerCase() ?? '';
+        if (plainTitle.startsWith(lowerFilter) || plainTitle == lowerFilter) {
+          matchingCollectionIds.add(col.id);
+        }
+      }
+    }
+    if (matchingCollectionIds.isEmpty) return [];
+
+    final cnRows = await (select(collectionNotes)
+          ..where(
+            (cn) => cn.collectionId.isIn(matchingCollectionIds.toList()),
+          ))
+        .get();
+    return cnRows.map((cn) => cn.noteId).toSet().toList();
+  }
+
+  /// Resolve note IDs matching a status property filter.
+  Future<List<String>?> _resolveStatusFilter(SearchQuery query) async {
+    if (query.statusFilter == null) return null;
+
+    final rows = await (select(noteProperties)
+          ..where(
+            (np) =>
+                np.key.equals('status') &
+                np.valueText.equals(query.statusFilter!),
+          ))
+        .get();
+    return rows.map((np) => np.noteId).toList();
+  }
+
+  /// Resolve note IDs matching a priority property filter.
+  Future<List<String>?> _resolvePriorityFilter(SearchQuery query) async {
+    if (query.priorityFilter == null) return null;
+
+    final rows = await (select(noteProperties)
+          ..where(
+            (np) =>
+                np.key.equals('priority') &
+                np.valueText.equals(query.priorityFilter!),
+          ))
+        .get();
+    return rows.map((np) => np.noteId).toList();
+  }
+
+  /// Resolve note IDs matching the has-links filter.
+  Future<List<String>?> _resolveLinksFilter(SearchQuery query) async {
+    if (query.hasLinks == null) return null;
+
+    if (query.hasLinks!) {
+      final allLinks = await (select(noteLinks)).get();
+      return allLinks.map((nl) => nl.sourceId).toSet().toList();
+    }
+
+    // Orphaned notes: no outbound links.
+    final allNotes =
+        await (select(notes)..where((n) => n.deletedAt.isNull())).get();
+    final allLinks = await (select(noteLinks)).get();
+    final linkedSourceIds = allLinks.map((nl) => nl.sourceId).toSet();
+    return allNotes
+        .where((n) => !linkedSourceIds.contains(n.id))
+        .map((n) => n.id)
+        .toList();
+  }
+
+  /// Resolve note IDs matching a color filter.
+  Future<List<String>?> _resolveColorFilter(SearchQuery query) async {
+    if (query.colorFilter == null) return null;
+
+    final targetColor = query.colorFilter!.toUpperCase();
+    final allNotes =
+        await (select(notes)..where((n) => n.deletedAt.isNull())).get();
+    return allNotes
+        .where((n) => n.color?.toUpperCase() == targetColor)
+        .map((n) => n.id)
+        .toList();
   }
 
   // ---------------------------------------------------------------------------

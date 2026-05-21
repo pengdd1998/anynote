@@ -42,7 +42,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
         data: (configs) {
           if (configs.isEmpty) {
             return AppEmptyState(
-              icon: AppIcons.ai,
+              icon: AppIcons.aiRobot,
               title: l10n.noLLMConfigs,
               subtitle: l10n.addLLMToEnableAI,
               actionLabel: l10n.addProvider,
@@ -428,7 +428,7 @@ class _LLMConfigCard extends StatelessWidget {
     return SettingsGroup(
       children: [
         SettingsItem(
-          icon: AppIcons.ai,
+          icon: AppIcons.aiRobot,
           title: cfg.name,
           subtitle: '${cfg.provider} - ${cfg.model}',
           trailing: Row(

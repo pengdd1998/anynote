@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/database/app_database.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../notes/presentation/widgets/note_card.dart';
 
 class CollectionDetailScreen extends ConsumerStatefulWidget {
   final String collectionId;
@@ -23,13 +27,8 @@ class CollectionDetailScreen extends ConsumerStatefulWidget {
 
 class _CollectionDetailScreenState
     extends ConsumerState<CollectionDetailScreen> {
-  /// The collection data, loaded once and refreshed on changes.
   Collection? _collection;
-
-  /// Notes belonging to this collection, with sortOrder.
   List<CollectionNote> _collectionNotes = [];
-
-  /// Full note objects for the notes in this collection, keyed by ID.
   Map<String, Note> _notesMap = {};
 
   bool _isLoading = true;
@@ -41,7 +40,6 @@ class _CollectionDetailScreenState
     _loadData();
   }
 
-  /// Load the collection and its notes from the database.
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
@@ -51,7 +49,6 @@ class _CollectionDetailScreenState
     try {
       final db = ref.read(databaseProvider);
 
-      // Load the collection.
       final collections = await db.collectionsDao.getAllCollections();
       final collection =
           collections.where((c) => c.id == widget.collectionId).firstOrNull;
@@ -59,17 +56,15 @@ class _CollectionDetailScreenState
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _error = 'collectionNotFound'; // will be translated in _buildBody
+            _error = 'collectionNotFound';
           });
         }
         return;
       }
 
-      // Load collection-note associations.
       final collectionNotes =
           await db.collectionsDao.getCollectionNotes(widget.collectionId);
 
-      // Load full note data for each note in the collection.
       final Map<String, Note> notesMap = {};
       for (final cn in collectionNotes) {
         final note = await db.notesDao.getNoteById(cn.noteId);
@@ -102,6 +97,9 @@ class _CollectionDetailScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(_collection?.plainTitle ?? l10n.collectionFallback),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -119,6 +117,9 @@ class _CollectionDetailScreenState
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddNotesSheet,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
         child: const Icon(Icons.add),
       ),
     );
@@ -142,7 +143,6 @@ class _CollectionDetailScreenState
       );
     }
 
-    // Filter out notes that have been deleted or are missing from the map.
     final validNotes = _collectionNotes
         .where((cn) => _notesMap.containsKey(cn.noteId))
         .toList();
@@ -159,7 +159,12 @@ class _CollectionDetailScreenState
 
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
-      padding: const EdgeInsets.only(bottom: 80),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s4,
+        AppSpacing.md,
+        96,
+      ),
       itemCount: validNotes.length,
       onReorder: (oldIndex, newIndex) =>
           _onReorder(validNotes, oldIndex, newIndex),
@@ -168,94 +173,142 @@ class _CollectionDetailScreenState
         final note = _notesMap[cn.noteId]!;
         final title = note.plainTitle ?? l10n.untitled;
 
-        return Dismissible(
+        return Padding(
           key: ValueKey(cn.noteId),
-          direction: DismissDirection.endToStart,
-          background: Container(
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 24),
-            color: AppColors.warning,
-            child: const Icon(Icons.remove_circle_outline, color: Colors.white),
-          ),
-          confirmDismiss: (direction) async {
-            return await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: Text(l10n.removeFromCollection),
-                content: Text(
-                  l10n.removeNoteConfirm(title),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(false),
-                    child: Text(l10n.cancel),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(true),
-                    child: Text(l10n.remove),
-                  ),
-                ],
-              ),
-            );
-          },
-          onDismissed: (direction) async {
-            final db = ref.read(databaseProvider);
-            await db.collectionsDao.removeNoteFromCollection(
-              widget.collectionId,
-              cn.noteId,
-            );
-            _loadData();
-          },
-          child: ListTile(
+          padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+          child: Dismissible(
             key: ValueKey(cn.noteId),
-            title: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withAlpha(20),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Icon(
+                Icons.remove_circle_outline,
+                color: AppColors.warning.withAlpha(150),
+              ),
             ),
-            subtitle: note.plainContent != null && note.plainContent!.isNotEmpty
-                ? Text(
-                    note.plainContent!.length > 80
-                        ? '${note.plainContent!.substring(0, 80)}...'
-                        : note.plainContent!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 12,
+            confirmDismiss: (direction) async {
+              return await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                  ),
+                  title: Text(l10n.removeFromCollection),
+                  content: Text(
+                    l10n.removeNoteConfirm(title),
+                    style: AppTextStyles.body,
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: Text(l10n.cancel),
                     ),
-                  )
-                : null,
-            leading: ReorderableDragStartListener(
-              index: index,
-              child: const Icon(Icons.drag_handle),
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: Text(l10n.remove),
+                    ),
+                  ],
+                ),
+              );
+            },
+            onDismissed: (direction) async {
+              final db = ref.read(databaseProvider);
+              await db.collectionsDao.removeNoteFromCollection(
+                widget.collectionId,
+                cn.noteId,
+              );
+              _loadData();
+            },
+            child: Stack(
+              children: [
+                NoteCard(
+                  note: note,
+                  time: _formatTime(note.updatedAt),
+                  tags: const [],
+                  isSelected: false,
+                  onTap: () => context.push('/notes/${cn.noteId}'),
+                  onLongPress: null,
+                  untitled: l10n.untitled,
+                  layout: NoteCardLayout.list,
+                  listIndex: index,
+                ),
+                // Drag handle overlay
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: ReorderableDragStartListener(
+                    index: index,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkCardBg.withAlpha(200)
+                            : AppColors.lightCardBg.withAlpha(200),
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: Icon(
+                        Icons.drag_handle,
+                        size: 18,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                    ),
+                  ),
+                ),
+                // Remove button overlay
+                Positioned(
+                  top: 0,
+                  right: 40,
+                  child: GestureDetector(
+                    onTap: () async {
+                      final db = ref.read(databaseProvider);
+                      await db.collectionsDao.removeNoteFromCollection(
+                        widget.collectionId,
+                        cn.noteId,
+                      );
+                      _loadData();
+                    },
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkCardBg.withAlpha(200)
+                            : AppColors.lightCardBg.withAlpha(200),
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            trailing: IconButton(
-              icon: const Icon(Icons.close, size: 20),
-              tooltip: l10n.removeFromCollectionTooltip,
-              onPressed: () async {
-                final db = ref.read(databaseProvider);
-                await db.collectionsDao.removeNoteFromCollection(
-                  widget.collectionId,
-                  cn.noteId,
-                );
-                _loadData();
-              },
-            ),
-            onTap: () => context.push('/notes/${cn.noteId}'),
           ),
         );
       },
     );
   }
 
-  /// Handle reordering of notes within the collection.
   void _onReorder(
     List<CollectionNote> validNotes,
     int oldIndex,
     int newIndex,
   ) {
-    // Adjust newIndex since ReorderableListView uses a different convention.
     if (oldIndex < newIndex) newIndex -= 1;
 
     setState(() {
@@ -263,16 +316,13 @@ class _CollectionDetailScreenState
       validNotes.insert(newIndex, item);
     });
 
-    // Persist the new sort order.
     _persistSortOrder(validNotes);
   }
 
-  /// Persist the updated sort order to the database.
   Future<void> _persistSortOrder(List<CollectionNote> notes) async {
     final db = ref.read(databaseProvider);
     for (var i = 0; i < notes.length; i++) {
       final cn = notes[i];
-      // Delete and re-insert with new sortOrder.
       await db.collectionsDao.removeNoteFromCollection(
         widget.collectionId,
         cn.noteId,
@@ -285,7 +335,6 @@ class _CollectionDetailScreenState
     }
   }
 
-  /// Show a dialog to rename the collection.
   void _showRenameDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final titleController = TextEditingController(
@@ -295,12 +344,17 @@ class _CollectionDetailScreenState
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
         title: Text(l10n.renameCollection),
         content: TextField(
           controller: titleController,
           decoration: InputDecoration(
             labelText: l10n.collectionTitle,
-            border: const OutlineInputBorder(),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
           ),
           autofocus: true,
           textCapitalization: TextCapitalization.sentences,
@@ -340,14 +394,19 @@ class _CollectionDetailScreenState
     );
   }
 
-  /// Confirm and delete the entire collection.
   void _confirmDelete(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
         title: Text(l10n.deleteCollectionDialogTitle),
-        content: Text(l10n.deleteCollectionDialogMessage),
+        content: Text(
+          l10n.deleteCollectionDialogMessage,
+          style: AppTextStyles.body,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -369,15 +428,19 @@ class _CollectionDetailScreenState
     );
   }
 
-  /// Show a bottom sheet with all notes, allowing the user to add/remove
-  /// notes from this collection.
   void _showAddNotesSheet() {
     final db = ref.read(databaseProvider);
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
+      ),
       builder: (ctx) => DraggableScrollableSheet(
         initialChildSize: 0.6,
         minChildSize: 0.3,
@@ -391,20 +454,41 @@ class _CollectionDetailScreenState
             }
 
             final allNotes = snapshot.data ?? [];
-
-            // Track which notes are currently in the collection.
             final currentNoteIds =
                 _collectionNotes.map((cn) => cn.noteId).toSet();
 
             return Column(
               children: [
+                // Drag handle
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(top: 8, bottom: 4),
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: (isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary)
+                          .withAlpha(80),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.s8,
+                    AppSpacing.md,
+                    AppSpacing.s4,
+                  ),
                   child: Row(
                     children: [
                       Text(
                         l10n.addNotes,
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const Spacer(),
                       IconButton(
@@ -415,11 +499,23 @@ class _CollectionDetailScreenState
                     ],
                   ),
                 ),
-                const Divider(height: 1),
+                Divider(
+                  height: 1,
+                  color: isDark
+                      ? AppColors.darkDivider.withAlpha(60)
+                      : AppColors.lightDivider.withAlpha(80),
+                ),
                 Expanded(
                   child: allNotes.isEmpty
                       ? Center(
-                          child: Text(l10n.noNotesAvailable),
+                          child: Text(
+                            l10n.noNotesAvailable,
+                            style: AppTextStyles.body.copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextTertiary
+                                  : AppColors.lightTextTertiary,
+                            ),
+                          ),
                         )
                       : ListView.builder(
                           controller: scrollController,
@@ -428,7 +524,8 @@ class _CollectionDetailScreenState
                             final note = allNotes[index];
                             final isInCollection =
                                 currentNoteIds.contains(note.id);
-                            final title = note.plainTitle ?? 'Untitled';
+                            final title =
+                                note.plainTitle ?? l10n.untitled;
 
                             return CheckboxListTile(
                               value: isInCollection,
@@ -436,6 +533,7 @@ class _CollectionDetailScreenState
                                 title,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.body,
                               ),
                               subtitle: note.plainContent != null &&
                                       note.plainContent!.isNotEmpty
@@ -445,22 +543,22 @@ class _CollectionDetailScreenState
                                           : note.plainContent!,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
+                                      style: AppTextStyles.caption.copyWith(
                                         fontSize: 12,
+                                        color: isDark
+                                            ? AppColors.darkTextTertiary
+                                            : AppColors.lightTextTertiary,
                                       ),
                                     )
                                   : null,
                               onChanged: (checked) async {
                                 if (checked == true) {
-                                  // Get the next sort order.
                                   final maxSort = _collectionNotes.isEmpty
                                       ? -1
                                       : _collectionNotes
                                           .map((cn) => cn.sortOrder)
-                                          .reduce((a, b) => a > b ? a : b);
+                                          .reduce(
+                                              (a, b) => a > b ? a : b,);
                                   await db.collectionsDao.addNoteToCollection(
                                     collectionId: widget.collectionId,
                                     noteId: note.id,
@@ -473,7 +571,6 @@ class _CollectionDetailScreenState
                                     note.id,
                                   );
                                 }
-                                // Reload data and rebuild the sheet.
                                 await _loadData();
                                 if (mounted) setState(() {});
                               },
@@ -488,4 +585,24 @@ class _CollectionDetailScreenState
       ),
     );
   }
+
+  String _formatTime(DateTime dt) {
+    final local = dt.toLocal();
+    final now = DateTime.now();
+    final diff = now.difference(local);
+
+    if (diff.inMinutes < 1) return AppLocalizations.of(context)!.justNow;
+    if (diff.inHours < 1) {
+      return AppLocalizations.of(context)!.minutesAgo(diff.inMinutes);
+    }
+    if (diff.inDays < 1) {
+      return AppLocalizations.of(context)!.hoursAgo(diff.inHours);
+    }
+    if (diff.inDays < 7) {
+      return AppLocalizations.of(context)!.daysAgo(diff.inDays);
+    }
+    return '${local.year}-${_pad(local.month)}-${_pad(local.day)}';
+  }
+
+  String _pad(int n) => n.toString().padLeft(2, '0');
 }

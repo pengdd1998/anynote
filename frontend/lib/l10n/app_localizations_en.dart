@@ -12,6 +12,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'AnyNote';
 
   @override
+  String get homeTitle => 'Home';
+
+  @override
   String get welcomeBack => 'Welcome Back';
 
   @override
@@ -1725,13 +1728,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutExitZen => 'Exit Zen Mode / Close Dialog';
 
   @override
-  String get notesTabLabel => 'Notes';
+  String get notesTabLabel => 'Home';
 
   @override
-  String get composeTabLabel => 'Compose';
+  String get composeTabLabel => 'Dream Plan';
 
   @override
-  String get publishTabLabel => 'Publish';
+  String get aiTabLabel => 'AI';
 
   @override
   String get settingsTabLabel => 'Settings';

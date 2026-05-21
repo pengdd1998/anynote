@@ -43,3 +43,20 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# AI tool configs (local only)
+.playwright-mcp/
+.serena/
+
+# Debugging artifacts
+ui_current_dump.xml
+*.dump
+
+# DevTools user config
+devtools_options.yaml
+
+# Android Gradle cache
+android/.gradle/
+android/.kotlin/
+android/build/
+**/local.properties

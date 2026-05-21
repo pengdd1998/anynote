@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../l10n/app_localizations.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../l10n/app_localizations.dart';
 import '../providers/plan_providers.dart';
 
 /// Profile editing screen.
@@ -37,12 +42,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.profileTitle),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           profileAsync.when(
             data: (_) => _saving
                 ? const Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       child: SizedBox(
                         width: 20,
                         height: 20,
@@ -81,60 +89,224 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildForm(BuildContext context, AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final initial = _displayNameController.text.trim().isNotEmpty
+        ? _displayNameController.text.trim().substring(0, 1).toUpperCase()
+        : '?';
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s4,
+        AppSpacing.md,
+        AppSpacing.xl,
+      ),
       children: [
-        // Display name
-        Text(
-          l10n.displayName,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w600,
+        // ── Avatar hero ─────────────────────────────────────
+        Center(
+          child: Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.accentLavenderBg,
+                  AppColors.accentMintBg.withAlpha(180),
+                ],
               ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _displayNameController,
-          maxLength: 100,
-          decoration: InputDecoration(
-            hintText: l10n.displayNameHint,
-            border: const OutlineInputBorder(),
-            counterText: '',
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withAlpha(30),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                initial,
+                style: AppTextStyles.headline.copyWith(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accentLavenderText,
+                ),
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.s8),
 
-        // Bio
-        Text(
-          l10n.bio,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _bioController,
-          maxLength: 500,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: l10n.bioHint,
-            border: const OutlineInputBorder(),
+        // Name preview below avatar
+        Center(
+          child: Text(
+            _displayNameController.text.trim().isNotEmpty
+                ? _displayNameController.text.trim()
+                : l10n.displayNameHint,
+            style: AppTextStyles.body.copyWith(
+              fontWeight: FontWeight.w600,
+              color: _displayNameController.text.trim().isNotEmpty
+                  ? (isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary)
+                  : (isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary),
+            ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.lg),
 
-        // Public profile toggle
-        Card(
-          child: SwitchListTile(
-            title: Text(l10n.publicProfile),
-            subtitle: Text(l10n.publicProfileDesc),
-            value: _publicProfileEnabled,
-            onChanged: (value) {
-              setState(() => _publicProfileEnabled = value);
-            },
+        // ── Form card ───────────────────────────────────────
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.s16),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Display name label
+              Text(
+                l10n.displayName,
+                style: AppTextStyles.caption.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.s8),
+              TextField(
+                controller: _displayNameController,
+                maxLength: 100,
+                decoration: InputDecoration(
+                  hintText: l10n.displayNameHint,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  counterText: '',
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+
+              const SizedBox(height: AppSpacing.lg),
+
+              // Bio label
+              Text(
+                l10n.bio,
+                style: AppTextStyles.caption.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.s8),
+              TextField(
+                controller: _bioController,
+                maxLength: 500,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: l10n.bioHint,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  counterStyle: AppTextStyles.caption.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        // ── Public profile toggle card ──────────────────────
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.s16,
+            vertical: AppSpacing.s4,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.s4,
+                  AppSpacing.s12,
+                  AppSpacing.s4,
+                  0,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: _publicProfileEnabled
+                            ? AppColors.accentMintBg
+                            : AppColors.darkTextTertiary.withAlpha(12),
+                        borderRadius: BorderRadius.circular(AppRadius.xs),
+                      ),
+                      child: Icon(
+                        Icons.public,
+                        size: 18,
+                        color: _publicProfileEnabled
+                            ? AppColors.accentMintText
+                            : (isDark
+                                ? AppColors.darkTextTertiary
+                                : AppColors.lightTextTertiary),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.s12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.publicProfile,
+                            style: AppTextStyles.body.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            l10n.publicProfileDesc,
+                            style: AppTextStyles.caption.copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextTertiary
+                                  : AppColors.lightTextTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Semantics(
+                      hint: l10n.publicProfile,
+                      child: Switch(
+                        value: _publicProfileEnabled,
+                        onChanged: (value) {
+                          setState(() => _publicProfileEnabled = value);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.s4),
+            ],
           ),
         ),
       ],

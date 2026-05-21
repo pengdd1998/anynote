@@ -3,14 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
+import '../../../core/crypto/crypto_service.dart';
+import '../../../core/error/error.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../../core/crypto/crypto_service.dart';
-import '../../../core/error/error.dart';
-import '../../../core/widgets/app_snackbar.dart';
 
-/// Screen that displays the version history of a note.
+/// Screen that displays the version history of a note as a vertical timeline.
 ///
 /// Users can:
 /// - Tap a version to preview it in a dialog
@@ -148,16 +153,28 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
 
   void _showVersionPreview(_DecryptedVersion version) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(version.title),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        title: Text(
+          version.title,
+          style: AppTextStyles.title,
+        ),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
             child: Text(
               version.content,
-              style: const TextStyle(fontSize: 14, height: 1.6),
+              style: AppTextStyles.body.copyWith(
+                height: 1.7,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
             ),
           ),
         ),
@@ -183,9 +200,13 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
         title: Text(l10n.restoreVersion),
         content: Text(
           l10n.restoreVersionConfirm(version.versionNumber),
+          style: AppTextStyles.body,
         ),
         actions: [
           TextButton(
@@ -246,10 +267,12 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
       // Otherwise, use the existing encrypted blobs (they were encrypted with
       // the same noteId so they remain valid).
       if (crypto.isUnlocked && version.content.isNotEmpty) {
-        encryptedContent = await crypto.encryptForItem(noteId, version.content);
+        encryptedContent =
+            await crypto.encryptForItem(noteId, version.content);
       }
       if (crypto.isUnlocked && version.title != l10n.untitled) {
-        encryptedTitle = await crypto.encryptForItem(noteId, version.title);
+        encryptedTitle =
+            await crypto.encryptForItem(noteId, version.title);
       }
 
       await db.notesDao.updateNote(
@@ -282,6 +305,9 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.versionHistory),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           if (_isSelecting)
             IconButton(
@@ -302,7 +328,10 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     final canCompare = _selectedIds.length == 2;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.s8,
+        ),
         child: FilledButton.icon(
           onPressed: canCompare ? _navigateToDiff : null,
           icon: const Icon(Icons.compare_arrows, size: 20),
@@ -316,7 +345,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
 
   Widget _buildBody() {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -334,21 +363,44 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ExcludeSemantics(
-              child: Icon(Icons.history, size: 64, color: theme.disabledColor),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkInputFill
+                    : AppColors.lightInputFill,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Icon(
+                Icons.history,
+                size: 28,
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             Text(
               l10n.noVersionsYet,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+              style: AppTextStyles.title.copyWith(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.versionsSavedAutomatically,
-              style: TextStyle(color: theme.disabledColor, fontSize: 13),
-              textAlign: TextAlign.center,
+            const SizedBox(height: AppSpacing.s8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: Text(
+                l10n.versionsSavedAutomatically,
+                style: AppTextStyles.caption.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),
@@ -358,7 +410,10 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     return RefreshIndicator(
       onRefresh: _loadVersions,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.only(
+          top: AppSpacing.s8,
+          bottom: 80,
+        ),
         itemCount: _versions.length,
         itemBuilder: (context, index) {
           final version = _versions[index];
@@ -372,63 +427,13 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
               _formatDate(version.createdAt),
               isCurrent ? l10n.currentSuffix : '',
             ),
-            child: Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              color: isSelected
-                  ? Theme.of(context)
-                      .colorScheme
-                      .secondaryContainer
-                      .withValues(alpha: 0.5)
-                  : null,
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: isCurrent
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : isSelected
-                          ? Theme.of(context).colorScheme.secondaryContainer
-                          : Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                  child: Text(
-                    'v${version.versionNumber}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: isCurrent
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : isSelected
-                              ? Theme.of(context)
-                                  .colorScheme
-                                  .onSecondaryContainer
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  version.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-                subtitle: Text(
-                  _buildSubtitle(version, l10n),
-                  style: TextStyle(
-                      fontSize: 12, color: theme.colorScheme.onSurfaceVariant,),
-                ),
-                trailing: _buildTrailing(isCurrent, isSelected),
-                onTap: () {
-                  if (_isSelecting) {
-                    _toggleSelection(version.id);
-                  } else {
-                    _showVersionPreview(version);
-                  }
-                },
-                onLongPress: () {
-                  _toggleSelection(version.id);
-                },
-              ),
+            child: _buildTimelineItem(
+              index,
+              version,
+              isCurrent: isCurrent,
+              isSelected: isSelected,
+              isDark: isDark,
+              l10n: l10n,
             ),
           );
         },
@@ -436,26 +441,200 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     );
   }
 
+  Widget _buildTimelineItem(
+    int index,
+    _DecryptedVersion version, {
+    required bool isCurrent,
+    required bool isSelected,
+    required bool isDark,
+    required AppLocalizations l10n,
+  }) {
+    final isFirst = index == 0;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    final lineColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final cardBg = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Connector line from previous item.
+          if (!isFirst)
+            Padding(
+              padding: const EdgeInsets.only(left: 11),
+              child: Container(
+                width: 2,
+                height: AppSpacing.s8,
+                color: lineColor,
+              ),
+            ),
+          // Dot + card row.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Timeline dot.
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: isCurrent ? 12 : (isSelected ? 12 : 8),
+                    height: isCurrent ? 12 : (isSelected ? 12 : 8),
+                    decoration: BoxDecoration(
+                      color: isCurrent
+                          ? primary
+                          : isSelected
+                              ? primary.withAlpha(60)
+                              : cardBg,
+                      shape: BoxShape.circle,
+                      border: isCurrent
+                          ? null
+                          : Border.all(
+                              color:
+                                  primary.withAlpha(isSelected ? 200 : 80),
+                              width: 2,
+                            ),
+                      boxShadow: isCurrent
+                          ? [
+                              BoxShadow(
+                                color: primary.withAlpha(40),
+                                blurRadius: 6,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              // Version card.
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    if (_isSelecting) {
+                      _toggleSelection(version.id);
+                    } else {
+                      _showVersionPreview(version);
+                    }
+                  },
+                  onLongPress: () => _toggleSelection(version.id),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? primary.withAlpha(15)
+                          : cardBg,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: isSelected
+                          ? Border.all(
+                              color: primary.withAlpha(80),
+                              width: 1.5,
+                            )
+                          : null,
+                      boxShadow: AppShadows.smOf(
+                        Theme.of(context).brightness,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Top row: version pill + trailing.
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isCurrent
+                                    ? primary.withAlpha(20)
+                                    : (isDark
+                                        ? AppColors.darkInputFill
+                                        : AppColors.lightInputFill),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.pill),
+                              ),
+                              child: Text(
+                                'v${version.versionNumber}',
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isCurrent
+                                      ? primary
+                                      : (isDark
+                                          ? AppColors.darkTextTertiary
+                                          : AppColors.lightTextTertiary),
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            _buildTrailing(isCurrent, isSelected),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.s8),
+                        // Title.
+                        Text(
+                          version.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: isCurrent
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.s4),
+                        // Timestamp + char count.
+                        Text(
+                          _buildSubtitle(version, l10n),
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.darkTextTertiary
+                                : AppColors.lightTextTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   String _buildSubtitle(_DecryptedVersion version, AppLocalizations l10n) {
     final date = _formatDate(version.createdAt);
     final charCount = version.content.length;
-    return '$date - $charCount chars';
+    return '$date · $charCount chars';
   }
 
   Widget _buildTrailing(bool isCurrent, bool isSelected) {
     if (isCurrent) {
       final l10n = AppLocalizations.of(context)!;
+      final primary = Theme.of(context).colorScheme.primary;
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(12),
+          color: primary.withAlpha(20),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           l10n.current,
-          style: TextStyle(
+          style: AppTextStyles.caption.copyWith(
             fontSize: 11,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            color: primary,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -465,15 +644,22 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     if (isSelected) {
       return Icon(
         Icons.check_circle,
+        size: 20,
         color: Theme.of(context).colorScheme.primary,
       );
     }
 
     if (_isSelecting) {
-      return const ExcludeSemantics(child: Icon(Icons.radio_button_unchecked));
+      return Icon(
+        Icons.radio_button_unchecked,
+        size: 20,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkTextTertiary
+            : AppColors.lightTextTertiary,
+      );
     }
 
-    return const ExcludeSemantics(child: Icon(Icons.chevron_right));
+    return const SizedBox.shrink();
   }
 
   String _formatDate(DateTime dt) {

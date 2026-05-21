@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +33,11 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
   Future<void> _triggerClustering() async {
     if (_hasTriggeredClustering) return;
     _hasTriggeredClustering = true;
-    await ref.read(composeSessionProvider.notifier).generateClusters();
+    try {
+      await ref.read(composeSessionProvider.notifier).generateClusters();
+    } catch (e) {
+      debugPrint('[ClusterScreen] generateClusters failed: $e');
+    }
   }
 
   @override

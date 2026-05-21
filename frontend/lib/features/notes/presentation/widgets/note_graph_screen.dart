@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import 'link_management_sheet.dart';
@@ -57,7 +61,7 @@ class GraphData {
 }
 
 /// Knowledge graph visualization screen.
-/// Displays notes as nodes and links as edges using a
+/// Displays notes as soft pastel bubbles and links as subtle edges using a
 /// force-directed layout drawn on a Canvas with pan/zoom support.
 class NoteGraphScreen extends ConsumerStatefulWidget {
   const NoteGraphScreen({super.key});
@@ -102,31 +106,31 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final graphAsync = ref.watch(localGraphDataProvider(null));
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.knowledgeGraph),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
-          // Link suggestions
           IconButton(
             icon: const Icon(Icons.lightbulb_outline),
             tooltip: 'Suggested links',
             onPressed: () => _showSuggestions(context),
           ),
-          // Orphaned notes
           IconButton(
             icon: const Icon(Icons.scatter_plot_outlined),
             tooltip: 'Orphaned notes',
             onPressed: () => _showOrphanedNotes(context),
           ),
-          // Link management
           IconButton(
             icon: const Icon(Icons.link),
             tooltip: 'Manage links',
             onPressed: () => _showLinkManagement(context),
           ),
-          // Reset view
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Reset view',
@@ -138,7 +142,6 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
       ),
       body: graphAsync.when(
         data: (data) {
-          // Cache data for use by AppBar actions
           _cachedData = data;
 
           if (data.nodes.isEmpty) {
@@ -146,22 +149,46 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.account_tree_outlined,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.outline,
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.darkInputFill
+                          : AppColors.lightInputFill,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                    child: Icon(
+                      Icons.account_tree_outlined,
+                      size: 28,
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.md),
                   Text(
                     'No notes yet',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: AppTextStyles.title.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Create some notes and link them with [[wiki links]]',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
+                  const SizedBox(height: AppSpacing.s8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
+                    child: Text(
+                      'Create some notes and link them with [[wiki links]]',
+                      style: AppTextStyles.caption.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),
@@ -185,21 +212,42 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.lightErrorBg,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: const Icon(
+                  Icons.error_outline,
+                  size: 28,
+                  color: AppColors.error,
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 'Error loading graph',
-                style: Theme.of(context).textTheme.titleMedium,
+                style: AppTextStyles.title.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                '$e',
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
+              const SizedBox(height: AppSpacing.s8),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                ),
+                child: Text(
+                  '$e',
+                  style: AppTextStyles.caption.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ],
           ),
@@ -229,15 +277,15 @@ class _GraphCanvasState extends State<_GraphCanvas>
     with TickerProviderStateMixin {
   late Map<String, Offset> _positions;
   late Map<String, String> _titles;
+  late Map<String, int> _colorIndices;
   Offset _panOffset = Offset.zero;
   double _scale = 1.0;
   String? _hoveredNodeId;
   Timer? _simulationTimer;
 
-  // Force-directed layout parameters
-  static const double _repulsion = 50000;
-  static const double _springLength = 120;
-  static const double _springK = 0.05;
+  static const double _repulsion = 60000;
+  static const double _springLength = 140;
+  static const double _springK = 0.04;
   static const double _damping = 0.85;
   static const int _maxIterations = 300;
 
@@ -248,6 +296,7 @@ class _GraphCanvasState extends State<_GraphCanvas>
     super.initState();
     _positions = {};
     _titles = {};
+    _colorIndices = {};
     _initializeData();
   }
 
@@ -260,6 +309,11 @@ class _GraphCanvasState extends State<_GraphCanvas>
   void _initializeData() {
     _titles = {for (var n in widget.nodes) n['id']!: n['title']!};
     _velocities = {for (var n in widget.nodes) n['id']!: Offset.zero};
+    // Assign color indices deterministically based on title hash.
+    _colorIndices = {
+      for (int i = 0; i < widget.nodes.length; i++)
+        widget.nodes[i]['id']!: i % _bubbleFillsLight.length,
+    };
     _runForceLayout();
   }
 
@@ -281,7 +335,6 @@ class _GraphCanvasState extends State<_GraphCanvas>
       }
     }
 
-    // Run simulation iterations
     int iteration = 0;
     _simulationTimer?.cancel();
     _simulationTimer =
@@ -303,7 +356,6 @@ class _GraphCanvasState extends State<_GraphCanvas>
   bool _simulateStep() {
     final Map<String, Offset> forces = {};
 
-    // Calculate repulsion between all node pairs
     for (final u in widget.nodes) {
       final uid = u['id']!;
       forces[uid] = Offset.zero;
@@ -320,7 +372,6 @@ class _GraphCanvasState extends State<_GraphCanvas>
       }
     }
 
-    // Calculate spring forces along edges
     for (final edge in widget.edges) {
       final srcId = edge['sourceId']!;
       final tgtId = edge['targetId']!;
@@ -336,7 +387,6 @@ class _GraphCanvasState extends State<_GraphCanvas>
       forces[tgtId] = forces[tgtId]! - force;
     }
 
-    // Apply forces and update positions
     double maxVelocity = 0;
     for (final node in widget.nodes) {
       final id = node['id']!;
@@ -347,11 +397,10 @@ class _GraphCanvasState extends State<_GraphCanvas>
 
       final newPos = _positions[id]! + velocity;
 
-      // Keep within bounds
       final size = MediaQuery.of(context).size;
       _positions[id] = Offset(
-        newPos.dx.clamp(50.0, size.width - 50),
-        newPos.dy.clamp(50.0, size.height - 50),
+        newPos.dx.clamp(60.0, size.width - 60),
+        newPos.dy.clamp(60.0, size.height - 60),
       );
     }
 
@@ -367,7 +416,7 @@ class _GraphCanvasState extends State<_GraphCanvas>
   void _handleScaleUpdate(ScaleUpdateDetails details) {
     setState(() {
       if (details.scale != 1.0) {
-        _scale = (_scale * details.scale).clamp(0.5, 3.0);
+        _scale = (_scale * details.scale).clamp(0.3, 4.0);
       }
       _panOffset = details.localFocalPoint;
     });
@@ -381,6 +430,8 @@ class _GraphCanvasState extends State<_GraphCanvas>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onScaleStart: _handleScaleStart,
       onScaleUpdate: _handleScaleUpdate,
@@ -389,7 +440,8 @@ class _GraphCanvasState extends State<_GraphCanvas>
         for (final node in widget.nodes) {
           final id = node['id']!;
           final pos = _positions[id];
-          if (pos != null && (tapPos - _transformPoint(pos)).distance < 30) {
+          if (pos != null &&
+              (tapPos - _transformPoint(pos)).distance < 35) {
             widget.onNodeTap(id);
             return;
           }
@@ -402,7 +454,7 @@ class _GraphCanvasState extends State<_GraphCanvas>
             final id = node['id']!;
             final pos = _positions[id];
             if (pos != null &&
-                (event.localPosition - _transformPoint(pos)).distance < 30) {
+                (event.localPosition - _transformPoint(pos)).distance < 35) {
               found = id;
               break;
             }
@@ -420,12 +472,11 @@ class _GraphCanvasState extends State<_GraphCanvas>
             edges: widget.edges,
             positions: _positions,
             titles: _titles,
+            colorIndices: _colorIndices,
             hoveredNodeId: _hoveredNodeId,
             scale: _scale,
             panOffset: _panOffset,
-            nodeColor: Theme.of(context).colorScheme.primary,
-            edgeColor: Theme.of(context).colorScheme.outlineVariant,
-            labelStyle: Theme.of(context).textTheme.labelSmall!,
+            isDark: isDark,
           ),
         ),
       ),
@@ -433,30 +484,64 @@ class _GraphCanvasState extends State<_GraphCanvas>
   }
 }
 
-/// CustomPainter that draws nodes and edges.
+// ---------------------------------------------------------------------------
+// Bubble color palette
+// ---------------------------------------------------------------------------
+
+const _bubbleFillsLight = <Color>[
+  AppColors.accentLavenderBg,
+  AppColors.accentYellowBg,
+  AppColors.accentMintBg,
+  AppColors.accentPeachBg,
+];
+
+const _bubbleFillsDark = <Color>[
+  Color(0xFF2A2545),
+  Color(0xFF3B3420),
+  Color(0xFF1E3828),
+  Color(0xFF3B2E1E),
+];
+
+const _bubbleAccents = <Color>[
+  AppColors.accentLavender,
+  AppColors.accentYellow,
+  AppColors.accentMint,
+  AppColors.accentPeach,
+];
+
+const _bubbleTextColors = <Color>[
+  AppColors.accentLavenderText,
+  AppColors.accentYellowText,
+  AppColors.accentMintText,
+  AppColors.accentPeachText,
+];
+
+// ---------------------------------------------------------------------------
+// Graph Painter
+// ---------------------------------------------------------------------------
+
+/// CustomPainter that draws soft pastel node bubbles and subtle edges.
 class _GraphPainter extends CustomPainter {
   final List<Map<String, String>> nodes;
   final List<Map<String, String>> edges;
   final Map<String, Offset> positions;
   final Map<String, String> titles;
+  final Map<String, int> colorIndices;
   final String? hoveredNodeId;
   final double scale;
   final Offset panOffset;
-  final Color nodeColor;
-  final Color edgeColor;
-  final TextStyle labelStyle;
+  final bool isDark;
 
   _GraphPainter({
     required this.nodes,
     required this.edges,
     required this.positions,
     required this.titles,
-    required this.nodeColor,
-    required this.edgeColor,
-    required this.labelStyle,
-    this.hoveredNodeId,
-    this.scale = 1.0,
-    this.panOffset = Offset.zero,
+    required this.colorIndices,
+    required this.hoveredNodeId,
+    required this.scale,
+    required this.panOffset,
+    required this.isDark,
   });
 
   @override
@@ -466,10 +551,19 @@ class _GraphPainter extends CustomPainter {
     canvas.scale(scale);
     canvas.translate(-center.dx, -center.dy);
 
-    // Draw edges.
+    _drawEdges(canvas);
+    _drawNodes(canvas);
+  }
+
+  void _drawEdges(Canvas canvas) {
+    final edgeColor = isDark
+        ? AppColors.darkDivider.withAlpha(60)
+        : AppColors.lightDivider.withAlpha(80);
+
     final edgePaint = Paint()
       ..color = edgeColor
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round;
 
     for (final edge in edges) {
       final src = edge['sourceId'];
@@ -477,12 +571,26 @@ class _GraphPainter extends CustomPainter {
       if (src == null || tgt == null) continue;
       final from = positions[src];
       final to = positions[tgt];
-      if (from != null && to != null) {
+      if (from == null || to == null) continue;
+
+      // Check if either endpoint is hovered to highlight the edge.
+      final isHighlighted =
+          src == hoveredNodeId || tgt == hoveredNodeId;
+
+      if (isHighlighted) {
+        final highlightPaint = Paint()
+          ..color = (isDark ? AppColors.darkTextTertiary : AppColors.primary)
+              .withAlpha(100)
+          ..strokeWidth = 2.0
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(from, to, highlightPaint);
+      } else {
         canvas.drawLine(from, to, edgePaint);
       }
     }
+  }
 
-    // Draw nodes.
+  void _drawNodes(Canvas canvas) {
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     for (final node in nodes) {
@@ -491,61 +599,88 @@ class _GraphPainter extends CustomPainter {
       if (pos == null) continue;
 
       final isHovered = id == hoveredNodeId;
-      final nodeRadius = isHovered ? 28.0 : 22.0;
+      final colorIdx = colorIndices[id] ?? 0;
+      final nodeRadius = isHovered ? 30.0 : 24.0;
 
-      // Draw node shadow
+      final fillColor = isDark
+          ? _bubbleFillsDark[colorIdx]
+          : _bubbleFillsLight[colorIdx];
+      final accentColor = _bubbleAccents[colorIdx];
+      final textColor = _bubbleTextColors[colorIdx];
+
+      // Soft shadow
       final shadowPaint = Paint()
-        ..color = Colors.black.withValues(alpha: 0.2)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-      canvas.drawCircle(pos + const Offset(2, 2), nodeRadius, shadowPaint);
+        ..color = isDark
+            ? AppColors.shadowDark
+            : AppColors.shadowLight
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawCircle(
+        pos + const Offset(0, 2),
+        nodeRadius,
+        shadowPaint,
+      );
 
-      // Draw node circle
-      final nodePaint = Paint()
-        ..color = isHovered ? nodeColor.withValues(alpha: 0.9) : nodeColor;
-      canvas.drawCircle(pos, nodeRadius, nodePaint);
+      // Filled bubble
+      final fillPaint = Paint()..color = fillColor;
+      canvas.drawCircle(pos, nodeRadius, fillPaint);
 
-      // Draw node border when hovered
+      // Accent border
+      final borderAlpha = isHovered ? 200 : 80;
+      final borderWidth = isHovered ? 2.5 : 1.5;
+      final borderPaint = Paint()
+        ..color = accentColor.withAlpha(borderAlpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = borderWidth;
+      canvas.drawCircle(pos, nodeRadius, borderPaint);
+
+      // Hover glow ring
       if (isHovered) {
-        final borderPaint = Paint()
-          ..color = nodeColor
+        final glowPaint = Paint()
+          ..color = accentColor.withAlpha(30)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 3;
-        canvas.drawCircle(pos, nodeRadius + 3, borderPaint);
+          ..strokeWidth = 6;
+        canvas.drawCircle(pos, nodeRadius + 4, glowPaint);
       }
 
-      // Draw title label
+      // Title label below bubble
       final label = titles[id] ?? id.substring(0, 4);
       final displayLabel =
-          label.length > 15 ? '${label.substring(0, 12)}...' : label;
+          label.length > 14 ? '${label.substring(0, 11)}...' : label;
 
+      final fontSize = isHovered ? 12.0 : 10.5;
       textPainter.text = TextSpan(
         text: displayLabel,
-        style: labelStyle.copyWith(
-          color: Colors.white,
-          fontSize: isHovered ? 12 : 10,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: isHovered ? FontWeight.w600 : FontWeight.w500,
+          color: isDark ? AppColors.darkTextPrimary : textColor,
+          height: 1.2,
         ),
       );
       textPainter.layout();
 
-      // Draw text background
-      final textBg = RRect.fromRectAndRadius(
+      // Label background pill
+      final labelBg = RRect.fromRectAndRadius(
         Rect.fromCenter(
-          center: pos + Offset(0, nodeRadius + 12),
-          width: textPainter.width + 8,
-          height: textPainter.height + 4,
+          center: pos + Offset(0, nodeRadius + 14),
+          width: textPainter.width + 10,
+          height: textPainter.height + 6,
         ),
-        const Radius.circular(4),
+        const Radius.circular(8),
       );
-      final bgPaint = Paint()..color = Colors.black.withValues(alpha: 0.7);
-      canvas.drawRRect(textBg, bgPaint);
+      final bgPaint = Paint()
+        ..color = isDark
+            ? AppColors.darkCardBg.withAlpha(220)
+            : AppColors.lightCardBg.withAlpha(230);
+      canvas.drawRRect(labelBg, bgPaint);
 
-      // Draw text
+      // Label text
       textPainter.paint(
         canvas,
         pos +
             Offset(
               -textPainter.width / 2,
-              nodeRadius + 10 - textPainter.height / 2,
+              nodeRadius + 11,
             ),
       );
     }
@@ -557,7 +692,9 @@ class _GraphPainter extends CustomPainter {
       edges != oldDelegate.edges ||
       positions != oldDelegate.positions ||
       titles != oldDelegate.titles ||
+      colorIndices != oldDelegate.colorIndices ||
       hoveredNodeId != oldDelegate.hoveredNodeId ||
       scale != oldDelegate.scale ||
-      panOffset != oldDelegate.panOffset;
+      panOffset != oldDelegate.panOffset ||
+      isDark != oldDelegate.isDark;
 }

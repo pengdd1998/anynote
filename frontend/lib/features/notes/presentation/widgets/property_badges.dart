@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/daos/note_properties_dao.dart';
+import '../../../../core/widgets/tag_chip.dart';
 import '../../../../main.dart';
 
 /// Widget displaying property badges for a note.
@@ -13,15 +14,24 @@ class PropertyBadges extends ConsumerWidget {
   final VoidCallback? onStatusTap;
   final VoidCallback? onPriorityTap;
 
+  /// Pre-loaded properties to avoid per-card database streams.
+  /// When provided, the StreamBuilder is skipped entirely.
+  final List<NoteProperty>? properties;
+
   const PropertyBadges({
     super.key,
     required this.noteId,
     this.onStatusTap,
     this.onPriorityTap,
+    this.properties,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (properties != null) {
+      return _buildFromList(context, properties!);
+    }
+
     final db = ref.watch(databaseProvider);
     final propertiesStream =
         db.notePropertiesDao.watchPropertiesForNote(noteId);
@@ -32,29 +42,28 @@ class PropertyBadges extends ConsumerWidget {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
-
-        final properties = snapshot.data!;
-        final badges = <Widget>[];
-
-        for (final property in properties) {
-          final badge = _buildBadge(context, property);
-          if (badge != null) {
-            badges.add(badge);
-          }
-        }
-
-        if (badges.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: badges
-              .expand((badge) => [badge, const SizedBox(width: 4)])
-              .toList()
-            ..removeLast(),
-        );
+        return _buildFromList(context, snapshot.data!);
       },
+    );
+  }
+
+  Widget _buildFromList(BuildContext context, List<NoteProperty> properties) {
+    if (properties.isEmpty) return const SizedBox.shrink();
+
+    final badges = <Widget>[];
+    for (final property in properties) {
+      final badge = _buildBadge(context, property);
+      if (badge != null) badges.add(badge);
+    }
+
+    if (badges.isEmpty) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: badges
+          .expand((badge) => [badge, const SizedBox(width: 4)])
+          .toList()
+        ..removeLast(),
     );
   }
 
@@ -118,32 +127,12 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (color, label) = _getStatusInfo(context, status);
 
-    final badge = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-      ),
+    return TagChip(
+      label: label,
+      color: color,
+      selected: true,
+      onTap: onTap,
     );
-
-    if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: badge,
-      );
-    }
-    return badge;
   }
 
   (Color, String) _getStatusInfo(BuildContext context, String status) {
@@ -182,35 +171,12 @@ class _PriorityBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (icon, color) = _getPriorityInfo(context, priority);
 
-    final badge = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 2),
-          Text(
-            priority,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-        ],
-      ),
+    return TagChip(
+      label: priority,
+      color: color,
+      icon: icon,
+      onTap: onTap,
     );
-
-    if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: badge,
-      );
-    }
-    return badge;
   }
 
   (IconData, Color) _getPriorityInfo(BuildContext context, String priority) {
@@ -293,37 +259,10 @@ class PropertyChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final chipColor = color ?? theme.colorScheme.primary;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: chipColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: chipColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$label: ',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: chipColor.withValues(alpha: 0.8),
-            ),
-          ),
-          Text(
-            value,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: chipColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+    final chipColor = color ?? Theme.of(context).colorScheme.primary;
+    return TagChip(
+      label: '$label: $value',
+      color: chipColor,
     );
   }
 }

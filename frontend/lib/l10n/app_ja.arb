@@ -1,6 +1,7 @@
 {
 
   "appTitle": "AnyNote",
+  "homeTitle": "ホーム",
 
   "welcomeBack": "おかえりなさい",
 
@@ -1026,11 +1027,11 @@
 
   "shortcutExitZen": "集中モードを終了 / ダイアログを閉じる",
 
-  "notesTabLabel": "メモ",
+  "notesTabLabel": "ホーム",
 
-  "composeTabLabel": "作成",
+  "composeTabLabel": "プラン",
 
-  "publishTabLabel": "公開",
+  "aiTabLabel": "AI",
 
   "settingsTabLabel": "設定",
 

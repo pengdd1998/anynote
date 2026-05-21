@@ -35,6 +35,8 @@ import 'core/widgets/error_boundary.dart';
 import 'core/constants/changelog.dart';
 import 'features/notes/presentation/widgets/command_palette.dart';
 import 'features/settings/presentation/whats_new_screen.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+
 import 'routing/app_router.dart';
 
 /// Global reference to the Riverpod container so that non-widget code
@@ -42,8 +44,9 @@ import 'routing/app_router.dart';
 late final ProviderContainer globalContainer;
 
 /// Whether [globalContainer] has been assigned and is safe to read.
-/// GoRouter redirect guards on this to avoid [LateInitializationError]
-/// during the first frame before [Future.microtask] completes.
+/// Set to true immediately after the container is created in main(),
+/// before runApp(), so the GoRouter redirect has correct auth state
+/// on the very first frame.
 bool containerReady = false;
 
 void main() async {
@@ -89,21 +92,16 @@ void main() async {
   }
 
   // Initialize API client.
-  // Priority: --dart-define=API_BASE_URL > kDebugMode default > production.
+  // Priority: --dart-define=API_BASE_URL > production default.
+  // Developers testing against a local server should pass
+  // --dart-define=API_BASE_URL=http://10.0.2.2:36661 (emulator)
+  // or --dart-define=API_BASE_URL=http://<lan-ip>:36661 (physical device).
   const String envApiUrl = String.fromEnvironment('API_BASE_URL');
   final apiClient = ApiClient(
     baseUrl: envApiUrl.isNotEmpty
         ? envApiUrl
-        : (kDebugMode
-            ? 'http://10.0.2.2:36661'
-            : 'http://175.178.66.207:36661'),
+        : 'http://175.178.66.207:36661',
   );
-
-  // Wire up auth failure callback so the interceptor can reset app-level
-  // auth state (Riverpod providers) when tokens are cleared after a 401.
-  apiClient.onAuthFailure = () {
-    globalContainer.read(authStateProvider.notifier).state = false;
-  };
 
   // Initialize local notification service for scheduled reminders.
   // Wrapped in try/catch because native plugin failures (missing config,
@@ -124,15 +122,38 @@ void main() async {
     ErrorReporter.instance.reportError(e, st, context: 'token_load');
   }
 
+  // Create the Riverpod container and wire up auth state BEFORE runApp.
+  // This ensures the GoRouter redirect has the correct auth state on the
+  // very first frame, preventing the flash-to-login on cold start.
+  globalContainer = ProviderContainer(
+    overrides: [
+      databaseProvider.overrideWithValue(db),
+      apiClientProvider.overrideWithValue(apiClient),
+      localNotificationServiceProvider
+          .overrideWithValue(localNotificationService),
+    ],
+  );
+
+  // Restore auth state from stored tokens. If an access token exists,
+  // the user is considered authenticated. The interceptor will handle
+  // refresh on the first API call if the token is expired.
+  if (apiClient.accessToken != null) {
+    globalContainer.read(authStateProvider.notifier).state = true;
+  }
+
+  // Wire up auth failure callback so the interceptor can reset app-level
+  // auth state (Riverpod providers) when tokens are cleared after a 401.
+  apiClient.onAuthFailure = () {
+    globalContainer.read(authStateProvider.notifier).state = false;
+  };
+
+  // Mark the container as ready so GoRouter redirect can read providers.
+  containerReady = true;
+
   runZonedGuarded(() {
     runApp(
-      ProviderScope(
-        overrides: [
-          databaseProvider.overrideWithValue(db),
-          apiClientProvider.overrideWithValue(apiClient),
-          localNotificationServiceProvider
-              .overrideWithValue(localNotificationService),
-        ],
+      UncontrolledProviderScope(
+        container: globalContainer,
         child: const AnyNoteApp(),
       ),
     );
@@ -159,64 +180,46 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
     if (PlatformUtils.isDesktop) {
       windowManager.addListener(this);
     }
-    // Store the container globally so the router redirect can access it.
-    // We use Future.microtask to ensure the ProviderScope is fully built.
-    Future.microtask(() {
-      if (mounted) {
-        globalContainer = ProviderScope.containerOf(context);
-        containerReady = true;
-        // Restore auth state from stored tokens BEFORE triggering the
-        // router refresh. This ordering is critical — if the refresh fires
-        // first, the redirect sees authStateProvider == false and may
-        // redirect an authenticated user to login/onboarding.
-        final api = globalContainer.read(apiClientProvider);
-        if (api.accessToken != null) {
-          globalContainer.read(authStateProvider.notifier).state = true;
-        }
-        // Now trigger router redirect re-evaluation. On the first frame
-        // the redirect was skipped (containerReady == false), which may
-        // have left an unauthenticated user on /notes.
-        routerRefreshNotifier.value = DateTime.now();
-        // Initialize sync lifecycle (auto-starts periodic sync if authed).
-        // Also attempts to unlock crypto from stored keys.
-        globalContainer.read(syncLifecycleProvider);
-        // Initialize connectivity-aware sync trigger so that queued
-        // offline operations are flushed when connectivity is restored.
-        globalContainer.read(connectivitySyncTriggerProvider);
-        // Initialize background sync (WorkManager on Android, BGTaskScheduler
-        // on iOS). Re-registers the periodic task if the user had enabled it.
-        BackgroundSyncService.initialize();
-        // Initialize push notifications (graceful no-op if Firebase is
-        // not configured). Only init after auth is confirmed.
-        if (globalContainer.read(authStateProvider)) {
-          globalContainer.read(pushNotificationServiceProvider).init();
-        }
-        // Initialize share extension receiver so that shared content
-        // arriving during cold start is detected.
-        final shareService = globalContainer.read(receiveShareServiceProvider);
-        shareService.init();
 
-        // Register home screen quick actions (iOS / Android only).
-        // Wire the navigator key getter so the quick action callback can
-        // obtain a valid BuildContext for navigation.
-        QuickActionsManager.setNavigatorKeyGetter(() => rootNavigatorKey);
-        QuickActionsManager.register(context);
+    // Auth state and container are already set up in main() before runApp().
+    // Use addPostFrameCallback for operations that need a BuildContext.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
 
-        // Listen for incoming shares and navigate to the note editor.
-        _shareSubscription = shareService.onShareReceived.listen((content) {
-          final navContext = rootNavigatorKey.currentContext;
-          if (navContext != null && navContext.mounted) {
-            final encoded = Uri.encodeComponent(content.toNoteContent());
-            navContext.push('/notes/new?shareContent=$encoded');
-            shareService.markConsumed();
-          }
-        });
+      // Trigger router redirect re-evaluation now that the first frame
+      // is complete. This handles the case where the GoRouter redirect
+      // evaluated before containerReady was true on the very first frame.
+      routerRefreshNotifier.value = DateTime.now();
 
-        // Check if this is a first launch or an app update and show
-        // the What's New dialog if the stored version differs from the
-        // current version.
-        _checkAndShowWhatsNew();
+      // Initialize sync lifecycle (auto-starts periodic sync if authed).
+      globalContainer.read(syncLifecycleProvider);
+      // Initialize connectivity-aware sync trigger.
+      globalContainer.read(connectivitySyncTriggerProvider);
+      // Initialize background sync (WorkManager on Android, BGTaskScheduler on iOS).
+      BackgroundSyncService.initialize();
+      // Initialize push notifications (graceful no-op if Firebase is not configured).
+      if (globalContainer.read(authStateProvider)) {
+        globalContainer.read(pushNotificationServiceProvider).init();
       }
+      // Initialize share extension receiver.
+      final shareService = globalContainer.read(receiveShareServiceProvider);
+      shareService.init();
+
+      // Register home screen quick actions.
+      QuickActionsManager.setNavigatorKeyGetter(() => rootNavigatorKey);
+      QuickActionsManager.register(context);
+
+      // Listen for incoming shares.
+      _shareSubscription = shareService.onShareReceived.listen((content) {
+        final navContext = rootNavigatorKey.currentContext;
+        if (navContext != null && navContext.mounted) {
+          final encoded = Uri.encodeComponent(content.toNoteContent());
+          navContext.push('/notes/new?shareContent=$encoded');
+          shareService.markConsumed();
+        }
+      });
+
+      _checkAndShowWhatsNew();
     });
   }
 
@@ -372,8 +375,10 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                               AppTheme.highContrastDarkTheme(),
                           themeMode: selectThemeMode(themeOption),
                           routerConfig: appRouter,
-                          localizationsDelegates:
-                              AppLocalizations.localizationsDelegates,
+                          localizationsDelegates: [
+                            ...AppLocalizations.localizationsDelegates,
+                            quill.FlutterQuillLocalizations.delegate,
+                          ],
                           supportedLocales: AppLocalizations.supportedLocales,
                           locale: locale,
                         ),
@@ -426,7 +431,12 @@ final _hasSeenOnboardingFutureProvider = FutureProvider<bool>((ref) async {
     return prefs.getBool('has_seen_onboarding') ?? false;
   }
   const storage = FlutterSecureStorage();
-  return (await storage.read(key: 'has_seen_onboarding')) == 'true';
+  final value = await storage.read(key: 'has_seen_onboarding');
+  if (value == 'true') return true;
+  // First launch after install/reinstall: mark onboarding as seen immediately
+  // so the user is never blocked by the onboarding screen on a fresh install.
+  await storage.write(key: 'has_seen_onboarding', value: 'true');
+  return true;
 });
 
 /// Synchronous provider: `true` once onboarding has been completed,

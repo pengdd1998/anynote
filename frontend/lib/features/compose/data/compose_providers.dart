@@ -549,11 +549,21 @@ final startComposeSessionProvider = Provider<String Function()>((ref) {
 /// Provides the list of notes from the local database for selection.
 final notesForSelectionProvider = StreamProvider<List<dynamic>>((ref) {
   final db = ref.watch(databaseProvider);
-  return db.notesDao.watchAllNotes();
+  try {
+    return db.notesDao.watchAllNotes();
+  } catch (e) {
+    debugPrint('[ComposeProviders] notesDao.watchAllNotes() failed: $e');
+    return Stream.value([]);
+  }
 });
 
 /// Provides generated content history for the compose home screen.
 final generatedContentsProvider = StreamProvider<List<dynamic>>((ref) {
   final db = ref.watch(databaseProvider);
-  return db.generatedContentsDao.watchAll();
+  try {
+    return db.generatedContentsDao.watchAll();
+  } catch (e) {
+    debugPrint('[ComposeProviders] generatedContentsDao.watchAll() failed: $e');
+    return Stream.value([]);
+  }
 });

@@ -7,18 +7,20 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/app_durations.dart';
 import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/notifications/local_notification_service.dart';
 import '../../../main.dart';
 
-/// Four-page onboarding screen with interactive guided walkthrough.
+/// Warm, emotional onboarding carousel.
 ///
-/// Uses a [PageView] with custom dot indicators. Page 3 features an
-/// animated demo showing note creation, encryption, and sync.
-/// On completion the user is redirected to registration; skipping
-/// goes to login.
+/// Four full-screen pages with generous whitespace, centered illustrations
+/// in soft rounded containers, large friendly headlines, pill-shaped CTA,
+/// and animated pagination dots. Page 3 features a live encryption demo.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -26,7 +28,8 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with TickerProviderStateMixin {
   final _controller = PageController();
   int _currentPage = 0;
   static const _totalPages = 4;
@@ -38,34 +41,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _demoSyncVisible = false;
   Timer? _demoTimer;
 
-  // Demo text for the typing animation on page 3.
-  // Initialized from l10n on first build.
   String _demoText = 'My secret note...';
   bool _demoTextInitialized = false;
 
-  List<_OnboardingPageData> _buildPages(AppLocalizations l10n) => [
-        _OnboardingPageData(
-          icon: Icons.shield_outlined,
-          title: l10n.onboardingSecureNotesTitle,
-          description: l10n.onboardingSecureNotesDesc,
-        ),
-        _OnboardingPageData(
-          icon: Icons.auto_awesome_outlined,
-          title: l10n.onboardingAITitle,
-          description: l10n.onboardingAIDesc,
-        ),
-        // Page 3 is the interactive demo -- handled separately in itemBuilder.
-        _OnboardingPageData(
-          icon: Icons.publish_outlined,
-          title: l10n.onboardingPublishTitle,
-          description: l10n.onboardingPublishDesc,
-        ),
-        _OnboardingPageData(
-          icon: Icons.group_outlined,
-          title: l10n.onboardingCollaborateTitle,
-          description: l10n.onboardingCollaborateDesc,
-        ),
-      ];
+  // Accent colors per page
+  static const _pageAccents = <Color>[
+    AppColors.accentLavender,
+    AppColors.accentYellow,
+    AppColors.accentMint,
+    AppColors.accentPeach,
+  ];
+
+  static const _pageAccentBgs = <Color>[
+    AppColors.accentLavenderBg,
+    AppColors.accentYellowBg,
+    AppColors.accentMintBg,
+    AppColors.accentPeachBg,
+  ];
+
+  static const _pageIcons = <IconData>[
+    Icons.shield_outlined,
+    Icons.auto_awesome_outlined,
+    Icons.publish_outlined,
+    Icons.group_outlined,
+  ];
+
+  List<String> get _pageTitles {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      l10n.onboardingSecureNotesTitle,
+      l10n.onboardingAITitle,
+      l10n.onboardingPublishTitle,
+      l10n.onboardingCollaborateTitle,
+    ];
+  }
+
+  List<String> get _pageDescriptions {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      l10n.onboardingSecureNotesDesc,
+      l10n.onboardingAIDesc,
+      l10n.onboardingPublishDesc,
+      l10n.onboardingCollaborateDesc,
+    ];
+  }
 
   @override
   void dispose() {
@@ -74,7 +93,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  /// Start or restart the character-by-character demo animation.
   void _startDemo() {
     _demoTimer?.cancel();
     setState(() {
@@ -84,7 +102,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _demoSyncVisible = false;
     });
 
-    // Type characters one by one (~80ms each).
     _demoTimer = Timer.periodic(const Duration(milliseconds: 80), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -94,15 +111,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         setState(() => _demoCharIndex++);
       } else {
         timer.cancel();
-        // After typing finishes, show lock icon.
         Future.delayed(AppDurations.animation, () {
           if (!mounted) return;
           setState(() => _demoLockVisible = true);
-          // Then show sync icon.
           Future.delayed(const Duration(milliseconds: 600), () {
             if (!mounted) return;
             setState(() => _demoSyncVisible = true);
-            // Reset cycle after a pause so it loops while the page is visible.
             Future.delayed(const Duration(milliseconds: 1500), () {
               if (!mounted || !_demoActive) return;
               _startDemo();
@@ -113,21 +127,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
-  /// Stop the demo animation.
   void _stopDemo() {
     _demoTimer?.cancel();
     _demoActive = false;
   }
 
-  /// Request notification permission (mobile only) then navigate to register.
   Future<void> _requestPermissionsAndContinue() async {
-    // Request notification permission on supported platforms.
     try {
       final notifService = LocalNotificationService();
       await notifService.init();
-    } catch (_) {
-      // Permission denial is non-blocking.
-    }
+    } catch (_) {}
     if (mounted) {
       _markSeenAndGo('/auth/register');
     }
@@ -136,18 +145,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _markSeenAndGo(String route) async {
     const storage = FlutterSecureStorage();
     await storage.write(key: 'has_seen_onboarding', value: 'true');
-    // Update in-memory provider so the router redirect does not send
-    // the user back to onboarding on the next navigation.
     globalContainer.read(hasSeenOnboardingProvider.notifier).state = true;
     if (mounted) {
       context.go(route);
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Warm-tinted inactive dot color
-  // ---------------------------------------------------------------------------
-  static const _warmGreyDot = Color(0xFFD5CCC2);
 
   @override
   Widget build(BuildContext context) {
@@ -156,52 +158,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _demoText = l10n.demoSecretNote;
       _demoTextInitialized = true;
     }
-    final pages = _buildPages(l10n);
-    final isLastPage = _currentPage == pages.length - 1;
-    final colorScheme = Theme.of(context).colorScheme;
+    final isLastPage = _currentPage == _totalPages - 1;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Background -- use explicit colors matching AppTheme surfaces.
-    const scaffoldBgLight = AppColors.lightSurface;
-    const scaffoldBgDark = AppColors.darkSurface;
-    final scaffoldBg = isDark ? scaffoldBgDark : scaffoldBgLight;
-
-    final inactiveDotColor = isDark ? AppColors.darkDisabled : _warmGreyDot;
+    final scaffoldBg =
+        isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final accent = _pageAccents[_currentPage];
 
     return Scaffold(
       backgroundColor: scaffoldBg,
       body: SafeArea(
         child: Column(
           children: [
-            // -- Top row: progress dots (left) + Skip button (right) -----------
+            // -- Top row: dots + skip --
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
               child: Row(
                 children: [
-                  // Dot indicators
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(_totalPages, (index) {
-                      final isActive = index == _currentPage;
-                      return AnimatedContainer(
-                        duration: AppDurations.shortAnimation,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: isActive ? 24 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color:
-                              isActive ? colorScheme.primary : inactiveDotColor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      );
-                    }),
+                  _DotIndicator(
+                    count: _totalPages,
+                    current: _currentPage,
+                    activeColor: accent,
                   ),
                   const Spacer(),
-                  // Skip text button
                   TextButton(
                     onPressed: () => _markSeenAndGo('/auth/login'),
                     style: TextButton.styleFrom(
-                      foregroundColor: colorScheme.onSurfaceVariant,
+                      foregroundColor: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
                     ),
                     child: Text(l10n.skip),
                   ),
@@ -209,14 +196,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // -- Page content ----------------------------------------------------
+            // -- Page content --
             Expanded(
               child: PageView.builder(
                 controller: _controller,
-                itemCount: pages.length,
+                itemCount: _totalPages,
                 onPageChanged: (index) {
                   setState(() => _currentPage = index);
-                  // Trigger demo on page 3 (index 2), stop otherwise.
                   if (index == 2) {
                     _startDemo();
                   } else {
@@ -224,17 +210,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   }
                 },
                 itemBuilder: (context, index) {
+                  final titles = _pageTitles;
+                  final descs = _pageDescriptions;
                   if (index == 2) {
-                    return _buildDemoPage(context, pages[index], colorScheme);
+                    return _buildDemoPage(
+                      context,
+                      titles[index],
+                      descs[index],
+                      _pageAccents[index],
+                      _pageAccentBgs[index],
+                    );
                   }
-                  return _buildStaticPage(context, pages[index], colorScheme);
+                  return _buildStaticPage(
+                    context,
+                    _pageIcons[index],
+                    titles[index],
+                    descs[index],
+                    _pageAccents[index],
+                    _pageAccentBgs[index],
+                  );
                 },
               ),
             ),
 
-            // -- Bottom action buttons -------------------------------------------
+            // -- Bottom CTA --
             Padding(
-              padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                0,
+                AppSpacing.xl,
+                AppSpacing.lg,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -251,9 +257,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           );
                         }
                       },
-                      child: FilledButton(
-                        onPressed: null, // handled by PressableScale
-                        child: Text(isLastPage ? l10n.getStarted : l10n.next),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              accent,
+                              accent.withValues(alpha: 0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                          boxShadow: [
+                            BoxShadow(
+                              color: accent.withValues(alpha: 0.3),
+                              offset: const Offset(0, 4),
+                              blurRadius: 16,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            isLastPage ? l10n.getStarted : l10n.next,
+                            style: AppTextStyles.body.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -267,39 +299,87 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // Static page builder (pages 1, 2, 4)
+  // Static page (pages 0, 1, 3)
   // ---------------------------------------------------------------------------
   Widget _buildStaticPage(
     BuildContext context,
-    _OnboardingPageData page,
-    ColorScheme colorScheme,
+    IconData icon,
+    String title,
+    String description,
+    Color accent,
+    Color accentBg,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            page.icon,
-            size: 100,
-            color: colorScheme.primary,
-          ),
-          const SizedBox(height: 40),
-          Text(
-            page.title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+          // Illustration container — large rounded circle with accent bg
+          Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? accent.withValues(alpha: 0.12)
+                  : accentBg,
+              borderRadius: BorderRadius.circular(48),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.15),
+                  offset: const Offset(0, 8),
+                  blurRadius: 32,
                 ),
+              ],
+            ),
+            child: Center(
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 40,
+                  color: isDark ? accent : accent.withValues(alpha: 0.85),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xl),
+
+          // Headline
+          Text(
+            title,
+            style: AppTextStyles.display.copyWith(
+              fontSize: 28,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
-          Text(
-            page.description,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.5,
-                ),
-            textAlign: TextAlign.center,
+
+          const SizedBox(height: AppSpacing.md),
+
+          // Supporting text
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
+            child: Text(
+              description,
+              style: AppTextStyles.body.copyWith(
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+                height: 1.7,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
@@ -307,121 +387,168 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // Interactive demo page (page 3 -- index 2)
+  // Interactive demo page (page 2 — index 2)
   // ---------------------------------------------------------------------------
   Widget _buildDemoPage(
     BuildContext context,
-    _OnboardingPageData page,
-    ColorScheme colorScheme,
+    String title,
+    String description,
+    Color accent,
+    Color accentBg,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppTheme.darkCardBg : AppTheme.lightCardBg;
-    final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
-    final inputFill = isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill;
-
+    final cardBg = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
     final typedText = _demoText.substring(0, _demoCharIndex);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Title & description
-          Icon(
-            page.icon,
-            size: 64,
-            color: colorScheme.primary,
-          ),
-          const SizedBox(height: 24),
-          Text(
-            page.title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+          // Smaller illustration for demo page
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? accent.withValues(alpha: 0.12)
+                  : accentBg,
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.15),
+                  offset: const Offset(0, 8),
+                  blurRadius: 32,
                 ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            page.description,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.5,
+              ],
+            ),
+            child: Center(
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
                 ),
-            textAlign: TextAlign.center,
+                child: Icon(
+                  Icons.lock_outline,
+                  size: 28,
+                  color: isDark ? accent : accent.withValues(alpha: 0.85),
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 32),
 
-          // -- Mock note card demo -------------------------------------------
+          const SizedBox(height: AppSpacing.lg),
+
+          Text(
+            title,
+            style: AppTextStyles.display.copyWith(
+              fontSize: 26,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: AppSpacing.s12),
+
+          Text(
+            description,
+            style: AppTextStyles.body.copyWith(
+              color: isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary,
+              height: 1.6,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: AppSpacing.xl),
+
+          // -- Mock note card demo --
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: cardBg,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              border: Border.all(color: borderColor),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              boxShadow: AppShadows.mdOf(Theme.of(context).brightness),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Fake note text field
+                // Fake note input
                 Container(
                   width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.s12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: inputFill,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                    border: Border.all(color: borderColor),
+                    color: isDark
+                        ? AppColors.darkInputFill
+                        : AppColors.lightInputFill,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
                           typedText.isEmpty ? ' ' : typedText,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: AppTextStyles.body,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Blinking cursor
                       if (_demoCharIndex < _demoText.length)
-                        _BlinkingCursor(colorScheme: colorScheme),
+                        _BlinkingCursor(color: accent),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
 
-                // Lock + Sync icons row
+                const SizedBox(height: AppSpacing.md),
+
+                // Lock -> Cloud animation row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Lock icon with fade-in
                     if (_demoLockVisible)
                       Icon(
                         Icons.lock,
                         size: 28,
-                        color: colorScheme.primary,
-                      ).animate().fadeIn(duration: 400.ms).scale(
+                        color: accent,
+                      )
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .scale(
                             begin: const Offset(0.5, 0.5),
                             end: const Offset(1.0, 1.0),
                             duration: 400.ms,
                           ),
-                    const SizedBox(width: 24),
-                    // Arrow from lock to cloud
                     if (_demoLockVisible && _demoSyncVisible)
-                      Icon(
-                        Icons.arrow_forward,
-                        size: 20,
-                        color: colorScheme.onSurfaceVariant,
-                      ).animate().fadeIn(duration: 200.ms),
-                    const SizedBox(width: 24),
-                    // Sync icon with fade-in
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward,
+                          size: 20,
+                          color: isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary,
+                        ).animate().fadeIn(duration: 200.ms),
+                      ),
                     if (_demoSyncVisible)
                       Icon(
                         Icons.cloud_upload_outlined,
                         size: 28,
-                        color: colorScheme.primary,
-                      ).animate().fadeIn(duration: 400.ms).scale(
+                        color: accent,
+                      )
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .scale(
                             begin: const Offset(0.5, 0.5),
                             end: const Offset(1.0, 1.0),
                             duration: 400.ms,
@@ -438,12 +565,53 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 }
 
 // ---------------------------------------------------------------------------
-// Blinking cursor widget for the typing animation
+// Animated dot indicator
+// ---------------------------------------------------------------------------
+class _DotIndicator extends StatelessWidget {
+  final int count;
+  final int current;
+  final Color activeColor;
+
+  const _DotIndicator({
+    required this.count,
+    required this.current,
+    required this.activeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inactiveColor = isDark
+        ? AppColors.darkDisabled
+        : const Color(0xFFD5D0C8);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(count, (index) {
+        final isActive = index == current;
+        return AnimatedContainer(
+          duration: AppDurations.mediumAnimation,
+          curve: Curves.easeInOutCubic,
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: isActive ? 24 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: isActive ? activeColor : inactiveColor,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Blinking cursor widget
 // ---------------------------------------------------------------------------
 class _BlinkingCursor extends StatefulWidget {
-  final ColorScheme colorScheme;
+  final Color color;
 
-  const _BlinkingCursor({required this.colorScheme});
+  const _BlinkingCursor({required this.color});
 
   @override
   State<_BlinkingCursor> createState() => _BlinkingCursorState();
@@ -455,7 +623,6 @@ class _BlinkingCursorState extends State<_BlinkingCursor> {
   @override
   void initState() {
     super.initState();
-    // Toggle cursor visibility every 500ms.
     Future.doWhile(() async {
       await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted) return false;
@@ -471,23 +638,10 @@ class _BlinkingCursorState extends State<_BlinkingCursor> {
       child: Text(
         '|',
         style: TextStyle(
-          color: widget.colorScheme.primary,
+          color: widget.color,
           fontWeight: FontWeight.w300,
         ),
       ),
     );
   }
-}
-
-/// Data model for a single onboarding page.
-class _OnboardingPageData {
-  final IconData icon;
-  final String title;
-  final String description;
-
-  const _OnboardingPageData({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
 }

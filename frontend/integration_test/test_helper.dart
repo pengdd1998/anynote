@@ -18,11 +18,13 @@ import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/core/sync/sync_engine.dart';
 import 'package:anynote/core/sync/sync_lifecycle.dart';
 import 'package:anynote/core/sync/sync_queue_manager.dart';
+import 'package:anynote/features/compose/data/ai_repository.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 import 'package:anynote/main.dart';
 import 'package:anynote/features/notes/presentation/note_editor_screen.dart';
 import 'package:anynote/routing/app_router.dart';
+import 'package:dio/dio.dart';
 
 // ---------------------------------------------------------------------------
 // Integration test binding initialization
@@ -94,6 +96,100 @@ class FakeApiClient extends ApiClient {
       expiresAt: DateTime.now().add(const Duration(hours: 1)),
       user: {'id': 'test_user_id', 'email': 'test@example.com'},
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Fake AI repository for compose flow tests
+// ---------------------------------------------------------------------------
+
+/// Valid cluster JSON response wrapped in markdown code fence (as real AI returns).
+const kClusterJsonResponse = '```json\n'
+    '{"clusters":[{"name":"Main Theme","theme":"Core Ideas","note_indices":[0],"summary":"A summary of the main theme."}]}\n'
+    '```';
+
+/// Valid outline JSON response wrapped in markdown code fence.
+const kOutlineJsonResponse = '```json\n'
+    '{"title":"Test Composition","sections":[{"heading":"Introduction","points":["First point","Second point"],"source_cluster":0}]}\n'
+    '```';
+
+/// A fake [AIRepository] that returns deterministic responses without network.
+class FakeAIRepository extends AIRepository {
+  /// When true, the next chat/chatStream call throws.
+  bool shouldFail = false;
+
+  /// Optional custom response for chat() calls.
+  String? customChatResponse;
+
+  /// Number of chunks to emit during chatStream.
+  int streamChunkCount = 3;
+
+  /// Delay between stream chunks.
+  Duration streamChunkDelay = Duration.zero;
+
+  FakeAIRepository() : super(FakeApiClient());
+
+  @override
+  Future<String> chat(
+    List<ChatMessage> messages, {
+    String? model,
+    CancelToken? cancelToken,
+  }) async {
+    if (shouldFail) throw Exception('AI request failed');
+    if (customChatResponse != null) return customChatResponse!;
+    return kClusterJsonResponse;
+  }
+
+  @override
+  Stream<String> chatStream(
+    List<ChatMessage> messages, {
+    String? model,
+    CancelToken? cancelToken,
+  }) async* {
+    if (shouldFail) throw Exception('AI stream failed');
+    const chunks = [
+      'First paragraph of the draft. ',
+      'Second paragraph with more details. ',
+      'Conclusion of the composition.',
+    ];
+    final count = streamChunkCount.clamp(1, chunks.length);
+    for (var i = 0; i < count; i++) {
+      if (streamChunkDelay != Duration.zero) {
+        await Future.delayed(streamChunkDelay);
+      }
+      yield chunks[i];
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getQuota() async => {
+        'plan': 'free',
+        'daily_limit': 100,
+        'daily_used': 0,
+        'reset_at': DateTime.now()
+            .add(const Duration(hours: 24))
+            .toIso8601String(),
+      };
+}
+
+/// A fake AI repository that returns different responses for sequential chat()
+/// calls. Useful when the compose flow calls chat() twice (cluster then outline).
+class SequentialFakeAIRepository extends FakeAIRepository {
+  int _callCount = 0;
+  final List<String> _responses;
+
+  SequentialFakeAIRepository(this._responses) : super();
+
+  @override
+  Future<String> chat(
+    List<ChatMessage> messages, {
+    String? model,
+    CancelToken? cancelToken,
+  }) async {
+    if (shouldFail) throw Exception('AI request failed');
+    final response = _responses[_callCount % _responses.length];
+    _callCount++;
+    return response;
   }
 }
 
@@ -192,6 +288,25 @@ List<Override> defaultIntegrationOverrides({
     }),
     connectivityProvider.overrideWith((ref) => Stream.value(true)),
     syncLifecycleProvider.overrideWith((ref) => _FakeSyncLifecycle()),
+  ];
+}
+
+/// Returns provider overrides tailored for compose flow integration tests.
+/// Includes all [defaultIntegrationOverrides] plus [aiRepositoryProvider].
+List<Override> composeTestOverrides({
+  FakeCryptoService? cryptoService,
+  FakeApiClient? apiClient,
+  AppDatabase? db,
+  FakeAIRepository? aiRepo,
+}) {
+  final overrides = defaultIntegrationOverrides(
+    cryptoService: cryptoService,
+    apiClient: apiClient,
+    db: db,
+  );
+  return [
+    ...overrides,
+    aiRepositoryProvider.overrideWithValue(aiRepo ?? FakeAIRepository()),
   ];
 }
 

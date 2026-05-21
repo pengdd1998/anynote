@@ -12,6 +12,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTitle => 'AnyNote';
 
   @override
+  String get homeTitle => '首页';
+
+  @override
   String get welcomeBack => '欢迎回来';
 
   @override
@@ -1670,13 +1673,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shortcutExitZen => '退出专注模式 / 关闭对话框';
 
   @override
-  String get notesTabLabel => '笔记';
+  String get notesTabLabel => '首页';
 
   @override
-  String get composeTabLabel => '创作';
+  String get composeTabLabel => '计划';
 
   @override
-  String get publishTabLabel => '发布';
+  String get aiTabLabel => 'AI';
 
   @override
   String get settingsTabLabel => '设置';

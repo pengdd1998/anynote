@@ -12,6 +12,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appTitle => 'AnyNote';
 
   @override
+  String get homeTitle => '홈';
+
+  @override
   String get welcomeBack => '다시 오셨군요';
 
   @override
@@ -1680,13 +1683,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shortcutExitZen => '집중 모드 종료 / 대화상자 닫기';
 
   @override
-  String get notesTabLabel => '메모';
+  String get notesTabLabel => '홈';
 
   @override
-  String get composeTabLabel => '작성';
+  String get composeTabLabel => '플랜';
 
   @override
-  String get publishTabLabel => '게시';
+  String get aiTabLabel => 'AI';
 
   @override
   String get settingsTabLabel => '설정';

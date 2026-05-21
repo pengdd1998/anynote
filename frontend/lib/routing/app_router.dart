@@ -17,6 +17,7 @@ import '../features/auth/presentation/register_screen.dart';
 import '../features/notes/presentation/notes_list_screen.dart';
 import '../features/notes/presentation/note_detail_screen.dart';
 import '../features/notes/presentation/note_editor_screen.dart';
+import '../features/notes/presentation/quick_capture_screen.dart';
 import '../features/notes/presentation/version_history_screen.dart';
 import '../features/notes/presentation/widgets/version_diff_screen.dart';
 import '../features/notes/presentation/widgets/note_compare_screen.dart';
@@ -60,8 +61,7 @@ import '../features/settings/presentation/plan_screen.dart'
 import '../features/settings/presentation/profile_screen.dart'
     deferred as profile_screen;
 import '../features/settings/presentation/image_management_screen.dart';
-import '../features/ai_chat/presentation/ai_chat_screen.dart'
-    deferred as ai_chat;
+import '../features/ai_chat/presentation/ai_chat_screen.dart';
 import '../features/ai_chat/presentation/ai_agent_screen.dart';
 import '../features/notes/presentation/widgets/note_graph_screen.dart';
 import '../features/notes/presentation/widgets/properties_dashboard.dart';
@@ -146,6 +146,17 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => slideTransition(const RecoveryScreen()),
     ),
 
+    // Quick capture (bottom sheet overlay, always accessible)
+    GoRoute(
+      path: '/quick-capture',
+      pageBuilder: (context, state) => bottomSheetTransition(
+        QuickCaptureScreen(
+          sharedText: state.uri.queryParameters['sharedText'],
+          template: state.uri.queryParameters['template'],
+        ),
+      ),
+    ),
+
     // Shared note viewer (public, no auth required)
     // Note: /share/received must come before /share/:id to avoid the
     // dynamic segment matching "received" as a share ID.
@@ -212,21 +223,32 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => slideTransition(const DiscoverScreen()),
     ),
 
-    // AI Chat Assistant (deferred, heavy AI dependency tree)
-    GoRoute(
-      path: '/ai-chat',
-      pageBuilder: (context, state) => slideTransition(
-        _DeferredLoader(
-          load: ai_chat.loadLibrary(),
-          builder: () => ai_chat.AiChatScreen(),
-        ),
-      ),
-    ),
-
     // AI Agent (eager, lightweight action screen)
     GoRoute(
       path: '/ai-agent',
       pageBuilder: (context, state) => slideTransition(const AIAgentScreen()),
+    ),
+
+    // Publish (pushed from notes/compose, no bottom nav shell)
+    GoRoute(
+      path: '/publish',
+      pageBuilder: (context, state) => slideTransition(
+        _DeferredLoader(
+          load: publish.loadLibrary(),
+          builder: () => publish.PublishScreen(),
+        ),
+      ),
+      routes: [
+        GoRoute(
+          path: 'history',
+          pageBuilder: (context, state) => slideTransition(
+            _DeferredLoader(
+              load: publish_history.loadLibrary(),
+              builder: () => publish_history.PublishHistoryScreen(),
+            ),
+          ),
+        ),
+      ],
     ),
 
     // Note comparison diff (query params: left, right)
@@ -355,6 +377,15 @@ final appRouter = GoRouter(
               ),
               routes: [
                 GoRoute(
+                  path: 'edit',
+                  parentNavigatorKey: rootNavigatorKey,
+                  pageBuilder: (context, state) => slideTransition(
+                    NoteEditorScreen(
+                      noteId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ),
+                GoRoute(
                   path: 'history',
                   parentNavigatorKey: rootNavigatorKey,
                   pageBuilder: (context, state) => slideTransition(
@@ -437,27 +468,12 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Publish -- deferred, platform adapters rarely needed.
+        // AI Chat
         GoRoute(
-          path: '/publish',
+          path: '/ai-chat',
           pageBuilder: (context, state) => fadeThroughTransition(
-            _DeferredLoader(
-              load: publish.loadLibrary(),
-              builder: () => publish.PublishScreen(),
-            ),
+            const AiChatScreen(),
           ),
-          routes: [
-            GoRoute(
-              path: 'history',
-              parentNavigatorKey: rootNavigatorKey,
-              pageBuilder: (context, state) => slideTransition(
-                _DeferredLoader(
-                  load: publish_history.loadLibrary(),
-                  builder: () => publish_history.PublishHistoryScreen(),
-                ),
-              ),
-            ),
-          ],
         ),
 
         // Settings
@@ -617,17 +633,17 @@ class _PhoneShell extends StatelessWidget {
             NavigationDestination(
               icon: const Icon(AppIcons.notes),
               selectedIcon: const Icon(AppIcons.notesFilled),
-              label: l10n?.notesTabLabel ?? 'Notes',
+              label: l10n?.notesTabLabel ?? 'Home',
             ),
             NavigationDestination(
               icon: const Icon(AppIcons.compose),
               selectedIcon: const Icon(AppIcons.composeFilled),
-              label: l10n?.composeTabLabel ?? 'Compose',
+              label: l10n?.composeTabLabel ?? 'Dream Plan',
             ),
             NavigationDestination(
-              icon: const Icon(AppIcons.publish),
-              selectedIcon: const Icon(AppIcons.publishFilled),
-              label: l10n?.publishTabLabel ?? 'Publish',
+              icon: const Icon(AppIcons.ai),
+              selectedIcon: const Icon(AppIcons.aiFilled),
+              label: l10n?.aiTabLabel ?? 'AI',
             ),
             NavigationDestination(
               icon: const Icon(AppIcons.settings),
@@ -650,9 +666,9 @@ class _DesktopShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _selectedIndex(context);
     final l10n = AppLocalizations.of(context);
-    final notesLabel = l10n?.notesTabLabel ?? 'Notes';
-    final composeLabel = l10n?.composeTabLabel ?? 'Compose';
-    final publishLabel = l10n?.publishTabLabel ?? 'Publish';
+    final notesLabel = l10n?.notesTabLabel ?? 'Home';
+    final composeLabel = l10n?.composeTabLabel ?? 'Dream Plan';
+    final publishLabel = l10n?.aiTabLabel ?? 'AI';
     final settingsLabel = l10n?.settingsTabLabel ?? 'Settings';
     return Scaffold(
       body: Row(
@@ -702,12 +718,12 @@ class _DesktopShell extends ConsumerWidget {
                 icon: Tooltip(
                   message: publishLabel,
                   preferBelow: false,
-                  child: const Icon(AppIcons.publish),
+                  child: const Icon(AppIcons.ai),
                 ),
                 selectedIcon: Tooltip(
                   message: publishLabel,
                   preferBelow: false,
-                  child: const Icon(AppIcons.publishFilled),
+                  child: const Icon(AppIcons.aiFilled),
                 ),
                 label: Text(publishLabel),
               ),
@@ -745,7 +761,7 @@ int _selectedIndex(BuildContext context) {
   final location = GoRouterState.of(context).matchedLocation;
   if (location.startsWith('/notes')) return 0;
   if (location.startsWith('/compose')) return 1;
-  if (location.startsWith('/publish')) return 2;
+  if (location.startsWith('/ai-chat') || location.startsWith('/ai-agent')) return 2;
   if (location.startsWith('/settings')) return 3;
   return 0;
 }
@@ -757,7 +773,7 @@ void _onDestinationSelected(BuildContext context, int index) {
     case 1:
       context.go('/compose');
     case 2:
-      context.go('/publish');
+      context.go('/ai-chat');
     case 3:
       context.go('/settings');
   }

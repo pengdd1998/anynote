@@ -253,24 +253,29 @@ class SyncEngine {
     final unsyncedImages = await _db.imagesDao.getUnsyncedImages();
     final imageResults = await Future.wait(
       unsyncedImages.map((image) async {
-        // Read image file bytes (skip if file has been deleted)
-        final file = File(image.path);
-        if (!await file.exists()) return null;
-        final bytes = await file.readAsBytes();
+        // Read image file bytes. Wrapped in try-catch to handle
+        // file deletion between listing and reading (race condition).
+        try {
+          final file = File(image.path);
+          final bytes = await file.readAsBytes();
 
-        // Encrypt the image data (base64-encode first, matching note envelope pattern)
-        final encryptedBase64 =
-            await _crypto.encryptForItem(image.id, base64Encode(bytes));
-        final encryptedBytes = base64Decode(encryptedBase64);
+          // Encrypt the image data (base64-encode first, matching note envelope pattern)
+          final encryptedBase64 =
+              await _crypto.encryptForItem(image.id, base64Encode(bytes));
+          final encryptedBytes = base64Decode(encryptedBase64);
 
-        return SyncPushItem(
-          itemId: image.id,
-          itemType: 'image',
-          version: 0,
-          encryptedData: encryptedBytes,
-          blobSize: encryptedBytes.length,
-          deviceId: deviceId,
-        );
+          return SyncPushItem(
+            itemId: image.id,
+            itemType: 'image',
+            version: 0,
+            encryptedData: encryptedBytes,
+            blobSize: encryptedBytes.length,
+            deviceId: deviceId,
+          );
+        } catch (e) {
+          debugPrint('[SyncEngine] Image ${image.id} skipped: $e');
+          return null;
+        }
       }),
     );
     encryptionFailures += imageResults.where((r) => r == null).length;

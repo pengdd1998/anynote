@@ -4,16 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../l10n/app_localizations.dart';
-import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error.dart';
-import '../../../core/theme/alpha_constants.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
-import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/widgets/sync_status_widget.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../main.dart';
+import '../../../routing/app_router.dart';
 import '../data/compose_providers.dart';
 
 /// Guard to prevent multiple bottom sheet invocations on rapid tap.
@@ -31,223 +34,159 @@ class ComposeScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final notesAsync = ref.watch(notesForSelectionProvider);
     final historyAsync = ref.watch(generatedContentsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.aiCompose),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: const [SyncStatusWidget()],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.s4,
+          AppSpacing.md,
+          96,
+        ),
+        children: [
+          // Hero card
+          _buildHeroCard(context, ref, notesAsync, l10n, isDark),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Recent compositions header
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.s12),
+            child: Text(
+              l10n.recentCompositions,
+              style: AppTextStyles.title,
+            ),
+          ),
+
+          // Recent compositions list
+          historyAsync.when(
+            data: (items) {
+              if (items.isEmpty) {
+                return _buildEmptyState(l10n, isDark);
+              }
+              return Column(
+                children: items.asMap().entries.map((entry) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+                    child: _buildSessionCard(
+                      context,
+                      ref,
+                      entry.value,
+                      entry.key,
+                      l10n,
+                      isDark,
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+            loading: () => Column(
+              children: List.generate(
+                3,
+                (_) => const Padding(
+                  padding: EdgeInsets.only(bottom: AppSpacing.s8),
+                  child: AppLoadingCard(),
+                ),
+              ),
+            ),
+            error: (err, _) {
+              final appError = ErrorMapper.map(err);
+              return _buildErrorState(appError, l10n, isDark);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroCard(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<dynamic>> notesAsync,
+    AppLocalizations l10n,
+    bool isDark,
+  ) {
+    return GestureDetector(
+      onTap: () => _showNoteSelector(context, ref, notesAsync),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [
+                    AppColors.primary.withAlpha(40),
+                    AppColors.accentLavender.withAlpha(30),
+                  ]
+                : [
+                    AppColors.primary.withAlpha(20),
+                    AppColors.accentLavenderBg,
+                  ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isDark
+                ? AppColors.darkBorder.withAlpha(60)
+                : AppColors.lightBorder.withAlpha(80),
+            width: 0.5,
+          ),
+          boxShadow: AppShadows.mdOf(Theme.of(context).brightness),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hero card
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(AppTheme.radiusLarge),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius:
-                      BorderRadius.circular(AppTheme.radiusLarge),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context)
-                          .colorScheme
-                          .primaryContainer
-                          .withAlpha(AppAlpha.light),
-                      Theme.of(context).colorScheme.surface,
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(25),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.s12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.startComposing,
+                        style: AppTextStyles.title,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.selectNotes,
+                        style: AppTextStyles.caption.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primaryContainer
-                            .withAlpha(AppAlpha.bold),
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      child: Icon(
-                        Icons.auto_awesome,
-                        size: 36,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.aiPoweredWriting,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.aiComposeDesc,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Theme.of(context).disabledColor,),
-                    ),
-                    const SizedBox(height: 20),
-                    PressableScale(
-                      onPressed: () =>
-                          _showNoteSelector(context, ref, notesAsync),
-                      child: Semantics(
-                        button: true,
-                        label: l10n.startComposing,
-                        child: FilledButton.icon(
-                          onPressed: () =>
-                              _showNoteSelector(
-                                context,
-                                ref,
-                                notesAsync,
-                              ),
-                          icon: const Icon(Icons.add),
-                          label: Text(l10n.startComposing),
-                        ),
-                      ),
-                    ),
-                  ],
+                Icon(
+                  Icons.chevron_right,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Recent compositions header
-            Text(
-              l10n.recentCompositions,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-
-            // Recent compositions list
-            Expanded(
-              child: historyAsync.when(
-                data: (items) {
-                  if (items.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.article_outlined,
-                            size: 48,
-                            color: Theme.of(context).disabledColor,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.noCompositionsYet,
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      final title =
-                          item.plainBody != null && item.plainBody!.length > 80
-                          ? '${item.plainBody!.substring(0, 80)}...'
-                          // Use localized untitled fallback
-                          : item.plainBody ?? l10n.untitled;
-                      final time = _formatTime(context, item.updatedAt);
-                      final platform = item.platformStyle;
-
-                      return Card(
-                        child: Semantics(
-                          button: true,
-                          label: l10n.compositionSemanticLabel(
-                            title,
-                            time,
-                            platform != 'generic'
-                                ? l10n.platformSuffix(platform)
-                                : '',
-                          ),
-                          child: ListTile(
-                            leading: Icon(
-                              Icons.auto_awesome,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            title: Text(
-                              title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            subtitle: Row(
-                              children: [
-                                if (platform != 'generic')
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: Chip(
-                                      label: Text(
-                                        platform,
-                                        style: const TextStyle(fontSize: 11),
-                                      ),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ),
-                                Text(
-                                  time,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            onTap: () =>
-                                _showContentPreview(context, ref, item),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-                loading: () => ListView.builder(
-                  itemCount: 3,
-                  shrinkWrap: true,
-                  itemBuilder: (_, __) => const AppLoadingCard(),
-                ),
-                error: (err, _) {
-                  final appError = ErrorMapper.map(err);
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          ErrorDisplay.errorIcon(appError),
-                          size: 36,
-                          color: Theme.of(context).disabledColor,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          ErrorDisplay.userMessage(appError, l10n),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              ],
             ),
           ],
         ),
@@ -255,24 +194,216 @@ class ComposeScreen extends ConsumerWidget {
     );
   }
 
-  /// Opens a bottom sheet for selecting notes and entering a topic.
+  Widget _buildSessionCard(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic item,
+    int index,
+    AppLocalizations l10n,
+    bool isDark,
+  ) {
+    final title = item.plainBody != null && item.plainBody!.length > 80
+        ? '${item.plainBody!.substring(0, 80)}...'
+        : item.plainBody ?? l10n.untitled;
+    final time = _formatTime(context, item.updatedAt);
+    final platform = item.platformStyle ?? 'generic';
+
+    // Warm pastel cycling for session cards
+    const accentBgs = [
+      AppColors.accentLavenderBg,
+      AppColors.accentYellowBg,
+      AppColors.accentMintBg,
+      AppColors.accentPeachBg,
+    ];
+    const accentIcons = [
+      AppColors.accentLavenderText,
+      AppColors.accentYellowText,
+      AppColors.accentMintText,
+      AppColors.accentPeachText,
+    ];
+
+    final accentBg = accentBgs[index % accentBgs.length];
+    final accentIcon = accentIcons[index % accentIcons.length];
+
+    return GestureDetector(
+      onTap: () => _showContentPreview(context, ref, item),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.s12),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+        ),
+        child: Row(
+          children: [
+            // Numbered badge with accent
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: accentBg,
+                borderRadius: BorderRadius.circular(AppRadius.xs),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '${index + 1}',
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: accentIcon,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s12),
+            // Content + metadata
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      if (platform != 'generic') ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Text(
+                            platform,
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.s8),
+                      ],
+                      Text(
+                        time,
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 12,
+                          color: isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(AppLocalizations l10n, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.accentLavenderBg,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: const Icon(
+              Icons.article_outlined,
+              size: 28,
+              color: AppColors.accentLavenderText,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          Text(
+            l10n.noCompositionsYet,
+            style: AppTextStyles.body.copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(
+    dynamic appError,
+    AppLocalizations l10n,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            ErrorDisplay.errorIcon(appError),
+            size: 36,
+            color: AppColors.error.withAlpha(150),
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          Text(
+            ErrorDisplay.userMessage(appError, l10n),
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.error,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showNoteSelector(
     BuildContext context,
     WidgetRef ref,
     AsyncValue<List<dynamic>> notesAsync,
   ) {
-    // Debounce: prevent multiple bottom sheet invocations.
     if (ref.read(_noteSelectorShowingProvider)) return;
     ref.read(_noteSelectorShowingProvider.notifier).state = true;
 
-    // Reset the session so the note selector starts with clean state.
     ref.read(composeSessionProvider.notifier).resetForNewSession();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
       ),
       builder: (context) => _NoteSelectorSheet(notesAsync: notesAsync),
     ).whenComplete(() {
@@ -280,8 +411,11 @@ class ComposeScreen extends ConsumerWidget {
     });
   }
 
-  /// Shows a preview of the generated content with copy and save-as-note actions.
-  void _showContentPreview(BuildContext context, WidgetRef ref, dynamic item) {
+  void _showContentPreview(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic item,
+  ) {
     final content = item.plainBody as String? ?? '';
     final platform = item.platformStyle as String? ?? 'generic';
 
@@ -290,7 +424,9 @@ class ComposeScreen extends ConsumerWidget {
       isScrollControlled: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
       ),
       builder: (context) =>
           _ContentPreviewSheet(content: content, platform: platform),
@@ -317,7 +453,8 @@ class _NoteSelectorSheet extends ConsumerStatefulWidget {
   const _NoteSelectorSheet({required this.notesAsync});
 
   @override
-  ConsumerState<_NoteSelectorSheet> createState() => _NoteSelectorSheetState();
+  ConsumerState<_NoteSelectorSheet> createState() =>
+      _NoteSelectorSheetState();
 }
 
 class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
@@ -326,14 +463,13 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   final Set<String> _selectedIds = {};
   late final VoidCallback _routeListener;
 
-  // Platform options with localized display names resolved at build time.
   List<(String, String)> _platformOptions(AppLocalizations l10n) => [
-    ('generic', l10n.platformGeneric),
-    ('xhs', l10n.platformXhs),
-    ('twitter', l10n.platformTwitter),
-    ('blog', l10n.platformBlog),
-    ('linkedin', l10n.platformLinkedin),
-  ];
+        ('generic', l10n.platformGeneric),
+        ('xhs', l10n.platformXhs),
+        ('twitter', l10n.platformTwitter),
+        ('blog', l10n.platformBlog),
+        ('linkedin', l10n.platformLinkedin),
+      ];
 
   @override
   void initState() {
@@ -363,6 +499,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -372,29 +509,34 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
       builder: (context, scrollController) {
         return Column(
           children: [
-            // Handle bar
-            Center(
+            // Drag handle
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
               child: Container(
-                margin: const EdgeInsets.only(top: 8, bottom: 4),
-                width: 40,
+                width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                  color: (isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary)
+                      .withAlpha(80),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s8,
+                AppSpacing.md,
+                AppSpacing.s4,
+              ),
               child: Row(
                 children: [
                   Text(
                     l10n.newComposition,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: AppTextStyles.headline,
                   ),
                   const Spacer(),
                   IconButton(
@@ -404,35 +546,48 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 ],
               ),
             ),
-
             // Topic field
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s8,
+                AppSpacing.md,
+                AppSpacing.s4,
+              ),
               child: TextField(
                 controller: _topicController,
                 decoration: InputDecoration(
                   labelText: l10n.topicOrTheme,
                   hintText: l10n.topicHint,
                   prefixIcon: const Icon(Icons.lightbulb_outline),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
                 ),
                 onChanged: (v) =>
                     ref.read(composeSessionProvider.notifier).setTopic(v),
               ),
             ),
-
             // Platform selector
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s8,
+                AppSpacing.md,
+                AppSpacing.s4,
+              ),
               child: DropdownButtonFormField<String>(
                 initialValue: _platformStyle,
                 decoration: InputDecoration(
                   labelText: l10n.targetPlatform,
                   prefixIcon: const Icon(Icons.share_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
                 ),
                 items: _platformOptions(l10n)
-                    .map(
-                      (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)),
-                    )
+                    .map((o) =>
+                        DropdownMenuItem(value: o.$1, child: Text(o.$2)),)
                     .toList(),
                 onChanged: (v) {
                   if (v != null) {
@@ -444,28 +599,42 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 },
               ),
             ),
-
             // Note list label
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.s8,
+              ),
               child: Row(
                 children: [
                   Text(
                     l10n.selectNotes,
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: AppTextStyles.title.copyWith(fontSize: 14),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.selectedCount(_selectedIds.length),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 13,
+                  const SizedBox(width: AppSpacing.s8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(15),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                    child: Text(
+                      l10n.selectedCount(_selectedIds.length),
+                      style: AppTextStyles.caption.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-
             // Note list
             Expanded(
               child: widget.notesAsync.when(
@@ -475,6 +644,11 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                       child: Text(
                         l10n.noNotesAvailableCreate,
                         textAlign: TextAlign.center,
+                        style: AppTextStyles.body.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary,
+                        ),
                       ),
                     );
                   }
@@ -484,10 +658,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                     itemCount: notes.length,
                     itemBuilder: (context, index) {
                       final note = notes[index];
-                      // Use localized untitled fallback
                       final title = note.plainTitle ?? l10n.untitled;
-                      final preview =
-                          note.plainContent != null &&
+                      final preview = note.plainContent != null &&
                               note.plainContent!.length > 60
                           ? '${note.plainContent!.substring(0, 60)}...'
                           : note.plainContent ?? '';
@@ -499,11 +671,17 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                           title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.body,
                         ),
                         subtitle: Text(
                           preview,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.caption.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextTertiary
+                                : AppColors.lightTextTertiary,
+                          ),
                         ),
                         onChanged: (checked) {
                           setState(() {
@@ -532,45 +710,50 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 error: (err, _) {
                   final appError = ErrorMapper.map(err);
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          ErrorDisplay.errorIcon(appError),
-                          size: 36,
-                          color: Theme.of(context).disabledColor,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      child: Text(
+                        ErrorDisplay.userMessage(appError, l10n),
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.error,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          ErrorDisplay.userMessage(appError, l10n),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                      ),
                     ),
                   );
                 },
               ),
             ),
-
             // Start button
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed:
-                        _selectedIds.isEmpty || _topicController.text.isEmpty
+                    onPressed: _selectedIds.isEmpty ||
+                            _topicController.text.isEmpty
                         ? null
                         : () {
                             final sessionId = ref.read(
                               composeSessionProvider,
                             ).sessionId;
-                            context.push('/compose/cluster/$sessionId');
                             Navigator.pop(context);
+                            final navContext =
+                                rootNavigatorKey.currentContext;
+                            if (navContext != null && navContext.mounted) {
+                              navContext.push('/compose/cluster/$sessionId');
+                            }
                           },
                     icon: const Icon(Icons.auto_awesome),
                     label: Text(l10n.startComposing),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -594,7 +777,8 @@ class _ContentPreviewSheet extends ConsumerStatefulWidget {
       _ContentPreviewSheetState();
 }
 
-class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
+class _ContentPreviewSheetState
+    extends ConsumerState<_ContentPreviewSheet> {
   bool _isSaving = false;
 
   Future<void> _copyToClipboard() async {
@@ -619,7 +803,8 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
       String? encryptedTitle;
 
       if (crypto.isUnlocked) {
-        encryptedContent = await crypto.encryptForItem(noteId, widget.content);
+        encryptedContent =
+            await crypto.encryptForItem(noteId, widget.content);
         final title = widget.content.length > 50
             ? widget.content.substring(0, 50)
             : widget.content;
@@ -665,6 +850,8 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -672,40 +859,57 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
-          Center(
+          // Drag handle
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 4),
             child: Container(
-              margin: const EdgeInsets.only(top: 8, bottom: 4),
-              width: 40,
+              width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                color: (isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary)
+                    .withAlpha(80),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.s8,
+              AppSpacing.md,
+              AppSpacing.s4,
+            ),
             child: Row(
               children: [
                 Text(
                   l10n.contentPreview,
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: AppTextStyles.headline,
                 ),
                 const Spacer(),
                 if (widget.platform != 'generic')
                   Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Chip(
-                      label: Text(
-                        widget.platform,
-                        style: const TextStyle(fontSize: 11),
+                    padding: const EdgeInsets.only(right: AppSpacing.s8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
                       ),
-                      visualDensity: VisualDensity.compact,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(15),
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Text(
+                        widget.platform,
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
                   ),
                 IconButton(
@@ -715,24 +919,33 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
               ],
             ),
           ),
-
-          // Content display
+          // Content
           Container(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.5,
             ),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            margin: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+            ),
+            padding: const EdgeInsets.all(AppSpacing.s12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkInputFill
+                  : AppColors.lightInputFill,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
             child: SingleChildScrollView(
               child: SelectableText(
                 widget.content.isEmpty ? l10n.noContent : widget.content,
-                style: const TextStyle(fontSize: 14, height: 1.5),
+                style: AppTextStyles.body.copyWith(
+                  height: 1.6,
+                ),
               ),
             ),
           ),
-
           // Action buttons
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
                 Expanded(
@@ -740,9 +953,15 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                     onPressed: _copyToClipboard,
                     icon: const Icon(Icons.copy, size: 18),
                     label: Text(l10n.copy),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: _isSaving ? null : _saveAsNote,
@@ -757,6 +976,12 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                           )
                         : const Icon(Icons.save_outlined, size: 18),
                     label: Text(l10n.saveAsNote),
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
                   ),
                 ),
               ],

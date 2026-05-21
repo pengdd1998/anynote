@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/database/app_database.dart';
-import '../../../../core/theme/alpha_constants.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'note_card.dart';
@@ -13,59 +14,25 @@ import 'note_card.dart';
 ///
 /// Swipe right (start-to-end) toggles pin with warm primary background.
 /// Swipe left (end-to-start) deletes with warm error background.
-/// Both backgrounds have rounded corners matching the card shape.
-///
-/// Extracted from `NotesListScreen._buildDismissibleNoteCard`.
+/// Both backgrounds use AppRadius and design token styling.
 class DismissibleNoteCard extends StatelessWidget {
-  /// The note to display.
   final Note note;
-
-  /// Database instance for pin toggle and delete operations.
   final AppDatabase db;
-
-  /// Whether to render in grid layout (true) or list layout (false).
   final bool isGrid;
-
-  /// Human-readable time description (e.g. "2 hours ago").
   final String time;
-
-  /// Tags associated with this note.
   final List<Tag> tags;
-
-  /// Whether this card is currently selected.
   final bool isSelected;
-
-  /// Whether swipe gestures are disabled (e.g., during batch selection).
   final bool disableSwipe;
-
-  /// Called when the user taps the card.
   final VoidCallback onTap;
-
-  /// Called when the user long-presses the card. Provides the global position
-  /// of the long press for context menu positioning.
   final ValueChanged<Offset>? onLongPress;
-
-  /// Called after a delete is confirmed (for parent state cleanup).
   final VoidCallback? onDeleted;
-
-  /// Localized "untitled" fallback string.
   final String untitled;
-
-  /// Called when status badge is tapped.
   final VoidCallback? onStatusTap;
-
-  /// Called when priority badge is tapped.
   final VoidCallback? onPriorityTap;
-
-  /// Whether the note is locked (read-only).
   final bool isLocked;
-
-  /// Test-only: if true, skips rendering PropertyBadges to avoid timer leaks.
-  final bool skipPropertyBadges;
-
-  /// Optional trailing widget displayed next to the card (e.g. drag handle).
-  /// Only shown when [disableSwipe] is true.
+  final List<NoteProperty>? properties;
   final Widget? trailing;
+  final int listIndex;
 
   const DismissibleNoteCard({
     super.key,
@@ -83,15 +50,16 @@ class DismissibleNoteCard extends StatelessWidget {
     this.onStatusTap,
     this.onPriorityTap,
     this.isLocked = false,
-    this.skipPropertyBadges = false,
+    this.properties,
     this.trailing,
+    this.listIndex = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final cardRadius = BorderRadius.circular(AppTheme.radiusMedium);
+    final cardRadius = BorderRadius.circular(isGrid ? AppRadius.md : AppRadius.sm);
 
     final card = NoteCard(
       note: note,
@@ -105,10 +73,10 @@ class DismissibleNoteCard extends StatelessWidget {
       onStatusTap: onStatusTap,
       onPriorityTap: onPriorityTap,
       isLocked: isLocked,
-      skipPropertyBadges: skipPropertyBadges,
+      properties: properties,
+      listIndex: listIndex,
     );
 
-    // When swipe is disabled (e.g., selection mode), just return the card.
     if (disableSwipe) {
       if (trailing != null) {
         return Row(
@@ -130,15 +98,18 @@ class DismissibleNoteCard extends StatelessWidget {
           DismissDirection.startToEnd: 0.35,
           DismissDirection.endToStart: 0.4,
         },
-        // Right swipe: pin/unpin with warm primary color.
+        // Right swipe: pin/unpin with warm primary color
         background: Container(
           decoration: BoxDecoration(
-            color: colorScheme.primary.withAlpha(AppAlpha.medium),
+            color: colorScheme.primary.withAlpha(40),
             borderRadius: cardRadius,
           ),
           alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.only(left: 24),
-          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          padding: const EdgeInsets.only(left: AppSpacing.lg),
+          margin: EdgeInsets.symmetric(
+            horizontal: isGrid ? AppSpacing.s4 : 0,
+            vertical: AppSpacing.s4,
+          ),
           child: Semantics(
             label: note.isPinned ? l10n.unpinNote : l10n.pinNote,
             child: Column(
@@ -151,7 +122,7 @@ class DismissibleNoteCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   note.isPinned ? l10n.unpinNote : l10n.pinNote,
-                  style: TextStyle(
+                  style: AppTextStyles.caption.copyWith(
                     fontSize: 11,
                     color: colorScheme.primary,
                   ),
@@ -160,15 +131,18 @@ class DismissibleNoteCard extends StatelessWidget {
             ),
           ),
         ),
-        // Left swipe: delete with warm error color.
+        // Left swipe: delete with warm error color
         secondaryBackground: Container(
           decoration: BoxDecoration(
-            color: colorScheme.error.withAlpha(AppAlpha.medium),
+            color: colorScheme.error.withAlpha(40),
             borderRadius: cardRadius,
           ),
           alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 24),
-          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          padding: const EdgeInsets.only(right: AppSpacing.lg),
+          margin: EdgeInsets.symmetric(
+            horizontal: isGrid ? AppSpacing.s4 : 0,
+            vertical: AppSpacing.s4,
+          ),
           child: Semantics(
             label: l10n.deleteNote,
             child: Column(
@@ -178,7 +152,7 @@ class DismissibleNoteCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   l10n.deleteNote,
-                  style: TextStyle(
+                  style: AppTextStyles.caption.copyWith(
                     fontSize: 11,
                     color: colorScheme.error,
                   ),
@@ -189,14 +163,15 @@ class DismissibleNoteCard extends StatelessWidget {
         ),
         confirmDismiss: (direction) async {
           if (direction == DismissDirection.startToEnd) {
-            // Pin/unpin does not dismiss; just toggle and return false.
             await db.notesDao.togglePin(note.id);
             return false;
           }
-          // Delete: confirm via dialog.
           return await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+              ),
               title: Text(l10n.deleteNoteQuestion),
               content: Text(
                 l10n.deleteNoteConfirm(note.plainTitle ?? l10n.untitled),
