@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -64,6 +65,7 @@ func (h *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	comment, err := h.commentService.CreateComment(r.Context(), sharedNoteID, userID, req)
 	if err != nil {
+		slog.Error("create comment failed", "error", err, "shared_note_id", sharedNoteID, "user_id", userID)
 		writeError(w, r, http.StatusInternalServerError, "create_error", "Failed to create comment")
 		return
 	}
@@ -100,6 +102,7 @@ func (h *CommentHandler) ListComments(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.commentService.ListComments(r.Context(), sharedNoteID, limit, offset)
 	if err != nil {
+		slog.Error("list comments failed", "error", err, "shared_note_id", sharedNoteID)
 		writeError(w, r, http.StatusInternalServerError, "internal_error", "Failed to list comments")
 		return
 	}
