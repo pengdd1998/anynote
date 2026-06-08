@@ -288,9 +288,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Future<void> _connectWebSocket() async {
     try {
       final api = ref.read(apiClientProvider);
-      final wsToken = await api.getWsToken();
-      if (!mounted) return;
-      ref.read(wsClientProvider.notifier).connect(wsToken);
+      final token = api.accessToken;
+      if (token == null || !mounted) return;
+      ref.read(wsClientProvider.notifier).connect(token);
     } catch (_) {
       // WebSocket connection failure is non-critical. The collab feature
       // will simply be unavailable until the next successful connection.

@@ -227,8 +227,9 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
   Future<void> _initWebSocket() async {
     try {
       final api = globalContainer.read(apiClientProvider);
-      final wsToken = await api.getWsToken();
-      globalContainer.read(wsClientProvider.notifier).connect(wsToken);
+      final token = api.accessToken;
+      if (token == null) return;
+      globalContainer.read(wsClientProvider.notifier).connect(token);
     } catch (_) {
       // WebSocket failure is non-critical for app functionality.
     }

@@ -8,15 +8,14 @@ import 'package:anynote/core/widgets/keyboard_shortcuts.dart';
 
 void main() {
   tearDown(() {
-    // Clean up any lingering static callbacks.
-    final _dummy = Object();
-    AppKeyboardShortcuts.clearZenModeCallback(owner: _dummy);
-    AppKeyboardShortcuts.clearPrintCallback(owner: _dummy);
-    AppKeyboardShortcuts.clearInsertLinkCallback(owner: _dummy);
-    AppKeyboardShortcuts.clearStrikethroughCallback(owner: _dummy);
-    AppKeyboardShortcuts.clearInlineCodeCallback(owner: _dummy);
-    AppKeyboardShortcuts.clearHeadingCycleCallback(owner: _dummy);
-    AppKeyboardShortcuts.clearFindCallback(owner: _dummy);
+    // Clean up any static callbacks.
+    AppKeyboardShortcuts.clearZenModeCallback();
+    AppKeyboardShortcuts.clearPrintCallback();
+    AppKeyboardShortcuts.clearInsertLinkCallback();
+    AppKeyboardShortcuts.clearStrikethroughCallback();
+    AppKeyboardShortcuts.clearInlineCodeCallback();
+    AppKeyboardShortcuts.clearHeadingCycleCallback();
+    AppKeyboardShortcuts.clearFindCallback();
   });
 
   // ---------------------------------------------------------------------------
@@ -79,119 +78,109 @@ void main() {
     test('zenModeCallback can be set and cleared', () {
       var invoked = false;
       void callback() => invoked = true;
-      final owner = Object();
 
-      AppKeyboardShortcuts.setZenModeCallback(callback, owner: owner);
+      AppKeyboardShortcuts.setZenModeCallback(callback);
       AppKeyboardShortcuts.zenModeCallback?.call();
       expect(invoked, isTrue);
 
       invoked = false;
-      AppKeyboardShortcuts.clearZenModeCallback(owner: owner);
+      AppKeyboardShortcuts.clearZenModeCallback();
       AppKeyboardShortcuts.zenModeCallback?.call();
       expect(invoked, isFalse);
     });
 
-    test('setZenModeCallback replaces previous callback for same owner', () {
+    test('setZenModeCallback replaces previous callback', () {
       var first = false;
       var second = false;
-      final owner = Object();
 
-      AppKeyboardShortcuts.setZenModeCallback(() => first = true, owner: owner);
-      AppKeyboardShortcuts.setZenModeCallback(() => second = true, owner: owner);
+      AppKeyboardShortcuts.setZenModeCallback(() => first = true);
+      AppKeyboardShortcuts.setZenModeCallback(() => second = true);
       AppKeyboardShortcuts.zenModeCallback?.call();
 
       expect(first, isFalse);
       expect(second, isTrue);
 
-      // Cleanup.
-      AppKeyboardShortcuts.clearZenModeCallback(owner: owner);
+      AppKeyboardShortcuts.clearZenModeCallback();
     });
 
     test('printCallback can be set and cleared', () {
       var invoked = false;
-      final owner = Object();
-      AppKeyboardShortcuts.setPrintCallback(() => invoked = true, owner: owner);
+      AppKeyboardShortcuts.setPrintCallback(() => invoked = true);
       AppKeyboardShortcuts.printCallback?.call();
       expect(invoked, isTrue);
 
       invoked = false;
-      AppKeyboardShortcuts.clearPrintCallback(owner: owner);
+      AppKeyboardShortcuts.clearPrintCallback();
       AppKeyboardShortcuts.printCallback?.call();
       expect(invoked, isFalse);
     });
 
     test('insertLinkCallback can be set and cleared', () {
       var invoked = false;
-      final owner = Object();
-      AppKeyboardShortcuts.setInsertLinkCallback(() => invoked = true, owner: owner);
+      AppKeyboardShortcuts.setInsertLinkCallback(() => invoked = true);
       AppKeyboardShortcuts.insertLinkCallback?.call();
       expect(invoked, isTrue);
 
       invoked = false;
-      AppKeyboardShortcuts.clearInsertLinkCallback(owner: owner);
+      AppKeyboardShortcuts.clearInsertLinkCallback();
       AppKeyboardShortcuts.insertLinkCallback?.call();
       expect(invoked, isFalse);
     });
 
     test('strikethroughCallback can be set and cleared', () {
       var invoked = false;
-      final owner = Object();
-      AppKeyboardShortcuts.setStrikethroughCallback(() => invoked = true, owner: owner);
+      AppKeyboardShortcuts.setStrikethroughCallback(() => invoked = true);
       AppKeyboardShortcuts.strikethroughCallback?.call();
       expect(invoked, isTrue);
 
       invoked = false;
-      AppKeyboardShortcuts.clearStrikethroughCallback(owner: owner);
+      AppKeyboardShortcuts.clearStrikethroughCallback();
       AppKeyboardShortcuts.strikethroughCallback?.call();
       expect(invoked, isFalse);
     });
 
     test('inlineCodeCallback can be set and cleared', () {
       var invoked = false;
-      final owner = Object();
-      AppKeyboardShortcuts.setInlineCodeCallback(() => invoked = true, owner: owner);
+      AppKeyboardShortcuts.setInlineCodeCallback(() => invoked = true);
       AppKeyboardShortcuts.inlineCodeCallback?.call();
       expect(invoked, isTrue);
 
       invoked = false;
-      AppKeyboardShortcuts.clearInlineCodeCallback(owner: owner);
+      AppKeyboardShortcuts.clearInlineCodeCallback();
       AppKeyboardShortcuts.inlineCodeCallback?.call();
       expect(invoked, isFalse);
     });
 
     test('headingCycleCallback can be set and cleared', () {
       var invoked = false;
-      final owner = Object();
-      AppKeyboardShortcuts.setHeadingCycleCallback(() => invoked = true, owner: owner);
+      AppKeyboardShortcuts.setHeadingCycleCallback(() => invoked = true);
       AppKeyboardShortcuts.headingCycleCallback?.call();
       expect(invoked, isTrue);
 
       invoked = false;
-      AppKeyboardShortcuts.clearHeadingCycleCallback(owner: owner);
+      AppKeyboardShortcuts.clearHeadingCycleCallback();
       AppKeyboardShortcuts.headingCycleCallback?.call();
       expect(invoked, isFalse);
     });
 
     test('findCallback can be set and cleared', () {
       var invoked = false;
-      final owner = Object();
-      AppKeyboardShortcuts.setFindCallback(() => invoked = true, owner: owner);
+      AppKeyboardShortcuts.setFindCallback(() => invoked = true);
       AppKeyboardShortcuts.findCallback?.call();
       expect(invoked, isTrue);
 
       invoked = false;
-      AppKeyboardShortcuts.clearFindCallback(owner: owner);
+      AppKeyboardShortcuts.clearFindCallback();
       AppKeyboardShortcuts.findCallback?.call();
       expect(invoked, isFalse);
     });
 
-    test('unregisterAll removes all callbacks for an owner', () {
+    test('clearing all callbacks individually works', () {
       var zenInvoked = false;
       var printInvoked = false;
-      final owner = Object();
 
-      AppKeyboardShortcuts.setZenModeCallback(() => zenInvoked = true, owner: owner);
-      AppKeyboardShortcuts.setPrintCallback(() => printInvoked = true, owner: owner);
+      AppKeyboardShortcuts.setZenModeCallback(() => zenInvoked = true);
+      AppKeyboardShortcuts.setPrintCallback(() => printInvoked = true);
 
       AppKeyboardShortcuts.zenModeCallback?.call();
       AppKeyboardShortcuts.printCallback?.call();
@@ -201,32 +190,22 @@ void main() {
       zenInvoked = false;
       printInvoked = false;
 
-      AppKeyboardShortcuts.unregisterAll(owner);
+      AppKeyboardShortcuts.clearZenModeCallback();
+      AppKeyboardShortcuts.clearPrintCallback();
       AppKeyboardShortcuts.zenModeCallback?.call();
       AppKeyboardShortcuts.printCallback?.call();
       expect(zenInvoked, isFalse);
       expect(printInvoked, isFalse);
     });
 
-    test('different owners do not interfere with each other', () {
-      var ownerAInvoked = false;
-      var ownerBInvoked = false;
-      final ownerA = Object();
-      final ownerB = Object();
-
-      AppKeyboardShortcuts.setZenModeCallback(() => ownerAInvoked = true, owner: ownerA);
-      AppKeyboardShortcuts.setZenModeCallback(() => ownerBInvoked = true, owner: ownerB);
-
-      AppKeyboardShortcuts.zenModeCallback?.call();
-      expect(ownerAInvoked, isTrue);
-
-      ownerAInvoked = false;
-      AppKeyboardShortcuts.clearZenModeCallback(owner: ownerA);
-      AppKeyboardShortcuts.zenModeCallback?.call();
-      expect(ownerAInvoked, isFalse);
-      expect(ownerBInvoked, isTrue);
-
-      AppKeyboardShortcuts.clearZenModeCallback(owner: ownerB);
+    test('callbacks default to null', () {
+      expect(AppKeyboardShortcuts.zenModeCallback, isNull);
+      expect(AppKeyboardShortcuts.printCallback, isNull);
+      expect(AppKeyboardShortcuts.insertLinkCallback, isNull);
+      expect(AppKeyboardShortcuts.strikethroughCallback, isNull);
+      expect(AppKeyboardShortcuts.inlineCodeCallback, isNull);
+      expect(AppKeyboardShortcuts.headingCycleCallback, isNull);
+      expect(AppKeyboardShortcuts.findCallback, isNull);
     });
   });
 
