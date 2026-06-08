@@ -80,15 +80,18 @@ class _RichEditorWithShortcutsState extends State<RichEditorWithShortcuts> {
   /// system so that Ctrl+P, Ctrl+Shift+K, etc. are forwarded here when
   /// the editor is active.
   void _registerGlobalCallbacks() {
-    AppKeyboardShortcuts.setStrikethroughCallback(_toggleStrikethrough, owner: this);
-    AppKeyboardShortcuts.setInlineCodeCallback(_toggleInlineCode, owner: this);
-    AppKeyboardShortcuts.setHeadingCycleCallback(_cycleHeading, owner: this);
-    AppKeyboardShortcuts.setInsertLinkCallback(_insertLink, owner: this);
+    AppKeyboardShortcuts.setStrikethroughCallback(_toggleStrikethrough);
+    AppKeyboardShortcuts.setInlineCodeCallback(_toggleInlineCode);
+    AppKeyboardShortcuts.setHeadingCycleCallback(_cycleHeading);
+    AppKeyboardShortcuts.setInsertLinkCallback(_insertLink);
   }
 
   /// Clear all global callbacks registered by this editor.
   void _clearGlobalCallbacks() {
-    AppKeyboardShortcuts.unregisterAll(this);
+    AppKeyboardShortcuts.clearStrikethroughCallback();
+    AppKeyboardShortcuts.clearInlineCodeCallback();
+    AppKeyboardShortcuts.clearHeadingCycleCallback();
+    AppKeyboardShortcuts.clearInsertLinkCallback();
   }
 
   /// Toggle strikethrough on the current selection.

@@ -219,10 +219,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _initLockWatcher();
       // Wire Ctrl+P to open the print preview sheet.
       if (!_isNew && _noteId != null) {
-        AppKeyboardShortcuts.setPrintCallback(() => _showPrintPreview(context), owner: this);
+        AppKeyboardShortcuts.setPrintCallback(() => _showPrintPreview(context));
       }
       // Wire Ctrl+F to open the find/replace bar in the editor.
-      AppKeyboardShortcuts.setFindCallback(_openFindReplace, owner: this);
+      AppKeyboardShortcuts.setFindCallback(_openFindReplace);
     });
   }
 
@@ -793,7 +793,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Leave presence room.
     ref.read(presenceProvider.notifier).leaveRoom();
     // Clear keyboard shortcut callbacks registered by this screen.
-    AppKeyboardShortcuts.unregisterAll(this);
+    AppKeyboardShortcuts.clearPrintCallback();
+    AppKeyboardShortcuts.clearFindCallback();
     // Restore system UI when leaving the editor.
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();

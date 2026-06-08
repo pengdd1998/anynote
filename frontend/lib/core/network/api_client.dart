@@ -450,8 +450,18 @@ class ApiClient {
   }
 
   /// Get a shared note by ID. No authentication required.
-  Future<Map<String, dynamic>> getSharedNote(String shareId) async {
-    final res = await _dio.get('/api/v1/share/$shareId');
+  /// For password-protected shares, [password] is sent as a header so the
+  /// server can verify access before returning the encrypted content.
+  Future<Map<String, dynamic>> getSharedNote(
+    String shareId, {
+    String? password,
+  }) async {
+    final res = await _dio.get(
+      '/api/v1/share/$shareId',
+      options: password != null
+          ? Options(headers: {'X-Share-Password': password})
+          : null,
+    );
     return res.data as Map<String, dynamic>;
   }
 
@@ -634,6 +644,107 @@ class ApiClient {
       },
     );
     return res.data as Map<String, dynamic>;
+  }
+
+  // ── Account API ────────────────────────────────────
+
+  /// Delete the authenticated user's account permanently.
+  /// Requires the current auth key hash (base64) for confirmation.
+  Future<void> deleteAccount(String authKeyHashBase64) async {
+    await _dio.delete(
+      '/api/v1/auth/account',
+      data: {'auth_key_hash': authKeyHashBase64},
+    );
+  }
+
+  // ── Collab API ─────────────────────────────────────
+
+  /// Create a collaboration room for a note. Returns {id, invite_code, ...}.
+  Future<Map<String, dynamic>> createCollabRoom({
+    required String roomName,
+  }) async {
+    final res = await _dio.post(
+      '/api/v1/collab/rooms',
+      data: {'room_name': roomName},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Join a collaboration room using an invite code.
+  Future<Map<String, dynamic>> joinCollabRoom({
+    required String inviteCode,
+  }) async {
+    final res = await _dio.post(
+      '/api/v1/collab/join',
+      data: {'invite_code': inviteCode},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ── Comments API ───────────────────────────────────
+
+  /// List comments for a shared note (paginated).
+  Future<Map<String, dynamic>> listComments(
+    String shareId, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final res = await _dio.get(
+      '/api/v1/share/$shareId/comments',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Create a comment on a shared note.
+  Future<Map<String, dynamic>> createComment(
+    String shareId, {
+    required String encryptedContent,
+    String? parentId,
+  }) async {
+    final res = await _dio.post(
+      '/api/v1/share/$shareId/comments',
+      data: {
+        'encrypted_content': encryptedContent,
+        if (parentId != null) 'parent_id': parentId,
+      },
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Delete a comment by ID.
+  Future<void> deleteComment(String commentId) async {
+    await _dio.delete('/api/v1/comments/$commentId');
+  }
+
+  // ── Notifications API ──────────────────────────────
+
+  /// Get the unread notification count for the current user.
+  Future<Map<String, dynamic>> getUnreadNotificationCount() async {
+    final res = await _dio.get('/api/v1/notifications/unread-count');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Get notifications for the current user (paginated).
+  Future<Map<String, dynamic>> getNotifications({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final res = await _dio.get(
+      '/api/v1/notifications',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Mark a single notification as read.
+  Future<void> markNotificationRead(String notificationId) async {
+    await _dio.put('/api/v1/notifications/$notificationId/read');
+  }
+
+  /// Mark all notifications as read.
+  Future<void> markAllNotificationsRead() async {
+    await _dio.put('/api/v1/notifications/read-all');
   }
 }
 
