@@ -119,7 +119,12 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Analyze
-        run: flutter analyze --no-fatal-infos
+        run: |
+          flutter analyze --no-fatal-infos 2>&1 | tee frontend-analyze.txt
+          echo '## Flutter Analyze Output' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat frontend-analyze.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Test with coverage
         run: flutter test --coverage
