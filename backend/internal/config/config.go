@@ -221,8 +221,11 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("FIREBASE_CREDENTIALS_FILE"); v != "" {
 		c.Firebase.CredentialsFile = v
 	}
-	if v := os.Getenv("WS_ALLOWED_ORIGINS"); v != "" {
-		// Comma-separated list of allowed WebSocket origins, e.g. "https://app.example.com,https://web.example.com"
+	if v := os.Getenv("CORS_ALLOWED_ORIGINS"); v != "" {
+		// Comma-separated list of allowed CORS origins, e.g. "https://app.example.com,https://web.example.com"
+		c.Server.AllowOrigins = splitCSV(v)
+	} else if v := os.Getenv("WS_ALLOWED_ORIGINS"); v != "" {
+		// Legacy fallback for CORS origins.
 		c.Server.AllowOrigins = splitCSV(v)
 	}
 	if v := os.Getenv("STRIPE_SECRET_KEY"); v != "" {
@@ -315,7 +318,7 @@ func (c *Config) Warn() {
 
 	// Warn if CORS AllowOrigins is empty (no cross-origin access allowed).
 	if len(c.Server.AllowOrigins) == 0 {
-		slog.Warn("CORS AllowOrigins is empty; cross-origin requests will be rejected. Set WS_ALLOWED_ORIGINS or server.allow_origins in config to enable.")
+		slog.Warn("CORS AllowOrigins is empty; cross-origin requests will be rejected. Set CORS_ALLOWED_ORIGINS or server.allow_origins in config to enable.")
 	}
 }
 

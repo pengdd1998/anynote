@@ -42,9 +42,6 @@ func (s *routerStubAuthService) GetRecoverySalt(ctx context.Context, userID uuid
 func (s *routerStubAuthService) GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
 	return nil, nil
 }
-func (s *routerStubAuthService) RecoverAccount(ctx context.Context, req *domain.RecoverRequest) error {
-	return nil
-}
 func (s *routerStubAuthService) FakeRecoverySalt(email string) []byte {
 	return make([]byte, 32)
 }

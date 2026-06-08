@@ -2279,3 +2279,64 @@ Structured search operators, saved searches, and search history.
 | Performance Profiling | Memory profiling, startup time optimization | P3 |
 | Internationalization | RTL language support, plural rules, date formatting | P3 |
 | Analytics (Privacy-Preserving) | Opt-in, anonymized usage telemetry | P3 |
+
+---
+
+## Release History (v2.0.0 — v2.7.5)
+
+### v2.0.0 — Full Platform Release
+- All 143 phases complete, production-ready
+- Backend: 934 tests, Frontend: 3395 tests
+- Zero lint issues, full l10n (EN/ZH/JA/KO), schema v25
+
+### v2.1.0 — Security Hardening
+- Argon2id KDF upgrade (256MB memory, 4 iterations)
+- Account deletion endpoint
+- Push notifications for publish/comments
+
+### v2.2.0 — Stripe Production + Push + CI Hardening
+- stripe-go v82.1.0, webhook idempotency
+- FCM push via asynq queue
+- golangci-lint v2 migration
+
+### v2.3.0 — Design System Overhaul
+- Pastel palette, Phosphor icons, spring animations
+- SSH-based CD pipeline
+
+### v2.3.2 — Security Fixes
+- SSRF DNS rebinding, prompt injection escaping
+- TOCTOU quota race fix, publish AES-256-GCM at rest
+
+### v2.4.0 — App Icon + l10n + Error Handling
+
+### v2.5.0 — Warm White/Deep Navy Aesthetic
+- Full UI redesign, registration bug fix (hex to base64)
+
+### v2.6.0 — Dark Mode + Editor Polish
+- Dark mode warmth, tag filter, editor chrome consolidation
+
+### v2.7.0 — Real Device Bug Fixes
+- KDF blocking fix, NDK mismatch, FragmentActivity compat
+
+### v2.7.1–v2.7.3 — CI Pipeline Fixes
+- libsodium source build, flutter_timezone migration
+
+### v2.7.4 — Compose Feature Testing
+- Compose test plan, duplicate username 409 fix
+
+### v2.7.5 — Salt Fetch + CORS + pprof + Cleanup
+- GET /api/v1/auth/salt endpoint (anti-enumeration)
+- CORS middleware for Flutter web prep
+- Authenticated pprof behind PPROF_ENABLED env
+- RecoverAccount dead code removal (E2E incompatible)
+
+---
+
+## Future Considerations
+
+| Area | Priority |
+|------|----------|
+| Semantic Search (pgvector, public content only) | P2 |
+| Web App Deployment | P2 |
+| Performance Profiling | P3 |
+| Dependency Maintenance (major version bumps) | P3 |

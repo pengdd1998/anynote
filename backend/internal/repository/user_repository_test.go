@@ -139,26 +139,6 @@ func (m *mockUserRepo) GetSaltByEmail(ctx context.Context, email string) ([]byte
 	return u.Salt, nil
 }
 
-func (m *mockUserRepo) UpdateAuthCredentials(ctx context.Context, id uuid.UUID, hashedPassword, salt string) error {
-	u, ok := m.usersByID[id]
-	if !ok {
-		return errors.New("user not found")
-	}
-	u.AuthKeyHash = []byte(hashedPassword)
-	if salt != "" {
-		u.Salt = []byte(salt)
-	}
-	return nil
-}
-
-func (m *mockUserRepo) GetRecoveryKeyByEmail(ctx context.Context, email string) ([]byte, error) {
-	u, ok := m.usersByEmail[email]
-	if !ok {
-		return nil, errors.New("user not found")
-	}
-	return u.RecoveryKey, nil
-}
-
 func TestMockUserRepo_Create(t *testing.T) {
 	repo := newMockUserRepo()
 	ctx := context.Background()
