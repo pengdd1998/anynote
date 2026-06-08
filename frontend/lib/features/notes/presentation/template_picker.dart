@@ -216,6 +216,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
             onChanged: (value) {
               setState(() => _searchQuery = value);
             },
+            scrollPadding: const EdgeInsets.only(bottom: 120),
           ),
         ),
 
@@ -490,6 +491,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
                       labelText: l10n.templateName,
                       border: const OutlineInputBorder(),
                     ),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -498,6 +500,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
                       labelText: l10n.templateDescription,
                       border: const OutlineInputBorder(),
                     ),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                   const SizedBox(height: 12),
                   // Category selector
@@ -537,6 +540,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
                       alignLabelWithHint: true,
                     ),
                     maxLines: 8,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                 ],
               ),

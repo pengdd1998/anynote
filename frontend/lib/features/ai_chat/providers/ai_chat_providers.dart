@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -86,6 +87,12 @@ class ChatSessionNotifier extends StateNotifier<ChatSession> {
         state,
         userMessage,
         cancelToken: token,
+      ).timeout(
+        const Duration(minutes: 3),
+        onTimeout: (sink) {
+          debugPrint('[ChatSession] sendMessage stream timed out');
+          sink.close();
+        },
       )) {
         buffer.write(chunk);
         // Update the last message (assistant) with accumulated content.

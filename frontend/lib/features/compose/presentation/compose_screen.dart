@@ -127,7 +127,7 @@ class ComposeScreen extends ConsumerWidget {
                   ]
                 : [
                     AppColors.primary.withAlpha(20),
-                    AppColors.accentLavenderBg,
+                    AppColors.accentPeachBg,
                   ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -210,13 +210,13 @@ class ComposeScreen extends ConsumerWidget {
 
     // Warm pastel cycling for session cards
     const accentBgs = [
-      AppColors.accentLavenderBg,
+      AppColors.accentPeachBg,
       AppColors.accentYellowBg,
       AppColors.accentMintBg,
       AppColors.accentPeachBg,
     ];
     const accentIcons = [
-      AppColors.accentLavenderText,
+      AppColors.accentPeachText,
       AppColors.accentYellowText,
       AppColors.accentMintText,
       AppColors.accentPeachText,
@@ -333,13 +333,13 @@ class ComposeScreen extends ConsumerWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.accentLavenderBg,
+              color: AppColors.accentPeachBg,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(
               Icons.article_outlined,
               size: 28,
-              color: AppColors.accentLavenderText,
+              color: AppColors.accentPeachText,
             ),
           ),
           const SizedBox(height: AppSpacing.s12),
@@ -566,6 +566,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 ),
                 onChanged: (v) =>
                     ref.read(composeSessionProvider.notifier).setTopic(v),
+                scrollPadding: const EdgeInsets.only(bottom: 120),
               ),
             ),
             // Platform selector

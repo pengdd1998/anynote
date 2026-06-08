@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -41,22 +42,22 @@ class NoteDetailScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
-          // Edit — primary action, always visible
+          // Star / bookmark
           A11yUtils.labeledButton(
             label: l10n.editNote,
             child: IconButton(
-              icon: const Icon(Icons.edit_outlined),
+              icon: const Icon(Icons.star_outline),
               tooltip: l10n.editNote,
               onPressed: () => context.push('/notes/$noteId/edit'),
             ),
           ),
-          // Preview
+          // Share
           A11yUtils.labeledButton(
-            label: l10n.markdownPreview,
+            label: l10n.shareViaLink,
             child: IconButton(
-              icon: const Icon(Icons.visibility_outlined),
-              tooltip: l10n.markdownPreview,
-              onPressed: () => context.push('/notes/$noteId/preview'),
+              icon: const Icon(Icons.share),
+              tooltip: l10n.shareViaLink,
+              onPressed: () => _openShareSheet(context, ref),
             ),
           ),
           // More actions
@@ -72,6 +73,23 @@ class NoteDetailScreen extends ConsumerWidget {
               onSelected: (value) =>
                   _onActionSelected(context, ref, value, db),
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: ListTile(
+                    leading: const Icon(Icons.edit_outlined),
+                    title: Text(l10n.editNote),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'preview',
+                  child: ListTile(
+                    leading: const Icon(Icons.visibility_outlined),
+                    title: Text(l10n.markdownPreview),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'history',
                   child: ListTile(
@@ -188,7 +206,7 @@ class NoteDetailScreen extends ConsumerWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.s8,
+        vertical: AppSpacing.md,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -202,12 +220,10 @@ class NoteDetailScreen extends ConsumerWidget {
                 header: true,
                 child: Text(
                   data.title,
-                  style: AppTextStyles.display.copyWith(
-                    fontSize: 30,
+                  style: AppTextStyles.headline.copyWith(
                     color: isDark
                         ? AppColors.darkTextPrimary
                         : AppColors.lightTextPrimary,
-                    height: 1.25,
                   ),
                 ),
               ),
@@ -224,6 +240,51 @@ class NoteDetailScreen extends ConsumerWidget {
                 label: AppLocalizations.of(context)!.noteContent,
                 child: MarkdownPreview(content: data.content),
               ),
+
+              // -- Tags --
+              if (data.tags.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.s4,
+                  children: data.tags.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final tag = entry.value;
+                    final bgColor = AppColors.notePastels[
+                        index % AppColors.notePastels.length];
+                    // Pick matching text color from accent palette.
+                    final accentTextColors = <Color>[
+                      AppColors.accentPeachText,
+                      AppColors.accentYellowText,
+                      AppColors.accentCoralText,
+                      AppColors.accentMintText,
+                      AppColors.accentLavenderText,
+                      AppColors.accentPeachText,
+                    ];
+                    final textColor = accentTextColors[
+                        index % accentTextColors.length];
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.s12,
+                        vertical: AppSpacing.s4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.xxs),
+                      ),
+                      child: Text(
+                        '#${tag.plainName}',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
 
               // Bottom breathing room
               const SizedBox(height: AppSpacing.xl),
@@ -244,28 +305,28 @@ class NoteDetailScreen extends ConsumerWidget {
         ? AppColors.darkTextTertiary
         : AppColors.lightTextTertiary;
 
+    final minutes = (data.content.length ~/ 250) + 1;
+
     return Row(
       children: [
-        Icon(Icons.access_time, size: 14, color: metaColor),
-        const SizedBox(width: AppSpacing.s4),
         Text(
-          l10n.updatedDate(
-            data.updatedAt.toLocal().toString().substring(0, 16),
-          ),
+          '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))} · $minutes min read',
           style: AppTextStyles.caption.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
             color: metaColor,
-            fontSize: 12,
           ),
         ),
         if (!data.isSynced) ...[
           const SizedBox(width: AppSpacing.s12),
-          const Icon(Icons.cloud_off, size: 14, color: AppColors.warning),
+          const Icon(Icons.cloud_off_outlined, size: 14, color: AppColors.warning),
           const SizedBox(width: AppSpacing.s4),
           Text(
             l10n.notSynced,
             style: AppTextStyles.caption.copyWith(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
               color: AppColors.warning,
-              fontSize: 12,
             ),
           ),
         ],
@@ -299,6 +360,7 @@ class NoteDetailScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.errorContainer,
                 borderRadius: BorderRadius.circular(AppRadius.md),
+                boxShadow: AppShadows.smOf(Theme.of(context).brightness),
               ),
               child: Icon(
                 ErrorDisplay.errorIcon(appError),
@@ -371,11 +433,14 @@ class NoteDetailScreen extends ConsumerWidget {
       }
     }
 
+    final tags = await db.tagsDao.getTagsForNote(noteId);
+
     return DecryptedNote(
       title: title,
       content: content,
       updatedAt: note.updatedAt,
       isSynced: note.isSynced,
+      tags: tags,
     );
   }
 
@@ -390,6 +455,10 @@ class NoteDetailScreen extends ConsumerWidget {
     AppDatabase db,
   ) {
     switch (action) {
+      case 'edit':
+        context.push('/notes/$noteId/edit');
+      case 'preview':
+        context.push('/notes/$noteId/preview');
       case 'history':
         context.push('/notes/$noteId/history');
       case 'delete':

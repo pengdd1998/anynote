@@ -395,6 +395,7 @@ class _PropertyEditorDialogState extends ConsumerState<_PropertyEditorDialog> {
               else if (_selectedType == PropertyType.text)
                 TextFormField(
                   controller: _textController,
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
                   decoration: InputDecoration(
                     labelText: l10n.valueLabel,
                     border: const OutlineInputBorder(),
@@ -405,6 +406,7 @@ class _PropertyEditorDialogState extends ConsumerState<_PropertyEditorDialog> {
               else if (_selectedType == PropertyType.number)
                 TextFormField(
                   controller: _numberController,
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
                   decoration: InputDecoration(
                     labelText: l10n.numberLabel,
                     border: const OutlineInputBorder(),
@@ -555,6 +557,7 @@ class _KeySelector extends StatelessWidget {
                   content: TextField(
                     controller: controller,
                     autofocus: true,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                     decoration: InputDecoration(
                       labelText: l10n.propertyLabel,
                       border: const OutlineInputBorder(),

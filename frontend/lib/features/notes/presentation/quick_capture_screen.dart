@@ -328,6 +328,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenHeight = MediaQuery.of(context).size.height;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return GestureDetector(
       onVerticalDragUpdate: (details) {
@@ -338,7 +339,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
       child: SafeArea(
         child: Container(
           constraints: BoxConstraints(
-            maxHeight: screenHeight * 0.85,
+            maxHeight: screenHeight * 0.85 + bottomInset,
           ),
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -432,6 +433,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                   child: TextField(
                     controller: _contentController,
                     focusNode: _contentFocusNode,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                     decoration: InputDecoration(
                       hintText: l10n.typeSomething,
                       border: InputBorder.none,

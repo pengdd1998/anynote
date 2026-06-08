@@ -318,7 +318,14 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         ],
       ),
       body: _buildBody(),
-      bottomNavigationBar: _buildCompareButton(l10n),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: _isSelecting
+              ? _buildCompareButton(l10n)
+              : _buildRestoreButton(l10n),
+        ),
+      ),
     );
   }
 
@@ -326,19 +333,25 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     if (!_isSelecting) return null;
 
     final canCompare = _selectedIds.length == 2;
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.s8,
+    return FilledButton.icon(
+      onPressed: canCompare ? _navigateToDiff : null,
+      icon: const Icon(Icons.compare_arrows, size: 20),
+      label: Text(
+        canCompare ? l10n.compareVersions : l10n.selectTwoVersions,
+      ),
+    );
+  }
+
+  Widget _buildRestoreButton(AppLocalizations l10n) {
+    return FilledButton.icon(
+      onPressed: _versions.isNotEmpty ? () => _confirmRestore(_versions.first) : null,
+      icon: const Icon(Icons.restore, size: 18),
+      label: Text(l10n.restoreVersion),
+      style: FilledButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
-        child: FilledButton.icon(
-          onPressed: canCompare ? _navigateToDiff : null,
-          icon: const Icon(Icons.compare_arrows, size: 20),
-          label: Text(
-            canCompare ? l10n.compareVersions : l10n.selectTwoVersions,
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 14),
       ),
     );
   }
@@ -479,35 +492,47 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                 width: 24,
                 height: 24,
                 child: Center(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: isCurrent ? 12 : (isSelected ? 12 : 8),
-                    height: isCurrent ? 12 : (isSelected ? 12 : 8),
-                    decoration: BoxDecoration(
-                      color: isCurrent
-                          ? primary
-                          : isSelected
-                              ? primary.withAlpha(60)
-                              : cardBg,
-                      shape: BoxShape.circle,
-                      border: isCurrent
-                          ? null
-                          : Border.all(
-                              color:
-                                  primary.withAlpha(isSelected ? 200 : 80),
-                              width: 2,
-                            ),
-                      boxShadow: isCurrent
-                          ? [
-                              BoxShadow(
-                                color: primary.withAlpha(40),
-                                blurRadius: 6,
-                                spreadRadius: 1,
+                  child: isCurrent
+                      ? Container(
+                          width: 24,
+                          height: 24,
+                          decoration: const BoxDecoration(
+                            color: AppColors.indigo100,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: primary,
+                                shape: BoxShape.circle,
                               ),
-                            ]
-                          : null,
-                    ),
-                  ),
+                            ),
+                          ),
+                        )
+                      : isSelected
+                          ? AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: primary.withAlpha(60),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: primary.withAlpha(200),
+                                  width: 2,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: AppColors.slate300,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                 ),
               ),
               const SizedBox(width: AppSpacing.s12),
@@ -525,16 +550,20 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: isSelected
-                          ? primary.withAlpha(15)
-                          : cardBg,
+                      color: isCurrent
+                          ? AppColors.indigo50.withAlpha(128)
+                          : isSelected
+                              ? primary.withAlpha(15)
+                              : cardBg,
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: isSelected
-                          ? Border.all(
-                              color: primary.withAlpha(80),
-                              width: 1.5,
-                            )
-                          : null,
+                      border: isCurrent
+                          ? Border.all(color: AppColors.indigo100)
+                          : isSelected
+                              ? Border.all(
+                                  color: primary.withAlpha(80),
+                                  width: 1.5,
+                                )
+                              : null,
                       boxShadow: AppShadows.smOf(
                         Theme.of(context).brightness,
                       ),

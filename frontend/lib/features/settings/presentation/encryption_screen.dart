@@ -120,10 +120,13 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.verifyPassword),
-        content: TextField(
-          controller: passwordCtrl,
-          decoration: InputDecoration(labelText: l10n.enterYourPassword),
-          obscureText: true,
+        content: SingleChildScrollView(
+          child: TextField(
+            controller: passwordCtrl,
+            decoration: InputDecoration(labelText: l10n.enterYourPassword),
+            obscureText: true,
+            scrollPadding: const EdgeInsets.only(bottom: 120),
+          ),
         ),
         actions: [
           TextButton(
@@ -173,40 +176,45 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.changePassword),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentCtrl,
-              decoration: InputDecoration(
-                labelText: l10n.currentPassword,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: currentCtrl,
+                decoration: InputDecoration(
+                  labelText: l10n.currentPassword,
+                ),
+                obscureText: true,
+                scrollPadding: const EdgeInsets.only(bottom: 120),
               ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: newCtrl,
-              decoration: InputDecoration(labelText: l10n.newPassword),
-              obscureText: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmCtrl,
-              decoration: InputDecoration(
-                labelText: l10n.confirmNewPassword,
+              const SizedBox(height: 12),
+              TextField(
+                controller: newCtrl,
+                decoration: InputDecoration(labelText: l10n.newPassword),
+                obscureText: true,
+                scrollPadding: const EdgeInsets.only(bottom: 120),
               ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.reEncryptWarning,
-              style: TextStyle(
-                fontSize: 12,
-                color:
-                    Theme.of(context).colorScheme.error.withValues(alpha: 0.8),
+              const SizedBox(height: 12),
+              TextField(
+                controller: confirmCtrl,
+                decoration: InputDecoration(
+                  labelText: l10n.confirmNewPassword,
+                ),
+                obscureText: true,
+                scrollPadding: const EdgeInsets.only(bottom: 120),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                l10n.reEncryptWarning,
+                style: TextStyle(
+                  fontSize: 12,
+                  color:
+                      Theme.of(context).colorScheme.error.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -316,19 +324,22 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.areYouAbsolutelySure),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.typeDeleteToConfirm),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmCtrl,
-              decoration: InputDecoration(
-                labelText: l10n.typeDelete,
-                border: const OutlineInputBorder(),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.typeDeleteToConfirm),
+              const SizedBox(height: 12),
+              TextField(
+                controller: confirmCtrl,
+                decoration: InputDecoration(
+                  labelText: l10n.typeDelete,
+                  border: const OutlineInputBorder(),
+                ),
+                scrollPadding: const EdgeInsets.only(bottom: 120),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -761,8 +772,8 @@ class _StatusCard extends StatelessWidget {
 
     // Status colors based on encryption state
     final statusColor = isActive
-        ? (isDark ? const Color(0xFF4CAF50) : const Color(0xFF2E7D32))
-        : (isDark ? const Color(0xFFFF9800) : const Color(0xFFE65100));
+        ? (isDark ? AppColors.success : const Color(0xFF1E7A42))
+        : (isDark ? AppColors.warning : const Color(0xFFC74A00));
     final statusBg = isActive
         ? statusColor.withValues(alpha: isDark ? 0.15 : 0.08)
         : statusColor.withValues(alpha: isDark ? 0.15 : 0.08);
@@ -838,7 +849,7 @@ class _CrossPlatformWarningCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final warningColor =
-        isDark ? const Color(0xFFFFA726) : const Color(0xFFE65100);
+        isDark ? AppColors.warning : const Color(0xFFC74A00);
     final bgColor = warningColor.withValues(alpha: isDark ? 0.12 : 0.06);
 
     return Container(

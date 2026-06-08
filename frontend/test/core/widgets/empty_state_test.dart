@@ -51,7 +51,7 @@ void main() {
       expect(find.byIcon(Icons.note_add), findsOneWidget);
     });
 
-    testWidgets('renders icon at size 64', (tester) async {
+    testWidgets('renders icon at size 32', (tester) async {
       await pumpEmptyState(
         tester,
         icon: Icons.inbox,
@@ -59,7 +59,7 @@ void main() {
       );
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.inbox));
-      expect(icon.size, 64);
+      expect(icon.size, 32);
     });
 
     testWidgets('renders inside a Center widget', (tester) async {
@@ -115,6 +115,7 @@ void main() {
       );
 
       expect(find.text('New Note'), findsOneWidget);
+      // EmptyState uses FilledButton.tonal (a subtype of FilledButton).
       expect(find.byType(FilledButton), findsOneWidget);
       // Prevent unused variable warning.
       expect(pressed, isFalse);
@@ -130,7 +131,12 @@ void main() {
         onAction: () => pressed = true,
       );
 
-      await tester.tap(find.text('New Note'));
+      // Wait for the entrance animation to complete before tapping.
+      await tester.pumpAndSettle();
+
+      // Tap the FilledButton directly (not just the text, which is a child).
+      await tester.tap(find.byType(FilledButton));
+      await tester.pump();
       expect(pressed, isTrue);
     });
 

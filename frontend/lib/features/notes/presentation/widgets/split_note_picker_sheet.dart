@@ -145,6 +145,7 @@ class _SplitNotePickerSheetState extends ConsumerState<SplitNotePickerSheet> {
             child: TextField(
               controller: _searchController,
               focusNode: _searchFocusNode,
+              scrollPadding: const EdgeInsets.only(bottom: 120),
               decoration: InputDecoration(
                 hintText: l10n.searchNotes,
                 prefixIcon: const Icon(Icons.search, size: 20),

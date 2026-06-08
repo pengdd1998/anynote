@@ -19,6 +19,7 @@ import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/core/sync/sync_engine.dart';
 
 import 'pipeline_helper.dart';
+import '../core/crypto/sodium_test_init.dart';
 
 void main() {
   setUpAll(() async {
@@ -29,7 +30,7 @@ void main() {
   // Push direction
   // ========================================================================
 
-  group('Push pipeline', () {
+  group('Push pipeline', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     late AppDatabase db;
     late CryptoService crypto;
     late MockSyncApiClient api;
@@ -169,7 +170,7 @@ void main() {
   // Pull direction
   // ========================================================================
 
-  group('Pull pipeline', () {
+  group('Pull pipeline', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     late AppDatabase db;
     late CryptoService crypto;
     late MockSyncApiClient api;
@@ -407,7 +408,7 @@ void main() {
   // Round-trip (cross-device)
   // ========================================================================
 
-  group('Cross-device round-trip', () {
+  group('Cross-device round-trip', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('Device A pushes note, Device B pulls and sees same plaintext',
         () async {
       final sharedEncryptKey = generateTestEncryptKey();
@@ -629,7 +630,7 @@ void main() {
   // Multi-type push + pull
   // ========================================================================
 
-  group('Multi-type sync', () {
+  group('Multi-type sync', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     late AppDatabase db;
     late CryptoService crypto;
     late MockSyncApiClient api;

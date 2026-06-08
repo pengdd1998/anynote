@@ -334,6 +334,7 @@ class _TemplateManagementScreenState
                       labelText: l10n.templateName,
                       border: const OutlineInputBorder(),
                     ),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -342,6 +343,7 @@ class _TemplateManagementScreenState
                       labelText: l10n.templateDescription,
                       border: const OutlineInputBorder(),
                     ),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
@@ -380,6 +382,7 @@ class _TemplateManagementScreenState
                       alignLabelWithHint: true,
                     ),
                     maxLines: 8,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                 ],
               ),
@@ -458,6 +461,7 @@ class _TemplateManagementScreenState
                       labelText: l10n.templateName,
                       border: const OutlineInputBorder(),
                     ),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -466,6 +470,7 @@ class _TemplateManagementScreenState
                       labelText: l10n.templateDescription,
                       border: const OutlineInputBorder(),
                     ),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
@@ -504,6 +509,7 @@ class _TemplateManagementScreenState
                       alignLabelWithHint: true,
                     ),
                     maxLines: 8,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                 ],
               ),

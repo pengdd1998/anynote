@@ -37,6 +37,7 @@ class InputField extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final TextAlign textAlign;
   final TextCapitalization textCapitalization;
+  final EdgeInsets scrollPadding;
 
   const InputField({
     super.key,
@@ -61,6 +62,7 @@ class InputField extends StatelessWidget {
     this.autofillHints,
     this.textAlign = TextAlign.start,
     this.textCapitalization = TextCapitalization.none,
+    this.scrollPadding = const EdgeInsets.all(20),
   });
 
   @override
@@ -99,6 +101,7 @@ class InputField extends StatelessWidget {
       autofillHints: autofillHints,
       textAlign: textAlign,
       textCapitalization: textCapitalization,
+      scrollPadding: scrollPadding,
     );
   }
 }

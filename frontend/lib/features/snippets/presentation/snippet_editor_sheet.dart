@@ -226,6 +226,7 @@ class _SnippetFormFields extends StatelessWidget {
             isDense: true,
           ),
           textCapitalization: TextCapitalization.sentences,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
@@ -254,6 +255,7 @@ class _SnippetFormFields extends StatelessWidget {
           style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
           maxLines: 8,
           minLines: 4,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -265,6 +267,7 @@ class _SnippetFormFields extends StatelessWidget {
           ),
           maxLines: 2,
           minLines: 1,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -274,6 +277,7 @@ class _SnippetFormFields extends StatelessWidget {
             border: const OutlineInputBorder(),
             isDense: true,
           ),
+          scrollPadding: const EdgeInsets.only(bottom: 120),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -284,6 +288,7 @@ class _SnippetFormFields extends StatelessWidget {
             isDense: true,
             hintText: 'tag1, tag2, tag3',
           ),
+          scrollPadding: const EdgeInsets.only(bottom: 120),
         ),
       ],
     );

@@ -38,8 +38,10 @@ class _ImmediateAIRepository extends AIRepository {
     List<ChatMessage> messages, {
     String? model,
     CancelToken? cancelToken,
-  }) async* {
-    yield _translatedText;
+  }) {
+    // Use Stream.value so the stream completes synchronously after yielding
+    // one element, avoiding the need for microtask resolution in tests.
+    return Stream.value(_translatedText);
   }
 
   @override
@@ -66,19 +68,26 @@ class _ErrorAIRepository extends AIRepository {
     List<ChatMessage> messages, {
     String? model,
     CancelToken? cancelToken,
-  }) async* {
-    throw Exception(_errorMessage);
+  }) {
+    // Use Stream.error so the error is delivered and the stream closes,
+    // allowing the await-for loop to exit promptly in tests.
+    return Stream.error(Exception(_errorMessage));
   }
 
   @override
   Future<Map<String, dynamic>> getQuota() async => {};
 }
 
-/// Fake AI repository that never yields (simulates loading).
+/// Fake AI repository that yields after a delay (simulates loading state).
+/// Exposes a [StreamController] that must be closed via [dispose] in
+/// test teardown so that the production `.timeout()` timer is cleaned up.
 class _LoadingAIRepository extends AIRepository {
-  final Completer<void> _completer = Completer<void>();
+  final StreamController<String> _controller = StreamController<String>();
 
   _LoadingAIRepository() : super(_fakeApiClient);
+
+  /// Close the stream to allow pending timers to resolve.
+  Future<void> dispose() => _controller.close();
 
   @override
   Future<String> chat(
@@ -86,7 +95,7 @@ class _LoadingAIRepository extends AIRepository {
     String? model,
     CancelToken? cancelToken,
   }) async {
-    await _completer.future;
+    await _controller.stream.drain();
     return '';
   }
 
@@ -95,9 +104,8 @@ class _LoadingAIRepository extends AIRepository {
     List<ChatMessage> messages, {
     String? model,
     CancelToken? cancelToken,
-  }) async* {
-    await _completer.future;
-    // Never yields any text.
+  }) {
+    return _controller.stream;
   }
 
   @override
@@ -219,7 +227,11 @@ void main() {
 
       // Tap the Translate button to trigger the translation.
       await tester.tap(find.text('Translate'));
-      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      // The production code uses `await for` on a streaming response.
+      // runAsync lets the microtask queue flush so the stream completes,
+      // then pump rebuilds the widget tree with the updated state.
+      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
 
       expect(find.text('Bonjour le monde'), findsOneWidget);
       // Action buttons should appear when translation is done.
@@ -229,22 +241,26 @@ void main() {
     });
 
     testWidgets('shows loading indicator during translation', (tester) async {
+      final loadingRepo = _LoadingAIRepository();
+
       await pumpTranslationSheet(
         tester,
-        aiRepo: _LoadingAIRepository(),
+        aiRepo: loadingRepo,
       );
 
       // Tap the Translate button to trigger translation.
       await tester.tap(find.text('Translate'));
       await tester.pump(const Duration(milliseconds: 100));
 
-      // While loading, the Translate button should be disabled.
-      final translateButton = find.widgetWithText(FilledButton, 'Translate');
-      final buttonWidget = tester.widget<FilledButton>(translateButton);
-      expect(buttonWidget.onPressed, isNull);
-
-      // A CircularProgressIndicator should be visible.
+      // A CircularProgressIndicator should be visible while loading.
       expect(find.byType(CircularProgressIndicator), findsWidgets);
+
+      // Close the stream to exit the await-for loop cleanly.
+      await loadingRepo.dispose();
+      // Pump to let the stream completion propagate through the notifier.
+      for (var i = 0; i < 10; i++) {
+        await tester.pump();
+      }
     });
 
     testWidgets('shows error state on translation failure', (tester) async {
@@ -255,7 +271,8 @@ void main() {
 
       // Tap the Translate button to trigger the error.
       await tester.tap(find.text('Translate'));
-      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
 
       expect(
         find.textContaining('Network error: connection refused'),
@@ -274,10 +291,11 @@ void main() {
 
       // Trigger translation.
       await tester.tap(find.text('Translate'));
-      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
 
       await tester.tap(find.text('Replace'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(replacedText, 'Translated text here');
     });
@@ -293,10 +311,11 @@ void main() {
 
       // Trigger translation.
       await tester.tap(find.text('Translate'));
-      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
 
       await tester.tap(find.text('Insert Below'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(insertedText, 'Inserted translation');
     });

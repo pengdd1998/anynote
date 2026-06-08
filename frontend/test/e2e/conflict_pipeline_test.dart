@@ -15,6 +15,7 @@ import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/core/sync/sync_engine.dart';
 
 import 'pipeline_helper.dart';
+import '../core/crypto/sodium_test_init.dart';
 
 void main() {
   setUpAll(() async {
@@ -25,7 +26,7 @@ void main() {
   // Server wins (remote is newer)
   // ========================================================================
 
-  group('Conflict resolution - server wins', () {
+  group('Conflict resolution - server wins', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     late AppDatabase db;
     late CryptoService crypto;
     late MockSyncApiClient api;
@@ -178,7 +179,7 @@ void main() {
   // Local wins (local is newer)
   // ========================================================================
 
-  group('Conflict resolution - local wins', () {
+  group('Conflict resolution - local wins', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     late AppDatabase db;
     late CryptoService crypto;
     late MockSyncApiClient api;
@@ -301,7 +302,7 @@ void main() {
   // Edge cases
   // ========================================================================
 
-  group('Conflict edge cases', () {
+  group('Conflict edge cases', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     late AppDatabase db;
     late CryptoService crypto;
     late MockSyncApiClient api;

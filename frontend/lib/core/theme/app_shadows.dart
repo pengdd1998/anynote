@@ -25,76 +25,76 @@ class AppShadows {
   // ---------------------------------------------------------------------------
 
   /// Subtle lift — list cards, compact tiles.
-  static List<BoxShadow> get sm => [
-        BoxShadow(
-          color: AppColors.shadowLight,
-          offset: const Offset(0, 1),
-          blurRadius: 3,
-        ),
-      ];
+  static final List<BoxShadow> sm = [
+    BoxShadow(
+      color: AppColors.shadowLight,
+      offset: const Offset(0, 1),
+      blurRadius: 4,
+    ),
+  ];
 
   /// Standard elevation — prominent cards, list headers.
-  static List<BoxShadow> get md => [
-        BoxShadow(
-          color: AppColors.shadowLight,
-          offset: const Offset(0, 2),
-          blurRadius: 8,
-        ),
-      ];
+  static final List<BoxShadow> md = [
+    BoxShadow(
+      color: AppColors.shadowLight,
+      offset: const Offset(0, 2),
+      blurRadius: 12,
+    ),
+  ];
 
   /// High elevation — dialogs, floating panels.
-  static List<BoxShadow> get lg => [
-        BoxShadow(
-          color: AppColors.shadowMedium,
-          offset: const Offset(0, 4),
-          blurRadius: 16,
-        ),
-      ];
+  static final List<BoxShadow> lg = [
+    BoxShadow(
+      color: AppColors.shadowMedium,
+      offset: const Offset(0, 4),
+      blurRadius: 20,
+    ),
+  ];
 
   /// Maximum elevation — overlays, popovers.
-  static List<BoxShadow> get xl => [
-        BoxShadow(
-          color: AppColors.shadowMedium,
-          offset: const Offset(0, 8),
-          blurRadius: 24,
-        ),
-      ];
+  static final List<BoxShadow> xl = [
+    BoxShadow(
+      color: AppColors.shadowMedium,
+      offset: const Offset(0, 8),
+      blurRadius: 24,
+    ),
+  ];
 
   // ---------------------------------------------------------------------------
   // Dark mode
   // ---------------------------------------------------------------------------
 
-  static List<BoxShadow> get smDark => [
-        BoxShadow(
-          color: AppColors.shadowDark,
-          offset: const Offset(0, 1),
-          blurRadius: 4,
-        ),
-      ];
+  static final List<BoxShadow> smDark = [
+    BoxShadow(
+      color: AppColors.shadowDark,
+      offset: const Offset(0, 1),
+      blurRadius: 4,
+    ),
+  ];
 
-  static List<BoxShadow> get mdDark => [
-        BoxShadow(
-          color: AppColors.shadowDark,
-          offset: const Offset(0, 2),
-          blurRadius: 8,
-        ),
-      ];
+  static final List<BoxShadow> mdDark = [
+    BoxShadow(
+      color: AppColors.shadowDark,
+      offset: const Offset(0, 2),
+      blurRadius: 8,
+    ),
+  ];
 
-  static List<BoxShadow> get lgDark => [
-        BoxShadow(
-          color: AppColors.shadowDark,
-          offset: const Offset(0, 4),
-          blurRadius: 16,
-        ),
-      ];
+  static final List<BoxShadow> lgDark = [
+    BoxShadow(
+      color: AppColors.shadowDark,
+      offset: const Offset(0, 4),
+      blurRadius: 16,
+    ),
+  ];
 
-  static List<BoxShadow> get xlDark => [
-        BoxShadow(
-          color: AppColors.shadowDark,
-          offset: const Offset(0, 8),
-          blurRadius: 24,
-        ),
-      ];
+  static final List<BoxShadow> xlDark = [
+    BoxShadow(
+      color: AppColors.shadowDark,
+      offset: const Offset(0, 8),
+      blurRadius: 24,
+    ),
+  ];
 
   // ---------------------------------------------------------------------------
   // Resolve by brightness

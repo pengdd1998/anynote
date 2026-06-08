@@ -15,13 +15,14 @@ void main() {
   setUpAll(() async {
     // Initialize native sodium for recovery key tests (uses BLAKE2b/SHA-256
     // on native test runner; would use WebCrypto in browser).
-    registerTestSodiumPlatform();
+    final available = await probeSodiumAvailability();
+    if (!available) return;
     await CryptoCompat.init();
   });
 
   // ── CryptoCompat ──────────────────────────────────────────────────
 
-  group('CryptoCompat', () {
+  group('CryptoCompat', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('isFullEncryptionSupported returns true', () {
       expect(CryptoCompat.isFullEncryptionSupported, isTrue);
     });
@@ -45,7 +46,7 @@ void main() {
   // ── BIP-39 Mnemonic Encoding/Decoding ─────────────────────────────
   // These are pure-Dart operations that work on both platforms.
 
-  group('BIP-39 encodeMnemonic / indicesToBits', () {
+  group('BIP-39 encodeMnemonic / indicesToBits', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('encodeMnemonic produces 12 words', () {
       // Create 17 bytes (132 bits + 4 unused bits) of known data.
       final combined = Uint8List.fromList(
@@ -190,7 +191,7 @@ void main() {
   // These tests use SharedPreferences directly to test the web storage
   // path independently of the kIsWeb check in MasterKeyManager.
 
-  group('MasterKeyManager storage (SharedPreferences direct)', () {
+  group('MasterKeyManager storage (SharedPreferences direct)', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     const masterKeyKey = 'anynote_master_key';
     const saltKey = 'anynote_salt';
 
@@ -273,7 +274,7 @@ void main() {
   // native crypto backend (sodium_libs). On web, these would use
   // WebCrypto instead.
 
-  group('MasterKeyManager facade (native backend)', () {
+  group('MasterKeyManager facade (native backend)', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     // Skip on web since these use native sodium.
     // On native test runner, sodium must be initialized first.
 
@@ -320,7 +321,7 @@ void main() {
   //   flutter test test/core/crypto/web_crypto_compat_test.dart \
   //     --platform chrome --web-browser-flag=--headless
 
-  group('WebCrypto operation contract (documented)', () {
+  group('WebCrypto operation contract (documented)', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('deriveMasterKeyImpl has expected signature', () {
       // deriveMasterKeyImpl(String password, Uint8List salt) -> Future<Uint8List>
       // Must return exactly 32 bytes.

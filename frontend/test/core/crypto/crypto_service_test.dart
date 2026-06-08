@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/crypto/crypto_service.dart';
 import 'package:anynote/core/crypto/decryption_exception.dart';
@@ -15,8 +14,8 @@ void main() {
 
   setUpAll(() async {
     // Initialize sodium so that MasterKeyManager and Encryptor can work.
-    registerTestSodiumPlatform();
-    await SodiumSumoInit.init();
+    final available = await probeSodiumAvailability();
+    if (!available) return;
     // Derive a deterministic encrypt key for testing.
     // We derive it the same way the app does: from a known master key.
     final salt = Uint8List.fromList(List.generate(32, (i) => i));
@@ -35,7 +34,7 @@ void main() {
     svc.injectEncryptKey(key);
   }
 
-  group('encryptForItem / decryptForItem round-trip', () {
+  group('encryptForItem / decryptForItem round-trip', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('same item ID encrypts and decrypts correctly', () async {
       injectEncryptKey(service, testEncryptKey);
       const itemId = 'note-test-123';
@@ -113,7 +112,7 @@ void main() {
     });
   });
 
-  group('encryptBlobForItem / decryptBlobForItem round-trip', () {
+  group('encryptBlobForItem / decryptBlobForItem round-trip', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('binary blob round-trip', () async {
       injectEncryptKey(service, testEncryptKey);
       const itemId = 'blob-test';
@@ -157,7 +156,7 @@ void main() {
     });
   });
 
-  group('lock/unlock lifecycle', () {
+  group('lock/unlock lifecycle', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('decrypt returns null when locked (no encrypt key)', () async {
       // Service is freshly created -- no key injected, locked by default
       expect(service.isUnlocked, isFalse);
@@ -218,7 +217,7 @@ void main() {
     });
   });
 
-  group('clearAll', () {
+  group('clearAll', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('clears cached key and sets isUnlocked to false', () async {
       injectEncryptKey(service, testEncryptKey);
       expect(service.isUnlocked, isTrue);
@@ -232,7 +231,7 @@ void main() {
     });
   });
 
-  group('provider', () {
+  group('provider', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('cryptoServiceProvider creates a CryptoService instance', () {
       // Verify the provider can be instantiated
       final svc = CryptoService();
@@ -241,7 +240,7 @@ void main() {
     });
   });
 
-  group('per-item key isolation', () {
+  group('per-item key isolation', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('item key from CryptoService matches manual derivation', () async {
       injectEncryptKey(service, testEncryptKey);
       const itemId = 'isolation-check';

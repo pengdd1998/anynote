@@ -8,6 +8,7 @@ import 'package:anynote/core/error/connectivity_provider.dart';
 import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/core/sync/sync_engine.dart';
 import 'package:anynote/core/sync/sync_lifecycle.dart';
+import 'package:anynote/core/sync/sync_progress.dart';
 import 'package:anynote/core/sync/sync_queue_manager.dart';
 import 'package:anynote/core/widgets/sync_status_widget.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
@@ -87,6 +88,10 @@ List<Override> _buildOverrides({
   required bool isSyncing,
   DateTime? lastSyncAt,
 }) {
+  final syncProgress = isSyncing
+      ? const SyncProgress(phase: SyncPhase.pulling, totalCount: 1)
+      : SyncProgress.idle;
+
   return [
     ...defaultProviderOverrides(),
     connectivityProvider.overrideWith(
@@ -100,6 +105,9 @@ List<Override> _buildOverrides({
         isActive: isSyncing,
         lastSyncAt: lastSyncAt,
       ),
+    ),
+    syncProgressProvider.overrideWith(
+      (ref) => Stream.value(syncProgress),
     ),
   ];
 }
@@ -177,7 +185,7 @@ void main() {
       expect(find.byIcon(Icons.sync), findsOneWidget);
     });
 
-    testWidgets('shows Syncing... tooltip when syncing', (tester) async {
+    testWidgets('shows sync progress tooltip when syncing', (tester) async {
       await _pumpWidget(
         tester,
         overrides: _buildOverrides(
@@ -188,7 +196,8 @@ void main() {
       );
 
       final iconButton = tester.widget<IconButton>(find.byType(IconButton));
-      expect(iconButton.tooltip, 'Syncing...');
+      // When sync is active with a total count, the tooltip shows progress.
+      expect(iconButton.tooltip, contains('Pulling'));
     });
 
     // -- Offline state ------------------------------------------------

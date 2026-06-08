@@ -13,13 +13,14 @@ void main() {
 
   setUpAll(() async {
     // Initialize native sodium for tests.
-    registerTestSodiumPlatform();
+    final available = await probeSodiumAvailability();
+    if (!available) return;
     await CryptoCompat.init();
   });
 
   // -- CryptoCompat --
 
-  group('CryptoCompat', () {
+  group('CryptoCompat', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('isFullEncryptionSupported returns true', () {
       expect(CryptoCompat.isFullEncryptionSupported, isTrue);
     });
@@ -36,7 +37,7 @@ void main() {
 
   // -- BIP-39 Mnemonic Encoding/Decoding --
 
-  group('BIP-39 encodeMnemonic / indicesToBits', () {
+  group('BIP-39 encodeMnemonic / indicesToBits', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('encodeMnemonic produces 12 words', () {
       final combined = Uint8List.fromList(
         List.generate(17, (i) => i),
@@ -159,7 +160,7 @@ void main() {
 
   // -- MasterKeyManager key storage via SharedPreferences --
 
-  group('MasterKeyManager storage (SharedPreferences direct)', () {
+  group('MasterKeyManager storage (SharedPreferences direct)', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     const masterKeyKey = 'anynote_master_key';
     const saltKey = 'anynote_salt';
 
@@ -239,7 +240,7 @@ void main() {
 
   // -- MasterKeyManager facade (native backend) --
 
-  group('MasterKeyManager facade (unified backend)', () {
+  group('MasterKeyManager facade (unified backend)', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('generateSalt returns 32 random bytes', () async {
       final salt = MasterKeyManager.generateSalt();
       expect(salt.length, 32);
@@ -259,7 +260,7 @@ void main() {
 
   // -- Cross-platform crypto contract --
 
-  group('Cross-platform crypto contract (unified)', () {
+  group('Cross-platform crypto contract (unified)', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('deriveMasterKeyImpl returns 32 bytes deterministically', () async {
       final salt = MasterKeyManager.generateSalt();
       final key1 = await MasterKeyManager.deriveMasterKey('testpassword', salt);
@@ -380,7 +381,7 @@ void main() {
 
   // -- Legacy web crypto format documentation --
 
-  group('Legacy web crypto format', () {
+  group('Legacy web crypto format', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('legacy format description is documented', () {
       // Prior to Phase 142:
       // - Web used AES-256-GCM (12-byte IV) + PBKDF2 + HMAC-SHA256

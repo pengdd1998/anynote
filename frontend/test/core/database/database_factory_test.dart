@@ -60,14 +60,14 @@ void main() {
       expect(result.read<int>('value'), 1);
     });
 
-    test('schema version is 17', () {
+    test('schema version is 18', () {
       if (kIsWeb) {
         db = AppDatabase();
       } else {
         db = AppDatabase.forTesting(NativeDatabase.memory());
       }
 
-      expect(db.schemaVersion, 17);
+      expect(db.schemaVersion, 18);
     });
 
     test('encryption key can be set and cleared', () {

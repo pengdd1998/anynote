@@ -60,22 +60,19 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows Search your notes empty state', (tester) async {
+    testWidgets('shows search hint in search bar', (tester) async {
       final handle = await pumpScreen(
         tester,
         const AdvancedSearchScreen(),
         overrides: searchOverrides(),
       );
 
-      expect(find.text('Search your notes'), findsOneWidget);
-      expect(
-        find.text('Enter a query with operators to find notes'),
-        findsOneWidget,
-      );
+      // The search bar has a hint text for operator-based search.
+      expect(find.byType(TextField), findsOneWidget);
       await handle.dispose();
     });
 
-    testWidgets('shows tabs for Search, Saved Searches, and History',
+    testWidgets('shows search hints toggle and idle state sections',
         (tester) async {
       final handle = await pumpScreen(
         tester,
@@ -83,9 +80,8 @@ void main() {
         overrides: searchOverrides(),
       );
 
-      expect(find.byType(TabBar), findsOneWidget);
-      expect(find.text('Saved Searches'), findsOneWidget);
-      expect(find.text('Recent Searches'), findsOneWidget);
+      // The idle state should show a search hints toggle.
+      expect(find.text('Show search hints'), findsOneWidget);
       await handle.dispose();
     });
   });

@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/crypto/encryptor.dart';
 import 'sodium_test_init.dart';
@@ -20,15 +19,15 @@ void main() {
   late Uint8List masterKey;
 
   setUpAll(() async {
-    registerTestSodiumPlatform();
-    await SodiumSumoInit.init();
+    final available = await probeSodiumAvailability();
+    if (!available) return;
     // Simulate a 32-byte master key (normally derived from Argon2id).
     masterKey = Uint8List.fromList(
       List.generate(32, (i) => (i * 7 + 13) % 256),
     );
   });
 
-  group('E2E encryption round-trip', () {
+  group('E2E encryption round-trip', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('single item: derive key → encrypt → decrypt → match', () async {
       const plaintext = 'Hello AnyNote - this is my secret note!';
       const itemId = '550e8400-e29b-41d4-a716-446655440000';

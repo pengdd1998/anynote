@@ -489,7 +489,7 @@ class _GraphCanvasState extends State<_GraphCanvas>
 // ---------------------------------------------------------------------------
 
 const _bubbleFillsLight = <Color>[
-  AppColors.accentLavenderBg,
+  AppColors.accentPeachBg,
   AppColors.accentYellowBg,
   AppColors.accentMintBg,
   AppColors.accentPeachBg,
@@ -510,7 +510,7 @@ const _bubbleAccents = <Color>[
 ];
 
 const _bubbleTextColors = <Color>[
-  AppColors.accentLavenderText,
+  AppColors.accentPeachText,
   AppColors.accentYellowText,
   AppColors.accentMintText,
   AppColors.accentPeachText,

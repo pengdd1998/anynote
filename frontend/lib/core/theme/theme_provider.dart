@@ -118,3 +118,23 @@ bool isHighContrast(ThemeOption option) {
     _ => false,
   };
 }
+
+/// Computes the exact [ThemeData] to apply for the given [option].
+///
+/// Handles system mode by reading [systemBrightness]. Returns a single
+/// ThemeData that is set as both `theme:` and `darkTheme:` on MaterialApp,
+/// so Flutter's themeMode logic is bypassed entirely.
+ThemeData selectEffectiveTheme(
+  ThemeOption option,
+  Brightness systemBrightness,
+) {
+  return switch (option) {
+    ThemeOption.light => AppTheme.lightTheme(),
+    ThemeOption.dark => AppTheme.darkTheme(),
+    ThemeOption.highContrastLight => AppTheme.highContrastLightTheme(),
+    ThemeOption.highContrastDark => AppTheme.highContrastDarkTheme(),
+    ThemeOption.system => systemBrightness == Brightness.dark
+        ? AppTheme.darkTheme()
+        : AppTheme.lightTheme(),
+  };
+}

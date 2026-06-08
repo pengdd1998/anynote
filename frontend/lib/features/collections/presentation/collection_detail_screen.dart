@@ -358,6 +358,7 @@ class _CollectionDetailScreenState
           ),
           autofocus: true,
           textCapitalization: TextCapitalization.sentences,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
         ),
         actions: [
           TextButton(

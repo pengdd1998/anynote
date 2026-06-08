@@ -187,6 +187,7 @@ class _TemplatePickerSheetState extends ConsumerState<TemplatePickerSheet> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
           child: TextField(
+            scrollPadding: const EdgeInsets.only(bottom: 120),
             decoration: InputDecoration(
               hintText: l10n.searchNotes,
               prefixIcon: const Icon(Icons.search, size: 20),
@@ -497,6 +498,7 @@ class _TemplatePickerSheetState extends ConsumerState<TemplatePickerSheet> {
                 children: [
                   TextField(
                     controller: nameController,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                     decoration: InputDecoration(
                       labelText: l10n.templateName,
                       border: const OutlineInputBorder(),
@@ -505,6 +507,7 @@ class _TemplatePickerSheetState extends ConsumerState<TemplatePickerSheet> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: descController,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                     decoration: InputDecoration(
                       labelText: l10n.templateDescription,
                       border: const OutlineInputBorder(),
@@ -540,6 +543,7 @@ class _TemplatePickerSheetState extends ConsumerState<TemplatePickerSheet> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: contentController,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                     decoration: InputDecoration(
                       labelText: l10n.templateContent,
                       hintText: l10n.templateDateHint,

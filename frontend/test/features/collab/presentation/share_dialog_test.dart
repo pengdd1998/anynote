@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/collab/presence_indicator.dart';
+import 'package:anynote/core/network/api_client.dart';
 import 'package:anynote/features/collab/presentation/share_dialog.dart';
 import 'package:anynote/l10n/app_localizations.dart';
+import 'package:anynote/main.dart';
 
 import '../../../helpers/test_app_helper.dart';
 
@@ -25,6 +27,27 @@ class _FakeRefForPresence implements Ref {
   dynamic noSuchMethod(Invocation invocation) => null;
 }
 
+/// A fake ApiClient that returns mock data for collab room operations
+/// without making real network calls.
+class _FakeApiClient extends ApiClient {
+  _FakeApiClient() : super(baseUrl: 'http://localhost:8080');
+
+  @override
+  Future<Map<String, dynamic>> createCollabRoom({
+    required String roomName,
+    int maxMembers = 10,
+  }) async {
+    return {'invite_code': 'test-invite-code-123', 'room_name': roomName};
+  }
+
+  @override
+  Future<Map<String, dynamic>> joinCollabRoom({
+    required String inviteCode,
+  }) async {
+    return {'room_id': 'room-456', 'invite_code': inviteCode};
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Test helpers
 // ---------------------------------------------------------------------------
@@ -35,6 +58,7 @@ Future<void> pumpShareSheet(
 }) async {
   final allOverrides = <Override>[
     ...defaultProviderOverrides(),
+    apiClientProvider.overrideWithValue(_FakeApiClient()),
     presenceProvider.overrideWith((ref) {
       return _FakePresenceNotifier(presence);
     }),

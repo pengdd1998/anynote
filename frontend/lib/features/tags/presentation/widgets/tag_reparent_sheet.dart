@@ -69,14 +69,18 @@ class _TagReparentSheetState extends State<TagReparentSheet> {
             .toList();
 
     return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _DragHandle(colorScheme: theme.colorScheme),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text(
-              l10n.selectParentTag,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _DragHandle(colorScheme: theme.colorScheme),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Text(
+                l10n.selectParentTag,
               style: theme.textTheme.titleMedium,
             ),
           ),
@@ -105,6 +109,7 @@ class _TagReparentSheetState extends State<TagReparentSheet> {
           ),
           const SizedBox(height: 8),
         ],
+      ),
       ),
     );
   }
@@ -166,6 +171,7 @@ class _SearchField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: TextField(
         controller: controller,
+        scrollPadding: const EdgeInsets.only(bottom: 120),
         decoration: InputDecoration(
           hintText: l10n.search,
           prefixIcon: const Icon(Icons.search, size: 20),

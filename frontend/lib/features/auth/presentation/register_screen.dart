@@ -13,10 +13,12 @@ import '../../../core/network/api_client.dart';
 import '../../../core/notifications/push_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/card_container.dart';
+import '../../../core/widgets/keyboard_scroll_mixin.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/pressable_scale.dart';
 
@@ -27,15 +29,45 @@ class RegisterScreen extends ConsumerStatefulWidget {
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen>
+    with WidgetsBindingObserver, KeyboardScrollMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _usernameFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmPasswordFocus = FocusNode();
   bool _isLoading = false;
   String? _error;
   String? _recoveryKey;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _emailController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _emailFocus.dispose();
+    _usernameFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmPasswordFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    onKeyboardMetricsChanged();
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -251,7 +283,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: Text(
                           l10n.iSavedIt,
                           style: AppTextStyles.body.copyWith(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
                           ),
@@ -269,42 +301,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   @override
-  void dispose() {
-    _emailController.dispose();
-    _usernameController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
     final accentBg = isDark
-        ? AppColors.accentMint.withValues(alpha: 0.12)
-        : AppColors.accentMintBg;
+        ? AppColors.accentCoral.withValues(alpha: 0.12)
+        : AppColors.accentCoralBg;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: ConstrainedBox(
-                constraints:
-                    BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: FocusTraversalGroup(
-                      policy: OrderedTraversalPolicy(),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: AppSpacing.xl,
+            right: AppSpacing.xl,
+            top: MediaQuery.sizeOf(context).height * 0.08,
+            bottom: 200,
+          ),
+          child: Form(
+            key: _formKey,
+            child: FocusTraversalGroup(
+              policy: OrderedTraversalPolicy(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                           // -- Illustration --
                           Center(
                             child: Semantics(
@@ -316,6 +337,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   color: accentBg,
                                   borderRadius: BorderRadius.circular(
                                       AppRadius.lg,),
+                                  boxShadow: AppShadows.mdOf(
+                                      Theme.of(context).brightness,),
                                 ),
                                 child: Icon(
                                   Icons.person_add_outlined,
@@ -358,19 +381,46 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           // -- Error --
                           if (_error != null)
                             Padding(
-                              padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.md,),
+                              padding: const EdgeInsets.only(bottom: AppSpacing.md),
                               child: Semantics(
                                 liveRegion: true,
                                 label: l10n.errorLabel(_error!),
-                                child: Text(
-                                  _error!,
-                                  style: AppTextStyles.body.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .error,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.md,
+                                    vertical: AppSpacing.s12,
                                   ),
-                                  textAlign: TextAlign.center,
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppColors.darkErrorBg
+                                        : AppColors.lightErrorBg,
+                                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? AppColors.darkErrorBorder
+                                          : AppColors.lightErrorBorder,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        size: 18,
+                                        color: Theme.of(context).colorScheme.error,
+                                      ),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Expanded(
+                                        child: Text(
+                                          _error!,
+                                          style: AppTextStyles.body.copyWith(
+                                            color: Theme.of(context).colorScheme.error,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -380,11 +430,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             order: const NumericFocusOrder(1),
                             child: TextFormField(
                               controller: _emailController,
+                              focusNode: _emailFocus,
                               autofocus: true,
                               autofillHints: const [
                                 AutofillHints.email,
                               ],
                               textInputAction: TextInputAction.next,
+                              scrollPadding: const EdgeInsets.only(bottom: 120),
                               decoration: InputDecoration(
                                 hintText: l10n.email,
                                 prefixIcon:
@@ -405,10 +457,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             order: const NumericFocusOrder(2),
                             child: TextFormField(
                               controller: _usernameController,
+                              focusNode: _usernameFocus,
                               autofillHints: const [
                                 AutofillHints.username,
                               ],
                               textInputAction: TextInputAction.next,
+                              scrollPadding: const EdgeInsets.only(bottom: 120),
                               decoration: InputDecoration(
                                 hintText: l10n.username,
                                 prefixIcon: const Icon(
@@ -427,6 +481,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             order: const NumericFocusOrder(3),
                             child: PasswordTextField(
                               controller: _passwordController,
+                              focusNode: _passwordFocus,
                               hintText: l10n.password,
                               prefixIcon:
                                   const Icon(Icons.lock_outline),
@@ -434,6 +489,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 AutofillHints.newPassword,
                               ],
                               textInputAction: TextInputAction.next,
+                              scrollPadding: const EdgeInsets.only(bottom: 120),
                               showPasswordTooltip: l10n.showPassword,
                               hidePasswordTooltip: l10n.hidePassword,
                               validator: (v) =>
@@ -450,6 +506,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             order: const NumericFocusOrder(4),
                             child: PasswordTextField(
                               controller: _confirmPasswordController,
+                              focusNode: _confirmPasswordFocus,
                               hintText: l10n.confirmPassword,
                               prefixIcon:
                                   const Icon(Icons.lock_outline),
@@ -458,6 +515,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ],
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _submit(),
+                              scrollPadding: const EdgeInsets.only(bottom: 120),
                               showPasswordTooltip: l10n.showPassword,
                               hidePasswordTooltip: l10n.hidePassword,
                               validator: (v) => v !=
@@ -482,7 +540,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                       ? AppColors.darkTextTertiary
                                       : AppColors.lightTextTertiary,
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   child: Text(
                                     l10n.encryptionNotice,
@@ -522,20 +580,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                               child: Center(
                                 child: _isLoading
-                                    ? const SizedBox(
+                                    ? SizedBox(
                                         width: 20,
                                         height: 20,
                                         child:
                                             CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          color: Colors.white,
+                                          color: Theme.of(context).colorScheme.onPrimary,
                                         ),
                                       )
                                     : Text(
                                         l10n.createAccount,
                                         style: AppTextStyles.body
                                             .copyWith(
-                                          color: Colors.white,
+                                          color: Theme.of(context).colorScheme.onPrimary,
                                           fontWeight: FontWeight.w600,
                                           fontSize: 16,
                                         ),
@@ -566,15 +624,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
               ),
-            );
-          },
-        ),
-      ),
-    );
+      );
   }
 }
-
-/// Soft copy button for the recovery key card.
 class _CopyButton extends StatefulWidget {
   final AppLocalizations l10n;
   final String? recoveryKey;
@@ -621,7 +673,7 @@ class _CopyButtonState extends State<_CopyButton> {
               size: 14,
               color: AppColors.accentYellowText,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.s4),
             Text(
               _copied
                   ? widget.l10n.recoveryKeyCopied

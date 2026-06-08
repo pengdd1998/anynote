@@ -330,6 +330,48 @@ abstract class AppLocalizations {
   /// **'Enter all 12 words separated by spaces, in the correct order.'**
   String get recoveryKeyFormatHint;
 
+  /// Headline for the mnemonic input step
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Recovery Key'**
+  String get recoveryStepMnemonicTitle;
+
+  /// Subtitle for the mnemonic input step
+  ///
+  /// In en, this message translates to:
+  /// **'Paste your 12-word recovery key or enter it manually.'**
+  String get recoveryStepMnemonicDesc;
+
+  /// Toggle to switch to 12-field manual input
+  ///
+  /// In en, this message translates to:
+  /// **'Enter words one by one'**
+  String get recoveryEnterManually;
+
+  /// Clear the mnemonic text area
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get recoveryClearMnemonic;
+
+  /// Placeholder text for the mnemonic text area
+  ///
+  /// In en, this message translates to:
+  /// **'word1 word2 word3 ... word12'**
+  String get recoveryMnemonicHint;
+
+  /// Headline while recovering account
+  ///
+  /// In en, this message translates to:
+  /// **'Recovering Account…'**
+  String get recoveryStepRecoveringTitle;
+
+  /// Status text while recovering account
+  ///
+  /// In en, this message translates to:
+  /// **'Deriving your encryption keys…'**
+  String get recoveryStepRecoveringDesc;
+
   /// Error when recovery key is malformed
   ///
   /// In en, this message translates to:
@@ -425,6 +467,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search notes...'**
   String get searchNotes;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @filterNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get filterNotes;
+
+  /// No description provided for @filterTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get filterTasks;
+
+  /// No description provided for @filterJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get filterJournal;
 
   /// Tooltip for collections button and screen title
   ///
@@ -2640,10 +2706,10 @@ abstract class AppLocalizations {
   /// **'Export Date'**
   String get exportDate;
 
-  /// Label for total item count
+  /// Label for total synced items count
   ///
   /// In en, this message translates to:
-  /// **'Total Items'**
+  /// **'Total items'**
   String get totalItems;
 
   /// Section header for item type counts
@@ -7737,6 +7803,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note published successfully!'**
   String get notePublishedSuccess;
+
+  /// Empty state text when there are no comments
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet. Be the first to share your thoughts!'**
+  String get noCommentsYet;
+
+  /// Label showing the number of comments
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 comment} other{{count} comments}}'**
+  String commentCount(int count);
+
+  /// Placeholder text in the comment input field
+  ///
+  /// In en, this message translates to:
+  /// **'Add a comment...'**
+  String get addComment;
+
+  /// Title for the notifications screen
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// Button to mark all notifications as read
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
+
+  /// Empty state when there are no notifications
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get noNotifications;
+
+  /// Subtitle for notification settings item
+  ///
+  /// In en, this message translates to:
+  /// **'Configure notification preferences'**
+  String get notificationPreferences;
+
+  /// Error message when notifications fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load notifications'**
+  String get failedToLoadNotifications;
+
+  /// Button label for account deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// Warning message in the delete account dialog
+  ///
+  /// In en, this message translates to:
+  /// **'This action is irreversible. All your data will be permanently deleted from the server.'**
+  String get deleteAccountWarning;
+
+  /// Title for the final confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Are you absolutely sure?'**
+  String get deleteAccountConfirmTitle;
+
+  /// Final warning text before account deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Your account and all associated data will be permanently deleted. This cannot be undone.'**
+  String get deleteAccountFinalWarning;
+
+  /// Button text for the final delete confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Permanently'**
+  String get deleteAccountPermanently;
+
+  /// Error message when account deletion fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete account: {error}'**
+  String deleteAccountFailed(String error);
+
+  /// Section header for server-side sync statistics
+  ///
+  /// In en, this message translates to:
+  /// **'Server Stats'**
+  String get syncStats;
+
+  /// Label for sync conflict count
+  ///
+  /// In en, this message translates to:
+  /// **'Conflicts'**
+  String get conflicts;
+
+  /// Error when share dialog fails to create a room
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create collaboration room. Please check your connection.'**
+  String get failedToCreateRoom;
+
+  /// Error when join room fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to join room. Please check the invite code.'**
+  String get failedToJoinRoom;
+
+  /// Loading text while joining a collaboration room
+  ///
+  /// In en, this message translates to:
+  /// **'Joining...'**
+  String get joining;
+
+  /// Button to load more items in a paginated list
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get loadMore;
 }
 
 class _AppLocalizationsDelegate

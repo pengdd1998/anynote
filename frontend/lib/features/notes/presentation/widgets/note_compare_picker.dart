@@ -127,6 +127,7 @@ class _NoteComparePickerState extends ConsumerState<NoteComparePicker> {
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
               child: TextField(
                 controller: _searchController,
+                scrollPadding: const EdgeInsets.only(bottom: 120),
                 decoration: InputDecoration(
                   hintText: l10n.searchNotes,
                   prefixIcon: const Icon(Icons.search, size: 20),

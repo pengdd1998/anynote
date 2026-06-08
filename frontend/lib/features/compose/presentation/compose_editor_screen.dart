@@ -70,6 +70,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(l10n.editorTitle),
         backgroundColor: Colors.transparent,
@@ -154,6 +155,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                 onChanged: (text) {
                   ref.read(composeSessionProvider.notifier).updateDraft(text);
                 },
+                scrollPadding: const EdgeInsets.only(bottom: 120),
               ),
             ),
           ),

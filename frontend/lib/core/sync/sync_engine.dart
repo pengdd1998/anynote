@@ -63,9 +63,32 @@ class SyncEngine {
 
     try {
       final pullResult = await pull();
-      final pushResult = await push();
-      pm.end('sync');
 
+      // Push may fail after a successful pull. Catch separately so that
+      // pull results are not lost and the caller can still record a
+      // partial-success timestamp.
+      SyncPushResponse pushResult;
+      try {
+        pushResult = await push();
+      } catch (pushError) {
+        pm.end('sync');
+        notifier.emit(SyncProgress(
+          phase: SyncPhase.error,
+          failedItems: [
+            SyncFailedItem(
+              itemId: '',
+              itemType: '',
+              error: 'Push failed: ${ErrorMapper.map(pushError)}',
+            ),
+          ],
+        ));
+        return SyncResult(
+          pulledCount: pullResult,
+          pushedCount: 0,
+        );
+      }
+
+      pm.end('sync');
       notifier.emit(
         SyncProgress(
           phase: SyncPhase.done,
@@ -121,6 +144,7 @@ class SyncEngine {
     );
 
     var count = 0;
+    int? lastSuccessfulVersion;
     for (final rawBlob in response.blobs) {
       // Parse the raw JSON blob from the API response into a typed SyncBlob.
       final blob = _parseBlob(rawBlob as Map<String, dynamic>);
@@ -130,29 +154,43 @@ class SyncEngine {
           completedCount: count,
         ),
       );
-      switch (blob.itemType) {
-        case 'note':
-          await _applyNoteBlob(blob);
-          break;
-        case 'tag':
-          await _applyTagBlob(blob);
-          break;
-        case 'collection':
-          await _applyCollectionBlob(blob);
-          break;
-        case 'content':
-          await _applyContentBlob(blob);
-          break;
-        case 'image':
-          await _applyImageBlob(blob);
-          break;
+      try {
+        switch (blob.itemType) {
+          case 'note':
+            await _applyNoteBlob(blob);
+          case 'tag':
+            await _applyTagBlob(blob);
+          case 'collection':
+            await _applyCollectionBlob(blob);
+          case 'content':
+            await _applyContentBlob(blob);
+          case 'image':
+            await _applyImageBlob(blob);
+        }
+        lastSuccessfulVersion = blob.version;
+      } catch (e) {
+        debugPrint(
+          '[SyncEngine] Failed to apply blob ${blob.itemType} '
+          '${blob.itemId.substring(0, 8)}: $e',
+        );
+        // Do not advance version past this blob — it will be re-delivered
+        // on the next pull.
+        break;
       }
       count++;
       notifier.emit(notifier.current.copyWith(completedCount: count));
     }
 
-    // Update sync meta with latest version
-    await syncMetaDao.updateSyncMeta('all', response.latestVersion);
+    // Only advance the version past blobs we successfully processed.
+    // If no blobs were in the response, we can safely advance to the
+    // server's latest version since there is nothing to re-deliver.
+    // If blobs were processed, advance to the last successful one.
+    // Blobs after the first failure remain eligible for re-delivery.
+    if (lastSuccessfulVersion != null) {
+      await syncMetaDao.updateSyncMeta('all', lastSuccessfulVersion);
+    } else if (response.blobs.isEmpty) {
+      await syncMetaDao.updateSyncMeta('all', response.latestVersion);
+    }
 
     return count;
   }
@@ -172,10 +210,12 @@ class SyncEngine {
     final deviceId = await getDeviceId();
     var encryptionFailures = 0;
 
-    // Gather and encrypt unsynced notes (parallel)
+    // Gather and encrypt unsynced notes (batched)
     final unsyncedNotes = await _db.notesDao.getUnsyncedNotes();
-    final noteResults = await Future.wait(
-      unsyncedNotes.map((note) async {
+    final noteResults = await _processInBatches<SyncPushItem, Note>(
+      unsyncedNotes,
+      20,
+      (note) async {
         final encryptedData = await _encryptNoteForPush(note);
         if (encryptedData == null) return null;
         return SyncPushItem(
@@ -186,15 +226,17 @@ class SyncEngine {
           blobSize: encryptedData.length,
           deviceId: deviceId,
         );
-      }),
+      },
     );
-    encryptionFailures += noteResults.where((r) => r == null).length;
-    items.addAll(noteResults.whereType<SyncPushItem>());
+    encryptionFailures += unsyncedNotes.length - noteResults.length;
+    items.addAll(noteResults);
 
-    // Gather and encrypt unsynced tags (parallel)
+    // Gather and encrypt unsynced tags (batched)
     final unsyncedTags = await _db.tagsDao.getUnsyncedTags();
-    final tagResults = await Future.wait(
-      unsyncedTags.map((tag) async {
+    final tagResults = await _processInBatches<SyncPushItem, Tag>(
+      unsyncedTags,
+      50,
+      (tag) async {
         final encryptedData = await _encryptTagForPush(tag);
         if (encryptedData == null) return null;
         return SyncPushItem(
@@ -205,16 +247,18 @@ class SyncEngine {
           blobSize: encryptedData.length,
           deviceId: deviceId,
         );
-      }),
+      },
     );
-    encryptionFailures += tagResults.where((r) => r == null).length;
-    items.addAll(tagResults.whereType<SyncPushItem>());
+    encryptionFailures += unsyncedTags.length - tagResults.length;
+    items.addAll(tagResults);
 
-    // Gather and encrypt unsynced collections (parallel)
+    // Gather and encrypt unsynced collections (batched)
     final unsyncedCollections =
         await _db.collectionsDao.getUnsyncedCollections();
-    final collectionResults = await Future.wait(
-      unsyncedCollections.map((collection) async {
+    final collectionResults = await _processInBatches<SyncPushItem, Collection>(
+      unsyncedCollections,
+      50,
+      (collection) async {
         final encryptedData = await _encryptCollectionForPush(collection);
         if (encryptedData == null) return null;
         return SyncPushItem(
@@ -225,15 +269,17 @@ class SyncEngine {
           blobSize: encryptedData.length,
           deviceId: deviceId,
         );
-      }),
+      },
     );
-    encryptionFailures += collectionResults.where((r) => r == null).length;
-    items.addAll(collectionResults.whereType<SyncPushItem>());
+    encryptionFailures += unsyncedCollections.length - collectionResults.length;
+    items.addAll(collectionResults);
 
-    // Gather and encrypt unsynced generated contents (parallel)
+    // Gather and encrypt unsynced generated contents (batched)
     final unsyncedContents = await _db.generatedContentsDao.getUnsynced();
-    final contentResults = await Future.wait(
-      unsyncedContents.map((content) async {
+    final contentResults = await _processInBatches<SyncPushItem, GeneratedContent>(
+      unsyncedContents,
+      20,
+      (content) async {
         final encryptedData = await _encryptContentForPush(content);
         if (encryptedData == null) return null;
         return SyncPushItem(
@@ -244,22 +290,21 @@ class SyncEngine {
           blobSize: encryptedData.length,
           deviceId: deviceId,
         );
-      }),
+      },
     );
-    encryptionFailures += contentResults.where((r) => r == null).length;
-    items.addAll(contentResults.whereType<SyncPushItem>());
+    encryptionFailures += unsyncedContents.length - contentResults.length;
+    items.addAll(contentResults);
 
-    // Gather and encrypt unsynced images (parallel)
+    // Gather and encrypt unsynced images (batched, small batch due to size)
     final unsyncedImages = await _db.imagesDao.getUnsyncedImages();
-    final imageResults = await Future.wait(
-      unsyncedImages.map((image) async {
-        // Read image file bytes. Wrapped in try-catch to handle
-        // file deletion between listing and reading (race condition).
+    final imageResults = await _processInBatches<SyncPushItem, NoteImage>(
+      unsyncedImages,
+      5,
+      (image) async {
         try {
           final file = File(image.path);
           final bytes = await file.readAsBytes();
 
-          // Encrypt the image data (base64-encode first, matching note envelope pattern)
           final encryptedBase64 =
               await _crypto.encryptForItem(image.id, base64Encode(bytes));
           final encryptedBytes = base64Decode(encryptedBase64);
@@ -276,10 +321,10 @@ class SyncEngine {
           debugPrint('[SyncEngine] Image ${image.id} skipped: $e');
           return null;
         }
-      }),
+      },
     );
-    encryptionFailures += imageResults.where((r) => r == null).length;
-    items.addAll(imageResults.whereType<SyncPushItem>());
+    encryptionFailures += unsyncedImages.length - imageResults.length;
+    items.addAll(imageResults);
 
     if (encryptionFailures > 0) {
       debugPrint(
@@ -423,7 +468,23 @@ class SyncEngine {
   }
 
   /// Apply a pulled tag blob to the local DB.
+  ///
+  /// Uses LWW conflict resolution based on the version field as a recency
+  /// proxy (tags do not have an updatedAt column). If the local tag has a
+  /// version >= the remote blob's version, the local version is kept and the
+  /// remote update is skipped. This prevents silent data loss when two devices
+  /// edit the same tag concurrently.
   Future<void> _applyTagBlob(SyncBlob blob) async {
+    final existing = await (_db.select(_db.tags)
+          ..where((t) => t.id.equals(blob.itemId)))
+        .getSingleOrNull();
+
+    // Local wins only when it has a strictly higher version.
+    // When versions are equal, remote wins (server is authoritative).
+    if (existing != null && existing.version > blob.version) {
+      return;
+    }
+
     final decrypted = await _tryDecryptBlob(blob.itemId, blob.encryptedData);
     final encryptedBase64 = base64Encode(blob.encryptedData);
 
@@ -435,7 +496,23 @@ class SyncEngine {
   }
 
   /// Apply a pulled collection blob to the local DB.
+  ///
+  /// Uses LWW conflict resolution based on the version field as a recency
+  /// proxy (collections do not have an updatedAt column). If the local
+  /// collection has a version >= the remote blob's version, the local version
+  /// is kept and the remote update is skipped. This prevents silent data loss
+  /// when two devices edit the same collection concurrently.
   Future<void> _applyCollectionBlob(SyncBlob blob) async {
+    final existing = await (_db.select(_db.collections)
+          ..where((c) => c.id.equals(blob.itemId)))
+        .getSingleOrNull();
+
+    // Local wins only when it has a strictly higher version.
+    // When versions are equal, remote wins (server is authoritative).
+    if (existing != null && existing.version > blob.version) {
+      return;
+    }
+
     final decrypted = await _tryDecryptBlob(blob.itemId, blob.encryptedData);
     final encryptedBase64 = base64Encode(blob.encryptedData);
 
@@ -582,6 +659,26 @@ class SyncEngine {
   }
 
   // ── Helpers ────────────────────────────────────────────
+
+  /// Process [items] in batches of [batchSize] using [processor].
+  ///
+  /// Each batch runs in parallel; the next batch starts only after the
+  /// previous one completes. This prevents overwhelming the main isolate
+  /// with hundreds of concurrent encryption tasks.
+  Future<List<T>> _processInBatches<T, S>(
+    List<S> items,
+    int batchSize,
+    Future<T?> Function(S) processor,
+  ) async {
+    final results = <T>[];
+    for (var i = 0; i < items.length; i += batchSize) {
+      final end = i + batchSize > items.length ? items.length : i + batchSize;
+      final batch = items.sublist(i, end);
+      final batchResults = await Future.wait(batch.map(processor));
+      results.addAll(batchResults.whereType<T>());
+    }
+    return results;
+  }
 
   /// Attempt to decrypt a blob. Returns null if crypto is not unlocked
   /// or if decryption fails (corrupted blob, wrong key, etc.).

@@ -301,6 +301,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
           ),
           autofocus: true,
           textCapitalization: TextCapitalization.sentences,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
         ),
         actions: [
           TextButton(
@@ -392,6 +393,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
               ),
               autofocus: true,
               textCapitalization: TextCapitalization.sentences,
+              scrollPadding: const EdgeInsets.only(bottom: 120),
             ),
           ],
         ),

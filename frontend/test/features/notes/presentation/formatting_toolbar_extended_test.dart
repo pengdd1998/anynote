@@ -50,7 +50,7 @@ void main() {
       await pumpToolbar(tester);
       final container = tester.widget<Container>(
         find.ancestor(
-          of: find.byType(ListView),
+          of: find.byType(SingleChildScrollView),
           matching: find.byType(Container),
         ),
       );
@@ -61,9 +61,11 @@ void main() {
 
     testWidgets('is horizontally scrollable', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byType(ListView), findsOneWidget);
-      final listView = tester.widget<ListView>(find.byType(ListView));
-      expect(listView.scrollDirection, Axis.horizontal);
+      expect(find.byType(SingleChildScrollView), findsOneWidget);
+      final scrollView = tester.widget<SingleChildScrollView>(
+        find.byType(SingleChildScrollView),
+      );
+      expect(scrollView.scrollDirection, Axis.horizontal);
     });
   });
 
@@ -263,16 +265,32 @@ void main() {
   });
 
   group('FormattingToolbar dividers', () {
-    testWidgets('has vertical dividers between groups', (tester) async {
+    testWidgets('has divider containers between groups', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byType(VerticalDivider), findsWidgets);
+      // The toolbar uses Container(width: 1, height: 16) dividers instead of
+      // VerticalDivider widgets. Verify that multiple such containers exist.
+      final containers = tester.widgetList<Container>(
+        find.byType(Container),
+      );
+      final dividers = containers.where((c) {
+        final box = c.constraints;
+        return box != null && box.maxWidth == 1 && box.maxHeight == 16;
+      });
+      expect(dividers.length, greaterThanOrEqualTo(1));
     });
 
     testWidgets('has at least 4 divider groups', (tester) async {
       await pumpToolbar(tester);
       // Groups: text style | heading | list/code/checklist | indent/outdent | undo/redo
       // Minimum 4 dividers.
-      expect(find.byType(VerticalDivider), findsAtLeast(4));
+      final containers = tester.widgetList<Container>(
+        find.byType(Container),
+      );
+      final dividers = containers.where((c) {
+        final box = c.constraints;
+        return box != null && box.maxWidth == 1 && box.maxHeight == 16;
+      });
+      expect(dividers.length, greaterThanOrEqualTo(4));
     });
   });
 

@@ -7,16 +7,19 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_durations.dart';
 import '../../../core/error/error.dart' show ErrorDisplay;
+import '../../../core/theme/app_animation.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
@@ -82,6 +85,15 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
   /// Whether the current sort mode is custom (drag-and-drop reorder).
   bool get _isCustomSort => _sortOption == 'custom';
+
+  /// Responsive max card width: 360px on mobile, smaller on wider screens
+  /// to allow more columns.
+  double _maxCardWidth(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (width > 1200) return 280;
+    if (width > 800) return 320;
+    return 360;
+  }
 
   /// Accumulated list of notes loaded so far for infinite scroll.
   List<Note> _notes = [];
@@ -151,6 +163,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
   /// Active priority filter (null = no filter).
   String? _priorityFilter;
+
+  /// Active filter chip type: 'all', 'notes', 'tasks', 'journal'.
+  String _filterType = 'all';
 
   /// Active tag filter (null = no filter, Set<String> = selected tag IDs).
   Set<String>? _tagFilter;
@@ -440,7 +455,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
   /// Scroll listener: load more when user is near the bottom (80%).
   void _onScroll() {
-    if (_isLoadingPage && _isLoadingMoreSearch) return;
+    if (_isLoadingPage || _isLoadingMoreSearch) return;
 
     final currentOffset = _scrollController.position.pixels;
 
@@ -598,6 +613,60 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   }
 
   // ---------------------------------------------------------------------------
+  // Filter chips
+  // ---------------------------------------------------------------------------
+
+  Widget _buildFilterChips(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final chips = <MapEntry<String, String>>[
+      MapEntry('all', l10n.filterAll),
+      MapEntry('notes', l10n.filterNotes),
+      MapEntry('tasks', l10n.filterTasks),
+      MapEntry('journal', l10n.filterJournal),
+    ];
+
+    final unselectedBg = isDark ? AppColors.darkInputFill : AppColors.accentPeachBg;
+    final unselectedText = isDark ? AppColors.darkTextSecondary : AppColors.accentPeachText;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: chips.map((entry) {
+          final isSelected = _filterType == entry.key;
+          return Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.s8),
+            child: GestureDetector(
+              onTap: () => setState(() => _filterType = entry.key),
+              child: AnimatedContainer(
+                duration: AppAnimation.short,
+                curve: AppAnimation.easeOut,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.s8,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary
+                      : unselectedBg,
+                  borderRadius: AppRadius.pillBorder,
+                ),
+                child: Text(
+                  entry.value,
+                  style: AppTextStyles.filterChip.copyWith(
+                    color: isSelected
+                        ? Colors.white
+                        : unselectedText,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // Build
   // ---------------------------------------------------------------------------
 
@@ -608,6 +677,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: _isSearching
             ? Semantics(
@@ -620,13 +690,40 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                   ),
                   autofocus: true,
                   onChanged: _onSearchChanged,
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
                 ),
               )
             : _isSelectionMode
-                ? Text(l10n.selectedNotes(_selectedNoteIds.length))
-                : Text(l10n.homeTitle),
+                ? Text(
+                    l10n.selectedNotes(_selectedNoteIds.length),
+                    style: AppTextStyles.title,
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'AnyNote',
+                        style: AppTextStyles.headline.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.s8),
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
         actions: [
-          if (_isSelectionMode) ...[
+          if (_isSearching && !_isSelectionMode) ...[
+            IconButton(
+              icon: const Icon(AppIcons.close),
+              tooltip: l10n.close,
+              onPressed: _exitSearchMode,
+            ),
+          ] else if (_isSelectionMode) ...[
             // Select/Deselect All
             TextButton(
               onPressed: _selectedNoteIds.length == _notes.length
@@ -867,6 +964,78 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           children: [
             // Offline banner at the top
             const OfflineBanner(),
+            // Search bar (persistent, below AppBar)
+            if (!_isSelectionMode && !_isSearching)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.s4,
+                  AppSpacing.md,
+                  0,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: AppRadius.smBorder,
+                    boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: l10n.searchNotes,
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                        size: 20,
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkInputFill
+                          : AppColors.lightInputFill,
+                      border: OutlineInputBorder(
+                        borderRadius: AppRadius.smBorder,
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.smBorder,
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.smBorder,
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.s16,
+                        vertical: AppSpacing.s12,
+                      ),
+                      isDense: true,
+                    ),
+                    style: AppTextStyles.body.copyWith(fontSize: 14),
+                    onTap: () {
+                      if (!_isSearching) {
+                        setState(() {
+                          _isSearching = true;
+                          _pageSubscription?.cancel();
+                        });
+                      }
+                    },
+                    onChanged: _onSearchChanged,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
+                  ),
+                ),
+              ),
+            // Filter chips row
+            if (!_isSelectionMode && !_isSearching)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.s8,
+                  AppSpacing.md,
+                  0,
+                ),
+                child: _buildFilterChips(l10n),
+              ),
             // Batch action bar (shown when in selection mode)
             if (_isSelectionMode)
               NotesBatchActionBar(
@@ -983,17 +1152,28 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         ),
       floatingActionButton: _isSelectionMode
           ? null
-          : FloatingActionButton(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                context.push('/notes/new');
-              },
-              tooltip: l10n.createNewNote,
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
+          : Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                boxShadow: AppShadows.mdOf(Theme.of(context).brightness),
               ),
-              child: const Icon(AppIcons.add),
+              child: FloatingActionButton(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  context.push('/notes/new');
+                },
+                tooltip: l10n.createNewNote,
+                elevation: 0,
+                highlightElevation: 0,
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                ),
+                child: Icon(
+                  AppIcons.add,
+                  color: Colors.white,
+                ),
+              ),
             ),
     );
   }
@@ -1004,7 +1184,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       // Show warm shimmer placeholders while loading the first page.
       return ListView.builder(
         itemCount: 5,
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.s8,
+        ),
         itemBuilder: (_, __) => const AppLoadingCard(),
       );
     }
@@ -1062,24 +1245,24 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           // Show reorder hint when in custom sort mode.
           if (_isCustomSort && !_isGridView)
             Material(
-              color: Theme.of(context).colorScheme.secondaryContainer,
+              color: AppColors.accentPeachBg,
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.s8,
+                ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.info_outline,
                       size: 16,
-                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                      color: AppColors.accentPeachText,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.s8),
                     Text(
                       l10n.reorderModeHint,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            Theme.of(context).colorScheme.onSecondaryContainer,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.accentPeachText,
                       ),
                     ),
                   ],
@@ -1102,7 +1285,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       // Show warm shimmer placeholders while searching.
       return ListView.builder(
         itemCount: 5,
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.s8,
+        ),
         itemBuilder: (_, __) => const AppLoadingCard(),
       );
     }
@@ -1148,7 +1334,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       return ReorderableListView.builder(
         buildDefaultDragHandles: false,
         itemCount: notes.length,
-        padding: const EdgeInsets.only(bottom: 96),
+        padding: const EdgeInsets.only(
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+          bottom: 96,
+        ),
         onReorder: (oldIndex, newIndex) {
           _onReorder(notes, oldIndex, newIndex);
         },
@@ -1174,10 +1364,12 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             trailing: ReorderableDragStartListener(
               index: index,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                 child: Icon(
                   Icons.drag_handle,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
                 ),
               ),
             ),
@@ -1189,11 +1381,15 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     return ListView.builder(
       controller: _scrollController,
       itemCount: notes.length + (showLoader ? 1 : 0),
-      padding: const EdgeInsets.only(bottom: 96),
+      padding: const EdgeInsets.only(
+        left: AppSpacing.md,
+        right: AppSpacing.md,
+        bottom: 96,
+      ),
       itemBuilder: (context, index) {
         if (index == notes.length) {
           return Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Center(
               child: _isLoadingPage || _isLoadingMoreSearch
                   ? const CircularProgressIndicator()
@@ -1267,15 +1463,18 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       );
     }
 
-    return MasonryGridView.count(
+    return GridView.builder(
       controller: _scrollController,
-      crossAxisCount: 2,
-      mainAxisSpacing: AppSpacing.s8,
-      crossAxisSpacing: AppSpacing.s8,
+      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: _maxCardWidth(context),
+        mainAxisSpacing: AppSpacing.md,
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisExtent: 150,
+      ),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.s12,
-        vertical: AppSpacing.s4,
-      ).copyWith(bottom: 80),
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.s8,
+      ).copyWith(bottom: 96),
       itemCount: items.length,
       itemBuilder: (context, index) => items[index],
     );
@@ -1470,7 +1669,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: AppRadius.topXl,
       ),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -1479,7 +1678,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             // Handle bar
             Center(
               child: Container(
-                margin: const EdgeInsets.only(top: 8, bottom: 4),
+                margin: const EdgeInsets.only(
+                  top: AppSpacing.s8,
+                  bottom: AppSpacing.s4,
+                ),
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
@@ -1487,19 +1689,24 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                       .colorScheme
                       .onSurfaceVariant
                       .withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AppRadius.pillBorder,
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s12,
+                AppSpacing.md,
+                AppSpacing.s4,
+              ),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   l10n.importNotes,
-                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: AppTextStyles.title.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -1527,7 +1734,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 _performImport(context, ImportType.appleNotes);
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
           ],
         ),
       ),
@@ -1556,7 +1763,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         content: Row(
           children: [
             const CircularProgressIndicator(),
-            const SizedBox(width: 20),
+            const SizedBox(width: AppSpacing.s20),
             Flexible(child: Text(l10n.importNotes)),
           ],
         ),
@@ -1655,7 +1862,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: AppRadius.topXl,
       ),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -1664,7 +1871,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             // Handle bar
             Center(
               child: Container(
-                margin: const EdgeInsets.only(top: 8, bottom: 4),
+                margin: const EdgeInsets.only(
+                  top: AppSpacing.s8,
+                  bottom: AppSpacing.s4,
+                ),
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
@@ -1672,11 +1882,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                       .colorScheme
                       .onSurfaceVariant
                       .withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AppRadius.pillBorder,
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             ListTile(
               leading: const Icon(AppIcons.noteAdd),
               title: Text(l10n.blankNote),
@@ -1701,7 +1911,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 context.push('/notes/daily');
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
           ],
         ),
       ),
@@ -1715,7 +1925,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       isScrollControlled: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: AppRadius.topXl,
       ),
       builder: (_) => TemplatePickerSheet(
         onSelected: (content) {
@@ -1739,7 +1949,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       isScrollControlled: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: AppRadius.topXl,
       ),
       builder: (_) => SplitNotePickerSheet(
         excludeIds: excludeIds,
@@ -1773,6 +1983,17 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     setState(() {
       _selectedNoteIds.clear();
     });
+  }
+
+  /// Exit search mode and restore the normal note list.
+  void _exitSearchMode() {
+    _searchController.clear();
+    setState(() {
+      _isSearching = false;
+      _searchQuery = '';
+      _searchResults.clear();
+    });
+    _loadInitialNotes();
   }
 
   /// Exit selection mode.

@@ -6,7 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart' show ErrorDisplay;
 import '../../../core/theme/alpha_constants.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
@@ -28,12 +32,14 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
   Widget build(BuildContext context) {
     final db = ref.read(databaseProvider);
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final cardRadius = BorderRadius.circular(AppTheme.radiusMedium);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.trash),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           StreamBuilder<List<Note>>(
             stream: _watchDeletedNotes(db),
@@ -57,12 +63,36 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.error_outline, size: 48, color: colorScheme.error),
-                  const SizedBox(height: 16),
-                  Text(l10n.failedToLoadTrash),
-                  const SizedBox(height: 16),
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: AppColors.lightErrorBg,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                    child: const Icon(
+                      Icons.error_outline,
+                      size: 28,
+                      color: AppColors.error,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    l10n.failedToLoadTrash,
+                    style: AppTextStyles.body.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   FilledButton.tonal(
                     onPressed: () => setState(() {}),
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
                     child: Text(l10n.retry),
                   ),
                 ],
@@ -86,7 +116,12 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.s4,
+              AppSpacing.md,
+              96,
+            ),
             itemCount: notes.length,
             itemBuilder: (context, index) {
               final note = notes[index];
@@ -98,163 +133,188 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
 
               return Semantics(
                 label: l10n.noteSemantics(title),
-                child: Dismissible(
-                  key: ValueKey(note.id),
-                  confirmDismiss: (direction) async {
-                    if (direction == DismissDirection.startToEnd) {
-                      // Restore
-                      try {
-                        await db.notesDao.restoreNote(note.id);
-                        if (context.mounted) {
-                          AppSnackBar.info(context, message: l10n.restore);
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+                  child: Dismissible(
+                    key: ValueKey(note.id),
+                    confirmDismiss: (direction) async {
+                      if (direction == DismissDirection.startToEnd) {
+                        // Restore
+                        try {
+                          await db.notesDao.restoreNote(note.id);
+                          if (context.mounted) {
+                            AppSnackBar.info(context, message: l10n.restore);
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            AppSnackBar.error(
+                              context,
+                              message: l10n.failedToRestoreError(ErrorDisplay.displayMessage(e, l10n)),
+                            );
+                          }
                         }
-                      } catch (e) {
-                        if (context.mounted) {
+                        return false;
+                      }
+                      // Permanent delete -- confirm
+                      return await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                          ),
+                          title: Text(l10n.permanentlyDelete),
+                          content: Text(
+                            l10n.permanentlyDeleteNoteConfirm(
+                              note.plainTitle ?? l10n.untitled,
+                            ),
+                            style: AppTextStyles.body,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(false),
+                              child: Text(l10n.cancel),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(true),
+                              child: Text(
+                                l10n.delete,
+                                style: const TextStyle(color: AppColors.error),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    onDismissed: (direction) {
+                      if (direction == DismissDirection.endToStart) {
+                        try {
+                          db.notesDao.permanentlyDeleteNote(note.id);
+                          AppSnackBar.info(
+                            context,
+                            message: l10n.permanentlyDelete,
+                          );
+                        } catch (e) {
                           AppSnackBar.error(
                             context,
-                            message: l10n.failedToRestoreError(ErrorDisplay.displayMessage(e, l10n)),
+                            message: l10n.failedToDeleteError(ErrorDisplay.displayMessage(e, l10n)),
                           );
                         }
                       }
-                      return false;
-                    }
-                    // Permanent delete -- confirm
-                    return await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: Text(l10n.permanentlyDelete),
-                        content: Text(
-                          l10n.permanentlyDeleteNoteConfirm(
-                            note.plainTitle ?? l10n.untitled,
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(false),
-                            child: Text(l10n.cancel),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(true),
-                            child: Text(l10n.delete),
+                    },
+                    background: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withAlpha(AppAlpha.medium),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(left: AppSpacing.lg),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.restore, color: AppColors.success),
+                          const SizedBox(height: AppSpacing.s2),
+                          Text(
+                            l10n.restore,
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: 11,
+                              color: AppColors.success,
+                            ),
                           ),
                         ],
                       ),
-                    );
-                  },
-                  onDismissed: (direction) {
-                    if (direction == DismissDirection.endToStart) {
-                      try {
-                        db.notesDao.permanentlyDeleteNote(note.id);
-                        AppSnackBar.info(
-                          context,
-                          message: l10n.permanentlyDelete,
-                        );
-                      } catch (e) {
-                        AppSnackBar.error(
-                          context,
-                          message: l10n.failedToDeleteError(ErrorDisplay.displayMessage(e, l10n)),
-                        );
-                      }
-                    }
-                  },
-                  background: Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withAlpha(AppAlpha.medium),
-                      borderRadius: cardRadius,
                     ),
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(left: 24),
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.restore, color: colorScheme.primary),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.restore,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colorScheme.primary,
+                    secondaryBackground: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withAlpha(AppAlpha.medium),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: AppSpacing.lg),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.delete_forever, color: AppColors.error),
+                          const SizedBox(height: AppSpacing.s2),
+                          Text(
+                            l10n.permanentlyDelete,
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: 11,
+                              color: AppColors.error,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  secondaryBackground: Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.error.withAlpha(AppAlpha.medium),
-                      borderRadius: cardRadius,
-                    ),
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 24),
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.delete_forever, color: colorScheme.error),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.permanentlyDelete,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colorScheme.error,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  child: Card(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: InkWell(
-                      borderRadius: cardRadius,
+                    child: GestureDetector(
                       onTap: () => _showNoteActions(context, note, db),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkCardBg
+                              : AppColors.lightCardBg,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          boxShadow: AppShadows.smOf(Theme.of(context).brightness),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  margin: const EdgeInsets.only(
+                                    right: AppSpacing.s12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.error.withAlpha(12),
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.xs,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.delete_outline,
+                                    size: 14,
+                                    color: AppColors.error.withAlpha(140),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.body.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             if (preview.isNotEmpty) ...[
-                              const SizedBox(height: 4),
+                              const SizedBox(height: AppSpacing.s8),
                               Text(
                                 preview,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: colorScheme.onSurface
-                                          .withAlpha(AppAlpha.nearOpaque),
-                                    ),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextTertiary
+                                      : AppColors.lightTextTertiary,
+                                ),
                               ),
                             ],
-                            const SizedBox(height: 6),
+                            const SizedBox(height: AppSpacing.s8),
                             Text(
                               note.deletedAt != null
                                   ? l10n.deletedOn(_formatDate(note.deletedAt!))
                                   : '',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: colorScheme.onSurface
-                                        .withAlpha(AppAlpha.prominent),
-                                  ),
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: 12,
+                                color: isDark
+                                    ? AppColors.darkTextTertiary
+                                    : AppColors.lightTextTertiary,
+                              ),
                             ),
                           ],
                         ),
@@ -306,15 +366,43 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
     AppDatabase db,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.topXl,
+      ),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Drag handle
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.s8, bottom: AppSpacing.s4),
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: (isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary)
+                      .withAlpha(80),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
             ListTile(
-              leading: const Icon(Icons.restore),
-              title: Text(l10n.restore),
+              leading: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withAlpha(15),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                ),
+                child: const Icon(Icons.restore, size: 18, color: AppColors.success),
+              ),
+              title: Text(l10n.restore, style: AppTextStyles.body),
               onTap: () async {
                 try {
                   await db.notesDao.restoreNote(note.id);
@@ -334,24 +422,37 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               },
             ),
             ListTile(
-              leading: Icon(
-                Icons.delete_forever,
-                color: Theme.of(context).colorScheme.error,
+              leading: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withAlpha(15),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                ),
+                child: const Icon(
+                  Icons.delete_forever,
+                  size: 18,
+                  color: AppColors.error,
+                ),
               ),
               title: Text(
                 l10n.permanentlyDelete,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                style: const TextStyle(color: AppColors.error),
               ),
               onTap: () async {
                 Navigator.of(ctx).pop();
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (dialogCtx) => AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                    ),
                     title: Text(l10n.permanentlyDelete),
                     content: Text(
                       l10n.permanentlyDeleteNoteConfirm(
                         note.plainTitle ?? l10n.untitled,
                       ),
+                      style: AppTextStyles.body,
                     ),
                     actions: [
                       TextButton(
@@ -360,7 +461,10 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.of(dialogCtx).pop(true),
-                        child: Text(l10n.delete),
+                        child: Text(
+                          l10n.delete,
+                          style: const TextStyle(color: AppColors.error),
+                        ),
                       ),
                     ],
                   ),
@@ -385,6 +489,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 }
               },
             ),
+            const SizedBox(height: AppSpacing.s8),
           ],
         ),
       ),
@@ -401,8 +506,14 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
         title: Text(l10n.emptyTrash),
-        content: Text(l10n.emptyTrashConfirm),
+        content: Text(
+          l10n.emptyTrashConfirm,
+          style: AppTextStyles.body,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -416,7 +527,10 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 AppSnackBar.info(context, message: l10n.emptyTrash);
               }
             },
-            child: Text(l10n.delete),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),

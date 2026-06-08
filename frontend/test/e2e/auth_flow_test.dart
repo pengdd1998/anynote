@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/widgets/pressable_scale.dart';
 import 'package:anynote/features/auth/presentation/login_screen.dart';
 import 'package:anynote/features/auth/presentation/register_screen.dart';
 import '../helpers/test_app_helper.dart';
@@ -32,8 +33,8 @@ void main() {
       // Two text form fields: email and password.
       expect(find.byType(TextFormField), findsNWidgets(2));
 
-      // FilledButton for sign in.
-      expect(find.byType(FilledButton), findsOneWidget);
+      // PressableScale for sign in.
+      expect(find.byType(PressableScale), findsOneWidget);
 
       // Two TextButtons: register link and recover link.
       expect(find.byType(TextButton), findsNWidgets(2));
@@ -65,7 +66,12 @@ void main() {
       );
 
       // Tap the sign-in button without filling fields.
-      await tester.tap(find.byType(FilledButton));
+      // PressableScale uses GestureDetector, so we find the button by its
+      // text content and ensure it is visible before tapping.
+      final signInButton = find.byType(PressableScale);
+      await tester.ensureVisible(signInButton);
+      await tester.pump();
+      await tester.tap(signInButton);
       await tester.pumpAndSettle();
 
       // Validation messages should appear for both email and password.
@@ -140,7 +146,10 @@ void main() {
 
       // Tap sign in -- this triggers the async crypto flow which will
       // fail because no salt is stored, but the widget should not crash.
-      await tester.tap(find.byType(FilledButton));
+      final signInBtn = find.byType(PressableScale);
+      await tester.ensureVisible(signInBtn);
+      await tester.pump();
+      await tester.tap(signInBtn);
       await tester.pump();
 
       // The widget tree should still be intact.
@@ -166,7 +175,10 @@ void main() {
       await tester.enterText(passwordField, 'password123');
       await tester.pump();
 
-      await tester.tap(find.byType(FilledButton));
+      final submitBtn = find.byType(PressableScale);
+      await tester.ensureVisible(submitBtn);
+      await tester.pump();
+      await tester.tap(submitBtn);
       await tester.pump(const Duration(seconds: 1));
 
       // The widget tree should still be intact after submission.
@@ -207,8 +219,8 @@ void main() {
       // Four text form fields: email, username, password, confirm password.
       expect(find.byType(TextFormField), findsNWidgets(4));
 
-      // FilledButton for create account.
-      expect(find.byType(FilledButton), findsOneWidget);
+      // PressableScale for create account.
+      expect(find.byType(PressableScale), findsOneWidget);
 
       // TextButton for "already have account".
       expect(find.byType(TextButton), findsOneWidget);
@@ -240,7 +252,10 @@ void main() {
       );
 
       // Tap create account without filling fields.
-      await tester.tap(find.byType(FilledButton));
+      final createAccountButton = find.byType(PressableScale);
+      await tester.ensureVisible(createAccountButton);
+      await tester.pump();
+      await tester.tap(createAccountButton);
       await tester.pumpAndSettle();
 
       // Multiple fields should show validation errors containing "required".
@@ -269,7 +284,10 @@ void main() {
       await tester.enterText(passwordFields.first, 'short');
       await tester.pump();
 
-      await tester.tap(find.byType(FilledButton));
+      final submitButton = find.byType(PressableScale);
+      await tester.ensureVisible(submitButton);
+      await tester.pump();
+      await tester.tap(submitButton);
       await tester.pumpAndSettle();
 
       // The screen should still be rendered (validation failed).

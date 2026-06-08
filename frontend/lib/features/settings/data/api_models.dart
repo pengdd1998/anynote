@@ -157,8 +157,16 @@ class SyncStatusInfo {
   factory SyncStatusInfo.fromJson(Map<String, dynamic> json) => SyncStatusInfo(
         latestVersion: json['latest_version'] as int? ?? 0,
         totalItems: json['total_items'] as int? ?? 0,
-        lastSyncedAt: json['last_synced_at'] != null
-            ? DateTime.parse(json['last_synced_at'] as String)
-            : null,
+        lastSyncedAt: _parseNullableDateTime(json['last_synced_at']),
       );
+}
+
+/// Parse a DateTime that may be null or a zero-value (e.g. Go's
+/// `"0001-01-01T00:00:00.000Z"`). Returns null for missing or zero dates.
+DateTime? _parseNullableDateTime(dynamic value) {
+  if (value == null) return null;
+  final dt = DateTime.tryParse(value as String);
+  if (dt == null) return null;
+  if (dt.year <= 1) return null;
+  return dt;
 }

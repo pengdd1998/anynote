@@ -10,11 +10,11 @@ class RGANode {
 
   /// Left neighbor's ID at time of insertion, used for ordering.
   /// Empty string means this node is anchored at the start of the document.
-  final String leftOriginId;
+  String leftOriginId;
 
   /// Right neighbor's ID at time of insertion, used as a scan boundary.
   /// Empty string means no right neighbor was present (append to end).
-  final String rightOriginId;
+  String rightOriginId;
 
   /// Site ID of the agent that created this node.
   final String siteId;
@@ -94,8 +94,21 @@ class CRDTText {
   /// Map from node ID to its index in [_nodes] for O(1) position lookup.
   final Map<String, int> _indexMap = {};
 
+  /// Ordered list of visible (non-deleted) node IDs for O(1) neighbor lookup.
+  /// Maps visible position → node ID.
+  final List<String> _visibleOrder = [];
+
   /// Sentinel ID for the document start (leftOriginId of the first character).
   static const String _startSentinel = '';
+
+  /// Cached text content, lazily recomputed after mutation.
+  String? _cachedText;
+
+  /// Whether [_cachedText] is stale and must be recomputed on next access.
+  bool _textDirty = true;
+
+  /// Maximum number of tombstones to retain after pruning.
+  static const int _maxTombstones = 1000;
 
   CRDTText(this.siteId);
 
@@ -103,14 +116,33 @@ class CRDTText {
   int get clock => _clock;
 
   /// The current text content with tombstones excluded.
-  String get text =>
-      _nodes.where((n) => !n.isDeleted).map((n) => n.value).join();
+  ///
+  /// Returns a lazily-cached value that is invalidated on any mutation.
+  String get text {
+    if (_textDirty) {
+      final buf = StringBuffer();
+      for (final n in _nodes) {
+        if (!n.isDeleted) {
+          buf.write(n.value);
+        }
+      }
+      _cachedText = buf.toString();
+      _textDirty = false;
+    }
+    return _cachedText!;
+  }
 
   /// Number of nodes (including tombstones).
   int get nodeCount => _nodes.length;
 
   /// Whether the document contains any nodes.
   bool get isEmpty => _nodes.isEmpty;
+
+  /// Mark the text cache as stale. Must be called after any mutation.
+  void _invalidateTextCache() {
+    _textDirty = true;
+    _cachedText = null;
+  }
 
   /// Insert [chars] at visible [index] (local operation).
   ///
@@ -142,6 +174,7 @@ class CRDTText {
       leftId = node.id;
     }
 
+    _invalidateTextCache();
     return newNodes;
   }
 
@@ -150,17 +183,28 @@ class CRDTText {
   /// Marks the nodes as tombstones. Returns the list of tombstoned node IDs
   /// so the caller can broadcast deletions to remote sites.
   List<String> localDelete(int index, int length) {
-    final deletedIds = <String>[];
-    final visibleNodes = _nodes.where((n) => !n.isDeleted).toList();
+    final deletedIds = <String>{};
+    var visibleCount = 0;
+    var remaining = length;
 
-    for (var i = 0; i < length && (index + i) < visibleNodes.length; i++) {
-      final node = visibleNodes[index + i];
-      node.isDeleted = true;
-      node.value = '';
-      deletedIds.add(node.id);
+    for (final node in _nodes) {
+      if (remaining <= 0) break;
+      if (!node.isDeleted) {
+        if (visibleCount >= index) {
+          node.isDeleted = true;
+          node.value = '';
+          deletedIds.add(node.id);
+          remaining--;
+        }
+        visibleCount++;
+      }
     }
 
-    return deletedIds;
+    if (deletedIds.isNotEmpty) {
+      _visibleOrder.removeWhere((id) => deletedIds.contains(id));
+      _invalidateTextCache();
+    }
+    return deletedIds.toList();
   }
 
   /// Apply a remote insert operation.
@@ -185,15 +229,18 @@ class CRDTText {
     final insertIndex = _computeInsertIndex(copy);
     _insertAtIndex(insertIndex, copy);
     _updateClock(copy.clock);
+    _invalidateTextCache();
     return true;
   }
 
   /// Apply a remote delete operation by node ID.
   void remoteDelete(String nodeId) {
     final node = _nodeMap[nodeId];
-    if (node != null) {
+    if (node != null && !node.isDeleted) {
       node.isDeleted = true;
       node.value = '';
+      _visibleOrder.remove(nodeId);
+      _invalidateTextCache();
     }
   }
 
@@ -214,6 +261,11 @@ class CRDTText {
   /// This ensures deterministic convergence regardless of the order in
   /// which operations arrive.
   void merge(List<RGANode> remoteNodes) {
+    if (remoteNodes.isEmpty) return;
+
+    // Track whether any mutation occurred to minimize cache invalidations.
+    var mutated = false;
+
     // Build a queue of nodes to process. We use a fixed-point loop:
     // keep trying to insert deferred nodes until no more progress is made.
     final pending = <RGANode>[];
@@ -225,6 +277,7 @@ class CRDTText {
         if (remoteNode.isDeleted && !existing.isDeleted) {
           existing.isDeleted = true;
           existing.value = '';
+          mutated = true;
         }
         continue;
       }
@@ -245,13 +298,14 @@ class CRDTText {
             if (!existing.isDeleted) {
               existing.isDeleted = true;
               existing.value = '';
+              mutated = true;
             }
           }
           madeProgress = true;
           continue;
         }
 
-        final inserted = remoteInsert(node);
+        final inserted = _remoteInsertInternal(node);
         if (inserted) {
           if (node.isDeleted) {
             // The node was integrated but should be a tombstone.
@@ -260,6 +314,7 @@ class CRDTText {
             n.isDeleted = true;
             n.value = '';
           }
+          mutated = true;
           madeProgress = true;
         } else {
           stillPending.add(node);
@@ -283,7 +338,13 @@ class CRDTText {
           n.isDeleted = true;
           n.value = '';
         }
+        mutated = true;
       }
+    }
+
+    if (mutated) {
+      _rebuildVisibleOrder();
+      _invalidateTextCache();
     }
   }
 
@@ -305,6 +366,94 @@ class CRDTText {
     }
     crdt._rebuildIndexMap();
     return crdt;
+  }
+
+  /// Remove old tombstones to bound memory growth.
+  ///
+  /// Keeps at most [_maxTombstones] tombstones, removing the oldest ones first.
+  /// Because tombstones are referenced by leftOriginId / rightOriginId of
+  /// subsequent nodes, only tombstones at the boundary of the visible region
+  /// are safe to remove. This method re-anchors any references and rebuilds
+  /// internal indices.
+  ///
+  /// Returns the number of tombstones removed.
+  int pruneTombstones() {
+    final tombstoneCount = _nodes.where((n) => n.isDeleted).length;
+    if (tombstoneCount <= _maxTombstones) return 0;
+
+    final toRemove = tombstoneCount - _maxTombstones;
+    final removedIds = <String>{};
+
+    // Remove the oldest tombstones (first encountered in _nodes order).
+    var removed = 0;
+    final newNodes = <RGANode>[];
+    for (final node in _nodes) {
+      if (node.isDeleted && removed < toRemove) {
+        removedIds.add(node.id);
+        _nodeMap.remove(node.id);
+        removed++;
+      } else {
+        newNodes.add(node);
+      }
+    }
+
+    if (removed == 0) return 0;
+
+    _nodes
+      ..clear()
+      ..addAll(newNodes);
+
+    // Re-anchor references: any node whose leftOriginId or rightOriginId
+    // refers to a removed tombstone must be rewired to the nearest surviving
+    // neighbor in the same direction.
+    for (final node in _nodes) {
+      if (removedIds.contains(node.leftOriginId)) {
+        node.leftOriginId = _findNearestSurvivingAncestor(
+          node.leftOriginId,
+          removedIds,
+          goLeft: true,
+        );
+      }
+      if (removedIds.contains(node.rightOriginId)) {
+        node.rightOriginId = _findNearestSurvivingAncestor(
+          node.rightOriginId,
+          removedIds,
+          goLeft: false,
+        );
+      }
+    }
+
+    _rebuildIndexMap();
+    _invalidateTextCache();
+    return removed;
+  }
+
+  /// Find the nearest surviving ancestor for a pruned node reference.
+  ///
+  /// When a tombstone is removed, nodes that reference it via leftOriginId
+  /// or rightOriginId need to be rewired. This walks the _nodes list to find
+  /// the nearest surviving (non-removed) node in the given direction.
+  String _findNearestSurvivingAncestor(
+    String prunedId,
+    Set<String> removedIds, {
+    required bool goLeft,
+  }) {
+    final idx = _indexMap[prunedId];
+    if (idx == null) return _startSentinel;
+
+    if (goLeft) {
+      for (var i = idx - 1; i >= 0; i--) {
+        final nodeId = _nodes[i].id;
+        if (!removedIds.contains(nodeId)) return nodeId;
+      }
+      return _startSentinel;
+    } else {
+      for (var i = idx + 1; i < _nodes.length; i++) {
+        final nodeId = _nodes[i].id;
+        if (!removedIds.contains(nodeId)) return nodeId;
+      }
+      return _startSentinel;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -330,62 +479,110 @@ class CRDTText {
     _clock++;
   }
 
-  /// Rebuild [_indexMap] from scratch.
+  /// Rebuild [_indexMap] and [_visibleOrder] from scratch.
   void _rebuildIndexMap() {
     _indexMap.clear();
+    _visibleOrder.clear();
     for (var i = 0; i < _nodes.length; i++) {
       _indexMap[_nodes[i].id] = i;
+      if (!_nodes[i].isDeleted) {
+        _visibleOrder.add(_nodes[i].id);
+      }
     }
   }
 
   /// Find the ID of the left neighbor at the given visible [index].
+  ///
+  /// Uses [_visibleOrder] for O(1) lookup instead of scanning all nodes.
   String _findLeftNeighborId(int index) {
-    if (index <= 0) return _startSentinel;
-
-    var visibleCount = 0;
-    for (final node in _nodes) {
-      if (!node.isDeleted) {
-        visibleCount++;
-        if (visibleCount == index) {
-          return node.id;
-        }
-      }
-    }
-
-    // Index is at or past the end; use the last visible node.
-    for (var i = _nodes.length - 1; i >= 0; i--) {
-      if (!_nodes[i].isDeleted) {
-        return _nodes[i].id;
-      }
-    }
-    return _startSentinel;
+    if (index <= 0 || _visibleOrder.isEmpty) return _startSentinel;
+    if (index - 1 < _visibleOrder.length) return _visibleOrder[index - 1];
+    return _visibleOrder.isNotEmpty ? _visibleOrder.last : _startSentinel;
   }
 
   /// Find the ID of the right neighbor at the given visible [index].
+  ///
+  /// Uses [_visibleOrder] for O(1) lookup instead of scanning all nodes.
   String _findRightNeighborId(int index) {
-    var visibleCount = 0;
-    for (final node in _nodes) {
-      if (!node.isDeleted) {
-        if (visibleCount == index) {
-          return node.id;
-        }
-        visibleCount++;
-      }
-    }
+    if (index < _visibleOrder.length) return _visibleOrder[index];
     return _startSentinel;
   }
 
-  /// Insert a node at the given index and update bookkeeping.
+  /// Compute the visible position corresponding to a node index in [_nodes].
+  ///
+  /// Counts non-deleted nodes from the start up to [nodeIndex].
+  int _visibleIndexForNodeIndex(int nodeIndex) {
+    var visiblePos = 0;
+    for (var i = 0; i < nodeIndex && i < _nodes.length; i++) {
+      if (!_nodes[i].isDeleted) visiblePos++;
+    }
+    return visiblePos;
+  }
+
+  /// Rebuild [_visibleOrder] from scratch based on current node state.
+  void _rebuildVisibleOrder() {
+    _visibleOrder.clear();
+    for (final n in _nodes) {
+      if (!n.isDeleted) _visibleOrder.add(n.id);
+    }
+  }
+
+  /// Insert a node at the given index with incremental index map update.
+  ///
+  /// Instead of rebuilding the entire [_indexMap], increments all indices
+  /// at or above [index] by one and sets the new entry. Also maintains
+  /// [_visibleOrder] for fast neighbor lookups.
   void _insertAtIndex(int index, RGANode node) {
     _nodes.insert(index, node);
     _nodeMap[node.id] = node;
-    _rebuildIndexMap();
+
+    // Incremental index update: shift all indices >= index by 1.
+    for (final entry in _indexMap.entries) {
+      if (entry.value >= index) {
+        _entriesToUpdateBuffer.add(entry.key);
+      }
+    }
+    for (final key in _entriesToUpdateBuffer) {
+      _indexMap[key] = _indexMap[key]! + 1;
+    }
+    _entriesToUpdateBuffer.clear();
+    _indexMap[node.id] = index;
+
+    // Update visible order.
+    if (!node.isDeleted) {
+      final visiblePos = _visibleIndexForNodeIndex(index);
+      _visibleOrder.insert(visiblePos, node.id);
+    }
   }
+
+  /// Scratch buffer for [_insertAtIndex] to avoid per-call allocation.
+  final List<String> _entriesToUpdateBuffer = [];
 
   /// Insert a locally-created node into [_nodes] at the correct position.
   void _insertNode(RGANode node) {
     final insertIndex = _computeInsertIndex(node);
     _insertAtIndex(insertIndex, node);
+  }
+
+  /// Internal variant of [remoteInsert] used by [merge] that skips cache
+  /// invalidation. The caller (merge) handles cache invalidation in a
+  /// single batch after all nodes are processed.
+  bool _remoteInsertInternal(RGANode node) {
+    if (_nodeMap.containsKey(node.id)) return true;
+
+    if (node.leftOriginId.isNotEmpty && !_nodeMap.containsKey(node.leftOriginId)) {
+      return false;
+    }
+
+    if (node.rightOriginId.isNotEmpty && !_nodeMap.containsKey(node.rightOriginId)) {
+      return false;
+    }
+
+    final copy = _copyNode(node);
+    final insertIndex = _computeInsertIndex(copy);
+    _insertAtIndex(insertIndex, copy);
+    _updateClock(copy.clock);
+    return true;
   }
 
   /// Core RGA algorithm: compute where [node] should be inserted.

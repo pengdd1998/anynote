@@ -167,6 +167,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
         onSubmitted: (value) {
           ref.read(operatorSearchQueryProvider.notifier).state = value;
         },
+        scrollPadding: const EdgeInsets.only(bottom: 120),
       ),
     );
   }
@@ -714,6 +715,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
             ),
           ),
           autofocus: true,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
         ),
         actions: [
           TextButton(
@@ -894,13 +896,13 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
   Widget _buildTagChips(List<Tag> tags, bool isDark) {
     final displayTags = tags.take(3).toList();
     final accentBgs = [
-      AppColors.accentLavenderBg,
+      AppColors.accentPeachBg,
       AppColors.accentYellowBg,
       AppColors.accentMintBg,
       AppColors.accentPeachBg,
     ];
     final accentTexts = [
-      AppColors.accentLavenderText,
+      AppColors.accentPeachText,
       AppColors.accentYellowText,
       AppColors.accentMintText,
       AppColors.accentPeachText,

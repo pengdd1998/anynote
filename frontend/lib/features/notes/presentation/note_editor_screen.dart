@@ -22,6 +22,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_animation.dart';
 import '../../../features/collab/presentation/share_dialog.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/tts/speech_service.dart';
@@ -155,7 +156,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   // Reminder state for the current note.
   ReminderEntry? _currentReminder;
-  Stream<ReminderEntry?>? _reminderStream;
+  StreamSubscription<ReminderEntry?>? _reminderSub;
+  StreamSubscription<bool>? _lockSub;
 
   // Find & replace state.
   bool _showFindReplace = false;
@@ -217,10 +219,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _initLockWatcher();
       // Wire Ctrl+P to open the print preview sheet.
       if (!_isNew && _noteId != null) {
-        AppKeyboardShortcuts.setPrintCallback(() => _showPrintPreview(context));
+        AppKeyboardShortcuts.setPrintCallback(() => _showPrintPreview(context), owner: this);
       }
       // Wire Ctrl+F to open the find/replace bar in the editor.
-      AppKeyboardShortcuts.setFindCallback(_openFindReplace);
+      AppKeyboardShortcuts.setFindCallback(_openFindReplace, owner: this);
     });
   }
 
@@ -456,9 +458,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// updates reactively when a reminder is set or removed.
   void _initReminderWatcher() {
     if (_noteId == null || _isNew) return;
+    _reminderSub?.cancel();
     final service = ref.read(reminderServiceProvider);
-    _reminderStream = service.watchReminderForNote(_noteId!);
-    _reminderStream?.listen((reminder) {
+    final stream = service.watchReminderForNote(_noteId!);
+    _reminderSub = stream.listen((reminder) {
       if (mounted) {
         setState(() => _currentReminder = reminder);
       }
@@ -490,8 +493,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Check the lock state for the current note and watch for changes.
   void _initLockWatcher() {
     if (_noteId == null || _isNew) return;
+    _lockSub?.cancel();
     final db = ref.read(databaseProvider);
-    db.notePropertiesDao.watchNoteLocked(_noteId!).listen((locked) {
+    _lockSub = db.notePropertiesDao.watchNoteLocked(_noteId!).listen((locked) {
       if (mounted) {
         setState(() => _isLocked = locked);
       }
@@ -766,6 +770,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _debounce?.cancel();
     _presenceDebounce?.cancel();
     _countDebounceTimer?.cancel();
+    _wikiLinkDebounce?.cancel();
+    _transclusionDebounce?.cancel();
+    _reminderSub?.cancel();
+    _lockSub?.cancel();
     _titleController.dispose();
     _contentController.dispose();
     _quillController.dispose();
@@ -785,8 +793,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Leave presence room.
     ref.read(presenceProvider.notifier).leaveRoom();
     // Clear keyboard shortcut callbacks registered by this screen.
-    AppKeyboardShortcuts.clearPrintCallback();
-    AppKeyboardShortcuts.clearFindCallback();
+    AppKeyboardShortcuts.unregisterAll(this);
     // Restore system UI when leaving the editor.
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
@@ -902,6 +909,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         extendBodyBehindAppBar: _isZenMode,
         extendBody: _isZenMode,
         appBar: _isZenMode
@@ -1082,7 +1090,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           child: Padding(
             padding: EdgeInsets.only(
               // In zen mode, add top padding for status bar area.
-              top: _isZenMode ? MediaQuery.of(context).padding.top + 8 : 0,
+              top: _isZenMode ? MediaQuery.of(context).padding.top + AppSpacing.sm : 0,
             ),
             child: Center(
               child: ConstrainedBox(
@@ -1142,6 +1150,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                 ? AppColors.darkTextPrimary
                                 : AppColors.lightTextPrimary,
                           ),
+                          scrollPadding: const EdgeInsets.only(bottom: 120),
                         ),
                       ),
                     ),
@@ -1228,6 +1237,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                                     ),
                                                     onChanged: (_) =>
                                                         _scheduleTypewriterScroll(),
+                                                    scrollPadding: const EdgeInsets.only(bottom: 120),
                                                   ),
                                                 ),
                                   ),
@@ -1254,7 +1264,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           ),
 
         // Floating formatting toolbar — only in rich mode, not preview/zen.
-        if (!_isZenMode && _useRichEditor && !_isPreview)
+        if (!_isZenMode && _useRichEditor && !_isPreview) ...[
+          // Gentle warm-tinted divider between editor and toolbar.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            child: Divider(
+              height: AppSpacing.s2,
+              thickness: 0.5,
+              color: isDark
+                  ? AppColors.darkDivider.withAlpha(80)
+                  : AppColors.lightDivider.withAlpha(120),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.s16,
@@ -1292,6 +1313,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ),
             ),
           ),
+        ],
         // Consolidated bottom status bar.
         _EditorBottomBar(
           isSaving: _isSaving,
@@ -1717,27 +1739,49 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Replace the selected text, or all text if [replaceAll] is true.
   void _replaceSelectedOrAllText(String newText, bool replaceAll) {
-    final controller = _effectiveContentController;
-    if (replaceAll) {
-      controller.text = newText;
+    if (_useRichEditor) {
+      if (replaceAll) {
+        _quillController.clear();
+        _quillController.document.insert(0, newText);
+      } else {
+        _quillController.replaceText(
+          _quillController.selection.start,
+          _quillController.selection.end - _quillController.selection.start,
+          newText,
+          TextSelection.collapsed(
+            offset: _quillController.selection.start + newText.length,
+          ),
+        );
+      }
     } else {
-      final sel = controller.selection;
-      controller.text = controller.text.replaceRange(
-        sel.start,
-        sel.end,
-        newText,
-      );
+      final controller = _effectiveContentController;
+      if (replaceAll) {
+        controller.text = newText;
+      } else {
+        final sel = controller.selection;
+        controller.text = controller.text.replaceRange(
+          sel.start,
+          sel.end,
+          newText,
+        );
+      }
     }
     _saveNote();
   }
 
   /// Insert text below the current cursor position.
   void _insertTextBelow(String text) {
-    final controller = _effectiveContentController;
-    final cursorPos = controller.selection.end;
-    final insertPos = cursorPos >= 0 ? cursorPos : controller.text.length;
-    controller.text =
-        '${controller.text.substring(0, insertPos)}\n$text${controller.text.substring(insertPos)}';
+    if (_useRichEditor) {
+      final pos = _quillController.selection.end;
+      final insertPos = pos >= 0 ? pos : _quillController.document.toPlainText().length;
+      _quillController.document.insert(insertPos, '\n$text');
+    } else {
+      final controller = _effectiveContentController;
+      final cursorPos = controller.selection.end;
+      final insertPos = cursorPos >= 0 ? cursorPos : controller.text.length;
+      controller.text =
+          '${controller.text.substring(0, insertPos)}\n$text${controller.text.substring(insertPos)}';
+    }
     _saveNote();
   }
 
@@ -1993,14 +2037,22 @@ class _EditorBottomBar extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          border: Border(
+            top: BorderSide(
+              color: isDark
+                  ? AppColors.darkDivider.withAlpha(80)
+                  : AppColors.lightDivider.withAlpha(100),
+              width: 0.5,
+            ),
+          ),
         ),
-        height: 40,
+        height: AppSpacing.s40,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
         child: Row(
           children: [
             // Save status chip (compact inline).
             _CompactSaveChip(isSaving: isSaving, isDirty: isDirty),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.s12),
             // Stats section — scrollable to prevent overflow on narrow screens.
             Expanded(
               child: SingleChildScrollView(
@@ -2035,13 +2087,18 @@ class _EditorBottomBar extends StatelessWidget {
               label: l10n.toggleWritingStats,
               child: IconButton(
                 icon: Icon(
-                  isStatsExpanded ? Icons.bar_chart : Icons.bar_chart_outlined,
-                  size: 16,
+                  isStatsExpanded
+                      ? Icons.bar_chart_rounded
+                      : Icons.bar_chart_outlined,
+                  size: 18,
                   color: captionColor,
                 ),
                 tooltip: l10n.toggleWritingStats,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                constraints: const BoxConstraints(
+                  minWidth: AppSpacing.minTouchTarget,
+                  minHeight: AppSpacing.s32,
+                ),
                 onPressed: onToggleStats,
               ),
             ),
@@ -2053,14 +2110,16 @@ class _EditorBottomBar extends StatelessWidget {
                   label: l10n.enterZenMode,
                   child: IconButton(
                     icon: Icon(
-                      Icons.fullscreen,
-                      size: 18,
+                      Icons.fullscreen_rounded,
+                      size: 20,
                       color: captionColor,
                     ),
                     tooltip: l10n.enterZenMode,
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 32, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: AppSpacing.minTouchTarget,
+                      minHeight: AppSpacing.s32,
+                    ),
                     onPressed: onToggleZenMode,
                   ),
                 ),
@@ -2120,10 +2179,10 @@ class _CompactSaveChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         icon,
-        const SizedBox(width: 3),
+        const SizedBox(width: AppSpacing.s4),
         Text(
           label,
-          style: TextStyle(
+          style: AppTextStyles.caption.copyWith(
             fontSize: 11,
             color: color,
             fontFeatures: const [FontFeature.tabularFigures()],
@@ -2144,16 +2203,16 @@ class _StatText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: AppDurations.shortAnimation,
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
+      duration: AppAnimation.short,
+      switchInCurve: AppAnimation.easeOut,
+      switchOutCurve: AppAnimation.easeIn,
       transitionBuilder: (child, animation) =>
           FadeTransition(opacity: animation, child: child),
       child: Text(
         text,
         key: ValueKey(text),
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(
+        style: AppTextStyles.caption.copyWith(
           fontSize: 12,
           color: color,
           fontFeatures: const [FontFeature.tabularFigures()],
@@ -2171,10 +2230,13 @@ class _StatSep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s4),
       child: Text(
         '|',
-        style: TextStyle(color: color.withValues(alpha: 0.3), fontSize: 10),
+        style: AppTextStyles.caption.copyWith(
+          fontSize: 10,
+          color: color.withValues(alpha: 0.3),
+        ),
       ),
     );
   }

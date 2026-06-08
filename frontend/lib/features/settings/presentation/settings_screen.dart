@@ -14,6 +14,7 @@ import '../../../core/widgets/app_components.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../notes/presentation/widgets/export_sheet.dart';
 import '../../notes/presentation/widgets/import_sheet.dart';
+import '../../notifications/presentation/notification_badge.dart';
 import '../data/settings_providers.dart';
 import 'widgets/about_section.dart';
 import 'widgets/account_section.dart';
@@ -33,6 +34,14 @@ class SettingsScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () => context.push('/notifications'),
+            icon: NotificationBadge(
+              child: Icon(AppIcons.notificationsActive),
+            ),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -169,13 +178,13 @@ class SettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SettingsGroupHeader(title: 'Notifications'),
+                    SettingsGroupHeader(title: l10n.notifications),
                     SettingsGroup(
                       children: [
                         SettingsItem(
                           icon: AppIcons.notification,
-                          title: 'Notifications',
-                          subtitle: 'Configure notification preferences',
+                          title: l10n.notifications,
+                          subtitle: l10n.notificationPreferences,
                           trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/notifications'),
                         ),
@@ -466,13 +475,24 @@ class _SyncStatusSection extends ConsumerWidget {
           if (lastSynced == null) {
             return l10n.lastSyncedNever;
           }
-          return l10n.lastSynced(lastSynced.toIso8601String());
+          return l10n.lastSynced(_formatSyncTime(lastSynced));
         },
         loading: () => l10n.checking,
         error: (_, __) => l10n.unableToLoadSyncStatus,
       ),
       trailing: const SyncButton(),
     );
+  }
+
+  static String _formatSyncTime(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) {
+      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    }
+    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -546,8 +566,8 @@ class _LanguageSection extends ConsumerWidget {
                 ref.read(localeProvider.notifier).setLocale(const Locale('en'));
                 Navigator.pop(ctx);
               },
-              accentBg: AppColors.accentLavenderBg,
-              accentText: AppColors.accentLavenderText,
+              accentBg: AppColors.accentPeachBg,
+              accentText: AppColors.accentPeachText,
             ),
             _LanguageOption(
               label: l10n.chinese,
@@ -754,8 +774,8 @@ class _AppearanceSection extends ConsumerWidget {
                     .setThemeOption(ThemeOption.dark);
                 Navigator.pop(ctx);
               },
-              accentBg: AppColors.accentLavenderBg,
-              accentText: AppColors.accentLavenderText,
+              accentBg: AppColors.accentPeachBg,
+              accentText: AppColors.accentPeachText,
             ),
             _ThemeOption(
               label: l10n.themeSystem,

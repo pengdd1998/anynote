@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
@@ -183,8 +184,15 @@ class ShareService {
     final Uint8List shareKeyBytes;
     final bool hasPassword = password != null && password.isNotEmpty;
 
-    if (hasPassword) {
-      shareKeyBytes = await _deriveKeyFromPassword(sodium, password, shareId);
+    // Random salt for Argon2id (password-protected shares only).
+    // Embedded in the encrypted content so it survives server ID reassignment.
+    final Uint8List? argonSalt = hasPassword
+        ? sodium.secureRandom(sodium.crypto.pwhash.saltBytes).extractBytes()
+        : null;
+
+    if (hasPassword && argonSalt != null) {
+      shareKeyBytes =
+          await _deriveKeyFromPassword(sodium, password, argonSalt);
     } else {
       shareKeyBytes = sodium
           .secureRandom(
@@ -200,6 +208,18 @@ class ShareService {
     });
     final encryptedBase64 = await Encryptor.encrypt(plaintext, shareKeyBytes);
 
+    // For password-protected shares, prepend the Argon2id salt so it is
+    // available during decryption regardless of the server-assigned share ID.
+    final String finalEncryptedContent;
+    if (hasPassword && argonSalt != null) {
+      final encryptedRaw = base64Decode(encryptedBase64);
+      finalEncryptedContent = base64Encode(
+        Uint8List.fromList([...argonSalt, ...encryptedRaw]),
+      );
+    } else {
+      finalEncryptedContent = encryptedBase64;
+    }
+
     // Encode the share key.
     final shareKeyB64 = base64Url.encode(shareKeyBytes).replaceAll('=', '');
 
@@ -212,16 +232,24 @@ class ShareService {
       // both encrypted_content and encrypted_title fields for compatibility
       // with the server schema. The key is never sent.
       try {
-        // Hash the share key for server-side reference (allows optional
-        // password verification without exposing the actual key).
-        final shareKeyHash = sodium.crypto.genericHash.call(
-          message: shareKeyBytes,
-          outLen: 32,
-        );
-        final shareKeyHashHex = hexEncode(shareKeyHash);
+        // For password-protected shares the server expects
+        // share_key_hash = hex(SHA-256(password)) so it can verify the
+        // password via X-Share-Password header without knowing the key.
+        // For non-password shares the hash is for server-side reference only.
+        final String shareKeyHashHex;
+        if (hasPassword) {
+          final pwDigest = crypto.sha256.convert(utf8.encode(password));
+          shareKeyHashHex = pwDigest.toString();
+        } else {
+          final shareKeyHash = sodium.crypto.genericHash.call(
+            message: shareKeyBytes,
+            outLen: 32,
+          );
+          shareKeyHashHex = hexEncode(shareKeyHash);
+        }
 
         final response = await _api.createShare({
-          'encrypted_content': encryptedBase64,
+          'encrypted_content': finalEncryptedContent,
           'encrypted_title': base64Url.encode(
             Uint8List.fromList(utf8.encode(plainTitle)),
           ),
@@ -260,7 +288,7 @@ class ShareService {
     // Local-only (self-contained) mode: embed everything in the URL.
     final payloadBytes = <int>[
       ...base64Url.decode(base64Url.normalize(shareId)),
-      ...base64Decode(encryptedBase64),
+      ...base64Decode(finalEncryptedContent),
     ];
     final payload = base64Url.encode(Uint8List.fromList(payloadBytes));
     final shareLink = 'anynote://share/$payload#$fragment';
@@ -297,27 +325,30 @@ class ShareService {
     // Decode the payload.
     final payloadBytes = base64Url.decode(base64Url.normalize(payload));
 
-    // First 16 bytes are the share ID (used as salt for password derivation).
+    // Payload layout for key-based shares:
+    //   shareId (16) || nonce (24) || ciphertext+tag
+    // Payload layout for password-protected shares:
+    //   shareId (16) || argonSalt (pwhash.saltBytes) || nonce (24) || ciphertext+tag
     final nonceLength = sodium.crypto.aeadXChaCha20Poly1305IETF.nonceBytes;
-    // Payload layout: shareId (16) || nonce (24) || ciphertext+tag
-    // But Encryptor.encrypt returns base64(nonce || ciphertext+tag).
-    // Our payload is: shareId (16 raw bytes) || raw(base64decoded encrypted data).
-    // So: shareId = bytes[0..16], encrypted = bytes[16..]
+    final saltLength = sodium.crypto.pwhash.saltBytes;
 
     if (payloadBytes.length < 16 + nonceLength + 16) {
       throw const FormatException('Share payload is too short');
     }
 
-    final shareIdBytes = payloadBytes.sublist(0, 16);
-    final shareId = base64Url.encode(shareIdBytes).replaceAll('=', '');
-    final encryptedBase64 = base64Encode(payloadBytes.sublist(16));
-
-    // Determine the key.
+    // Determine the key and encrypted data offset.
     final Uint8List shareKeyBytes;
+    final int encryptedOffset;
     if (key != null && key.isNotEmpty && key != 'pwd') {
       shareKeyBytes = base64Url.decode(base64Url.normalize(key));
+      encryptedOffset = 16; // shareId only
     } else if (password != null && password.isNotEmpty) {
-      shareKeyBytes = await _deriveKeyFromPassword(sodium, password, shareId);
+      // Extract the embedded Argon2id salt (bytes 16..16+saltLength).
+      final salt = Uint8List.fromList(
+        payloadBytes.sublist(16, 16 + saltLength),
+      );
+      shareKeyBytes = await _deriveKeyFromPassword(sodium, password, salt);
+      encryptedOffset = 16 + saltLength; // shareId + salt
     } else {
       throw ArgumentError(
         'Either a key or a password must be provided to decrypt the shared note.',
@@ -325,6 +356,7 @@ class ShareService {
     }
 
     // Decrypt.
+    final encryptedBase64 = base64Encode(payloadBytes.sublist(encryptedOffset));
     final plaintext = await Encryptor.decrypt(encryptedBase64, shareKeyBytes);
     final json = jsonDecode(plaintext) as Map<String, dynamic>;
 
@@ -346,17 +378,35 @@ class ShareService {
     String? key,
     String? password,
   }) async {
-    // Fetch encrypted data from the server (no auth required).
-    final response = await _api.getSharedNote(shareId);
+    // Fetch encrypted data from the server.
+    // For password-protected shares, send the password header so the server
+    // can verify access before returning the encrypted content.
+    final response = await _api.getSharedNote(
+      shareId,
+      password: (key == null || key == 'pwd') ? password : null,
+    );
     final encryptedContent = response['encrypted_content'] as String;
 
     // Determine the key.
     final Uint8List shareKeyBytes;
+    final String actualEncryptedContent;
     if (key != null && key.isNotEmpty && key != 'pwd') {
       shareKeyBytes = base64Url.decode(base64Url.normalize(key));
+      actualEncryptedContent = encryptedContent;
     } else if (password != null && password.isNotEmpty) {
       final sodium = await SodiumSumoInit.init();
-      shareKeyBytes = await _deriveKeyFromPassword(sodium, password, shareId);
+      // Extract the embedded Argon2id salt from the first pwhash.saltBytes.
+      final contentBytes = base64Decode(encryptedContent);
+      final saltLength = sodium.crypto.pwhash.saltBytes;
+      if (contentBytes.length < saltLength) {
+        throw const FormatException(
+          'Encrypted content too short for password-protected share',
+        );
+      }
+      final salt = Uint8List.fromList(contentBytes.sublist(0, saltLength));
+      shareKeyBytes = await _deriveKeyFromPassword(sodium, password, salt);
+      // The actual encrypted data follows the salt.
+      actualEncryptedContent = base64Encode(contentBytes.sublist(saltLength));
     } else {
       throw ArgumentError(
         'Either a key or a password must be provided to decrypt the shared note.',
@@ -364,7 +414,8 @@ class ShareService {
     }
 
     // Decrypt the content blob.
-    final plaintext = await Encryptor.decrypt(encryptedContent, shareKeyBytes);
+    final plaintext =
+        await Encryptor.decrypt(actualEncryptedContent, shareKeyBytes);
     final json = jsonDecode(plaintext) as Map<String, dynamic>;
 
     return DecryptedSharedNote(
@@ -443,20 +494,13 @@ class ShareService {
   Future<Uint8List> _deriveKeyFromPassword(
     SodiumSumo sodium,
     String password,
-    String shareId,
+    Uint8List salt,
   ) async {
-    // Use the shareId as salt material for Argon2id.
-    final pwhashSalt = sodium.crypto.genericHash.call(
-      message: Uint8List.fromList(utf8.encode(shareId)),
-      outLen: sodium.crypto.pwhash.saltBytes,
-    );
-
     final passwordBytes = Int8List.fromList(utf8.encode(password));
     final key = sodium.crypto.pwhash.call(
       password: passwordBytes,
-      salt: pwhashSalt,
+      salt: salt,
       outLen: 32,
-      // OWASP-aligned parameters: opsLimitSensitive (4 ops) + memLimitModerate (256MB).
       opsLimit: sodium.crypto.pwhash.opsLimitSensitive,
       memLimit: sodium.crypto.pwhash.memLimitModerate,
       alg: CryptoPwhashAlgorithm.argon2id13,

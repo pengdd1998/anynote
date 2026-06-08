@@ -46,17 +46,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   // Accent colors per page
   static const _pageAccents = <Color>[
-    AppColors.accentLavender,
-    AppColors.accentYellow,
-    AppColors.accentMint,
     AppColors.accentPeach,
+    AppColors.accentYellow,
+    AppColors.accentCoral,
+    AppColors.accentMint,
   ];
 
   static const _pageAccentBgs = <Color>[
-    AppColors.accentLavenderBg,
-    AppColors.accentYellowBg,
-    AppColors.accentMintBg,
     AppColors.accentPeachBg,
+    AppColors.accentYellowBg,
+    AppColors.accentCoralBg,
+    AppColors.accentMintBg,
   ];
 
   static const _pageIcons = <IconData>[
@@ -583,7 +583,7 @@ class _DotIndicator extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final inactiveColor = isDark
         ? AppColors.darkDisabled
-        : const Color(0xFFD5D0C8);
+        : AppColors.lightDisabled;
 
     return Row(
       mainAxisSize: MainAxisSize.min,

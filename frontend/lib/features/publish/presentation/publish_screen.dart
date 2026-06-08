@@ -10,6 +10,7 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/keyboard_scroll_mixin.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/publish_providers.dart';
@@ -21,7 +22,8 @@ class PublishScreen extends ConsumerStatefulWidget {
   ConsumerState<PublishScreen> createState() => _PublishScreenState();
 }
 
-class _PublishScreenState extends ConsumerState<PublishScreen> {
+class _PublishScreenState extends ConsumerState<PublishScreen>
+    with WidgetsBindingObserver, KeyboardScrollMixin {
   static const _platformIcons = <String, IconData>{
     'xiaohongshu': Icons.camera_alt,
     'wechat': Icons.chat,
@@ -39,8 +41,8 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
       text: AppColors.accentMintText,
     ),
     'zhihu': _PlatformAccent(
-      bg: AppColors.accentLavenderBg,
-      text: AppColors.accentLavenderText,
+      bg: AppColors.accentPeachBg,
+      text: AppColors.accentPeachText,
     ),
     'medium': _PlatformAccent(
       bg: AppColors.accentYellowBg,
@@ -54,11 +56,23 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
   final _tagsController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _titleController.dispose();
     _contentController.dispose();
     _tagsController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    onKeyboardMetricsChanged();
   }
 
   @override
@@ -69,6 +83,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
     final publishState = ref.watch(publishActionProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(l10n.publish),
         backgroundColor: Colors.transparent,
@@ -76,18 +91,20 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         scrolledUnderElevation: 0,
         actions: const [SyncStatusWidget()],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(connectedPlatformsProvider);
-          ref.invalidate(publishHistoryProvider);
-        },
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.s4,
-            AppSpacing.md,
-            96,
-          ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(connectedPlatformsProvider);
+              ref.invalidate(publishHistoryProvider);
+            },
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s4,
+                AppSpacing.md,
+                200,
+              ),
           children: [
             // Platform cards
             _buildSectionLabel(l10n.connectedPlatforms),
@@ -109,7 +126,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                   padding: EdgeInsets.all(AppSpacing.lg),
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: AppColors.accentLavenderText,
+                    color: AppColors.accentPeachText,
                   ),
                 ),
               ),
@@ -160,16 +177,18 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                   padding: EdgeInsets.all(AppSpacing.lg),
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: AppColors.accentLavenderText,
+                    color: AppColors.accentPeachText,
                   ),
                 ),
               ),
               error: (error, _) => _buildHistoryError(error, l10n),
             ),
           ],
-        ),
-      ),
-    );
+        ),                // ListView
+      );                  // RefreshIndicator
+    },                    // builder callback
+  ),                      // LayoutBuilder
+);                        // Scaffold + return
   }
 
   Widget _buildSectionLabel(String title) {
@@ -196,8 +215,8 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
     final isSelected = _selectedPlatform == platformKey;
     final accent = _platformAccents[platformKey] ??
         const _PlatformAccent(
-          bg: AppColors.accentLavenderBg,
-          text: AppColors.accentLavenderText,
+          bg: AppColors.accentPeachBg,
+          text: AppColors.accentPeachText,
         );
 
     return GestureDetector(
@@ -279,13 +298,13 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.accentLavenderBg,
+              color: AppColors.accentPeachBg,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(
               Icons.add_link_outlined,
               size: 28,
-              color: AppColors.accentLavenderText,
+              color: AppColors.accentPeachText,
             ),
           ),
           const SizedBox(height: AppSpacing.s12),
@@ -366,6 +385,9 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         children: [
           TextField(
             controller: _titleController,
+            scrollPadding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 40,
+            ),
             decoration: InputDecoration(
               labelText: l10n.title,
               border: OutlineInputBorder(
@@ -377,6 +399,9 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
           const SizedBox(height: AppSpacing.s8),
           TextField(
             controller: _contentController,
+            scrollPadding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 40,
+            ),
             decoration: InputDecoration(
               labelText: l10n.content,
               border: OutlineInputBorder(
@@ -389,6 +414,9 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
           const SizedBox(height: AppSpacing.s8),
           TextField(
             controller: _tagsController,
+            scrollPadding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 40,
+            ),
             decoration: InputDecoration(
               labelText: l10n.tagsCommaSeparated,
               border: OutlineInputBorder(
@@ -441,6 +469,20 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
               ),
             ),
           const SizedBox(height: AppSpacing.s4),
+          if (canPublish && _contentController.text.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+              child: OutlinedButton.icon(
+                onPressed: _showPreview,
+                icon: const Icon(Icons.preview_outlined, size: 18),
+                label: Text(l10n.preview),
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                ),
+              ),
+            ),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
@@ -704,6 +746,98 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         }
       }
     }
+  }
+
+  /// Show a preview of the content as it will appear when published.
+  void _showPreview() {
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+    final tags = _tagsController.text.trim();
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(AppSpacing.s16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.preview,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(Icons.close, size: 20),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.s12),
+              if (title.isNotEmpty)
+                Text(
+                  title,
+                  style: AppTextStyles.display.copyWith(fontSize: 22),
+                ),
+              const SizedBox(height: AppSpacing.s8),
+              if (_selectedPlatform != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.s8,
+                    vertical: AppSpacing.s4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkCardBg
+                        : AppColors.lightCardBg,
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                  ),
+                  child: Text(
+                    _selectedPlatform!.toUpperCase(),
+                    style: AppTextStyles.caption.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: AppSpacing.s12),
+              Text(
+                content,
+                style: AppTextStyles.body.copyWith(height: 1.6),
+              ),
+              if (tags.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.s12),
+                Wrap(
+                  spacing: 6,
+                  children: tags
+                      .split(',')
+                      .map((t) => t.trim())
+                      .where((t) => t.isNotEmpty)
+                      .map((t) => Chip(
+                            label: Text('#$t', style: AppTextStyles.caption),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),)
+                      .toList(),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

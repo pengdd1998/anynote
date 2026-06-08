@@ -118,11 +118,16 @@ void main() {
         onAction: () => pressed = true,
       );
 
-      await tester.tap(find.text('Create'));
+      // Wait for the entrance animation to complete before tapping.
+      await tester.pumpAndSettle();
+
+      // Tap the FilledButton directly (not just the text label).
+      await tester.tap(find.byType(FilledButton));
+      await tester.pump();
       expect(pressed, isTrue);
     });
 
-    testWidgets('icon has size 64', (tester) async {
+    testWidgets('icon has size 32', (tester) async {
       await pumpEmptyState(
         tester,
         icon: Icons.inbox,
@@ -130,7 +135,7 @@ void main() {
       );
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.inbox));
-      expect(icon.size, 64);
+      expect(icon.size, 32);
     });
 
     testWidgets('renders inside Center widget', (tester) async {

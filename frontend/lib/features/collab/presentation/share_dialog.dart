@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_durations.dart';
 import '../../../core/collab/presence_indicator.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../main.dart';
 
 /// Shows a bottom sheet for sharing a note with real-time collaboration.
 ///
@@ -21,7 +25,7 @@ void showShareBottomSheet(BuildContext context, String noteId) {
     isScrollControlled: true,
     useSafeArea: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: AppRadius.topXl,
     ),
     builder: (_) => ShareNoteSheet(noteId: noteId),
   );
@@ -38,16 +42,17 @@ class ShareNoteSheet extends ConsumerStatefulWidget {
 }
 
 class _ShareNoteSheetState extends ConsumerState<ShareNoteSheet> {
-  late final String _inviteCode;
+  String? _inviteCode;
   final TextEditingController _inviteCodeController = TextEditingController();
   bool _copied = false;
+  bool _isCreating = true;
+  bool _isJoining = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    // Generate a UUID v4 invite code for this note's collaboration room.
-    _inviteCode = const Uuid().v4();
-    _inviteCodeController.text = _inviteCode;
+    _createRoom();
   }
 
   @override
@@ -56,8 +61,30 @@ class _ShareNoteSheetState extends ConsumerState<ShareNoteSheet> {
     super.dispose();
   }
 
+  Future<void> _createRoom() async {
+    setState(() => _isCreating = true);
+    try {
+      final api = ref.read(apiClientProvider);
+      final room = await api.createCollabRoom(roomName: widget.noteId);
+      if (!mounted) return;
+      setState(() {
+        _inviteCode = room['invite_code'] as String;
+        _inviteCodeController.text = _inviteCode!;
+        _isCreating = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isCreating = false;
+        _error = e.toString();
+      });
+    }
+  }
+
   void _copyInviteCode() {
-    Clipboard.setData(ClipboardData(text: _inviteCode));
+    final code = _inviteCode;
+    if (code == null) return;
+    Clipboard.setData(ClipboardData(text: code));
     setState(() => _copied = true);
 
     final l10n = AppLocalizations.of(context)!;
@@ -68,7 +95,6 @@ class _ShareNoteSheetState extends ConsumerState<ShareNoteSheet> {
       ),
     );
 
-    // Reset the copied state after the snackbar duration.
     Future.delayed(AppDurations.snackbarDuration, () {
       if (mounted) {
         setState(() => _copied = false);
@@ -76,32 +102,76 @@ class _ShareNoteSheetState extends ConsumerState<ShareNoteSheet> {
     });
   }
 
-  void _handleJoin() {
+  Future<void> _handleJoin() async {
     final enteredCode = _inviteCodeController.text.trim();
     if (enteredCode.isEmpty) return;
 
-    final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.joinSharedNote(enteredCode)),
-        duration: AppDurations.snackbarDuration,
-      ),
-    );
-
-    // In v1.2.0, backend integration is out of scope.
-    // Future: Send join request to backend with the invite code.
-    Navigator.of(context).pop();
+    setState(() => _isJoining = true);
+    try {
+      final api = ref.read(apiClientProvider);
+      await api.joinCollabRoom(inviteCode: enteredCode);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.failedToJoinRoom),
+          duration: AppDurations.snackbarDuration,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isJoining = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Get current presence in this room.
     final presenceMap = ref.watch(presenceProvider);
     final presentUsers = presenceMap.values.toList();
+    final inviteCode = _inviteCode ?? '';
+
+    if (_isCreating) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _DragHandle(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_error != null && _inviteCode == null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _DragHandle(),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Text(
+              l10n.failedToCreateRoom,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(
@@ -110,18 +180,18 @@ class _ShareNoteSheetState extends ConsumerState<ShareNoteSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _DragHandle(colorScheme: colorScheme),
+          const _DragHandle(),
           _ShareContent(
             l10n: l10n,
-            theme: theme,
-            colorScheme: colorScheme,
+            isDark: isDark,
             presentUsers: presentUsers,
             presenceText: _getPresenceText(presentUsers.length, l10n),
-            inviteCode: _inviteCode,
+            inviteCode: inviteCode,
             copied: _copied,
             onCopy: _copyInviteCode,
             inviteCodeController: _inviteCodeController,
             onJoin: _handleJoin,
+            isJoining: _isJoining,
           ),
         ],
       ),
@@ -137,18 +207,20 @@ class _ShareNoteSheetState extends ConsumerState<ShareNoteSheet> {
 
 /// Drag handle bar at the top of the bottom sheet.
 class _DragHandle extends StatelessWidget {
-  final ColorScheme colorScheme;
-
-  const _DragHandle({required this.colorScheme});
+  const _DragHandle();
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      margin: const EdgeInsets.only(top: 12),
-      width: 32,
+      margin: const EdgeInsets.only(top: AppSpacing.s12),
+      width: 36,
       height: 4,
       decoration: BoxDecoration(
-        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+        color: (isDark
+                ? AppColors.darkTextTertiary
+                : AppColors.lightTextTertiary)
+            .withAlpha(80),
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -158,8 +230,7 @@ class _DragHandle extends StatelessWidget {
 /// Main content column inside the share sheet.
 class _ShareContent extends StatelessWidget {
   final AppLocalizations l10n;
-  final ThemeData theme;
-  final ColorScheme colorScheme;
+  final bool isDark;
   final List<RoomPresence> presentUsers;
   final String presenceText;
   final String inviteCode;
@@ -167,11 +238,11 @@ class _ShareContent extends StatelessWidget {
   final VoidCallback onCopy;
   final TextEditingController inviteCodeController;
   final VoidCallback onJoin;
+  final bool isJoining;
 
   const _ShareContent({
     required this.l10n,
-    required this.theme,
-    required this.colorScheme,
+    required this.isDark,
     required this.presentUsers,
     required this.presenceText,
     required this.inviteCode,
@@ -179,51 +250,72 @@ class _ShareContent extends StatelessWidget {
     required this.onCopy,
     required this.inviteCodeController,
     required this.onJoin,
+    required this.isJoining,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.people_outline, color: colorScheme.primary),
-              const SizedBox(width: 12),
-              Text(l10n.shareNote, style: theme.textTheme.titleLarge),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.accentLavenderBg,
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                ),
+                child: const Icon(
+                  Icons.people_outline,
+                  size: 18,
+                  color: AppColors.accentLavenderText,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              Text(l10n.shareNote, style: AppTextStyles.headline),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           if (presentUsers.isNotEmpty) ...[
             _PresenceRow(
               presentUsers: presentUsers,
               presenceText: presenceText,
-              theme: theme,
-              colorScheme: colorScheme,
+              isDark: isDark,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
           ],
           _InviteCodeSection(
             inviteCode: inviteCode,
             copied: copied,
             onCopy: onCopy,
             l10n: l10n,
-            theme: theme,
-            colorScheme: colorScheme,
+            isDark: isDark,
           ),
-          const Divider(),
-          const SizedBox(height: 16),
+          Divider(
+            height: 1,
+            color: isDark
+                ? AppColors.darkDivider.withAlpha(60)
+                : AppColors.lightDivider.withAlpha(80),
+          ),
+          const SizedBox(height: AppSpacing.md),
           _JoinCodeSection(
             inviteCodeController: inviteCodeController,
             inviteCodeHint: inviteCode,
             onJoin: onJoin,
             l10n: l10n,
+            isDark: isDark,
+            isJoining: isJoining,
           ),
-          const SizedBox(height: 16),
-          _SecurityNotice(l10n: l10n, theme: theme, colorScheme: colorScheme),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
+          _SecurityNotice(l10n: l10n, isDark: isDark),
+          const SizedBox(height: AppSpacing.md),
         ],
       ),
     );
@@ -234,14 +326,12 @@ class _ShareContent extends StatelessWidget {
 class _PresenceRow extends StatelessWidget {
   final List<RoomPresence> presentUsers;
   final String presenceText;
-  final ThemeData theme;
-  final ColorScheme colorScheme;
+  final bool isDark;
 
   const _PresenceRow({
     required this.presentUsers,
     required this.presenceText,
-    required this.theme,
-    required this.colorScheme,
+    required this.isDark,
   });
 
   @override
@@ -249,11 +339,13 @@ class _PresenceRow extends StatelessWidget {
     return Row(
       children: [
         PresenceAvatarStack(users: presentUsers),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.s12),
         Text(
           presenceText,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+          style: AppTextStyles.body.copyWith(
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
           ),
         ),
       ],
@@ -267,16 +359,14 @@ class _InviteCodeSection extends StatelessWidget {
   final bool copied;
   final VoidCallback onCopy;
   final AppLocalizations l10n;
-  final ThemeData theme;
-  final ColorScheme colorScheme;
+  final bool isDark;
 
   const _InviteCodeSection({
     required this.inviteCode,
     required this.copied,
     required this.onCopy,
     required this.l10n,
-    required this.theme,
-    required this.colorScheme,
+    required this.isDark,
   });
 
   @override
@@ -286,37 +376,46 @@ class _InviteCodeSection extends StatelessWidget {
       children: [
         Text(
           l10n.anyoneWithCode,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+          style: AppTextStyles.body.copyWith(
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.s8),
         Container(
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
+            color: isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
+            borderRadius: BorderRadius.circular(AppRadius.xs),
           ),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.s12),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   inviteCode,
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: AppTextStyles.title.copyWith(
                     fontFamily: 'monospace',
                     letterSpacing: 1.2,
                   ),
                 ),
               ),
-              IconButton(
-                icon: Icon(copied ? Icons.check : Icons.copy),
-                onPressed: onCopy,
-                tooltip: l10n.copyInviteCode,
+              SizedBox(
+                width: AppSpacing.minTouchTarget,
+                height: AppSpacing.minTouchTarget,
+                child: IconButton(
+                  icon: Icon(
+                    copied ? Icons.check : Icons.copy,
+                    color: copied ? AppColors.success : AppColors.primary,
+                  ),
+                  onPressed: onCopy,
+                  tooltip: l10n.copyInviteCode,
+                ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
@@ -325,9 +424,14 @@ class _InviteCodeSection extends StatelessWidget {
             label: Text(
               copied ? l10n.inviteCodeCopied : l10n.copyInviteCode,
             ),
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.lg),
       ],
     );
   }
@@ -339,12 +443,16 @@ class _JoinCodeSection extends StatelessWidget {
   final String inviteCodeHint;
   final VoidCallback onJoin;
   final AppLocalizations l10n;
+  final bool isDark;
+  final bool isJoining;
 
   const _JoinCodeSection({
     required this.inviteCodeController,
     required this.inviteCodeHint,
     required this.onJoin,
     required this.l10n,
+    required this.isDark,
+    required this.isJoining,
   });
 
   @override
@@ -354,14 +462,17 @@ class _JoinCodeSection extends StatelessWidget {
       children: [
         Text(
           l10n.enterInviteCode,
-          style: Theme.of(context).textTheme.titleSmall,
+          style: AppTextStyles.title.copyWith(fontSize: 14),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.s8),
         TextField(
           controller: inviteCodeController,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
           decoration: InputDecoration(
             hintText: inviteCodeHint,
-            border: const OutlineInputBorder(),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
             suffixIcon: IconButton(
               icon: const Icon(Icons.login),
               onPressed: onJoin,
@@ -372,13 +483,27 @@ class _JoinCodeSection extends StatelessWidget {
           autocorrect: false,
           onSubmitted: (_) => onJoin(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.s12),
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: onJoin,
-            icon: const Icon(Icons.login),
-            label: Text(l10n.joinSharedNote('')),
+            onPressed: isJoining ? null : onJoin,
+            icon: isJoining
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white.withAlpha(180),
+                    ),
+                  )
+                : const Icon(Icons.login),
+            label: Text(isJoining ? l10n.joining : l10n.joinSharedNote('')),
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+            ),
           ),
         ),
       ],
@@ -389,13 +514,11 @@ class _JoinCodeSection extends StatelessWidget {
 /// E2E security notice and sharing instructions displayed at the bottom.
 class _SecurityNotice extends StatelessWidget {
   final AppLocalizations l10n;
-  final ThemeData theme;
-  final ColorScheme colorScheme;
+  final bool isDark;
 
   const _SecurityNotice({
     required this.l10n,
-    required this.theme,
-    required this.colorScheme,
+    required this.isDark,
   });
 
   @override
@@ -404,36 +527,39 @@ class _SecurityNotice extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.s12),
           decoration: BoxDecoration(
-            color: colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(8),
+            color: AppColors.accentLavenderBg,
+            borderRadius: BorderRadius.circular(AppRadius.xs),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
+              const Icon(
                 Icons.lock_outline,
                 size: 20,
-                color: colorScheme.onPrimaryContainer,
+                color: AppColors.accentLavenderText,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               Expanded(
                 child: Text(
                   l10n.e2eSharingNotice,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onPrimaryContainer,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.accentLavenderText,
+                    height: 1.4,
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.s8),
         Text(
           l10n.shareSecurely,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+          style: AppTextStyles.caption.copyWith(
+            color: isDark
+                ? AppColors.darkTextTertiary
+                : AppColors.lightTextTertiary,
           ),
         ),
       ],

@@ -324,12 +324,14 @@ void main() {
         final manager = SyncQueueManager(fakeDb, mockEngine);
         await manager.processQueue();
 
+        // All operations are marked in-progress, then a single push syncs them.
         expect(mockDao.markInProgressCalls, 3);
-        expect(mockEngine.pushCallCount, 3);
+        expect(mockEngine.pushCallCount, 1);
         expect(mockDao.markCompletedCalls, 3);
       });
 
       test('calls clearCompleted after processing', () async {
+        mockDao.addPendingOperation(_makeOp());
         final manager = SyncQueueManager(fakeDb, mockEngine);
         await manager.processQueue();
 
@@ -390,7 +392,7 @@ void main() {
 
         expect(mockEngine.pushCallCount, 0);
         expect(mockDao.markInProgressCalls, 0);
-        expect(mockDao.clearCompletedCalls, 1);
+        expect(mockDao.clearCompletedCalls, 0);
       });
     });
 

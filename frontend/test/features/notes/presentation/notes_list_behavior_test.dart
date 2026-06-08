@@ -29,35 +29,56 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('shows search toggle button', (tester) async {
+    testWidgets('shows search entry in overflow menu', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
 
-      // Search icon should be visible.
+      // Open the overflow menu.
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is PopupMenuButton<String> &&
+              w.icon is Icon &&
+              (w.icon as Icon).icon == Icons.more_vert,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Search option should be in the overflow menu.
       expect(find.byIcon(AppIcons.search), findsOneWidget);
 
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('shows grid/list toggle button', (tester) async {
+    testWidgets('shows grid/list toggle in overflow menu', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
 
-      // Grid/list toggle icon should be present (either grid_view or view_list).
+      // Open the overflow menu.
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is PopupMenuButton<String> &&
+              w.icon is Icon &&
+              (w.icon as Icon).icon == Icons.more_vert,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Grid/list toggle should be present in the overflow menu
+      // (either grid_view or view_list icon).
       expect(
         find.byWidgetPredicate(
           (w) =>
-              w is IconButton &&
-              (w.icon is Icon &&
-                  ((w.icon as Icon).icon == Icons.grid_view ||
-                      (w.icon as Icon).icon == Icons.view_list)),
+              w is Icon &&
+              (w.icon == Icons.grid_view || w.icon == Icons.view_list),
         ),
         findsOneWidget,
       );
@@ -66,19 +87,30 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('tapping search shows search input', (tester) async {
+    testWidgets('tapping search in menu shows search input', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
 
-      // Tap the search button.
+      // Open the overflow menu and tap the search option.
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is PopupMenuButton<String> &&
+              w.icon is Icon &&
+              (w.icon as Icon).icon == Icons.more_vert,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap the search menu item.
       await tester.tap(find.byIcon(AppIcons.search));
       await tester.pumpAndSettle();
 
-      // A TextField should now be visible for search input.
-      expect(find.byType(TextField), findsOneWidget);
+      // The app bar title should now be a TextField for search.
+      expect(find.byType(TextField), findsAtLeast(1));
 
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));
@@ -99,17 +131,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('has SyncStatusIndicator', (tester) async {
+    testWidgets('has OfflineBanner', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
 
-      // SyncStatusIndicator should be in the actions area.
+      // OfflineBanner should be in the widget tree.
       expect(
         find.byWidgetPredicate(
-          (w) => w.runtimeType.toString() == 'SyncStatusIndicator',
+          (w) => w.runtimeType.toString() == 'OfflineBanner',
         ),
         findsOneWidget,
       );
@@ -141,22 +173,43 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('tapping grid toggle changes icon', (tester) async {
+    testWidgets('tapping grid toggle in menu changes view', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
 
-      // Default is list view, so grid_view icon should show.
-      expect(find.byIcon(Icons.grid_view), findsOneWidget);
-
-      // Tap the toggle.
-      await tester.tap(find.byIcon(Icons.grid_view));
+      // Open the overflow menu.
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is PopupMenuButton<String> &&
+              w.icon is Icon &&
+              (w.icon as Icon).icon == Icons.more_vert,
+        ),
+      );
       await tester.pumpAndSettle();
 
-      // After toggle, view_list icon should show (now in grid mode).
+      // Default is grid view, so view_list icon should show as the toggle option.
       expect(find.byIcon(Icons.view_list), findsOneWidget);
+
+      // Tap the toggle menu item.
+      await tester.tap(find.byIcon(Icons.view_list));
+      await tester.pumpAndSettle();
+
+      // Open the menu again and verify the icon changed to grid_view.
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is PopupMenuButton<String> &&
+              w.icon is Icon &&
+              (w.icon as Icon).icon == Icons.more_vert,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.grid_view), findsOneWidget);
 
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));

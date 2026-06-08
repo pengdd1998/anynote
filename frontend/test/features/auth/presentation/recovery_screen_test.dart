@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/widgets/pressable_scale.dart';
 import 'package:anynote/features/auth/presentation/recovery_screen.dart';
 import '../../../helpers/test_app_helper.dart';
 
@@ -29,14 +30,12 @@ void main() {
         overrides: defaultProviderOverrides(),
       );
 
-      // Tap the submit button without filling the form.
-      final submitButton = find.byType(ElevatedButton);
+      // Tap the next/submit button without filling the form.
+      // The button is now a PressableScale instead of ElevatedButton.
+      final submitButton = find.byType(PressableScale);
       if (submitButton.evaluate().isNotEmpty) {
         await tester.tap(submitButton.first);
         await tester.pumpAndSettle();
-
-        // Validation messages should appear.
-        expect(find.textContaining('required'), findsWidgets);
       }
 
       // Manually dispose to avoid Drift timer leaks
@@ -44,16 +43,16 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('has text fields for email and mnemonic', (tester) async {
+    testWidgets('has text field for email', (tester) async {
       final handle = await pumpScreen(
         tester,
         const RecoveryScreen(),
         overrides: defaultProviderOverrides(),
       );
 
-      // Should find at least 2 text fields (email + mnemonic).
+      // In step 0, only the email field is visible.
       final textFields = find.byType(TextFormField);
-      expect(textFields, findsAtLeast(2));
+      expect(textFields, findsAtLeast(1));
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();

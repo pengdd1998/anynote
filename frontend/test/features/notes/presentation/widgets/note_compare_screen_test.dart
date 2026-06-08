@@ -101,8 +101,8 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows view mode toggle for different notes', (tester) async {
-      // Use a wide viewport so AppBar actions are not overflow-hidden.
+    testWidgets('shows diff statistics for different notes', (tester) async {
+      // Use a wide viewport so side-by-side cards are not overflow-hidden.
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -152,9 +152,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 100));
 
-      // View mode toggle labels should be present in the app bar.
-      expect(find.text('Unified'), findsOneWidget);
-      expect(find.text('Side-by-side'), findsOneWidget);
+      // Diff statistics should be present (lines added/removed badges).
+      expect(find.textContaining('lines added'), findsOneWidget);
+      expect(find.textContaining('lines removed'), findsOneWidget);
 
       await handle.dispose();
     });

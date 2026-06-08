@@ -208,9 +208,9 @@ void main() {
       expect(longPressed, isTrue);
     });
 
-    testWidgets('renders as Card widget', (tester) async {
+    testWidgets('renders as NoteCard widget', (tester) async {
       await pumpNoteCard(tester);
-      expect(find.byType(Card), findsOneWidget);
+      expect(find.byType(NoteCard), findsOneWidget);
     });
   });
 
@@ -307,9 +307,9 @@ void main() {
       expect(longPressed, isTrue);
     });
 
-    testWidgets('renders as Card in grid', (tester) async {
+    testWidgets('renders as NoteCard in grid', (tester) async {
       await pumpNoteCard(tester, layout: NoteCardLayout.grid);
-      expect(find.byType(Card), findsOneWidget);
+      expect(find.byType(NoteCard), findsOneWidget);
     });
   });
 }

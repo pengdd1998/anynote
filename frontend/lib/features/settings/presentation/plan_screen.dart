@@ -77,8 +77,8 @@ class _PlanContent extends ConsumerWidget {
           icon: Icons.explore_outlined,
           title: l10n.freePlan,
           price: l10n.freePlan,
-          accentBg: AppColors.accentLavenderBg,
-          accentText: AppColors.accentLavenderText,
+          accentBg: AppColors.accentPeachBg,
+          accentText: AppColors.accentPeachText,
           features: [
             '${l10n.maxNotes}: 500',
             '${l10n.aiDailyQuota}: 50',
@@ -259,7 +259,7 @@ class _CurrentPlanCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final (accentBg, accentText) = switch (plan.plan) {
-      PlanType.free => (AppColors.accentLavenderBg, AppColors.accentLavenderText),
+      PlanType.free => (AppColors.accentPeachBg, AppColors.accentPeachText),
       PlanType.pro => (AppColors.accentYellowBg, AppColors.accentYellowText),
       PlanType.lifetime => (AppColors.accentMintBg, AppColors.accentMintText),
     };
@@ -339,6 +339,9 @@ class _CurrentPlanCard extends StatelessWidget {
                       ? l10n.unlimited
                       : '${plan.limits.maxNotes}',
                   accentText: accentText,
+                  progress: plan.limits.maxNotes > 0
+                      ? plan.noteCount / plan.limits.maxNotes
+                      : 0,
                 ),
                 const SizedBox(height: AppSpacing.s8),
                 _UsageRow(
@@ -349,6 +352,9 @@ class _CurrentPlanCard extends StatelessWidget {
                       ? l10n.unlimited
                       : '${plan.limits.aiDailyQuota}',
                   accentText: accentText,
+                  progress: plan.limits.aiDailyQuota > 0
+                      ? plan.aiDailyUsed / plan.limits.aiDailyQuota
+                      : 0,
                 ),
                 const SizedBox(height: AppSpacing.s8),
                 _UsageRow(
@@ -359,6 +365,9 @@ class _CurrentPlanCard extends StatelessWidget {
                       ? l10n.unlimited
                       : _formatBytes(plan.limits.maxStorageBytes),
                   accentText: accentText,
+                  progress: plan.limits.maxStorageBytes > 0
+                      ? plan.storageBytes / plan.limits.maxStorageBytes
+                      : 0,
                 ),
               ],
             ),
@@ -386,6 +395,7 @@ class _UsageRow extends StatelessWidget {
   final String value;
   final String limit;
   final Color accentText;
+  final double progress;
 
   const _UsageRow({
     required this.icon,
@@ -393,38 +403,49 @@ class _UsageRow extends StatelessWidget {
     required this.value,
     required this.limit,
     required this.accentText,
+    this.progress = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Row(
+    final subtext = isDark
+        ? AppColors.darkTextTertiary
+        : AppColors.lightTextTertiary;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 14,
-          color: isDark
-              ? AppColors.darkTextTertiary
-              : AppColors.lightTextTertiary,
+        Row(
+          children: [
+            Icon(icon, size: 14, color: subtext),
+            const SizedBox(width: AppSpacing.s4),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyles.caption.copyWith(color: subtext),
+              ),
+            ),
+            Text(
+              '$value / $limit',
+              style: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.w600,
+                color: accentText,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: AppSpacing.s4),
-        Expanded(
-          child: Text(
-            label,
-            style: AppTextStyles.caption.copyWith(
-              color: isDark
-                  ? AppColors.darkTextTertiary
-                  : AppColors.lightTextTertiary,
+        if (progress > 0) ...[
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              minHeight: 3,
+              backgroundColor: subtext.withAlpha(30),
+              valueColor: AlwaysStoppedAnimation(accentText),
             ),
           ),
-        ),
-        Text(
-          '$value / $limit',
-          style: AppTextStyles.caption.copyWith(
-            fontWeight: FontWeight.w600,
-            color: accentText,
-          ),
-        ),
+        ],
       ],
     );
   }

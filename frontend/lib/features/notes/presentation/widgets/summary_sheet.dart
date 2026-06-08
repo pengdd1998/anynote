@@ -72,6 +72,9 @@ class _SummaryNotifier extends StateNotifier<_SummaryState> {
           ),
         ],
         cancelToken: _activeToken,
+      ).timeout(
+        const Duration(minutes: 2),
+        onTimeout: (sink) => sink.close(),
       )) {
         buffer.write(chunk);
         state = state.copyWith(summary: buffer.toString());

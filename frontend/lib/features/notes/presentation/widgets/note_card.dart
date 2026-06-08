@@ -75,7 +75,7 @@ class NoteCard extends StatelessWidget {
 
   static final _pastelColors = <String, Color>{
     'yellow': AppColors.noteYellow,
-    'purple': AppColors.notePurple,
+    'peach': AppColors.notePeach,
     'green': AppColors.noteGreen,
     'pink': AppColors.notePink,
     'blue': AppColors.noteBlue,
@@ -91,7 +91,12 @@ class NoteCard extends StatelessWidget {
       final isDark = Theme.of(context).brightness == Brightness.dark;
       final pastel =
           AppColors.notePastels[listIndex % AppColors.notePastels.length];
-      return isDark ? pastel.withAlpha(30) : pastel;
+      if (isDark) return pastel.withAlpha(30);
+      // Light mode: white card with very faint pastel tint (alpha 25/255 ≈ 10%)
+      return Color.alphaBlend(
+        pastel.withAlpha(25),
+        AppColors.lightCardBg,
+      );
     }
     final colorStr = note.color?.toLowerCase();
     if (colorStr != null) {
@@ -127,7 +132,12 @@ class NoteCard extends StatelessWidget {
             colorScheme.surfaceContainerLow,
           );
 
-    final radius = _isGrid ? AppRadius.md : AppRadius.sm;
+    final radius = _isGrid ? AppRadius.lg : AppRadius.md;
+
+    // Subtle colored border for grid cards (mockup style).
+    final borderColor = _isGrid && !isSelected && !isDark
+        ? AppColors.noteBorderColors[listIndex % AppColors.noteBorderColors.length]
+        : null;
 
     final card = Container(
       decoration: BoxDecoration(
@@ -138,7 +148,11 @@ class NoteCard extends StatelessWidget {
                 color: colorScheme.primary.withAlpha(80),
                 width: 1.5,
               )
-            : null,
+            : borderColor != null
+                ? Border.all(color: borderColor, width: 1)
+                : (!_isGrid && !isDark
+                    ? Border.all(color: AppColors.slate100, width: 1)
+                    : null),
         boxShadow: _isGrid ? AppShadows.smOf(theme.brightness) : null,
       ),
       child: Material(
@@ -213,12 +227,7 @@ class NoteCard extends StatelessWidget {
           ),
 
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.s12,
-            AppSpacing.s12,
-            AppSpacing.s12,
-            AppSpacing.s8,
-          ),
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -368,17 +377,8 @@ class NoteCard extends StatelessWidget {
 
   Widget _buildDateRow(ThemeData theme, bool isDark) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Icon(
-          Icons.schedule,
-          size: _isGrid ? 11 : 13,
-          color: (isDark
-                  ? AppColors.darkTextTertiary
-                  : AppColors.lightTextTertiary)
-              .withAlpha(180),
-        ),
-        const SizedBox(width: AppSpacing.s4),
         Text(
           time,
           style: AppTextStyles.caption.copyWith(

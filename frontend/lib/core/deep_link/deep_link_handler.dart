@@ -114,7 +114,9 @@ class DeepLinkHandler {
             context.push('/share/received');
           } else {
             if (!_isValidId(rawSegments[1])) return;
-            context.push('/share/${rawSegments[1]}');
+            final fragment =
+                uri.fragment.isNotEmpty ? '#${uri.fragment}' : '';
+            context.push('/share/${rawSegments[1]}$fragment');
           }
         }
         break;

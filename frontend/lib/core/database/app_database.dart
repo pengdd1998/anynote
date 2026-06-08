@@ -1,14 +1,10 @@
-import 'dart:io' show File
-    if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
-import 'package:sqlite3/sqlite3.dart' as sqlite3_lib;
-import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 import 'package:drift_flutter/drift_flutter.dart' as drift_flutter;
+
+// Native database helpers: conditionally replaced with stub on web.
+import 'database_native.dart'
+    if (dart.library.js) 'database_native_stub.dart';
 
 import 'tables.dart';
 import 'daos/notes_dao.dart';
@@ -25,7 +21,6 @@ import 'daos/note_properties_dao.dart';
 import 'daos/saved_searches_dao.dart';
 import 'daos/snippets_dao.dart';
 import 'daos/images_dao.dart';
-import '../platform/platform_utils.dart';
 
 part 'app_database.g.dart';
 
@@ -321,29 +316,10 @@ String? _dbEncryptionKey;
 /// of synced content provides the security boundary instead).
 QueryExecutor _openConnection() {
   // Web: no native SQLite, so use the drift_flutter default (IndexedDB/OPFS).
-  // SQLCipher PRAGMA is not applicable on web.
   if (kIsWeb) {
     return drift_flutter.driftDatabase(name: 'anynote.db');
   }
 
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'anynote.db.sqlite'));
-
-    if (PlatformUtils.isAndroid) {
-      await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
-    }
-
-    final cacheBase = (await getTemporaryDirectory()).path;
-    sqlite3_lib.sqlite3.tempDirectory = cacheBase;
-
-    return NativeDatabase.createInBackground(
-      file,
-      setup: (db) {
-        if (_dbEncryptionKey != null) {
-          db.execute('PRAGMA key = "$_dbEncryptionKey"');
-        }
-      },
-    );
-  });
+  // Native: use SQLite via the platform-specific helper.
+  return openNativeDatabase(_dbEncryptionKey);
 }

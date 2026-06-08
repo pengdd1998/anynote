@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -58,6 +59,13 @@ class WSClient {
   String? _currentRoom;
   int _reconnectAttempts = 0;
   static const _maxReconnectDelay = Duration(seconds: 30);
+  static const int _maxQueueSize = 100;
+
+  /// Buffer of encoded messages to send once the connection is re-established.
+  final List<String> _sendQueue = [];
+
+  /// Random number generator for jitter in reconnection backoff.
+  final Random _rng = Random();
 
   WSClient({required this.baseUrl, required this.token});
 
@@ -98,6 +106,9 @@ class WSClient {
       if (_currentRoom != null) {
         joinRoom(_currentRoom!);
       }
+
+      // Flush any messages that were buffered while disconnected.
+      _flushQueue();
     } catch (e) {
       _setState(WSConnectionState.error);
       _scheduleReconnect();
@@ -134,15 +145,44 @@ class WSClient {
     }),);
   }
 
-  /// Send a typed message over the WebSocket. Silently drops the message
-  /// if the connection is not currently in a connected state.
+  /// Send a typed message over the WebSocket.
+  ///
+  /// If the connection is not currently in a connected state, the encoded
+  /// message is buffered in a queue (up to [_maxQueueSize] entries) and
+  /// will be flushed automatically when the connection is re-established.
   void send(WSMessage message) {
-    if (_state != WSConnectionState.connected) return;
-    try {
-      _channel?.sink.add(message.encode());
-    } catch (_) {
-      // Swallow write errors; the onDone / onError callbacks will
-      // handle reconnection.
+    final encoded = message.encode();
+    if (_state == WSConnectionState.connected) {
+      try {
+        _channel?.sink.add(encoded);
+      } catch (_) {
+        // Swallow write errors; the onDone / onError callbacks will
+        // handle reconnection. Queue the message so it is not lost.
+        _enqueue(encoded);
+      }
+    } else {
+      _enqueue(encoded);
+    }
+  }
+
+  /// Add an encoded message to the send queue, respecting the size limit.
+  void _enqueue(String encoded) {
+    if (_sendQueue.length >= _maxQueueSize) {
+      _sendQueue.removeAt(0);
+    }
+    _sendQueue.add(encoded);
+  }
+
+  /// Flush all queued messages over the active connection.
+  void _flushQueue() {
+    while (_sendQueue.isNotEmpty) {
+      try {
+        _channel?.sink.add(_sendQueue.removeAt(0));
+      } catch (_) {
+        // Write failed; stop flushing. The remaining messages stay queued
+        // and will be retried on the next reconnect.
+        break;
+      }
     }
   }
 
@@ -151,6 +191,7 @@ class WSClient {
     _pingTimer?.cancel();
     _reconnectTimer?.cancel();
     _channel?.sink.close();
+    _sendQueue.clear();
     _messageController.close();
     _stateController.close();
   }
@@ -165,14 +206,17 @@ class WSClient {
     _scheduleReconnect();
   }
 
-  /// Schedule a reconnect attempt with exponential backoff, capped at
-  /// [_maxReconnectDelay].
+  /// Schedule a reconnect attempt with exponential backoff and jitter.
+  ///
+  /// Base delay follows: 1s, 2s, 4s, 8s, 16s, 30s, 30s, ...
+  /// A random jitter of 0-500 ms is added to avoid thundering-herd effects.
   void _scheduleReconnect() {
     _reconnectTimer?.cancel();
     _reconnectAttempts++;
-    final delay = Duration(
-      seconds: (3 * _reconnectAttempts).clamp(3, _maxReconnectDelay.inSeconds),
-    );
+    final exponentialSeconds = (1 << (_reconnectAttempts - 1))
+        .clamp(1, _maxReconnectDelay.inSeconds);
+    final jitterMs = _rng.nextInt(500);
+    final delay = Duration(seconds: exponentialSeconds, milliseconds: jitterMs);
     _reconnectTimer = Timer(delay, connect);
   }
 
@@ -209,12 +253,15 @@ class WSClientNotifier extends StateNotifier<WSConnectionState> {
   WSClientNotifier(this._ref) : super(WSConnectionState.disconnected);
 
   /// The active [WSClient]. Lazily created on first access.
+  ///
+  /// If the client has not been explicitly connected via [connect], this
+  /// creates a placeholder that will be replaced on the first [connect] call.
   WSClient get client {
     _client ??= WSClient(
       baseUrl: _wsBaseUrlFromHttp(
         _ref.read(apiClientProvider).baseUrl,
       ),
-      token: '',
+      token: _ref.read(apiClientProvider).accessToken ?? '',
     );
     return _client!;
   }

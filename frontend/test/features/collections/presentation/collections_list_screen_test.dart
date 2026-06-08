@@ -41,14 +41,14 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows FAB for creating a new collection', (tester) async {
+    testWidgets('shows add button for creating a new collection', (tester) async {
       final handle = await pumpScreen(
         tester,
         const CollectionsListScreen(),
         overrides: defaultProviderOverrides(),
       );
 
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      // The add button is now in the AppBar actions, not a FAB.
       expect(find.byIcon(Icons.add), findsOneWidget);
       await handle.dispose();
     });

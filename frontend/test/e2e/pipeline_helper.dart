@@ -13,7 +13,6 @@ import 'dart:typed_data';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/crypto/crypto_service.dart';
 import 'package:anynote/core/crypto/encryptor.dart';
@@ -38,8 +37,7 @@ Future<void> initSodium() async {
   if (_sodiumInitialized) return;
   TestWidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.setMockInitialValues({});
-  registerTestSodiumPlatform();
-  await SodiumSumoInit.init();
+  await probeSodiumAvailability();
   _sodiumInitialized = true;
 }
 

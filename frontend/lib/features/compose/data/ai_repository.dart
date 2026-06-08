@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -20,16 +21,21 @@ class AIRepository {
     String? model,
     CancelToken? cancelToken,
   }) async {
-    final response = await _apiClient.aiProxy(
-      {
-        'messages': messages
-            .map((m) => {'role': m.role, 'content': m.content})
-            .toList(),
-        if (model != null) 'model': model,
-        'stream': false,
-      },
-      cancelToken: cancelToken,
-    );
+    final response = await _apiClient
+        .aiProxy(
+          {
+            'messages': messages
+                .map((m) => {'role': m.role, 'content': m.content})
+                .toList(),
+            if (model != null) 'model': model,
+            'stream': false,
+          },
+          cancelToken: cancelToken,
+        )
+        .timeout(
+          const Duration(seconds: 60),
+          onTimeout: () => throw TimeoutException('AI request timed out'),
+        );
     final content = response['content'];
     if (content == null) {
       throw FormatException(
@@ -57,10 +63,20 @@ class AIRepository {
       cancelToken: cancelToken,
     );
 
-    final stream = response.data?.stream;
-    if (stream == null) {
+    final rawStream = response.data?.stream;
+    if (rawStream == null) {
       throw FormatException('AI proxy stream returned no data');
     }
+
+    // Per-chunk timeout: if no data arrives within 60 seconds, close the
+    // stream to prevent indefinite hangs when the server stops responding.
+    final stream = rawStream.timeout(
+      const Duration(seconds: 60),
+      onTimeout: (EventSink<List<int>> sink) {
+        debugPrint('[AIRepository] Stream timeout - no data for 60s, closing');
+        sink.close();
+      },
+    );
 
     await for (final chunk in stream) {
       final data = utf8.decode(chunk);

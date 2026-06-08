@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Property filter bottom sheet.
@@ -211,7 +213,7 @@ class NotesFilterSheet extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: AppRadius.topXl,
       ),
       builder: (ctx) => NotesFilterSheet(
         statusFilter: statusFilter,
@@ -281,7 +283,10 @@ class NotesFilterBar extends StatelessWidget {
       final colorScheme = Theme.of(context).colorScheme;
       return Container(
         height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.s12,
+          vertical: AppSpacing.s4,
+        ),
         child: Align(
           alignment: Alignment.centerLeft,
           child: FilterChip(
@@ -305,7 +310,10 @@ class NotesFilterBar extends StatelessWidget {
     // Show active filters
     return Container(
       height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s4,
+      ),
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [

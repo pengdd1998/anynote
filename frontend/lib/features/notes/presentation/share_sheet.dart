@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../core/share/share_service.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/error/error.dart' show ErrorDisplay;
 
@@ -156,7 +157,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.xs),
           ),
           child: Row(
             children: [
@@ -242,6 +243,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
           const SizedBox(height: 4),
           TextField(
             controller: _passwordController,
+            scrollPadding: const EdgeInsets.only(bottom: 120),
             decoration: InputDecoration(
               labelText: l10n.password,
               border: const OutlineInputBorder(),

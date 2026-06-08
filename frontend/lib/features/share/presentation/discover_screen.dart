@@ -349,13 +349,13 @@ class _DiscoverCard extends ConsumerWidget {
 
     // Warm pastel cycling
     const pastelBgs = [
-      AppColors.accentLavenderBg,
+      AppColors.accentPeachBg,
       AppColors.accentYellowBg,
       AppColors.accentMintBg,
       AppColors.accentPeachBg,
     ];
     const pastelTexts = [
-      AppColors.accentLavenderText,
+      AppColors.accentPeachText,
       AppColors.accentYellowText,
       AppColors.accentMintText,
       AppColors.accentPeachText,

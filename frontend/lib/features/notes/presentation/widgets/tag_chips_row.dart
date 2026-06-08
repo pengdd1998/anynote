@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/accessibility/a11y_utils.dart';
 import '../../../../core/database/app_database.dart';
-import '../../../../core/theme/alpha_constants.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 
-/// Displays up to 3 tag chips with warm fill and border styling.
+/// Displays up to 3 tag chips with indigo badge styling.
 ///
-/// Extracted from `NotesListScreen._buildTagChips` for reuse across
-/// list and grid note cards.
+/// Matches the design mockup: small indigo text badges with
+/// indigo-50 background and bold indigo-600 text.
 class TagChipsRow extends StatelessWidget {
   /// Tags to display. Only the first 3 are shown.
   final List<Tag> tags;
@@ -16,8 +17,6 @@ class TagChipsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final displayTags = tags.take(3).toList();
     return Wrap(
       spacing: 4,
@@ -25,23 +24,20 @@ class TagChipsRow extends StatelessWidget {
       children: displayTags.map<Widget>((tag) {
         return Semantics(
           label: A11yUtils.semanticLabelForTag(name: tag.plainName ?? '...'),
-          child: Chip(
-            label: Text(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.indigo50,
+              borderRadius: BorderRadius.circular(AppRadius.xxs),
+            ),
+            child: Text(
               tag.plainName ?? '...',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurface.withAlpha(AppAlpha.nearOpaque),
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
               ),
             ),
-            visualDensity: VisualDensity.compact,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            padding: EdgeInsets.zero,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-            side: BorderSide(
-              color: colorScheme.outlineVariant.withAlpha(AppAlpha.heavy),
-              width: 0.5,
-            ),
-            backgroundColor:
-                colorScheme.surfaceContainerHighest.withAlpha(AppAlpha.bold),
           ),
         );
       }).toList(),

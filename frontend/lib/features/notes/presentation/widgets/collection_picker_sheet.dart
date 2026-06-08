@@ -103,6 +103,7 @@ class _CollectionPickerSheetState extends ConsumerState<CollectionPickerSheet> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: TextField(
+                scrollPadding: const EdgeInsets.only(bottom: 120),
                 decoration: InputDecoration(
                   hintText: l10n.searchCollections,
                   prefixIcon: const Icon(Icons.search, size: 20),

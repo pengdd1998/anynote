@@ -84,6 +84,15 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
               ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              onPressed: () {
+                ref.read(composeSessionProvider.notifier).cancel();
+                context.pop();
+              },
+              icon: const Icon(Icons.close, size: 18),
+              label: Text(l10n.cancel),
+            ),
           ],
         ),
       );

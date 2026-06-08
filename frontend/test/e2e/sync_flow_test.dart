@@ -18,7 +18,7 @@ import 'package:anynote/core/sync/sync_queue_manager.dart';
 import 'package:anynote/core/widgets/offline_banner.dart';
 import 'package:anynote/core/widgets/sync_status_widget.dart';
 import 'package:anynote/features/notes/presentation/notes_list_screen.dart';
-import 'package:anynote/features/notes/presentation/widgets/sync_status_indicator.dart';
+
 import 'package:anynote/features/settings/data/settings_providers.dart';
 import 'package:anynote/main.dart';
 import '../helpers/test_app_helper.dart';
@@ -214,24 +214,8 @@ void main() {
   });
 
   group('Sync flow - NotesListScreen integration', () {
-    testWidgets('notes list screen contains sync status widget',
+    testWidgets('notes list screen contains offline banner',
         (tester) async {
-      final handle = await pumpScreen(
-        tester,
-        const NotesListScreen(autoLoad: false),
-        overrides: defaultProviderOverrides(),
-      );
-
-      // The notes list screen should include the SyncStatusIndicator in the
-      // app bar actions.
-      expect(find.byType(SyncStatusIndicator), findsOneWidget);
-
-      // Manually dispose to avoid Drift timer leaks
-      await handle.dispose();
-      await tester.pump(const Duration(milliseconds: 100));
-    });
-
-    testWidgets('notes list screen contains offline banner', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
@@ -270,7 +254,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('sync status indicator present in notes list when offline',
+    testWidgets('offline banner shows message in notes list when offline',
         (tester) async {
       final overrides = defaultProviderOverrides();
       overrides.add(
@@ -283,15 +267,14 @@ void main() {
         overrides: overrides,
       );
 
-      // The SyncStatusIndicator should still be present when offline
-      // (shows a colored dot, not an icon).
-      expect(find.byType(SyncStatusIndicator), findsOneWidget);
-
       // The OfflineBanner should display the offline message.
       expect(
         find.text('You are offline — changes will sync when connected'),
         findsOneWidget,
       );
+
+      // The OfflineBanner widget should be present.
+      expect(find.byType(OfflineBanner), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();

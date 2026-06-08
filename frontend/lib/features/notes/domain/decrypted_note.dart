@@ -15,11 +15,15 @@ class DecryptedNote {
   /// Whether the note has been synced to the server.
   final bool isSynced;
 
+  /// Tags associated with this note (optional, loaded on demand).
+  final List<dynamic> tags;
+
   const DecryptedNote({
     required this.title,
     required this.content,
     required this.updatedAt,
     required this.isSynced,
+    this.tags = const [],
   });
 
   DecryptedNote copyWith({
@@ -27,12 +31,14 @@ class DecryptedNote {
     String? content,
     DateTime? updatedAt,
     bool? isSynced,
+    List<dynamic>? tags,
   }) {
     return DecryptedNote(
       title: title ?? this.title,
       content: content ?? this.content,
       updatedAt: updatedAt ?? this.updatedAt,
       isSynced: isSynced ?? this.isSynced,
+      tags: tags ?? this.tags,
     );
   }
 

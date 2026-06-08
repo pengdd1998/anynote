@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/collab/crdt_editor_controller.dart';
 import '../../../core/collab/crdt_text.dart';
 import '../../../core/collab/merge_engine.dart';
+import '../../../core/collab/remote_cursor.dart';
 import '../../../core/collab/ws_client.dart';
 import '../../../main.dart' show databaseProvider;
 
@@ -25,21 +26,27 @@ class CollabSessionState {
   /// The editor controller that bridges the text field with the CRDT.
   final CrdtEditorController? editorController;
 
+  /// Remote user cursors currently visible in the editor.
+  final List<RemoteCursor> remoteCursors;
+
   const CollabSessionState({
     this.noteId,
     this.isConnected = false,
     this.editorController,
+    this.remoteCursors = const [],
   });
 
   CollabSessionState copyWith({
     String? noteId,
     bool? isConnected,
     CrdtEditorController? editorController,
+    List<RemoteCursor>? remoteCursors,
   }) {
     return CollabSessionState(
       noteId: noteId ?? this.noteId,
       isConnected: isConnected ?? this.isConnected,
       editorController: editorController ?? this.editorController,
+      remoteCursors: remoteCursors ?? this.remoteCursors,
     );
   }
 }
@@ -284,8 +291,7 @@ class CollabNotifier extends StateNotifier<CollabSessionState> {
       case WSMessageType.edit:
         _onRemoteEdit(msg.data);
       case WSMessageType.cursor:
-        // Cursor messages could update remote cursor markers in the future.
-        // For now they are acknowledged but not rendered.
+        _onRemoteCursor(msg.data);
         break;
       default:
         // Other message types (join, leave, presence, typing) are handled
@@ -324,6 +330,37 @@ class CollabNotifier extends StateNotifier<CollabSessionState> {
         }
       }
     }
+  }
+
+  /// Handle a remote cursor position update.
+  void _onRemoteCursor(Map<String, dynamic> data) {
+    final userId = data['user_id'] as String?;
+    final displayName = data['display_name'] as String? ?? 'Unknown';
+    final position = data['position'] as int?;
+    if (userId == null || position == null) return;
+
+    final updated = <RemoteCursor>[];
+    var found = false;
+    for (final c in state.remoteCursors) {
+      if (c.userId == userId) {
+        updated.add(RemoteCursor(
+          userId: userId,
+          displayName: displayName,
+          position: position,
+        ));
+        found = true;
+      } else {
+        updated.add(c);
+      }
+    }
+    if (!found) {
+      updated.add(RemoteCursor(
+        userId: userId,
+        displayName: displayName,
+        position: position,
+      ));
+    }
+    state = state.copyWith(remoteCursors: updated);
   }
 
   // ---------------------------------------------------------------------------

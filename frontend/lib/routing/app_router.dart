@@ -1,7 +1,10 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/theme/app_colors.dart';
 import '../core/theme/app_icons.dart';
 import '../core/theme/page_transitions.dart';
 import '../core/widgets/adaptive_scaffold.dart';
@@ -71,6 +74,7 @@ import '../features/notes/presentation/reminders_screen.dart';
 import '../features/notes/presentation/widgets/template_management_screen.dart';
 import '../features/notes/presentation/conflict_resolution_screen.dart';
 import '../features/snippets/presentation/snippets_screen.dart';
+import '../features/notifications/presentation/notifications_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -299,6 +303,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/trash',
       pageBuilder: (context, state) => slideTransition(const TrashScreen()),
+    ),
+
+    // Notifications screen (pushed from main shell)
+    GoRoute(
+      path: '/notifications',
+      pageBuilder: (context, state) =>
+          slideTransition(const NotificationsScreen()),
     ),
 
     // Sync conflict resolution screen
@@ -608,6 +619,7 @@ class _PhoneShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: FocusTraversalGroup(
         policy: OrderedTraversalPolicy(),
@@ -625,32 +637,53 @@ class _PhoneShell extends StatelessWidget {
       ),
       bottomNavigationBar: FocusTraversalOrder(
         order: const NumericFocusOrder(1),
-        child: NavigationBar(
-          selectedIndex: _selectedIndex(context),
-          onDestinationSelected: (index) =>
-              _onDestinationSelected(context, index),
-          destinations: [
-            NavigationDestination(
-              icon: const Icon(AppIcons.notes),
-              selectedIcon: const Icon(AppIcons.notesFilled),
-              label: l10n?.notesTabLabel ?? 'Home',
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: isDark
+                    ? AppColors.darkDivider
+                    : AppColors.slate100,
+                width: 1,
+              ),
             ),
-            NavigationDestination(
-              icon: const Icon(AppIcons.compose),
-              selectedIcon: const Icon(AppIcons.composeFilled),
-              label: l10n?.composeTabLabel ?? 'Dream Plan',
+          ),
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: NavigationBar(
+                backgroundColor: (isDark
+                        ? AppColors.darkSurface
+                        : Colors.white)
+                    .withAlpha(230),
+                selectedIndex: _selectedIndex(context),
+                onDestinationSelected: (index) =>
+                    _onDestinationSelected(context, index),
+                destinations: [
+                  NavigationDestination(
+                    icon: const Icon(AppIcons.notes),
+                    selectedIcon: const Icon(AppIcons.notesFilled),
+                    label: l10n?.notesTabLabel ?? 'Home',
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(AppIcons.compose),
+                    selectedIcon: const Icon(AppIcons.composeFilled),
+                    label: l10n?.composeTabLabel ?? 'Dream Plan',
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(AppIcons.ai),
+                    selectedIcon: const Icon(AppIcons.aiFilled),
+                    label: l10n?.aiTabLabel ?? 'AI',
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(AppIcons.settings),
+                    selectedIcon: const Icon(AppIcons.settingsFilled),
+                    label: l10n?.settingsTabLabel ?? 'Settings',
+                  ),
+                ],
+              ),
             ),
-            NavigationDestination(
-              icon: const Icon(AppIcons.ai),
-              selectedIcon: const Icon(AppIcons.aiFilled),
-              label: l10n?.aiTabLabel ?? 'AI',
-            ),
-            NavigationDestination(
-              icon: const Icon(AppIcons.settings),
-              selectedIcon: const Icon(AppIcons.settingsFilled),
-              label: l10n?.settingsTabLabel ?? 'Settings',
-            ),
-          ],
+          ),
         ),
       ),
     );

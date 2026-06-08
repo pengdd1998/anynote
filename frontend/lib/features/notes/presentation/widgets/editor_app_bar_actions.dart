@@ -100,6 +100,7 @@ class EditorAppBarActions {
     EditorActionsConfig config,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return [
       // Presence avatars showing active collaborators.
@@ -110,6 +111,23 @@ class EditorAppBarActions {
       // Save status indicator in AppBar: spinner when saving, checkmark when
       // saved, amber dot when there are unsaved changes.
       _AppBarSaveStatus(isSaving: config.isSaving, isDirty: config.isDirty),
+      // Undo/Redo buttons for quick access.
+      IconButton(
+        icon: const Icon(Icons.undo),
+        tooltip: l10n.undo,
+        onPressed: null,
+      ),
+      IconButton(
+        icon: const Icon(Icons.redo),
+        tooltip: l10n.menuRedo,
+        onPressed: null,
+      ),
+      // Save-and-close done button with primary color.
+      IconButton(
+        icon: Icon(Icons.check, color: colorScheme.primary),
+        tooltip: l10n.saveAndClose,
+        onPressed: config.onSaveAndClose,
+      ),
       // Rich/plain text mode toggle.
       IconButton(
         icon: Icon(

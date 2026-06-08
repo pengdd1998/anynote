@@ -37,10 +37,11 @@ class SyncLifecycle {
   /// When the last successful sync completed.
   DateTime? get lastSyncAt => _lastSyncAt;
 
-  /// Start periodic sync. No-op if already running.
+  /// Start periodic sync with an immediate first sync. No-op if already running.
   void start() {
     if (_timer != null) return;
-    _scheduleNext();
+    // Fire the first sync immediately, then schedule periodic syncs.
+    _doSync();
   }
 
   /// Stop periodic sync.
@@ -76,6 +77,10 @@ class SyncLifecycle {
 
       return result;
     } catch (e) {
+      // Record sync time even on partial failure -- pull may have succeeded
+      // and applied data locally before push threw.
+      _lastSyncAt = DateTime.now();
+
       // Even if the main sync fails, try to process any retryable
       // operations in case the network issue was transient.
       debugPrint('[SyncLifecycle] sync cycle failed: $e');
@@ -101,6 +106,14 @@ class SyncLifecycle {
     if (!isAuthenticated) {
       stop();
       return;
+    }
+
+    // Ensure crypto is unlocked before syncing. The auth listener fires
+    // crypto unlock in a fire-and-forget Future which may not have completed
+    // yet when the first sync runs immediately after login.
+    final crypto = _ref.read(cryptoServiceProvider);
+    if (!crypto.isUnlocked) {
+      await crypto.unlock();
     }
 
     await syncNow();

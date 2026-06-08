@@ -52,8 +52,8 @@ class NotificationSettingsScreen extends ConsumerWidget {
                   title: 'Reminders',
                   subtitle: 'Get notified when a note reminder is due',
                   value: prefs.reminderNotifications,
-                  accentBg: AppColors.accentLavenderBg,
-                  accentText: AppColors.accentLavenderText,
+                  accentBg: AppColors.accentPeachBg,
+                  accentText: AppColors.accentPeachText,
                   onChanged: (value) {
                     ref
                         .read(notificationPreferencesProvider.notifier)
@@ -115,7 +115,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
               vertical: AppSpacing.s8,
             ),
             decoration: BoxDecoration(
-              color: AppColors.accentLavenderBg.withAlpha(80),
+              color: AppColors.accentPeachBg.withAlpha(80),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Row(
@@ -123,14 +123,14 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 const Icon(
                   Icons.info_outline,
                   size: 16,
-                  color: AppColors.accentLavenderText,
+                  color: AppColors.accentPeachText,
                 ),
                 const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: Text(
                     'Preferences are stored locally and sync across all your devices.',
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.accentLavenderText,
+                      color: AppColors.accentPeachText,
                     ),
                   ),
                 ),

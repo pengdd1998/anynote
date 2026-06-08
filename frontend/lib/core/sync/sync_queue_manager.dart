@@ -78,6 +78,10 @@ class SyncQueueManager {
   /// are no-ops. If the device is offline (as reported by
   /// [connectivityChecker]), the call is skipped entirely and operations
   /// remain queued for a future flush.
+  ///
+  /// All pending operations are marked in-progress first, then a single
+  /// [SyncEngine.push] call syncs all local changes at once. This avoids
+  /// redundant pushes when N operations would each trigger a full push.
   Future<void> processQueue() async {
     if (_isProcessing) {
       return;
@@ -98,43 +102,40 @@ class SyncQueueManager {
         await _dao.resetToPending(op.id);
       }
 
-      // Process all pending operations in order.
+      // Collect all pending operations.
       final pending = await _dao.getPendingOperations();
-      for (final op in pending) {
-        // Re-check connectivity before each operation in case it drops
-        // mid-batch.
-        if (!_isConnected) {
-          break;
-        }
+      if (pending.isEmpty) {
+        return;
+      }
 
-        await _processOperation(op);
+      // Re-check connectivity before processing.
+      if (!_isConnected) {
+        return;
+      }
+
+      // Mark all pending operations as in-progress.
+      for (final op in pending) {
+        await _dao.markInProgress(op.id);
+      }
+
+      // Perform a single push that syncs all local changes at once.
+      try {
+        await _syncEngine.push();
+        // Mark all operations as completed after a successful push.
+        for (final op in pending) {
+          await _dao.markCompleted(op.id);
+        }
+      } catch (e) {
+        final errorMessage = ErrorMapper.map(e).toString();
+        for (final op in pending) {
+          await _dao.markFailed(op.id, errorMessage, op.retryCount, op.maxRetries);
+        }
       }
 
       // Housekeeping: remove completed operations.
       await _dao.clearCompleted();
     } finally {
       _isProcessing = false;
-    }
-  }
-
-  /// Process a single operation from the queue.
-  Future<void> _processOperation(SyncOperation op) async {
-    await _dao.markInProgress(op.id);
-
-    try {
-      // The queue manager delegates the actual sync to the SyncEngine.
-      // The engine handles encryption, API calls, and conflict resolution.
-      // A successful full sync cycle is sufficient to flush all pending
-      // local changes to the server.
-      await _syncEngine.push();
-      await _dao.markCompleted(op.id);
-    } catch (e) {
-      await _dao.markFailed(
-        op.id,
-        ErrorMapper.map(e).toString(),
-        op.retryCount,
-        op.maxRetries,
-      );
     }
   }
 

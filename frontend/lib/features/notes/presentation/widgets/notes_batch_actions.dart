@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
 
 /// Batch action bar displayed at the bottom of the notes list during
 /// multi-selection mode. Provides pin, color, lock, delete, export,
@@ -52,14 +54,18 @@ class NotesBatchActionBar extends ConsumerWidget {
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkBorder
+                : AppColors.lightBorder,
             width: 1,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.shadowDark
+                : AppColors.shadowLight,
+            blurRadius: 8,
             offset: const Offset(0, -2),
           ),
         ],
@@ -67,7 +73,10 @@ class NotesBatchActionBar extends ConsumerWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.s8,
+          ),
           child: Row(
             children: [
               // Pin/Unpin button

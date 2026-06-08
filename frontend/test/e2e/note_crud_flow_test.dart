@@ -15,7 +15,7 @@ import 'package:anynote/features/notes/presentation/notes_list_screen.dart';
 import '../helpers/test_app_helper.dart';
 
 /// Finder that matches the main "Create new note" FloatingActionButton,
-/// excluding the secondary "Scroll to top" FAB.
+/// excluding any other FABs or IconButtons.
 Finder _mainFabFinder() => find.byWidgetPredicate(
       (w) =>
           w is FloatingActionButton &&
@@ -52,7 +52,9 @@ void main() {
 
       // FAB should be visible with the add icon.
       expect(_mainFabFinder(), findsOneWidget);
-      expect(find.byIcon(AppIcons.add), findsOneWidget);
+
+      // The add icon appears in both the FAB and the AppBar IconButton.
+      expect(find.byIcon(AppIcons.add), findsAtLeast(1));
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -76,32 +78,48 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('has sort and grid/list toggle buttons', (tester) async {
+    testWidgets('has sort and grid/list toggle in overflow menu',
+        (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
 
-      // Sort popup menu button (at least one PopupMenuButton: sort + more overflow).
+      // Sort popup menu button (the overflow menu).
       expect(find.byType(PopupMenuButton<String>), findsAtLeast(1));
 
-      // Grid/list toggle icon button.
-      expect(find.byIcon(Icons.grid_view), findsOneWidget);
+      // Open the overflow menu to verify grid/list toggle is inside.
+      await tester.tap(find.byType(PopupMenuButton<String>).first);
+      await tester.pumpAndSettle();
+
+      // Grid/list toggle icon should be in the menu.
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Icon &&
+              (w.icon == Icons.grid_view || w.icon == Icons.view_list),
+        ),
+        findsOneWidget,
+      );
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('has search toggle button', (tester) async {
+    testWidgets('has search entry in overflow menu', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
         overrides: defaultProviderOverrides(),
       );
 
-      // Search icon should be visible.
+      // Open the overflow menu.
+      await tester.tap(find.byType(PopupMenuButton<String>).first);
+      await tester.pumpAndSettle();
+
+      // Search icon should be visible in the overflow menu.
       expect(find.byIcon(AppIcons.search), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks

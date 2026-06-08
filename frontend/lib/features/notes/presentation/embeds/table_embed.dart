@@ -278,6 +278,7 @@ class _TableBlockWidgetState extends State<TableBlockWidget> {
           filled: true,
           fillColor: isDark ? const Color(0xFF2A2623) : const Color(0xFFF5F1EB),
         ),
+        scrollPadding: const EdgeInsets.only(bottom: 120),
       ),
     );
   }

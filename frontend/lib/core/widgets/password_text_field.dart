@@ -21,6 +21,7 @@ class PasswordTextField extends StatelessWidget {
   final String? obscuringCharacter;
   final String? showPasswordTooltip;
   final String? hidePasswordTooltip;
+  final EdgeInsets scrollPadding;
 
   const PasswordTextField({
     super.key,
@@ -39,6 +40,7 @@ class PasswordTextField extends StatelessWidget {
     this.obscuringCharacter,
     this.showPasswordTooltip,
     this.hidePasswordTooltip,
+    this.scrollPadding = const EdgeInsets.all(20),
   });
 
   @override
@@ -60,6 +62,7 @@ class PasswordTextField extends StatelessWidget {
       obscuringCharacter: obscuringCharacter,
       showPasswordTooltip: showPasswordTooltip,
       hidePasswordTooltip: hidePasswordTooltip,
+      scrollPadding: scrollPadding,
     );
   }
 }
@@ -80,6 +83,7 @@ class _PasswordField extends StatefulWidget {
   final String? obscuringCharacter;
   final String? showPasswordTooltip;
   final String? hidePasswordTooltip;
+  final EdgeInsets scrollPadding;
 
   const _PasswordField({
     super.key,
@@ -98,6 +102,7 @@ class _PasswordField extends StatefulWidget {
     this.obscuringCharacter,
     this.showPasswordTooltip,
     this.hidePasswordTooltip,
+    this.scrollPadding = const EdgeInsets.all(20),
   });
 
   @override
@@ -120,6 +125,7 @@ class _PasswordFieldState extends State<_PasswordField> {
       enabled: widget.enabled,
       autofocus: widget.autofocus,
       obscuringCharacter: widget.obscuringCharacter ?? '•',
+      scrollPadding: widget.scrollPadding,
       decoration: InputDecoration(
         labelText: widget.labelText,
         hintText: widget.hintText,

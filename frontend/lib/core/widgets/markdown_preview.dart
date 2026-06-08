@@ -3,7 +3,6 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 import '../theme/app_colors.dart';
-import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import 'mermaid_renderer.dart' show MermaidRenderer, extractMermaidBlocks;
@@ -173,42 +172,40 @@ class MarkdownPreview extends StatelessWidget {
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return MarkdownStyleSheet(
-      p: AppTextStyles.body.copyWith(fontSize: 16, height: 1.7, color: textColor),
+      p: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.625, color: textColor),
       pPadding: const EdgeInsets.only(bottom: AppSpacing.s16),
-      h1: AppTextStyles.display.copyWith(fontSize: 26, height: 1.3, color: textColor),
+      h1: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, height: 1.3, color: textColor),
       h1Padding: const EdgeInsets.only(top: AppSpacing.s24, bottom: AppSpacing.s12),
-      h2: AppTextStyles.headline.copyWith(fontSize: 23, height: 1.3, color: textColor),
+      h2: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.3, color: AppColors.primary),
       h2Padding: const EdgeInsets.only(top: AppSpacing.s24, bottom: AppSpacing.s8),
       h3: AppTextStyles.headline.copyWith(fontSize: 20, height: 1.35, color: textColor),
       h3Padding: const EdgeInsets.only(top: AppSpacing.s20, bottom: AppSpacing.s8),
       h4: AppTextStyles.title.copyWith(fontSize: 18, height: 1.35, color: textColor),
       h4Padding: const EdgeInsets.only(top: AppSpacing.s16, bottom: AppSpacing.s8),
-      code: AppTextStyles.caption.copyWith(
+      code: const TextStyle(
         fontFamily: 'monospace',
-        fontSize: 14,
-        color: textColor,
-        backgroundColor: isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
+        fontSize: 11,
       ),
       codeblockDecoration: BoxDecoration(
-        color: codeBlockBg,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        color: AppColors.slate50,
+        border: Border.all(color: AppColors.slate100),
+        borderRadius: BorderRadius.circular(12),
       ),
-      codeblockPadding: const EdgeInsets.all(AppSpacing.md),
+      codeblockPadding: const EdgeInsets.all(16),
       codeblockAlign: WrapAlignment.start,
-      blockquote: AppTextStyles.body.copyWith(
-        color: secondaryColor,
+      blockquote: const TextStyle(
+        fontSize: 12,
         fontStyle: FontStyle.italic,
-        height: 1.7,
       ),
       blockquoteDecoration: BoxDecoration(
-        color: isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        color: AppColors.slate50,
         border: Border(
-          left: BorderSide(
-            color: AppColors.primary.withAlpha(80),
-            width: 3,
-          ),
+          left: BorderSide(color: AppColors.primary, width: 2),
+          top: BorderSide(color: AppColors.slate100),
+          right: BorderSide(color: AppColors.slate100),
+          bottom: BorderSide(color: AppColors.slate100),
         ),
+        borderRadius: BorderRadius.circular(12),
       ),
       blockquotePadding: const EdgeInsets.fromLTRB(
         AppSpacing.md, AppSpacing.s12, AppSpacing.md, AppSpacing.s12,

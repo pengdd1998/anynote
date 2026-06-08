@@ -74,6 +74,13 @@
   "recoveryKeyWordCount": "リカバリーキーはちょうど12語である必要があります",
 
   "recoveryKeyFormatHint": "12語を正しい順序で、スペースで区切って入力してください。",
+  "recoveryStepMnemonicTitle": "リカバリーキーを入力",
+  "recoveryStepMnemonicDesc": "12語のリカバリーキーを貼り付けるか、手動で入力してください。",
+  "recoveryEnterManually": "単語を一つずつ入力",
+  "recoveryClearMnemonic": "クリア",
+  "recoveryMnemonicHint": "単語1 単語2 単語3 … 単語12",
+  "recoveryStepRecoveringTitle": "アカウントを復元中…",
+  "recoveryStepRecoveringDesc": "暗号鍵を導出中…",
 
   "invalidRecoveryKey": "無効なリカバリーキーです。入力内容を確認して再度お試しください。",
 
@@ -106,6 +113,11 @@
   "onboardingAIDesc": "AIを使ってメモの作成、アウトライン作成、あらゆるプラットフォーム向けの変換ができます。コンテンツは一切記録されません。",
 
   "searchNotes": "メモを検索...",
+
+  "filterAll": "すべて",
+  "filterNotes": "メモ",
+  "filterTasks": "タスク",
+  "filterJournal": "ジャーナル",
 
   "collections": "コレクション",
 
@@ -2176,5 +2188,27 @@
   "publishToPlatform": "プラットフォームに公開",
   "polishContent": "推敲",
   "selectPlatformFirst": "プラットフォームを選択してください",
-  "notePublishedSuccess": "メモを公開しました！"
+  "notePublishedSuccess": "メモを公開しました！",
+
+  "noCommentsYet": "まだコメントはありません。最初のコメントを書きましょう！",
+  "commentCount": "{count}件のコメント",
+  "addComment": "コメントを追加...",
+  "notifications": "通知",
+  "markAllRead": "すべて既読にする",
+  "noNotifications": "通知はありません",
+  "failedToLoadNotifications": "通知の読み込みに失敗しました",
+  "notificationPreferences": "通知設定を構成",
+  "deleteAccount": "アカウント削除",
+  "deleteAccountWarning": "この操作は取り消せません。すべてのデータがサーバーから永久に削除されます。",
+  "deleteAccountConfirmTitle": "本当に削除しますか？",
+  "deleteAccountFinalWarning": "アカウントと関連するすべてのデータが永久に削除されます。",
+  "deleteAccountPermanently": "永久に削除",
+  "deleteAccountFailed": "アカウントの削除に失敗しました：{error}",
+  "syncStats": "サーバー統計",
+  "totalItems": "合計アイテム",
+  "conflicts": "競合",
+  "failedToCreateRoom": "コラボレーションルームの作成に失敗しました。接続を確認してください。",
+  "failedToJoinRoom": "ルームへの参加に失敗しました。招待コードを確認してください。",
+  "joining": "参加中...",
+  "loadMore": "もっと読み込む"
 }

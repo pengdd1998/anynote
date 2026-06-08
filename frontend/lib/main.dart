@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'core/crypto/web_crypto_compat.dart';
+import 'core/collab/ws_client.dart';
 import 'core/database/app_database.dart';
 import 'core/deep_link/deep_link_handler.dart';
 import 'core/locale/locale_provider.dart';
@@ -24,7 +25,6 @@ import 'core/storage/window_state.dart';
 import 'core/sync/sync_lifecycle.dart';
 import 'core/sync/background_sync_service.dart';
 import 'core/error/connectivity_provider.dart';
-import 'core/theme/app_theme.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/theme/animation_config.dart';
@@ -97,10 +97,9 @@ void main() async {
   // --dart-define=API_BASE_URL=http://10.0.2.2:36661 (emulator)
   // or --dart-define=API_BASE_URL=http://<lan-ip>:36661 (physical device).
   const String envApiUrl = String.fromEnvironment('API_BASE_URL');
+  const String kDefaultApiUrl = 'http://175.178.66.207:36661';
   final apiClient = ApiClient(
-    baseUrl: envApiUrl.isNotEmpty
-        ? envApiUrl
-        : 'http://175.178.66.207:36661',
+    baseUrl: envApiUrl.isNotEmpty ? envApiUrl : kDefaultApiUrl,
   );
 
   // Initialize local notification service for scheduled reminders.
@@ -200,6 +199,8 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
       // Initialize push notifications (graceful no-op if Firebase is not configured).
       if (globalContainer.read(authStateProvider)) {
         globalContainer.read(pushNotificationServiceProvider).init();
+        // Connect WebSocket for real-time collaboration.
+        _initWebSocket();
       }
       // Initialize share extension receiver.
       final shareService = globalContainer.read(receiveShareServiceProvider);
@@ -221,6 +222,16 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
 
       _checkAndShowWhatsNew();
     });
+  }
+
+  Future<void> _initWebSocket() async {
+    try {
+      final api = globalContainer.read(apiClientProvider);
+      final wsToken = await api.getWsToken();
+      globalContainer.read(wsClientProvider.notifier).connect(wsToken);
+    } catch (_) {
+      // WebSocket failure is non-critical for app functionality.
+    }
   }
 
   @override
@@ -364,16 +375,9 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                           title: 'AnyNote',
                           debugShowCheckedModeBanner: false,
                           showSemanticsDebugger: false,
-                          theme: selectThemeData(
-                                themeOption,
-                                MediaQuery.platformBrightnessOf(context),
-                              ) ??
-                              AppTheme.lightTheme(),
-                          darkTheme: AppTheme.darkTheme(),
-                          highContrastTheme: AppTheme.highContrastLightTheme(),
-                          highContrastDarkTheme:
-                              AppTheme.highContrastDarkTheme(),
-                          themeMode: selectThemeMode(themeOption),
+                          theme: selectEffectiveTheme(themeOption, brightness),
+                          darkTheme: selectEffectiveTheme(themeOption, brightness),
+                          themeMode: ThemeMode.system,
                           routerConfig: appRouter,
                           localizationsDelegates: [
                             ...AppLocalizations.localizationsDelegates,

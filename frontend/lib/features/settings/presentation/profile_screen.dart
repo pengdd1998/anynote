@@ -7,6 +7,7 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/keyboard_scroll_mixin.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/plan_providers.dart';
 
@@ -20,18 +21,35 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen>
+    with WidgetsBindingObserver, KeyboardScrollMixin {
   late TextEditingController _displayNameController;
   late TextEditingController _bioController;
+  final _displayNameFocus = FocusNode();
+  final _bioFocus = FocusNode();
   late bool _publicProfileEnabled;
   bool _initialized = false;
   bool _saving = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _displayNameController.dispose();
     _bioController.dispose();
+    _displayNameFocus.dispose();
+    _bioFocus.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    onKeyboardMetricsChanged();
   }
 
   @override
@@ -40,6 +58,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(l10n.profileTitle),
         backgroundColor: Colors.transparent,
@@ -94,13 +113,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ? _displayNameController.text.trim().substring(0, 1).toUpperCase()
         : '?';
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.s4,
-        AppSpacing.md,
-        AppSpacing.xl,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.s4,
+              AppSpacing.md,
+              200,
+            ),
       children: [
         // ── Avatar hero ─────────────────────────────────────
         Center(
@@ -113,7 +134,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppColors.accentLavenderBg,
+                  AppColors.accentPeachBg,
                   AppColors.accentMintBg.withAlpha(180),
                 ],
               ),
@@ -131,7 +152,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 style: AppTextStyles.headline.copyWith(
                   fontSize: 34,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.accentLavenderText,
+                  color: AppColors.accentPeachText,
                 ),
               ),
             ),
@@ -183,7 +204,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: AppSpacing.s8),
               TextField(
                 controller: _displayNameController,
+                focusNode: _displayNameFocus,
                 maxLength: 100,
+                scrollPadding: const EdgeInsets.only(bottom: 120),
                 decoration: InputDecoration(
                   hintText: l10n.displayNameHint,
                   border: OutlineInputBorder(
@@ -209,8 +232,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: AppSpacing.s8),
               TextField(
                 controller: _bioController,
+                focusNode: _bioFocus,
                 maxLength: 500,
                 maxLines: 4,
+                scrollPadding: const EdgeInsets.only(bottom: 120),
                 decoration: InputDecoration(
                   hintText: l10n.bioHint,
                   border: OutlineInputBorder(
@@ -310,6 +335,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
       ],
+    );
+      },
     );
   }
 

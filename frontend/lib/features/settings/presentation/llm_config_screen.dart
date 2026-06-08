@@ -37,6 +37,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
     final configsAsync = ref.watch(llmConfigsProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: Text(l10n.llmConfigTitle)),
       body: configsAsync.when(
         data: (configs) {
@@ -151,6 +152,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   child: TextField(
                     controller: nameCtrl,
                     decoration: InputDecoration(labelText: l10n.name),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -176,6 +178,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   child: TextField(
                     controller: urlCtrl,
                     decoration: InputDecoration(labelText: l10n.baseUrl),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -190,6 +193,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                       ),
                     ),
                     obscureText: true,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -201,6 +205,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                       labelText: l10n.model,
                       hintText: l10n.modelHint,
                     ),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                 ),
               ],
@@ -261,6 +266,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 child: TextField(
                   controller: nameCtrl,
                   decoration: InputDecoration(labelText: l10n.name),
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
                 ),
               ),
               const SizedBox(height: 12),
@@ -269,6 +275,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 child: TextField(
                   controller: urlCtrl,
                   decoration: InputDecoration(labelText: l10n.baseUrl),
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
                 ),
               ),
               const SizedBox(height: 12),
@@ -283,6 +290,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                     ),
                   ),
                   obscureText: true,
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
                 ),
               ),
               const SizedBox(height: 12),
@@ -294,6 +302,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                     labelText: l10n.model,
                     hintText: l10n.modelHint,
                   ),
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
                 ),
               ),
             ],

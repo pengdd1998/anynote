@@ -130,6 +130,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter all 12 words separated by spaces, in the correct order.';
 
   @override
+  String get recoveryStepMnemonicTitle => 'Enter Recovery Key';
+
+  @override
+  String get recoveryStepMnemonicDesc =>
+      'Paste your 12-word recovery key or enter it manually.';
+
+  @override
+  String get recoveryEnterManually => 'Enter words one by one';
+
+  @override
+  String get recoveryClearMnemonic => 'Clear';
+
+  @override
+  String get recoveryMnemonicHint => 'word1 word2 word3 ... word12';
+
+  @override
+  String get recoveryStepRecoveringTitle => 'Recovering Account…';
+
+  @override
+  String get recoveryStepRecoveringDesc => 'Deriving your encryption keys…';
+
+  @override
   String get invalidRecoveryKey =>
       'Invalid recovery key. Please check your words and try again.';
 
@@ -183,6 +205,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchNotes => 'Search notes...';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterNotes => 'Notes';
+
+  @override
+  String get filterTasks => 'Tasks';
+
+  @override
+  String get filterJournal => 'Journal';
 
   @override
   String get collections => 'Collections';
@@ -1425,7 +1459,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportDate => 'Export Date';
 
   @override
-  String get totalItems => 'Total Items';
+  String get totalItems => 'Total items';
 
   @override
   String get itemCounts => 'Item Counts';
@@ -4380,4 +4414,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notePublishedSuccess => 'Note published successfully!';
+
+  @override
+  String get noCommentsYet =>
+      'No comments yet. Be the first to share your thoughts!';
+
+  @override
+  String commentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count comments',
+      one: '1 comment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get addComment => 'Add a comment...';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get noNotifications => 'No notifications';
+
+  @override
+  String get notificationPreferences => 'Configure notification preferences';
+
+  @override
+  String get failedToLoadNotifications => 'Failed to load notifications';
+
+  @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get deleteAccountWarning =>
+      'This action is irreversible. All your data will be permanently deleted from the server.';
+
+  @override
+  String get deleteAccountConfirmTitle => 'Are you absolutely sure?';
+
+  @override
+  String get deleteAccountFinalWarning =>
+      'Your account and all associated data will be permanently deleted. This cannot be undone.';
+
+  @override
+  String get deleteAccountPermanently => 'Delete Permanently';
+
+  @override
+  String deleteAccountFailed(String error) {
+    return 'Failed to delete account: $error';
+  }
+
+  @override
+  String get syncStats => 'Server Stats';
+
+  @override
+  String get conflicts => 'Conflicts';
+
+  @override
+  String get failedToCreateRoom =>
+      'Failed to create collaboration room. Please check your connection.';
+
+  @override
+  String get failedToJoinRoom =>
+      'Failed to join room. Please check the invite code.';
+
+  @override
+  String get joining => 'Joining...';
+
+  @override
+  String get loadMore => 'Load more';
 }

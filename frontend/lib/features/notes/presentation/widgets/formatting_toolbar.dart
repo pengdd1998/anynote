@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
+import '../../../../core/theme/app_radius.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Tooltip strings for formatting toolbar buttons.
@@ -61,6 +62,29 @@ class FormattingToolbar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: IntrinsicHeight(
           child: Row(children: [
+          // --- Aa prefix ---
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Aa',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 16,
+                  margin: const EdgeInsets.only(left: 12),
+                  color: colorScheme.outlineVariant,
+                ),
+              ],
+            ),
+          ),
           // --- Text style group ---
           _FormatButton(
             icon: Icons.format_bold,
@@ -221,18 +245,11 @@ class FormattingToolbar extends StatelessWidget {
   }
 
   Widget _groupDivider(ColorScheme colorScheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Center(
-        child: Container(
-          width: 3,
-          height: 3,
-          decoration: BoxDecoration(
-            color: colorScheme.onSurfaceVariant.withAlpha(60),
-            shape: BoxShape.circle,
-          ),
-        ),
-      ),
+    return Container(
+      width: 1,
+      height: 16,
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      color: colorScheme.outlineVariant,
     );
   }
 
@@ -342,7 +359,7 @@ class _FormatButton extends StatelessWidget {
         foregroundColor: isActive
             ? colorScheme.primary
             : colorScheme.onSurfaceVariant,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.xsBorder),
       ),
       onPressed: onPressed,
     );

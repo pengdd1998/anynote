@@ -146,6 +146,7 @@ class _TagPickerSheetState extends ConsumerState<TagPickerSheet> {
                     label: l10n.newTagName,
                     child: TextField(
                       controller: _newTagController,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
                       decoration: InputDecoration(
                         hintText: l10n.newTagName,
                         border: const OutlineInputBorder(),

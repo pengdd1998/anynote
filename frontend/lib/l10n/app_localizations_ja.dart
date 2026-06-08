@@ -125,6 +125,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recoveryKeyFormatHint => '12語を正しい順序で、スペースで区切って入力してください。';
 
   @override
+  String get recoveryStepMnemonicTitle => 'リカバリーキーを入力';
+
+  @override
+  String get recoveryStepMnemonicDesc => '12語のリカバリーキーを貼り付けるか、手動で入力してください。';
+
+  @override
+  String get recoveryEnterManually => '単語を一つずつ入力';
+
+  @override
+  String get recoveryClearMnemonic => 'クリア';
+
+  @override
+  String get recoveryMnemonicHint => '単語1 単語2 単語3 … 単語12';
+
+  @override
+  String get recoveryStepRecoveringTitle => 'アカウントを復元中…';
+
+  @override
+  String get recoveryStepRecoveringDesc => '暗号鍵を導出中…';
+
+  @override
   String get invalidRecoveryKey => '無効なリカバリーキーです。入力内容を確認して再度お試しください。';
 
   @override
@@ -175,6 +196,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get searchNotes => 'メモを検索...';
+
+  @override
+  String get filterAll => 'すべて';
+
+  @override
+  String get filterNotes => 'メモ';
+
+  @override
+  String get filterTasks => 'タスク';
+
+  @override
+  String get filterJournal => 'ジャーナル';
 
   @override
   String get collections => 'コレクション';
@@ -1389,7 +1422,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get exportDate => 'エクスポート日';
 
   @override
-  String get totalItems => '合計アイテム数';
+  String get totalItems => '合計アイテム';
 
   @override
   String get itemCounts => 'アイテム数';
@@ -4171,4 +4204,68 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get notePublishedSuccess => 'メモを公開しました！';
+
+  @override
+  String get noCommentsYet => 'まだコメントはありません。最初のコメントを書きましょう！';
+
+  @override
+  String commentCount(int count) {
+    return '$count件のコメント';
+  }
+
+  @override
+  String get addComment => 'コメントを追加...';
+
+  @override
+  String get notifications => '通知';
+
+  @override
+  String get markAllRead => 'すべて既読にする';
+
+  @override
+  String get noNotifications => '通知はありません';
+
+  @override
+  String get notificationPreferences => '通知設定を構成';
+
+  @override
+  String get failedToLoadNotifications => '通知の読み込みに失敗しました';
+
+  @override
+  String get deleteAccount => 'アカウント削除';
+
+  @override
+  String get deleteAccountWarning => 'この操作は取り消せません。すべてのデータがサーバーから永久に削除されます。';
+
+  @override
+  String get deleteAccountConfirmTitle => '本当に削除しますか？';
+
+  @override
+  String get deleteAccountFinalWarning => 'アカウントと関連するすべてのデータが永久に削除されます。';
+
+  @override
+  String get deleteAccountPermanently => '永久に削除';
+
+  @override
+  String deleteAccountFailed(String error) {
+    return 'アカウントの削除に失敗しました：$error';
+  }
+
+  @override
+  String get syncStats => 'サーバー統計';
+
+  @override
+  String get conflicts => '競合';
+
+  @override
+  String get failedToCreateRoom => 'コラボレーションルームの作成に失敗しました。接続を確認してください。';
+
+  @override
+  String get failedToJoinRoom => 'ルームへの参加に失敗しました。招待コードを確認してください。';
+
+  @override
+  String get joining => '参加中...';
+
+  @override
+  String get loadMore => 'もっと読み込む';
 }

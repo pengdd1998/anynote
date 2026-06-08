@@ -167,23 +167,32 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
   }
 
   Widget _buildGridView(List<Collection> collections, AppDatabase db) {
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: AppSpacing.s8,
-        crossAxisSpacing: AppSpacing.s8,
-        childAspectRatio: 0.9,
-      ),
-      itemCount: collections.length,
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.s4,
-        AppSpacing.md,
-        80,
-      ),
-      itemBuilder: (context, index) {
-        final collection = collections[index];
-        return _buildDismissibleCard(collection, db, isGrid: true);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxExtent = constraints.maxWidth > 1200
+            ? 280.0
+            : constraints.maxWidth > 800
+                ? 320.0
+                : 360.0;
+        return GridView.builder(
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: maxExtent,
+            mainAxisSpacing: AppSpacing.s8,
+            crossAxisSpacing: AppSpacing.s8,
+            childAspectRatio: 0.9,
+          ),
+          itemCount: collections.length,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.s4,
+            AppSpacing.md,
+            80,
+          ),
+          itemBuilder: (context, index) {
+            final collection = collections[index];
+            return _buildDismissibleCard(collection, db, isGrid: true);
+          },
+        );
       },
     );
   }
@@ -553,6 +562,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
           ),
           autofocus: true,
           textCapitalization: TextCapitalization.sentences,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
         ),
         actions: [
           TextButton(

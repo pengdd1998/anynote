@@ -598,6 +598,7 @@ class _SnippetPickerSheetState extends State<_SnippetPickerSheet> {
             ),
             onChanged: _applyFilter,
             autofocus: true,
+            scrollPadding: const EdgeInsets.only(bottom: 120),
           ),
           const SizedBox(height: 8),
           if (_isLoading)

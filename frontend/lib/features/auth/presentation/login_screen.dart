@@ -6,14 +6,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
+import '../../../core/collab/ws_client.dart';
 import '../../../core/crypto/master_key.dart';
 import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/notifications/push_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/keyboard_scroll_mixin.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/pressable_scale.dart';
 
@@ -24,12 +27,36 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with WidgetsBindingObserver, KeyboardScrollMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
   bool _isLoading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _emailController.dispose();
+    _passwordController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    onKeyboardMetricsChanged();
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -133,6 +160,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Initialize push notifications now that the user is authenticated.
       // This is a fire-and-forget operation; failure does not block login.
       ref.read(pushNotificationServiceProvider).init();
+
+      // Connect to the WebSocket server for real-time collaboration.
+      _connectWebSocket();
 
       // Step 5: Prompt KDF migration if user logged in with legacy parameters.
       // This is non-blocking: the user can decline and still use the app.
@@ -255,11 +285,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
+  Future<void> _connectWebSocket() async {
+    try {
+      final api = ref.read(apiClientProvider);
+      final wsToken = await api.getWsToken();
+      if (!mounted) return;
+      ref.read(wsClientProvider.notifier).connect(wsToken);
+    } catch (_) {
+      // WebSocket connection failure is non-critical. The collab feature
+      // will simply be unavailable until the next successful connection.
+    }
   }
 
   @override
@@ -268,239 +303,275 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
     final accentBg = isDark
-        ? AppColors.accentLavender.withValues(alpha: 0.12)
-        : AppColors.accentLavenderBg;
+        ? AppColors.accentCoral.withValues(alpha: 0.12)
+        : AppColors.accentCoralBg;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: FocusTraversalGroup(
-                      policy: OrderedTraversalPolicy(),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // -- Illustration --
-                          Center(
-                            child: Semantics(
-                              label: l10n.loginScreenLabel,
-                              child: Container(
-                                width: 88,
-                                height: 88,
-                                decoration: BoxDecoration(
-                                  color: accentBg,
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.lg),
-                                ),
-                                child: Icon(
-                                  Icons.lock_outline,
-                                  size: 40,
-                                  color: primaryColor,
-                                ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: AppSpacing.xl,
+            right: AppSpacing.xl,
+            top: MediaQuery.sizeOf(context).height * 0.12,
+            bottom: 200,
+          ),
+          child: Form(
+            key: _formKey,
+            child: FocusTraversalGroup(
+              policy: OrderedTraversalPolicy(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // -- Illustration --
+                  Center(
+                    child: Semantics(
+                      label: l10n.loginScreenLabel,
+                      child: Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          color: accentBg,
+                          borderRadius:
+                              BorderRadius.circular(AppRadius.lg),
+                          boxShadow: AppShadows.mdOf(
+                            Theme.of(context).brightness,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.shield_moon_outlined,
+                          size: 40,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // -- Welcome headline --
+                  Text(
+                    l10n.welcomeBack,
+                    style: AppTextStyles.display.copyWith(
+                      fontSize: 30,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: AppSpacing.sm),
+
+                  Text(
+                    l10n.signInToVault,
+                    style: AppTextStyles.body.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // -- Error message --
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Semantics(
+                        liveRegion: true,
+                        label: l10n.errorLabel(_error!),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.s12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkErrorBg
+                                : AppColors.lightErrorBg,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.darkErrorBorder
+                                  : AppColors.lightErrorBorder,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.error,
                               ),
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.xl),
-
-                          // -- Welcome headline --
-                          Text(
-                            l10n.welcomeBack,
-                            style: AppTextStyles.display.copyWith(
-                              fontSize: 30,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          const SizedBox(height: AppSpacing.sm),
-
-                          Text(
-                            l10n.signInToVault,
-                            style: AppTextStyles.body.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextTertiary
-                                  : AppColors.lightTextTertiary,
-                              height: 1.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          const SizedBox(height: AppSpacing.xl),
-
-                          // -- Error message --
-                          if (_error != null)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.md,),
-                              child: Semantics(
-                                liveRegion: true,
-                                label: l10n.errorLabel(_error!),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
                                 child: Text(
                                   _error!,
                                   style: AppTextStyles.body.copyWith(
-                                    color:
-                                        Theme.of(context).colorScheme.error,
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 13,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-
-                          // -- Email field --
-                          FocusTraversalOrder(
-                            order: const NumericFocusOrder(1),
-                            child: TextFormField(
-                              controller: _emailController,
-                              autofocus: true,
-                              autofillHints: const [AutofillHints.email],
-                              textInputAction: TextInputAction.next,
-                              decoration: InputDecoration(
-                                hintText: l10n.email,
-                                prefixIcon:
-                                    const Icon(Icons.email_outlined),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (v) => v?.isEmpty ?? true
-                                  ? l10n.emailRequired
-                                  : null,
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.s12),
-
-                          // -- Password field --
-                          FocusTraversalOrder(
-                            order: const NumericFocusOrder(2),
-                            child: PasswordTextField(
-                              controller: _passwordController,
-                              hintText: l10n.password,
-                              prefixIcon:
-                                  const Icon(Icons.lock_outline),
-                              autofillHints: const [
-                                AutofillHints.password,
-                              ],
-                              textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (_) => _submit(),
-                              showPasswordTooltip: l10n.showPassword,
-                              hidePasswordTooltip: l10n.hidePassword,
-                              validator: (v) => v?.isEmpty ?? true
-                                  ? l10n.passwordRequired
-                                  : null,
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // -- Sign in button --
-                          PressableScale(
-                            onPressed: _isLoading ? null : _submit,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.pill),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 16,),
-                              decoration: BoxDecoration(
-                                color: primaryColor,
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.pill),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: primaryColor
-                                        .withValues(alpha: 0.25),
-                                    offset: const Offset(0, 4),
-                                    blurRadius: 16,
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child:
-                                            CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : Text(
-                                        l10n.signIn,
-                                        style: AppTextStyles.body
-                                            .copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.xl),
-
-                          // -- Divider with spacing --
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  height: 1,
-                                  color: isDark
-                                      ? AppColors.darkDivider
-                                      : AppColors.lightDivider,
                                 ),
                               ),
                             ],
                           ),
+                        ),
+                      ),
+                    ),
 
-                          const SizedBox(height: AppSpacing.lg),
+                  // -- Email field --
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(1),
+                    child: TextFormField(
+                      controller: _emailController,
+                      focusNode: _emailFocus,
+                      autofocus: true,
+                      autofillHints: const [AutofillHints.email],
+                      textInputAction: TextInputAction.next,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      decoration: InputDecoration(
+                        hintText: l10n.email,
+                        prefixIcon:
+                            const Icon(Icons.email_outlined),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) => v?.isEmpty ?? true
+                          ? l10n.emailRequired
+                          : null,
+                    ),
+                  ),
 
-                          // -- Alternative actions --
-                          TextButton(
-                            onPressed: () =>
-                                context.push('/auth/register'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: primaryColor,
-                            ),
-                            child: Text(
-                              l10n.noAccountRegister,
-                              style: AppTextStyles.body.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
+                  const SizedBox(height: AppSpacing.s12),
 
-                          TextButton(
-                            onPressed: () =>
-                                context.push('/auth/recover'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: isDark
-                                  ? AppColors.darkTextTertiary
-                                  : AppColors.lightTextTertiary,
-                            ),
-                            child: Text(
-                              l10n.recoverFromBackup,
-                              style: AppTextStyles.caption,
-                            ),
+                  // -- Password field --
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(2),
+                    child: PasswordTextField(
+                      controller: _passwordController,
+                      focusNode: _passwordFocus,
+                      hintText: l10n.password,
+                      prefixIcon:
+                          const Icon(Icons.lock_outline),
+                      autofillHints: const [
+                        AutofillHints.password,
+                      ],
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _submit(),
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      showPasswordTooltip: l10n.showPassword,
+                      hidePasswordTooltip: l10n.hidePassword,
+                      validator: (v) => v?.isEmpty ?? true
+                          ? l10n.passwordRequired
+                          : null,
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // -- Sign in button --
+                  PressableScale(
+                    onPressed: _isLoading ? null : _submit,
+                    borderRadius:
+                        BorderRadius.circular(AppRadius.pill),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16,),
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.pill),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor
+                                .withValues(alpha: 0.25),
+                            offset: const Offset(0, 4),
+                            blurRadius: 16,
                           ),
                         ],
                       ),
+                      child: Center(
+                        child: _isLoading
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              )
+                            : Text(
+                                l10n.signIn,
+                                style: AppTextStyles.body
+                                    .copyWith(
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                      ),
                     ),
                   ),
-                ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // -- Divider with spacing --
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            color: isDark
+                                ? AppColors.darkDivider
+                                : AppColors.lightDivider,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // -- Alternative actions --
+                  TextButton(
+                    onPressed: () =>
+                        context.push('/auth/register'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: primaryColor,
+                    ),
+                    child: Text(
+                      l10n.noAccountRegister,
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+
+                  TextButton(
+                    onPressed: () =>
+                        context.push('/auth/recover'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
+                    child: Text(
+                      l10n.recoverFromBackup,
+                      style: AppTextStyles.caption,
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );

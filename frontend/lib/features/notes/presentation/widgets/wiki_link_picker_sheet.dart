@@ -135,7 +135,11 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
       minChildSize: 0.3,
       maxChildSize: 0.9,
       expand: false,
-      builder: (context, scrollController) => Column(
+      builder: (context, scrollController) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
         children: [
           _buildHeader(context, l10n, theme),
           _buildSearchField(context, l10n, theme),
@@ -148,6 +152,7 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
                     : _buildNotesList(context, scrollController, l10n, theme),
           ),
         ],
+      ),
       ),
     );
   }
@@ -190,6 +195,7 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
+        scrollPadding: const EdgeInsets.only(bottom: 120),
         decoration: InputDecoration(
           hintText: l10n.searchNotes,
           prefixIcon: const Icon(Icons.search),

@@ -15,6 +15,9 @@ import 'package:flutter/material.dart';
 class AppRadius {
   AppRadius._();
 
+  /// 8 — tag badges, small rounded elements
+  static const double xxs = 8;
+
   /// 12 — chips, badges, small elements
   static const double xs = 12;
 
@@ -35,18 +38,26 @@ class AppRadius {
 
   // -- Convenience BorderRadius instances --
 
-  static BorderRadius get xsBorder => BorderRadius.circular(xs);
-  static BorderRadius get smBorder => BorderRadius.circular(sm);
-  static BorderRadius get mdBorder => BorderRadius.circular(md);
-  static BorderRadius get lgBorder => BorderRadius.circular(lg);
-  static BorderRadius get xlBorder => BorderRadius.circular(xl);
-  static BorderRadius get pillBorder => BorderRadius.circular(pill);
+  static const BorderRadius xxsBorder =
+      BorderRadius.all(Radius.circular(xxs));
+  static const BorderRadius xsBorder =
+      BorderRadius.all(Radius.circular(xs));
+  static const BorderRadius smBorder =
+      BorderRadius.all(Radius.circular(sm));
+  static const BorderRadius mdBorder =
+      BorderRadius.all(Radius.circular(md));
+  static const BorderRadius lgBorder =
+      BorderRadius.all(Radius.circular(lg));
+  static const BorderRadius xlBorder =
+      BorderRadius.all(Radius.circular(xl));
+  static const BorderRadius pillBorder =
+      BorderRadius.all(Radius.circular(pill));
 
   /// Top-only rounded corners for bottom sheets.
-  static BorderRadius get topXl =>
-      const BorderRadius.vertical(top: Radius.circular(xl));
+  static const BorderRadius topXl =
+      BorderRadius.vertical(top: Radius.circular(xl));
 
   /// Top-only rounded corners at lg size.
-  static BorderRadius get topLg =>
-      const BorderRadius.vertical(top: Radius.circular(lg));
+  static const BorderRadius topLg =
+      BorderRadius.vertical(top: Radius.circular(lg));
 }

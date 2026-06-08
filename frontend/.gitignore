@@ -48,6 +48,9 @@ app.*.map.json
 .playwright-mcp/
 .serena/
 
+# Native libraries for local testing (install via NuGet or download)
+libsodium.dll
+
 # Debugging artifacts
 ui_current_dump.xml
 *.dump

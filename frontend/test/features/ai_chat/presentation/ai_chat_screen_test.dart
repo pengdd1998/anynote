@@ -43,6 +43,9 @@ void main() {
         overrides: chatOverrides(),
       );
       addTearDown(() async {
+        // Drain the microtask queue to let any pending async stream
+        // operations (from sendMessage) complete before disposing.
+        await tester.pumpAndSettle(const Duration(seconds: 3));
         // Cancel the notifier while the widget is still mounted to prevent
         // the dispose() method from reading a disposed ref.
         try {
@@ -50,6 +53,7 @@ void main() {
         } catch (_) {
           // Notifier may already be cancelled.
         }
+        await tester.pump();
         await handle.dispose();
       });
       return handle;
@@ -73,7 +77,7 @@ void main() {
 
       // Should show the welcome empty state.
       expect(find.text('Ask me anything about your notes'), findsOneWidget);
-      expect(find.byIcon(Icons.chat_bubble_outline), findsOneWidget);
+      expect(find.byIcon(Icons.auto_awesome), findsOneWidget);
     });
 
     testWidgets('shows message input field', (tester) async {
@@ -114,13 +118,19 @@ void main() {
       );
       await tester.pump();
 
-      // Tap the send button.
+      // Tap the send button -- should not throw.
       await tester.tap(find.byIcon(Icons.send));
       await tester.pump();
 
-      // After sending, the input field should be cleared.
-      // The user's message text should appear in a message bubble.
+      // The user's message text should appear immediately (added synchronously
+      // to the session state before the async stream starts).
       expect(find.text('What are my notes about?'), findsWidgets);
+
+      // Let the async stream operations complete on the real event loop.
+      await tester.runAsync(() async {
+        await Future.delayed(const Duration(milliseconds: 100));
+      });
+      await tester.pumpAndSettle();
     });
 
     testWidgets('tapping new chat does not crash', (tester) async {

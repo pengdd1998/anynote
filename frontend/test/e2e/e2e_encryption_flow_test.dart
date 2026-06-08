@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/crypto/encryptor.dart';
 
@@ -16,11 +15,11 @@ import '../core/crypto/sodium_test_init.dart';
 
 void main() {
   setUpAll(() async {
-    registerTestSodiumPlatform();
-    await SodiumSumoInit.init();
+    final available = await probeSodiumAvailability();
+    if (!available) return;
   });
 
-  group('E2E encryption flow', () {
+  group('E2E encryption flow', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('per-item key derivation produces unique keys for different items',
         () async {
       final encryptKey = Uint8List.fromList(

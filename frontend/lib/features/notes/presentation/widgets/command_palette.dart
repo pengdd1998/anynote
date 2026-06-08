@@ -500,6 +500,7 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
                               controller: _searchController,
                               focusNode: _focusNode,
                               autofocus: true,
+                              scrollPadding: const EdgeInsets.only(bottom: 120),
                               decoration: InputDecoration(
                                 hintText: l10n?.commandSearchHint ??
                                     'Type to search notes and commands...',

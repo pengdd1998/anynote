@@ -1,6 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+
+import '../platform/platform_utils.dart';
 
 /// Typography tokens for the warm design system.
 ///
@@ -20,7 +20,7 @@ class AppTextStyles {
   AppTextStyles._();
 
   static final String fontFamily =
-      Platform.isIOS ? 'SF Pro Display' : 'Inter';
+      PlatformUtils.isIOS ? 'SF Pro Display' : 'Inter';
 
   // ---------------------------------------------------------------------------
   // Base named styles (use these directly in screen code)
@@ -29,15 +29,24 @@ class AppTextStyles {
   static final TextStyle display = TextStyle(
     fontFamily: fontFamily,
     fontSize: 36,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w800,
     height: 1.21,
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
+  );
+
+  /// Hero display for brand moments (login, onboarding, empty states).
+  static final TextStyle displayWarm = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 40,
+    fontWeight: FontWeight.w800,
+    height: 1.15,
+    letterSpacing: -1.0,
   );
 
   static final TextStyle headline = TextStyle(
     fontFamily: fontFamily,
     fontSize: 22,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w700,
     height: 1.27,
     letterSpacing: -0.3,
   );
@@ -65,13 +74,50 @@ class AppTextStyles {
     height: 1.38,
   );
 
+  // -- Additional named styles for specific UI elements -----------------------
+
+  static final TextStyle filterChip = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    height: 1.3,
+  );
+
+  /// Inline code / monospace snippets.
+  static final TextStyle mono = TextStyle(
+    fontFamily: 'RobotoMono',
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+    letterSpacing: 0,
+  );
+
+  /// Link text (underlined, accent color applied at usage site).
+  static final TextStyle link = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 15,
+    fontWeight: FontWeight.w500,
+    height: 1.47,
+    letterSpacing: -0.1,
+    decoration: TextDecoration.underline,
+  );
+
+  /// Overline / section label (small caps feel).
+  static final TextStyle overline = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    height: 1.36,
+    letterSpacing: 0.8,
+  );
+
   // ---------------------------------------------------------------------------
   // Material TextTheme mapping
   // ---------------------------------------------------------------------------
 
   static TextTheme get textTheme => TextTheme(
-        displayLarge: display,
-        displayMedium: display.copyWith(fontSize: 32),
+        displayLarge: displayWarm,
+        displayMedium: display,
         displaySmall: display.copyWith(fontSize: 28),
         headlineLarge: headline.copyWith(fontSize: 26),
         headlineMedium: headline,

@@ -57,6 +57,12 @@ class AppSpacing {
   static const double itemGap = 8;
 
   // ---------------------------------------------------------------------------
+  // Touch target
+  // ---------------------------------------------------------------------------
+
+  static const double minTouchTarget = 44;
+
+  // ---------------------------------------------------------------------------
   // Convenience EdgeInsets
   // ---------------------------------------------------------------------------
 
@@ -72,4 +78,18 @@ class AppSpacing {
     horizontal: 16,
     vertical: 12,
   );
+
+  /// Standard screen horizontal padding (16px).
+  static const EdgeInsets screenH = EdgeInsets.symmetric(horizontal: screenPadding);
+
+  /// Screen with top section gap.
+  static const EdgeInsets screenWithGap = EdgeInsets.fromLTRB(
+    screenPadding, sectionGap, screenPadding, 0,
+  );
+
+  /// Card inner padding.
+  static const EdgeInsets cardInner = EdgeInsets.all(16);
+
+  /// List item horizontal padding.
+  static const EdgeInsets listItemH = EdgeInsets.symmetric(horizontal: 16);
 }

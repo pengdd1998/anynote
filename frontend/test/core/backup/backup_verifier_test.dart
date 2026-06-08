@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/backup/backup_verifier.dart';
 import 'package:anynote/core/crypto/crypto_service.dart';
@@ -20,8 +19,8 @@ void main() {
   late Directory tempDir;
 
   setUpAll(() async {
-    registerTestSodiumPlatform();
-    await SodiumSumoInit.init();
+    final available = await probeSodiumAvailability();
+    if (!available) return;
 
     final salt = Uint8List.fromList(List.generate(32, (i) => i));
     final masterKey =
@@ -68,7 +67,7 @@ void main() {
     });
   }
 
-  group('BackupInfo', () {
+  group('BackupInfo', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('isValid returns true when errors is empty', () {
       const info = BackupInfo(
         format: 'anynote-backup-v1',
@@ -109,7 +108,7 @@ void main() {
     });
   });
 
-  group('RestorePreview', () {
+  group('RestorePreview', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('totalConflicts sums all existing counts', () {
       const preview = RestorePreview(
         existingNoteCount: 3,
@@ -143,7 +142,7 @@ void main() {
     });
   });
 
-  group('verify', () {
+  group('verify', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('returns error for non-existent file', () async {
       final verifier = BackupVerifier(crypto);
       final result = await verifier.verify('/nonexistent/path/backup.json');
@@ -331,7 +330,7 @@ void main() {
     });
   });
 
-  group('preview', () {
+  group('preview', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('throws StateError when crypto is locked', () async {
       final lockedCrypto = CryptoService();
       final verifier = BackupVerifier(lockedCrypto);

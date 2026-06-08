@@ -125,6 +125,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recoveryKeyFormatHint => '12단어를 올바른 순서로, 공백으로 구분하여 입력하세요.';
 
   @override
+  String get recoveryStepMnemonicTitle => '복구 키 입력';
+
+  @override
+  String get recoveryStepMnemonicDesc => '12단어 복구 키를 붙여넣거나 직접 입력하세요.';
+
+  @override
+  String get recoveryEnterManually => '단어별 입력';
+
+  @override
+  String get recoveryClearMnemonic => '지우기';
+
+  @override
+  String get recoveryMnemonicHint => '단어1 단어2 단어3 … 단어12';
+
+  @override
+  String get recoveryStepRecoveringTitle => '계정 복구 중…';
+
+  @override
+  String get recoveryStepRecoveringDesc => '암호화 키 파생 중…';
+
+  @override
   String get invalidRecoveryKey => '유효하지 않은 복구 키입니다. 단어를 확인하고 다시 시도해 주세요.';
 
   @override
@@ -175,6 +196,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get searchNotes => '메모 검색...';
+
+  @override
+  String get filterAll => '전체';
+
+  @override
+  String get filterNotes => '메모';
+
+  @override
+  String get filterTasks => '작업';
+
+  @override
+  String get filterJournal => '저널';
 
   @override
   String get collections => '컬렉션';
@@ -1389,7 +1422,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get exportDate => '내보낸 날짜';
 
   @override
-  String get totalItems => '전체 항목 수';
+  String get totalItems => '전체 항목';
 
   @override
   String get itemCounts => '항목 수';
@@ -4173,4 +4206,69 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notePublishedSuccess => '메모가 게시되었습니다!';
+
+  @override
+  String get noCommentsYet => '아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!';
+
+  @override
+  String commentCount(int count) {
+    return '댓글 $count개';
+  }
+
+  @override
+  String get addComment => '댓글 추가...';
+
+  @override
+  String get notifications => '알림';
+
+  @override
+  String get markAllRead => '모두 읽음';
+
+  @override
+  String get noNotifications => '알림이 없습니다';
+
+  @override
+  String get notificationPreferences => '알림 환경설정';
+
+  @override
+  String get failedToLoadNotifications => '알림을 불러오지 못했습니다';
+
+  @override
+  String get deleteAccount => '계정 삭제';
+
+  @override
+  String get deleteAccountWarning =>
+      '이 작업은 되돌릴 수 없습니다. 모든 데이터가 서버에서 영구적으로 삭제됩니다.';
+
+  @override
+  String get deleteAccountConfirmTitle => '정말 삭제하시겠습니까?';
+
+  @override
+  String get deleteAccountFinalWarning => '계정 및 모든 관련 데이터가 영구적으로 삭제됩니다.';
+
+  @override
+  String get deleteAccountPermanently => '영구 삭제';
+
+  @override
+  String deleteAccountFailed(String error) {
+    return '계정 삭제 실패: $error';
+  }
+
+  @override
+  String get syncStats => '서버 통계';
+
+  @override
+  String get conflicts => '충돌';
+
+  @override
+  String get failedToCreateRoom => '협업 방 생성에 실패했습니다. 연결을 확인해 주세요.';
+
+  @override
+  String get failedToJoinRoom => '방 참여에 실패했습니다. 초대 코드를 확인해 주세요.';
+
+  @override
+  String get joining => '참여 중...';
+
+  @override
+  String get loadMore => '더 보기';
 }

@@ -166,13 +166,14 @@ class _PublishFromEditorSheetState
             Expanded(
               child: SingleChildScrollView(
                 controller: scrollController,
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Title
                     TextField(
                       controller: _titleController,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
                       decoration: InputDecoration(
                         labelText: l10n.title,
                         border: const OutlineInputBorder(),
@@ -184,6 +185,7 @@ class _PublishFromEditorSheetState
                     // Content
                     TextField(
                       controller: _contentController,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
                       decoration: InputDecoration(
                         labelText: l10n.content,
                         border: const OutlineInputBorder(),
@@ -196,6 +198,7 @@ class _PublishFromEditorSheetState
                     // Tags
                     TextField(
                       controller: _tagsController,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
                       decoration: InputDecoration(
                         labelText: l10n.tagsCommaSeparated,
                         border: const OutlineInputBorder(),

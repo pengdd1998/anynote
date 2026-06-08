@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
+import '../platform/platform_utils.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_text_styles.dart';
@@ -45,12 +44,16 @@ class AppTheme {
   // Font family
   // ---------------------------------------------------------------------------
   static final String _fontFamily =
-      Platform.isIOS ? 'SF Pro Display' : 'Inter';
+      PlatformUtils.isIOS ? 'SF Pro Display' : 'Inter';
 
   // ---------------------------------------------------------------------------
-  // Light theme
+  // Light theme (cached)
   // ---------------------------------------------------------------------------
-  static ThemeData lightTheme() {
+  static final ThemeData light = _buildLightTheme();
+
+  static ThemeData lightTheme() => light;
+
+  static ThemeData _buildLightTheme() {
     var colorScheme = ColorScheme.fromSeed(
       seedColor: _seed,
       brightness: Brightness.light,
@@ -194,7 +197,7 @@ class AppTheme {
 
       // -- Chips -------------------------------------------------------------
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.lightInputFill,
+        backgroundColor: AppColors.slate100,
         selectedColor: colorScheme.primaryContainer,
         labelStyle: TextStyle(
           fontFamily: _fontFamily,
@@ -208,11 +211,11 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           color: colorScheme.onPrimaryContainer,
         ),
-        side: const BorderSide(color: AppColors.lightBorder),
+        side: BorderSide.none,
         shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.xsBorder,
+          borderRadius: AppRadius.pillBorder,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       ),
 
       // -- Bottom Navigation -------------------------------------------------
@@ -240,26 +243,24 @@ class AppTheme {
         indicatorColor: colorScheme.primaryContainer,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        height: 64,
+        height: 56,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return TextStyle(
               fontFamily: _fontFamily,
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
               color: colorScheme.primary,
             );
           }
           return TextStyle(
             fontFamily: _fontFamily,
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: FontWeight.w400,
             color: AppColors.lightTextSecondary,
           );
         }),
       ),
-
-      // -- Dividers ----------------------------------------------------------
       dividerTheme: const DividerThemeData(
         color: AppColors.lightDivider,
         thickness: 1,
@@ -354,13 +355,64 @@ class AppTheme {
         color: colorScheme.primary,
         size: 24,
       ),
+
+      // -- List Tile ---------------------------------------------------------
+      listTileTheme: ListTileThemeData(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+        minVerticalPadding: 8,
+      ),
+
+      // -- Progress Indicator ------------------------------------------------
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: colorScheme.primary,
+        linearTrackColor: AppColors.lightBorder,
+        circularTrackColor: Colors.transparent,
+      ),
+
+      // -- Drawer ------------------------------------------------------------
+      drawerTheme: DrawerThemeData(
+        backgroundColor: lightCardBg,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.horizontal(
+            right: Radius.circular(AppRadius.lg),
+          ),
+        ),
+      ),
+
+      // -- Tooltip -----------------------------------------------------------
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: AppColors.darkSurface,
+          borderRadius: AppRadius.xsBorder,
+        ),
+        textStyle: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 12,
+          color: AppColors.darkTextPrimary,
+        ),
+        waitDuration: const Duration(milliseconds: 500),
+      ),
+
+      // -- Popup Menu --------------------------------------------------------
+      popupMenuTheme: PopupMenuThemeData(
+        color: lightCardBg,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+        elevation: 4,
+      ),
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Dark theme
+  // Dark theme (cached)
   // ---------------------------------------------------------------------------
-  static ThemeData darkTheme() {
+  static final ThemeData dark = _buildDarkTheme();
+
+  static ThemeData darkTheme() => dark;
+
+  static ThemeData _buildDarkTheme() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: _seed,
       brightness: Brightness.dark,
@@ -663,18 +715,71 @@ class AppTheme {
         color: colorScheme.primary,
         size: 24,
       ),
+
+      // -- List Tile ---------------------------------------------------------
+      listTileTheme: ListTileThemeData(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+        minVerticalPadding: 8,
+      ),
+
+      // -- Progress Indicator ------------------------------------------------
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: colorScheme.primary,
+        linearTrackColor: AppColors.darkBorder,
+        circularTrackColor: Colors.transparent,
+      ),
+
+      // -- Drawer ------------------------------------------------------------
+      drawerTheme: DrawerThemeData(
+        backgroundColor: AppColors.darkCardBg,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.horizontal(
+            right: Radius.circular(AppRadius.lg),
+          ),
+        ),
+      ),
+
+      // -- Tooltip -----------------------------------------------------------
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: AppColors.lightSurface,
+          borderRadius: AppRadius.xsBorder,
+        ),
+        textStyle: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 12,
+          color: AppColors.lightTextPrimary,
+        ),
+        waitDuration: const Duration(milliseconds: 500),
+      ),
+
+      // -- Popup Menu --------------------------------------------------------
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.darkCardBg,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+        elevation: 4,
+      ),
     );
   }
 
   // ---------------------------------------------------------------------------
-  // High contrast themes (WCAG AAA 7:1 contrast)
+  // High contrast themes (WCAG AAA 7:1 contrast, cached)
   // ---------------------------------------------------------------------------
+
+  static final ThemeData highContrastLight = _buildHighContrastLightTheme();
+
+  static final ThemeData highContrastDark = _buildHighContrastDarkTheme();
 
   /// High contrast light theme with pure black on white for maximum readability.
   ///
   /// All color pairs meet or exceed WCAG AAA (7:1) contrast ratio.
   /// Pure black (#000000) on pure white (#FFFFFF) provides 21:1 contrast.
-  static ThemeData highContrastLightTheme() {
+  static ThemeData highContrastLightTheme() => highContrastLight;
+
+  static ThemeData _buildHighContrastLightTheme() {
     const surfaceWhite = Color(0xFFFFFFFF);
     const pureBlack = Color(0xFF000000);
     const primaryCoral = AppColors.hcPrimary;
@@ -727,7 +832,9 @@ class AppTheme {
   ///
   /// All color pairs meet or exceed WCAG AAA (7:1) contrast ratio.
   /// Pure white (#FFFFFF) on pure black (#000000) provides 21:1 contrast.
-  static ThemeData highContrastDarkTheme() {
+  static ThemeData highContrastDarkTheme() => highContrastDark;
+
+  static ThemeData _buildHighContrastDarkTheme() {
     const surfaceBlack = Color(0xFF000000);
     const pureWhite = Color(0xFFFFFFFF);
     const primaryCoral = AppColors.hcDarkPrimary;

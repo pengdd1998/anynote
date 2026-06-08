@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Centralized color tokens for the warm design system.
 ///
-/// Light mode uses warm off-white surfaces with soft indigo-purple accents
-/// and a warm accent palette (lavender, yellow, mint, peach).
+/// Light mode uses warm cream surfaces with coral-amber accents and a warm
+/// accent palette (peach, yellow, coral, mint).
 /// Dark mode uses deep navy with muted highlights.
 /// All neutrals are warm-tinted.
 ///
@@ -11,19 +11,19 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // -- Light palette (warm) ---------------------------------------------------
+  // -- Light palette (warm cream) ---------------------------------------------
 
-  static const lightSurface = Color(0xFFFAF9F7);
-  static const lightCardBg = Color(0xFFFFFFFF);
-  static const lightInputFill = Color(0xFFF3F1ED);
-  static const lightBorder = Color(0xFFE8E5DF);
-  static const lightDivider = Color(0xFFEFECE7);
+  static const lightSurface = Color(0xFFFAF8F5); // warm cream
+  static const lightCardBg = Color(0xFFFFFDF9); // faint warm tint
+  static const lightInputFill = Color(0xFFF5F2EE); // warm input fill
+  static const lightBorder = Color(0xFFE8E4DF); // warm border
+  static const lightDivider = Color(0xFFEBE8E3);
   static const lightDisabled = Color(0xFFD5D0C8);
 
-  // Light text tiers (WCAG AA on lightSurface)
-  static const lightTextPrimary = Color(0xFF2D2A26);
-  static const lightTextSecondary = Color(0xFF6B6560);
-  static const lightTextTertiary = Color(0xFF9E9890);
+  // Light text tiers (WCAG AA on lightSurface) — warm slate
+  static const lightTextPrimary = Color(0xFF0F172A); // slate-900
+  static const lightTextSecondary = Color(0xFF5C534A); // warm brown-gray
+  static const lightTextTertiary = Color(0xFF9C8F83); // warm muted
 
   // -- Dark palette -----------------------------------------------------------
 
@@ -39,11 +39,11 @@ class AppColors {
   static const darkTextSecondary = Color(0xFFC4C0E0);
   static const darkTextTertiary = Color(0xFF9E9AB8);
 
-  // -- Brand accent -----------------------------------------------------------
+  // -- Brand accent (warm coral-amber — matching design reference) ---------
 
-  static const primary = Color(0xFF6C5CE7);
-  static const primaryDark = Color(0xFF5A4BD1);
-  static const secondary = Color(0xFFA29BFE);
+  static const primary = Color(0xFFD9774A); // warm coral-amber
+  static const primaryDark = Color(0xFFC46838); // deeper coral
+  static const secondary = Color(0xFFE8A87C); // warm peach-lavender
 
   // -- Warm accent palette ----------------------------------------------------
 
@@ -51,6 +51,7 @@ class AppColors {
   static const accentYellow = Color(0xFFFDE68A);
   static const accentMint = Color(0xFFA7F3D0);
   static const accentPeach = Color(0xFFFDBA74);
+  static const accentCoral = Color(0xFFF4A28C);
 
   // -- Warm accent backgrounds (for cards, chips, sections) -------------------
 
@@ -58,6 +59,24 @@ class AppColors {
   static const accentYellowBg = Color(0xFFFEF9E7);
   static const accentMintBg = Color(0xFFECFDF5);
   static const accentPeachBg = Color(0xFFFFF7ED);
+  static const accentCoralBg = Color(0xFFFFF0EB);
+
+  // -- Slate palette (Tailwind) -----------------------------------------------
+
+  static const slate50 = Color(0xFFF8FAFC);
+  static const slate100 = Color(0xFFF1F5F9);
+  static const slate200 = Color(0xFFE2E8F0);
+  static const slate300 = Color(0xFFCBD5E1);
+  static const slate400 = Color(0xFF94A3B8);
+  static const slate500 = Color(0xFF64748B);
+  static const slate600 = Color(0xFF475569);
+  static const slate700 = Color(0xFF334155);
+  static const slate900 = Color(0xFF0F172A);
+
+  // -- Indigo accent tones (Tailwind) -----------------------------------------
+
+  static const indigo50 = Color(0xFFEEF2FF);
+  static const indigo100 = Color(0xFFE0E7FF);
 
   // -- Warm accent text (for text on light surfaces) --------------------------
 
@@ -65,19 +84,21 @@ class AppColors {
   static const accentYellowText = Color(0xFF92690A);
   static const accentMintText = Color(0xFF0E7A52);
   static const accentPeachText = Color(0xFFB45815);
+  static const accentCoralText = Color(0xFFB85A3A);
 
   // Ordered accent backgrounds for auto-cycling (cards, tags).
+  // Warm-first: peach, yellow, coral, mint.
   static const accentBackgrounds = <Color>[
-    accentLavenderBg,
-    accentYellowBg,
-    accentMintBg,
     accentPeachBg,
+    accentYellowBg,
+    accentCoralBg,
+    accentMintBg,
   ];
 
-  // -- Shadow colors ----------------------------------------------------------
+  // -- Shadow colors (warm-tinted) -------------------------------------------
 
-  static const shadowLight = Color(0x14000000); // ~8% black
-  static const shadowMedium = Color(0x28000000); // ~16% black
+  static const shadowLight = Color(0x1A1008); // warm ~10%
+  static const shadowMedium = Color(0x2A2018); // warm ~16%
   static const shadowDark = Color(0x20000000); // ~12% black (dark mode)
 
   // -- Semantic colors --------------------------------------------------------
@@ -89,8 +110,8 @@ class AppColors {
 
   // -- High contrast (WCAG AAA 7:1) -------------------------------------------
 
-  static const hcPrimary = Color(0xFF6D28D9);
-  static const hcDarkPrimary = Color(0xFFC4B5FD);
+  static const hcPrimary = Color(0xFFB45A25);
+  static const hcDarkPrimary = Color(0xFFF4A28C);
 
   // -- Semantic variants for light mode ---------------------------------------
 
@@ -116,20 +137,38 @@ class AppColors {
 
   // -- Note card pastel backgrounds -------------------------------------------
 
-  static const noteYellow = Color(0xFFFFF3CD);
-  static const notePurple = Color(0xFFE6E1FF);
-  static const noteGreen = Color(0xFFE8F5E9);
-  static const notePink = Color(0xFFFCE4EC);
-  static const noteBlue = Color(0xFFE3F2FD);
-  static const noteOrange = Color(0xFFFFE8D6);
+  static const noteYellow = Color(0xFFFFFBEB); // warm cream
+  static const notePeach = Color(0xFFFFF5F0); // warm peach
+  static const noteGreen = Color(0xFFF0FDF4); // subtle mint
+  static const notePink = Color(0xFFFFF1F2); // subtle rose
+  static const noteBlue = Color(0xFFF0F7FF); // subtle sky
+  static const noteOrange = Color(0xFFFFF7ED); // subtle peach
 
-  /// Ordered palette for auto-cycling card colors.
+  /// Ordered palette for auto-cycling card colors. Warm-first.
   static const notePastels = <Color>[
     noteYellow,
-    notePurple,
-    noteGreen,
-    notePink,
-    noteBlue,
     noteOrange,
+    notePink,
+    noteGreen,
+    noteBlue,
+    notePeach,
+  ];
+
+  // -- Note card border colors (soft, warm-tinted) ---------------------------
+
+  static const noteBorderYellow = Color(0xFFFEECC0);
+  static const noteBorderPink = Color(0xFFFECDD3);
+  static const noteBorderGreen = Color(0xFFBBF7D0);
+  static const noteBorderPeach = Color(0xFFFED7AA);
+  static const noteBorderBlue = Color(0xFFBFDBFE);
+  static const noteBorderOrange = Color(0xFFFED7AA);
+
+  static const noteBorderColors = <Color>[
+    noteBorderYellow,
+    noteBorderOrange,
+    noteBorderPink,
+    noteBorderGreen,
+    noteBorderBlue,
+    noteBorderPeach,
   ];
 }

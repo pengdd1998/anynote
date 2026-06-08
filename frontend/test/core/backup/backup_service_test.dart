@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/backup/backup_service.dart';
 import 'package:anynote/core/crypto/crypto_service.dart';
@@ -19,8 +18,8 @@ void main() {
   late Uint8List testEncryptKey;
 
   setUpAll(() async {
-    registerTestSodiumPlatform();
-    await SodiumSumoInit.init();
+    final available = await probeSodiumAvailability();
+    if (!available) return;
 
     final salt = Uint8List.fromList(List.generate(32, (i) => i));
     final masterKey =
@@ -42,7 +41,7 @@ void main() {
     await db.close();
   });
 
-  group('exportBackup', () {
+  group('exportBackup', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('throws StateError when crypto is locked', () async {
       final lockedCrypto = CryptoService();
       final service = BackupService(db, lockedCrypto);
@@ -158,7 +157,7 @@ void main() {
     });
   });
 
-  group('importBackup', () {
+  group('importBackup', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('throws StateError when crypto is locked', () async {
       final lockedCrypto = CryptoService();
       final service = BackupService(db, lockedCrypto);

@@ -577,7 +577,7 @@ class _TopTagsSection extends StatelessWidget {
                 final accentBg =
                     AppColors.accentBackgrounds[index % AppColors.accentBackgrounds.length];
                 final accentTextColors = [
-                  AppColors.accentLavenderText,
+                  AppColors.accentPeachText,
                   AppColors.accentYellowText,
                   AppColors.accentMintText,
                   AppColors.accentPeachText,

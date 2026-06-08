@@ -9,6 +9,9 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../main.dart';
+import '../../comments/presentation/comment_list.dart';
+import '../../comments/presentation/comment_input.dart';
 
 /// Screen for viewing a shared note.
 ///
@@ -56,6 +59,9 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
   }
 
   Future<void> _tryDecrypt() async {
+    // Detect server share status for all paths (including password-protected).
+    _isServerShare = _detectIsServerShare(widget.shareId);
+
     if (_isPasswordProtected) {
       setState(() => _isDecrypting = false);
       return;
@@ -68,11 +74,9 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
 
     try {
       final shareService = ref.read(shareServiceProvider);
-      final isServer = _detectIsServerShare(widget.shareId);
-      _isServerShare = isServer;
 
       final DecryptedSharedNote decrypted;
-      if (isServer) {
+      if (_isServerShare!) {
         decrypted = await shareService.decryptServerSharedNote(
           shareId: widget.shareId,
           key: widget.shareKeyFragment,
@@ -110,10 +114,9 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
 
     try {
       final shareService = ref.read(shareServiceProvider);
-      final isServer = _isServerShare ?? _detectIsServerShare(widget.shareId);
 
       final DecryptedSharedNote decrypted;
-      if (isServer) {
+      if (_isServerShare!) {
         decrypted = await shareService.decryptServerSharedNote(
           shareId: widget.shareId,
           password: _passwordController.text,
@@ -184,7 +187,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.accentLavenderBg,
+              color: AppColors.accentPeachBg,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Center(
@@ -193,7 +196,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
                 height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: AppColors.accentLavenderText,
+                  color: AppColors.accentPeachText,
                 ),
               ),
             ),
@@ -261,8 +264,13 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.xl,
+        AppSpacing.xl,
+        AppSpacing.xl + MediaQuery.viewInsetsOf(context).bottom,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -270,13 +278,13 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: AppColors.accentLavenderBg,
+              color: AppColors.accentPeachBg,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(
               Icons.lock_outline,
               size: 28,
-              color: AppColors.accentLavenderText,
+              color: AppColors.accentPeachText,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -297,6 +305,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
           const SizedBox(height: AppSpacing.lg),
           TextField(
             controller: _passwordController,
+            scrollPadding: const EdgeInsets.only(bottom: 120),
             decoration: InputDecoration(
               labelText: l10n.password,
               border: OutlineInputBorder(
@@ -340,109 +349,129 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final note = _decryptedNote!;
+    final isServerShare = _isServerShare == true;
+    final isLoggedIn = ref.read(authStateProvider);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.s8,
-        AppSpacing.md,
-        AppSpacing.xl,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          Text(
-            note.title,
-            style: AppTextStyles.headline.copyWith(
-              fontWeight: FontWeight.w700,
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.s8,
+              AppSpacing.md,
+              AppSpacing.xl,
             ),
-          ),
-          const SizedBox(height: AppSpacing.s8),
-
-          // Subtle metadata
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(100),
-                  borderRadius: BorderRadius.circular(2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  note.title,
+                  style: AppTextStyles.headline.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.s8),
-              Text(
-                _isServerShare == true
-                    ? l10n.sharedViaLink
-                    : l10n.sharedNote,
-                style: AppTextStyles.caption.copyWith(
-                  fontSize: 12,
+                const SizedBox(height: AppSpacing.s8),
+
+                // Subtle metadata
+                Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(100),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.s8),
+                    Text(
+                      isServerShare
+                          ? l10n.sharedViaLink
+                          : l10n.sharedNote,
+                      style: AppTextStyles.caption.copyWith(
+                        fontSize: 12,
+                        color: isDark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+
+                // Warm divider
+                Container(
+                  height: 0.5,
                   color: isDark
-                      ? AppColors.darkTextTertiary
-                      : AppColors.lightTextTertiary,
+                      ? AppColors.darkDivider.withAlpha(60)
+                      : AppColors.lightDivider.withAlpha(80),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
 
-          // Warm divider
-          Container(
-            height: 0.5,
-            color: isDark
-                ? AppColors.darkDivider.withAlpha(60)
-                : AppColors.lightDivider.withAlpha(80),
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Content card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.s16),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkCardBg
-                  : AppColors.lightCardBg,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              boxShadow: [
-                BoxShadow(
-                  color: isDark
-                      ? AppColors.shadowDark.withAlpha(20)
-                      : AppColors.shadowLight.withAlpha(30),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
+                // Content card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.s16),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkCardBg
+                        : AppColors.lightCardBg,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? AppColors.shadowDark.withAlpha(20)
+                            : AppColors.shadowLight.withAlpha(30),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: MarkdownBody(
+                    data: note.content,
+                    selectable: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: AppTextStyles.body.copyWith(height: 1.7),
+                      h1: AppTextStyles.display.copyWith(fontSize: 24),
+                      h2: AppTextStyles.headline.copyWith(fontSize: 22),
+                      h3: AppTextStyles.title.copyWith(fontSize: 20),
+                      code: TextStyle(
+                        fontSize: 14,
+                        backgroundColor: isDark
+                            ? AppColors.darkInputFill
+                            : AppColors.lightInputFill,
+                      ),
+                      blockquote: AppTextStyles.body.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      listBullet: AppTextStyles.body.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
                 ),
+
+                // Comments section (server shares + authenticated only)
+                if (isServerShare && isLoggedIn) ...[
+                  const SizedBox(height: AppSpacing.xl),
+                  const Divider(),
+                  const SizedBox(height: AppSpacing.s8),
+                  CommentList(shareId: widget.shareId),
+                ],
               ],
             ),
-            child: MarkdownBody(
-              data: note.content,
-              selectable: true,
-              styleSheet: MarkdownStyleSheet(
-                p: AppTextStyles.body.copyWith(height: 1.7),
-                h1: AppTextStyles.display.copyWith(fontSize: 24),
-                h2: AppTextStyles.headline.copyWith(fontSize: 22),
-                h3: AppTextStyles.title.copyWith(fontSize: 20),
-                code: TextStyle(
-                  fontSize: 14,
-                  backgroundColor: isDark
-                      ? AppColors.darkInputFill
-                      : AppColors.lightInputFill,
-                ),
-                blockquote: AppTextStyles.body.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextTertiary
-                      : AppColors.lightTextTertiary,
-                  fontStyle: FontStyle.italic,
-                ),
-                listBullet: AppTextStyles.body.copyWith(
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
           ),
-        ],
-      ),
+        ),
+
+        // Comment input bar (server shares + authenticated only)
+        if (isServerShare && isLoggedIn)
+          CommentInput(shareId: widget.shareId),
+      ],
     );
   }
 }

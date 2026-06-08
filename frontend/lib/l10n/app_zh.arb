@@ -74,6 +74,13 @@
   "recoveryKeyWordCount": "恢复密钥必须为12个词",
 
   "recoveryKeyFormatHint": "请按正确顺序输入12个词，以空格分隔。",
+  "recoveryStepMnemonicTitle": "输入恢复密钥",
+  "recoveryStepMnemonicDesc": "粘贴12个词的恢复密钥，或手动输入。",
+  "recoveryEnterManually": "逐个输入单词",
+  "recoveryClearMnemonic": "清除",
+  "recoveryMnemonicHint": "词1 词2 词3 … 词12",
+  "recoveryStepRecoveringTitle": "正在恢复账号…",
+  "recoveryStepRecoveringDesc": "正在派生加密密钥…",
 
   "invalidRecoveryKey": "恢复密钥无效，请检查输入。",
 
@@ -106,6 +113,11 @@
   "onboardingAIDesc": "使用 AI 来撰写、提纲和改编你的笔记，适配任何平台。你的内容绝不会被记录。",
 
   "searchNotes": "搜索笔记...",
+
+  "filterAll": "全部",
+  "filterNotes": "笔记",
+  "filterTasks": "任务",
+  "filterJournal": "日志",
 
   "collections": "合集",
 
@@ -2176,5 +2188,31 @@
   "publishToPlatform": "发布到平台",
   "polishContent": "润色",
   "selectPlatformFirst": "请先选择平台",
-  "notePublishedSuccess": "笔记发布成功！"
+  "notePublishedSuccess": "笔记发布成功！",
+
+  "noCommentsYet": "暂无评论，快来发表你的想法吧！",
+  "commentCount": "{count}条评论",
+  "addComment": "添加评论...",
+
+  "notifications": "通知",
+  "markAllRead": "全部标记已读",
+  "noNotifications": "暂无通知",
+  "failedToLoadNotifications": "加载通知失败",
+  "notificationPreferences": "配置通知偏好",
+
+  "deleteAccount": "删除账号",
+  "deleteAccountWarning": "此操作不可撤销。您的所有数据将从服务器永久删除。",
+  "deleteAccountConfirmTitle": "您确定要删除吗？",
+  "deleteAccountFinalWarning": "您的账号及所有关联数据将被永久删除，无法恢复。",
+  "deleteAccountPermanently": "永久删除",
+  "deleteAccountFailed": "删除账号失败：{error}",
+
+  "syncStats": "服务器统计",
+  "totalItems": "总项目数",
+  "conflicts": "冲突",
+
+  "failedToCreateRoom": "创建协作房间失败，请检查网络连接。",
+  "failedToJoinRoom": "加入房间失败，请检查邀请码。",
+  "joining": "正在加入...",
+  "loadMore": "加载更多"
 }

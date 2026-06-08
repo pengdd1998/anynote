@@ -70,6 +70,9 @@ class _WritingAssistNotifier extends StateNotifier<_WritingAssistState> {
           ),
         ],
         cancelToken: _activeToken,
+      ).timeout(
+        const Duration(minutes: 2),
+        onTimeout: (sink) => sink.close(),
       )) {
         buffer.write(chunk);
         state = state.copyWith(correctedText: buffer.toString());

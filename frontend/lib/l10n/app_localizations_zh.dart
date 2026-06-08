@@ -123,6 +123,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recoveryKeyFormatHint => '请按正确顺序输入12个词，以空格分隔。';
 
   @override
+  String get recoveryStepMnemonicTitle => '输入恢复密钥';
+
+  @override
+  String get recoveryStepMnemonicDesc => '粘贴12个词的恢复密钥，或手动输入。';
+
+  @override
+  String get recoveryEnterManually => '逐个输入单词';
+
+  @override
+  String get recoveryClearMnemonic => '清除';
+
+  @override
+  String get recoveryMnemonicHint => '词1 词2 词3 … 词12';
+
+  @override
+  String get recoveryStepRecoveringTitle => '正在恢复账号…';
+
+  @override
+  String get recoveryStepRecoveringDesc => '正在派生加密密钥…';
+
+  @override
   String get invalidRecoveryKey => '恢复密钥无效，请检查输入。';
 
   @override
@@ -172,6 +193,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get searchNotes => '搜索笔记...';
+
+  @override
+  String get filterAll => '全部';
+
+  @override
+  String get filterNotes => '笔记';
+
+  @override
+  String get filterTasks => '任务';
+
+  @override
+  String get filterJournal => '日志';
 
   @override
   String get collections => '合集';
@@ -4158,4 +4191,68 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notePublishedSuccess => '笔记发布成功！';
+
+  @override
+  String get noCommentsYet => '暂无评论，快来发表你的想法吧！';
+
+  @override
+  String commentCount(int count) {
+    return '$count条评论';
+  }
+
+  @override
+  String get addComment => '添加评论...';
+
+  @override
+  String get notifications => '通知';
+
+  @override
+  String get markAllRead => '全部标记已读';
+
+  @override
+  String get noNotifications => '暂无通知';
+
+  @override
+  String get notificationPreferences => '配置通知偏好';
+
+  @override
+  String get failedToLoadNotifications => '加载通知失败';
+
+  @override
+  String get deleteAccount => '删除账号';
+
+  @override
+  String get deleteAccountWarning => '此操作不可撤销。您的所有数据将从服务器永久删除。';
+
+  @override
+  String get deleteAccountConfirmTitle => '您确定要删除吗？';
+
+  @override
+  String get deleteAccountFinalWarning => '您的账号及所有关联数据将被永久删除，无法恢复。';
+
+  @override
+  String get deleteAccountPermanently => '永久删除';
+
+  @override
+  String deleteAccountFailed(String error) {
+    return '删除账号失败：$error';
+  }
+
+  @override
+  String get syncStats => '服务器统计';
+
+  @override
+  String get conflicts => '冲突';
+
+  @override
+  String get failedToCreateRoom => '创建协作房间失败，请检查网络连接。';
+
+  @override
+  String get failedToJoinRoom => '加入房间失败，请检查邀请码。';
+
+  @override
+  String get joining => '正在加入...';
+
+  @override
+  String get loadMore => '加载更多';
 }

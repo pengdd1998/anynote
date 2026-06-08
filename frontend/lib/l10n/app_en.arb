@@ -113,6 +113,20 @@
 
   "recoveryKeyFormatHint": "Enter all 12 words separated by spaces, in the correct order.",
   "@recoveryKeyFormatHint": { "description": "Helper text below the recovery key input" },
+  "recoveryStepMnemonicTitle": "Enter Recovery Key",
+  "@recoveryStepMnemonicTitle": { "description": "Headline for the mnemonic input step" },
+  "recoveryStepMnemonicDesc": "Paste your 12-word recovery key or enter it manually.",
+  "@recoveryStepMnemonicDesc": { "description": "Subtitle for the mnemonic input step" },
+  "recoveryEnterManually": "Enter words one by one",
+  "@recoveryEnterManually": { "description": "Toggle to switch to 12-field manual input" },
+  "recoveryClearMnemonic": "Clear",
+  "@recoveryClearMnemonic": { "description": "Clear the mnemonic text area" },
+  "recoveryMnemonicHint": "word1 word2 word3 ... word12",
+  "@recoveryMnemonicHint": { "description": "Placeholder text for the mnemonic text area" },
+  "recoveryStepRecoveringTitle": "Recovering Account…",
+  "@recoveryStepRecoveringTitle": { "description": "Headline while recovering account" },
+  "recoveryStepRecoveringDesc": "Deriving your encryption keys…",
+  "@recoveryStepRecoveringDesc": { "description": "Status text while recovering account" },
 
   "invalidRecoveryKey": "Invalid recovery key. Please check your words and try again.",
   "@invalidRecoveryKey": { "description": "Error when recovery key is malformed" },
@@ -160,6 +174,11 @@
   "@onboardingAIDesc": { "description": "Onboarding page 4 description" },
 
   "searchNotes": "Search notes...",
+
+  "filterAll": "All",
+  "filterNotes": "Notes",
+  "filterTasks": "Tasks",
+  "filterJournal": "Journal",
   "@searchNotes": { "description": "Search text field hint" },
 
   "collections": "Collections",
@@ -4365,5 +4384,68 @@
   "@selectPlatformFirst": { "description": "Validation message when trying to publish without selecting a platform" },
 
   "notePublishedSuccess": "Note published successfully!",
-  "@notePublishedSuccess": { "description": "Success message after publishing a note to a platform" }
+  "@notePublishedSuccess": { "description": "Success message after publishing a note to a platform" },
+
+  "noCommentsYet": "No comments yet. Be the first to share your thoughts!",
+  "@noCommentsYet": { "description": "Empty state text when there are no comments" },
+
+  "commentCount": "{count, plural, =1{1 comment} other{{count} comments}}",
+  "@commentCount": { "description": "Label showing the number of comments", "placeholders": { "count": { "type": "int" } } },
+
+  "addComment": "Add a comment...",
+  "@addComment": { "description": "Placeholder text in the comment input field" },
+
+  "notifications": "Notifications",
+  "@notifications": { "description": "Title for the notifications screen" },
+
+  "markAllRead": "Mark all read",
+  "@markAllRead": { "description": "Button to mark all notifications as read" },
+
+  "noNotifications": "No notifications",
+  "@noNotifications": { "description": "Empty state when there are no notifications" },
+
+  "notificationPreferences": "Configure notification preferences",
+  "@notificationPreferences": { "description": "Subtitle for notification settings item" },
+
+  "failedToLoadNotifications": "Failed to load notifications",
+  "@failedToLoadNotifications": { "description": "Error message when notifications fail to load" },
+
+  "deleteAccount": "Delete Account",
+  "@deleteAccount": { "description": "Button label for account deletion" },
+
+  "deleteAccountWarning": "This action is irreversible. All your data will be permanently deleted from the server.",
+  "@deleteAccountWarning": { "description": "Warning message in the delete account dialog" },
+
+  "deleteAccountConfirmTitle": "Are you absolutely sure?",
+  "@deleteAccountConfirmTitle": { "description": "Title for the final confirmation dialog" },
+
+  "deleteAccountFinalWarning": "Your account and all associated data will be permanently deleted. This cannot be undone.",
+  "@deleteAccountFinalWarning": { "description": "Final warning text before account deletion" },
+
+  "deleteAccountPermanently": "Delete Permanently",
+  "@deleteAccountPermanently": { "description": "Button text for the final delete confirmation" },
+
+  "deleteAccountFailed": "Failed to delete account: {error}",
+  "@deleteAccountFailed": { "description": "Error message when account deletion fails", "placeholders": { "error": { "type": "String" } } },
+
+  "syncStats": "Server Stats",
+  "@syncStats": { "description": "Section header for server-side sync statistics" },
+
+  "totalItems": "Total items",
+  "@totalItems": { "description": "Label for total synced items count" },
+
+  "conflicts": "Conflicts",
+  "@conflicts": { "description": "Label for sync conflict count" },
+
+  "failedToCreateRoom": "Failed to create collaboration room. Please check your connection.",
+  "@failedToCreateRoom": { "description": "Error when share dialog fails to create a room" },
+
+  "failedToJoinRoom": "Failed to join room. Please check the invite code.",
+  "@failedToJoinRoom": { "description": "Error when join room fails" },
+
+  "joining": "Joining...",
+  "@joining": { "description": "Loading text while joining a collaboration room" },
+
+  "loadMore": "Load more",
+  "@loadMore": { "description": "Button to load more items in a paginated list" }
 }

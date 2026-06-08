@@ -4,17 +4,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:anynote/features/notes/presentation/quick_capture_screen.dart';
 import '../../../helpers/test_app_helper.dart';
 
+/// Helper that wraps the [screen] in a [Material] widget so that material
+/// components (TextField, IconButton, Chip, etc.) have the required ancestor.
+Widget _wrapInMaterial(Widget screen) => Material(child: screen);
+
 void main() {
   group('QuickCaptureScreen', () {
     testWidgets('renders without errors', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
 
-      expect(find.byType(Scaffold), findsOneWidget);
+      // The screen no longer uses a Scaffold; verify the widget itself renders.
+      expect(find.byType(QuickCaptureScreen), findsOneWidget);
+      // Verify the TextField is present (core UI element).
+      expect(find.byType(TextField), findsOneWidget);
 
       await handle.dispose();
     });
@@ -22,7 +29,7 @@ void main() {
     testWidgets('shows Quick Capture title in app bar', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
@@ -35,7 +42,7 @@ void main() {
     testWidgets('shows text input field with hint', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
@@ -47,16 +54,17 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows close button in app bar leading', (tester) async {
+    testWidgets('shows save button in header row', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
 
-      // The keyboard_arrow_down icon is the close/dismiss button.
-      expect(find.byIcon(Icons.keyboard_arrow_down), findsOneWidget);
+      // The header row has an IconButton with check_circle_outline icon.
+      expect(
+          find.byIcon(Icons.check_circle_outline), findsOneWidget);
 
       await handle.dispose();
     });
@@ -64,7 +72,7 @@ void main() {
     testWidgets('shows save and close button in toolbar', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
@@ -77,7 +85,7 @@ void main() {
     testWidgets('shows tag picker button in toolbar', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
@@ -90,7 +98,7 @@ void main() {
     testWidgets('shows priority selector button in toolbar', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
@@ -104,7 +112,7 @@ void main() {
     testWidgets('can enter text in the content field', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
@@ -121,7 +129,7 @@ void main() {
     testWidgets('tapping priority button opens bottom sheet', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
@@ -141,7 +149,7 @@ void main() {
     testWidgets('selecting a priority updates the toolbar', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
@@ -155,7 +163,6 @@ void main() {
       await tester.pumpAndSettle();
 
       // The toolbar should now show the High priority icon (arrow up, red).
-      // It appears in both the toolbar icon button and the chip avatar.
       expect(find.byIcon(Icons.keyboard_double_arrow_up), findsWidgets);
 
       // A chip with "High" text should appear in the metadata area.
@@ -164,17 +171,16 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows save icon buttons', (tester) async {
+    testWidgets('shows save icon button in header', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(),
+        _wrapInMaterial(const QuickCaptureScreen()),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
 
-      // The check icon (save) should appear in both the app bar and the
-      // bottom toolbar's "Save and close" button.
-      expect(find.byIcon(Icons.check), findsWidgets);
+      // The check_circle_outline icon is the save button in the header.
+      expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
 
       await handle.dispose();
     });
@@ -182,7 +188,7 @@ void main() {
     testWidgets('pre-fills content from sharedText parameter', (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(sharedText: 'Shared text content'),
+        _wrapInMaterial(const QuickCaptureScreen(sharedText: 'Shared text content')),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
@@ -197,13 +203,13 @@ void main() {
         (tester) async {
       final handle = await pumpScreen(
         tester,
-        const QuickCaptureScreen(template: 'checklist'),
+        _wrapInMaterial(const QuickCaptureScreen(template: 'checklist')),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());
 
       // The checklist template should be pre-filled.
-      expect(find.textContaining('- [ ]'), findsOneWidget);
+      expect(find.textContaining('- [ ]'), findsWidgets);
 
       await handle.dispose();
     });

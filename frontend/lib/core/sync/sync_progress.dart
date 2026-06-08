@@ -117,10 +117,27 @@ class SyncProgressNotifier {
   SyncProgress _current = SyncProgress.idle;
   SyncProgress get current => _current;
 
+  DateTime? _lastEmitTime;
+  static const _emitInterval = Duration(milliseconds: 100);
+
   /// Emit a progress event.
+  ///
+  /// Phase transitions and terminal states (done/error) are always emitted
+  /// immediately. Item-by-item progress is throttled to at most 10 updates
+  /// per second to avoid excessive UI rebuilds.
   void emit(SyncProgress progress) {
+    final previousPhase = _current.phase;
     _current = progress;
-    _controller.add(progress);
+    final now = DateTime.now();
+    final isPhaseChange = previousPhase != progress.phase;
+    if (isPhaseChange ||
+        progress.phase == SyncPhase.done ||
+        progress.phase == SyncPhase.error ||
+        _lastEmitTime == null ||
+        now.difference(_lastEmitTime!) >= _emitInterval) {
+      _lastEmitTime = now;
+      _controller.add(progress);
+    }
   }
 
   /// Reset to idle state.

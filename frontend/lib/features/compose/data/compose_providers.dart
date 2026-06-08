@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -142,6 +143,12 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
 
   ComposeSessionNotifier(this._ref, String sessionId)
       : super(ComposeSessionState(sessionId: sessionId));
+
+  @override
+  void dispose() {
+    cancel();
+    super.dispose();
+  }
 
   /// Reset state for a new composition session while keeping the notifier alive.
   void resetForNewSession() {
@@ -422,16 +429,26 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       );
 
       final buffer = StringBuffer();
+      Timer? throttleTimer;
 
       await for (final chunk in _aiRepo.chatStream(
         [ChatMessage(role: 'user', content: prompt)],
         cancelToken: token,
+      ).timeout(
+        const Duration(minutes: 3),
+        onTimeout: (sink) {
+          debugPrint('[ComposeProviders] expandToDraft stream timed out');
+          sink.close();
+        },
       )) {
         buffer.write(chunk);
-        state = state.copyWith(draft: buffer.toString());
+        throttleTimer ??= Timer(const Duration(milliseconds: 125), () {
+          throttleTimer = null;
+          state = state.copyWith(draft: buffer.toString());
+        });
       }
-
-      state = state.copyWith(isLoading: false);
+      throttleTimer?.cancel();
+      state = state.copyWith(draft: buffer.toString(), isLoading: false);
     } catch (e) {
       final appError = ErrorMapper.map(e);
       state = state.copyWith(
@@ -461,15 +478,25 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       );
 
       final buffer = StringBuffer();
+      Timer? throttleTimer;
       await for (final chunk in _aiRepo.chatStream(
         [ChatMessage(role: 'user', content: prompt)],
         cancelToken: token,
+      ).timeout(
+        const Duration(minutes: 3),
+        onTimeout: (sink) {
+          debugPrint('[ComposeProviders] adaptStyle stream timed out');
+          sink.close();
+        },
       )) {
         buffer.write(chunk);
-        state = state.copyWith(draft: buffer.toString());
+        throttleTimer ??= Timer(const Duration(milliseconds: 125), () {
+          throttleTimer = null;
+          state = state.copyWith(draft: buffer.toString());
+        });
       }
-
-      state = state.copyWith(isLoading: false);
+      throttleTimer?.cancel();
+      state = state.copyWith(draft: buffer.toString(), isLoading: false);
     } catch (e) {
       final appError = ErrorMapper.map(e);
       state = state.copyWith(

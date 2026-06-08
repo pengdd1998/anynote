@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
 
 import 'package:anynote/core/crypto/crypto_factory.dart';
 import 'sodium_test_init.dart';
@@ -11,15 +10,15 @@ void main() {
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    registerTestSodiumPlatform();
-    await SodiumSumoInit.init();
+    final available = await probeSodiumAvailability();
+    if (!available) return;
     // Deterministic 32-byte test key.
     testKey = Uint8List.fromList(
       List.generate(32, (i) => (i * 7 + 13) % 256),
     );
   });
 
-  group('CryptoFactory', () {
+  group('CryptoFactory', skip: !isSodiumAvailable ? 'libsodium not available' : null, () {
     test('isNativeBackend returns true', () {
       expect(CryptoFactory.instance.isNativeBackend, isTrue);
     });
