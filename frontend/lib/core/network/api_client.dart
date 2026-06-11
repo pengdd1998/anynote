@@ -200,6 +200,8 @@ class ApiClient {
       'salt': req.salt,
       'recovery_key': req.recoveryKey,
       if (req.recoverySalt != null) 'recovery_salt': req.recoverySalt,
+      if (req.encryptedMasterKey != null)
+        'encrypted_master_key': req.encryptedMasterKey,
     };
     debugPrint('[Register] request body keys: ${body.keys.toList()}');
     debugPrint(
@@ -251,18 +253,25 @@ class ApiClient {
     return res.data as Map<String, dynamic>;
   }
 
-  /// Fetch the per-user recovery salt from the server.
+  /// Fetch the per-user recovery salt and encrypted master key from the server.
   /// No authentication required (public endpoint, rate-limited by IP).
-  /// Returns null if the user has no recovery salt (legacy accounts).
-  Future<Uint8List?> getRecoverySalt(String email) async {
+  /// Returns null fields for legacy accounts.
+  Future<RecoveryData> getRecoverySalt(String email) async {
     final res = await _dio.get(
       '/api/v1/auth/recovery-salt',
       queryParameters: {'email': email},
     );
     final data = res.data as Map<String, dynamic>;
     final saltBase64 = data['recovery_salt'] as String?;
-    if (saltBase64 == null || saltBase64.isEmpty) return null;
-    return base64Decode(saltBase64);
+    final encKeyBase64 = data['encrypted_master_key'] as String?;
+    return RecoveryData(
+      recoverySalt: (saltBase64 != null && saltBase64.isNotEmpty)
+          ? base64Decode(saltBase64)
+          : null,
+      encryptedMasterKey: (encKeyBase64 != null && encKeyBase64.isNotEmpty)
+          ? base64Decode(encKeyBase64)
+          : null,
+    );
   }
 
   /// Fetch the Argon2id salt from the server for login key derivation.
@@ -832,6 +841,7 @@ class RegisterRequest {
   final String salt;
   final String recoveryKey;
   final String? recoverySalt;
+  final String? encryptedMasterKey;
 
   RegisterRequest({
     required this.email,
@@ -840,6 +850,7 @@ class RegisterRequest {
     required this.salt,
     required this.recoveryKey,
     this.recoverySalt,
+    this.encryptedMasterKey,
   });
 
   Map<String, dynamic> toJson() => {
@@ -849,6 +860,8 @@ class RegisterRequest {
         'salt': salt,
         'recovery_key': recoveryKey,
         if (recoverySalt != null) 'recovery_salt': recoverySalt,
+        if (encryptedMasterKey != null)
+          'encrypted_master_key': encryptedMasterKey,
       };
 }
 
@@ -862,6 +875,14 @@ class LoginRequest {
         'email': email,
         'auth_key_hash': authKeyHash,
       };
+}
+
+/// Response from GET /api/v1/auth/recovery-salt.
+class RecoveryData {
+  final Uint8List? recoverySalt;
+  final Uint8List? encryptedMasterKey;
+
+  RecoveryData({this.recoverySalt, this.encryptedMasterKey});
 }
 
 class AuthResponse {

@@ -34,14 +34,15 @@ func newTestDomainUser() *domain.User {
 	uid := uuid.New()
 	suffix := uid.String()[:8]
 	return &domain.User{
-		ID:           uid,
-		Email:        fmt.Sprintf("test-%s@example.com", suffix),
-		Username:     fmt.Sprintf("user_%s", suffix),
-		AuthKeyHash:  []byte("plaintext-auth-key-for-testing"),
-		Salt:         []byte("0123456789abcdef0123456789abcdef"), // 32 bytes
-		RecoveryKey:  []byte("recovery-key-32-bytes-padding!!!"), // 32 bytes
-		RecoverySalt: []byte("recovery-salt-32-bytes-padding!!!"), // 32 bytes
-		Plan:         "free",
+		ID:                 uid,
+		Email:              fmt.Sprintf("test-%s@example.com", suffix),
+		Username:           fmt.Sprintf("user_%s", suffix),
+		AuthKeyHash:        []byte("plaintext-auth-key-for-testing"),
+		Salt:               []byte("0123456789abcdef0123456789abcdef"), // 32 bytes
+		RecoveryKey:        []byte("recovery-key-32-bytes-padding!!!"), // 32 bytes
+		RecoverySalt:       []byte("recovery-salt-32-bytes-padding!!!"), // 32 bytes
+		EncryptedMasterKey: []byte("encrypted-master-key-32-bytes-pad!!"), // 32 bytes
+		Plan:               "free",
 	}
 }
 
@@ -306,7 +307,7 @@ func TestUserRepository_GetRecoverySalt(t *testing.T) {
 	}
 }
 
-func TestUserRepository_GetRecoverySaltByEmail(t *testing.T) {
+func TestUserRepository_GetRecoveryDataByEmail(t *testing.T) {
 	repo := userTestRepo(t)
 	ctx := context.Background()
 
@@ -315,12 +316,15 @@ func TestUserRepository_GetRecoverySaltByEmail(t *testing.T) {
 		t.Fatalf("Create: %v", err)
 	}
 
-	salt, err := repo.GetRecoverySaltByEmail(ctx, user.Email)
+	salt, encryptedMasterKey, err := repo.GetRecoveryDataByEmail(ctx, user.Email)
 	if err != nil {
-		t.Fatalf("GetRecoverySaltByEmail: %v", err)
+		t.Fatalf("GetRecoveryDataByEmail: %v", err)
 	}
 	if string(salt) != string(user.RecoverySalt) {
 		t.Errorf("RecoverySalt = %x, want %x", salt, user.RecoverySalt)
+	}
+	if string(encryptedMasterKey) != string(user.EncryptedMasterKey) {
+		t.Errorf("EncryptedMasterKey = %x, want %x", encryptedMasterKey, user.EncryptedMasterKey)
 	}
 }
 
@@ -356,12 +360,15 @@ func TestUserRepository_GetRecoverySalt_NilForLegacyUser(t *testing.T) {
 	}
 
 	// Same via email lookup.
-	saltByEmail, err := repo.GetRecoverySaltByEmail(ctx, user.Email)
+	saltByEmail, encMKByEmail, err := repo.GetRecoveryDataByEmail(ctx, user.Email)
 	if err != nil {
-		t.Fatalf("GetRecoverySaltByEmail for legacy user: %v", err)
+		t.Fatalf("GetRecoveryDataByEmail for legacy user: %v", err)
 	}
 	if saltByEmail != nil {
 		t.Errorf("expected nil recovery_salt by email for legacy user, got %x", saltByEmail)
+	}
+	if encMKByEmail != nil {
+		t.Errorf("expected nil encrypted_master_key by email for legacy user, got %x", encMKByEmail)
 	}
 }
 
@@ -407,14 +414,14 @@ func TestUserRepository_FullCRUDRoundTrip(t *testing.T) {
 			byID.Email, byEmail.Email)
 	}
 
-	// Step 4: Recovery salt lookups.
+	// Step 4: Recovery salt and encrypted master key lookups.
 	saltByID, err := repo.GetRecoverySalt(ctx, user.ID)
 	if err != nil {
 		t.Fatalf("GetRecoverySalt: %v", err)
 	}
-	saltByEmail, err := repo.GetRecoverySaltByEmail(ctx, user.Email)
+	saltByEmail, encMKByEmail, err := repo.GetRecoveryDataByEmail(ctx, user.Email)
 	if err != nil {
-		t.Fatalf("GetRecoverySaltByEmail: %v", err)
+		t.Fatalf("GetRecoveryDataByEmail: %v", err)
 	}
 	if string(saltByID) != string(saltByEmail) {
 		t.Errorf("recovery salt mismatch: byID=%x, byEmail=%x", saltByID, saltByEmail)

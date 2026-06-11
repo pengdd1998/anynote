@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -16,8 +15,8 @@ import '../../../core/crypto/decryption_exception.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/export/export_service.dart';
-import '../../../core/widgets/markdown_preview.dart';
 import '../domain/decrypted_note.dart';
+import 'widgets/quill_read_only_viewer.dart';
 import 'share_sheet.dart';
 import 'widgets/export_sheet.dart';
 import 'widgets/print_preview_sheet.dart';
@@ -42,137 +41,114 @@ class NoteDetailScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
-          // Star / bookmark
-          A11yUtils.labeledButton(
-            label: l10n.editNote,
-            child: IconButton(
-              icon: const Icon(Icons.star_outline),
-              tooltip: l10n.editNote,
-              onPressed: () => context.push('/notes/$noteId/edit'),
-            ),
-          ),
-          // Share
-          A11yUtils.labeledButton(
-            label: l10n.shareViaLink,
-            child: IconButton(
-              icon: const Icon(Icons.share),
-              tooltip: l10n.shareViaLink,
-              onPressed: () => _openShareSheet(context, ref),
-            ),
+          // Edit — primary action, always visible
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: l10n.editNote,
+            onPressed: () => context.push('/notes/$noteId/edit'),
           ),
           // More actions
-          A11yUtils.labeledButton(
-            label: l10n.moreActions,
-            child: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_horiz),
-              tooltip: l10n.moreActions,
-              position: PopupMenuPosition.under,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_horiz),
+            tooltip: l10n.moreActions,
+            position: PopupMenuPosition.under,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            onSelected: (value) =>
+                _onActionSelected(context, ref, value, db),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'share_link',
+                child: ListTile(
+                  leading: const Icon(Icons.share),
+                  title: Text(l10n.shareViaLink),
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-              onSelected: (value) =>
-                  _onActionSelected(context, ref, value, db),
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: ListTile(
-                    leading: const Icon(Icons.edit_outlined),
-                    title: Text(l10n.editNote),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              PopupMenuItem(
+                value: 'preview',
+                child: ListTile(
+                  leading: const Icon(Icons.visibility_outlined),
+                  title: Text(l10n.markdownPreview),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                PopupMenuItem(
-                  value: 'preview',
-                  child: ListTile(
-                    leading: const Icon(Icons.visibility_outlined),
-                    title: Text(l10n.markdownPreview),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'history',
+                child: ListTile(
+                  leading: const Icon(Icons.history),
+                  title: Text(l10n.versionHistory),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'history',
-                  child: ListTile(
-                    leading: const Icon(Icons.history),
-                    title: Text(l10n.versionHistory),
-                    contentPadding: EdgeInsets.zero,
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: ListTile(
+                  leading: Icon(
+                    Icons.delete_outline,
+                    color: Theme.of(context).colorScheme.error,
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.delete_outline,
+                  title: Text(
+                    l10n.deleteNote,
+                    style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
-                    title: Text(
-                      l10n.deleteNote,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    contentPadding: EdgeInsets.zero,
                   ),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'share_link',
-                  child: ListTile(
-                    leading: const Icon(Icons.link),
-                    title: Text(l10n.shareViaLink),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'markdown',
+                child: ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: Text(l10n.exportAsMarkdown),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                PopupMenuItem(
-                  value: 'markdown',
-                  child: ListTile(
-                    leading: const Icon(Icons.description_outlined),
-                    title: Text(l10n.exportAsMarkdown),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              PopupMenuItem(
+                value: 'html',
+                child: ListTile(
+                  leading: const Icon(Icons.code),
+                  title: Text(l10n.exportAsHTML),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                PopupMenuItem(
-                  value: 'html',
-                  child: ListTile(
-                    leading: const Icon(Icons.code),
-                    title: Text(l10n.exportAsHTML),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              PopupMenuItem(
+                value: 'plaintext',
+                child: ListTile(
+                  leading: const Icon(Icons.text_snippet_outlined),
+                  title: Text(l10n.exportAsPlainText),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                PopupMenuItem(
-                  value: 'plaintext',
-                  child: ListTile(
-                    leading: const Icon(Icons.text_snippet_outlined),
-                    title: Text(l10n.exportAsPlainText),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              PopupMenuItem(
+                value: 'markdown_frontmatter',
+                child: ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: Text(l10n.exportWithFrontmatter),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                PopupMenuItem(
-                  value: 'markdown_frontmatter',
-                  child: ListTile(
-                    leading: const Icon(Icons.description_outlined),
-                    title: Text(l10n.exportWithFrontmatter),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              PopupMenuItem(
+                value: 'export_zip',
+                child: ListTile(
+                  leading: const Icon(Icons.folder_zip_outlined),
+                  title: Text(l10n.exportAsZip),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                PopupMenuItem(
-                  value: 'export_zip',
-                  child: ListTile(
-                    leading: const Icon(Icons.folder_zip_outlined),
-                    title: Text(l10n.exportAsZip),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              PopupMenuItem(
+                value: 'print',
+                child: ListTile(
+                  leading: const Icon(Icons.print_outlined),
+                  title: Text(l10n.printNote),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                PopupMenuItem(
-                  value: 'print',
-                  child: ListTile(
-                    leading: const Icon(Icons.print_outlined),
-                    title: Text(l10n.printNote),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -238,7 +214,10 @@ class NoteDetailScreen extends ConsumerWidget {
               // -- Body --
               Semantics(
                 label: AppLocalizations.of(context)!.noteContent,
-                child: MarkdownPreview(content: data.content),
+                child: QuillReadOnlyViewer(
+                  deltaJson: data.content,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                ),
               ),
 
               // -- Tags --
@@ -618,4 +597,5 @@ class NoteDetailScreen extends ConsumerWidget {
       ),
     );
   }
+
 }

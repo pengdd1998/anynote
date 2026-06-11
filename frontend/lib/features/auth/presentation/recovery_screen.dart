@@ -175,15 +175,31 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
       final mnemonic = _buildMnemonic();
 
       final api = ref.read(apiClientProvider);
-      Uint8List? serverSalt;
+      RecoveryData? recoveryData;
       try {
-        serverSalt = await api.getRecoverySalt(email);
+        recoveryData = await api.getRecoverySalt(email);
       } catch (e) {
-        debugPrint('[RecoveryScreen] failed to fetch recovery salt: $e');
+        debugPrint('[RecoveryScreen] failed to fetch recovery data: $e');
       }
 
-      final masterKey =
-          await MasterKeyManager.recoverMasterKeyFromMnemonic(
+      final serverSalt = recoveryData?.recoverySalt;
+      final encryptedMasterKey = recoveryData?.encryptedMasterKey;
+
+      if (encryptedMasterKey == null || serverSalt == null) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
+        setState(() {
+          _currentStep = 1;
+          _error = l10n.invalidRecoveryKeyForAccount;
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Decrypt the real master key (derived from password) using the
+      // recovery mnemonic + recovery salt.
+      final masterKey = await MasterKeyManager.unwrapMasterKey(
+        encryptedMasterKey,
         mnemonic,
         serverSalt,
       );
@@ -199,6 +215,21 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
       );
 
       await MasterKeyManager.storeMasterKey(masterKey);
+      await MasterKeyManager.storeKdfVersion(MasterKeyManager.currentKdfVersion);
+
+      // Also store the Argon2id salt so normal login works after recovery.
+      // The master key was originally derived from password + salt.
+      // Without the salt, the user can't log in with their password next time.
+      // Fetch the login salt from the server.
+      try {
+        final loginSalt = await api.getSalt(email);
+        if (loginSalt != null) {
+          await MasterKeyManager.storeSalt(loginSalt);
+        }
+      } catch (_) {
+        // Non-critical: recovery still works, just password login may
+        // require another recovery.
+      }
 
       final encryptKey = await MasterKeyManager.deriveEncryptKey(masterKey);
       await KeyStorage.saveEncryptKey(encryptKey);

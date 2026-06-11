@@ -59,6 +59,10 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "recovery_salt must be at most 64 bytes")
 		return
 	}
+	if len(req.EncryptedMasterKey) > 256 {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "encrypted_master_key must be at most 256 bytes")
+		return
+	}
 
 	resp, err := h.authService.Register(r.Context(), req)
 	if err != nil {
@@ -207,7 +211,8 @@ func (h *AuthHandler) GetRecoverySalt(w http.ResponseWriter, r *http.Request) {
 		// The client will derive a key from the wrong salt and the
 		// subsequent login attempts will fail with an opaque error.
 		writeJSON(w, http.StatusOK, domain.RecoverySaltResponse{
-			RecoverySalt: h.authService.FakeRecoverySalt(email),
+			RecoverySalt:       h.authService.FakeRecoverySalt(email),
+			EncryptedMasterKey: h.authService.FakeEncryptedMasterKey(email),
 		})
 		return
 	}

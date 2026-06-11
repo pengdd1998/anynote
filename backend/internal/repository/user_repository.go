@@ -41,21 +41,21 @@ func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
 	}
 
 	_, err = r.pool.Exec(ctx,
-		`INSERT INTO users (id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, plan)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-		user.ID, user.Email, user.Username, hashedAuthKey, user.Salt, hashedRecoveryKey, user.RecoverySalt, user.Plan,
+		`INSERT INTO users (id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, encrypted_master_key, plan)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		user.ID, user.Email, user.Username, hashedAuthKey, user.Salt, hashedRecoveryKey, user.RecoverySalt, user.EncryptedMasterKey, user.Plan,
 	)
 	return err
 }
 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	row := r.pool.QueryRow(ctx,
-		`SELECT id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, plan, created_at, updated_at
-		 FROM users WHERE email = $1`, email,
+		`SELECT id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, encrypted_master_key, plan, created_at, updated_at
+			 FROM users WHERE email = $1`, email,
 	)
 
 	var u domain.User
-	err := row.Scan(&u.ID, &u.Email, &u.Username, &u.AuthKeyHash, &u.Salt, &u.RecoveryKey, &u.RecoverySalt, &u.Plan, &u.CreatedAt, &u.UpdatedAt)
+	err := row.Scan(&u.ID, &u.Email, &u.Username, &u.AuthKeyHash, &u.Salt, &u.RecoveryKey, &u.RecoverySalt, &u.EncryptedMasterKey, &u.Plan, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -64,12 +64,12 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*domain.
 
 func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	row := r.pool.QueryRow(ctx,
-		`SELECT id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, plan, created_at, updated_at
-		 FROM users WHERE id = $1`, id,
+		`SELECT id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, encrypted_master_key, plan, created_at, updated_at
+			 FROM users WHERE id = $1`, id,
 	)
 
 	var u domain.User
-	err := row.Scan(&u.ID, &u.Email, &u.Username, &u.AuthKeyHash, &u.Salt, &u.RecoveryKey, &u.RecoverySalt, &u.Plan, &u.CreatedAt, &u.UpdatedAt)
+	err := row.Scan(&u.ID, &u.Email, &u.Username, &u.AuthKeyHash, &u.Salt, &u.RecoveryKey, &u.RecoverySalt, &u.EncryptedMasterKey, &u.Plan, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -87,12 +87,12 @@ func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
 	row := r.pool.QueryRow(ctx,
-		`SELECT id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, plan, created_at, updated_at
-		 FROM users WHERE username = $1`, username,
+		`SELECT id, email, username, auth_key_hash, salt, recovery_key, recovery_salt, encrypted_master_key, plan, created_at, updated_at
+			 FROM users WHERE username = $1`, username,
 	)
 
 	var u domain.User
-	err := row.Scan(&u.ID, &u.Email, &u.Username, &u.AuthKeyHash, &u.Salt, &u.RecoveryKey, &u.RecoverySalt, &u.Plan, &u.CreatedAt, &u.UpdatedAt)
+	err := row.Scan(&u.ID, &u.Email, &u.Username, &u.AuthKeyHash, &u.Salt, &u.RecoveryKey, &u.RecoverySalt, &u.EncryptedMasterKey, &u.Plan, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -112,17 +112,18 @@ func (r *UserRepository) GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]b
 	return salt, nil
 }
 
-// GetRecoverySaltByEmail returns the recovery_salt for the given email.
-// Returns nil slice (not NULL) for legacy users without a stored salt.
-func (r *UserRepository) GetRecoverySaltByEmail(ctx context.Context, email string) ([]byte, error) {
+// GetRecoveryDataByEmail returns the recovery_salt and encrypted_master_key for
+// the given email.  Used during account recovery (unauthenticated).
+func (r *UserRepository) GetRecoveryDataByEmail(ctx context.Context, email string) ([]byte, []byte, error) {
 	var salt []byte
+	var encMasterKey []byte
 	err := r.pool.QueryRow(ctx,
-		`SELECT recovery_salt FROM users WHERE email = $1`, email,
-	).Scan(&salt)
+		`SELECT recovery_salt, encrypted_master_key FROM users WHERE email = $1`, email,
+	).Scan(&salt, &encMasterKey)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return salt, nil
+	return salt, encMasterKey, nil
 }
 
 // GetSaltByEmail returns the Argon2id salt for the given email.

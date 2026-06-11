@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'encryptor.dart';
+
 // Unified implementation for key derivation, hashing, and recovery.
 // Uses sodium_libs (Argon2id, BLAKE2b) on all platforms.
 // sodium_libs provides JS/WASM backend (libsodium.js) for web browsers.
@@ -136,6 +138,41 @@ class MasterKeyManager {
       recoverySalt = await hashForRecoverySaltImpl(entropy);
     }
     return deriveMasterKey(entropyHex, recoverySalt);
+  }
+
+  /// Encrypt the master key with a key derived from the recovery mnemonic.
+  ///
+  /// During registration, the master key (derived from password) is encrypted
+  /// with a wrap key derived from the BIP-39 recovery entropy + recovery salt.
+  /// The resulting blob is stored on the server so the master key can be
+  /// recovered if the user forgets their password.
+  static Future<Uint8List> wrapMasterKey(
+    Uint8List masterKey,
+    String mnemonic,
+    Uint8List recoverySalt,
+  ) async {
+    final entropy = await entropyFromRecoveryKey(mnemonic);
+    final entropyHex =
+        entropy.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    final wrapKey = await deriveMasterKey(entropyHex, recoverySalt);
+    return Encryptor.encryptBlob(masterKey, wrapKey);
+  }
+
+  /// Decrypt the master key from a server-stored encrypted blob.
+  ///
+  /// During account recovery, the client fetches the encrypted master key
+  /// from the server, derives the wrap key from the mnemonic + recovery salt,
+  /// and decrypts the original master key.
+  static Future<Uint8List> unwrapMasterKey(
+    Uint8List encryptedMasterKey,
+    String mnemonic,
+    Uint8List recoverySalt,
+  ) async {
+    final entropy = await entropyFromRecoveryKey(mnemonic);
+    final entropyHex =
+        entropy.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    final wrapKey = await deriveMasterKey(entropyHex, recoverySalt);
+    return Encryptor.decryptBlob(encryptedMasterKey, wrapKey);
   }
 
   /// Store master key securely.

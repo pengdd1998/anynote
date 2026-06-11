@@ -15,16 +15,17 @@ var ErrInvalidReaction = errors.New("invalid reaction type")
 // ── User ──────────────────────────────────────────
 
 type User struct {
-	ID           uuid.UUID `json:"id"`
-	Email        string    `json:"email"`
-	Username     string    `json:"username"`
-	AuthKeyHash  []byte    `json:"-"`
-	Salt         []byte    `json:"-"`
-	RecoveryKey  []byte    `json:"-"`
-	RecoverySalt []byte    `json:"-"`
-	Plan         string    `json:"plan"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID                  uuid.UUID `json:"id"`
+	Email               string    `json:"email"`
+	Username            string    `json:"username"`
+	AuthKeyHash         []byte    `json:"-"`
+	Salt                []byte    `json:"-"`
+	RecoveryKey         []byte    `json:"-"`
+	RecoverySalt        []byte    `json:"-"`
+	EncryptedMasterKey  []byte    `json:"-"`
+	Plan                string    `json:"plan"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
 }
 
 // ── Device ────────────────────────────────────────
@@ -265,12 +266,13 @@ type SyncProgressResponse struct {
 // ── Auth ──────────────────────────────────────────
 
 type RegisterRequest struct {
-	Email        string `json:"email"`
-	Username     string `json:"username"`
-	AuthKeyHash  []byte `json:"auth_key_hash"`   // Client-derived: HKDF(master_key, "auth")
-	Salt         []byte `json:"salt"`
-	RecoveryKey  string `json:"recovery_key"`    // BIP-39 mnemonic
-	RecoverySalt []byte `json:"recovery_salt"`   // Random 32-byte salt for recovery key derivation
+	Email               string `json:"email"`
+	Username            string `json:"username"`
+	AuthKeyHash         []byte `json:"auth_key_hash"`            // Client-derived: HKDF(master_key, "auth")
+	Salt                []byte `json:"salt"`
+	RecoveryKey         string `json:"recovery_key"`             // BIP-39 mnemonic
+	RecoverySalt        []byte `json:"recovery_salt"`            // Random 32-byte salt for recovery key derivation
+	EncryptedMasterKey  []byte `json:"encrypted_master_key"`     // Master key encrypted with recovery-derived key
 }
 
 type LoginRequest struct {
@@ -282,8 +284,12 @@ type LoginRequest struct {
 // RecoverySalt is nil for legacy accounts that registered before this field
 // was added.  The client falls back to deterministic salt derivation in
 // that case.
+// EncryptedMasterKey contains the master key wrapped with a key derived from
+// the recovery mnemonic + recovery_salt.  The client decrypts it to recover
+// the original master key during account recovery.
 type RecoverySaltResponse struct {
-	RecoverySalt []byte `json:"recovery_salt"`
+	RecoverySalt       []byte `json:"recovery_salt"`
+	EncryptedMasterKey []byte `json:"encrypted_master_key"`
 }
 
 // SaltResponse is returned by GET /api/v1/auth/salt.

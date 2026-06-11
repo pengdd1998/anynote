@@ -183,6 +183,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     String? encryptedTitle,
     String? plainContent,
     String? plainTitle,
+    String? firstImagePath,
   }) async {
     final now = DateTime.now();
     await into(notes).insert(
@@ -192,6 +193,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
         encryptedTitle: Value(encryptedTitle),
         plainContent: Value(plainContent),
         plainTitle: Value(plainTitle),
+        firstImagePath: Value(firstImagePath),
         createdAt: now,
         updatedAt: now,
         version: const Value(0),
@@ -214,6 +216,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     String? encryptedTitle,
     String? plainContent,
     String? plainTitle,
+    String? firstImagePath,
   }) async {
     final note = await getNoteById(id);
     if (note == null) return;
@@ -224,6 +227,7 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
         encryptedTitle: Value(encryptedTitle ?? note.encryptedTitle),
         plainContent: Value(plainContent ?? note.plainContent),
         plainTitle: Value(plainTitle ?? note.plainTitle),
+        firstImagePath: Value(firstImagePath),
         updatedAt: Value(DateTime.now()),
         version: Value(note.version + 1),
         isSynced: const Value(false),

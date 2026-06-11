@@ -106,6 +106,10 @@ func (m *mockAuthService) FakeSalt(email string) []byte {
 	return mac
 }
 
+func (m *mockAuthService) FakeEncryptedMasterKey(email string) []byte {
+	return make([]byte, 72)
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

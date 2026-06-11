@@ -123,12 +123,12 @@ func (m *mockUserRepo) GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]byt
 	return u.RecoverySalt, nil
 }
 
-func (m *mockUserRepo) GetRecoverySaltByEmail(ctx context.Context, email string) ([]byte, error) {
+func (m *mockUserRepo) GetRecoveryDataByEmail(ctx context.Context, email string) ([]byte, []byte, error) {
 	u, ok := m.usersByEmail[email]
 	if !ok {
-		return nil, errors.New("user not found")
+		return nil, nil, errors.New("user not found")
 	}
-	return u.RecoverySalt, nil
+	return u.RecoverySalt, u.EncryptedMasterKey, nil
 }
 
 func (m *mockUserRepo) GetSaltByEmail(ctx context.Context, email string) ([]byte, error) {

@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +18,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/keyboard_scroll_mixin.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/pressable_scale.dart';
@@ -282,6 +285,105 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       setState(() => _error = message);
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// Dev-only: auto-registers a test account with known credentials,
+  /// bypassing the need for manual text input via adb.
+  Future<void> _devAutoRegister() async {
+    const email = 'devtest2@anynote.local';
+    const username = 'devtest2';
+    const password = 'DevTest1234';
+
+    setState(() { _isLoading = true; _error = null; });
+
+    try {
+      final salt = MasterKeyManager.generateSalt();
+      final masterKey = await MasterKeyManager.deriveMasterKey(password, salt);
+      final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
+      final authKeyHash = await MasterKeyManager.hashAuthKey(authKey);
+      final recoveryKey = await MasterKeyManager.generateRecoveryKey();
+      final recoverySalt = MasterKeyManager.generateSalt();
+      final encryptedMasterKey = await MasterKeyManager.wrapMasterKey(
+        masterKey, recoveryKey, recoverySalt,
+      );
+
+      final api = ref.read(apiClientProvider);
+      await api.register(RegisterRequest(
+        email: email,
+        username: username,
+        authKeyHash: authKeyHash,
+        salt: base64Encode(salt),
+        recoveryKey: recoveryKey,
+        recoverySalt: base64Encode(recoverySalt),
+        encryptedMasterKey: base64Encode(encryptedMasterKey),
+      ));
+
+      await MasterKeyManager.storeMasterKey(masterKey);
+      await MasterKeyManager.storeSalt(salt);
+      await MasterKeyManager.storeKdfVersion(MasterKeyManager.currentKdfVersion);
+      await MasterKeyManager.deriveEncryptKey(masterKey);
+      ref.read(authStateProvider.notifier).state = true;
+      ref.read(pushNotificationServiceProvider).init();
+      _connectWebSocket();
+
+      if (mounted) {
+        AppSnackBar.info(context, message: 'Dev account registered: $email / $password');
+        context.go('/notes');
+      }
+    } catch (e) {
+      debugPrint('[DevAutoRegister] failed: $e');
+      if (mounted) {
+        // If already registered, try logging in instead.
+        if (e.toString().contains('already') || e.toString().contains('409')) {
+          await _devAutoLogin();
+          return;
+        }
+        setState(() { _error = 'Dev register failed: $e'; });
+      }
+    } finally {
+      if (mounted) setState(() { _isLoading = false; });
+    }
+  }
+
+  /// Dev-only: logs in with the hardcoded test account.
+  Future<void> _devAutoLogin() async {
+    const email = 'devtest2@anynote.local';
+    const password = 'DevTest1234';
+
+    setState(() { _isLoading = true; _error = null; });
+
+    try {
+      final api = ref.read(apiClientProvider);
+      final serverSalt = await api.getSalt(email);
+      if (serverSalt == null) {
+        if (mounted) setState(() { _error = 'No salt for dev account'; });
+        return;
+      }
+
+      final masterKey = await MasterKeyManager.deriveMasterKey(password, serverSalt);
+      final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
+      final authKeyHash = await MasterKeyManager.hashAuthKey(authKey);
+
+      await api.login(LoginRequest(email: email, authKeyHash: authKeyHash));
+
+      await MasterKeyManager.storeMasterKey(masterKey);
+      await MasterKeyManager.storeSalt(serverSalt);
+      await MasterKeyManager.storeKdfVersion(MasterKeyManager.currentKdfVersion);
+      await MasterKeyManager.deriveEncryptKey(masterKey);
+      ref.read(authStateProvider.notifier).state = true;
+      ref.read(pushNotificationServiceProvider).init();
+      _connectWebSocket();
+
+      if (mounted) {
+        AppSnackBar.info(context, message: 'Dev login: $email / $password');
+        context.go('/notes');
+      }
+    } catch (e) {
+      debugPrint('[DevAutoLogin] failed: $e');
+      if (mounted) setState(() { _error = 'Dev login failed: $e'; });
+    } finally {
+      if (mounted) setState(() { _isLoading = false; });
     }
   }
 
@@ -568,6 +670,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       style: AppTextStyles.caption,
                     ),
                   ),
+
+                  // DEV: auto-register test account
+                  if (kDebugMode)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.md),
+                      child: TextButton(
+                        onPressed: _isLoading ? null : _devAutoRegister,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.warning,
+                        ),
+                        child: Text(
+                          'DEV: Auto Register',
+                          style: AppTextStyles.caption,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

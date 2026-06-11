@@ -51,6 +51,11 @@ class Notes extends Table {
   /// Lower values appear first. Local-only, not synced to server.
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// Local filesystem path of the first image embed in the note content.
+  /// Extracted from Quill Delta JSON during save for fast card preview.
+  /// Local-only, not synced to server.
+  TextColumn get firstImagePath => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

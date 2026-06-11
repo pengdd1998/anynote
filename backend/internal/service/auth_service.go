@@ -37,14 +37,9 @@ type AuthService interface {
 	GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error)
 	GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error)
 	GetSaltByEmail(ctx context.Context, email string) (*domain.SaltResponse, error)
-	// FakeSalt returns a deterministic fake salt for non-existing emails to
-	// prevent user enumeration via the /salt endpoint.
 	FakeSalt(email string) []byte
-	// FakeRecoverySalt returns a deterministic 32-byte salt derived from the
-	// email using HMAC-SHA256 with the server's JWT secret. Used to produce
-	// consistent fake salts for non-existing users without revealing a static
-	// prefix pattern.
 	FakeRecoverySalt(email string) []byte
+	FakeEncryptedMasterKey(email string) []byte
 }
 
 type UserRepository interface {
@@ -54,39 +49,30 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetRecoverySalt(ctx context.Context, id uuid.UUID) ([]byte, error)
-	GetRecoverySaltByEmail(ctx context.Context, email string) ([]byte, error)
+	GetRecoveryDataByEmail(ctx context.Context, email string) ([]byte, []byte, error)
 	GetSaltByEmail(ctx context.Context, email string) ([]byte, error)
 }
 
 // deviceTokenDeleter removes device tokens for a user.
-// Extracted as a minimal interface so the auth service does not depend on the
-// full DeviceTokenRepository.
 type deviceTokenDeleter interface {
 	DeleteByUser(ctx context.Context, userID string) error
 }
 
 // RefreshTokenStore defines the operations needed for refresh token rotation.
-// Implementations persist token records so that reuse can be detected and
-// tokens can be revoked on logout or password change.
 type RefreshTokenStore interface {
-	// Store persists a new refresh token record.
 	Store(ctx context.Context, userID uuid.UUID, tokenID string, expiresAt time.Time) error
-	// Revoke marks a single refresh token as revoked. Returns whether the
-	// token existed and was successfully revoked.
 	Revoke(ctx context.Context, tokenID string) (bool, error)
-	// IsRevoked reports whether a refresh token has been revoked.
 	IsRevoked(ctx context.Context, tokenID string) (bool, error)
-	// RevokeAllForUser revokes every active refresh token for a user.
 	RevokeAllForUser(ctx context.Context, userID uuid.UUID) error
 }
 
 type authService struct {
-	userRepo         UserRepository
-	deviceTokens     deviceTokenDeleter
+	userRepo          UserRepository
+	deviceTokens      deviceTokenDeleter
 	refreshTokenStore RefreshTokenStore
-	jwtSecret        string
-	tokenExpiry      time.Duration
-	refreshExpiry    time.Duration
+	jwtSecret         string
+	tokenExpiry       time.Duration
+	refreshExpiry     time.Duration
 }
 
 func NewAuthService(userRepo UserRepository, jwtSecret string, tokenExpiry, refreshExpiry time.Duration) AuthService {
@@ -98,10 +84,6 @@ func NewAuthService(userRepo UserRepository, jwtSecret string, tokenExpiry, refr
 	}
 }
 
-// NewAuthServiceWithDeviceTokens creates an AuthService that also cleans up
-// device tokens on account deletion. The refreshTokenStore enables token
-// rotation: when set, the service tracks issued refresh tokens and rejects
-// reuse of previously-rotated tokens.
 func NewAuthServiceWithDeviceTokens(userRepo UserRepository, dt deviceTokenDeleter, rts RefreshTokenStore, jwtSecret string, tokenExpiry, refreshExpiry time.Duration) AuthService {
 	return &authService{
 		userRepo:          userRepo,
@@ -114,27 +96,26 @@ func NewAuthServiceWithDeviceTokens(userRepo UserRepository, dt deviceTokenDelet
 }
 
 func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error) {
-	// Check email uniqueness
 	if existing, _ := s.userRepo.GetByEmail(ctx, req.Email); existing != nil {
 		return nil, ErrEmailExists
 	}
 
-	// Check username uniqueness
 	if existing, _ := s.userRepo.GetByUsername(ctx, req.Username); existing != nil {
 		return nil, ErrUsernameExists
 	}
 
 	user := &domain.User{
-		ID:           uuid.New(),
-		Email:        req.Email,
-		Username:     req.Username,
-		AuthKeyHash:  req.AuthKeyHash,
-		Salt:         req.Salt,
-		RecoveryKey:  []byte(req.RecoveryKey),
-		RecoverySalt: req.RecoverySalt,
-		Plan:         "free",
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		ID:                 uuid.New(),
+		Email:              req.Email,
+		Username:           req.Username,
+		AuthKeyHash:        req.AuthKeyHash,
+		Salt:               req.Salt,
+		RecoveryKey:        []byte(req.RecoveryKey),
+		RecoverySalt:       req.RecoverySalt,
+		EncryptedMasterKey: req.EncryptedMasterKey,
+		Plan:               "free",
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
 	}
 
 	if err := s.userRepo.Create(ctx, user); err != nil {
@@ -147,7 +128,6 @@ func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) 
 		return nil, err
 	}
 
-	// Persist the refresh token when rotation tracking is enabled.
 	if s.refreshTokenStore != nil {
 		jti := s.extractJTI(resp.RefreshToken)
 		if jti != "" {
@@ -166,7 +146,6 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (*doma
 		return nil, ErrInvalidCredentials
 	}
 
-	// Compare auth key hash (client-derived)
 	if err := bcrypt.CompareHashAndPassword(user.AuthKeyHash, req.AuthKeyHash); err != nil {
 		return nil, ErrInvalidCredentials
 	}
@@ -176,7 +155,6 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (*doma
 		return nil, err
 	}
 
-	// Persist the refresh token when rotation tracking is enabled.
 	if s.refreshTokenStore != nil {
 		jti := s.extractJTI(resp.RefreshToken)
 		if jti != "" {
@@ -202,13 +180,11 @@ func (s *authService) RefreshToken(ctx context.Context, refreshToken string) (*d
 		return nil, ErrInvalidToken
 	}
 
-	// Verify the token is a refresh token, not an access token.
 	tokenType, _ := claims["token_type"].(string)
 	if tokenType != "refresh" {
 		return nil, ErrInvalidTokenType
 	}
 
-	// Check if the token has been revoked (when rotation tracking is enabled).
 	oldJTI, _ := claims["jti"].(string)
 	if s.refreshTokenStore != nil && oldJTI != "" {
 		revoked, revErr := s.refreshTokenStore.IsRevoked(ctx, oldJTI)
@@ -236,16 +212,13 @@ func (s *authService) RefreshToken(ctx context.Context, refreshToken string) (*d
 		return nil, err
 	}
 
-	// Rotate: revoke the old token and persist the new one.
 	if s.refreshTokenStore != nil {
-		// Revoke the old token.
 		if oldJTI != "" {
 			if _, revokeErr := s.refreshTokenStore.Revoke(ctx, oldJTI); revokeErr != nil {
 				slog.Warn("auth: failed to revoke old refresh token during rotation",
 					"user_id", userID.String(), "error", revokeErr)
 			}
 		}
-		// Store the new token.
 		newJTI := s.extractJTI(resp.RefreshToken)
 		if newJTI != "" {
 			if storeErr := s.refreshTokenStore.Store(ctx, userID, newJTI, time.Now().Add(s.refreshExpiry)); storeErr != nil {
@@ -262,33 +235,23 @@ func (s *authService) GetCurrentUser(ctx context.Context, userID uuid.UUID) (*do
 	return s.userRepo.GetByID(ctx, userID)
 }
 
-// DeleteAccount verifies the provided auth key hash against the stored bcrypt
-// hash and, on match, deletes the user and all associated data. Tables linked
-// via ON DELETE CASCADE (sync_blobs, user_quotas, llm_configs, etc.) are
-// automatically cleaned up by PostgreSQL. Device tokens require explicit
-// deletion because the device_tokens table uses a TEXT user_id without FK.
 func (s *authService) DeleteAccount(ctx context.Context, userID uuid.UUID, authKeyHash []byte) error {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return ErrUserNotFound
 	}
 
-	// Verify the caller knows the correct authentication key.
 	if err := bcrypt.CompareHashAndPassword(user.AuthKeyHash, authKeyHash); err != nil {
 		return ErrInvalidCredentials
 	}
 
-	// Clean up device tokens (no FK cascade for the device_tokens table).
 	if s.deviceTokens != nil {
 		if dtErr := s.deviceTokens.DeleteByUser(ctx, userID.String()); dtErr != nil {
-			// Log but do not abort: the primary goal is deleting the user row,
-			// which cascades to all FK-linked tables.
 			slog.Warn("auth: failed to delete device tokens during account deletion",
 				"user_id", userID.String(), "error", dtErr)
 		}
 	}
 
-	// Revoke all refresh tokens for this user (best-effort cleanup).
 	if s.refreshTokenStore != nil {
 		if rtErr := s.refreshTokenStore.RevokeAllForUser(ctx, userID); rtErr != nil {
 			slog.Warn("auth: failed to revoke refresh tokens during account deletion",
@@ -303,9 +266,6 @@ func (s *authService) DeleteAccount(ctx context.Context, userID uuid.UUID, authK
 	return nil
 }
 
-// GetRecoverySalt returns the per-user random recovery salt.  Returns nil
-// RecoverySalt for legacy accounts that were created before this field
-// existed -- the client will fall back to deterministic derivation.
 func (s *authService) GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*domain.RecoverySaltResponse, error) {
 	salt, err := s.userRepo.GetRecoverySalt(ctx, userID)
 	if err != nil {
@@ -314,18 +274,17 @@ func (s *authService) GetRecoverySalt(ctx context.Context, userID uuid.UUID) (*d
 	return &domain.RecoverySaltResponse{RecoverySalt: salt}, nil
 }
 
-// GetRecoverySaltByEmail returns the per-user random recovery salt by email.
-// This is used during account recovery when the user is not authenticated.
+// GetRecoverySaltByEmail returns the per-user random recovery salt and
+// encrypted master key by email. Used during account recovery when the
+// user is not authenticated.
 func (s *authService) GetRecoverySaltByEmail(ctx context.Context, email string) (*domain.RecoverySaltResponse, error) {
-	salt, err := s.userRepo.GetRecoverySaltByEmail(ctx, email)
+	salt, encMasterKey, err := s.userRepo.GetRecoveryDataByEmail(ctx, email)
 	if err != nil {
 		return nil, ErrUserNotFound
 	}
-	return &domain.RecoverySaltResponse{RecoverySalt: salt}, nil
+	return &domain.RecoverySaltResponse{RecoverySalt: salt, EncryptedMasterKey: encMasterKey}, nil
 }
 
-// GetSaltByEmail returns the Argon2id salt for the given email.
-// Used by clients to re-derive the master key after app reinstall.
 func (s *authService) GetSaltByEmail(ctx context.Context, email string) (*domain.SaltResponse, error) {
 	salt, err := s.userRepo.GetSaltByEmail(ctx, email)
 	if err != nil {
@@ -342,7 +301,6 @@ func (s *authService) generateAuthResponse(user *domain.User) (*domain.AuthRespo
 		return nil, err
 	}
 
-	// Generate a unique ID for the refresh token so the store can track it.
 	refreshTokenID := uuid.New().String()
 
 	refreshToken, err := s.generateToken(user, now, s.refreshExpiry, "refresh", refreshTokenID)
@@ -375,8 +333,6 @@ func (s *authService) generateToken(user *domain.User, now time.Time, expiry tim
 	return token.SignedString([]byte(s.jwtSecret))
 }
 
-// extractJTI parses a JWT token string and returns the "jti" claim, or an
-// empty string if the claim is absent or the token cannot be parsed.
 func (s *authService) extractJTI(tokenStr string) string {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return []byte(s.jwtSecret), nil
@@ -392,19 +348,26 @@ func (s *authService) extractJTI(tokenStr string) string {
 	return jti
 }
 
-// FakeRecoverySalt returns a deterministic 32-byte salt derived from the email
-// using HMAC-SHA256 with the server's JWT secret as the key. This replaces the
-// previous static-prefix SHA-256 approach to prevent recognition of fake salts
-// by their fixed prefix pattern.
 func (s *authService) FakeRecoverySalt(email string) []byte {
 	mac := hmac.New(sha256.New, []byte(s.jwtSecret))
 	mac.Write([]byte(email))
 	return mac.Sum(nil)
 }
 
-// FakeSalt returns a deterministic 32-byte fake salt for non-existing emails.
-// Uses a "login-salt:" prefix in the HMAC input so the output differs from
-// FakeRecoverySalt for the same email.
+// FakeEncryptedMasterKey returns a deterministic 72-byte fake blob for
+// non-existing emails so that the response shape is indistinguishable from
+// a real user's response.
+func (s *authService) FakeEncryptedMasterKey(email string) []byte {
+	// 72 bytes: 24 (nonce) + 32 (ciphertext) + 16 (tag)
+	result := make([]byte, 0, 72)
+	for i := 0; i < 3; i++ {
+		mac := hmac.New(sha256.New, []byte(s.jwtSecret))
+		mac.Write([]byte(fmt.Sprintf("enc-master-key:%d:%s", i, email)))
+		result = append(result, mac.Sum(nil)...)
+	}
+	return result[:72]
+}
+
 func (s *authService) FakeSalt(email string) []byte {
 	mac := hmac.New(sha256.New, []byte(s.jwtSecret))
 	mac.Write([]byte("login-salt:" + email))

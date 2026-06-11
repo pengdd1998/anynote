@@ -2,13 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -30,6 +31,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/performance/performance_monitor.dart';
 import '../../../core/storage/image_storage.dart';
+import 'embeds/local_image_embed.dart';
 import '../../../core/widgets/keyboard_shortcuts.dart';
 import '../../../core/widgets/markdown_preview.dart';
 import '../../collab/providers/collab_provider.dart';
@@ -95,7 +97,6 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     with TickerProviderStateMixin {
-  final _titleController = TextEditingController();
   final _contentController = TextEditingController();
   final _quillController = quill.QuillController.basic();
   final _editorFocusNode = FocusNode();
@@ -480,7 +481,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ),
       builder: (_) => ReminderPickerSheet(
         noteId: _noteId!,
-        noteTitle: _titleController.text.trim(),
+        noteTitle: _extractPlainText().split('\n').first.trim(),
       ),
     ).then((result) {
       // If a reminder was set or removed, reload the current reminder state.
@@ -550,7 +551,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (!mounted) return;
 
       _debounce?.cancel();
-      _titleController.text = title;
+
+      // Merge old-style separate title into content so the editor shows
+      // a single unified area. The title becomes the first line.
+      if (title.isNotEmpty && !content.startsWith(title)) {
+        content = _prependTitleToContent(title, content);
+      }
+
       _contentController.text = content;
       if (content.isNotEmpty) {
         _loadContentIntoQuill(content);
@@ -583,6 +590,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // Delta JSON ops always have an 'insert' key.
         if (firstOp is Map && firstOp.containsKey('insert')) {
           _quillController.document = quill.Document.fromJson(decoded);
+          // Migrate legacy markdown image text to proper image embeds.
+          convertMarkdownImagesToEmbeds(_quillController);
           return;
         }
       }
@@ -592,6 +601,37 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     // Plain text or unrecognised format — insert as-is.
     _quillController.document.insert(0, content);
+    // Also migrate if the plain text contains markdown images.
+    convertMarkdownImagesToEmbeds(_quillController);
+  }
+
+  /// Prepend an old-style separate title into the note content string.
+  /// Handles both Delta JSON and plain text formats.
+  String _prependTitleToContent(String title, String content) {
+    final trimmed = content.trim();
+    if (trimmed.isEmpty) return title;
+
+    // If content is Delta JSON, inject the title as the first insert op.
+    if (trimmed.startsWith('[')) {
+      try {
+        final decoded = jsonDecode(trimmed);
+        if (decoded is List && decoded.isNotEmpty) {
+          final firstOp = decoded.first;
+          if (firstOp is Map && firstOp.containsKey('insert')) {
+            final list = List<Map<String, dynamic>>.from(
+              decoded.cast<Map<String, dynamic>>(),
+            );
+            list.insert(0, {'insert': '$title\n'});
+            return jsonEncode(list);
+          }
+        }
+      } catch (_) {
+        // Not Delta JSON, fall through.
+      }
+    }
+
+    // Plain text: prepend title with newline.
+    return '$title\n$content';
   }
 
   /// Recalculate word and character counts from the current editor content.
@@ -699,11 +739,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     final pm = PerformanceMonitor.instance;
     pm.start('note_save');
-    final title = _titleController.text.trim();
     final content = _getContentForSave();
     final plainText = _extractPlainText();
 
-    if (plainText.isEmpty && title.isEmpty) return;
+    if (plainText.isEmpty) return;
+
+    // Derive title from first line of content.
+    final effectiveTitle = plainText.split('\n').first.trim();
+    // Extract first image path from Delta JSON for card preview.
+    final imagePath = _extractFirstImagePath(content);
 
     if (!mounted) return;
     _isSaving = true;
@@ -719,14 +763,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
       if (crypto.isUnlocked) {
         encryptedContent = await crypto.encryptForItem(noteId, content);
-        if (title.isNotEmpty) {
-          encryptedTitle = await crypto.encryptForItem(noteId, title);
+        if (effectiveTitle.isNotEmpty) {
+          encryptedTitle = await crypto.encryptForItem(noteId, effectiveTitle);
         } else {
           encryptedTitle = null;
         }
       } else {
         encryptedContent = content;
-        encryptedTitle = title.isNotEmpty ? title : null;
+        encryptedTitle = effectiveTitle.isNotEmpty ? effectiveTitle : null;
       }
 
       if (_isNew) {
@@ -735,7 +779,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           encryptedContent: encryptedContent,
           encryptedTitle: encryptedTitle,
           plainContent: plainText,
-          plainTitle: title.isEmpty ? null : title,
+          plainTitle: effectiveTitle.isEmpty ? null : effectiveTitle,
+          firstImagePath: imagePath,
         );
         _isNew = false;
       } else {
@@ -746,7 +791,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           encryptedContent: encryptedContent,
           encryptedTitle: encryptedTitle,
           plainContent: plainText,
-          plainTitle: title.isEmpty ? null : title,
+          plainTitle: effectiveTitle.isEmpty ? null : effectiveTitle,
+          firstImagePath: imagePath,
         );
       }
       pm.end('note_save');
@@ -774,7 +820,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _transclusionDebounce?.cancel();
     _reminderSub?.cancel();
     _lockSub?.cancel();
-    _titleController.dispose();
     _contentController.dispose();
     _quillController.dispose();
     _editorFocusNode.dispose();
@@ -852,6 +897,36 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       return _quillController.document.toPlainText();
     }
     return _contentController.text;
+  }
+
+  /// Extract the first image file path from the content (Delta JSON or plain text).
+  /// Returns null if no image is found.
+  String? _extractFirstImagePath(String content) {
+    final trimmed = content.trim();
+    if (trimmed.isEmpty) return null;
+
+    // Try Delta JSON: look for {"insert": {"image": "path"}}
+    if (trimmed.startsWith('[')) {
+      try {
+        final decoded = jsonDecode(trimmed);
+        if (decoded is List) {
+          for (final op in decoded) {
+            if (op is Map && op['insert'] is Map) {
+              final insert = op['insert'] as Map;
+              final image = insert['image'];
+              if (image is String && image.isNotEmpty) return image;
+            }
+          }
+        }
+      } catch (_) {
+        // Not Delta JSON.
+      }
+    }
+
+    // Fallback: markdown image syntax for legacy notes.
+    final regex = RegExp(r'!\[.*?\]\((file://)?([^)]+)\)');
+    final match = regex.firstMatch(trimmed);
+    return match?.group(2);
   }
 
   /// Returns the effective text controller for the content field.
@@ -1115,49 +1190,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           );
                         },
                       ),
-
-                    // Title field — large, minimal, no visible container.
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        AppSpacing.s8,
-                        AppSpacing.lg,
-                        0,
-                      ),
-                      child: Semantics(
-                        label: l10n.noteTitle,
-                        child: TextField(
-                          controller: _titleController,
-                          readOnly: _isLocked,
-                          decoration: InputDecoration(
-                            hintText: l10n.title,
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                            hintStyle: AppTextStyles.display.copyWith(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
-                              height: 1.3,
-                              color: (isDark
-                                      ? AppColors.darkTextTertiary
-                                      : AppColors.lightTextTertiary)
-                                  .withAlpha(150),
-                            ),
-                          ),
-                          style: AppTextStyles.display.copyWith(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                            height: 1.3,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                          scrollPadding: const EdgeInsets.only(bottom: 120),
-                        ),
-                      ),
-                    ),
-
-                    // Spacing replaces the old accent divider.
-                    const SizedBox(height: AppSpacing.lg),
 
                     // Editor area — fills remaining space.
                     Expanded(
@@ -1844,7 +1876,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => PublishFromEditorSheet(
-        title: _titleController.text.trim(),
+        title: _extractPlainText().split('\n').first.trim(),
         content: _extractPlainText(),
         initialTags: tags.map((t) => t.plainName).whereType<String>().toList(),
       ),
@@ -1899,7 +1931,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     await _pickImageFromSource(context, source);
   }
 
-  /// Pick an image from the given [source] and insert a markdown reference.
+  /// Insert an image embed into the content.
+  /// Uses BlockEmbed.image for the rich editor or markdown syntax for plain text.
+  Future<void> _insertImageRef(String localPath) async {
+    if (_useRichEditor && !_isCollab) {
+      final controller = _quillController;
+      final sel = controller.selection;
+      final index = sel.isCollapsed ? sel.baseOffset : sel.start;
+      controller
+        ..skipRequestKeyboard = true
+        ..replaceText(
+          index,
+          0,
+          quill.BlockEmbed.image(localPath),
+          null,
+        )
+        ..moveCursorToPosition(index + 1);
+    } else {
+      final controller = _effectiveContentController;
+      controller.text = '${controller.text}\n![image](file://$localPath)\n';
+    }
+    await _saveNote();
+  }
+
+  /// Pick an image from the given [source] and insert a reference.
   Future<void> _pickImageFromSource(
     BuildContext context,
     ImageSource source,
@@ -1910,17 +1965,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (xFile == null) return;
 
       final bytes = await File(xFile.path).readAsBytes();
-      final localPath = await ImageStorage.saveImage(bytes, _noteId!);
-
-      // Insert markdown image reference at the end of content.
-      final controller = _effectiveContentController;
-      final currentText = controller.text;
-      final imageRef = '\n![image](file://$localPath)\n';
-      controller.text = currentText + imageRef;
-
-      // Trigger auto-save.
-      _saveNote();
-    } catch (e) {
+      final localPath = await ImageStorage.saveImage(
+        bytes,
+        _noteId!,
+        compress: false,
+      );
+      await _insertImageRef(localPath);
+    } catch (e, st) {
+      debugPrint('[NoteEditor] Image insert failed: $e\n$st');
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;
       AppSnackBar.error(

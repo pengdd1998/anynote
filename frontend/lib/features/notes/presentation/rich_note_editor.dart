@@ -6,30 +6,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/database/app_database.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/database/daos/snippets_dao.dart';
+import 'embeds/local_image_embed.dart';
 import 'embeds/table_embed.dart';
-import 'embeds/table_picker_dialog.dart';
 import 'embeds/transclusion_embed.dart';
 import 'embeds/wiki_link_embed.dart';
 import 'widgets/slash_command_menu.dart';
 
 /// A rich text editor widget using flutter_quill.
 ///
-/// Wraps a [quill.QuillSimpleToolbar] above a [quill.QuillEditor] with a
-/// divider between them. The toolbar is configured for note-taking with
-/// heading styles, lists, quotes, code blocks, inline formatting, undo/redo,
-/// and link support. Font family, font size, color, alignment, subscript, and
-/// superscript buttons are hidden to keep the toolbar compact.
-///
-/// Toolbar buttons use the warm theme colors from the enclosing [ThemeData].
-/// Active/toggled buttons display with the primary accent, inactive buttons
-/// use the theme's secondary text color. Subtle dividers separate button
-/// groups for a polished, non-cluttered look.
-///
-/// When the user types `/` at the beginning of a line or after a space, a
-/// slash command popup appears near the cursor. The user can filter commands
-/// by typing and select one with arrow keys + Enter, tap, or Escape to close.
+/// Renders only the [quill.QuillEditor] — formatting controls live in the
+/// parent's bottom [FormattingToolbar]. Slash commands are detected and shown
+/// in an overlay popup near the cursor.
 class RichNoteEditor extends ConsumerStatefulWidget {
   final quill.QuillController controller;
   final FocusNode focusNode;
@@ -95,17 +83,6 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
     _removeSlashOverlay();
     _fallbackScrollController?.dispose();
     super.dispose();
-  }
-
-  void _insertTable(BuildContext context) async {
-    final tableSize = await showTablePickerDialog(context);
-    if (tableSize == null) return;
-
-    insertTableEmbed(
-      controller: widget.controller,
-      rows: tableSize.rows,
-      cols: tableSize.cols,
-    );
   }
 
   // -- Slash command detection and overlay management --
@@ -195,9 +172,7 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
     final linesBeforeCursor =
         '\n'.allMatches(plainText.substring(0, cursorPos)).length;
     const lineHeight = 30.0; // approximate line height (20.0 * 1.5)
-    const toolbarHeight = 48.0;
-    final estimatedCursorY =
-        linesBeforeCursor * lineHeight + 16.0 + toolbarHeight;
+    final estimatedCursorY = linesBeforeCursor * lineHeight + 16.0;
 
     // Horizontal: center-ish, but could be improved with actual cursor metrics.
     final offset = Offset(
@@ -325,141 +300,12 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
   Widget build(BuildContext context) {
     // Sync readOnly state to the quill controller.
     widget.controller.readOnly = widget.readOnly;
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconTheme = _buildIconTheme(colorScheme, isDark);
 
     return Column(
       key: _editorKey,
       children: [
-        if (!widget.readOnly) _buildToolbar(context, iconTheme, isDark),
-        if (!widget.readOnly)
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-          ),
         Expanded(child: _buildEditorArea(context)),
       ],
-    );
-  }
-
-  /// Builds the warm-themed icon theme for toolbar buttons.
-  quill.QuillIconTheme _buildIconTheme(ColorScheme colorScheme, bool isDark) {
-    return quill.QuillIconTheme(
-      iconButtonSelectedData: quill.IconButtonData(
-        color: colorScheme.primary,
-        style: ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(
-            colorScheme.primaryContainer.withValues(alpha: 0.3),
-          ),
-        ),
-      ),
-      iconButtonUnselectedData: quill.IconButtonData(
-        color: isDark
-            ? AppColors.darkTextSecondary // warm medium grey (WCAG AA on dark)
-            : AppColors.lightTextSecondary, // warm brown-grey (light theme)
-      ),
-    );
-  }
-
-  /// Builds the formatting toolbar with warm styling and shortcut tooltips.
-  Widget _buildToolbar(
-    BuildContext context,
-    quill.QuillIconTheme iconTheme,
-    bool isDark,
-  ) {
-    return quill.QuillSimpleToolbar(
-      controller: widget.controller,
-      config: quill.QuillSimpleToolbarConfig(
-        multiRowsDisplay: true,
-        showDividers: true,
-        showFontFamily: false,
-        showFontSize: false,
-        showBoldButton: true,
-        showItalicButton: true,
-        showUnderLineButton: true,
-        showStrikeThrough: true,
-        showInlineCode: true,
-        showColorButton: false,
-        showBackgroundColorButton: false,
-        showClearFormat: true,
-        showAlignmentButtons: false,
-        showHeaderStyle: true,
-        showListNumbers: true,
-        showListBullets: true,
-        showListCheck: true,
-        showCodeBlock: true,
-        showQuote: true,
-        showIndent: false,
-        showLink: true,
-        showSearchButton: false,
-        showUndo: true,
-        showRedo: true,
-        showDirection: false,
-        showSubscript: false,
-        showSuperscript: false,
-        showSmallButton: false,
-        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-        sectionDividerColor:
-            isDark ? AppColors.darkDivider : AppColors.lightDivider,
-        sectionDividerSpace: 8,
-        iconTheme: iconTheme,
-        buttonOptions: _buildToolbarButtonOptions(iconTheme),
-        customButtons: [
-          quill.QuillToolbarCustomButtonOptions(
-            icon: const Icon(Icons.table_chart),
-            tooltip: 'Insert table',
-            onPressed: () => _insertTable(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds the toolbar button options with warm icon theme and shortcut tooltips.
-  quill.QuillSimpleToolbarButtonOptions _buildToolbarButtonOptions(
-    quill.QuillIconTheme iconTheme,
-  ) {
-    return quill.QuillSimpleToolbarButtonOptions(
-      base: quill.QuillToolbarBaseButtonOptions(iconTheme: iconTheme),
-      bold: quill.QuillToolbarToggleStyleButtonOptions(
-        iconTheme: iconTheme,
-        tooltip: 'Bold (Ctrl+B)',
-      ),
-      italic: quill.QuillToolbarToggleStyleButtonOptions(
-        iconTheme: iconTheme,
-        tooltip: 'Italic (Ctrl+I)',
-      ),
-      underLine: quill.QuillToolbarToggleStyleButtonOptions(
-        iconTheme: iconTheme,
-        tooltip: 'Underline (Ctrl+U)',
-      ),
-      strikeThrough: quill.QuillToolbarToggleStyleButtonOptions(
-        iconTheme: iconTheme,
-        tooltip: 'Strikethrough (Ctrl+Shift+S)',
-      ),
-      inlineCode: quill.QuillToolbarToggleStyleButtonOptions(
-        iconTheme: iconTheme,
-        tooltip: 'Inline Code (Ctrl+`)',
-      ),
-      linkStyle: quill.QuillToolbarLinkStyleButtonOptions(
-        iconTheme: iconTheme,
-        tooltip: 'Insert Link (Ctrl+Shift+K)',
-      ),
-      selectHeaderStyleDropdownButton:
-          quill.QuillToolbarSelectHeaderStyleDropdownButtonOptions(
-        iconTheme: iconTheme,
-        tooltip: 'Heading (Ctrl+H)',
-      ),
-      undoHistory: quill.QuillToolbarHistoryButtonOptions(
-        iconTheme: iconTheme,
-        tooltip: 'Undo (Ctrl+Z)',
-      ),
-      redoHistory: quill.QuillToolbarHistoryButtonOptions(
-        iconTheme: iconTheme,
-        tooltip: 'Redo (Ctrl+Y)',
-      ),
     );
   }
 
@@ -480,6 +326,7 @@ class _RichNoteEditorState extends ConsumerState<RichNoteEditor> {
             autoFocus: false,
             expands: false,
             embedBuilders: [
+              LocalImageEmbedBuilder(),
               TableEmbedBuilder(),
               WikiLinkEmbedBuilder(),
               TransclusionEmbedBuilder(),

@@ -51,6 +51,9 @@ func (s *routerStubAuthService) GetSaltByEmail(ctx context.Context, email string
 func (s *routerStubAuthService) FakeSalt(email string) []byte {
 	return make([]byte, 32)
 }
+func (s *routerStubAuthService) FakeEncryptedMasterKey(email string) []byte {
+	return make([]byte, 72)
+}
 
 // routerStubSyncService implements service.SyncService.
 type routerStubSyncService struct{}

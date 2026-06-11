@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -164,8 +165,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   /// Active priority filter (null = no filter).
   String? _priorityFilter;
 
-  /// Active filter chip type: 'all', 'notes', 'tasks', 'journal'.
-  String _filterType = 'all';
+  /// Active tag filter for quick filter chips (null = show all).
+  String? _quickTagFilter;
 
   /// Active tag filter (null = no filter, Set<String> = selected tag IDs).
   Set<String>? _tagFilter;
@@ -618,50 +619,110 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
   Widget _buildFilterChips(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final chips = <MapEntry<String, String>>[
-      MapEntry('all', l10n.filterAll),
-      MapEntry('notes', l10n.filterNotes),
-      MapEntry('tasks', l10n.filterTasks),
-      MapEntry('journal', l10n.filterJournal),
-    ];
-
     final unselectedBg = isDark ? AppColors.darkInputFill : AppColors.accentPeachBg;
     final unselectedText = isDark ? AppColors.darkTextSecondary : AppColors.accentPeachText;
+
+    // Show first 8 tags, then a "+N more" chip.
+    final visibleTags = _allTags.take(8).toList();
+    final remaining = _allTags.length - visibleTags.length;
+
+    Widget buildChip({
+      required String label,
+      required bool isSelected,
+      required VoidCallback onTap,
+    }) {
+      return Padding(
+        padding: const EdgeInsets.only(right: AppSpacing.s8),
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: AppAnimation.short,
+            curve: AppAnimation.easeOut,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.s8,
+            ),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : unselectedBg,
+              borderRadius: AppRadius.pillBorder,
+            ),
+            child: Text(
+              label,
+              style: AppTextStyles.filterChip.copyWith(
+                color: isSelected ? Colors.white : unselectedText,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: chips.map((entry) {
-          final isSelected = _filterType == entry.key;
-          return Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.s8),
-            child: GestureDetector(
-              onTap: () => setState(() => _filterType = entry.key),
-              child: AnimatedContainer(
-                duration: AppAnimation.short,
-                curve: AppAnimation.easeOut,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.s8,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary
-                      : unselectedBg,
-                  borderRadius: AppRadius.pillBorder,
-                ),
-                child: Text(
-                  entry.value,
-                  style: AppTextStyles.filterChip.copyWith(
-                    color: isSelected
-                        ? Colors.white
-                        : unselectedText,
-                  ),
-                ),
+        children: [
+          // "All" chip
+          buildChip(
+            label: l10n.filterAll,
+            isSelected: _quickTagFilter == null && (_tagFilter == null || _tagFilter!.isEmpty),
+            onTap: () => setState(() {
+              _quickTagFilter = null;
+              _tagFilter = null;
+            }),
+          ),
+          // Tag chips
+          ...visibleTags.map((tag) {
+            final isSelected = _quickTagFilter == tag.id;
+            return buildChip(
+              label: tag.plainName ?? tag.id,
+              isSelected: isSelected,
+              onTap: () => setState(() {
+                if (_quickTagFilter == tag.id) {
+                  _quickTagFilter = null;
+                  _tagFilter = null;
+                } else {
+                  _quickTagFilter = tag.id;
+                  _tagFilter = {tag.id};
+                }
+              }),
+            );
+          }),
+          // "+N more" chip
+          if (remaining > 0)
+            buildChip(
+              label: '+$remaining',
+              isSelected: false,
+              onTap: () => NotesFilterSheet.show(
+                context: context,
+                statusFilter: _statusFilter,
+                priorityFilter: _priorityFilter,
+                tagFilter: _tagFilter,
+                allTags: _allTags,
+                onStatusChanged: (status) =>
+                    setState(() => _statusFilter = status),
+                onPriorityChanged: (priority) =>
+                    setState(() => _priorityFilter = priority),
+                onTagChanged: (tagId) {
+                  setState(() {
+                    _quickTagFilter = null;
+                    _tagFilter ??= {};
+                    if (_tagFilter!.contains(tagId)) {
+                      _tagFilter!.remove(tagId);
+                      if (_tagFilter!.isEmpty) _tagFilter = null;
+                    } else {
+                      _tagFilter!.add(tagId);
+                    }
+                  });
+                },
+                onClearAll: () => setState(() {
+                  _statusFilter = null;
+                  _priorityFilter = null;
+                  _tagFilter = null;
+                  _quickTagFilter = null;
+                }),
               ),
             ),
-          );
-        }).toList(),
+        ],
       ),
     );
   }
@@ -1463,14 +1524,13 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       );
     }
 
-    return GridView.builder(
+    return MasonryGridView.builder(
       controller: _scrollController,
-      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+      gridDelegate: SliverSimpleGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: _maxCardWidth(context),
-        mainAxisSpacing: AppSpacing.md,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisExtent: 150,
       ),
+      mainAxisSpacing: AppSpacing.md,
+      crossAxisSpacing: AppSpacing.md,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.s8,

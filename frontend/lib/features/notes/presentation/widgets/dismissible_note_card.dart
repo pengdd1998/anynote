@@ -33,6 +33,7 @@ class DismissibleNoteCard extends StatelessWidget {
   final List<NoteProperty>? properties;
   final Widget? trailing;
   final int listIndex;
+  final String? previewImagePath;
 
   const DismissibleNoteCard({
     super.key,
@@ -53,6 +54,7 @@ class DismissibleNoteCard extends StatelessWidget {
     this.properties,
     this.trailing,
     this.listIndex = 0,
+    this.previewImagePath,
   });
 
   @override
@@ -75,6 +77,7 @@ class DismissibleNoteCard extends StatelessWidget {
       isLocked: isLocked,
       properties: properties,
       listIndex: listIndex,
+      previewImagePath: previewImagePath ?? note.firstImagePath,
     );
 
     if (disableSwipe) {

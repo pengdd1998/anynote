@@ -100,6 +100,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       // key derivation during account recovery.
       final recoverySalt = MasterKeyManager.generateSalt();
 
+      // Step 5c: Encrypt the master key with the recovery-derived key so
+      // the master key can be recovered from the mnemonic alone.
+      final encryptedMasterKey = await MasterKeyManager.wrapMasterKey(
+        masterKey,
+        _recoveryKey!,
+        recoverySalt,
+      );
+
       // Step 6: Send registration request to server.
       final api = ref.read(apiClientProvider);
       await api.register(
@@ -110,6 +118,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           salt: base64Encode(salt),
           recoveryKey: _recoveryKey!,
           recoverySalt: base64Encode(recoverySalt),
+          encryptedMasterKey: base64Encode(encryptedMasterKey),
         ),
       );
 

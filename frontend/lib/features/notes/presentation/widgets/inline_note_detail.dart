@@ -1,8 +1,4 @@
-import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/decrypted_note.dart';
+import 'quill_read_only_viewer.dart';
 
 /// Placeholder shown in the detail pane when no note is selected on desktop.
 class InlineDetailPlaceholder extends StatelessWidget {
@@ -243,50 +240,9 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                MarkdownBody(
-                  data: _data!.content,
-                  selectable: true,
-                  sizedImageBuilder: (config) {
-                    final uri = config.uri;
-                    if (!kIsWeb && uri.scheme == 'file') {
-                      return Image.file(
-                        File.fromUri(uri),
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.broken_image, size: 48),
-                      );
-                    }
-                    return Image.network(
-                      uri.toString(),
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.broken_image, size: 48),
-                    );
-                  },
-                  styleSheet: MarkdownStyleSheet(
-                    p: const TextStyle(fontSize: 14, height: 1.6),
-                    h1: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    h2: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    h3: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    code: TextStyle(
-                      fontSize: 13,
-                      backgroundColor:
-                          theme.colorScheme.surfaceContainerHighest,
-                    ),
-                    blockquote: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
+                QuillReadOnlyViewer(
+                  deltaJson: _data!.content,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                 ),
               ],
             ),
@@ -295,4 +251,5 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
       ],
     );
   }
+
 }

@@ -84,7 +84,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration {
@@ -267,6 +267,9 @@ class AppDatabase extends _$AppDatabase {
           await customStatement(
             'CREATE INDEX IF NOT EXISTS idx_tags_plain_name ON tags (plain_name)',
           );
+        }
+        if (from < 19) {
+          await m.addColumn(notes, notes.firstImagePath);
         }
       },
     );

@@ -47,6 +47,9 @@ class NoteCard extends StatelessWidget {
   /// Index in the list, used for auto-cycling pastel colors.
   final int listIndex;
 
+  /// Pre-extracted first image path from the note content, stored in DB.
+  final String? previewImagePath;
+
   const NoteCard({
     super.key,
     required this.note,
@@ -62,6 +65,7 @@ class NoteCard extends StatelessWidget {
     this.isLocked = false,
     this.properties,
     this.listIndex = 0,
+    this.previewImagePath,
   });
 
   bool get _isGrid => layout == NoteCardLayout.grid;
@@ -105,15 +109,6 @@ class NoteCard extends StatelessWidget {
       }
     }
     return noteColor.withAlpha(40);
-  }
-
-  /// Extract the first image file path from the note content, if any.
-  String? get _firstImagePath {
-    final content = note.plainContent;
-    if (content == null) return null;
-    final regex = RegExp(r'!\[.*?\]\(file://([^)]+)\)');
-    final match = regex.firstMatch(content);
-    return match?.group(1);
   }
 
   @override
@@ -201,26 +196,25 @@ class NoteCard extends StatelessWidget {
     bool isDark,
     String title,
   ) {
-    final preview = _previewText(50);
-    final imagePath = _firstImagePath;
-    final hasImage = imagePath != null && !kIsWeb;
+    final preview = _previewText(80);
+    final hasImage = previewImagePath != null && !kIsWeb;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Image header — prominent, clipped to top corners
+        // Image header — proportionally scaled, clipped to top corners
         if (hasImage)
           ClipRRect(
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(AppRadius.md),
             ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 140,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200, minHeight: 80),
               child: Image.file(
-                File(imagePath),
-                fit: BoxFit.cover,
+                File(previewImagePath!),
+                width: double.infinity,
+                fit: BoxFit.fitWidth,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
             ),
@@ -239,7 +233,7 @@ class NoteCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.s4),
                 Text(
                   preview,
-                  maxLines: 3,
+                  maxLines: 5,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.body.copyWith(
                     fontSize: 13,
@@ -280,36 +274,59 @@ class NoteCard extends StatelessWidget {
     String title,
   ) {
     final preview = _previewText(100);
+    final hasImage = previewImagePath != null && !kIsWeb;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.s16,
         vertical: 14,
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTitleRow(context, theme, isDark, title),
-          if (preview.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.s8),
-            Text(
-              preview,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.body.copyWith(
-                color: isDark
-                    ? AppColors.darkTextTertiary
-                    : AppColors.lightTextTertiary,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTitleRow(context, theme, isDark, title),
+                if (preview.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.s8),
+                  Text(
+                    preview,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.body.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
+                  ),
+                ],
+                if (tags.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.s8),
+                    child: TagChipsRow(tags: tags),
+                  ),
+                const SizedBox(height: AppSpacing.s8),
+                _buildDateRow(theme, isDark),
+              ],
+            ),
+          ),
+          if (hasImage) ...[
+            const SizedBox(width: AppSpacing.s12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: SizedBox(
+                width: 56,
+                height: 56,
+                child: Image.file(
+                  File(previewImagePath!),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
           ],
-          if (tags.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.s8),
-              child: TagChipsRow(tags: tags),
-            ),
-          const SizedBox(height: AppSpacing.s8),
-          _buildDateRow(theme, isDark),
         ],
       ),
     );
@@ -393,8 +410,20 @@ class NoteCard extends StatelessWidget {
   }
 
   String _previewText(int maxLen) {
-    final content = note.plainContent;
-    if (content == null) return '';
+    var content = note.plainContent;
+    if (content == null || content.isEmpty) {
+      // Fall back to plainTitle if plainContent is empty.
+      final title = note.plainTitle;
+      if (title != null && title.isNotEmpty) return title;
+      return '';
+    }
+    // If plainContent looks like raw Delta JSON (starts with '['), skip it
+    // and use plainTitle instead.
+    if (content.trimLeft().startsWith('[')) {
+      final title = note.plainTitle;
+      if (title != null && title.isNotEmpty) return title.length > maxLen ? '${title.substring(0, maxLen)}...' : title;
+      return '';
+    }
     // Strip markdown image syntax for preview.
     final cleaned = content.replaceAll(RegExp(r'!\[.*?\]\(file://[^)]+\)'), '').trim();
     if (cleaned.isEmpty) return '';
