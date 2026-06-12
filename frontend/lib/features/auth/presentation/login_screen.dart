@@ -334,12 +334,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     } catch (e) {
       debugPrint('[DevAutoRegister] failed: $e');
       if (mounted) {
-        // If already registered, try logging in instead.
-        if (e.toString().contains('already') || e.toString().contains('409')) {
-          await _devAutoLogin();
-          return;
-        }
-        setState(() { _error = 'Dev register failed: $e'; });
+        // If registration fails for any reason (already exists, server
+        // version mismatch, etc.), fall back to login with known credentials.
+        debugPrint('[DevAutoRegister] falling back to auto-login');
+        await _devAutoLogin();
+        return;
       }
     } finally {
       if (mounted) setState(() { _isLoading = false; });
