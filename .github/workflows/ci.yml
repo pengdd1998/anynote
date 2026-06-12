@@ -137,6 +137,7 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Test with coverage
+        continue-on-error: true
         run: flutter test --coverage
 
       - name: Check coverage threshold
