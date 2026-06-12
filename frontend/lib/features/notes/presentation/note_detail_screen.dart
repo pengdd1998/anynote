@@ -40,12 +40,34 @@ class NoteDetailScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(0.5),
+          child: Divider(
+            height: 0.5,
+            thickness: 0.5,
+            color: isDark
+                ? AppColors.darkDivider.withAlpha(40)
+                : AppColors.lightDivider.withAlpha(60),
+          ),
+        ),
         actions: [
-          // Edit — primary action, always visible
+          // Edit — direct action, most important CTA
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: l10n.editNote,
             onPressed: () => context.push('/notes/$noteId/edit'),
+          ),
+          // Star / bookmark
+          IconButton(
+            icon: const Icon(Icons.star_outline),
+            tooltip: l10n.moreActions,
+            onPressed: () {},
+          ),
+          // Share
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            tooltip: l10n.shareViaLink,
+            onPressed: () => _openShareSheet(context, ref),
           ),
           // More actions
           PopupMenuButton<String>(
@@ -179,10 +201,13 @@ class NoteDetailScreen extends ConsumerWidget {
   // ---------------------------------------------------------------------------
 
   Widget _buildContent(BuildContext context, DecryptedNote data, bool isDark) {
+    final textColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
+        horizontal: AppSpacing.s20,
+        vertical: AppSpacing.s20,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -197,6 +222,9 @@ class NoteDetailScreen extends ConsumerWidget {
                 child: Text(
                   data.title,
                   style: AppTextStyles.headline.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
+                    letterSpacing: -0.5,
                     color: isDark
                         ? AppColors.darkTextPrimary
                         : AppColors.lightTextPrimary,
@@ -206,17 +234,20 @@ class NoteDetailScreen extends ConsumerWidget {
 
               const SizedBox(height: AppSpacing.md),
 
-              // -- Meta row --
-              _buildMetaRow(context, data, isDark),
-
-              const SizedBox(height: AppSpacing.xl),
-
               // -- Body --
               Semantics(
                 label: AppLocalizations.of(context)!.noteContent,
-                child: QuillReadOnlyViewer(
-                  deltaJson: data.content,
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                child: DefaultTextStyle(
+                  style: AppTextStyles.body.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    height: 1.6,
+                    color: textColor,
+                  ),
+                  child: QuillReadOnlyViewer(
+                    deltaJson: data.content,
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
               ),
 
@@ -224,46 +255,34 @@ class NoteDetailScreen extends ConsumerWidget {
               if (data.tags.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.md),
                 Wrap(
-                  spacing: AppSpacing.sm,
+                  spacing: AppSpacing.s8,
                   runSpacing: AppSpacing.s4,
-                  children: data.tags.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final tag = entry.value;
-                    final bgColor = AppColors.notePastels[
-                        index % AppColors.notePastels.length];
-                    // Pick matching text color from accent palette.
-                    final accentTextColors = <Color>[
-                      AppColors.accentPeachText,
-                      AppColors.accentYellowText,
-                      AppColors.accentCoralText,
-                      AppColors.accentMintText,
-                      AppColors.accentLavenderText,
-                      AppColors.accentPeachText,
-                    ];
-                    final textColor = accentTextColors[
-                        index % accentTextColors.length];
+                  children: data.tags.map((tag) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.s12,
                         vertical: AppSpacing.s4,
                       ),
                       decoration: BoxDecoration(
-                        color: bgColor,
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.xxs),
+                        color: AppColors.indigo50,
+                        borderRadius: BorderRadius.circular(AppRadius.xxs),
                       ),
                       child: Text(
                         '#${tag.plainName}',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: textColor,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
                         ),
                       ),
                     );
                   }).toList(),
                 ),
               ],
+
+              // -- Date / meta footer --
+              const SizedBox(height: AppSpacing.s8),
+              _buildMetaFooter(context, data, isDark),
 
               // Bottom breathing room
               const SizedBox(height: AppSpacing.xl),
@@ -274,7 +293,7 @@ class NoteDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMetaRow(
+  Widget _buildMetaFooter(
     BuildContext context,
     DecryptedNote data,
     bool isDark,
@@ -285,25 +304,26 @@ class NoteDetailScreen extends ConsumerWidget {
         : AppColors.lightTextTertiary;
 
     final minutes = (data.content.length ~/ 250) + 1;
+    final dateStr = data.updatedAt.toLocal().toString().substring(0, 16);
 
     return Row(
       children: [
         Text(
-          '${l10n.updatedDate(data.updatedAt.toLocal().toString().substring(0, 16))} · $minutes min read',
+          '${l10n.updatedDate(dateStr)}  ·  $minutes min read',
           style: AppTextStyles.caption.copyWith(
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w500,
             color: metaColor,
           ),
         ),
         if (!data.isSynced) ...[
           const SizedBox(width: AppSpacing.s12),
-          const Icon(Icons.cloud_off_outlined, size: 14, color: AppColors.warning),
+          const Icon(Icons.cloud_off_outlined, size: 12, color: AppColors.warning),
           const SizedBox(width: AppSpacing.s4),
           Text(
             l10n.notSynced,
             style: AppTextStyles.caption.copyWith(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w500,
               color: AppColors.warning,
             ),
@@ -434,8 +454,6 @@ class NoteDetailScreen extends ConsumerWidget {
     AppDatabase db,
   ) {
     switch (action) {
-      case 'edit':
-        context.push('/notes/$noteId/edit');
       case 'preview':
         context.push('/notes/$noteId/preview');
       case 'history':

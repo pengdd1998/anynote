@@ -102,6 +102,11 @@ class EditorAppBarActions {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
+    // In preview/read mode: minimal actions matching the design mockup.
+    if (config.isPreview) {
+      return _buildPreviewActions(context, ref, config, l10n, colorScheme);
+    }
+
     return [
       // Presence avatars showing active collaborators.
       if (config.noteId != null)
@@ -400,6 +405,8 @@ class EditorAppBarActions {
     String value,
   ) {
     switch (value) {
+      case 'toggle_preview':
+        config.onTogglePreview();
       case 'lock':
         config.onToggleLock();
       case 'reminder':
@@ -443,6 +450,131 @@ class EditorAppBarActions {
       case 'save_close':
         config.onSaveAndClose();
     }
+  }
+
+  /// Minimal AppBar actions for preview/read mode.
+  /// Matches the design mockup: save status, share, more menu.
+  static List<Widget> _buildPreviewActions(
+    BuildContext context,
+    WidgetRef ref,
+    EditorActionsConfig config,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
+    return [
+      _AppBarSaveStatus(isSaving: config.isSaving, isDirty: config.isDirty),
+      // Share action directly visible in preview mode.
+      IconButton(
+        icon: const Icon(Icons.share_outlined),
+        tooltip: l10n.shareNote,
+        onPressed: config.onShare,
+      ),
+      // Overflow menu with all secondary actions.
+      PopupMenuButton<String>(
+        icon: const Icon(Icons.more_horiz),
+        tooltip: l10n.moreActions,
+        onSelected: (value) => _handleOverflowSelection(
+          context,
+          ref,
+          config,
+          value,
+        ),
+        itemBuilder: (context) => [
+          // --- Switch to edit ---
+          PopupMenuItem(
+            value: 'toggle_preview',
+            child: ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(l10n.edit),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          const PopupMenuDivider(),
+          // --- Note section ---
+          PopupMenuItem(
+            value: 'tags',
+            child: ListTile(
+              leading: const Icon(Icons.sell_outlined),
+              title: Text(l10n.manageTags),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          if (!config.isNew)
+            PopupMenuItem(
+              value: 'backlinks',
+              child: ListTile(
+                leading: const Icon(Icons.link_outlined),
+                title: Text(l10n.viewBacklinks),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          if (!config.isNew)
+            PopupMenuItem(
+              value: 'related',
+              child: ListTile(
+                leading: const Icon(Icons.call_made_outlined),
+                title: Text(l10n.relatedNotes),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          if (!config.isNew)
+            PopupMenuItem(
+              value: 'properties',
+              child: ListTile(
+                leading: const Icon(Icons.tune_outlined),
+                title: Text(l10n.viewProperties),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          const PopupMenuDivider(),
+          // --- Export ---
+          if (!config.isNew && config.noteId != null)
+            PopupMenuItem(
+              value: 'print',
+              child: ListTile(
+                leading: const Icon(Icons.print_outlined),
+                title: Text(l10n.printNote),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          if (!config.isNew && config.noteId != null)
+            PopupMenuItem(
+              value: 'publish',
+              child: ListTile(
+                leading: const Icon(Icons.publish_outlined),
+                title: Text(l10n.publishToPlatform),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          const PopupMenuDivider(),
+          // --- AI ---
+          PopupMenuItem(
+            value: 'ai_summary',
+            child: ListTile(
+              leading: const Icon(Icons.summarize_outlined),
+              title: Text(l10n.smartSummary),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          PopupMenuItem(
+            value: 'ai_translate',
+            child: ListTile(
+              leading: const Icon(Icons.translate),
+              title: Text(l10n.aiTranslation),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          PopupMenuItem(
+            value: 'read_aloud',
+            child: ListTile(
+              leading: _buildSpeechIcon(ref),
+              title: Text(l10n.readAloud),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ],
+      ),
+    ];
   }
 }
 

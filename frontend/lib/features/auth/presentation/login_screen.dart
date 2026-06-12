@@ -292,8 +292,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   /// Dev-only: auto-registers a test account with known credentials,
   /// bypassing the need for manual text input via adb.
   Future<void> _devAutoRegister() async {
-    const email = 'devtest2@anynote.local';
-    const username = 'devtest2';
+    const email = 'devtest4@anynote.local';
+    const username = 'devtest4';
     const password = 'DevTest1234';
 
     setState(() { _isLoading = true; _error = null; });
@@ -349,8 +349,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   /// Dev-only: logs in with the hardcoded test account.
+  /// Tries current KDF version first, falls back to legacy v1 if auth fails.
   Future<void> _devAutoLogin() async {
-    const email = 'devtest2@anynote.local';
+    const email = 'devtest4@anynote.local';
     const password = 'DevTest1234';
 
     setState(() { _isLoading = true; _error = null; });
@@ -363,15 +364,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         return;
       }
 
-      final masterKey = await MasterKeyManager.deriveMasterKey(password, serverSalt);
-      final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
-      final authKeyHash = await MasterKeyManager.hashAuthKey(authKey);
+      final currentVersion = MasterKeyManager.currentKdfVersion;
+      Uint8List masterKey;
+      int usedKdfVersion;
 
-      await api.login(LoginRequest(email: email, authKeyHash: authKeyHash));
+      try {
+        masterKey = await MasterKeyManager.deriveMasterKey(
+          password, serverSalt, currentVersion,
+        );
+        usedKdfVersion = currentVersion;
+        final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
+        final authKeyHash = await MasterKeyManager.hashAuthKey(authKey);
+        await api.login(LoginRequest(email: email, authKeyHash: authKeyHash));
+      } catch (_) {
+        // Retry with legacy KDF v1 params
+        masterKey = await MasterKeyManager.deriveMasterKey(
+          password, serverSalt, 1,
+        );
+        usedKdfVersion = 1;
+        final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
+        final authKeyHash = await MasterKeyManager.hashAuthKey(authKey);
+        await api.login(LoginRequest(email: email, authKeyHash: authKeyHash));
+      }
 
       await MasterKeyManager.storeMasterKey(masterKey);
       await MasterKeyManager.storeSalt(serverSalt);
-      await MasterKeyManager.storeKdfVersion(MasterKeyManager.currentKdfVersion);
+      await MasterKeyManager.storeKdfVersion(usedKdfVersion);
       await MasterKeyManager.deriveEncryptKey(masterKey);
       ref.read(authStateProvider.notifier).state = true;
       // ignore: unawaited_futures

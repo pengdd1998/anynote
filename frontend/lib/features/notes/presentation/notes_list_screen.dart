@@ -344,6 +344,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           _currentOffset = firstPage.length;
           _hasMore = firstPage.length < total;
           _isLoadingPage = false;
+          // Force re-application of property filters since the underlying
+          // note list changed (new notes, updated notes, deleted notes).
+          _lastFilterSignature = null;
         });
 
         _batchLoadTagsAndLocks(firstPage, db);

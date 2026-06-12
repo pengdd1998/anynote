@@ -28,7 +28,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(startChatSessionProvider)();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(startChatSessionProvider)();
+      }
+    });
   }
 
   @override

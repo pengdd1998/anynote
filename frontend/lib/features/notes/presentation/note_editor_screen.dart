@@ -64,6 +64,7 @@ import 'widgets/editor_drop_target.dart';
 import 'widgets/editor_app_bar_actions.dart';
 import 'widgets/formatting_toolbar.dart';
 import 'widgets/find_replace_bar.dart';
+import 'widgets/tag_chips_row.dart';
 import '../../../core/notifications/reminder_service.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
 import '../../../core/constants/app_durations.dart';
@@ -111,6 +112,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _isPreview = false;
   bool _useRichEditor = true;
   String? _errorMessage;
+
+  // Tags for the current note (loaded for preview display).
+  List<Tag> _noteTags = [];
+
+  // Updated-at timestamp from DB (used for date footer in preview).
+  DateTime? _noteUpdatedAt;
 
   // Lock state: when true, the note is read-only.
   bool _isLocked = false;
@@ -217,6 +224,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _isLocked = false;
     _errorMessage = null;
     _currentReminder = null;
+    _noteTags = [];
+    _noteUpdatedAt = null;
     _wordCount = 0;
     _charCount = 0;
     _writingStats = WritingStats.empty;
@@ -611,6 +620,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
       _updateCounts();
       _isDirty = false;
+
+      // Load tags and updated-at for preview display.
+      _noteTags = await db.tagsDao.getTagsForNote(_noteId!);
+      _noteUpdatedAt = note.updatedAt;
     } catch (e) {
       debugPrint('[NoteEditor] Failed to load existing note: $e');
       _isLoadingExisting = false;
@@ -1257,15 +1270,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       switchInCurve: Curves.easeOutCubic,
                                       switchOutCurve: Curves.easeInCubic,
                                       child: _isPreview
-                                          ? SingleChildScrollView(
-                                              key: const ValueKey('preview'),
-                                              padding: const EdgeInsets.only(
-                                                bottom: AppSpacing.lg,
-                                              ),
-                                              child: MarkdownPreview(
-                                                content: _extractPlainText(),
-                                              ),
-                                            )
+                                          ? _buildPreviewView(isDark)
+
                                           : _useRichEditor
                                               ? KeyedSubtree(
                                                   key: const ValueKey(
@@ -1409,6 +1415,84 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         const TtsPlayerBar(),
       ],
     );
+  }
+
+  // ── Preview / read-mode view ──────────────────────
+
+  Widget _buildPreviewView(bool isDark) {
+    final plainText = _extractPlainText();
+    final lines = plainText.split('\n');
+    final title = lines.first.trim();
+    final bodyContent = lines.length > 1
+        ? lines.sublist(1).join('\n').trimLeft()
+        : '';
+
+    final tertiaryColor =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+
+    return SingleChildScrollView(
+      key: const ValueKey('preview'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.s20,
+        vertical: AppSpacing.s20,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title — matches NoteDetailScreen: 20px, w800, tight tracking
+          if (title.isNotEmpty)
+            Text(
+              title,
+              style: AppTextStyles.headline.copyWith(
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                letterSpacing: -0.5,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+            ),
+          if (title.isNotEmpty) const SizedBox(height: AppSpacing.md),
+          // Body content
+          if (bodyContent.isNotEmpty)
+            MarkdownPreview(content: bodyContent),
+          // Tags — indigo pill badges
+          if (_noteTags.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            TagChipsRow(tags: _noteTags),
+          ],
+          // Date / metadata footer — matches NoteDetailScreen: 10px muted
+          if (_noteUpdatedAt != null) ...[
+            const SizedBox(height: AppSpacing.s8),
+            Text(
+              _formatPreviewDate(),
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: tertiaryColor,
+              ),
+            ),
+          ],
+          // Bottom breathing room
+          const SizedBox(height: AppSpacing.xl),
+        ],
+      ),
+    );
+  }
+
+  String _formatPreviewDate() {
+    final dt = _noteUpdatedAt!.toLocal();
+    final months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    final dateStr =
+        '${months[dt.month]} ${dt.day}, ${dt.year}';
+    final readingTime = _writingStats.estimatedReadingTime;
+    if (readingTime.inMinutes > 0) {
+      return '$dateStr · ${readingTime.inMinutes} min read';
+    }
+    return dateStr;
   }
 
   // ── Collab cursor wrapper ────────────────────────────
