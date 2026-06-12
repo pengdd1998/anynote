@@ -172,20 +172,55 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   @override
   void initState() {
     super.initState();
+    _setupForNote();
+  }
 
+  /// Initialize or reinitialize all note-specific state based on the current
+  /// widget parameters. Called from [initState] and [didUpdateWidget] so that
+  /// navigating from one note to another (or from an existing note to a new
+  /// one) resets stale metadata.
+  void _setupForNote() {
     // Use the provided noteId if opening an existing note, otherwise generate.
     _noteId = widget.noteId ?? const Uuid().v4();
     _isNew = widget.noteId == null;
 
+    _contentController.removeListener(_onContentChanged);
+    _quillController.removeListener(_onContentChanged);
+
+    // Clear any stale content from a previously loaded note.
+    _contentController.clear();
+    _quillController.clear();
+
     _contentController.addListener(_onContentChanged);
     _quillController.addListener(_onContentChanged);
 
+    // Leave the previous presence room so collaborators no longer see stale
+    // active status for the old note.
+    ref.read(presenceProvider.notifier).leaveRoom();
+
+    // Cancel stale subscriptions from the previous note.
+    _reminderSub?.cancel();
+    _reminderSub = null;
+    _lockSub?.cancel();
+    _lockSub = null;
+
     // Zen mode chrome fade animation (300ms).
-    _zenChromeAnimController = AnimationController(
+    _zenChromeAnimController ??= AnimationController(
       vsync: this,
       duration: AppDurations.animation,
       value: 1.0, // chrome visible by default
     );
+
+    // Reset metadata state.
+    _isDirty = false;
+    _isSaving = false;
+    _isLoadingExisting = false;
+    _isLocked = false;
+    _errorMessage = null;
+    _currentReminder = null;
+    _wordCount = 0;
+    _charCount = 0;
+    _writingStats = WritingStats.empty;
 
     // Pre-fill with initial content if provided (e.g. from a template).
     if (widget.initialContent != null && widget.initialContent!.isNotEmpty) {
@@ -225,6 +260,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // Wire Ctrl+F to open the find/replace bar in the editor.
       AppKeyboardShortcuts.setFindCallback(_openFindReplace);
     });
+  }
+
+  @override
+  void didUpdateWidget(NoteEditorScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When the noteId changes (e.g. navigating from editing one note to
+    // another or from an existing note to a new one), reinitialize all
+    // note-specific state so stale metadata from the previous note is cleared.
+    if (oldWidget.noteId != widget.noteId) {
+      _setupForNote();
+    }
   }
 
   /// Join the WebSocket presence room so that collaborators can see
