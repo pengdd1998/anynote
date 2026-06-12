@@ -31,6 +31,7 @@ void main() {
   });
 
   setUp(() async {
+    if (!isSodiumAvailable) return;
     db = AppDatabase.forTesting(NativeDatabase.memory());
     crypto = CryptoService();
     crypto.injectEncryptKey(testEncryptKey);
@@ -38,10 +39,12 @@ void main() {
   });
 
   tearDown(() async {
+    if (!isSodiumAvailable) return;
     await db.close();
   });
 
   tearDownAll(() async {
+    if (!isSodiumAvailable) return;
     if (await tempDir.exists()) {
       await tempDir.delete(recursive: true);
     }

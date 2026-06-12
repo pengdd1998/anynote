@@ -165,6 +165,7 @@ void main() {
     const saltKey = 'anynote_salt';
 
     setUp(() {
+      if (!isSodiumAvailable) return;
       SharedPreferences.setMockInitialValues({});
     });
 

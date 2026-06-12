@@ -25,6 +25,7 @@ void main() {
   });
 
   setUp(() {
+    if (!isSodiumAvailable) return;
     service = CryptoService();
   });
 
