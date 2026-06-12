@@ -96,11 +96,13 @@ func NewAuthServiceWithDeviceTokens(userRepo UserRepository, dt deviceTokenDelet
 }
 
 func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) (*domain.AuthResponse, error) {
-	if existing, _ := s.userRepo.GetByEmail(ctx, req.Email); existing != nil {
+	existing, err := s.userRepo.GetByEmail(ctx, req.Email)
+	if err == nil && existing != nil {
 		return nil, ErrEmailExists
 	}
 
-	if existing, _ := s.userRepo.GetByUsername(ctx, req.Username); existing != nil {
+	existing, err = s.userRepo.GetByUsername(ctx, req.Username)
+	if err == nil && existing != nil {
 		return nil, ErrUsernameExists
 	}
 
