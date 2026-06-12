@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/settings/domain/plan_model.dart';
 import 'package:anynote/features/settings/presentation/plan_screen.dart';
 import 'package:anynote/features/settings/providers/plan_providers.dart';
@@ -136,7 +135,8 @@ void main() {
       // Should show lifetime badge instead of upgrade buttons.
       // The l10n string is "Lifetime Member -- all features unlocked forever."
       expect(find.textContaining('Lifetime Member'), findsOneWidget);
-      expect(find.byIcon(AppIcons.verified), findsOneWidget);
+      // The lifetime badge uses Material Icons.verified, not AppIcons.verified.
+      expect(find.byIcon(Icons.verified), findsOneWidget);
 
       // Should NOT show upgrade button for lifetime plan.
       expect(find.text('Upgrade'), findsNothing);
@@ -164,11 +164,19 @@ void main() {
     });
 
     testWidgets('comparison table shows plan features', (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       final handle = await pumpWithPlan(tester, makePlan(PlanType.pro));
       addTearDown(() => handle.dispose());
 
       // The comparison table should show plan names.
-      expect(find.text('Free'), findsOneWidget);
+      // "Free" appears as both title and price in the Free plan card.
+      expect(find.text('Free'), findsAtLeast(1));
       expect(find.text('Pro'), findsOneWidget);
       expect(find.text('Lifetime'), findsOneWidget);
 

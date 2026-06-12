@@ -31,6 +31,20 @@ class _FakeRefForPresence implements Ref {
 /// without making real network calls.
 class _FakeApiClient extends ApiClient {
   _FakeApiClient() : super(baseUrl: 'http://localhost:8080');
+
+  @override
+  Future<Map<String, dynamic>> createCollabRoom({
+    required String roomName,
+  }) async {
+    return {'invite_code': 'test-invite-code-123', 'room_name': roomName};
+  }
+
+  @override
+  Future<Map<String, dynamic>> joinCollabRoom({
+    required String inviteCode,
+  }) async {
+    return {'room_id': 'room-456', 'invite_code': inviteCode};
+  }
 }
 
 // ---------------------------------------------------------------------------

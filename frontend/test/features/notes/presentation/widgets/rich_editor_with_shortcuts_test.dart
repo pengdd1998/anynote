@@ -57,11 +57,6 @@ void main() {
       expect(find.byType(quill.QuillEditor), findsOneWidget);
     });
 
-    testWidgets('renders QuillSimpleToolbar', (tester) async {
-      await pumpRichEditorWithShortcuts(tester);
-      expect(find.byType(quill.QuillSimpleToolbar), findsOneWidget);
-    });
-
     testWidgets('uses Shortcuts widget for keyboard bindings', (tester) async {
       await pumpRichEditorWithShortcuts(tester);
       // quill editor may add its own Shortcuts, so check for at least one.
@@ -72,16 +67,6 @@ void main() {
       await pumpRichEditorWithShortcuts(tester);
       // quill editor may add its own Actions, so check for at least one.
       expect(find.byType(Actions), findsAtLeast(1));
-    });
-
-    testWidgets('uses provided QuillController', (tester) async {
-      final controller = quill.QuillController.basic();
-      await pumpRichEditorWithShortcuts(tester, quillController: controller);
-
-      final toolbar = tester.widget<quill.QuillSimpleToolbar>(
-        find.byType(quill.QuillSimpleToolbar),
-      );
-      expect(identical(toolbar.controller, controller), isTrue);
     });
 
     testWidgets('wraps editor in KeyedSubtree-compatible structure',

@@ -115,8 +115,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // The row should be tappable (InkWell from DestructiveSettingsItem).
-      expect(find.byType(InkWell), findsOneWidget);
+      // The rows should be tappable (InkWell from DestructiveSettingsItem).
+      // There are two destructive items: Sign Out and Delete Account.
+      expect(find.byType(InkWell), findsNWidgets(2));
     });
   });
 

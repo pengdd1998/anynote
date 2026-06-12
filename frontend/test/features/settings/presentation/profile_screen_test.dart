@@ -56,7 +56,8 @@ void main() {
       expect(find.text('Public Profile'), findsOneWidget);
 
       // Pre-filled values.
-      expect(find.text('Jane Doe'), findsOneWidget);
+      // Display name appears in both the avatar preview and the TextField.
+      expect(find.text('Jane Doe'), findsAtLeast(1));
       expect(find.text('Flutter developer'), findsOneWidget);
 
       await handle.dispose();
@@ -103,8 +104,9 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Public profile switch should be present and off by default.
-      final switchWidget = tester.widget<SwitchListTile>(
-        find.byType(SwitchListTile),
+      // The UI uses a plain Switch widget (not SwitchListTile).
+      final switchWidget = tester.widget<Switch>(
+        find.byType(Switch),
       );
       expect(switchWidget.value, isFalse);
 
@@ -129,12 +131,12 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Tap the switch to enable.
-      await tester.tap(find.byType(SwitchListTile));
+      await tester.tap(find.byType(Switch));
       await tester.pumpAndSettle();
 
       // Switch should now be on.
-      final switchWidget = tester.widget<SwitchListTile>(
-        find.byType(SwitchListTile),
+      final switchWidget = tester.widget<Switch>(
+        find.byType(Switch),
       );
       expect(switchWidget.value, isTrue);
 
@@ -188,7 +190,8 @@ void main() {
       await tester.enterText(textFields.first, 'New Name');
       await tester.pump();
 
-      expect(find.text('New Name'), findsOneWidget);
+      // "New Name" appears in both the avatar preview and the TextField.
+      expect(find.text('New Name'), findsAtLeast(1));
 
       await handle.dispose();
     });

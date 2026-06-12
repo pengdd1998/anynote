@@ -77,7 +77,7 @@ void main() {
 
       // Should show the welcome empty state.
       expect(find.text('Ask me anything about your notes'), findsOneWidget);
-      expect(find.byIcon(Icons.auto_awesome), findsOneWidget);
+      expect(find.byIcon(Icons.chat_bubble_outline), findsOneWidget);
     });
 
     testWidgets('shows message input field', (tester) async {
