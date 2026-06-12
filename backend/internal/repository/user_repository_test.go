@@ -79,14 +79,16 @@ func TestUserRepository_BCryptHashing(t *testing.T) {
 
 // mockUserRepo satisfies the service.UserRepository interface for unit tests.
 type mockUserRepo struct {
-	usersByEmail map[string]*domain.User
-	usersByID    map[uuid.UUID]*domain.User
+	usersByEmail    map[string]*domain.User
+	usersByUsername map[string]*domain.User
+	usersByID       map[uuid.UUID]*domain.User
 }
 
 func newMockUserRepo() *mockUserRepo {
 	return &mockUserRepo{
-		usersByEmail: make(map[string]*domain.User),
-		usersByID:    make(map[uuid.UUID]*domain.User),
+		usersByEmail:    make(map[string]*domain.User),
+		usersByUsername: make(map[string]*domain.User),
+		usersByID:       make(map[uuid.UUID]*domain.User),
 	}
 }
 
@@ -95,12 +97,21 @@ func (m *mockUserRepo) Create(ctx context.Context, user *domain.User) error {
 		return errors.New("duplicate email")
 	}
 	m.usersByEmail[user.Email] = user
+	m.usersByUsername[user.Username] = user
 	m.usersByID[user.ID] = user
 	return nil
 }
 
 func (m *mockUserRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	u, ok := m.usersByEmail[email]
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	return u, nil
+}
+
+func (m *mockUserRepo) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
+	u, ok := m.usersByUsername[username]
 	if !ok {
 		return nil, errors.New("user not found")
 	}
@@ -137,6 +148,21 @@ func (m *mockUserRepo) GetSaltByEmail(ctx context.Context, email string) ([]byte
 		return nil, errors.New("user not found")
 	}
 	return u.Salt, nil
+}
+
+func (m *mockUserRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	if _, ok := m.usersByID[id]; !ok {
+		return errors.New("user not found")
+	}
+	for email, u := range m.usersByEmail {
+		if u.ID == id {
+			delete(m.usersByEmail, email)
+			delete(m.usersByUsername, u.Username)
+			break
+		}
+	}
+	delete(m.usersByID, id)
+	return nil
 }
 
 func TestMockUserRepo_Create(t *testing.T) {

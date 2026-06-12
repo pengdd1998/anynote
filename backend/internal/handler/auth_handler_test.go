@@ -265,7 +265,7 @@ func TestAuthHandler_Register_DuplicateEmail(t *testing.T) {
 		Email:       "alice@example.com",
 		Username:    "alice",
 		AuthKeyHash: []byte("hash"),
-			RecoveryKey: "recovery",
+		RecoveryKey: "recovery",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
