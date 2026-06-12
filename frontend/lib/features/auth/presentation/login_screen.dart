@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -162,9 +161,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
       // Initialize push notifications now that the user is authenticated.
       // This is a fire-and-forget operation; failure does not block login.
+      // ignore: unawaited_futures
       ref.read(pushNotificationServiceProvider).init();
 
       // Connect to the WebSocket server for real-time collaboration.
+      // ignore: unawaited_futures
       _connectWebSocket();
 
       // Step 5: Prompt KDF migration if user logged in with legacy parameters.
@@ -317,14 +318,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         recoveryKey: recoveryKey,
         recoverySalt: base64Encode(recoverySalt),
         encryptedMasterKey: base64Encode(encryptedMasterKey),
-      ));
+      ),);
 
       await MasterKeyManager.storeMasterKey(masterKey);
       await MasterKeyManager.storeSalt(salt);
       await MasterKeyManager.storeKdfVersion(MasterKeyManager.currentKdfVersion);
       await MasterKeyManager.deriveEncryptKey(masterKey);
       ref.read(authStateProvider.notifier).state = true;
+      // ignore: unawaited_futures
       ref.read(pushNotificationServiceProvider).init();
+      // ignore: unawaited_futures
       _connectWebSocket();
 
       if (mounted) {
@@ -371,7 +374,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       await MasterKeyManager.storeKdfVersion(MasterKeyManager.currentKdfVersion);
       await MasterKeyManager.deriveEncryptKey(masterKey);
       ref.read(authStateProvider.notifier).state = true;
+      // ignore: unawaited_futures
       ref.read(pushNotificationServiceProvider).init();
+      // ignore: unawaited_futures
       _connectWebSocket();
 
       if (mounted) {
@@ -391,6 +396,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       final api = ref.read(apiClientProvider);
       final token = api.accessToken;
       if (token == null || !mounted) return;
+      // ignore: unawaited_futures
       ref.read(wsClientProvider.notifier).connect(token);
     } catch (_) {
       // WebSocket connection failure is non-critical. The collab feature

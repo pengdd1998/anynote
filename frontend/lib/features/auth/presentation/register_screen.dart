@@ -136,6 +136,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       ref.read(authStateProvider.notifier).state = true;
 
       // Initialize push notifications for the new account.
+      // ignore: unawaited_futures
       ref.read(pushNotificationServiceProvider).init();
 
       if (mounted) {
