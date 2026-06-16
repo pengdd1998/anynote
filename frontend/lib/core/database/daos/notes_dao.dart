@@ -251,7 +251,11 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     );
 
     // Remove from FTS5
-    await customStatement('DELETE FROM notes_fts WHERE note_id = ?', [id]);
+    await customStatement(
+      'DELETE FROM notes_fts WHERE rowid IN '
+      '(SELECT rowid FROM notes_fts WHERE note_id = ?)',
+      [id],
+    );
   }
 
   /// Mark a note as synced.
@@ -761,7 +765,17 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
 
   /// Update FTS5 index for a single note.
   Future<void> _updateFts(String noteId, String content, String? title) async {
-    await customStatement('DELETE FROM notes_fts WHERE note_id = ?', [noteId]);
+    // FTS5 virtual tables restrict DELETE/UPDATE WHERE clauses to the `rowid`
+    // column only — a bare `WHERE note_id = ?` throws on a virtual table
+    // (it worked only because notes_fts used to be a *regular* table). Use a
+    // rowid subquery: the inner SELECT may filter on FTS5 columns, and the
+    // outer DELETE references rowid. This form is valid on both virtual and
+    // regular tables, so it's safe regardless of schema state.
+    await customStatement(
+      'DELETE FROM notes_fts WHERE rowid IN '
+      '(SELECT rowid FROM notes_fts WHERE note_id = ?)',
+      [noteId],
+    );
     await customStatement(
       'INSERT INTO notes_fts (note_id, content, title) VALUES (?, ?, ?)',
       [noteId, content, title ?? ''],

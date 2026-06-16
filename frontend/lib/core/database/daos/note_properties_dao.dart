@@ -272,7 +272,8 @@ class NotePropertiesDao extends DatabaseAccessor<AppDatabase>
     // Update FTS5 if plaintext is available.
     if (plainContent != null) {
       await customStatement(
-        'DELETE FROM notes_fts WHERE note_id = ?',
+        'DELETE FROM notes_fts WHERE rowid IN '
+        '(SELECT rowid FROM notes_fts WHERE note_id = ?)',
         [noteId],
       );
       await customStatement(

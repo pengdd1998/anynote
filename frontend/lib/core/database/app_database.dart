@@ -84,7 +84,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration {
@@ -98,14 +98,12 @@ class AppDatabase extends _$AppDatabase {
         //   Co — Private Use (for compatibility)
         // This ensures Chinese characters are individually recognized as tokens
         // rather than being silently skipped by the default unicode61 filter.
-        await customStatement('''
-          CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
-            note_id,
-            content,
-            title,
-            tokenize='unicode61 categories "L* N* Co"'
-          );
-        ''');
+        // m.createAll() above created `notes_fts` as a *regular* table
+        // (NotesFts is a plain Drift Table in the tables list). A regular
+        // table silently breaks MATCH-based search — every query returns
+        // nothing. Drop it and recreate as a real FTS5 virtual table.
+        // _recreateFtsTable also rebuilds the index (a no-op on a fresh DB).
+        await _recreateFtsTable();
       },
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 2) {
@@ -271,6 +269,23 @@ class AppDatabase extends _$AppDatabase {
         if (from < 19) {
           await m.addColumn(notes, notes.firstImagePath);
         }
+        if (from < 20) {
+          // v19 -> v20: Repair `notes_fts`. On fresh installs, onCreate's
+          // createAll() left notes_fts as a regular table (the earlier
+          // `CREATE VIRTUAL TABLE IF NOT EXISTS` was a no-op because the
+          // table already existed), so MATCH search returned no results.
+          // Recreate as a real FTS5 virtual table and rebuild the index from
+          // decrypted plain content.
+          await _recreateFtsTable();
+        }
+        if (from < 21) {
+          // v20 -> v21: The FTS5 tokenize directive used invalid double quotes
+          // around the categories list (`categories "L* N* Co"`), which SQLite
+          // rejects with "parse error in tokenize directive" — so the v20
+          // _recreateFtsTable silently failed to create the virtual table,
+          // and note creation threw. Recreate with the corrected directive.
+          await _recreateFtsTable();
+        }
       },
     );
   }
@@ -284,7 +299,7 @@ class AppDatabase extends _$AppDatabase {
         note_id,
         content,
         title,
-        tokenize='unicode61 categories "L* N* Co"'
+        tokenize='unicode61'
       );
     ''');
     await rebuildFtsIndex();
