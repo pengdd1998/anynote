@@ -86,6 +86,25 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 /// current route.
 final routerRefreshNotifier = ValueNotifier<Object?>(null);
 
+/// Minimal boot splash shown while auth/onboarding state loads from secure
+/// storage, so the authenticated Home shell never flashes to an unresolved
+/// session. Replaced by the real route once [hasSeenOnboardingProvider]
+/// resolves and the router redirect re-evaluates.
+class _BootSplash extends StatelessWidget {
+  const _BootSplash();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/notes',
@@ -120,8 +139,12 @@ final appRouter = GoRouter(
     // Check if onboarding has been seen.
     if (!isAuthRoute && !isOnboarding) {
       final hasSeen = globalContainer.read(hasSeenOnboardingProvider);
-      // null = still loading from secure storage, don't redirect yet.
-      if (hasSeen == null) return null;
+      // null = still loading from secure storage. Route to the splash screen
+      // (not /notes) so an unauthenticated user never sees the Home shell
+      // before auth/onboarding state resolves. The refreshListenable re-runs
+      // this redirect once hasSeen resolves, routing onward correctly
+      // (onboarding for first-timers, login for returning users).
+      if (hasSeen == null) return '/splash';
       if (hasSeen == false) return '/onboarding';
       return '/auth/login';
     }
@@ -129,6 +152,15 @@ final appRouter = GoRouter(
     return null;
   },
   routes: [
+    // Splash/boot screen shown while auth/onboarding state loads from secure
+    // storage, so the authenticated Home shell never flashes to an
+    // unauthenticated session on launch. Once hasSeen resolves, the
+    // refreshListenable re-evaluates the redirect and routes onward.
+    GoRoute(
+      path: '/splash',
+      pageBuilder: (context, state) => slideTransition(const _BootSplash()),
+    ),
+
     // Onboarding route (no shell)
     GoRoute(
       path: '/onboarding',
