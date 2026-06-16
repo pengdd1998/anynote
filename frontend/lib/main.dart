@@ -161,6 +161,22 @@ void main() async {
   });
 }
 
+/// System back button handler: if the soft keyboard (IME) is open, hide it
+/// and consume the press instead of letting it navigate/pop. Matches the
+/// standard Android UX where the first back closes the keyboard and only a
+/// subsequent back navigates. Without this, Flutter routes back presses to
+/// the Navigator while the IME is still open, so the back key exits the app
+/// mid-form-entry.
+Future<bool> _onSystemBack() async {
+  final views = WidgetsBinding.instance.platformDispatcher.views;
+  final keyboardOpen = views.isNotEmpty && views.first.viewInsets.bottom > 0;
+  if (keyboardOpen) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    return true; // consumed — keyboard was open, just hide it
+  }
+  return false; // let default back handling (navigate/pop) proceed
+}
+
 class AnyNoteApp extends ConsumerStatefulWidget {
   const AnyNoteApp({super.key});
 
@@ -386,6 +402,10 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                           ],
                           supportedLocales: AppLocalizations.supportedLocales,
                           locale: locale,
+                          builder: (context, child) => BackButtonListener(
+                            onBackButtonPressed: _onSystemBack,
+                            child: child!,
+                          ),
                         ),
                         // Command palette overlay rendered on top of all screens.
                           const CommandPaletteOverlay(),
