@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -244,10 +246,12 @@ class NoteDetailScreen extends ConsumerWidget {
                     height: 1.6,
                     color: textColor,
                   ),
-                  child: QuillReadOnlyViewer(
-                    deltaJson: data.content,
-                    padding: EdgeInsets.zero,
-                  ),
+                  child: _isQuillDelta(data.content)
+                      ? QuillReadOnlyViewer(
+                          deltaJson: data.content,
+                          padding: EdgeInsets.zero,
+                        )
+                      : Text(data.content),
                 ),
               ),
 
@@ -434,6 +438,11 @@ class NoteDetailScreen extends ConsumerWidget {
 
     final tags = await db.tagsDao.getTagsForNote(noteId);
 
+    // The stored content may be the sync envelope {"content":...,"title":...}
+    // (the format sync packs for push) rather than a Quill Delta. Unwrap it
+    // so the detail view renders the actual body, not the raw envelope JSON.
+    content = _unwrapContentEnvelope(content);
+
     return DecryptedNote(
       title: title,
       content: content,
@@ -441,6 +450,35 @@ class NoteDetailScreen extends ConsumerWidget {
       isSynced: note.isSynced,
       tags: tags,
     );
+  }
+
+  /// If [content] is the sync envelope {"content":...,"title":...}, return
+  /// its inner "content" (the plain-text body); otherwise return [content]
+  /// unchanged. A Quill Delta is a JSON array ([...]) and is left intact.
+  String _unwrapContentEnvelope(String content) {
+    final trimmed = content.trim();
+    if (!trimmed.startsWith('{')) return content;
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is Map<String, dynamic> && decoded.containsKey('content')) {
+        return (decoded['content'] as String?) ?? '';
+      }
+    } catch (_) {
+      // Not valid JSON — leave as-is (plain text).
+    }
+    return content;
+  }
+
+  /// Whether [content] is a Quill Delta document (a JSON array of ops), as
+  /// opposed to plain text or the sync envelope.
+  bool _isQuillDelta(String content) {
+    final trimmed = content.trim();
+    if (!trimmed.startsWith('[')) return false;
+    try {
+      return jsonDecode(trimmed) is List;
+    } catch (_) {
+      return false;
+    }
   }
 
   // ---------------------------------------------------------------------------
