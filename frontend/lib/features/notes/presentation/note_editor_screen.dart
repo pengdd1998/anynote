@@ -32,7 +32,6 @@ import '../../../core/performance/performance_monitor.dart';
 import '../../../core/storage/image_storage.dart';
 import 'embeds/local_image_embed.dart';
 import '../../../core/widgets/keyboard_shortcuts.dart';
-import '../../../core/widgets/markdown_preview.dart';
 import '../../collab/providers/collab_provider.dart';
 import 'widgets/backlinks_sheet.dart';
 import 'package:anynote/core/accessibility/a11y_utils.dart';
@@ -40,6 +39,7 @@ import 'widgets/command_palette.dart';
 import 'widgets/related_notes_sheet.dart';
 import 'widgets/collab_cursors_widget.dart';
 import 'widgets/rich_editor_with_shortcuts.dart';
+import 'rich_note_editor.dart';
 import 'widgets/tag_picker_sheet.dart';
 import 'widgets/tts_player_bar.dart';
 import 'widgets/slash_command_menu.dart';
@@ -1420,61 +1420,71 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   // ── Preview / read-mode view ──────────────────────
 
   Widget _buildPreviewView(bool isDark) {
-    final plainText = _extractPlainText();
-    final lines = plainText.split('\n');
-    final title = lines.first.trim();
-    final bodyContent = lines.length > 1
-        ? lines.sublist(1).join('\n').trimLeft()
-        : '';
-
     final tertiaryColor =
         isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final contentColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
 
-    return SingleChildScrollView(
+    // Render the note with the SAME editor widget used in edit mode, but
+    // read-only. This guarantees the detail/preview is visually identical to
+    // the editor (same fonts, spacing, headings, lists) instead of
+    // re-rendering the body through a separate markdown engine that diverges
+    // in style. The title is part of the document, so it renders exactly as
+    // in the editor (no separate styled header that differs).
+    return KeyedSubtree(
       key: const ValueKey('preview'),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.s20,
-        vertical: AppSpacing.s20,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title — matches NoteDetailScreen: 20px, w800, tight tracking
-          if (title.isNotEmpty)
-            Text(
-              title,
-              style: AppTextStyles.headline.copyWith(
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
-                letterSpacing: -0.5,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+          Expanded(
+            child: _useRichEditor
+                ? RichNoteEditor(
+                    controller: _quillController,
+                    focusNode: _editorFocusNode,
+                    readOnly: true,
+                  )
+                : TextField(
+                    controller: _effectiveContentController,
+                    readOnly: true,
+                    maxLines: null,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                    ),
+                    style: AppTextStyles.body.copyWith(
+                      fontSize: 16,
+                      height: 1.8,
+                      color: contentColor,
+                    ),
+                  ),
+          ),
+          // Footer: tags + metadata (preview-only chrome, not part of the
+          // editable content).
+          if (_noteTags.isNotEmpty || _noteUpdatedAt != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.s20,
+                vertical: AppSpacing.s12,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_noteTags.isNotEmpty) ...[
+                    TagChipsRow(tags: _noteTags),
+                    const SizedBox(height: AppSpacing.s8),
+                  ],
+                  if (_noteUpdatedAt != null)
+                    Text(
+                      _formatPreviewDate(),
+                      style: AppTextStyles.caption.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: tertiaryColor,
+                      ),
+                    ),
+                ],
               ),
             ),
-          if (title.isNotEmpty) const SizedBox(height: AppSpacing.md),
-          // Body content
-          if (bodyContent.isNotEmpty)
-            MarkdownPreview(content: bodyContent),
-          // Tags — indigo pill badges
-          if (_noteTags.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            TagChipsRow(tags: _noteTags),
-          ],
-          // Date / metadata footer — matches NoteDetailScreen: 10px muted
-          if (_noteUpdatedAt != null) ...[
-            const SizedBox(height: AppSpacing.s8),
-            Text(
-              _formatPreviewDate(),
-              style: AppTextStyles.caption.copyWith(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: tertiaryColor,
-              ),
-            ),
-          ],
-          // Bottom breathing room
-          const SizedBox(height: AppSpacing.xl),
         ],
       ),
     );
