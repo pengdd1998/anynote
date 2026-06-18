@@ -202,9 +202,6 @@ class NoteDetailScreen extends ConsumerWidget {
   // ---------------------------------------------------------------------------
 
   Widget _buildContent(BuildContext context, DecryptedNote data, bool isDark) {
-    final textColor =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.s20,
@@ -236,19 +233,17 @@ class NoteDetailScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.md),
 
               // -- Body --
+              // Render via the same read-only Quill viewer the editor uses,
+              // WITHOUT a DefaultTextStyle override: the previous wrapper
+              // forced fontSize 13 / w500 / height 1.6, which made the body
+              // render smaller and differently than the editor. Letting the
+              // viewer use its native Quill styling keeps detail and edit
+              // visually identical.
               Semantics(
                 label: AppLocalizations.of(context)!.noteContent,
-                child: DefaultTextStyle(
-                  style: AppTextStyles.body.copyWith(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    height: 1.6,
-                    color: textColor,
-                  ),
-                  child: QuillReadOnlyViewer(
-                    deltaJson: data.content,
-                    padding: EdgeInsets.zero,
-                  ),
+                child: QuillReadOnlyViewer(
+                  deltaJson: data.content,
+                  padding: EdgeInsets.zero,
                 ),
               ),
 
