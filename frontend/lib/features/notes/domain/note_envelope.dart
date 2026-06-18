@@ -17,10 +17,27 @@ import 'dart:convert';
 /// `[{"insert":"…{\"content\":…}…"}]`, where a naive `jsonDecode` of the
 /// remainder would choke on the trailing Delta syntax).
 String unwrapSyncEnvelope(String content) {
-  final idx = content.indexOf('{"content"');
-  if (idx < 0) return content;
-  final obj = _extractBalancedJsonObject(content, idx);
-  if (obj == null) return content;
+  // 1. Pure envelope, or envelope after a prepended title (real quotes).
+  final direct = _tryExtractEnvelope(content);
+  if (direct != null) return direct;
+  // 2. Envelope baked into a Quill Delta: the raw Delta JSON escapes the
+  //    envelope's quotes (\"), so a raw search misses it. Parse the Delta,
+  //    join its insert-op text (escapes resolved) and search there.
+  final deltaText = _deltaInsertText(content);
+  if (deltaText != null) {
+    final fromDelta = _tryExtractEnvelope(deltaText);
+    if (fromDelta != null) return fromDelta;
+  }
+  return content;
+}
+
+/// Returns the envelope's inner "content" body if [s] contains a sync
+/// envelope `{"content":…}` (with real quotes); otherwise null.
+String? _tryExtractEnvelope(String s) {
+  final idx = s.indexOf('{"content"');
+  if (idx < 0) return null;
+  final obj = _extractBalancedJsonObject(s, idx);
+  if (obj == null) return null;
   try {
     final decoded = jsonDecode(obj);
     if (decoded is Map && decoded.containsKey('content')) {
@@ -28,15 +45,35 @@ String unwrapSyncEnvelope(String content) {
       if (inner is String) return inner;
     }
   } catch (_) {
-    // Not a parseable envelope — leave as-is.
+    // Not a parseable envelope.
   }
-  return content;
+  return null;
+}
+
+/// If [content] is a Quill Delta JSON array, return the concatenation of its
+/// insert-op text (with JSON escapes resolved); otherwise null.
+String? _deltaInsertText(String content) {
+  try {
+    final decoded = jsonDecode(content);
+    if (decoded is! List) return null;
+    final buf = StringBuffer();
+    for (final op in decoded) {
+      if (op is Map && op['insert'] is String) {
+        buf.write(op['insert'] as String);
+      }
+    }
+    return buf.toString();
+  } catch (_) {
+    return null;
+  }
 }
 
 /// Whether [content] is (or contains) a sync envelope `{"content":…}`.
-bool containsSyncEnvelope(String content) =>
-    content.contains('{"content"') &&
-    _extractBalancedJsonObject(content, content.indexOf('{"content"')) != null;
+bool containsSyncEnvelope(String content) {
+  if (_tryExtractEnvelope(content) != null) return true;
+  final deltaText = _deltaInsertText(content);
+  return deltaText != null && _tryExtractEnvelope(deltaText) != null;
+}
 
 /// Extract the balanced JSON object (`{…}`) beginning at [start], respecting
 /// string escapes and nested braces. Returns `null` if no matching `}` is
