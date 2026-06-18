@@ -604,6 +604,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
       if (!mounted) return;
 
+      // Unwrap the sync envelope {"content":...,"title":...} if the stored
+      // content is (or contains) it, so the editor loads the actual body
+      // instead of the raw envelope JSON. Matches NoteDetailScreen.
+      content = _unwrapSyncEnvelope(content);
+
       _debounce?.cancel();
 
       // Merge old-style separate title into content so the editor shows
@@ -628,6 +633,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       debugPrint('[NoteEditor] Failed to load existing note: $e');
       _isLoadingExisting = false;
     }
+  }
+
+  /// If [content] is (or contains) the sync envelope {"content":...,"title":
+  /// ...}, return its inner "content" (the plain-text body); otherwise return
+  /// [content] unchanged. The envelope may be embedded (e.g. a legacy title
+  /// prepended), so we locate it rather than requiring the whole string to be
+  /// the envelope. A Quill Delta (JSON array) is left intact.
+  String _unwrapSyncEnvelope(String content) {
+    final idx = content.indexOf('{"content"');
+    if (idx < 0) return content;
+    try {
+      final decoded = jsonDecode(content.substring(idx));
+      if (decoded is Map<String, dynamic> && decoded.containsKey('content')) {
+        final inner = decoded['content'];
+        if (inner is String) return inner;
+      }
+    } catch (_) {
+      // Not a parseable envelope — leave as-is.
+    }
+    return content;
   }
 
   /// Loads content into the Quill controller, detecting Delta JSON when the

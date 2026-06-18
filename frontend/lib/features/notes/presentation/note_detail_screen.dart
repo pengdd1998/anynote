@@ -246,12 +246,10 @@ class NoteDetailScreen extends ConsumerWidget {
                     height: 1.6,
                     color: textColor,
                   ),
-                  child: _isQuillDelta(data.content)
-                      ? QuillReadOnlyViewer(
-                          deltaJson: data.content,
-                          padding: EdgeInsets.zero,
-                        )
-                      : Text(data.content),
+                  child: QuillReadOnlyViewer(
+                    deltaJson: data.content,
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
               ),
 
@@ -452,33 +450,24 @@ class NoteDetailScreen extends ConsumerWidget {
     );
   }
 
-  /// If [content] is the sync envelope {"content":...,"title":...}, return
-  /// its inner "content" (the plain-text body); otherwise return [content]
-  /// unchanged. A Quill Delta is a JSON array ([...]) and is left intact.
+  /// If [content] is (or contains) the sync envelope {"content":...,"title":
+  /// ...}, return its inner "content" (the plain-text body); otherwise return
+  /// [content] unchanged. The envelope may be embedded (e.g. a legacy title
+  /// prepended), so we locate it rather than requiring the whole string to be
+  /// the envelope. A Quill Delta (JSON array) is left intact.
   String _unwrapContentEnvelope(String content) {
-    final trimmed = content.trim();
-    if (!trimmed.startsWith('{')) return content;
+    final idx = content.indexOf('{"content"');
+    if (idx < 0) return content;
     try {
-      final decoded = jsonDecode(trimmed);
+      final decoded = jsonDecode(content.substring(idx));
       if (decoded is Map<String, dynamic> && decoded.containsKey('content')) {
-        return (decoded['content'] as String?) ?? '';
+        final inner = decoded['content'];
+        if (inner is String) return inner;
       }
     } catch (_) {
-      // Not valid JSON — leave as-is (plain text).
+      // Not a parseable envelope — leave as-is.
     }
     return content;
-  }
-
-  /// Whether [content] is a Quill Delta document (a JSON array of ops), as
-  /// opposed to plain text or the sync envelope.
-  bool _isQuillDelta(String content) {
-    final trimmed = content.trim();
-    if (!trimmed.startsWith('[')) return false;
-    try {
-      return jsonDecode(trimmed) is List;
-    } catch (_) {
-      return false;
-    }
   }
 
   // ---------------------------------------------------------------------------
