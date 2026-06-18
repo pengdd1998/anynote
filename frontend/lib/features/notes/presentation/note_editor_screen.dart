@@ -40,6 +40,7 @@ import 'widgets/command_palette.dart';
 import 'widgets/related_notes_sheet.dart';
 import 'widgets/collab_cursors_widget.dart';
 import 'widgets/rich_editor_with_shortcuts.dart';
+import '../domain/note_envelope.dart';
 import 'widgets/tag_picker_sheet.dart';
 import 'widgets/tts_player_bar.dart';
 import 'widgets/slash_command_menu.dart';
@@ -635,25 +636,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
-  /// If [content] is (or contains) the sync envelope {"content":...,"title":
-  /// ...}, return its inner "content" (the plain-text body); otherwise return
-  /// [content] unchanged. The envelope may be embedded (e.g. a legacy title
-  /// prepended), so we locate it rather than requiring the whole string to be
-  /// the envelope. A Quill Delta (JSON array) is left intact.
-  String _unwrapSyncEnvelope(String content) {
-    final idx = content.indexOf('{"content"');
-    if (idx < 0) return content;
-    try {
-      final decoded = jsonDecode(content.substring(idx));
-      if (decoded is Map<String, dynamic> && decoded.containsKey('content')) {
-        final inner = decoded['content'];
-        if (inner is String) return inner;
-      }
-    } catch (_) {
-      // Not a parseable envelope — leave as-is.
-    }
-    return content;
-  }
+  /// Delegate to the shared [unwrapSyncEnvelope] (see note_envelope.dart),
+  /// which locates the sync envelope anywhere in the content and extracts a
+  /// balanced JSON object — so it works even when the envelope is baked into a
+  /// Quill Delta's text.
+  String _unwrapSyncEnvelope(String content) => unwrapSyncEnvelope(content);
 
   /// Loads content into the Quill controller, detecting Delta JSON when the
   /// note was saved in rich editor mode.
@@ -701,6 +688,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (decoded is List && decoded.isNotEmpty) {
           final firstOp = decoded.first;
           if (firstOp is Map && firstOp.containsKey('insert')) {
+            final firstInsert = firstOp['insert'];
+            // Idempotent: if the first insert already starts with the title,
+            // don't prepend again (otherwise the title accumulates on every
+            // load, since a Delta JSON string starts with '[' and the
+            // call-site startsWith(title) check never matches it).
+            if (firstInsert is String &&
+                firstInsert.trimLeft().startsWith(title)) {
+              return content;
+            }
             final list = List<Map<String, dynamic>>.from(
               decoded.cast<Map<String, dynamic>>(),
             );
@@ -713,7 +709,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       }
     }
 
-    // Plain text: prepend title with newline.
+    // Plain text: prepend title with newline (idempotent).
+    if (trimmed.startsWith(title)) return content;
     return '$title\n$content';
   }
 

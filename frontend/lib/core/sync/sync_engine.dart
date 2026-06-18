@@ -431,11 +431,22 @@ class SyncEngine {
 
     final encryptedBase64 = base64Encode(blob.encryptedData);
 
+    // Store the UNWRAPPED body as encryptedContent (not the raw envelope).
+    // The server blob decrypts to the envelope {"content":…,"title":…}; if we
+    // stored that envelope as encryptedContent, the editor/detail would later
+    // decrypt it to the envelope JSON and render it as raw text. Re-encrypting
+    // plainContent (the already-unwrapped body) keeps encryptedContent as the
+    // actual note body. Push always re-wraps from plainContent/plainTitle, so
+    // this stays consistent with the wire format.
+    final String innerEncryptedContent = plainContent != null
+        ? await _crypto.encryptForItem(blob.itemId, plainContent)
+        : encryptedBase64;
+
     if (existing == null) {
       // New note from server -- insert with both encrypted and plain data.
       await _db.notesDao.createNote(
         id: blob.itemId,
-        encryptedContent: encryptedBase64,
+        encryptedContent: innerEncryptedContent,
         encryptedTitle: plainTitle != null
             ? await _crypto.encryptForItem(blob.itemId, plainTitle)
             : null,
@@ -455,7 +466,7 @@ class SyncEngine {
         // Remote version wins -- update local with decrypted content.
         await _db.notesDao.updateNote(
           id: blob.itemId,
-          encryptedContent: encryptedBase64,
+          encryptedContent: innerEncryptedContent,
           encryptedTitle: plainTitle != null
               ? await _crypto.encryptForItem(blob.itemId, plainTitle)
               : null,

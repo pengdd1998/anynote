@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +16,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/export/export_service.dart';
 import '../domain/decrypted_note.dart';
+import '../domain/note_envelope.dart';
 import 'widgets/quill_read_only_viewer.dart';
 import 'share_sheet.dart';
 import 'widgets/export_sheet.dart';
@@ -450,25 +449,10 @@ class NoteDetailScreen extends ConsumerWidget {
     );
   }
 
-  /// If [content] is (or contains) the sync envelope {"content":...,"title":
-  /// ...}, return its inner "content" (the plain-text body); otherwise return
-  /// [content] unchanged. The envelope may be embedded (e.g. a legacy title
-  /// prepended), so we locate it rather than requiring the whole string to be
-  /// the envelope. A Quill Delta (JSON array) is left intact.
-  String _unwrapContentEnvelope(String content) {
-    final idx = content.indexOf('{"content"');
-    if (idx < 0) return content;
-    try {
-      final decoded = jsonDecode(content.substring(idx));
-      if (decoded is Map<String, dynamic> && decoded.containsKey('content')) {
-        final inner = decoded['content'];
-        if (inner is String) return inner;
-      }
-    } catch (_) {
-      // Not a parseable envelope — leave as-is.
-    }
-    return content;
-  }
+  /// Delegate to the shared [unwrapSyncEnvelope] (see note_envelope.dart),
+  /// which extracts a balanced JSON envelope even when it's baked into a
+  /// Quill Delta's text.
+  String _unwrapContentEnvelope(String content) => unwrapSyncEnvelope(content);
 
   // ---------------------------------------------------------------------------
   // Actions dispatch
