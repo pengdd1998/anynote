@@ -14,6 +14,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/color_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'tag_chips_row.dart';
+import 'note_rich_preview.dart';
 
 /// Layout variant for [NoteCard].
 enum NoteCardLayout {
@@ -207,7 +208,6 @@ class NoteCard extends StatelessWidget {
     bool isDark,
     String title,
   ) {
-    final preview = _previewText(80);
     final hasImage = previewImagePath != null && !kIsWeb;
 
     return Column(
@@ -239,22 +239,15 @@ class NoteCard extends StatelessWidget {
               // Title row with pin/lock icons
               _buildTitleRow(context, theme, isDark, title),
 
-              // Preview text
-              if (preview.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.s4),
-                Text(
-                  preview,
-                  maxLines: 5,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.body.copyWith(
-                    fontSize: 13,
-                    color: isDark
-                        ? AppColors.darkTextTertiary
-                        : AppColors.lightTextTertiary,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+              // Formatted body — rendered the same way as the editor.
+              const SizedBox(height: AppSpacing.s4),
+              NoteRichPreview(
+                note: note,
+                maxLines: 8,
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+              ),
 
               // Tags
               if (tags.isNotEmpty)
@@ -284,7 +277,6 @@ class NoteCard extends StatelessWidget {
     bool isDark,
     String title,
   ) {
-    final preview = _previewText(100);
     final hasImage = previewImagePath != null && !kIsWeb;
 
     return Padding(
@@ -300,19 +292,15 @@ class NoteCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildTitleRow(context, theme, isDark, title),
-                if (preview.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.s8),
-                  Text(
-                    preview,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.body.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                    ),
-                  ),
-                ],
+                // Formatted body — rendered the same way as the editor.
+                const SizedBox(height: AppSpacing.s8),
+                NoteRichPreview(
+                  note: note,
+                  maxLines: 4,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
                 if (tags.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.s8),
@@ -383,22 +371,8 @@ class NoteCard extends StatelessWidget {
               ),
             ),
           ),
-        Expanded(
-          child: Text(
-            title,
-            maxLines: _isGrid ? 2 : 1,
-            overflow: TextOverflow.ellipsis,
-            style: (_isGrid
-                    ? AppTextStyles.title
-                    : AppTextStyles.headline.copyWith(fontSize: 18))
-                .copyWith(
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
-              fontWeight: _isGrid ? FontWeight.w600 : FontWeight.w700,
-            ),
-          ),
-        ),
+        // Notes have no separate title — the body is rendered formatted by
+        // NoteRichPreview below, so this row only carries status icons.
       ],
     );
   }
@@ -418,28 +392,5 @@ class NoteCard extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _previewText(int maxLen) {
-    var content = note.plainContent;
-    if (content == null || content.isEmpty) {
-      // Fall back to plainTitle if plainContent is empty.
-      final title = note.plainTitle;
-      if (title != null && title.isNotEmpty) return title;
-      return '';
-    }
-    // If plainContent looks like raw Delta JSON (starts with '['), skip it
-    // and use plainTitle instead.
-    if (content.trimLeft().startsWith('[')) {
-      final title = note.plainTitle;
-      if (title != null && title.isNotEmpty) return title.length > maxLen ? '${title.substring(0, maxLen)}...' : title;
-      return '';
-    }
-    // Strip markdown image syntax for preview.
-    final cleaned = content.replaceAll(RegExp(r'!\[.*?\]\(file://[^)]+\)'), '').trim();
-    if (cleaned.isEmpty) return '';
-    return cleaned.length > maxLen
-        ? '${cleaned.substring(0, maxLen)}...'
-        : cleaned;
   }
 }
