@@ -213,25 +213,6 @@ class NoteDetailScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // -- Title --
-              Semantics(
-                label: AppLocalizations.of(context)!.noteTitleLabel(data.title),
-                header: true,
-                child: Text(
-                  data.title,
-                  style: AppTextStyles.headline.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 20,
-                    letterSpacing: -0.5,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-
               // -- Body --
               // Render via the same read-only Quill viewer the editor uses,
               // WITHOUT a DefaultTextStyle override: the previous wrapper

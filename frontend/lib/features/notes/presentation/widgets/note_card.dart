@@ -116,7 +116,18 @@ class NoteCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
-    final title = note.plainTitle ?? untitled;
+    // Notes have no stored title — derive the list label from the first line
+    // of content; fall back to a legacy stored title, then "Untitled".
+    final title = () {
+      final content = note.plainContent;
+      if (content != null && content.trim().isNotEmpty) {
+        final firstLine = content.trim().split('\n').first.trim();
+        if (firstLine.isNotEmpty) return firstLine;
+      }
+      final legacy = note.plainTitle;
+      if (legacy != null && legacy.isNotEmpty) return legacy;
+      return untitled;
+    }();
     final noteColor = _noteColor;
 
     final cardBgColor = isSelected

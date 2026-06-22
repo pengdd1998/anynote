@@ -584,7 +584,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         return;
       }
 
-      String title = note.plainTitle ?? '';
       String content = note.plainContent ?? '';
 
       if (crypto.isUnlocked) {
@@ -594,13 +593,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         );
         if (!mounted) return;
         if (decryptedContent != null) content = decryptedContent;
-        if (note.encryptedTitle != null) {
-          final decryptedTitle = await crypto.decryptForItem(
-            _noteId!,
-            note.encryptedTitle!,
-          );
-          if (decryptedTitle != null) title = decryptedTitle;
-        }
       }
 
       if (!mounted) return;
@@ -612,11 +604,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
       _debounce?.cancel();
 
-      // Merge old-style separate title into content so the editor shows
-      // a single unified area. The title becomes the first line.
-      if (title.isNotEmpty && !content.startsWith(title)) {
-        content = _prependTitleToContent(title, content);
-      }
+      // Notes have no separate title — do not merge any legacy title into
+      // the content. The content is rendered as-is.
 
       _contentController.text = content;
       if (content.isNotEmpty) {
@@ -673,45 +662,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _quillController.document.insert(0, content);
     // Also migrate if the plain text contains markdown images.
     convertMarkdownImagesToEmbeds(_quillController);
-  }
-
-  /// Prepend an old-style separate title into the note content string.
-  /// Handles both Delta JSON and plain text formats.
-  String _prependTitleToContent(String title, String content) {
-    final trimmed = content.trim();
-    if (trimmed.isEmpty) return title;
-
-    // If content is Delta JSON, inject the title as the first insert op.
-    if (trimmed.startsWith('[')) {
-      try {
-        final decoded = jsonDecode(trimmed);
-        if (decoded is List && decoded.isNotEmpty) {
-          final firstOp = decoded.first;
-          if (firstOp is Map && firstOp.containsKey('insert')) {
-            final firstInsert = firstOp['insert'];
-            // Idempotent: if the first insert already starts with the title,
-            // don't prepend again (otherwise the title accumulates on every
-            // load, since a Delta JSON string starts with '[' and the
-            // call-site startsWith(title) check never matches it).
-            if (firstInsert is String &&
-                firstInsert.trimLeft().startsWith(title)) {
-              return content;
-            }
-            final list = List<Map<String, dynamic>>.from(
-              decoded.cast<Map<String, dynamic>>(),
-            );
-            list.insert(0, {'insert': '$title\n'});
-            return jsonEncode(list);
-          }
-        }
-      } catch (_) {
-        // Not Delta JSON, fall through.
-      }
-    }
-
-    // Plain text: prepend title with newline (idempotent).
-    if (trimmed.startsWith(title)) return content;
-    return '$title\n$content';
   }
 
   /// Recalculate word and character counts from the current editor content.
@@ -824,8 +774,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     if (plainText.isEmpty) return;
 
-    // Derive title from first line of content.
-    final effectiveTitle = plainText.split('\n').first.trim();
+    // Notes have no separate title — the content is the whole note.
     // Extract first image path from Delta JSON for card preview.
     final imagePath = _extractFirstImagePath(content);
 
@@ -838,28 +787,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       final crypto = ref.read(cryptoServiceProvider);
       final noteId = _noteId!;
 
-      String encryptedContent;
-      String? encryptedTitle;
-
-      if (crypto.isUnlocked) {
-        encryptedContent = await crypto.encryptForItem(noteId, content);
-        if (effectiveTitle.isNotEmpty) {
-          encryptedTitle = await crypto.encryptForItem(noteId, effectiveTitle);
-        } else {
-          encryptedTitle = null;
-        }
-      } else {
-        encryptedContent = content;
-        encryptedTitle = effectiveTitle.isNotEmpty ? effectiveTitle : null;
-      }
+      final String encryptedContent = crypto.isUnlocked
+          ? await crypto.encryptForItem(noteId, content)
+          : content;
 
       if (_isNew) {
         await db.notesDao.createNote(
           id: noteId,
           encryptedContent: encryptedContent,
-          encryptedTitle: encryptedTitle,
           plainContent: plainText,
-          plainTitle: effectiveTitle.isEmpty ? null : effectiveTitle,
           firstImagePath: imagePath,
         );
         _isNew = false;
@@ -869,9 +805,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await db.notesDao.updateNote(
           id: noteId,
           encryptedContent: encryptedContent,
-          encryptedTitle: encryptedTitle,
           plainContent: plainText,
-          plainTitle: effectiveTitle.isEmpty ? null : effectiveTitle,
           firstImagePath: imagePath,
         );
       }

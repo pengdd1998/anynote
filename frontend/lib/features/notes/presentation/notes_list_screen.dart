@@ -574,9 +574,19 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         sorted.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         break;
       case 'title_az':
+        // Notes have no stored title — sort by the first line of content
+        // (the list label), falling back to a legacy title then "Untitled".
+        String label(Note n) {
+          final content = n.plainContent;
+          if (content != null && content.trim().isNotEmpty) {
+            final firstLine = content.trim().split('\n').first.trim();
+            if (firstLine.isNotEmpty) return firstLine;
+          }
+          return n.plainTitle ?? untitled;
+        }
         sorted.sort((a, b) {
-          final ta = a.plainTitle ?? untitled;
-          final tb = b.plainTitle ?? untitled;
+          final ta = label(a);
+          final tb = label(b);
           return ta.toLowerCase().compareTo(tb.toLowerCase());
         });
         break;
