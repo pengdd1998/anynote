@@ -83,7 +83,13 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final base = AppTextStyles.body.copyWith(color: widget.color, height: 1.5);
+    // Compact preview base (smaller than the editor's body size) so the card
+    // reads as a preview, not a full document.
+    final base = AppTextStyles.body.copyWith(
+      color: widget.color,
+      height: 1.4,
+      fontSize: 13,
+    );
 
     if (_ops == null && _plainFallback == null) {
       return const SizedBox.shrink(); // still decrypting
@@ -189,13 +195,13 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     if (header is int) {
       switch (header) {
         case 1:
-          s = s.copyWith(fontSize: (base.fontSize ?? 16) * 1.5, fontWeight: FontWeight.bold);
+          s = s.copyWith(fontSize: (base.fontSize ?? 13) * 1.35, fontWeight: FontWeight.bold);
           break;
         case 2:
-          s = s.copyWith(fontSize: (base.fontSize ?? 16) * 1.3, fontWeight: FontWeight.bold);
+          s = s.copyWith(fontSize: (base.fontSize ?? 13) * 1.2, fontWeight: FontWeight.bold);
           break;
         case 3:
-          s = s.copyWith(fontSize: (base.fontSize ?? 16) * 1.15, fontWeight: FontWeight.w600);
+          s = s.copyWith(fontSize: (base.fontSize ?? 13) * 1.1, fontWeight: FontWeight.w600);
           break;
       }
     }

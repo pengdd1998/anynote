@@ -243,7 +243,7 @@ class NoteCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.s4),
               NoteRichPreview(
                 note: note,
-                maxLines: 8,
+                maxLines: 5,
                 color: isDark
                     ? AppColors.darkTextPrimary
                     : AppColors.lightTextPrimary,
@@ -296,7 +296,7 @@ class NoteCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.s8),
                 NoteRichPreview(
                   note: note,
-                  maxLines: 4,
+                  maxLines: 3,
                   color: isDark
                       ? AppColors.darkTextPrimary
                       : AppColors.lightTextPrimary,
