@@ -245,8 +245,8 @@ class NoteCard extends StatelessWidget {
                 note: note,
                 maxLines: 8,
                 color: isDark
-                    ? AppColors.darkTextTertiary
-                    : AppColors.lightTextTertiary,
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
               ),
 
               // Tags
@@ -298,8 +298,8 @@ class NoteCard extends StatelessWidget {
                   note: note,
                   maxLines: 4,
                   color: isDark
-                      ? AppColors.darkTextTertiary
-                      : AppColors.lightTextTertiary,
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
                 ),
                 if (tags.isNotEmpty)
                   Padding(
