@@ -360,7 +360,7 @@ class AppDatabase extends _$AppDatabase {
       await customStatement(
         'INSERT OR IGNORE INTO post_templates '
         '(id, name, description, system_prompt, structure_hint, '
-        'tone_hint, is_builtin, created_at) '
+        'tone_hint, is_built_in, created_at) '
         'VALUES (?, ?, ?, ?, ?, ?, 1, 0)',
         t,
       );
