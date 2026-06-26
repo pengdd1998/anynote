@@ -10,6 +10,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
+import 'widgets/refinement_chat.dart';
 
 /// Full text editor with AI-generated content displayed via streaming.
 ///
@@ -119,8 +120,9 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
         // Title area
         if (session.outline != null) _buildTitleArea(session, isDark),
 
-        // Editor area
+        // Editor area (top — editable draft)
         Expanded(
+          flex: 3,
           child: Container(
             margin: const EdgeInsets.fromLTRB(
               AppSpacing.md,
@@ -159,6 +161,12 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
               ),
             ),
           ),
+        ),
+
+        // AI refinement chat (split view — bottom)
+        Expanded(
+          flex: 2,
+          child: RefinementChat(sessionId: widget.sessionId),
         ),
 
         // Bottom action bar

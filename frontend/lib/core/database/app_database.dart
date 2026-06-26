@@ -21,6 +21,7 @@ import 'daos/note_properties_dao.dart';
 import 'daos/saved_searches_dao.dart';
 import 'daos/snippets_dao.dart';
 import 'daos/images_dao.dart';
+import 'daos/post_template_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -43,6 +44,7 @@ part 'app_database.g.dart';
     SavedSearches,
     Snippets,
     NoteImages,
+    PostTemplates,
   ],
   daos: [
     NotesDao,
@@ -59,6 +61,7 @@ part 'app_database.g.dart';
     SavedSearchesDao,
     SnippetsDao,
     ImagesDao,
+    PostTemplateDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -84,7 +87,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration {
@@ -104,6 +107,7 @@ class AppDatabase extends _$AppDatabase {
         // nothing. Drop it and recreate as a real FTS5 virtual table.
         // _recreateFtsTable also rebuilds the index (a no-op on a fresh DB).
         await _recreateFtsTable();
+        await _seedBuiltInPostTemplates();
       },
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 2) {
@@ -286,6 +290,12 @@ class AppDatabase extends _$AppDatabase {
           // and note creation threw. Recreate with the corrected directive.
           await _recreateFtsTable();
         }
+        if (from < 22) {
+          // v21 -> v22: Add post_templates table for the compose template
+          // system and seed the three built-in templates.
+          await m.createTable(postTemplates);
+          await _seedBuiltInPostTemplates();
+        }
       },
     );
   }
@@ -314,6 +324,47 @@ class AppDatabase extends _$AppDatabase {
       FROM notes
       WHERE plain_content IS NOT NULL AND deleted_at IS NULL;
     ''');
+  }
+
+  /// Seed the three built-in post templates. Idempotent (INSERT OR IGNORE).
+  Future<void> _seedBuiltInPostTemplates() async {
+    const templates = [
+      [
+        'builtin-template-general', '通用模板',
+        '灵活通用的文章模板，适合任何主题和内容。',
+        'Write a well-structured, engaging article. Use clear paragraphs with '
+            'natural transitions. Adapt the length and depth to the source '
+            'material. Keep the tone neutral and professional.',
+        '标题 → 引言 → 正文（分段）→ 总结', '自然流畅, 专业中性',
+      ],
+      [
+        'builtin-template-xhs', '小红书种草文',
+        '适合小红书的种草/分享文：吸睛标题、第一人称、emoji、要点、CTA、话题标签。',
+        'Write a XHS(小红书) style post. Use a catchy title with emoji, '
+            'first-person perspective, enthusiastic tone, bullet points, '
+            'short paragraphs, CTA at the end, and 5-10 hashtag tags.',
+        '吸睛标题(emoji) → 钩子开头 → 要点正文(bullet) → CTA → #话题标签',
+        '轻松活泼, 热情, 第一人称',
+      ],
+      [
+        'builtin-template-longform', '公众号/长文',
+        '适合公众号、博客的长文：结构化标题、叙事流畅、1000字以上、专业深度。',
+        'Write a long-form article for WeChat/blog. Use section headings (##), '
+            'in-depth analysis with examples from source, professional tone, '
+            '1000-2500 characters.',
+        '深度标题 → 引言(钩子) → 分章节正文(##) → 深度分析 → 总结升华',
+        '专业严谨, 有深度',
+      ],
+    ];
+    for (final t in templates) {
+      await customStatement(
+        'INSERT OR IGNORE INTO post_templates '
+        '(id, name, description, system_prompt, structure_hint, '
+        'tone_hint, is_builtin, created_at) '
+        'VALUES (?, ?, ?, ?, ?, ?, 1, 0)',
+        t,
+      );
+    }
   }
 }
 

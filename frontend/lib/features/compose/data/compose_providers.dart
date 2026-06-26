@@ -12,6 +12,7 @@ import '../../../core/error/error_mapper.dart';
 import '../../settings/data/settings_providers.dart';
 import '../domain/cluster_model.dart';
 import '../domain/outline_model.dart';
+import '../domain/post_template.dart';
 import '../domain/prompt_builder.dart';
 import '../domain/response_parser.dart';
 import 'ai_repository.dart';
@@ -72,6 +73,12 @@ class ComposeSessionState {
   /// Final draft text (accumulated from streaming).
   final String draft;
 
+  /// Selected post template (controls format/tone/structure).
+  final PostTemplate? selectedTemplate;
+
+  /// Chat history from iterative refinement (user instruction + AI response).
+  final List<ChatMessage> refinementHistory;
+
   /// Whether an AI operation is in progress.
   final bool isLoading;
 
@@ -85,6 +92,8 @@ class ComposeSessionState {
     this.noteContents = const {},
     this.topic = '',
     this.platformStyle = 'generic',
+    this.selectedTemplate,
+    this.refinementHistory = const [],
     this.clusters = const [],
     this.selectedClusterIndices = const {},
     this.outline,
@@ -99,6 +108,8 @@ class ComposeSessionState {
     Map<String, String>? noteContents,
     String? topic,
     String? platformStyle,
+    PostTemplate? selectedTemplate,
+    List<ChatMessage>? refinementHistory,
     List<ClusterModel>? clusters,
     Set<int>? selectedClusterIndices,
     OutlineModel? outline,
@@ -113,6 +124,8 @@ class ComposeSessionState {
       noteContents: noteContents ?? this.noteContents,
       topic: topic ?? this.topic,
       platformStyle: platformStyle ?? this.platformStyle,
+      selectedTemplate: selectedTemplate ?? this.selectedTemplate,
+      refinementHistory: refinementHistory ?? this.refinementHistory,
       clusters: clusters ?? this.clusters,
       selectedClusterIndices:
           selectedClusterIndices ?? this.selectedClusterIndices,
@@ -240,6 +253,11 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
     state = state.copyWith(platformStyle: style);
   }
 
+  /// Set the selected post template (controls format/tone/structure).
+  void setTemplate(PostTemplate? template) {
+    state = state.copyWith(selectedTemplate: template);
+  }
+
   // ── Stage 1: Cluster ───────────────────────────
 
   /// Request AI clustering of selected notes.
@@ -275,7 +293,10 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       final truncatedNotes = truncatedText.split('\n');
 
       final prompt =
-          _promptBuilder.buildClusterPrompt(truncatedNotes, state.topic);
+          _promptBuilder.buildClusterPrompt(
+            truncatedNotes, state.topic,
+            template: state.selectedTemplate,
+          );
       final response = await _aiRepo.chat(
         [ChatMessage(role: 'user', content: prompt)],
         cancelToken: token,
@@ -342,6 +363,7 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       final prompt = _promptBuilder.buildOutlinePrompt(
         selectedClusters,
         state.platformStyle,
+        template: state.selectedTemplate,
       );
 
       final response = await _aiRepo.chat(
@@ -426,6 +448,7 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       final prompt = _promptBuilder.buildExpandPrompt(
         state.outline!.toJson(),
         truncatedSource.split('\n'),
+        template: state.selectedTemplate,
       );
 
       final buffer = StringBuffer();
@@ -497,6 +520,79 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       }
       throttleTimer?.cancel();
       state = state.copyWith(draft: buffer.toString(), isLoading: false);
+    } catch (e) {
+      final appError = ErrorMapper.map(e);
+      state = state.copyWith(
+        isLoading: false,
+        error: appError.message,
+      );
+    } finally {
+      _isProcessing = false;
+    }
+  }
+
+  // ── Stage 5: Chat-based refinement ─────────────
+
+  /// Refine the draft via a chat instruction.
+  ///
+  /// The LLM receives the template context + current draft + prior refinement
+  /// history + the new instruction, and streams the FULL updated draft back.
+  /// The draft updates in real-time during streaming.
+  Future<void> refineDraft(String instruction) async {
+    if (state.draft.isEmpty || _isProcessing) return;
+
+    _isProcessing = true;
+    state = state.copyWith(isLoading: true, error: null);
+    final token = _freshToken();
+
+    try {
+      if (!await _checkQuota()) return;
+
+      final systemPrompt =
+          _promptBuilder.buildRefineSystemPrompt(state.selectedTemplate);
+
+      final messages = <ChatMessage>[
+        ChatMessage(role: 'system', content: systemPrompt),
+        ChatMessage(
+          role: 'user',
+          content: 'Here is the current draft. Keep it as context and apply '
+              'the user\'s refinements:\n\n${state.draft}',
+        ),
+        ...state.refinementHistory,
+        ChatMessage(role: 'user', content: instruction),
+      ];
+
+      final buffer = StringBuffer();
+      Timer? throttleTimer;
+
+      await for (final chunk in _aiRepo.chatStream(
+        messages,
+        cancelToken: token,
+      ).timeout(
+        const Duration(minutes: 3),
+        onTimeout: (sink) {
+          debugPrint('[ComposeProviders] refineDraft stream timed out');
+          sink.close();
+        },
+      )) {
+        buffer.write(chunk);
+        throttleTimer ??= Timer(const Duration(milliseconds: 125), () {
+          throttleTimer = null;
+          state = state.copyWith(draft: buffer.toString());
+        });
+      }
+      throttleTimer?.cancel();
+
+      final result = buffer.toString().trim();
+      state = state.copyWith(
+        draft: result.isNotEmpty ? result : state.draft,
+        isLoading: false,
+        refinementHistory: [
+          ...state.refinementHistory,
+          ChatMessage(role: 'user', content: instruction),
+          ChatMessage(role: 'assistant', content: result),
+        ],
+      );
     } catch (e) {
       final appError = ErrorMapper.map(e);
       state = state.copyWith(
@@ -594,3 +690,58 @@ final generatedContentsProvider = StreamProvider<List<dynamic>>((ref) {
     return Stream.value([]);
   }
 });
+
+// ── Post Template Providers ────────────────────────
+
+/// Watches all post templates (built-in + user-created) from the database.
+final allPostTemplatesProvider = StreamProvider<List<PostTemplate>>((ref) {
+  final db = ref.watch(databaseProvider);
+  try {
+    return db.postTemplateDao.watchAll().map((rows) => rows
+        .map((r) => PostTemplate(
+              id: r.id,
+              name: r.name,
+              description: r.description,
+              systemPrompt: r.systemPrompt,
+              structureHint: r.structureHint,
+              toneHint: r.toneHint,
+              isBuiltIn: r.isBuiltIn,
+              createdAt: r.createdAt,
+            ))
+        .toList());
+  } catch (e) {
+    debugPrint('[ComposeProviders] postTemplateDao.watchAll() failed: $e');
+    return Stream.value(kBuiltInTemplates);
+  }
+});
+
+/// Extracts a [PostTemplate] from a sample post via the AI agent.
+/// Returns the extracted template, or null on failure.
+Future<PostTemplate?> extractTemplateFromPost(
+  String samplePost, {
+  required Ref ref,
+}) async {
+  final aiRepo = ref.read(aiRepositoryProvider);
+  final promptBuilder = PromptBuilder();
+
+  try {
+    final prompt = promptBuilder.buildExtractTemplatePrompt(samplePost);
+    final response = await aiRepo.chat(
+      [ChatMessage(role: 'user', content: prompt)],
+    );
+
+    final jsonStr = ResponseParser.extractJson(response);
+    final json = jsonDecode(jsonStr) as Map<String, dynamic>;
+
+    return PostTemplate.create(
+      name: json['name'] as String? ?? 'Extracted Template',
+      description: json['description'] as String? ?? '',
+      systemPrompt: json['systemPrompt'] as String? ?? '',
+      structureHint: json['structureHint'] as String?,
+      toneHint: json['toneHint'] as String?,
+    );
+  } catch (e) {
+    debugPrint('[ComposeProviders] extractTemplateFromPost failed: $e');
+    return null;
+  }
+}
