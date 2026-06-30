@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,8 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../routing/app_router.dart';
 import '../data/compose_providers.dart';
+import '../domain/post_template.dart';
+import 'template_selector_sheet.dart';
 
 /// Guard to prevent multiple bottom sheet invocations on rapid tap.
 final _noteSelectorShowingProvider = StateProvider<bool>((ref) => false);
@@ -460,6 +463,7 @@ class _NoteSelectorSheet extends ConsumerStatefulWidget {
 class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   final _topicController = TextEditingController();
   String _platformStyle = 'generic';
+  PostTemplate? _selectedTemplate;
   final Set<String> _selectedIds = {};
   late final VoidCallback _routeListener;
 
@@ -600,6 +604,40 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 },
               ),
             ),
+            // Template selector
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, 0, AppSpacing.md, AppSpacing.s8),
+              child: InkWell(
+                onTap: () async {
+                  await TemplateSelectorSheet.show(
+                    context,
+                    selectedTemplate: _selectedTemplate,
+                    onSelected: (template) {
+                      setState(() => _selectedTemplate = template);
+                      ref
+                          .read(composeSessionProvider.notifier)
+                          .setTemplate(template);
+                    },
+                  );
+                },
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: '文章模板',
+                    prefixIcon: const Icon(Icons.description_outlined),
+                    suffixIcon: const Icon(Icons.arrow_drop_down),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                  ),
+                  child: Text(
+                    _selectedTemplate?.name ?? '通用模板（默认）',
+                    style: AppTextStyles.body,
+                  ),
+                ),
+              ),
+            ),
             // Note list label
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -709,6 +747,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                   itemBuilder: (_, __) => const AppLoadingCard(),
                 ),
                 error: (err, _) {
+                  debugPrint('[COMPOSE] notesForSelection error: $err');
                   final appError = ErrorMapper.map(err);
                   return Center(
                     child: Padding(

@@ -7,6 +7,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../data/compose_providers.dart';
 import '../domain/post_template.dart';
+import 'template_editor_screen.dart';
+import 'template_extractor_screen.dart';
 
 /// Bottom sheet for selecting a post template.
 ///
@@ -75,7 +77,12 @@ class TemplateSelectorSheet extends ConsumerWidget {
                     icon: const Icon(Icons.add_circle_outline),
                     onPressed: () {
                       Navigator.pop(context);
-                      onSelected(null); // TODO: navigate to template editor
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TemplateEditorScreen(),
+                        ),
+                      );
                     },
                     tooltip: '创建自定义模板',
                   ),
@@ -84,7 +91,12 @@ class TemplateSelectorSheet extends ConsumerWidget {
                     icon: const Icon(Icons.auto_fix_high),
                     onPressed: () {
                       Navigator.pop(context);
-                      onSelected(null); // TODO: navigate to extractor
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TemplateExtractorScreen(),
+                        ),
+                      );
                     },
                     tooltip: '从文章提取模板',
                   ),

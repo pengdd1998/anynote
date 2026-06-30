@@ -719,7 +719,7 @@ final allPostTemplatesProvider = StreamProvider<List<PostTemplate>>((ref) {
 /// Returns the extracted template, or null on failure.
 Future<PostTemplate?> extractTemplateFromPost(
   String samplePost, {
-  required Ref ref,
+  required dynamic ref,
 }) async {
   final aiRepo = ref.read(aiRepositoryProvider);
   final promptBuilder = PromptBuilder();
