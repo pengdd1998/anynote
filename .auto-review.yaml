@@ -1,0 +1,50 @@
+# auto-review gate configuration for anynote (Flutter frontend + Go backend).
+#
+# Since auto-review v0.2.0, Go and Dart/Flutter have native language packs:
+#   - backend:  go test gate (blocker), diff coverage via -coverprofile,
+#               gocyclo complexity (needs gocyclo on PATH), TDD coupling
+#   - frontend: flutter test gate (blocker), diff coverage via lcov,
+#               TDD coupling (_test.dart / test/)
+# Ecosystem tools without packs (vet / gofmt / analyze) stay as custom_checks.
+#
+# `command -v` guards keep the custom checks green on machines without the
+# toolchain; CI installs the toolchains and the checks enforce there.
+#
+# LLM semantic review: set the OPENAI_API_KEY secret (repo settings) to
+# enable advisory-level semantic review of Dart/Go diffs.
+
+fail_level: major
+
+exclude:
+  - "**/*.g.dart"        # build_runner generated
+  - "**/*.freezed.dart"  # freezed generated
+  - "**/*.mocks.dart"
+
+languages:
+  golang:
+    complexity:
+      max_cc: 10
+      blocker_cc: 15
+    tests:
+      coverage:
+        threshold: 60    # repo-wide is ~50% today; ramp toward 80
+  dart:
+    tests:
+      coverage:
+        threshold: 60    # ramp toward 80
+
+custom_checks:
+  - name: go-vet
+    command: 'command -v go >/dev/null 2>&1 || exit 0; cd backend && go vet ./...'
+    severity_on_fail: major
+    category: semantic
+
+  - name: gofmt
+    command: 'command -v go >/dev/null 2>&1 || exit 0; cd backend && test -z "$(gofmt -l .)"'
+    severity_on_fail: minor
+    category: style
+
+  - name: flutter-analyze
+    command: 'command -v flutter >/dev/null 2>&1 || exit 0; cd frontend && flutter analyze --no-fatal-infos'
+    severity_on_fail: major
+    category: semantic

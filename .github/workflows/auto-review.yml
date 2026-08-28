@@ -1,0 +1,100 @@
+name: auto-review
+
+# AnyNote automated code review gate: multi-layer review of the PR diff
+# (lint/vet/analyze, cyclomatic complexity, test gates with diff coverage,
+# TDD coupling, boy-scout deltas, advisory LLM semantic review).
+# Exit code 1 fails the check; findings are posted as PR review comments.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: auto-review-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    name: Review Gate
+    runs-on: ubuntu-latest
+    env:
+      # Optional: set this secret to enable advisory LLM semantic review.
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Setup Go 1.25
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: backend/go.sum
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.9"
+          channel: stable
+
+      - name: Install gocyclo (complexity gate)
+        run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+
+      - name: Install system dependencies (libsodium for crypto tests)
+        run: |
+          sudo apt-get update
+          wget -q https://github.com/jedisct1/libsodium/releases/download/1.0.20-RELEASE/libsodium-1.0.20.tar.gz
+          tar -xzf libsodium-1.0.20.tar.gz
+          cd libsodium-1.0.20
+          ./configure --prefix=/usr
+          make
+          sudo make install
+          sudo ldconfig
+          echo "LD_LIBRARY_PATH=/usr/local/lib" >> $GITHUB_ENV
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Generate code (Drift, etc.)
+        working-directory: frontend
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Install auto-review
+        run: pip install "auto-review @ git+https://github.com/pengdd1998/auto-review.git@v0.2.1"
+
+      - name: Run review gate
+        run: |
+          auto-review review \
+            --base "origin/${{ github.base_ref || 'main' }}" \
+            --head HEAD \
+            --report-md  auto-review-report.md \
+            --report-json auto-review-report.json
+
+      - name: Upload reports (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auto-review-report
+          path: |
+            auto-review-report.md
+            auto-review-report.json
+          retention-days: 14
+
+      - name: Post PR review comments
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python -m auto_review.ci.gh_pr_review auto-review-report.json
+
+      - name: Add job summary
+        if: always()
+        run: cat auto-review-report.md >> "$GITHUB_STEP_SUMMARY" || true
