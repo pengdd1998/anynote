@@ -1,0 +1,40 @@
+08-31 23:51:06.936  7547  7881 I WifiService: getConnectionInfo uid=1000
+08-31 23:51:06.938  7547 10493 I WifiService: getCurrentNetwork uid=10007
+08-31 23:51:06.939  7547  7788 D WifiClientModeImpl:  L2ConnectedState screen=on 31 0 "CU_SQCG" f0:ab:1f:82:7c:c0 rssi=-44 f=2457 sc=60 link=156 tx=5.3, 0.0, 0.0  rx=4.2 bcn=1437529 snr=32 lqcm_tx=7 lqcm_rx=7 ap_cu=-1 [on:1118 tx:2 rx:176 period:3066] from screen [on:24143909 period:49888922] score=60
+08-31 23:51:07.035 29251 29251 D BluetoothAdapter: STATE_ON
+08-31 23:51:07.036  7968 12777 D BtConfig.SecureMode: isSecureModeOn:false
+08-31 23:51:07.041 29251 29251 D BluetoothAdapter: STATE_ON
+08-31 23:51:07.041 29251 29251 D BluetoothLeAdvertiser: wrapper is null
+08-31 23:51:07.044 29251 29251 D BluetoothAdapter: STATE_ON
+08-31 23:51:07.044  7968 12777 D BtConfig.SecureMode: isSecureModeOn:false
+08-31 23:51:07.048 29251 29251 D BluetoothAdapter: STATE_ON
+08-31 23:51:07.048 29251 29251 D BluetoothAdapter: isSecureModeEnabled
+08-31 23:51:07.049  7968 12777 D BtConfig.SecureMode: isSecureModeOn:false
+08-31 23:51:07.050 29251 29251 D BluetoothAdapter: STATE_ON
+08-31 23:51:07.050 29251 29251 D BluetoothAdapter: isSecureModeEnabled
+08-31 23:51:07.050  7968 12777 D BtConfig.SecureMode: isSecureModeOn:false
+08-31 23:51:07.051 25964 26224 I System.out: (HTTPLog)-Static: isSBSettingEnabled false
+08-31 23:51:07.052 25964 26224 I System.out: (HTTPLog)-Static: isSBSettingEnabled false
+08-31 23:51:07.053  7968 12777 D BluetoothAdapterService: getAdapterService() - returning com.android.bluetooth.btservice.AdapterService@24d8118
+08-31 23:51:07.066  7968  8789 E BtGatt.GattService: [GSIM LOG]: gsimLogHandler, msg: MESSAGE_ADV_SET_START, appName: app.landrop.landrop_flutter, id: 1, isLegacy: true
+08-31 23:51:07.477 29251 29251 D BluetoothAdapter: STATE_ON
+08-31 23:51:07.480 29251 29251 D BluetoothAdapter: STATE_ON
+08-31 23:51:07.483  7968 12777 E BtGatt.AppAdvStats: recordAdvertiseStop() - app: app.landrop.landrop_flutter(uid=10180), adv: 1, no such advertise found
+08-31 23:51:07.483  7968  8998 I bt_stack: [INFO:ble_advertiser_hci_interface.cc(285)] SetPeriodicAdvertisingData VSC can't do periodic advertising
+08-31 23:51:07.483  7968  8998 W bt_btm  : btm_ble_disable_resolving_list() rl_state = 0x13, rl_mask = 0x8, to_resume = 1
+08-31 23:51:07.484  7968  8789 E BtGatt.GattService: [GSIM LOG]: gsimLogHandler, msg: MESSAGE_ADV_SET_STOP, appName: app.landrop.landrop_flutter, id: 1, isLegacy: true
+08-31 23:51:07.596  7547  7881 I WifiService: getConnectionInfo uid=1000
+08-31 23:51:07.598  7547  7881 I WifiService: getConnectionInfo uid=1000
+08-31 23:51:07.619  7547  7881 D WifiClientModeImpl: fetchRssiLinkSpeedAndFrequencyNative rssi=-45 TxLinkspeed=156 freq=2457 RxLinkSpeed=0
+08-31 23:51:07.623 25971 26227 I System.out: (HTTPLog)-Static: isSBSettingEnabled false
+08-31 23:51:07.623 25971 26227 I System.out: (HTTPLog)-Static: isSBSettingEnabled false
+08-31 23:51:07.624 19095 19095 D wpa_supplicant: wpa_driver_nl80211_driver_cmd snr 32 len = 6, 6
+08-31 23:51:07.625  7547  7881 D SupplicantStaIfaceHal: ISehSupplicantStaIface.getExtendedInfomation succeeded
+08-31 23:51:07.632 19095 19095 D wpa_supplicant: wpa_driver_nl80211_driver_cmd GET_LQCM_REPORT 460545 len = 22, 22
+08-31 23:51:07.633  7547  7881 D SupplicantStaIfaceHal: ISehSupplicantStaIface.getExtendedInfomation succeeded
+08-31 23:51:07.635 19095 19095 D wpa_supplicant: wpa_driver_nl80211_driver_cmd FAIL len = 4, 4
+08-31 23:51:07.635  7547  7881 D SupplicantStaIfaceHal: ISehSupplicantStaIface.getExtendedInfomation succeeded
+08-31 23:51:07.635  7547  7881 V WifiConfigManager: Updating scan detail cache freq=2457 BSSID=f0:ab:1f:82:7c:c0 RSSI=-44 for "CU_SQCG"WPA_PSK
+08-31 23:51:07.643  7547  7881 I WifiService: getConnectionInfo uid=1000
+08-31 23:51:07.665  7547  7882 I WifiService: getConnectionInfo uid=1000
+08-31 23:51:07.668  7547  7881 I WifiService: getConnectionInfo uid=1000

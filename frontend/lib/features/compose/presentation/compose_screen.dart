@@ -468,6 +468,12 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   final Set<String> _selectedIds = {};
   late final VoidCallback _routeListener;
 
+  /// Cached router reference captured while the State is mounted. Reading it
+  /// via GoRouter.of(context) from a listener or dispose would throw
+  /// "No GoRouter found in context" once the element detaches (e.g. after an
+  /// ErrorBoundary swap), crashing the widget tree with a red ErrorWidget.
+  GoRouter? _router;
+
   List<(String, String)> _platformOptions(AppLocalizations l10n) => [
         ('generic', l10n.platformGeneric),
         ('xhs', l10n.platformXhs),
@@ -481,12 +487,14 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
     super.initState();
     _routeListener = () {
       if (!mounted) return;
+      final router = _router;
+      if (router == null) return;
       // Dependency-free read: GoRouterState.of(context) here would register an
       // inherited dependency from a notification context, re-entering
       // dependOnInheritedElement on every router notification and amplifying
       // global rebuild jank.
       final location =
-          GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+          router.routerDelegate.currentConfiguration.uri.path;
       if (location.startsWith('/compose')) return;
       // Only pop when this sheet route is still the current one.
       final modal = ModalRoute.of(context);
@@ -495,7 +503,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
     };
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      GoRouter.of(context).routerDelegate.addListener(_routeListener);
+      _router = GoRouter.maybeOf(context);
+      _router?.routerDelegate.addListener(_routeListener);
       // The label reads 通用模板（默认）even before the user picks anything,
       // so make that true: pre-select the general template for new sessions.
       if (_selectedTemplate == null) {
@@ -521,9 +530,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
 
   @override
   void dispose() {
-    try {
-      GoRouter.of(context).routerDelegate.removeListener(_routeListener);
-    } catch (_) {}
+    _router?.routerDelegate.removeListener(_routeListener);
+    _router = null;
     _topicController.dispose();
     super.dispose();
   }
