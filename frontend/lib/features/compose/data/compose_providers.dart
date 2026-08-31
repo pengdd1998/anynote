@@ -193,7 +193,7 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   /// Check the AI quota before starting an operation.
   /// Returns `true` if the user has remaining quota, `false` otherwise.
   /// When quota is exceeded, sets the error on the state.
-  Future<bool> _checkQuota() async {
+  Future<bool> _checkQuota({String? quotaExceededMessage}) async {
     try {
       final quotaState = _ref.read(aiQuotaProvider);
       final quotaData = quotaState.valueOrNull;
@@ -203,7 +203,8 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       if (quotaData.isExhausted) {
         state = state.copyWith(
           isLoading: false,
-          error: 'AI quota exceeded. Please wait before trying again.',
+          error: quotaExceededMessage ??
+              'AI quota exceeded. Please wait before trying again.',
         );
         return false;
       }
@@ -220,7 +221,15 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
 
   /// Toggle a note's inclusion in the selection.
   /// Enforces [maxSelectedNotes] limit when adding a new note.
-  void toggleNoteSelection(String noteId, String plainContent) {
+  ///
+  /// Returns `true` if the selection changed, `false` if the request was
+  /// rejected (e.g. the note limit was hit). Callers must only update their
+  /// local UI state when this returns `true`.
+  bool toggleNoteSelection(
+    String noteId,
+    String plainContent, {
+    String? maxNotesMessage,
+  }) {
     final ids = List<String>.from(state.selectedNoteIds);
     final contents = Map<String, String>.from(state.noteContents);
 
@@ -231,16 +240,18 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       // Enforce maximum selected notes limit.
       if (ids.length >= maxSelectedNotes) {
         state = state.copyWith(
-          error: 'You can select at most $maxSelectedNotes notes. '
-              'Deselect some notes before adding more.',
+          error: maxNotesMessage ??
+              'You can select at most $maxSelectedNotes notes. '
+                  'Deselect some notes before adding more.',
         );
-        return;
+        return false;
       }
       ids.add(noteId);
       contents[noteId] = plainContent;
     }
 
     state = state.copyWith(selectedNoteIds: ids, noteContents: contents);
+    return true;
   }
 
   /// Set the composition topic.
@@ -254,23 +265,66 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   }
 
   /// Set the selected post template (controls format/tone/structure).
+  ///
+  /// Passing `null` explicitly clears the selection (see [clearTemplate]).
   void setTemplate(PostTemplate? template) {
+    if (template == null) {
+      clearTemplate();
+      return;
+    }
     state = state.copyWith(selectedTemplate: template);
+  }
+
+  /// Explicitly clear the selected post template.
+  ///
+  /// [ComposeSessionState.copyWith] cannot assign a nullable field back to
+  /// null (`selectedTemplate ?? this.selectedTemplate` keeps the old value),
+  /// so the state is reconstructed here with a raw field assignment.
+  void clearTemplate() {
+    final s = state;
+    state = ComposeSessionState(
+      sessionId: s.sessionId,
+      stage: s.stage,
+      selectedNoteIds: s.selectedNoteIds,
+      noteContents: s.noteContents,
+      topic: s.topic,
+      platformStyle: s.platformStyle,
+      selectedTemplate: null,
+      refinementHistory: s.refinementHistory,
+      clusters: s.clusters,
+      selectedClusterIndices: s.selectedClusterIndices,
+      outline: s.outline,
+      draft: s.draft,
+      isLoading: s.isLoading,
+      error: s.error,
+    );
   }
 
   // ── Stage 1: Cluster ───────────────────────────
 
+  /// IDs of selected notes with non-empty content, in selection order.
+  ///
+  /// Stage-1 cluster [ClusterModel.noteIndices] refer to this list — it is
+  /// the exact per-note ordering sent to the LLM — not to
+  /// [ComposeSessionState.selectedNoteIds].
+  List<String> get _promptNoteIds => state.selectedNoteIds
+      .where((id) => (state.noteContents[id] ?? '').isNotEmpty)
+      .toList();
+
   /// Request AI clustering of selected notes.
-  Future<void> generateClusters() async {
+  Future<void> generateClusters({
+    String? maxContentMessage,
+    String? quotaExceededMessage,
+  }) async {
     if (state.selectedNoteIds.isEmpty || state.topic.isEmpty) return;
     if (_isProcessing) return;
 
     // Validate total content size before sending.
     if (state.totalContentChars > maxTotalContentChars) {
       state = state.copyWith(
-        error:
+        error: maxContentMessage ??
             'Total content exceeds ${maxTotalContentChars ~/ 1000}K characters. '
-            'Please select fewer notes or shorten the content.',
+                'Please select fewer notes or shorten the content.',
       );
       return;
     }
@@ -280,23 +334,39 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
     final token = _freshToken();
 
     try {
-      if (!await _checkQuota()) return;
+      if (!await _checkQuota(quotaExceededMessage: quotaExceededMessage)) {
+        return;
+      }
 
-      final noteTexts = state.selectedNoteIds
-          .map((id) => state.noteContents[id] ?? '')
-          .where((c) => c.isNotEmpty)
-          .toList();
+      final promptNoteIds = _promptNoteIds;
+      final noteTexts =
+          promptNoteIds.map((id) => state.noteContents[id] ?? '').toList();
 
-      final combinedText = noteTexts.join('\n');
-      final truncatedText =
+      // Join with the unique sentinel so multi-line notes survive the
+      // truncate-then-split round trip; splitting on a bare '\n' would
+      // shatter a multi-line note into pseudo-notes and corrupt the cluster
+      // note_indices mapping.
+      const separator = '\n$kNoteSeparator\n';
+      final combinedText = noteTexts.join(separator);
+      var promptText =
           PromptBuilder.truncateToLimit(combinedText, maxTotalContentChars);
-      final truncatedNotes = truncatedText.split('\n');
+      // If truncation destroyed a sentinel, back off to the last complete
+      // marker so every split entry is exactly one note and the entry order
+      // stays aligned with [promptNoteIds]. (A cut before the first sentinel
+      // still yields exactly one entry: a prefix of the first note.)
+      if (promptText.length < combinedText.length) {
+        final lastSep = promptText.lastIndexOf(separator);
+        if (lastSep != -1) {
+          promptText = promptText.substring(0, lastSep);
+        }
+      }
+      final truncatedNotes = promptText.split(separator);
 
-      final prompt =
-          _promptBuilder.buildClusterPrompt(
-            truncatedNotes, state.topic,
-            template: state.selectedTemplate,
-          );
+      final prompt = _promptBuilder.buildClusterPrompt(
+        truncatedNotes,
+        state.topic,
+        template: state.selectedTemplate,
+      );
       final response = await _aiRepo.chat(
         [ChatMessage(role: 'user', content: prompt)],
         cancelToken: token,
@@ -345,7 +415,7 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   // ── Stage 2: Outline ───────────────────────────
 
   /// Generate an outline from selected clusters.
-  Future<void> generateOutline() async {
+  Future<void> generateOutline({String? quotaExceededMessage}) async {
     if (state.selectedClusterIndices.isEmpty) return;
     if (_isProcessing) return;
 
@@ -354,7 +424,9 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
     final token = _freshToken();
 
     try {
-      if (!await _checkQuota()) return;
+      if (!await _checkQuota(quotaExceededMessage: quotaExceededMessage)) {
+        return;
+      }
 
       final selectedClusters = state.selectedClusterIndices
           .map((i) => state.clusters[i].toJson())
@@ -363,6 +435,7 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       final prompt = _promptBuilder.buildOutlinePrompt(
         selectedClusters,
         state.platformStyle,
+        topic: state.topic,
         template: state.selectedTemplate,
       );
 
@@ -411,7 +484,7 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   // ── Stage 3: Expand to draft ───────────────────
 
   /// Expand the outline into a full draft using streaming.
-  Future<void> expandToDraft() async {
+  Future<void> expandToDraft({String? quotaExceededMessage}) async {
     if (state.outline == null) return;
     if (_isProcessing) return;
 
@@ -425,29 +498,44 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
     final token = _freshToken();
 
     try {
-      if (!await _checkQuota()) return;
+      if (!await _checkQuota(quotaExceededMessage: quotaExceededMessage)) {
+        return;
+      }
 
-      // Gather source notes from selected clusters.
+      // Gather source notes from selected clusters. Cluster note_indices
+      // refer to the filtered prompt-note list (non-empty content, selection
+      // order) — the exact ordering sent during clustering — not to raw
+      // selectedNoteIds.
+      final promptNoteIds = _promptNoteIds;
       final sourceNotes = <String>[];
       for (final index in state.selectedClusterIndices) {
         if (index < state.clusters.length) {
           final cluster = state.clusters[index];
           for (final noteIdx in cluster.noteIndices) {
-            if (noteIdx < state.selectedNoteIds.length) {
-              final noteId = state.selectedNoteIds[noteIdx];
-              sourceNotes.add(state.noteContents[noteId] ?? '');
+            if (noteIdx >= 0 && noteIdx < promptNoteIds.length) {
+              final noteId = promptNoteIds[noteIdx];
+              final content = state.noteContents[noteId] ?? '';
+              if (content.isNotEmpty) sourceNotes.add(content);
             }
           }
         }
       }
 
-      final combinedSource = sourceNotes.where((s) => s.isNotEmpty).join('\n');
-      final truncatedSource =
-          PromptBuilder.truncateToLimit(combinedSource, maxTotalContentChars);
+      // Apply the global char budget per note so truncation can never merge
+      // notes or shift their order.
+      final limitedSources = <String>[];
+      var remaining = maxTotalContentChars;
+      for (final content in sourceNotes) {
+        if (remaining <= 0) break;
+        final piece = PromptBuilder.truncateToLimit(content, remaining);
+        limitedSources.add(piece);
+        remaining -= piece.length;
+      }
 
       final prompt = _promptBuilder.buildExpandPrompt(
         state.outline!.toJson(),
-        truncatedSource.split('\n'),
+        limitedSources,
+        topic: state.topic,
         template: state.selectedTemplate,
       );
 
@@ -484,7 +572,7 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   }
 
   /// Apply platform style adaptation to the current draft.
-  Future<void> adaptStyle() async {
+  Future<void> adaptStyle({String? quotaExceededMessage}) async {
     if (state.draft.isEmpty) return;
     if (_isProcessing) return;
 
@@ -493,11 +581,14 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
     final token = _freshToken();
 
     try {
-      if (!await _checkQuota()) return;
+      if (!await _checkQuota(quotaExceededMessage: quotaExceededMessage)) {
+        return;
+      }
 
       final prompt = _promptBuilder.buildStyleAdaptPrompt(
         state.draft,
         state.platformStyle,
+        template: state.selectedTemplate,
       );
 
       final buffer = StringBuffer();
@@ -538,7 +629,10 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   /// The LLM receives the template context + current draft + prior refinement
   /// history + the new instruction, and streams the FULL updated draft back.
   /// The draft updates in real-time during streaming.
-  Future<void> refineDraft(String instruction) async {
+  Future<void> refineDraft(
+    String instruction, {
+    String? quotaExceededMessage,
+  }) async {
     if (state.draft.isEmpty || _isProcessing) return;
 
     _isProcessing = true;
@@ -546,7 +640,9 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
     final token = _freshToken();
 
     try {
-      if (!await _checkQuota()) return;
+      if (!await _checkQuota(quotaExceededMessage: quotaExceededMessage)) {
+        return;
+      }
 
       final systemPrompt =
           _promptBuilder.buildRefineSystemPrompt(state.selectedTemplate);
@@ -562,13 +658,19 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         ChatMessage(role: 'user', content: instruction),
       ];
 
+      // Remember the draft as it was before streaming so an empty response
+      // can be rolled back.
+      final previousDraft = state.draft;
+
       final buffer = StringBuffer();
       Timer? throttleTimer;
 
-      await for (final chunk in _aiRepo.chatStream(
+      await for (final chunk in _aiRepo
+          .chatStream(
         messages,
         cancelToken: token,
-      ).timeout(
+      )
+          .timeout(
         const Duration(minutes: 3),
         onTimeout: (sink) {
           debugPrint('[ComposeProviders] refineDraft stream timed out');
@@ -584,8 +686,20 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       throttleTimer?.cancel();
 
       final result = buffer.toString().trim();
+      if (result.isEmpty) {
+        // The stream produced nothing usable: restore the previous draft and
+        // leave the refinement history untouched (no turns for an empty
+        // response).
+        state = state.copyWith(
+          draft: previousDraft,
+          isLoading: false,
+          error: 'The AI returned an empty response. Please try again.',
+        );
+        return;
+      }
+
       state = state.copyWith(
-        draft: result.isNotEmpty ? result : state.draft,
+        draft: result,
         isLoading: false,
         refinementHistory: [
           ...state.refinementHistory,
@@ -618,6 +732,11 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       final crypto = _ref.read(cryptoServiceProvider);
       final noteId = const Uuid().v4();
 
+      // After a session restore the vault may still be locked — try the
+      // stored keys before giving up; encryptForItem throws when locked.
+      if (!crypto.isUnlocked) {
+        await crypto.unlock();
+      }
       final encryptedContent = await crypto.encryptForItem(noteId, state.draft);
       final title = state.outline?.title ?? 'AI Composition';
       final encryptedTitle = await crypto.encryptForItem(noteId, title);

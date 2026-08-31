@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_snackbar.dart';
+import '../../../main.dart';
 import '../data/compose_providers.dart';
 import '../domain/post_template.dart';
 import 'template_editor_screen.dart';
@@ -46,7 +47,7 @@ class TemplateSelectorSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final templatesAsync = ref.watch(allPostTemplatesProvider);
-    final l10n = Theme.of(context);
+    final theme = Theme.of(context);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
@@ -62,7 +63,7 @@ class TemplateSelectorSheet extends ConsumerWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: l10n.colorScheme.outline.withAlpha(80),
+                color: theme.colorScheme.outline.withAlpha(80),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -107,18 +108,23 @@ class TemplateSelectorSheet extends ConsumerWidget {
             Expanded(
               child: templatesAsync.when(
                 data: (templates) {
-                  if (templates.isEmpty) {
-                    return const Center(child: Text('暂无模板'));
-                  }
+                  // Index 0 is the "no template" option; the rest are the
+                  // templates from the database.
                   return ListView.builder(
                     controller: scrollController,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.s16),
-                    itemCount: templates.length,
+                      horizontal: AppSpacing.s16,
+                    ),
+                    itemCount: templates.length + 1,
                     itemBuilder: (context, index) {
-                      final t = templates[index];
-                      final isSelected =
-                          selectedTemplate?.id == t.id;
+                      if (index == 0) {
+                        return _NoTemplateCard(
+                          isSelected: selectedTemplate == null,
+                          onTap: () => _selectNoTemplate(context, ref),
+                        );
+                      }
+                      final t = templates[index - 1];
+                      final isSelected = selectedTemplate?.id == t.id;
                       return _TemplateCard(
                         template: t,
                         isSelected: isSelected,
@@ -126,6 +132,12 @@ class TemplateSelectorSheet extends ConsumerWidget {
                           onSelected(t);
                           Navigator.pop(context);
                         },
+                        // Built-in templates are not editable.
+                        onEditRequest:
+                            t.isBuiltIn ? null : () => _editTemplate(context, t),
+                        onDeleteRequest: t.isBuiltIn
+                            ? null
+                            : () => _deleteTemplate(context, ref, t),
                       );
                     },
                   );
@@ -140,6 +152,62 @@ class TemplateSelectorSheet extends ConsumerWidget {
       },
     );
   }
+
+  /// Selects the "no template" option: clears the selection in both the
+  /// callback owner and the compose session provider.
+  void _selectNoTemplate(BuildContext context, WidgetRef ref) {
+    onSelected(null);
+    ref.read(composeSessionProvider.notifier).clearTemplate();
+    Navigator.pop(context);
+  }
+
+  /// Opens the template editor pre-filled with [template] for updating.
+  void _editTemplate(BuildContext context, PostTemplate template) {
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TemplateEditorScreen(existing: template),
+      ),
+    );
+  }
+
+  /// Deletes a user-created template after a confirmation dialog.
+  Future<void> _deleteTemplate(
+    BuildContext context,
+    WidgetRef ref,
+    PostTemplate template,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('删除模板'),
+        content: Text('确定要删除「${template.name}」吗？此操作无法撤销。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(databaseProvider).postTemplateDao.deleteById(template.id);
+      if (context.mounted) {
+        AppSnackBar.info(context, message: '模板已删除');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppSnackBar.error(context, message: '删除失败: $e');
+      }
+    }
+  }
 }
 
 class _TemplateCard extends StatelessWidget {
@@ -147,11 +215,53 @@ class _TemplateCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
+  /// Non-null for user-created templates: opens the editor pre-filled.
+  final VoidCallback? onEditRequest;
+
+  /// Non-null for user-created templates: deletes after confirmation.
+  final VoidCallback? onDeleteRequest;
+
   const _TemplateCard({
     required this.template,
     required this.isSelected,
     required this.onTap,
+    this.onEditRequest,
+    this.onDeleteRequest,
   });
+
+  bool get _isEditable =>
+      onEditRequest != null || onDeleteRequest != null;
+
+  /// Shows the edit/delete actions for a user-created template.
+  Future<void> _showActions(BuildContext context) {
+    return showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('编辑模板'),
+              onTap: () => Navigator.pop(sheetContext, 'edit'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: const Text('删除模板'),
+              onTap: () => Navigator.pop(sheetContext, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    ).then((action) {
+      if (!context.mounted) return;
+      if (action == 'edit') onEditRequest?.call();
+      if (action == 'delete') onDeleteRequest?.call();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +277,7 @@ class _TemplateCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.md),
         onTap: onTap,
+        onLongPress: _isEditable ? () => _showActions(context) : null,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.s12),
           child: Row(
@@ -203,6 +314,73 @@ class _TemplateCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                  ],
+                ),
+              ),
+              if (_isEditable)
+                IconButton(
+                  icon: const Icon(Icons.more_vert, size: 20),
+                  tooltip: '模板操作',
+                  onPressed: () => _showActions(context),
+                )
+              else if (isSelected)
+                Icon(Icons.check_circle, color: theme.colorScheme.primary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The "no template" option: clears the current template selection so the AI
+/// composes without template constraints.
+class _NoTemplateCard extends StatelessWidget {
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _NoTemplateCard({
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.s8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        side: isSelected
+            ? BorderSide(color: theme.colorScheme.primary, width: 2)
+            : BorderSide.none,
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.s12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.block,
+                size: 20,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: AppSpacing.s8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('无模板', style: AppTextStyles.title),
+                    Text(
+                      '不套用模板，按默认风格自由创作',
+                      style: AppTextStyles.caption.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),

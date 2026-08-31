@@ -182,7 +182,7 @@ class _TemplateExtractorScreenState
                       child: Text(
                         _extracted!.systemPrompt,
                         style: const TextStyle(
-                            fontFamily: 'monospace', fontSize: 12),
+                            fontFamily: 'RobotoMono', fontSize: 12),
                       ),
                     ),
                   ],

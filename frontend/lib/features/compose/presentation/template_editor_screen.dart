@@ -104,10 +104,10 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.existing != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? '编辑模板' : '创建模板'),
+        // Show the template name when editing an existing template.
+        title: Text(widget.existing?.name ?? '创建模板'),
         actions: [
           IconButton(
             onPressed: _isSaving ? null : _save,
@@ -145,7 +145,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
               hintText: 'Write a ... style post. Requirements:\n- ...',
             ),
             maxLines: 8,
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+            style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 13),
           ),
           const SizedBox(height: AppSpacing.s12),
           TextField(

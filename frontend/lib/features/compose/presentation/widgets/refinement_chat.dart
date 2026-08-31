@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/compose_providers.dart';
-import '../../data/ai_repository.dart';
 
 /// Chat interface for iteratively refining the draft post via LLM.
 ///
@@ -37,7 +36,14 @@ class _RefinementChatState extends ConsumerState<RefinementChat> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     _controller.clear();
-    ref.read(composeSessionProvider.notifier).refineDraft(text).then((_) {
+    final l10n = AppLocalizations.of(context);
+    ref
+        .read(composeSessionProvider.notifier)
+        .refineDraft(
+          text,
+          quotaExceededMessage: l10n?.aiQuotaExceeded,
+        )
+        .then((_) {
       if (mounted) {
         // Scroll to bottom after refinement completes.
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -115,8 +121,8 @@ class _RefinementChatState extends ConsumerState<RefinementChat> {
                   )
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.s16),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
                     itemCount: history.length,
                     itemBuilder: (context, index) {
                       final msg = history[index];
@@ -198,8 +204,8 @@ class _ChatBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            Icon(Icons.smart_toy, size: 16,
-                color: theme.colorScheme.primary.withAlpha(180)),
+            Icon(Icons.smart_toy,
+                size: 16, color: theme.colorScheme.primary.withAlpha(180)),
             const SizedBox(width: AppSpacing.s4),
           ],
           Flexible(

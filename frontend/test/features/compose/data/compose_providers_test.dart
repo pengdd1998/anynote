@@ -17,6 +17,7 @@ import 'package:anynote/features/compose/data/ai_repository.dart';
 import 'package:anynote/features/compose/data/compose_providers.dart';
 import 'package:anynote/features/compose/domain/cluster_model.dart';
 import 'package:anynote/features/compose/domain/outline_model.dart';
+import 'package:anynote/features/compose/domain/post_template.dart';
 import 'package:anynote/features/compose/domain/prompt_builder.dart';
 import 'package:anynote/features/compose/domain/response_parser.dart';
 import 'package:anynote/main.dart';
@@ -63,6 +64,18 @@ class FakeAIRepository extends AIRepository {
 class _FakeApiClient extends ApiClient {
   _FakeApiClient() : super(baseUrl: 'http://localhost:8080');
 }
+
+/// Builds a distinctive [PostTemplate] for template-related assertions.
+PostTemplate _testTemplate() => PostTemplate(
+      id: 'tpl-test',
+      name: 'Marker Template',
+      description: '',
+      systemPrompt: 'TEMPLATE_FRAGMENT_MARKER',
+      structureHint: 'A -> B -> C',
+      toneHint: 'cheerful',
+      isBuiltIn: true,
+      createdAt: DateTime(2026, 1, 1),
+    );
 
 // ---------------------------------------------------------------------------
 // Fake CryptoService
@@ -316,6 +329,71 @@ void main() {
       expect(state.selectedNoteIds.length, maxSelectedNotes - 1);
       // No error -- deselect should work fine.
       expect(state.error, isNull);
+    });
+
+    test('toggleNoteSelection returns true when a note is added', () {
+      final container = ProviderContainer(
+        overrides: [
+          aiRepositoryProvider.overrideWithValue(FakeAIRepository()),
+          databaseProvider.overrideWithValue(_createTestDb()),
+          cryptoServiceProvider.overrideWithValue(_FakeCryptoService()),
+        ],
+      );
+      addTearDown(() async {
+        await container.read(databaseProvider).close();
+        container.dispose();
+      });
+
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      expect(notifier.toggleNoteSelection('note-1', 'content 1'), isTrue);
+    });
+
+    test('toggleNoteSelection returns true when a note is removed', () {
+      final container = ProviderContainer(
+        overrides: [
+          aiRepositoryProvider.overrideWithValue(FakeAIRepository()),
+          databaseProvider.overrideWithValue(_createTestDb()),
+          cryptoServiceProvider.overrideWithValue(_FakeCryptoService()),
+        ],
+      );
+      addTearDown(() async {
+        await container.read(databaseProvider).close();
+        container.dispose();
+      });
+
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      expect(notifier.toggleNoteSelection('note-1', 'content 1'), isTrue);
+      // Removing it again is also an accepted change.
+      expect(notifier.toggleNoteSelection('note-1', 'content 1'), isTrue);
+    });
+
+    test('toggleNoteSelection returns false at the max limit', () {
+      final container = ProviderContainer(
+        overrides: [
+          aiRepositoryProvider.overrideWithValue(FakeAIRepository()),
+          databaseProvider.overrideWithValue(_createTestDb()),
+          cryptoServiceProvider.overrideWithValue(_FakeCryptoService()),
+        ],
+      );
+      addTearDown(() async {
+        await container.read(databaseProvider).close();
+        container.dispose();
+      });
+
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      for (var i = 0; i < maxSelectedNotes; i++) {
+        expect(notifier.toggleNoteSelection('note-$i', 'content $i'), isTrue);
+      }
+
+      // The 11th note is rejected.
+      expect(notifier.toggleNoteSelection('note-extra', 'extra'), isFalse);
+      expect(
+        container.read(composeSessionProvider).selectedNoteIds.length,
+        maxSelectedNotes,
+      );
     });
 
     test('generateClusters rejects when content exceeds limit', () async {
@@ -919,6 +997,260 @@ void main() {
       final state = container.read(composeSessionProvider);
       expect(state.error, isNotNull);
       expect(state.isLoading, isFalse);
+    });
+
+    // -- Template selection -------------------------------------------------
+
+    test('setTemplate sets the selected template', () {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.setTemplate(_testTemplate());
+
+      final state = container.read(composeSessionProvider);
+      expect(state.selectedTemplate, isNotNull);
+      expect(state.selectedTemplate!.name, 'Marker Template');
+    });
+
+    test('setTemplate(null) clears the selected template', () {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.setTemplate(_testTemplate());
+      expect(
+        container.read(composeSessionProvider).selectedTemplate,
+        isNotNull,
+      );
+
+      notifier.setTemplate(null);
+
+      expect(container.read(composeSessionProvider).selectedTemplate, isNull);
+    });
+
+    test('clearTemplate clears the template but preserves other fields', () {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.setTopic('kept topic');
+      notifier.toggleNoteSelection('n1', 'c1');
+      notifier.updateDraft('kept draft');
+      notifier.setTemplate(_testTemplate());
+
+      notifier.clearTemplate();
+
+      final state = container.read(composeSessionProvider);
+      expect(state.selectedTemplate, isNull);
+      expect(state.topic, 'kept topic');
+      expect(state.selectedNoteIds, ['n1']);
+      expect(state.draft, 'kept draft');
+      expect(state.isLoading, isFalse);
+    });
+
+    // -- Cluster note-index mapping (sentinel) ------------------------------
+
+    test('generateClusters keeps multi-line notes as single prompt entries',
+        () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.toggleNoteSelection('n1', 'Title line\nBody line');
+      notifier.toggleNoteSelection('n2', 'Second note');
+      notifier.setTopic('topic');
+
+      fakeAiRepo.chatResponse = '{"clusters": []}';
+      await notifier.generateClusters();
+
+      final prompt = fakeAiRepo.chatCalls.last.first.content;
+      const sep = '\n$kNoteSeparator\n';
+      // Note 0 keeps both of its lines under a single [0] label, and note 1
+      // is labeled [1] — not shattered into additional line indices.
+      expect(prompt, contains('[0] Title line\nBody line$sep[1] Second note'));
+    });
+
+    test('generateClusters skips empty notes in the index mapping', () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.state = notifier.state.copyWith(
+        selectedNoteIds: ['n1', 'n2'],
+        noteContents: {'n1': '', 'n2': 'Only real note'},
+      );
+      notifier.setTopic('topic');
+
+      fakeAiRepo.chatResponse = '{"clusters": []}';
+      await notifier.generateClusters();
+
+      final prompt = fakeAiRepo.chatCalls.last.first.content;
+      // The only prompt entry is [0]; indices refer to the filtered list.
+      expect(prompt, contains('[0] Only real note'));
+      expect(prompt, isNot(contains('[1]')));
+    });
+
+    test('expandToDraft maps cluster note indices to actual note contents',
+        () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      // n1 is empty and must be excluded from the mapping, so cluster index
+      // 0 refers to n2 (the first non-empty note).
+      notifier.state = notifier.state.copyWith(
+        selectedNoteIds: ['n1', 'n2'],
+        noteContents: {'n1': '', 'n2': 'Second real content'},
+        clusters: const [
+          ClusterModel(name: 'C', theme: 't', noteIndices: [0], summary: 's',),
+        ],
+        selectedClusterIndices: {0},
+        outline: const OutlineModel(title: 'T', sections: []),
+      );
+      notifier.setTopic('my topic');
+
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['draft']);
+      await notifier.expandToDraft();
+
+      final prompt = fakeAiRepo.chatStreamCalls.last.first.content;
+      expect(prompt, contains('Second real content'));
+      // The user's topic reaches the expand stage as well.
+      expect(prompt, contains('User topic: my topic'));
+    });
+
+    // -- Outline topic ------------------------------------------------------
+
+    test('generateOutline includes the topic in the prompt', () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.state = notifier.state.copyWith(
+        clusters: [
+          const ClusterModel(
+              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
+        ],
+        selectedClusterIndices: {0},
+      );
+      notifier.setTopic('My Topic');
+
+      fakeAiRepo.chatResponse = '{"title": "T", "sections": []}';
+      await notifier.generateOutline();
+
+      final prompt = fakeAiRepo.chatCalls.last.first.content;
+      expect(prompt, contains('User topic: My Topic'));
+    });
+
+    // -- Adapt style with template ------------------------------------------
+
+    test('adaptStyle includes the selected template in the prompt', () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.state = notifier.state.copyWith(
+        draft: 'Draft content',
+        platformStyle: 'xhs',
+        selectedTemplate: _testTemplate(),
+      );
+
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['Adapted']);
+      await notifier.adaptStyle();
+
+      final prompt = fakeAiRepo.chatStreamCalls.last.first.content;
+      expect(prompt, contains('TEMPLATE_FRAGMENT_MARKER'));
+      // Style adaptation must not strip the template guidance.
+      expect(prompt, contains('Draft content'));
+    });
+
+    // -- Refine draft -------------------------------------------------------
+
+    test('refineDraft does nothing when the draft is empty', () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      await notifier.refineDraft('make it better');
+
+      expect(fakeAiRepo.chatStreamCalls, isEmpty);
+    });
+
+    test('refineDraft appends turns and updates the draft on success',
+        () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.updateDraft('Original draft');
+      fakeAiRepo.chatStreamResponse =
+          Stream.fromIterable(['Refined ', 'draft ', 'text']);
+
+      await notifier.refineDraft('make it shorter');
+
+      final state = container.read(composeSessionProvider);
+      expect(state.draft, 'Refined draft text');
+      expect(state.refinementHistory.length, 2);
+      expect(state.refinementHistory[0].role, 'user');
+      expect(state.refinementHistory[0].content, 'make it shorter');
+      expect(state.refinementHistory[1].role, 'assistant');
+      expect(state.refinementHistory[1].content, 'Refined draft text');
+      expect(state.isLoading, isFalse);
+      expect(state.error, isNull);
+    });
+
+    test('refineDraft keeps prior history when appending', () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.state = notifier.state.copyWith(
+        draft: 'Draft',
+        refinementHistory: [
+          const ChatMessage(role: 'user', content: 'older instruction'),
+          const ChatMessage(role: 'assistant', content: 'older response'),
+        ],
+      );
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['New draft']);
+
+      await notifier.refineDraft('new instruction');
+
+      final state = container.read(composeSessionProvider);
+      expect(state.refinementHistory.length, 4);
+      expect(state.refinementHistory[2].content, 'new instruction');
+      expect(state.refinementHistory[3].content, 'New draft');
+    });
+
+    test('refineDraft does not append an assistant turn on empty result',
+        () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.updateDraft('Original draft');
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['   ']);
+
+      await notifier.refineDraft('make it pop');
+
+      final state = container.read(composeSessionProvider);
+      // Draft restored, history untouched (no assistant turn), error shown.
+      expect(state.draft, 'Original draft');
+      expect(state.refinementHistory, isEmpty);
+      expect(state.error, isNotNull);
+      expect(state.isLoading, isFalse);
+    });
+
+    test('refineDraft sends the selected template in the system prompt',
+        () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.state = notifier.state.copyWith(
+        draft: 'Draft',
+        selectedTemplate: _testTemplate(),
+      );
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['Refined']);
+
+      await notifier.refineDraft('tighten it');
+
+      final messages = fakeAiRepo.chatStreamCalls.last;
+      expect(messages.first.role, 'system');
+      expect(messages.first.content, contains('TEMPLATE_FRAGMENT_MARKER'));
+      // The user instruction is the last message.
+      expect(messages.last.role, 'user');
+      expect(messages.last.content, 'tighten it');
+    });
+
+    test('refineDraft omits the template section without a template',
+        () async {
+      final notifier = container.read(composeSessionProvider.notifier);
+
+      notifier.updateDraft('Draft');
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['Refined']);
+
+      await notifier.refineDraft('tighten it');
+
+      final messages = fakeAiRepo.chatStreamCalls.last;
+      expect(messages.first.role, 'system');
+      expect(
+        messages.first.content,
+        isNot(contains('TEMPLATE_FRAGMENT_MARKER')),
+      );
     });
 
     // -- Cancel token -------------------------------------------------------

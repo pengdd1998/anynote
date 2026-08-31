@@ -1,5 +1,13 @@
 import '../domain/post_template.dart';
 
+/// Separator inserted between individual notes inside compose prompts.
+///
+/// A bare newline is ambiguous because a note may span multiple lines.
+/// Pipelines that join notes into one string (e.g. for length truncation)
+/// split back on this exact marker so per-note indices stay stable and
+/// cluster `note_indices` keep referring to actual notes.
+const String kNoteSeparator = '@@NOTE_SPLIT@@';
+
 /// Client-side prompt builder for the AI compose pipeline.
 ///
 /// All prompts are constructed on the client (never on the server). Prompts
@@ -16,8 +24,8 @@ class PromptBuilder {
     final tpl = template?.promptFragment;
     return '''You are a content organizer. Group the following notes by theme for a piece about "$topic".
 ${tpl != null ? '\nTarget format guidance:\n$tpl\n' : ''}
-Notes:
-${noteContents.asMap().entries.map((e) => '[${e.key}] ${e.value}').join('\n')}
+Notes (each labeled [index]; notes are separated by "$kNoteSeparator" markers):
+${noteContents.asMap().entries.map((e) => '[${e.key}] ${e.value}').join('\n$kNoteSeparator\n')}
 
 Output JSON:
 {
@@ -36,11 +44,14 @@ Output JSON:
   String buildOutlinePrompt(
     List<Map<String, dynamic>> clusters,
     String platform, {
+    String? topic,
     PostTemplate? template,
   }) {
     final tpl = template?.promptFragment;
+    final topicBlock =
+        (topic != null && topic.isNotEmpty) ? '\nUser topic: $topic\n' : '';
     return '''Based on these note clusters, create a detailed outline for a $platform post.
-${tpl != null ? '\nFollow this template:\n$tpl\n' : ''}
+${tpl != null ? '\nFollow this template:\n$tpl\n' : ''}$topicBlock
 Clusters:
 ${clusters.map((c) => '- ${c['name']}: ${c['summary']}').join('\n')}
 
@@ -61,12 +72,15 @@ Output JSON:
   String buildExpandPrompt(
     Map<String, dynamic> outline,
     List<String> sourceNotes, {
+    String? topic,
     PostTemplate? template,
   }) {
     final sections = (outline['sections'] as List?) ?? [];
     final tpl = template?.promptFragment;
+    final topicBlock =
+        (topic != null && topic.isNotEmpty) ? '\nUser topic: $topic\n' : '';
     return '''Write a detailed, engaging post based on this outline.
-${tpl != null ? '\nYou must follow this template specification:\n$tpl\n' : ''}
+${tpl != null ? '\nYou must follow this template specification:\n$tpl\n' : ''}$topicBlock
 Title: ${outline['title']}
 Sections:
 ${sections.asMap().entries.map((e) {
@@ -81,9 +95,14 @@ Write the full content now.''';
   }
 
   /// Stage 4: Adapt style for a specific platform (legacy — prefer templates).
-  String buildStyleAdaptPrompt(String content, String platform) {
+  String buildStyleAdaptPrompt(
+    String content,
+    String platform, {
+    PostTemplate? template,
+  }) {
+    final tpl = template?.promptFragment;
     return '''Adapt the following content for $platform. Adjust tone, format, and style to match platform conventions.
-
+${tpl != null ? '\nKeep the following template specification (structure, tone, and format rules):\n$tpl\n' : ''}
 Content:
 $content
 
