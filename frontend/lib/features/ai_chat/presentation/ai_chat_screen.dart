@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/constants/app_durations.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -65,12 +67,24 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _scrollToBottom();
   }
 
+  /// Sends a follow-up suggestion chip tap as a regular user message.
+  void _sendFollowUp(String text) {
+    ref.read(chatSessionProvider.notifier).sendMessage(text);
+    _scrollToBottom();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final session = ref.watch(chatSessionProvider);
     final messages = session.messages.whereType<ChatMessage>().toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Follow-up suggestions appear under the last completed AI message.
+    final showFollowUps = messages.isNotEmpty &&
+        messages.last.role == 'assistant' &&
+        !messages.last.isStreaming &&
+        !session.isLoading;
 
     ref.listen(chatSessionProvider, (prev, next) {
       if (prev?.messages.length != next.messages.length) {
@@ -89,12 +103,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         scrolledUnderElevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.note_add_outlined),
+            icon: const Icon(AppIcons.noteAdd),
             tooltip: l10n.selectContextNotes,
             onPressed: () => _showContextNoteSelector(context),
           ),
           IconButton(
-            icon: const Icon(Icons.add_comment_outlined),
+            icon: const Icon(AppIcons.chat),
             tooltip: l10n.newChat,
             onPressed: () {
               ref.read(startChatSessionProvider)();
@@ -124,8 +138,14 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       AppSpacing.md,
                       AppSpacing.s8,
                     ),
-                    itemCount: messages.length,
+                    itemCount: messages.length + (showFollowUps ? 1 : 0),
                     itemBuilder: (context, index) {
+                      if (index == messages.length) {
+                        return _FollowUpChips(
+                          onSelect: _sendFollowUp,
+                          isDark: isDark,
+                        );
+                      }
                       return _AiMessageBubble(
                         message: messages[index],
                         isLast: index == messages.length - 1,
@@ -231,7 +251,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   Widget _buildEmptyState(AppLocalizations l10n, bool isDark) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -240,13 +260,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: AppColors.accentLavenderBg,
+                color: AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: const Icon(
-                Icons.chat_bubble_outline,
+                AppIcons.sparkles,
                 size: 32,
-                color: AppColors.accentLavenderText,
+                color: AppColors.primaryText,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -268,6 +288,26 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     : AppColors.lightTextTertiary,
               ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            // Full-width purple "New Session" CTA.
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => ref.read(startChatSessionProvider)(),
+                icon: const Icon(AppIcons.sparkles, size: 18),
+                label: Text(l10n.newChat),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: isDark
+                      ? AppColors.darkDisabled
+                      : AppColors.primaryDisabled,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -301,8 +341,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
 /// A single message bubble in the chat with warm styling.
 ///
-/// User messages appear on the right in primary-tinted cards.
-/// AI messages appear on the left in warm surface cards with an accent bar.
+/// User messages appear on the right in soft lavender tinted bubbles.
+/// AI messages appear on the left in bordered surface cards.
 class _AiMessageBubble extends StatelessWidget {
   final ChatMessage message;
   final bool isLast;
@@ -339,20 +379,15 @@ class _AiMessageBubble extends StatelessWidget {
         vertical: AppSpacing.s12,
       ),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: isDark
+            ? AppColors.primary.withAlpha(45)
+            : AppColors.primarySoft,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppRadius.md),
-          topRight: Radius.circular(AppRadius.md),
-          bottomLeft: Radius.circular(AppRadius.md),
+          topLeft: Radius.circular(AppRadius.sm),
+          topRight: Radius.circular(AppRadius.sm),
+          bottomLeft: Radius.circular(AppRadius.sm),
           bottomRight: Radius.circular(AppSpacing.s4),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withAlpha(40),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -360,7 +395,9 @@ class _AiMessageBubble extends StatelessWidget {
           SelectableText(
             message.content,
             style: AppTextStyles.body.copyWith(
-              color: Colors.white,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
               height: 1.5,
             ),
           ),
@@ -369,7 +406,9 @@ class _AiMessageBubble extends StatelessWidget {
             _formatTime(message.timestamp),
             style: AppTextStyles.caption.copyWith(
               fontSize: 10,
-              color: Colors.white.withAlpha(180),
+              color: isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.primaryText.withAlpha(180),
             ),
           ),
         ],
@@ -379,6 +418,8 @@ class _AiMessageBubble extends StatelessWidget {
 
   Widget _buildAiBubble(bool isDark) {
     final bgColor = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
+    final borderColor =
+        isDark ? AppColors.darkBorder : AppColors.lightBorder;
     final textColor =
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
@@ -390,26 +431,12 @@ class _AiMessageBubble extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppRadius.md),
-          topRight: Radius.circular(AppRadius.md),
+          topLeft: Radius.circular(AppRadius.sm),
+          topRight: Radius.circular(AppRadius.sm),
           bottomLeft: Radius.circular(AppSpacing.s4),
-          bottomRight: Radius.circular(AppRadius.md),
+          bottomRight: Radius.circular(AppRadius.sm),
         ),
-        border: Border(
-          left: BorderSide(
-            color: AppColors.accentLavender.withAlpha(100),
-            width: 2.5,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? AppColors.shadowDark.withAlpha(30)
-                : AppColors.shadowLight.withAlpha(40),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,13 +449,15 @@ class _AiMessageBubble extends StatelessWidget {
                 width: 18,
                 height: 18,
                 decoration: BoxDecoration(
-                  color: AppColors.accentLavenderBg,
-                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                  color: isDark
+                      ? AppColors.primary.withAlpha(45)
+                      : AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(AppRadius.xxs),
                 ),
                 child: const Icon(
-                  Icons.auto_awesome,
+                  AppIcons.sparkles,
                   size: 10,
-                  color: AppColors.accentLavenderText,
+                  color: AppColors.primaryText,
                 ),
               ),
               const SizedBox(width: AppSpacing.s4),
@@ -437,7 +466,9 @@ class _AiMessageBubble extends StatelessWidget {
                 style: AppTextStyles.caption.copyWith(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.accentLavenderText,
+                  color: isDark
+                      ? AppColors.secondary
+                      : AppColors.primaryText,
                 ),
               ),
             ],
@@ -465,7 +496,7 @@ class _AiMessageBubble extends StatelessWidget {
                     height: 12,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.accentLavenderText.withAlpha(180),
+                      color: AppColors.primary.withAlpha(180),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.s4),
@@ -549,7 +580,7 @@ class _ChatInput extends StatelessWidget {
                 color: isDark
                     ? AppColors.darkInputFill
                     : AppColors.lightInputFill,
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: TextField(
                 controller: controller,
@@ -574,7 +605,8 @@ class _ChatInput extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.s4),
+          const SizedBox(width: AppSpacing.s8),
+          // Circular purple send button.
           Container(
             width: 44,
             height: 44,
@@ -590,16 +622,79 @@ class _ChatInput extends StatelessWidget {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(Icons.send, size: 20),
+                  : const Icon(PhosphorIconsBold.arrowUp, size: 20),
               style: IconButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                ),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: isDark
+                    ? AppColors.darkDisabled
+                    : AppColors.primaryDisabled,
+                shape: const CircleBorder(),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Follow-up suggestion chips shown under the last completed AI message.
+///
+/// Tapping a chip sends its label as a regular user message through the
+/// existing chat session provider.
+class _FollowUpChips extends StatelessWidget {
+  final void Function(String text) onSelect;
+  final bool isDark;
+
+  const _FollowUpChips({required this.onSelect, required this.isDark});
+
+  static const _suggestions = <String>[
+    'Make it shorter',
+    'More uplifting',
+    'Summarize key points',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.s4),
+      child: Wrap(
+        spacing: AppSpacing.s8,
+        runSpacing: AppSpacing.s8,
+        children: _suggestions
+            .map(
+              (label) => GestureDetector(
+                onTap: () => onSelect(label),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.s12,
+                    vertical: AppSpacing.s8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkCardBg
+                        : AppColors.lightCardBg,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    border: Border.all(
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
+                    ),
+                  ),
+                  child: Text(
+                    label,
+                    style: AppTextStyles.caption.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }

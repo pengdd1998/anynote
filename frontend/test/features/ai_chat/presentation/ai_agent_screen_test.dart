@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/features/ai_chat/presentation/ai_agent_screen.dart';
 import 'package:anynote/core/network/api_client.dart';
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 import 'package:anynote/main.dart';
 
@@ -79,10 +80,10 @@ void main() {
       expect(find.text('AI Agent'), findsOneWidget);
     });
 
-    testWidgets('renders select action label', (tester) async {
+    testWidgets('renders header label', (tester) async {
       await pumpAgentScreen(tester, fakeApi: fakeApi);
 
-      expect(find.text('Select an action'), findsOneWidget);
+      expect(find.text('I can help you with...'), findsOneWidget);
     });
 
     testWidgets('renders organize notes action card', (tester) async {
@@ -114,15 +115,15 @@ void main() {
     testWidgets('action cards have chevron icons', (tester) async {
       await pumpAgentScreen(tester, fakeApi: fakeApi);
 
-      expect(find.byIcon(Icons.chevron_right), findsNWidgets(3));
+      expect(find.byIcon(AppIcons.chevronRight), findsNWidgets(3));
     });
 
     testWidgets('action cards have leading icons', (tester) async {
       await pumpAgentScreen(tester, fakeApi: fakeApi);
 
-      expect(find.byIcon(Icons.folder_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.summarize_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.folder), findsOneWidget);
+      expect(find.byIcon(AppIcons.summarize), findsOneWidget);
+      expect(find.byIcon(AppIcons.noteAdd), findsOneWidget);
     });
 
     // -- Tapping action triggers execution ------------------------------------
