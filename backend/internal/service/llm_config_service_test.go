@@ -260,7 +260,9 @@ func TestLLMConfigService_Update_NoKeyRotation(t *testing.T) {
 	gw := newTestLLMGateway(provider)
 	svc := NewLLMConfigService(repo, gw, masterKey)
 
-	// Update without providing a new DecryptedKey -- should preserve existing EncryptedKey.
+	// Update without providing a new DecryptedKey -- the merged-patch update
+	// must PRESERVE the stored encrypted key (a partial update like
+	// {"is_default": true} must never wipe the API key).
 	updated, err := svc.Update(context.Background(), userID, domain.LLMConfig{
 		ID:       configID,
 		Provider: "mock",
@@ -269,11 +271,15 @@ func TestLLMConfigService_Update_NoKeyRotation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Update: %v", err)
 	}
-	// EncryptedKey should be empty (zero value) since the caller did not provide
-	// a new DecryptedKey and the Update method only sets EncryptedKey when DecryptedKey != "".
-	// The repository stores whatever the service passes.
-	if len(updated.EncryptedKey) != 0 {
-		t.Error("EncryptedKey should not change when DecryptedKey is empty")
+	if len(updated.EncryptedKey) == 0 {
+		t.Fatal("EncryptedKey should be preserved when DecryptedKey is empty")
+	}
+	decrypted, err := llm.DecryptAPIKey(updated.EncryptedKey, masterKey)
+	if err != nil {
+		t.Fatalf("DecryptAPIKey: %v", err)
+	}
+	if decrypted != "sk-original" {
+		t.Errorf("decrypted = %q, want %q", decrypted, "sk-original")
 	}
 }
 
