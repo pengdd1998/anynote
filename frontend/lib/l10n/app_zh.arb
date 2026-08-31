@@ -243,6 +243,7 @@
     "llmConfigTitle": "LLM 配置",
     "noLLMConfigs": "没有 LLM 配置",
     "addLLMToEnableAI": "添加 LLM 以启用 AI 功能",
+    "llmLocalOnlyNote": "API 密钥仅保存在本设备，绝不会上传到 AnyNote 服务器。",
     "addProvider": "添加提供商",
     "defaultLabel": "默认",
     "testConnection": "测试连接",

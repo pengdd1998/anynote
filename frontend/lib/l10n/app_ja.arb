@@ -243,6 +243,7 @@
     "llmConfigTitle": "LLM設定",
     "noLLMConfigs": "LLM設定がありません",
     "addLLMToEnableAI": "LLMを追加してAI機能を有効にしてください",
+    "llmLocalOnlyNote": "APIキーはこの端末にのみ保存され、AnyNoteサーバーには送信されません。",
     "addProvider": "プロバイダーを追加",
     "defaultLabel": "デフォルト",
     "testConnection": "接続テスト",

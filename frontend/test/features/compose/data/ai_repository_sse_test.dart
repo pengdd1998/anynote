@@ -41,6 +41,36 @@ void main() {
     test('returns null (no throw) for malformed JSON', () {
       expect(AIRepository.parseSseLine('data: {oops'), isNull);
     });
+
+    test('extracts delta content from OpenAI-compatible chunks', () {
+      // Direct mode: providers stream choices[0].delta.content chunks.
+      expect(
+        AIRepository.parseSseLine(
+          'data: {"choices":[{"delta":{"content":"hi"}}]}',
+        ),
+        'hi',
+      );
+    });
+
+    test('returns null for OpenAI role-only delta chunk', () {
+      expect(
+        AIRepository.parseSseLine(
+          'data: {"choices":[{"delta":{"role":"assistant"}}]}',
+        ),
+        isNull,
+      );
+    });
+
+    test('returns null for OpenAI empty-choices (usage) chunk', () {
+      expect(
+        AIRepository.parseSseLine('data: {"choices":[],"usage":{}}'),
+        isNull,
+      );
+    });
+
+    test('DONE event also terminates OpenAI-format streams', () {
+      expect(AIRepository.parseSseLine('data: [DONE]'), isNotNull);
+    });
   });
 
   group('parseSseContentStream', () {
@@ -108,6 +138,28 @@ void main() {
       final chunks = ['data: {"content":"tail"}'];
       final out = await AIRepository.parseSseContentStream(bytes(chunks)).join();
       expect(out, isEmpty);
+    });
+  });
+
+  group('parseSseContentStream (OpenAI delta format)', () {
+    test('joins delta chunks and terminates on DONE', () async {
+      final chunks = [
+        'data: {"choices":[{"delta":{"role":"assistant"}}]}\n'
+            'data: {"choices":[{"delta":{"content":"he"}}]}\n'
+            'data: {"choices":[{"delta":{"content":"llo"}}]}\n'
+            'data: [DONE]\n',
+      ];
+      final out = await AIRepository.parseSseContentStream(bytes(chunks)).join();
+      expect(out, 'hello');
+    });
+
+    test('parses delta lines split across chunk boundaries', () async {
+      final chunks = [
+        'data: {"choices":[{"del',
+        'ta":{"content":"hi"}}]}\n',
+      ];
+      final out = await AIRepository.parseSseContentStream(bytes(chunks)).join();
+      expect(out, 'hi');
     });
   });
 }

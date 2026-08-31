@@ -18,10 +18,10 @@ class LLMConfigScreen extends ConsumerStatefulWidget {
 }
 
 class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
-  // Built-in provider presets. The actual provider list is also fetched from
-  // the server via [llmProvidersProvider] and merged when available.
-  // 'id' is the wire value the server validates (lowercase); 'name' is the
-  // display label. The server rejects non-lowercase ids (invalid provider).
+  // Built-in provider presets. 'id' is the provider identifier stored with
+  // the local config; 'name' is the display label.
+  // 'anthropic' configs are used OpenAI-compatibly: Anthropic exposes an
+  // OpenAI-compatible chat endpoint under the same /v1 base URL.
   static const _presets = <Map<String, String>>[
     {'id': 'openai', 'name': 'OpenAI', 'baseUrl': 'https://api.openai.com/v1'},
     {
@@ -50,24 +50,34 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
       body: configsAsync.when(
         data: (configs) {
           if (configs.isEmpty) {
-            return AppEmptyState(
-              icon: AppIcons.aiRobot,
-              title: l10n.noLLMConfigs,
-              subtitle: l10n.addLLMToEnableAI,
-              actionLabel: l10n.addProvider,
-              onAction: _showAddDialog,
+            return Column(
+              children: [
+                _PrivacyNote(l10n: l10n),
+                Expanded(
+                  child: AppEmptyState(
+                    icon: AppIcons.aiRobot,
+                    title: l10n.noLLMConfigs,
+                    subtitle: l10n.addLLMToEnableAI,
+                    actionLabel: l10n.addProvider,
+                    onAction: _showAddDialog,
+                  ),
+                ),
+              ],
             );
           }
           return RefreshIndicator(
             onRefresh: () => ref.read(llmConfigsProvider.notifier).refresh(),
             child: ListView.builder(
               padding: const EdgeInsets.only(top: 8, bottom: 80),
-              itemCount: configs.length,
+              // Index 0 is the privacy note; the rest are config cards.
+              itemCount: configs.length + 1,
               itemBuilder: (context, index) {
-                final cfg = configs[index];
+                if (index == 0) return _PrivacyNote(l10n: l10n);
+                final i = index - 1;
+                final cfg = configs[i];
                 final id = cfg.id;
                 return StaggeredGroup(
-                  staggerIndex: index,
+                  staggerIndex: i,
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _LLMConfigCard(
@@ -236,17 +246,14 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 }
 
                 try {
-                  final current = ref.read(llmConfigsProvider);
-                  final isFirst = (current.value ?? const []).isEmpty;
+                  // The first local config automatically becomes the default;
+                  // direct AI calls route through the default config.
                   await ref.read(llmConfigsProvider.notifier).create({
                     'name': nameCtrl.text,
                     'provider': providerIdFor(selectedProvider),
                     'base_url': urlCtrl.text,
                     'api_key': keyCtrl.text,
                     'model': modelCtrl.text,
-                    // The AI proxy routes through the default config; the
-                    // first config a user creates becomes the default.
-                    if (isFirst) 'is_default': true,
                   });
                   nav.pop();
                 } catch (e) {
@@ -366,15 +373,12 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
     );
   }
 
-  /// Test an LLM config by calling the test endpoint.
-  /// Mark [id] as the user's default LLM config. The AI proxy routes
-  /// requests through the default config; without one the shared LLM and its
+  /// Mark [id] as the user's default LLM config. Direct AI calls route
+  /// through the default local config; without one the shared LLM and its
   /// rate limits apply.
   Future<void> _setDefault(BuildContext context, String id) async {
     try {
-      await ref
-          .read(llmConfigsProvider.notifier)
-          .updateConfig(id, {'is_default': true});
+      await ref.read(llmConfigsProvider.notifier).setDefault(id);
       if (mounted) {
         AppSnackBar.info(
           context,
@@ -390,27 +394,31 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
     }
   }
 
+  /// Test an LLM config CLIENT-DIRECT: a tiny chat call against the config's
+  /// own base URL. No server round trip; the API key never leaves the device
+  /// except towards the provider itself.
   Future<void> _testConfig(String id) async {
     final l10n = AppLocalizations.of(context)!;
     AppSnackBar.info(context, message: l10n.testingConnection);
     try {
-      final result = await ref.read(llmConfigsProvider.notifier).test(id);
-      final success = result['success'] == true;
+      await ref.read(llmConfigsProvider.notifier).test(id);
       if (mounted) {
         AppSnackBar.show(
           context,
-          message: success
-              ? l10n.connectionSuccessful
-              : l10n.connectionFailed(
-                  result['error']?.toString() ?? l10n.unknownError,
-                ),
-          type: success ? SnackBarType.info : SnackBarType.error,
+          message: l10n.connectionSuccessful,
+          type: SnackBarType.info,
         );
       }
     } catch (e) {
       if (mounted) {
         final appError = ErrorMapper.map(e);
-        ErrorDisplay.showSnackBar(context, appError);
+        AppSnackBar.show(
+          context,
+          message: l10n.connectionFailed(
+            ErrorDisplay.userMessage(appError, l10n),
+          ),
+          type: SnackBarType.error,
+        );
       }
     }
   }
@@ -445,6 +453,38 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
               }
             },
             child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Privacy note: local-only storage of LLM configs
+// =============================================================================
+
+class _PrivacyNote extends StatelessWidget {
+  final AppLocalizations l10n;
+
+  const _PrivacyNote({required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(AppIcons.lock, size: 14, color: theme.hintColor),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              l10n.llmLocalOnlyNote,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.hintColor),
+            ),
           ),
         ],
       ),

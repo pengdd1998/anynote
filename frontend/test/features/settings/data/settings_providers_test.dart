@@ -10,7 +10,10 @@ import 'package:sqlite3/sqlite3.dart';
 import 'package:anynote/core/crypto/crypto_service.dart';
 import 'package:anynote/core/database/app_database.dart';
 import 'package:anynote/core/network/api_client.dart';
+import 'package:anynote/features/settings/data/api_models.dart';
+import 'package:anynote/features/settings/data/local_llm_store.dart';
 import 'package:anynote/features/settings/data/settings_providers.dart';
+import 'package:anynote/features/settings/data/llm_direct_client.dart';
 import 'package:anynote/main.dart' show apiClientProvider, databaseProvider;
 
 // ---------------------------------------------------------------------------
@@ -38,17 +41,12 @@ class MockApiClient extends ApiClient {
     'created_at': DateTime.now().toUtc().toIso8601String(),
     'updated_at': DateTime.now().toUtc().toIso8601String(),
   };
-  List<Map<String, dynamic>> llmConfigsResponse = [];
   List<String> llmProvidersResponse = ['OpenAI', 'DeepSeek'];
   List<Map<String, dynamic>> platformsResponse = [];
   Map<String, dynamic> connectPlatformResponse = {'status': 'connected'};
   Map<String, dynamic> verifyPlatformResponse = {'verified': true};
 
   // Call records.
-  final List<String> createLlmConfigCalls = [];
-  final List<(String, Map<String, dynamic>)> updateLlmConfigCalls = [];
-  final List<String> deleteLlmConfigCalls = [];
-  final List<String> testLlmConfigCalls = [];
   final List<String> connectPlatformCalls = [];
   final List<String> disconnectPlatformCalls = [];
   final List<String> verifyPlatformCalls = [];
@@ -57,7 +55,6 @@ class MockApiClient extends ApiClient {
   Object? aiQuotaError;
   Object? syncStatusError;
   Object? meError;
-  Object? llmConfigsError;
   Object? listPlatformsError;
   Object? connectPlatformError;
 
@@ -79,39 +76,6 @@ class MockApiClient extends ApiClient {
   Future<Map<String, dynamic>> getMe() async {
     if (meError != null) throw meError!;
     return meResponse;
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> listLlmConfigs() async {
-    if (llmConfigsError != null) throw llmConfigsError!;
-    return llmConfigsResponse;
-  }
-
-  @override
-  Future<Map<String, dynamic>> createLlmConfig(
-      Map<String, dynamic> config,) async {
-    createLlmConfigCalls.add(config['name'] ?? config.toString());
-    return {'id': 'cfg-new', ...config};
-  }
-
-  @override
-  Future<Map<String, dynamic>> updateLlmConfig(
-    String id,
-    Map<String, dynamic> config,
-  ) async {
-    updateLlmConfigCalls.add((id, config));
-    return {'id': id, ...config};
-  }
-
-  @override
-  Future<void> deleteLlmConfig(String id) async {
-    deleteLlmConfigCalls.add(id);
-  }
-
-  @override
-  Future<Map<String, dynamic>> testLlmConfig(String id) async {
-    testLlmConfigCalls.add(id);
-    return {'success': true};
   }
 
   @override
@@ -162,6 +126,42 @@ class FakeCryptoServiceForStatus extends CryptoService {
 
   @override
   bool get isUnlocked => _isUnlocked;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers for the device-local LLM config store.
+// ---------------------------------------------------------------------------
+
+/// In-memory persistence standing in for encrypted storage.
+class _MemLlmPersistence implements LlmConfigPersistence {
+  _MemLlmPersistence();
+
+  String? value;
+
+  @override
+  Future<String?> read() async => value;
+
+  @override
+  Future<void> write(String value) {
+    this.value = value;
+    return Future.value();
+  }
+}
+
+/// Direct client stub that records connection-test calls.
+class _StubDirectClient extends LlmDirectClient {
+  _StubDirectClient() : super();
+
+  final List<String> models = [];
+
+  @override
+  Future<void> testConnection({
+    required String baseUrl,
+    required String apiKey,
+    required String model,
+  }) async {
+    models.add(model);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -510,18 +510,24 @@ void main() {
   });
 
   // =========================================================================
-  // LlmConfigsNotifier
+  // LlmConfigsNotifier (device-local store)
   // =========================================================================
 
   group('LlmConfigsNotifier', () {
-    late MockApiClient mockApi;
+    late _MemLlmPersistence persistence;
+    late _StubDirectClient directClient;
     late ProviderContainer container;
 
     setUp(() {
-      mockApi = MockApiClient();
+      persistence = _MemLlmPersistence();
+      directClient = _StubDirectClient();
       container = ProviderContainer(
         overrides: [
-          apiClientProvider.overrideWithValue(mockApi),
+          apiClientProvider.overrideWithValue(MockApiClient()),
+          localLlmStoreProvider.overrideWithValue(
+            LocalLlmStore(persistence: persistence),
+          ),
+          llmDirectClientProvider.overrideWithValue(directClient),
         ],
       );
     });
@@ -530,133 +536,173 @@ void main() {
       container.dispose();
     });
 
-    test('build fetches LLM configs from API', () async {
-      mockApi.llmConfigsResponse = [
-        {
-          'id': 'cfg-1',
-          'name': 'GPT-4',
-          'provider': 'OpenAI',
-          'model': 'gpt-4',
-          'created_at': DateTime.now().toUtc().toIso8601String(),
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        },
-        {
-          'id': 'cfg-2',
-          'name': 'DeepSeek Chat',
-          'provider': 'DeepSeek',
-          'model': 'deepseek-chat',
-          'created_at': DateTime.now().toUtc().toIso8601String(),
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        },
-      ];
+    LlmConfig draftConfig({String name = 'A', bool isDefault = false}) =>
+        LlmConfig(
+          id: '',
+          name: name,
+          provider: 'openai',
+          baseUrl: 'https://api.example.com/v1',
+          apiKey: 'sk-test',
+          model: 'gpt-4o',
+          isDefault: isDefault,
+          maxTokens: 4096,
+          temperature: 0.7,
+          createdAt: DateTime.utc(2024, 1, 1),
+          updatedAt: DateTime.utc(2024, 1, 1),
+        );
+
+    test('build loads LLM configs from the local store', () async {
+      final store = container.read(localLlmStoreProvider);
+      await store.create(draftConfig(name: 'GPT-4'));
 
       final result = await container.read(llmConfigsProvider.future);
 
-      expect(result.length, 2);
-      expect(result[0].name, 'GPT-4');
-      expect(result[1].provider, 'DeepSeek');
+      expect(result, hasLength(1));
+      expect(result.single.name, 'GPT-4');
+      expect(result.single.isDefault, isTrue);
     });
 
-    test('build returns empty list when no configs', () async {
-      mockApi.llmConfigsResponse = [];
-
+    test('build returns an empty list when nothing is stored', () async {
       final result = await container.read(llmConfigsProvider.future);
-
       expect(result, isEmpty);
     });
 
-    test('create calls API and invalidates self', () async {
-      mockApi.llmConfigsResponse = [];
-
-      // Initial load.
+    test('create assigns id/timestamps and the first config is default',
+        () async {
       await container.read(llmConfigsProvider.future);
 
-      // Create a new config.
-      final newConfig = {'name': 'Claude', 'provider': 'Anthropic'};
-      await container.read(llmConfigsProvider.notifier).create(newConfig);
+      await container.read(llmConfigsProvider.notifier).create({
+        'name': 'Claude',
+        'provider': 'anthropic',
+        'base_url': 'https://api.anthropic.com/v1',
+        'api_key': 'sk-ant',
+        'model': 'claude-3',
+      });
 
-      expect(mockApi.createLlmConfigCalls, ['Claude']);
+      final after = await container.read(llmConfigsProvider.future);
+      expect(after, hasLength(1));
+      expect(after.single.id, isNotEmpty);
+      expect(after.single.isDefault, isTrue);
+      expect(after.single.apiKey, 'sk-ant');
     });
 
-    test('updateConfig calls API and invalidates self', () async {
+    test('create keeps an existing default when adding another config',
+        () async {
+      await container.read(llmConfigsProvider.notifier).create({
+        'name': 'First',
+        'provider': 'openai',
+        'model': 'gpt-4o',
+      });
+      await container.read(llmConfigsProvider.notifier).create({
+        'name': 'Second',
+        'provider': 'openai',
+        'model': 'gpt-4o-mini',
+      });
+
+      final after = await container.read(llmConfigsProvider.future);
+      expect(after.firstWhere((c) => c.name == 'First').isDefault, isTrue);
+      expect(after.firstWhere((c) => c.name == 'Second').isDefault, isFalse);
+    });
+
+    test('updateConfig merges: empty strings and absent api key inherit', () async {
+      final store = container.read(localLlmStoreProvider);
+      final cfg = await store.create(
+        draftConfig(name: 'Original').copyWith(baseUrl: 'https://old.example.com'),
+      );
       await container.read(llmConfigsProvider.future);
 
-      final updatedConfig = {'name': 'Updated GPT-4'};
-      await container.read(llmConfigsProvider.notifier).updateConfig(
-            'cfg-1',
-            updatedConfig,
-          );
+      await container.read(llmConfigsProvider.notifier).updateConfig(cfg.id, {
+        'name': 'Renamed',
+        'base_url': '',
+        'model': '',
+        // no api_key: the stored key must survive
+      });
 
-      expect(mockApi.updateLlmConfigCalls.length, 1);
-      expect(mockApi.updateLlmConfigCalls.first.$1, 'cfg-1');
+      final after = await container.read(llmConfigsProvider.future);
+      expect(after.single.name, 'Renamed');
+      expect(after.single.baseUrl, 'https://old.example.com');
+      expect(after.single.model, 'gpt-4o');
+      expect(after.single.apiKey, 'sk-test');
     });
 
-    test('delete calls API and invalidates self', () async {
+    test('updateConfig replaces the API key when a new one is provided',
+        () async {
+      final store = container.read(localLlmStoreProvider);
+      final cfg = await store.create(draftConfig());
       await container.read(llmConfigsProvider.future);
 
-      await container.read(llmConfigsProvider.notifier).delete('cfg-1');
+      await container.read(llmConfigsProvider.notifier).updateConfig(cfg.id, {
+        'api_key': 'sk-new',
+      });
 
-      expect(mockApi.deleteLlmConfigCalls, ['cfg-1']);
+      final after = await container.read(llmConfigsProvider.future);
+      expect(after.single.apiKey, 'sk-new');
+      // Untouched fields stay intact.
+      expect(after.single.name, 'A');
     });
 
-    test('test calls API and returns result', () async {
-      final result = await container.read(llmConfigsProvider.notifier).test(
-            'cfg-1',
-          );
+    test('setDefault marks one config as the only default', () async {
+      await container.read(llmConfigsProvider.notifier).create({
+        'name': 'First',
+        'provider': 'openai',
+        'model': 'gpt-4o',
+      });
+      await container.read(llmConfigsProvider.notifier).create({
+        'name': 'Second',
+        'provider': 'openai',
+        'model': 'gpt-4o-mini',
+      });
+      final configs = await container.read(llmConfigsProvider.future);
+      final secondId = configs.firstWhere((c) => c.name == 'Second').id;
 
-      expect(mockApi.testLlmConfigCalls, ['cfg-1']);
-      expect(result['success'], isTrue);
+      await container.read(llmConfigsProvider.notifier).setDefault(secondId);
+
+      final after = await container.read(llmConfigsProvider.future);
+      expect(after.firstWhere((c) => c.name == 'First').isDefault, isFalse);
+      expect(after.firstWhere((c) => c.name == 'Second').isDefault, isTrue);
     });
 
-    test('refresh invalidates self to trigger reload', () async {
-      final ts = DateTime.now().toUtc().toIso8601String();
-      mockApi.llmConfigsResponse = [
-        {
-          'id': 'cfg-1',
-          'name': 'Old Config',
-          'provider': 'OpenAI',
-          'model': 'gpt-4',
-          'created_at': ts,
-          'updated_at': ts,
-        },
-      ];
+    test('delete removes the config from the local store', () async {
+      final store = container.read(localLlmStoreProvider);
+      final cfg = await store.create(draftConfig());
+      await container.read(llmConfigsProvider.future);
 
+      await container.read(llmConfigsProvider.notifier).delete(cfg.id);
+
+      final after = await container.read(llmConfigsProvider.future);
+      expect(after, isEmpty);
+    });
+
+    test('test performs a client-direct connection test', () async {
+      final store = container.read(localLlmStoreProvider);
+      final cfg = await store.create(draftConfig());
+      await container.read(llmConfigsProvider.future);
+
+      await container.read(llmConfigsProvider.notifier).test(cfg.id);
+
+      expect(directClient.models, ['gpt-4o']);
+    });
+
+    test('refresh re-reads the local store', () async {
       final first = await container.read(llmConfigsProvider.future);
-      expect(first.length, 1);
+      expect(first, isEmpty);
 
-      // Update stub and refresh.
-      mockApi.llmConfigsResponse = [
-        {
-          'id': 'cfg-1',
-          'name': 'Old Config',
-          'provider': 'OpenAI',
-          'model': 'gpt-4',
-          'created_at': ts,
-          'updated_at': ts,
-        },
-        {
-          'id': 'cfg-2',
-          'name': 'New Config',
-          'provider': 'DeepSeek',
-          'model': 'deepseek-chat',
-          'created_at': ts,
-          'updated_at': ts,
-        },
-      ];
+      final store = container.read(localLlmStoreProvider);
+      await store.create(draftConfig(name: 'Late'));
 
       await container.read(llmConfigsProvider.notifier).refresh();
       final second = await container.read(llmConfigsProvider.future);
 
-      expect(second.length, 2);
+      expect(second, hasLength(1));
+      expect(second.single.name, 'Late');
     });
 
-    test('build sets error state when API fails', () async {
-      mockApi.llmConfigsError = Exception('Server error');
+    test('build tolerates a corrupt stored payload', () async {
+      persistence.value = '{corrupt';
 
-      await expectLater(
-        container.read(llmConfigsProvider.future),
-        throwsA(isA<Exception>()),
-      );
+      final result = await container.read(llmConfigsProvider.future);
+
+      expect(result, isEmpty);
     });
   });
 

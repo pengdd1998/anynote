@@ -788,6 +788,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get addLLMToEnableAI => 'LLM을 추가하여 AI 기능을 활성화하세요';
 
   @override
+  String get llmLocalOnlyNote => 'API 키는 이 기기에만 저장되며 AnyNote 서버로 전송되지 않습니다.';
+
+  @override
   String get addProvider => '제공자 추가';
 
   @override

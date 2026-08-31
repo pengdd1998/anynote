@@ -802,6 +802,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addLLMToEnableAI => 'Add an LLM to enable AI features';
 
   @override
+  String get llmLocalOnlyNote =>
+      'API keys are stored only on this device and never uploaded to AnyNote servers.';
+
+  @override
   String get addProvider => 'Add Provider';
 
   @override

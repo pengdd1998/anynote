@@ -1566,6 +1566,12 @@ abstract class AppLocalizations {
   /// **'Add an LLM to enable AI features'**
   String get addLLMToEnableAI;
 
+  /// Privacy note shown on the LLM config screen
+  ///
+  /// In en, this message translates to:
+  /// **'API keys are stored only on this device and never uploaded to AnyNote servers.'**
+  String get llmLocalOnlyNote;
+
   /// Action label and button text
   ///
   /// In en, this message translates to:

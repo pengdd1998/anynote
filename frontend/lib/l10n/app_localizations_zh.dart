@@ -782,6 +782,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addLLMToEnableAI => '添加 LLM 以启用 AI 功能';
 
   @override
+  String get llmLocalOnlyNote => 'API 密钥仅保存在本设备，绝不会上传到 AnyNote 服务器。';
+
+  @override
   String get addProvider => '添加提供商';
 
   @override

@@ -62,12 +62,20 @@ class AccountInfo {
       );
 }
 
-/// An LLM configuration from GET /api/v1/llm/configs.
+/// An LLM configuration.
+///
+/// Server responses (GET /api/v1/llm/configs) never carry an [apiKey]; the
+/// field is only populated by the device-local store ([LocalLlmStore]), since
+/// API keys must never leave the device except in direct calls to the user's
+/// own provider.
 class LlmConfig {
   final String id;
   final String name;
   final String provider;
   final String? baseUrl;
+
+  /// Provider API key. Device-local only; never uploaded to the server.
+  final String? apiKey;
   final String model;
   final bool isDefault;
   final int maxTokens;
@@ -80,6 +88,7 @@ class LlmConfig {
     required this.name,
     required this.provider,
     this.baseUrl,
+    this.apiKey,
     required this.model,
     required this.isDefault,
     required this.maxTokens,
@@ -93,12 +102,59 @@ class LlmConfig {
         name: json['name'] as String? ?? '',
         provider: json['provider'] as String,
         baseUrl: json['base_url'] as String?,
+        apiKey: json['api_key'] as String?,
         model: json['model'] as String,
         isDefault: json['is_default'] as bool? ?? false,
         maxTokens: json['max_tokens'] as int? ?? 4096,
         temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
         createdAt: DateTime.parse(json['created_at'] as String),
         updatedAt: DateTime.parse(json['updated_at'] as String),
+      );
+
+  /// Serializes the config for device-local persistence. Note that this
+  /// includes [apiKey]; the output is only ever written to encrypted local
+  /// storage, never sent to the AnyNote server.
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'provider': provider,
+        'base_url': baseUrl,
+        'api_key': apiKey,
+        'model': model,
+        'is_default': isDefault,
+        'max_tokens': maxTokens,
+        'temperature': temperature,
+        'created_at': createdAt.toUtc().toIso8601String(),
+        'updated_at': updatedAt.toUtc().toIso8601String(),
+      };
+
+  /// Returns a copy with the given fields replaced. Pass a non-null value to
+  /// change a field; omitted (null) fields keep the current value.
+  LlmConfig copyWith({
+    String? id,
+    String? name,
+    String? provider,
+    String? baseUrl,
+    String? apiKey,
+    String? model,
+    bool? isDefault,
+    int? maxTokens,
+    double? temperature,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) =>
+      LlmConfig(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        provider: provider ?? this.provider,
+        baseUrl: baseUrl ?? this.baseUrl,
+        apiKey: apiKey ?? this.apiKey,
+        model: model ?? this.model,
+        isDefault: isDefault ?? this.isDefault,
+        maxTokens: maxTokens ?? this.maxTokens,
+        temperature: temperature ?? this.temperature,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
       );
 }
 

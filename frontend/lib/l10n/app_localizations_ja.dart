@@ -788,6 +788,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addLLMToEnableAI => 'LLMを追加してAI機能を有効にしてください';
 
   @override
+  String get llmLocalOnlyNote => 'APIキーはこの端末にのみ保存され、AnyNoteサーバーには送信されません。';
+
+  @override
   String get addProvider => 'プロバイダーを追加';
 
   @override

@@ -7,6 +7,8 @@ import '../../../core/network/connectivity_service.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_queue_manager.dart';
 import 'api_models.dart';
+import 'llm_direct_client.dart';
+import 'local_llm_store.dart';
 
 // ── Sync Engine Provider ──────────────────────────────
 
@@ -130,43 +132,117 @@ final accountInfoProvider =
 
 // ── LLM Configs ───────────────────────────────────────
 
-/// Manages the list of LLM configurations.
+/// Client-direct connection tester for local LLM configs (plain Dio, no auth
+/// interceptor, no server involvement).
+final llmDirectClientProvider = Provider<LlmDirectClient>((ref) {
+  return LlmDirectClient();
+});
+
+/// Manages the list of LLM configurations stored LOCALLY on the device.
+///
+/// Privacy: user LLM configs (API keys) are persisted only in the device's
+/// secure storage ([LocalLlmStore]) and are never uploaded to the AnyNote
+/// server. AI calls with a local config go directly to the provider; the
+/// server proxy remains only as the shared-mode fallback when the user has
+/// no local default config.
 class LlmConfigsNotifier extends AsyncNotifier<List<LlmConfig>> {
   @override
-  Future<List<LlmConfig>> build() async {
-    final api = ref.read(apiClientProvider);
-    final rawList = await api.listLlmConfigs();
-    return rawList.map((raw) => LlmConfig.fromJson(raw)).toList();
-  }
+  Future<List<LlmConfig>> build() => ref.read(localLlmStoreProvider).load();
 
-  /// Create a new LLM config and refresh the list.
+  LocalLlmStore get _store => ref.read(localLlmStoreProvider);
+
+  /// Create a new LLM config from a snake_case map and refresh the list.
+  ///
+  /// The store assigns the id and timestamps; when no stored config is the
+  /// default yet, the new config becomes the default (first config is
+  /// default).
   Future<void> create(Map<String, dynamic> config) async {
-    final api = ref.read(apiClientProvider);
-    await api.createLlmConfig(config);
+    final existing = await _store.load();
+    final now = DateTime.now().toUtc();
+    await _store.create(
+      LlmConfig(
+        id: '',
+        name: config['name'] as String? ?? '',
+        provider: config['provider'] as String? ?? 'custom',
+        baseUrl: config['base_url'] as String?,
+        apiKey: config['api_key'] as String?,
+        model: config['model'] as String? ?? '',
+        isDefault: config['is_default'] as bool? ?? existing.isEmpty,
+        maxTokens: config['max_tokens'] as int? ?? 4096,
+        temperature: (config['temperature'] as num?)?.toDouble() ?? 0.7,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
     ref.invalidateSelf();
   }
 
-  /// Update an existing LLM config and refresh the list.
+  /// Update an existing LLM config with a partial snake_case map.
+  ///
+  /// Mirrors the server's merged-patch semantics: empty strings inherit the
+  /// stored value, and the stored API key is kept when the map carries no new
+  /// one. Setting `is_default: true` clears the default flag on all others.
   Future<void> updateConfig(String id, Map<String, dynamic> config) async {
-    final api = ref.read(apiClientProvider);
-    await api.updateLlmConfig(id, config);
+    final configs = await _store.load();
+    final index = configs.indexWhere((c) => c.id == id);
+    if (index < 0) {
+      throw StateError('LLM config not found: $id');
+    }
+    final current = configs[index];
+    String merged(String? incoming, String fallback) =>
+        (incoming == null || incoming.isEmpty) ? fallback : incoming;
+
+    await _store.update(
+      current.copyWith(
+        name: merged(config['name'] as String?, current.name),
+        provider: merged(config['provider'] as String?, current.provider),
+        baseUrl: merged(config['base_url'] as String?, current.baseUrl ?? ''),
+        model: merged(config['model'] as String?, current.model),
+        apiKey: merged(config['api_key'] as String?, current.apiKey ?? ''),
+        maxTokens: config['max_tokens'] as int? ?? current.maxTokens,
+        temperature:
+            (config['temperature'] as num?)?.toDouble() ?? current.temperature,
+        isDefault: config['is_default'] as bool? ?? current.isDefault,
+        updatedAt: DateTime.now().toUtc(),
+      ),
+    );
     ref.invalidateSelf();
   }
 
   /// Delete an LLM config and refresh the list.
   Future<void> delete(String id) async {
-    final api = ref.read(apiClientProvider);
-    await api.deleteLlmConfig(id);
+    await _store.delete(id);
     ref.invalidateSelf();
   }
 
-  /// Test an LLM config connection.
-  Future<Map<String, dynamic>> test(String id) async {
-    final api = ref.read(apiClientProvider);
-    return api.testLlmConfig(id);
+  /// Mark [id] as the default config. Direct AI calls route through the
+  /// default local config; without one the shared LLM and its rate limits
+  /// apply.
+  Future<void> setDefault(String id) async {
+    await _store.setDefault(id);
+    ref.invalidateSelf();
   }
 
-  /// Refresh the list of LLM configs.
+  /// Test an LLM config connection CLIENT-DIRECT: sends a tiny chat
+  /// completion against the config's own base URL. Throws on failure; no
+  /// server round trip is involved (the API key only reaches the provider).
+  Future<void> test(String id) async {
+    final configs = await _store.load();
+    LlmConfig? cfg;
+    for (final c in configs) {
+      if (c.id == id) cfg = c;
+    }
+    if (cfg == null) {
+      throw StateError('LLM config not found: $id');
+    }
+    await ref.read(llmDirectClientProvider).testConnection(
+          baseUrl: cfg.baseUrl ?? '',
+          apiKey: cfg.apiKey ?? '',
+          model: cfg.model,
+        );
+  }
+
+  /// Refresh the list of LLM configs from local storage.
   Future<void> refresh() async {
     ref.invalidateSelf();
   }
