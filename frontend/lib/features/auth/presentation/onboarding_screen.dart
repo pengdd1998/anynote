@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../core/storage/app_secure_storage.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -16,11 +17,12 @@ import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/notifications/local_notification_service.dart';
 import '../../../main.dart';
 
-/// Warm, emotional onboarding carousel.
+/// Warm, journal-like onboarding carousel.
 ///
-/// Four full-screen pages with generous whitespace, centered illustrations
-/// in soft rounded containers, large friendly headlines, pill-shaped CTA,
-/// and animated pagination dots. Page 3 features a live encryption demo.
+/// Four full-screen pages under a handwritten "AnyNote" wordmark header.
+/// Headlines use the Caveat handwriting voice, page 1 shows a sticky-note
+/// mascot built from widgets, and navigation is a purple circular next
+/// button with page dots on the left. Page 3 features a live encryption demo.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -138,12 +140,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       await notifService.init();
     } catch (_) {}
     if (mounted) {
-      _markSeenAndGo('/auth/register');
+      await _markSeenAndGo('/auth/register');
     }
   }
 
   Future<void> _markSeenAndGo(String route) async {
-    const storage = FlutterSecureStorage();
+    const storage = AppSecureStorage.instance;
     await storage.write(key: 'has_seen_onboarding', value: 'true');
     globalContainer.read(hasSeenOnboardingProvider.notifier).state = true;
     if (mounted) {
@@ -162,14 +164,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldBg =
         isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final accent = _pageAccents[_currentPage];
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       backgroundColor: scaffoldBg,
       body: SafeArea(
         child: Column(
           children: [
-            // -- Top row: dots + skip --
+            // -- Top row: skip on the right --
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
@@ -177,11 +179,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ),
               child: Row(
                 children: [
-                  _DotIndicator(
-                    count: _totalPages,
-                    current: _currentPage,
-                    activeColor: accent,
-                  ),
                   const Spacer(),
                   TextButton(
                     onPressed: () => _markSeenAndGo('/auth/login'),
@@ -195,6 +192,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ],
               ),
             ),
+
+            // -- Brand wordmark header --
+            const _Wordmark(),
 
             // -- Page content --
             Expanded(
@@ -228,12 +228,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     descs[index],
                     _pageAccents[index],
                     _pageAccentBgs[index],
+                    showMascot: index == 0,
                   );
                 },
               ),
             ),
 
-            // -- Bottom CTA --
+            // -- Bottom nav: dots on the left, circular next button right --
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.xl,
@@ -241,51 +242,44 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 AppSpacing.xl,
                 AppSpacing.lg,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: PressableScale(
-                      onPressed: () {
-                        if (isLastPage) {
-                          _requestPermissionsAndContinue();
-                        } else {
-                          _controller.nextPage(
-                            duration: AppDurations.animation,
-                            curve: Curves.easeInOut,
-                          );
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              accent,
-                              accent.withValues(alpha: 0.8),
-                            ],
+                  _DotIndicator(
+                    count: _totalPages,
+                    current: _currentPage,
+                    activeColor: primaryColor,
+                  ),
+                  const Spacer(),
+                  PressableScale(
+                    onPressed: () {
+                      if (isLastPage) {
+                        _requestPermissionsAndContinue();
+                      } else {
+                        _controller.nextPage(
+                          duration: AppDurations.animation,
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(28),
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withValues(alpha: 0.3),
+                            offset: const Offset(0, 4),
+                            blurRadius: 16,
                           ),
-                          borderRadius: BorderRadius.circular(AppRadius.pill),
-                          boxShadow: [
-                            BoxShadow(
-                              color: accent.withValues(alpha: 0.3),
-                              offset: const Offset(0, 4),
-                              blurRadius: 16,
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            isLastPage ? l10n.getStarted : l10n.next,
-                            style: AppTextStyles.body.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward,
+                        color: Colors.white,
+                        size: 24,
                       ),
                     ),
                   ),
@@ -299,7 +293,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   // ---------------------------------------------------------------------------
-  // Static page (pages 0, 1, 3)
+  // Static page (pages 0, 1, 3). Page 0 shows the sticky-note mascot.
   // ---------------------------------------------------------------------------
   Widget _buildStaticPage(
     BuildContext context,
@@ -307,8 +301,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     String title,
     String description,
     Color accent,
-    Color accentBg,
-  ) {
+    Color accentBg, {
+    bool showMascot = false,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
@@ -316,47 +311,50 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Illustration container — large rounded circle with accent bg
-          Container(
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? accent.withValues(alpha: 0.12)
-                  : accentBg,
-              borderRadius: BorderRadius.circular(48),
-              boxShadow: [
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.15),
-                  offset: const Offset(0, 8),
-                  blurRadius: 32,
-                ),
-              ],
-            ),
-            child: Center(
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 40,
-                  color: isDark ? accent : accent.withValues(alpha: 0.85),
+          // Illustration: sticky-note mascot on page 0, icon tile otherwise.
+          if (showMascot)
+            const _StickyNoteMascot()
+          else
+            Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? accent.withValues(alpha: 0.12)
+                    : accentBg,
+                borderRadius: BorderRadius.circular(48),
+                boxShadow: [
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.15),
+                    offset: const Offset(0, 8),
+                    blurRadius: 32,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 40,
+                    color: isDark ? accent : accent.withValues(alpha: 0.85),
+                  ),
                 ),
               ),
             ),
-          ),
 
           const SizedBox(height: AppSpacing.xl),
 
-          // Headline
+          // Headline (handwriting voice)
           Text(
             title,
-            style: AppTextStyles.display.copyWith(
-              fontSize: 28,
+            style: AppTextStyles.handwritingTitle.copyWith(
+              fontSize: 30,
               color: isDark
                   ? AppColors.darkTextPrimary
                   : AppColors.lightTextPrimary,
@@ -371,12 +369,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
             child: Text(
               description,
-              style: AppTextStyles.body.copyWith(
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 14,
+                height: 1.6,
                 color: isDark
                     ? AppColors.darkTextTertiary
                     : AppColors.lightTextTertiary,
-                height: 1.7,
-                fontSize: 16,
               ),
               textAlign: TextAlign.center,
             ),
@@ -443,8 +441,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
           Text(
             title,
-            style: AppTextStyles.display.copyWith(
-              fontSize: 26,
+            style: AppTextStyles.handwritingTitle.copyWith(
+              fontSize: 28,
               color: isDark
                   ? AppColors.darkTextPrimary
                   : AppColors.lightTextPrimary,
@@ -456,11 +454,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
           Text(
             description,
-            style: AppTextStyles.body.copyWith(
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 14,
+              height: 1.6,
               color: isDark
                   ? AppColors.darkTextTertiary
                   : AppColors.lightTextTertiary,
-              height: 1.6,
             ),
             textAlign: TextAlign.center,
           ),
@@ -562,6 +561,216 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Brand wordmark header: handwritten "AnyNote" with a golden sparkle
+// ---------------------------------------------------------------------------
+class _Wordmark extends StatelessWidget {
+  const _Wordmark();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.md),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Text(
+            'AnyNote',
+            style: AppTextStyles.handwritingDisplay.copyWith(
+              fontSize: 48,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
+          // Small golden sparkle at the top-right of the wordmark
+          const Positioned(
+            top: -2,
+            right: -16,
+            child: Text(
+              '✦',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.warning,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sticky-note mascot: rotated yellow note with a smiley face, an overlapping
+// pencil silhouette, and a few tiny sparkles around it.
+// ---------------------------------------------------------------------------
+class _StickyNoteMascot extends StatelessWidget {
+  const _StickyNoteMascot();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final brightness = isDark ? Brightness.dark : Brightness.light;
+
+    return SizedBox(
+      width: 230,
+      height: 190,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Yellow sticky note, slightly rotated
+          Positioned(
+            left: 36,
+            top: 14,
+            child: Transform.rotate(
+              angle: -0.1, // about -6 degrees
+              child: Container(
+                width: 152,
+                height: 152,
+                decoration: BoxDecoration(
+                  color: AppColors.accentYellow,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  border: Border.all(
+                    color: AppColors.accentYellowText.withValues(alpha: 0.2),
+                  ),
+                  boxShadow: AppShadows.mdOf(brightness),
+                ),
+                child: const Center(
+                  child: _SmileyFace(
+                    color: AppColors.slate700,
+                    width: 68,
+                    height: 44,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Pencil silhouette overlapping the note
+          Positioned(
+            right: 26,
+            bottom: 2,
+            child: Transform.rotate(
+              angle: -0.65,
+              child: const Icon(
+                AppIcons.edit,
+                size: 60,
+                color: AppColors.slate500,
+              ),
+            ),
+          ),
+
+          // Tiny sparkles around the composition
+          const Positioned(
+            top: 0,
+            left: 18,
+            child: Text(
+              '✦',
+              style: TextStyle(fontSize: 18, color: AppColors.warning),
+            ),
+          ),
+          Positioned(
+            bottom: 34,
+            left: 6,
+            child: Text(
+              '✦',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark
+                    ? AppColors.accentLavender
+                    : AppColors.accentLavenderText,
+              ),
+            ),
+          ),
+          const Positioned(
+            top: 66,
+            right: 6,
+            child: Text(
+              '·',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: AppColors.accentLavender,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Simple smiley face drawn with two dots and an arc
+// ---------------------------------------------------------------------------
+class _SmileyFace extends StatelessWidget {
+  final Color color;
+  final double width;
+  final double height;
+
+  const _SmileyFace({
+    required this.color,
+    required this.width,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: CustomPaint(
+        painter: _SmileyPainter(color: color),
+      ),
+    );
+  }
+}
+
+class _SmileyPainter extends CustomPainter {
+  final Color color;
+
+  const _SmileyPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Two eyes as filled dots.
+    final dotPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final eyeRadius = size.width * 0.07;
+    canvas.drawCircle(
+      Offset(size.width * 0.28, size.height * 0.28),
+      eyeRadius,
+      dotPaint,
+    );
+    canvas.drawCircle(
+      Offset(size.width * 0.72, size.height * 0.28),
+      eyeRadius,
+      dotPaint,
+    );
+
+    // Smile as a downward arc.
+    final arcPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.07
+      ..strokeCap = StrokeCap.round;
+    final arcRect = Rect.fromCenter(
+      center: Offset(size.width / 2, size.height * 0.34),
+      width: size.width * 0.46,
+      height: size.height * 0.9,
+    );
+    canvas.drawArc(arcRect, 0.35 * 3.14159, 0.65 * 3.14159, false, arcPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SmileyPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 // ---------------------------------------------------------------------------

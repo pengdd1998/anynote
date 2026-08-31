@@ -12,11 +12,10 @@ import '../../../core/crypto/master_key.dart';
 import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/card_container.dart';
 import '../../../core/widgets/keyboard_scroll_mixin.dart';
 import '../../../core/widgets/pressable_scale.dart';
 
@@ -96,14 +95,23 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
     return _mnemonicController.text.trim().toLowerCase();
   }
 
-  int get _effectiveWordCount =>
-      _manualMode ? _manualFilledCount : _wordCount;
+  int get _effectiveWordCount => _manualMode ? _manualFilledCount : _wordCount;
 
   void _goToStep(int step) {
     setState(() {
       _currentStep = step;
       _error = null;
     });
+  }
+
+  /// AppBar back action: step back inside the flow, or leave to sign in.
+  void _onAppBarBack() {
+    if (_isLoading) return;
+    if (_currentStep > 0) {
+      _goToStep(_currentStep - 1);
+    } else {
+      context.push('/auth/login');
+    }
   }
 
   Future<void> _pasteFromClipboard() async {
@@ -135,8 +143,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
   }
 
   void _syncToManualMode() {
-    final words =
-        _mnemonicController.text.trim().split(RegExp(r'\s+'));
+    final words = _mnemonicController.text.trim().split(RegExp(r'\s+'));
     for (int i = 0; i < 12; i++) {
       _wordControllers[i].text = i < words.length ? words[i] : '';
     }
@@ -215,7 +222,8 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
       );
 
       await MasterKeyManager.storeMasterKey(masterKey);
-      await MasterKeyManager.storeKdfVersion(MasterKeyManager.currentKdfVersion);
+      await MasterKeyManager.storeKdfVersion(
+          MasterKeyManager.currentKdfVersion);
 
       // Also store the Argon2id salt so normal login works after recovery.
       // The master key was originally derived from password + salt.
@@ -276,16 +284,30 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(AppIcons.arrowBack),
+          onPressed: _onAppBarBack,
+        ),
+        title: Text(
+          'Account Recovery',
+          style: AppTextStyles.title.copyWith(fontSize: 15),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
             // Step indicator
             Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.lg),
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
               child: _StepIndicator(
                 currentStep: _currentStep,
                 totalSteps: 3,
-                activeColor: AppColors.accentPeachText,
+                activeColor: primaryColor,
               ),
             ),
 
@@ -297,11 +319,23 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
                 switchOutCurve: Curves.easeIn,
                 child: switch (_currentStep) {
                   0 => _buildEmailStep(
-                      context, l10n, isDark, primaryColor,),
+                      context,
+                      l10n,
+                      isDark,
+                      primaryColor,
+                    ),
                   1 => _buildMnemonicStep(
-                      context, l10n, isDark, primaryColor,),
+                      context,
+                      l10n,
+                      isDark,
+                      primaryColor,
+                    ),
                   2 => _buildRecoveringStep(
-                      context, l10n, isDark, primaryColor,),
+                      context,
+                      l10n,
+                      isDark,
+                      primaryColor,
+                    ),
                   _ => const SizedBox.shrink(),
                 },
               ),
@@ -320,49 +354,33 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
     bool isDark,
     Color primaryColor,
   ) {
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textTertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final linkColor = isDark ? AppColors.secondary : AppColors.primaryText;
+
     return SingleChildScrollView(
       key: const ValueKey('email_step'),
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, 200,
+        AppSpacing.xl,
+        AppSpacing.xl,
+        AppSpacing.xl,
+        200,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(height: MediaQuery.sizeOf(context).height * 0.1),
-
-          // Icon
-          Center(
-            child: Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.accentPeach.withValues(alpha: 0.12)
-                    : AppColors.accentPeachBg,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                boxShadow: AppShadows.mdOf(isDark ? Brightness.dark : Brightness.light),
-              ),
-              child: const Icon(
-                Icons.key_outlined,
-                size: 40,
-                color: AppColors.accentPeachText,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-
           // Headline
           Text(
             l10n.recoverAccount,
-            style: AppTextStyles.display.copyWith(
-              fontSize: 30,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+            style: AppTextStyles.handwritingTitle.copyWith(
+              fontSize: 34,
+              color: textPrimary,
             ),
-            textAlign: TextAlign.center,
           ),
 
           const SizedBox(height: AppSpacing.sm),
@@ -370,18 +388,24 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
           // Subtitle
           Text(
             l10n.recoverAccountInstructions,
-            style: AppTextStyles.body.copyWith(
-              color: isDark
-                  ? AppColors.darkTextTertiary
-                  : AppColors.lightTextTertiary,
+            style: AppTextStyles.caption.copyWith(
+              color: textTertiary,
               height: 1.5,
             ),
-            textAlign: TextAlign.center,
           ),
 
           const SizedBox(height: AppSpacing.xl),
 
           // Email field
+          Text(
+            l10n.email,
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s4),
           TextFormField(
             controller: _emailController,
             focusNode: _emailFocusNode,
@@ -402,12 +426,12 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
           // Next button
           PressableScale(
             onPressed: _onEmailNext,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              height: 54,
               decoration: BoxDecoration(
                 color: primaryColor,
-                borderRadius: BorderRadius.circular(AppRadius.pill),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
                 boxShadow: [
                   BoxShadow(
                     color: primaryColor.withValues(alpha: 0.25),
@@ -429,17 +453,25 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
             ),
           ),
 
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
 
           // Back to sign in
           TextButton(
             onPressed: () => context.push('/auth/login'),
-            style: TextButton.styleFrom(foregroundColor: primaryColor),
+            style: TextButton.styleFrom(foregroundColor: linkColor),
             child: Text(
               l10n.backToSignIn,
-              style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500),
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w500,
+                color: linkColor,
+              ),
             ),
           ),
+
+          const SizedBox(height: AppSpacing.sm),
+
+          // Support footer
+          _buildSupportFooter(l10n, linkColor, textTertiary),
         ],
       ),
     );
@@ -469,64 +501,46 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
     Color primaryColor,
   ) {
     final filled = _effectiveWordCount;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textTertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final linkColor = isDark ? AppColors.secondary : AppColors.primaryText;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final cardBg = isDark ? AppColors.darkCardBg : Colors.white;
 
     return SingleChildScrollView(
       key: const ValueKey('mnemonic_step'),
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl, AppSpacing.s4, AppSpacing.xl, 200,
+        AppSpacing.xl,
+        AppSpacing.s4,
+        AppSpacing.xl,
+        200,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(height: MediaQuery.sizeOf(context).height * 0.04),
-
-          // Icon (smaller)
-          Center(
-            child: Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.accentPeach.withValues(alpha: 0.12)
-                    : AppColors.accentPeachBg,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                boxShadow: AppShadows.smOf(isDark ? Brightness.dark : Brightness.light),
-              ),
-              child: const Icon(
-                Icons.key_outlined,
-                size: 32,
-                color: AppColors.accentPeachText,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.lg),
-
-          // Headline
+          // Heading
           Text(
             l10n.recoveryStepMnemonicTitle,
-            style: AppTextStyles.display.copyWith(
-              fontSize: 26,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+            style: AppTextStyles.title.copyWith(
+              fontSize: 18,
+              color: textPrimary,
             ),
-            textAlign: TextAlign.center,
           ),
 
-          const SizedBox(height: AppSpacing.s8),
+          const SizedBox(height: AppSpacing.s4),
 
-          // Subtitle
+          // Helper caption
           Text(
             l10n.recoveryStepMnemonicDesc,
-            style: AppTextStyles.body.copyWith(
-              color: isDark
-                  ? AppColors.darkTextTertiary
-                  : AppColors.lightTextTertiary,
+            style: AppTextStyles.caption.copyWith(
+              color: textTertiary,
               height: 1.5,
             ),
-            textAlign: TextAlign.center,
           ),
 
           const SizedBox(height: AppSpacing.lg),
@@ -544,9 +558,8 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
                     vertical: AppSpacing.s12,
                   ),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkErrorBg
-                        : AppColors.lightErrorBg,
+                    color:
+                        isDark ? AppColors.darkErrorBg : AppColors.lightErrorBg,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                     border: Border.all(
                       color: isDark
@@ -580,13 +593,13 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
 
           // Textarea mode (primary)
           if (!_manualMode)
-            CardContainer(
-              color: isDark
-                  ? AppColors.accentPeach.withValues(alpha: 0.08)
-                  : AppColors.accentPeachBg,
-              borderColor: AppColors.accentPeach.withValues(alpha: 0.3),
-              borderWidth: 1,
+            Container(
               padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                border: Border.all(color: borderColor, width: 1),
+              ),
               child: Column(
                 children: [
                   TextFormField(
@@ -597,9 +610,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
                     scrollPadding: const EdgeInsets.only(bottom: 120),
                     style: AppTextStyles.body.copyWith(
                       fontSize: 14,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
+                      color: textPrimary,
                       letterSpacing: 0.5,
                     ),
                     decoration: InputDecoration(
@@ -609,10 +620,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
                       contentPadding: EdgeInsets.zero,
                       hintText: l10n.recoveryMnemonicHint,
                       hintStyle: TextStyle(
-                        color: (isDark
-                                ? AppColors.darkTextTertiary
-                                : AppColors.lightTextTertiary)
-                            .withValues(alpha: 0.4),
+                        color: textTertiary.withValues(alpha: 0.4),
                         fontSize: 13,
                       ),
                     ),
@@ -636,9 +644,17 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
                       ),
                     ],
                   ),
+                  const SizedBox(height: AppSpacing.s8),
+                  // Live preview of the parsed words as chips.
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _mnemonicController,
+                    builder: (context, value, _) => _WordsPreview(
+                      text: value.text,
+                      isDark: isDark,
+                    ),
+                  ),
                 ],
               ),
-
             ),
 
           // Manual mode grid
@@ -649,11 +665,10 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
                 Expanded(
                   child: Text(
                     l10n.recoveryKeyLabel,
-                    style: AppTextStyles.title.copyWith(
-                      fontSize: 15,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: textSecondary,
                     ),
                   ),
                 ),
@@ -667,38 +682,32 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
             ),
             const SizedBox(height: AppSpacing.s12),
 
-            // Word grid (2 columns x 6 rows)
-            ...List.generate(6, (row) {
+            // Word grid (4 columns x 3 rows)
+            ...List.generate(3, (row) {
               return Padding(
                 padding: EdgeInsets.only(
-                  bottom: row < 5 ? AppSpacing.s4 : 0,
+                  bottom: row < 2 ? AppSpacing.s4 : 0,
                 ),
                 child: Row(
-                  children: [
-                    Expanded(
-                      child: _WordChip(
-                        index: row * 2,
-                        controller: _wordControllers[row * 2],
-                        focusNode: _wordFocusNodes[row * 2],
-                        nextFocusNode: _wordFocusNodes[row * 2 + 1],
-                        onFilled: _submit,
-                        scrollPadding: const EdgeInsets.only(bottom: 120),
+                  children: List.generate(4, (col) {
+                    final index = row * 4 + col;
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: col > 0 ? AppSpacing.s4 : 0,
+                        ),
+                        child: _WordChip(
+                          index: index,
+                          controller: _wordControllers[index],
+                          focusNode: _wordFocusNodes[index],
+                          nextFocusNode:
+                              index < 11 ? _wordFocusNodes[index + 1] : null,
+                          onFilled: _submit,
+                          scrollPadding: const EdgeInsets.only(bottom: 120),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.s4),
-                    Expanded(
-                      child: _WordChip(
-                        index: row * 2 + 1,
-                        controller: _wordControllers[row * 2 + 1],
-                        focusNode: _wordFocusNodes[row * 2 + 1],
-                        nextFocusNode: row < 5
-                            ? _wordFocusNodes[(row + 1) * 2]
-                            : null,
-                        onFilled: _submit,
-                        scrollPadding: const EdgeInsets.only(bottom: 120),
-                      ),
-                    ),
-                  ],
+                    );
+                  }),
                 ),
               );
             }),
@@ -708,9 +717,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
             Text(
               l10n.recoveryKeyFormatHint,
               style: AppTextStyles.caption.copyWith(
-                color: isDark
-                    ? AppColors.darkTextTertiary
-                    : AppColors.lightTextTertiary,
+                color: textTertiary,
               ),
             ),
           ],
@@ -731,16 +738,18 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
               });
             },
             icon: Icon(
-              _manualMode ? Icons.text_snippet_outlined : Icons.edit_note_outlined,
+              _manualMode
+                  ? Icons.text_snippet_outlined
+                  : Icons.edit_note_outlined,
               size: 16,
-              color: primaryColor,
+              color: linkColor,
             ),
             label: Text(
               _manualMode
                   ? l10n.recoveryStepMnemonicTitle
                   : l10n.recoveryEnterManually,
               style: AppTextStyles.caption.copyWith(
-                color: primaryColor,
+                color: linkColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -751,12 +760,12 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
           // Submit button
           PressableScale(
             onPressed: filled >= 12 && !_isLoading ? _submit : null,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              height: 54,
               decoration: BoxDecoration(
-                color: filled >= 12 ? primaryColor : primaryColor.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
+                color: filled >= 12 ? primaryColor : AppColors.primaryDisabled,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
                 boxShadow: filled >= 12
                     ? [
                         BoxShadow(
@@ -794,12 +803,20 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
           // Back
           TextButton(
             onPressed: () => _goToStep(0),
-            style: TextButton.styleFrom(foregroundColor: primaryColor),
+            style: TextButton.styleFrom(foregroundColor: linkColor),
             child: Text(
               l10n.backToSignIn,
-              style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500),
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w500,
+                color: linkColor,
+              ),
             ),
           ),
+
+          const SizedBox(height: AppSpacing.sm),
+
+          // Support footer
+          _buildSupportFooter(l10n, linkColor, textTertiary),
         ],
       ),
     );
@@ -813,6 +830,11 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
     bool isDark,
     Color primaryColor,
   ) {
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textTertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+
     return Padding(
       key: const ValueKey('recovering_step'),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
@@ -834,27 +856,48 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
           const SizedBox(height: AppSpacing.xl),
           Text(
             l10n.recoveryStepRecoveringTitle,
-            style: AppTextStyles.display.copyWith(
-              fontSize: 24,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+            style: AppTextStyles.handwritingTitle.copyWith(
+              fontSize: 30,
+              color: textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.recoveryStepRecoveringDesc,
-            style: AppTextStyles.body.copyWith(
-              color: isDark
-                  ? AppColors.darkTextTertiary
-                  : AppColors.lightTextTertiary,
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 14,
+              color: textTertiary,
               height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),
         ],
       ),
+    );
+  }
+
+  /// Centered "Need help? Contact support" footer text.
+  Widget _buildSupportFooter(
+    AppLocalizations l10n,
+    Color linkColor,
+    Color textTertiary,
+  ) {
+    return Text.rich(
+      TextSpan(
+        text: '${l10n.needHelp} ',
+        style: AppTextStyles.caption.copyWith(color: textTertiary),
+        children: [
+          TextSpan(
+            text: l10n.contactSupport,
+            style: AppTextStyles.caption.copyWith(
+              color: linkColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+      textAlign: TextAlign.center,
     );
   }
 }
@@ -877,9 +920,8 @@ class _StepIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final inactiveColor = isDark
-        ? AppColors.darkDisabled
-        : AppColors.lightDisabled;
+    final inactiveColor =
+        isDark ? AppColors.darkDisabled : AppColors.lightDisabled;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -894,6 +936,63 @@ class _StepIndicator extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? activeColor : inactiveColor,
             borderRadius: BorderRadius.circular(AppRadius.pill),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Read-only 4-column preview of the parsed mnemonic words
+// ---------------------------------------------------------------------------
+
+class _WordsPreview extends StatelessWidget {
+  final String text;
+  final bool isDark;
+
+  const _WordsPreview({required this.text, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmed = text.trim();
+    final words =
+        trimmed.isEmpty ? const <String>[] : trimmed.split(RegExp(r'\s+'));
+    final emptyBg = isDark ? AppColors.darkInputFill : Colors.white;
+    final emptyBorder = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final emptyFg =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+
+    return GridView.count(
+      crossAxisCount: 4,
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: AppSpacing.s4,
+      crossAxisSpacing: AppSpacing.s4,
+      childAspectRatio: 2.2,
+      children: List.generate(12, (i) {
+        final hasWord = i < words.length && words[i].isNotEmpty;
+        return Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: hasWord ? AppColors.primarySoft : emptyBg,
+            borderRadius: BorderRadius.circular(AppRadius.xs),
+            border: Border.all(
+              color: hasWord ? AppColors.primarySoftBorder : emptyBorder,
+              width: 1,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s4),
+          child: Text(
+            hasWord ? words[i] : '·',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 12,
+              color: hasWord ? AppColors.primaryText : emptyFg,
+              fontWeight: hasWord ? FontWeight.w600 : FontWeight.w400,
+            ),
           ),
         );
       }),
@@ -926,41 +1025,33 @@ class _WordChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasText = controller.text.isNotEmpty;
+    final emptyBg = isDark ? AppColors.darkInputFill : Colors.white;
+    final emptyBorder = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final emptyFg =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
       decoration: BoxDecoration(
-        color: hasText
-            ? (isDark
-                ? AppColors.accentLavender.withValues(alpha: 0.1)
-                : AppColors.accentPeachBg)
-            : (isDark
-                ? AppColors.darkInputFill
-                : AppColors.lightInputFill),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: hasText
-            ? Border.all(
-                color: AppColors.accentLavender.withValues(alpha: 0.3),
-                width: 1,
-              )
-            : null,
+        color: hasText ? AppColors.primarySoft : emptyBg,
+        borderRadius: BorderRadius.circular(AppRadius.xs),
+        border: Border.all(
+          color: hasText ? AppColors.primarySoftBorder : emptyBorder,
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
           Container(
-            width: 28,
+            width: 22,
             alignment: Alignment.center,
             child: Text(
               '${index + 1}',
               style: AppTextStyles.caption.copyWith(
-                color: hasText
-                    ? AppColors.accentPeachText
-                    : (isDark
-                        ? AppColors.darkTextTertiary
-                        : AppColors.lightTextTertiary),
+                color: hasText ? AppColors.primaryText : emptyFg,
                 fontWeight: FontWeight.w600,
-                fontSize: 11,
+                fontSize: 10,
               ),
             ),
           ),
@@ -970,27 +1061,23 @@ class _WordChip extends StatelessWidget {
               focusNode: focusNode,
               scrollPadding: scrollPadding,
               style: AppTextStyles.body.copyWith(
-                fontSize: 14,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                fontSize: 13,
+                color: hasText ? AppColors.primaryText : emptyFg,
+                fontWeight: hasText ? FontWeight.w600 : FontWeight.w400,
               ),
               decoration: InputDecoration(
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.only(
-                  right: AppSpacing.sm,
-                  top: 12,
-                  bottom: 12,
+                  right: AppSpacing.s4,
+                  top: 11,
+                  bottom: 11,
                 ),
                 hintText: '· · ·',
                 hintStyle: TextStyle(
-                  color: (isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary)
-                      .withValues(alpha: 0.4),
-                  letterSpacing: 2,
+                  color: emptyFg.withValues(alpha: 0.4),
+                  letterSpacing: 1,
                 ),
               ),
               textInputAction: nextFocusNode != null
@@ -1036,9 +1123,7 @@ class _ProgressBadge extends StatelessWidget {
 
     final color = isComplete
         ? AppColors.accentMintText
-        : (isDark
-            ? AppColors.darkTextTertiary
-            : AppColors.lightTextTertiary);
+        : (isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary);
 
     final bg = isComplete
         ? (isDark
@@ -1090,25 +1175,22 @@ class _PasteChip extends StatelessWidget {
           vertical: 4,
         ),
         decoration: BoxDecoration(
-          color: Theme.of(context)
-              .colorScheme
-              .primary
-              .withValues(alpha: 0.08),
+          color: AppColors.primarySoft,
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.content_paste_rounded,
               size: 13,
-              color: Theme.of(context).colorScheme.primary,
+              color: AppColors.primaryText,
             ),
             const SizedBox(width: AppSpacing.s4),
             Text(
               label,
               style: AppTextStyles.caption.copyWith(
-                color: Theme.of(context).colorScheme.primary,
+                color: AppColors.primaryText,
                 fontWeight: FontWeight.w500,
                 fontSize: 11,
               ),
@@ -1143,10 +1225,7 @@ class _ClearChip extends StatelessWidget {
           vertical: 4,
         ),
         decoration: BoxDecoration(
-          color: Theme.of(context)
-              .colorScheme
-              .error
-              .withValues(alpha: 0.06),
+          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(

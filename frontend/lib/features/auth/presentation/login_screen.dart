@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +14,8 @@ import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/notifications/push_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -39,10 +40,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   bool _isLoading = false;
   String? _error;
 
+  // Re-validate fields on every keystroke after the first submit attempt so
+  // field errors clear as soon as the input becomes valid.
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
+
+  /// Pattern used to validate the email format on the client side.
+  static final RegExp _emailRegex = RegExp(
+    r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
+  );
+
+  // Gesture recognizer for the "Sign up" link in the footer.
+  late final TapGestureRecognizer _signUpRecognizer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _signUpRecognizer = TapGestureRecognizer()
+      ..onTap = () => context.push('/auth/register');
   }
 
   @override
@@ -52,6 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _passwordController.dispose();
     _emailFocus.dispose();
     _passwordFocus.dispose();
+    _signUpRecognizer.dispose();
     super.dispose();
   }
 
@@ -61,6 +77,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _submit() async {
+    // From the first submit on, re-validate on every keystroke so stale
+    // field errors clear while the user types.
+    setState(() => _autovalidateMode = AutovalidateMode.onUserInteraction);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -296,7 +315,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     const username = 'devtest4';
     const password = 'DevTest1234';
 
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
       final salt = MasterKeyManager.generateSalt();
@@ -306,23 +328,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       final recoveryKey = await MasterKeyManager.generateRecoveryKey();
       final recoverySalt = MasterKeyManager.generateSalt();
       final encryptedMasterKey = await MasterKeyManager.wrapMasterKey(
-        masterKey, recoveryKey, recoverySalt,
+        masterKey,
+        recoveryKey,
+        recoverySalt,
       );
 
       final api = ref.read(apiClientProvider);
-      await api.register(RegisterRequest(
-        email: email,
-        username: username,
-        authKeyHash: authKeyHash,
-        salt: base64Encode(salt),
-        recoveryKey: recoveryKey,
-        recoverySalt: base64Encode(recoverySalt),
-        encryptedMasterKey: base64Encode(encryptedMasterKey),
-      ),);
+      await api.register(
+        RegisterRequest(
+          email: email,
+          username: username,
+          authKeyHash: authKeyHash,
+          salt: base64Encode(salt),
+          recoveryKey: recoveryKey,
+          recoverySalt: base64Encode(recoverySalt),
+          encryptedMasterKey: base64Encode(encryptedMasterKey),
+        ),
+      );
 
       await MasterKeyManager.storeMasterKey(masterKey);
       await MasterKeyManager.storeSalt(salt);
-      await MasterKeyManager.storeKdfVersion(MasterKeyManager.currentKdfVersion);
+      await MasterKeyManager.storeKdfVersion(
+          MasterKeyManager.currentKdfVersion);
       await MasterKeyManager.deriveEncryptKey(masterKey);
       ref.read(authStateProvider.notifier).state = true;
       // ignore: unawaited_futures
@@ -331,7 +358,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       _connectWebSocket();
 
       if (mounted) {
-        AppSnackBar.info(context, message: 'Dev account registered: $email / $password');
+        AppSnackBar.info(context,
+            message: 'Dev account registered: $email / $password');
         context.go('/notes');
       }
     } catch (e) {
@@ -344,7 +372,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         return;
       }
     } finally {
-      if (mounted) setState(() { _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+        });
     }
   }
 
@@ -354,13 +385,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     const email = 'devtest4@anynote.local';
     const password = 'DevTest1234';
 
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
       final api = ref.read(apiClientProvider);
       final serverSalt = await api.getSalt(email);
       if (serverSalt == null) {
-        if (mounted) setState(() { _error = 'No salt for dev account'; });
+        if (mounted)
+          setState(() {
+            _error = 'No salt for dev account';
+          });
         return;
       }
 
@@ -370,7 +407,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
       try {
         masterKey = await MasterKeyManager.deriveMasterKey(
-          password, serverSalt, currentVersion,
+          password,
+          serverSalt,
+          currentVersion,
         );
         usedKdfVersion = currentVersion;
         final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
@@ -379,7 +418,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       } catch (_) {
         // Retry with legacy KDF v1 params
         masterKey = await MasterKeyManager.deriveMasterKey(
-          password, serverSalt, 1,
+          password,
+          serverSalt,
+          1,
         );
         usedKdfVersion = 1;
         final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
@@ -403,9 +444,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       }
     } catch (e) {
       debugPrint('[DevAutoLogin] failed: $e');
-      if (mounted) setState(() { _error = 'Dev login failed: $e'; });
+      if (mounted)
+        setState(() {
+          _error = 'Dev login failed: $e';
+        });
     } finally {
-      if (mounted) setState(() { _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+        });
     }
   }
 
@@ -427,9 +474,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
-    final accentBg = isDark
-        ? AppColors.accentCoral.withValues(alpha: 0.12)
-        : AppColors.accentCoralBg;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textTertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final linkColor = isDark ? AppColors.secondary : AppColors.primaryText;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -438,7 +489,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           padding: EdgeInsets.only(
             left: AppSpacing.xl,
             right: AppSpacing.xl,
-            top: MediaQuery.sizeOf(context).height * 0.12,
+            top: MediaQuery.sizeOf(context).height * 0.10,
             bottom: 200,
           ),
           child: Form(
@@ -448,55 +499,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // -- Illustration --
-                  Center(
-                    child: Semantics(
-                      label: l10n.loginScreenLabel,
-                      child: Container(
-                        width: 88,
-                        height: 88,
-                        decoration: BoxDecoration(
-                          color: accentBg,
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.lg),
-                          boxShadow: AppShadows.mdOf(
-                            Theme.of(context).brightness,
+                  // -- Welcome header --
+                  Semantics(
+                    label: l10n.loginScreenLabel,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.welcomeBack,
+                          style: AppTextStyles.handwritingTitle.copyWith(
+                            fontSize: 34,
+                            color: textPrimary,
                           ),
                         ),
-                        child: Icon(
-                          Icons.shield_moon_outlined,
-                          size: 40,
-                          color: primaryColor,
+                        const SizedBox(height: AppSpacing.s4),
+                        Text(
+                          l10n.signInToContinue,
+                          style: AppTextStyles.caption.copyWith(
+                            color: textTertiary,
+                            height: 1.5,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // -- Welcome headline --
-                  Text(
-                    l10n.welcomeBack,
-                    style: AppTextStyles.display.copyWith(
-                      fontSize: 30,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: AppSpacing.sm),
-
-                  Text(
-                    l10n.signInToVault,
-                    style: AppTextStyles.body.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
                   ),
 
                   const SizedBox(height: AppSpacing.xl),
@@ -549,6 +574,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
 
                   // -- Email field --
+                  _FieldLabel(text: l10n.email, color: textSecondary),
                   FocusTraversalOrder(
                     order: const NumericFocusOrder(1),
                     child: TextFormField(
@@ -560,59 +586,97 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       scrollPadding: const EdgeInsets.only(bottom: 120),
                       decoration: InputDecoration(
                         hintText: l10n.email,
-                        prefixIcon:
-                            const Icon(Icons.email_outlined),
+                        prefixIcon: const Icon(Icons.email_outlined),
                       ),
                       keyboardType: TextInputType.emailAddress,
-                      validator: (v) => v?.isEmpty ?? true
-                          ? l10n.emailRequired
-                          : null,
+                      autovalidateMode: _autovalidateMode,
+                      onChanged: (_) {
+                        // Clear the submit-level error once the user types.
+                        if (_error != null) {
+                          setState(() => _error = null);
+                        }
+                      },
+                      validator: (v) {
+                        final value = v?.trim() ?? '';
+                        if (value.isEmpty) return l10n.emailRequired;
+                        if (!_emailRegex.hasMatch(value)) {
+                          return l10n.emailInvalid;
+                        }
+                        return null;
+                      },
                     ),
                   ),
 
                   const SizedBox(height: AppSpacing.s12),
 
                   // -- Password field --
+                  _FieldLabel(text: l10n.password, color: textSecondary),
                   FocusTraversalOrder(
                     order: const NumericFocusOrder(2),
                     child: PasswordTextField(
                       controller: _passwordController,
                       focusNode: _passwordFocus,
                       hintText: l10n.password,
-                      prefixIcon:
-                          const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline),
                       autofillHints: const [
                         AutofillHints.password,
                       ],
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _submit(),
+                      autovalidateMode: _autovalidateMode,
+                      onChanged: (_) {
+                        // Clear the submit-level error once the user types.
+                        if (_error != null) {
+                          setState(() => _error = null);
+                        }
+                      },
                       scrollPadding: const EdgeInsets.only(bottom: 120),
                       showPasswordTooltip: l10n.showPassword,
                       hidePasswordTooltip: l10n.hidePassword,
-                      validator: (v) => v?.isEmpty ?? true
-                          ? l10n.passwordRequired
-                          : null,
+                      validator: (v) =>
+                          v?.isEmpty ?? true ? l10n.passwordRequired : null,
                     ),
                   ),
 
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // -- Forgot password link --
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => context.push('/auth/recover'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: linkColor,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.s4,
+                        ),
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        l10n.forgotPassword,
+                        style: AppTextStyles.caption.copyWith(
+                          color: linkColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.md),
 
                   // -- Sign in button --
                   PressableScale(
                     onPressed: _isLoading ? null : _submit,
-                    borderRadius:
-                        BorderRadius.circular(AppRadius.pill),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16,),
+                      height: 54,
                       decoration: BoxDecoration(
                         color: primaryColor,
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.pill),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                         boxShadow: [
                           BoxShadow(
-                            color: primaryColor
-                                .withValues(alpha: 0.25),
+                            color: primaryColor.withValues(alpha: 0.25),
                             offset: const Offset(0, 4),
                             blurRadius: 16,
                           ),
@@ -623,17 +687,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             ? SizedBox(
                                 width: 20,
                                 height: 20,
-                                child:
-                                    CircularProgressIndicator(
+                                child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
                                 ),
                               )
                             : Text(
                                 l10n.signIn,
-                                style: AppTextStyles.body
-                                    .copyWith(
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                                style: AppTextStyles.body.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 16,
                                 ),
@@ -644,54 +708,111 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                   const SizedBox(height: AppSpacing.xl),
 
-                  // -- Divider with spacing --
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xl,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 1,
-                            color: isDark
-                                ? AppColors.darkDivider
-                                : AppColors.lightDivider,
+                  // -- Divider with centered caption --
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 1,
+                          color: isDark
+                              ? AppColors.darkDivider
+                              : AppColors.lightDivider,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.s12,
+                        ),
+                        child: Text(
+                          l10n.orContinueWith,
+                          style: AppTextStyles.caption.copyWith(
+                            color: textTertiary,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          height: 1,
+                          color: isDark
+                              ? AppColors.darkDivider
+                              : AppColors.lightDivider,
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
 
-                  // -- Alternative actions --
-                  TextButton(
-                    onPressed: () =>
-                        context.push('/auth/register'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: primaryColor,
-                    ),
-                    child: Text(
-                      l10n.noAccountRegister,
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.w500,
+                  // -- Social sign-in buttons (decorative) --
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _SocialButton(
+                        isDark: isDark,
+                        borderColor: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
+                        onPressed: () {},
+                        child: const Text(
+                          'G',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.info,
+                            height: 1.0,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: AppSpacing.lg),
+                      _SocialButton(
+                        isDark: isDark,
+                        borderColor: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
+                        onPressed: () {},
+                        child: Icon(
+                          AppIcons.apple,
+                          size: 24,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.lg),
+                      _SocialButton(
+                        isDark: isDark,
+                        borderColor: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
+                        onPressed: () {},
+                        child: Icon(
+                          Icons.mail_outline,
+                          size: 24,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
 
-                  TextButton(
-                    onPressed: () =>
-                        context.push('/auth/recover'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // -- Footer: link to register --
+                  Text.rich(
+                    TextSpan(
+                      text: l10n.dontHaveAccount + ' ',
+                      style: AppTextStyles.caption.copyWith(
+                        color: textTertiary,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: l10n.signUp,
+                          style: AppTextStyles.caption.copyWith(
+                            color: linkColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          recognizer: _signUpRecognizer,
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      l10n.recoverFromBackup,
-                      style: AppTextStyles.caption,
-                    ),
+                    textAlign: TextAlign.center,
                   ),
 
                   // DEV: auto-register test account
@@ -714,6 +835,66 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Small w600 field label shown above inputs
+// ---------------------------------------------------------------------------
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _FieldLabel({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+      child: Text(
+        text,
+        style: AppTextStyles.caption.copyWith(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Circular social sign-in button
+// ---------------------------------------------------------------------------
+class _SocialButton extends StatelessWidget {
+  final bool isDark;
+  final Color borderColor;
+  final VoidCallback onPressed;
+  final Widget child;
+
+  const _SocialButton({
+    required this.isDark,
+    required this.borderColor,
+    required this.onPressed,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PressableScale(
+      onPressed: onPressed,
+      borderRadius: AppRadius.pillBorder,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCardBg : Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: borderColor, width: 1),
+        ),
+        child: Center(child: child),
       ),
     );
   }
