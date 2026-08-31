@@ -504,10 +504,15 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
   }
 
   /// Extracts the publish title from the draft: the first non-empty line with
-  /// leading markdown heading markers (`#`) stripped.
+  /// markdown heading markers (`#`) and emphasis markers (`**`) stripped —
+  /// platform titles should carry plain text, not markdown.
   String _extractPublishTitle(String draft) {
     for (final line in draft.split('\n')) {
-      final stripped = line.trim().replaceFirst(RegExp(r'^#+\s*'), '').trim();
+      final stripped = line
+          .trim()
+          .replaceFirst(RegExp(r'^#+\s*'), '')
+          .replaceAll('**', '')
+          .trim();
       if (stripped.isNotEmpty) return stripped;
     }
     return '';

@@ -465,7 +465,10 @@ class ApiClient {
 
   Future<List<Map<String, dynamic>>> listPlatforms() async {
     final res = await _dio.get('/api/v1/platforms');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    // Server nil-slice serializes to JSON null when nothing is connected.
+    final data = res.data;
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return const [];
   }
 
   Future<Map<String, dynamic>> connectPlatform(String platform) async {
@@ -515,7 +518,9 @@ class ApiClient {
       '/api/v1/share/discover',
       queryParameters: {'limit': limit, 'offset': offset},
     );
-    return (res.data as List).cast<Map<String, dynamic>>();
+    final data = res.data;
+    if (data is! List) return const <Map<String, dynamic>>[];
+    return data.cast<Map<String, dynamic>>();
   }
 
   /// Toggle a reaction on a shared note. Requires authentication.

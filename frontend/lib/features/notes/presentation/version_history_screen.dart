@@ -284,6 +284,25 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         plainTitle: version.title == l10n.untitled ? null : version.title,
       );
 
+      // Snapshot the restored content as the newest version so the timeline's
+      // top entry always matches the live note (otherwise the top entry is
+      // the pre-restore safety snapshot and the 当前 label misleads).
+      final restoredNote = await db.notesDao.getNoteById(noteId);
+      if (restoredNote != null) {
+        final restoredCount =
+            await db.noteVersionsDao.getVersionCount(noteId);
+        await db.noteVersionsDao.createVersion(
+          id: const Object().hashCode.toString(),
+          noteId: noteId,
+          encryptedTitle: restoredNote.encryptedTitle,
+          plainTitle: restoredNote.plainTitle,
+          encryptedContent: restoredNote.encryptedContent,
+          plainContent: restoredNote.plainContent,
+          versionNumber: restoredCount + 1,
+        );
+        await db.noteVersionsDao.deleteVersionsOlderThan(noteId, 20);
+      }
+
       if (mounted) {
         AppSnackBar.info(context, message: l10n.versionRestored);
         // Reload versions to reflect the new snapshot.
