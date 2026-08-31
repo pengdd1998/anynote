@@ -9,7 +9,9 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../publish/presentation/widgets/publish_from_editor_sheet.dart';
 import '../data/compose_providers.dart';
+import 'widgets/refinement_chat.dart';
 
 /// Full text editor with AI-generated content displayed via streaming.
 ///
@@ -57,12 +59,22 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
   Widget build(BuildContext context) {
     final session = ref.watch(composeSessionProvider);
 
+    // Surface refinement failures with an existing draft via a SnackBar.
+    // The full-screen error state below only covers the empty-draft case, so
+    // without this listener a failed refinement would fail silently.
+    ref.listen<ComposeSessionState>(composeSessionProvider, (previous, next) {
+      final error = next.error;
+      if (error == null || error.isEmpty) return;
+      if (previous?.error == error) return;
+      if (next.draft.isEmpty) return; // Full-screen error state handles this.
+      AppSnackBar.error(context, message: error);
+    });
+
     if (session.isLoading && _editorController.text != session.draft) {
       _editorController.text = session.draft;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
-          _scrollController
-              .jumpTo(_scrollController.position.maxScrollExtent);
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
         }
       });
     }
@@ -82,19 +94,25 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.ios_share),
+            tooltip: l10n.publish,
+            onPressed: session.isLoading
+                ? null
+                : () => _publishDraft(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.style),
             tooltip: l10n.adaptStyleFor(session.platformStyle),
             onPressed: session.isLoading || session.draft.isEmpty
                 ? null
-                : () => _adaptStyle(ref),
+                : () => _adaptStyle(ref, l10n),
           ),
           IconButton(
             icon: const Icon(Icons.save_outlined),
             tooltip: l10n.saveNoteTooltip,
-            onPressed:
-                session.isLoading || session.draft.isEmpty || _isSaving
-                    ? null
-                    : () => _saveAsNote(context, ref),
+            onPressed: session.isLoading || session.draft.isEmpty || _isSaving
+                ? null
+                : () => _saveAsNote(context, ref),
           ),
         ],
       ),
@@ -119,8 +137,9 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
         // Title area
         if (session.outline != null) _buildTitleArea(session, isDark),
 
-        // Editor area
+        // Editor area (top — editable draft)
         Expanded(
+          flex: 3,
           child: Container(
             margin: const EdgeInsets.fromLTRB(
               AppSpacing.md,
@@ -159,6 +178,12 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
               ),
             ),
           ),
+        ),
+
+        // AI refinement chat (split view — bottom)
+        Expanded(
+          flex: 2,
+          child: RefinementChat(sessionId: widget.sessionId),
         ),
 
         // Bottom action bar
@@ -201,7 +226,9 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
             FilledButton.tonal(
               onPressed: () {
                 ref.read(composeSessionProvider.notifier).clearError();
-                ref.read(composeSessionProvider.notifier).expandToDraft();
+                ref
+                    .read(composeSessionProvider.notifier)
+                    .expandToDraft(quotaExceededMessage: l10n.aiQuotaExceeded);
               },
               child: Text(l10n.retry),
             ),
@@ -445,17 +472,64 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
     return text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
   }
 
-  Future<void> _adaptStyle(WidgetRef ref) async {
-    await ref.read(composeSessionProvider.notifier).adaptStyle();
+  /// Hands the current draft off to the publish flow.
+  ///
+  /// The title is the first non-empty line with markdown heading markers
+  /// stripped; the content is the full draft.
+  void _publishDraft(BuildContext context) {
+    final session = ref.read(composeSessionProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    if (session.draft.trim().isEmpty) {
+      AppSnackBar.error(context, message: l10n.titleAndContentRequired);
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => PublishFromEditorSheet(
+        title: _extractPublishTitle(session.draft),
+        content: session.draft,
+        initialTags: const [],
+        // Carry the compose template through so the publish sheet's AI
+        // polish keeps the template's structure and tone.
+        template: session.selectedTemplate,
+      ),
+    );
+  }
+
+  /// Extracts the publish title from the draft: the first non-empty line with
+  /// markdown heading markers (`#`) and emphasis markers (`**`) stripped —
+  /// platform titles should carry plain text, not markdown.
+  String _extractPublishTitle(String draft) {
+    for (final line in draft.split('\n')) {
+      final stripped = line
+          .trim()
+          .replaceFirst(RegExp(r'^#+\s*'), '')
+          .replaceAll('**', '')
+          .trim();
+      if (stripped.isNotEmpty) return stripped;
+    }
+    return '';
+  }
+
+  Future<void> _adaptStyle(WidgetRef ref, AppLocalizations l10n) async {
+    await ref
+        .read(composeSessionProvider.notifier)
+        .adaptStyle(quotaExceededMessage: l10n.aiQuotaExceeded);
   }
 
   Future<void> _saveAsNote(BuildContext context, WidgetRef ref) async {
     setState(() => _isSaving = true);
 
     try {
-      final noteId = await ref
-          .read(composeSessionProvider.notifier)
-          .saveDraftAsNote();
+      final noteId =
+          await ref.read(composeSessionProvider.notifier).saveDraftAsNote();
 
       if (!mounted) return;
       if (!context.mounted) return;

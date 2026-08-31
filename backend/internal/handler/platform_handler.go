@@ -39,6 +39,12 @@ func (h *PlatformHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Serialize an empty list as [] instead of Go nil-slice `null`, which
+	// breaks mobile clients that type-assert the decoded body to a list.
+	if connections == nil {
+		connections = []domain.PlatformConnection{}
+	}
+
 	writeJSON(w, http.StatusOK, connections)
 }
 

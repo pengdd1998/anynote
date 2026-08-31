@@ -13,6 +13,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/color_utils.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/note_envelope.dart';
 import 'tag_chips_row.dart';
 import 'note_rich_preview.dart';
 
@@ -25,8 +26,9 @@ enum NoteCardLayout {
 /// Card widget for displaying a note in list or staggered grid layout.
 ///
 /// Uses the warm design system: generous rounded corners (AppRadius.md),
-/// soft diffused shadows, no hard borders, and design token typography.
-/// Image notes render with a prominent clipped image header.
+/// soft matching borders, subtle shadows, and design token typography.
+/// Grid cards read as pastel sticky notes; image notes render with a
+/// prominent clipped image header above a warm card info section.
 class NoteCard extends StatelessWidget {
   final Note note;
   final String time;
@@ -71,6 +73,24 @@ class NoteCard extends StatelessWidget {
 
   bool get _isGrid => layout == NoteCardLayout.grid;
 
+  /// Plain-text body used for the derived title. Normalizes notes whose
+  /// plainContent holds Delta JSON (e.g. from an older broken restore) so
+  /// raw JSON is never rendered as the card title.
+  String get _plainBody {
+    final content = note.plainContent;
+    if (content == null || content.trim().isEmpty) return '';
+    return plainTextFromStoredContent(content);
+  }
+
+  /// True when the note title is derived from the body's first line, in
+  /// which case the rich preview skips that line to avoid duplication.
+  bool get _titleComesFromContent {
+    final content = _plainBody;
+    if (content.trim().isEmpty) return false;
+    final line = content.trim().split('\n').first.trim();
+    return line.isNotEmpty;
+  }
+
   /// Parsed note color, or null if no color is set.
   Color? get _noteColor {
     final hex = note.color;
@@ -97,9 +117,10 @@ class NoteCard extends StatelessWidget {
       final pastel =
           AppColors.notePastels[listIndex % AppColors.notePastels.length];
       if (isDark) return pastel.withAlpha(30);
-      // Light mode: white card with very faint pastel tint (alpha 25/255 ≈ 10%)
+      // Light mode: warm card surface tinted with the pastel so grid cards
+      // read as sticky notes (mockup style).
       return Color.alphaBlend(
-        pastel.withAlpha(25),
+        pastel.withAlpha(60),
         AppColors.lightCardBg,
       );
     }
@@ -119,47 +140,52 @@ class NoteCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     // Notes have no stored title — derive the list label from the first line
     // of content; fall back to a legacy stored title, then "Untitled".
-    final title = () {
-      final content = note.plainContent;
-      if (content != null && content.trim().isNotEmpty) {
-        final firstLine = content.trim().split('\n').first.trim();
-        if (firstLine.isNotEmpty) return firstLine;
-      }
-      final legacy = note.plainTitle;
-      if (legacy != null && legacy.isNotEmpty) return legacy;
-      return untitled;
+    final firstLine = () {
+      final content = _plainBody;
+      if (content.trim().isEmpty) return null;
+      final line = content.trim().split('\n').first.trim();
+      return line.isEmpty ? null : line;
     }();
+    final legacy = note.plainTitle;
+    final title = firstLine ??
+        (legacy != null && legacy.isNotEmpty ? legacy : untitled);
+    final hasImage = previewImagePath != null && !kIsWeb;
     final noteColor = _noteColor;
 
     final cardBgColor = isSelected
-        ? colorScheme.primaryContainer.withAlpha(60)
-        : _cardBackgroundColor(
-            context,
-            noteColor,
-            colorScheme.surfaceContainerLow,
-          );
+        ? (isDark
+            ? AppColors.primary.withAlpha(40)
+            : AppColors.primarySoft)
+        : hasImage
+            ? (isDark ? AppColors.darkCardBg : AppColors.lightCardBg)
+            : _cardBackgroundColor(
+                context,
+                noteColor,
+                colorScheme.surfaceContainerLow,
+              );
 
-    final radius = _isGrid ? AppRadius.lg : AppRadius.md;
+    // Sticky-note cards use radius 20 per the mockup.
+    const radius = AppRadius.md;
 
-    // Subtle colored border for grid cards (mockup style).
-    final borderColor = _isGrid && !isSelected && !isDark
-        ? AppColors.noteBorderColors[listIndex % AppColors.noteBorderColors.length]
-        : null;
+    // Soft matching border: pastel border for tinted grid cards (light mode),
+    // neutral warm border elsewhere, periwinkle when selected.
+    final borderColor = isSelected
+        ? AppColors.primary
+        : _isGrid && !isDark
+            ? AppColors.noteBorderColors[
+                listIndex % AppColors.noteBorderColors.length]
+            : isDark
+                ? AppColors.darkBorder
+                : AppColors.lightBorder;
 
     final card = Container(
       decoration: BoxDecoration(
         color: cardBgColor,
         borderRadius: BorderRadius.circular(radius),
-        border: isSelected
-            ? Border.all(
-                color: colorScheme.primary.withAlpha(80),
-                width: 1.5,
-              )
-            : borderColor != null
-                ? Border.all(color: borderColor, width: 1)
-                : (!_isGrid && !isDark
-                    ? Border.all(color: AppColors.slate100, width: 1)
-                    : null),
+        border: Border.all(
+          color: borderColor,
+          width: isSelected ? 1.5 : 1,
+        ),
         boxShadow: _isGrid ? AppShadows.smOf(theme.brightness) : null,
       ),
       child: Material(
@@ -209,16 +235,17 @@ class NoteCard extends StatelessWidget {
     String title,
   ) {
     final hasImage = previewImagePath != null && !kIsWeb;
+    final previewSkipsTitle = _titleComesFromContent;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Image header — proportionally scaled, clipped to top corners
+        // Image header — proportionally scaled, clipped to rounded top corners.
         if (hasImage)
           ClipRRect(
             borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppRadius.md),
+              top: Radius.circular(AppRadius.sm),
             ),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 200, minHeight: 80),
@@ -231,22 +258,29 @@ class NoteCard extends StatelessWidget {
             ),
           ),
 
-        Padding(
+        // Info section — on the warm card surface for image notes, or the
+        // pastel sticky-note background otherwise (mockup style).
+        Container(
+          width: double.infinity,
+          color: hasImage
+              ? (isDark ? AppColors.darkCardBg : AppColors.lightCardBg)
+              : null,
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title row with pin/lock icons
+              // Handwritten title with pin/lock icons.
               _buildTitleRow(context, theme, isDark, title),
 
               // Formatted body — rendered the same way as the editor.
               const SizedBox(height: AppSpacing.s4),
               NoteRichPreview(
                 note: note,
-                maxLines: 5,
+                maxLines: 4,
+                skipFirstLine: previewSkipsTitle,
                 color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
               ),
 
               // Tags
@@ -278,6 +312,7 @@ class NoteCard extends StatelessWidget {
     String title,
   ) {
     final hasImage = previewImagePath != null && !kIsWeb;
+    final previewSkipsTitle = _titleComesFromContent;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -291,15 +326,17 @@ class NoteCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Handwritten title with pin/lock icons.
                 _buildTitleRow(context, theme, isDark, title),
                 // Formatted body — rendered the same way as the editor.
                 const SizedBox(height: AppSpacing.s8),
                 NoteRichPreview(
                   note: note,
                   maxLines: 3,
+                  skipFirstLine: previewSkipsTitle,
                   color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
                 ),
                 if (tags.isNotEmpty)
                   Padding(
@@ -342,24 +379,25 @@ class NoteCard extends StatelessWidget {
     String title,
   ) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (note.isPinned)
           Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.s4),
+            padding: const EdgeInsets.only(right: AppSpacing.s4, top: 3),
             child: Semantics(
               label: AppLocalizations.of(context)?.pinnedNote,
               child: ExcludeSemantics(
                 child: Icon(
                   Icons.push_pin,
                   size: _isGrid ? 14 : 16,
-                  color: theme.colorScheme.primary,
+                  color: AppColors.primary,
                 ),
               ),
             ),
           ),
         if (isLocked)
           Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.s4),
+            padding: const EdgeInsets.only(right: AppSpacing.s4, top: 3),
             child: ExcludeSemantics(
               child: Icon(
                 Icons.lock_outline,
@@ -371,8 +409,19 @@ class NoteCard extends StatelessWidget {
               ),
             ),
           ),
-        // Notes have no separate title — the body is rendered formatted by
-        // NoteRichPreview below, so this row only carries status icons.
+        // Handwritten note title (first line of content), near-black.
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.handwritingBody.copyWith(
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -383,8 +432,7 @@ class NoteCard extends StatelessWidget {
       children: [
         Text(
           time,
-          style: AppTextStyles.caption.copyWith(
-            fontSize: _isGrid ? 11 : 12,
+          style: AppTextStyles.handwritingCaption.copyWith(
             color: isDark
                 ? AppColors.darkTextTertiary
                 : AppColors.lightTextTertiary,

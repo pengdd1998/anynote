@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/error/error.dart';
 import '../../../compose/data/ai_repository.dart';
+import '../../../compose/domain/post_template.dart';
 
 // ── Writing Assist State ───────────────────────────
 
@@ -43,7 +44,11 @@ class _WritingAssistNotifier extends StateNotifier<_WritingAssistState> {
   _WritingAssistNotifier(this._aiRepo) : super(const _WritingAssistState());
 
   /// Run grammar check and polish on the given text.
-  Future<void> polishText(String text) async {
+  ///
+  /// When [template] is provided, the polish pass also reshapes the content
+  /// toward that template's structure and tone (e.g. 小红书种草文) instead of
+  /// only fixing grammar.
+  Future<void> polishText(String text, {PostTemplate? template}) async {
     if (text.trim().isEmpty) return;
 
     _activeToken?.cancel('Replaced by new request');
@@ -53,16 +58,26 @@ class _WritingAssistNotifier extends StateNotifier<_WritingAssistState> {
 
     final buffer = StringBuffer();
 
+    final fragment = template?.promptFragment;
+    final systemContent = fragment == null
+        ? 'You are a writing assistant. Fix grammar, spelling, and '
+            'punctuation errors in the user text. Also improve clarity '
+            'and readability while preserving the original meaning and '
+            'tone. Output ONLY the corrected text with no explanation '
+            'or commentary. Respond in the same language as the input.'
+        : 'You are a writing assistant polishing social-media ready content. '
+            'Fix grammar, spelling, and punctuation, then reshape the text to '
+            'match the template specification below while preserving the core '
+            'meaning and facts. Output ONLY the polished text with no '
+            'explanation or commentary. Respond in the same language as the '
+            'input.\n\n$fragment';
+
     try {
       await for (final chunk in _aiRepo.chatStream(
         [
-          const ChatMessage(
+          ChatMessage(
             role: 'system',
-            content: 'You are a writing assistant. Fix grammar, spelling, and '
-                'punctuation errors in the user text. Also improve clarity '
-                'and readability while preserving the original meaning and '
-                'tone. Output ONLY the corrected text with no explanation '
-                'or commentary. Respond in the same language as the input.',
+            content: systemContent,
           ),
           ChatMessage(
             role: 'user',
@@ -113,10 +128,14 @@ class WritingAssistSheet extends ConsumerWidget {
   /// Callback to replace the text with the polished version.
   final void Function(String corrected) onAccept;
 
+  /// Optional post template whose structure/tone guides the polish pass.
+  final PostTemplate? template;
+
   const WritingAssistSheet({
     super.key,
     required this.originalText,
     required this.onAccept,
+    this.template,
   });
 
   @override
@@ -156,6 +175,31 @@ class WritingAssistSheet extends ConsumerWidget {
                     Icons.spellcheck,
                     color: Theme.of(context).colorScheme.primary,
                   ),
+                  if (template != null) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        template!.name,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(width: 8),
                   Text(
                     l10n.writingPolish,
@@ -167,7 +211,7 @@ class WritingAssistSheet extends ConsumerWidget {
                       onPressed: () {
                         ref
                             .read(_writingAssistProvider.notifier)
-                            .polishText(originalText);
+                            .polishText(originalText, template: template);
                       },
                       child: Text(l10n.checkGrammar),
                     ),
@@ -226,9 +270,8 @@ class WritingAssistSheet extends ConsumerWidget {
               const SizedBox(height: 16),
               FilledButton.tonal(
                 onPressed: () {
-                  ref
-                      .read(_writingAssistProvider.notifier)
-                      .polishText(originalText);
+                  ref.read(_writingAssistProvider.notifier)
+                      .polishText(originalText, template: template);
                 },
                 child: Text(l10n.retry),
               ),

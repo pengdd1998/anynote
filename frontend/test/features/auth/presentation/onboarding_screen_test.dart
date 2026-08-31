@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/auth/presentation/onboarding_screen.dart';
 import '../../../helpers/test_app_helper.dart';
 
@@ -28,25 +29,28 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows Next button on first page', (tester) async {
+    testWidgets('shows circular next button on first page', (tester) async {
       final handle = await pumpScreen(
         tester,
         const OnboardingScreen(),
         overrides: defaultProviderOverrides(),
       );
 
-      expect(find.text('Next'), findsOneWidget);
+      // The mockup replaces the text button with a circular arrow button.
+      expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
       await handle.dispose();
     });
 
-    testWidgets('shows shield icon on first page', (tester) async {
+    testWidgets('shows sticky-note mascot with pencil on first page',
+        (tester) async {
       final handle = await pumpScreen(
         tester,
         const OnboardingScreen(),
         overrides: defaultProviderOverrides(),
       );
 
-      expect(find.byIcon(Icons.shield_outlined), findsOneWidget);
+      // Page 1 shows the sticky-note mascot with an overlapping pencil.
+      expect(find.byIcon(AppIcons.edit), findsOneWidget);
       await handle.dispose();
     });
   });

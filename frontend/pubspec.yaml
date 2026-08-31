@@ -124,6 +124,24 @@ flutter:
           weight: 600
         - asset: assets/fonts/inter/Inter-Bold.otf
           weight: 700
+    - family: Caveat
+      fonts:
+        - asset: assets/fonts/caveat/Caveat.ttf
+          weight: 400
+        - asset: assets/fonts/caveat/Caveat.ttf
+          weight: 500
+        - asset: assets/fonts/caveat/Caveat.ttf
+          weight: 600
+        - asset: assets/fonts/caveat/Caveat.ttf
+          weight: 700
+    - family: RobotoMono
+      fonts:
+        - asset: assets/fonts/roboto-mono/RobotoMono.ttf
+          weight: 400
+        - asset: assets/fonts/roboto-mono/RobotoMono.ttf
+          weight: 500
+        - asset: assets/fonts/roboto-mono/RobotoMono.ttf
+          weight: 600
   assets:
     - assets/
     - assets/fonts/

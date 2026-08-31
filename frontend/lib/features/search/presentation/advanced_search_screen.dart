@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -56,7 +58,8 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.search),
+        title: Text(l10n.advancedSearch),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -86,34 +89,39 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // Search bar
+  // Search bar (mockup style: pill, input fill, magnifier)
   // ---------------------------------------------------------------------------
 
   Widget _buildSearchBar(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final fill = isDark ? AppColors.darkInputFill : AppColors.lightInputFill;
+    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.s8, AppSpacing.md, AppSpacing.s4),
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s8,
+        AppSpacing.md,
+        AppSpacing.s4,
+      ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+        color: fill,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: border),
       ),
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
         decoration: InputDecoration(
           hintText: l10n.searchNotesHint,
-          hintStyle: AppTextStyles.body.copyWith(
-            color: isDark
-                ? AppColors.darkTextTertiary
-                : AppColors.lightTextTertiary,
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: isDark
-                ? AppColors.darkTextTertiary
-                : AppColors.lightTextTertiary,
+          hintStyle: AppTextStyles.body.copyWith(color: tertiary),
+          prefixIcon: Icon(AppIcons.search, size: 20, color: tertiary),
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.s16,
+            vertical: AppSpacing.s12,
           ),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
@@ -123,9 +131,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                   icon: Icon(
                     Icons.clear,
                     size: 20,
-                    color: isDark
-                        ? AppColors.darkTextTertiary
-                        : AppColors.lightTextTertiary,
+                    color: tertiary,
                   ),
                   onPressed: () {
                     _searchController.clear();
@@ -140,7 +146,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                       ? (isDark
                           ? AppColors.darkDisabled
                           : AppColors.lightDisabled)
-                      : AppColors.primary,
+                      : AppColors.primaryText,
                 ),
                 tooltip: l10n.saveSearch,
                 onPressed: _searchController.text.trim().isEmpty
@@ -152,10 +158,6 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.s16,
-            vertical: AppSpacing.s12,
-          ),
         ),
         onChanged: (value) {
           _debounceTimer?.cancel();
@@ -173,13 +175,16 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // Idle state: hints toggle + recent searches + saved searches
+  // Idle state: filters + hints + recent searches + saved searches
   // ---------------------------------------------------------------------------
 
   Widget _buildIdleState(AppLocalizations l10n) {
     return ListView(
       padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       children: [
+        // Filter entry points (operator chips)
+        _buildFiltersSection(l10n),
+        const SizedBox(height: AppSpacing.md),
         // Operator hints
         _buildHintsSection(l10n),
         const SizedBox(height: AppSpacing.md),
@@ -192,14 +197,176 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Filters section (mockup style: pill chips with dropdown carets)
+  // ---------------------------------------------------------------------------
+
+  Widget _buildFiltersSection(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final query = ref.watch(operatorSearchQueryProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionLabel(l10n.filter, isDark, topPadding: AppSpacing.s8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Wrap(
+            spacing: AppSpacing.s8,
+            runSpacing: AppSpacing.s8,
+            children: [
+              _buildFilterChip(
+                'Note Type',
+                'status:',
+                isActive: query.contains('status:'),
+                isDark: isDark,
+              ),
+              _buildFilterChip(
+                'Tag',
+                'tag:',
+                isActive: query.contains('tag:'),
+                isDark: isDark,
+              ),
+              _buildFilterChip(
+                'Date',
+                'date:',
+                isActive: query.contains('date:'),
+                isDark: isDark,
+              ),
+              _buildFilterChip(
+                'More',
+                null,
+                isActive: _showHints,
+                isDark: isDark,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Pill filter chip. When [operatorPrefix] is set the chip inserts that
+  /// operator token into the query field (the screen's existing filter
+  /// mechanism); otherwise it toggles the operator hints panel.
+  Widget _buildFilterChip(
+    String label,
+    String? operatorPrefix, {
+    required bool isActive,
+    required bool isDark,
+  }) {
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final activeText = isDark ? AppColors.secondary : AppColors.primaryText;
+
+    return GestureDetector(
+      onTap: () {
+        if (operatorPrefix != null) {
+          _insertOperator(operatorPrefix);
+        } else {
+          setState(() => _showHints = !_showHints);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.s12,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: isActive
+              ? (isDark
+                  ? AppColors.primary.withAlpha(40)
+                  : AppColors.primarySoft)
+              : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: isActive
+                ? (isDark ? AppColors.primary : AppColors.primarySoftBorder)
+                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: AppTextStyles.body.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: isActive
+                    ? activeText
+                    : (isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s4),
+            PhosphorIcon(
+              isActive ? PhosphorIconsFill.caretDown : PhosphorIconsRegular.caretDown,
+              size: 12,
+              color: isActive ? activeText : tertiary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Appends an operator token to the query (existing operator syntax) and
+  /// keeps the keyboard focused so the user can complete the value.
+  void _insertOperator(String prefix) {
+    final text = _searchController.text;
+    if (text.contains(prefix)) return;
+    final newText = text.isEmpty ? prefix : '$text $prefix';
+    _searchController.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+    _searchFocusNode.requestFocus();
+    setState(() {});
+  }
+
+  Widget _buildSectionLabel(
+    String label,
+    bool isDark, {
+    double topPadding = AppSpacing.s12,
+  }) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        topPadding,
+        AppSpacing.md,
+        AppSpacing.s4,
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.caption.copyWith(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.4,
+          color: isDark
+              ? AppColors.darkTextTertiary
+              : AppColors.lightTextTertiary,
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Operator hints
+  // ---------------------------------------------------------------------------
+
   Widget _buildHintsSection(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
           onTap: () => setState(() => _showHints = !_showHints),
+          behavior: HitTestBehavior.opaque,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
@@ -213,16 +380,16 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                   turns: _showHints ? 0.5 : 0,
                   duration: const Duration(milliseconds: 200),
                   child: const Icon(
-                    Icons.expand_more,
-                    size: 18,
-                    color: AppColors.primary,
+                    PhosphorIconsRegular.caretDown,
+                    size: 14,
+                    color: AppColors.primaryText,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s8),
                 Text(
                   _showHints ? l10n.hideSearchHints : l10n.showSearchHints,
                   style: AppTextStyles.caption.copyWith(
-                    color: AppColors.primary,
+                    color: AppColors.primaryText,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -257,9 +424,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                 Text(
                   l10n.searchOperatorsExample,
                   style: AppTextStyles.caption.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextTertiary
-                        : AppColors.lightTextTertiary,
+                    color: tertiary,
                   ),
                 ),
               ],
@@ -275,22 +440,28 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.primary.withAlpha(12),
-          borderRadius: BorderRadius.circular(AppRadius.xs),
+          color: isDark
+              ? AppColors.primary.withAlpha(20)
+              : AppColors.primarySoft,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           hint,
           style: AppTextStyles.caption.copyWith(
             fontSize: 12,
-            fontFamily: 'monospace',
+            fontFamily: 'RobotoMono',
             color: isDark
                 ? AppColors.darkTextSecondary
-                : AppColors.lightTextSecondary,
+                : AppColors.primaryText,
           ),
         ),
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Recent searches (mockup style: icon + text + chevron rows)
+  // ---------------------------------------------------------------------------
 
   Widget _buildRecentSection(AppLocalizations l10n) {
     final recentAsync = ref.watch(recentSearchesProvider);
@@ -303,58 +474,24 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.s8,
-                AppSpacing.md,
-                AppSpacing.s4,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.history,
-                    size: 16,
-                    color: isDark
-                        ? AppColors.darkTextTertiary
-                        : AppColors.lightTextTertiary,
+            _buildSectionHeader(
+              l10n.recentSearches,
+              isDark,
+              trailing: GestureDetector(
+                onTap: () async {
+                  await clearRecentSearches();
+                  ref.invalidate(recentSearchesProvider);
+                },
+                child: Text(
+                  l10n.clearSearchHistory,
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 12,
+                    color: AppColors.primaryText,
                   ),
-                  const SizedBox(width: AppSpacing.s8),
-                  Text(
-                    l10n.searchHistory,
-                    style: AppTextStyles.caption.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                    ),
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () async {
-                      await clearRecentSearches();
-                      ref.invalidate(recentSearchesProvider);
-                    },
-                    child: Text(
-                      l10n.clearSearchHistory,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Wrap(
-                spacing: AppSpacing.s8,
-                runSpacing: AppSpacing.s8,
-                children: recent.take(8).map((query) {
-                  return _buildRecentChip(query, l10n, isDark);
-                }).toList(),
-              ),
-            ),
+            ...recent.take(8).map((query) => _buildRecentRow(query, isDark)),
           ],
         );
       },
@@ -363,38 +500,74 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
     );
   }
 
-  Widget _buildRecentChip(String query, AppLocalizations l10n, bool isDark) {
+  Widget _buildSectionHeader(
+    String label,
+    bool isDark, {
+    Widget? trailing,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s12,
+        AppSpacing.md,
+        AppSpacing.s4,
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.4,
+              color: isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary,
+            ),
+          ),
+          const Spacer(),
+          if (trailing != null) trailing,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentRow(String query, bool isDark) {
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+
     return GestureDetector(
       onTap: () {
         _searchController.text = query;
         ref.read(operatorSearchQueryProvider.notifier).state = query;
       },
-      child: Container(
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.s12,
+          horizontal: AppSpacing.md,
           vertical: 6,
         ),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-        ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: Icon(AppIcons.history, size: 18, color: tertiary),
+            ),
+            const SizedBox(width: AppSpacing.s12),
+            Expanded(
               child: Text(
                 query,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.caption.copyWith(
-                  fontSize: 13,
+                style: AppTextStyles.body.copyWith(
                   color: isDark
                       ? AppColors.darkTextSecondary
                       : AppColors.lightTextSecondary,
                 ),
               ),
             ),
-            const SizedBox(width: AppSpacing.s4),
+            // Remove this entry (kept from the previous chip UI)
             GestureDetector(
               onTap: () async {
                 final prefs = await SharedPreferences.getInstance();
@@ -403,19 +576,22 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                 await prefs.setStringList('recent_searches', existing);
                 ref.invalidate(recentSearchesProvider);
               },
-              child: Icon(
-                Icons.close,
-                size: 14,
-                color: isDark
-                    ? AppColors.darkTextTertiary
-                    : AppColors.lightTextTertiary,
+              child: SizedBox(
+                width: 32,
+                height: 32,
+                child: Icon(Icons.close, size: 14, color: tertiary),
               ),
             ),
+            Icon(AppIcons.chevronRight, size: 14, color: tertiary),
           ],
         ),
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Saved searches (mockup style: icon + name + chevron rows)
+  // ---------------------------------------------------------------------------
 
   Widget _buildSavedSection(AppLocalizations l10n) {
     final savedAsync = ref.watch(savedSearchesProvider);
@@ -428,36 +604,8 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.s12,
-                AppSpacing.md,
-                AppSpacing.s4,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.bookmark_outline,
-                    size: 16,
-                    color: isDark
-                        ? AppColors.darkTextTertiary
-                        : AppColors.lightTextTertiary,
-                  ),
-                  const SizedBox(width: AppSpacing.s8),
-                  Text(
-                    l10n.savedSearches,
-                    style: AppTextStyles.caption.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ...saved.map((search) => _buildSavedCard(search, l10n, isDark)),
+            _buildSectionHeader(l10n.savedSearches, isDark),
+            ...saved.map((search) => _buildSavedRow(search, isDark)),
           ],
         );
       },
@@ -466,91 +614,82 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
     );
   }
 
-  Widget _buildSavedCard(
-    SavedSearch search,
-    AppLocalizations l10n,
-    bool isDark,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.s4,
-        AppSpacing.md,
-        AppSpacing.s4,
-      ),
-      child: GestureDetector(
-        onTap: () {
-          _searchController.text = search.query;
-          ref.read(operatorSearchQueryProvider.notifier).state = search.query;
-        },
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.s12),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
-          ),
-          child: Row(
-            children: [
-              Container(
+  Widget _buildSavedRow(SavedSearch search, bool isDark) {
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+
+    return GestureDetector(
+      onTap: () {
+        _searchController.text = search.query;
+        ref.read(operatorSearchQueryProvider.notifier).state = search.query;
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 6,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.primary.withAlpha(36)
+                    : AppColors.primarySoft,
+                borderRadius: BorderRadius.circular(AppRadius.xs),
+              ),
+              child: Icon(
+                AppIcons.folder,
+                size: 18,
+                color: isDark ? AppColors.secondary : AppColors.primaryText,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    search.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  Text(
+                    search.query,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 12,
+                      fontFamily: 'RobotoMono',
+                      color: tertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Delete saved search (kept)
+            GestureDetector(
+              onTap: () => _deleteSavedSearch(search),
+              child: SizedBox(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(15),
-                  borderRadius: BorderRadius.circular(AppRadius.xs),
-                ),
-                child: const Icon(
-                  Icons.bookmark,
-                  size: 16,
-                  color: AppColors.primary,
+                child: Icon(
+                  Icons.close,
+                  size: 14,
+                  color: AppColors.error.withAlpha(150),
                 ),
               ),
-              const SizedBox(width: AppSpacing.s12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      search.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      search.query,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                        color: isDark
-                            ? AppColors.darkTextTertiary
-                            : AppColors.lightTextTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () => _deleteSavedSearch(search),
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withAlpha(12),
-                    borderRadius: BorderRadius.circular(AppRadius.xs),
-                  ),
-                  child: const Icon(
-                    Icons.delete_outline,
-                    size: 14,
-                    color: AppColors.error,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+            Icon(AppIcons.chevronRight, size: 14, color: tertiary),
+          ],
         ),
       ),
     );

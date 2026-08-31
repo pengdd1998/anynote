@@ -20,6 +20,7 @@ type AIProxyService interface {
 
 type LLMConfigRepository interface {
 	GetDefaultByUser(ctx context.Context, userID uuid.UUID) (*domain.LLMConfig, error)
+	ListByUser(ctx context.Context, userID uuid.UUID) ([]domain.LLMConfig, error)
 }
 
 type aiProxyService struct {

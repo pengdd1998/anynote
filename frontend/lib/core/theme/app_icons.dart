@@ -151,4 +151,6 @@ class AppIcons {
   static const deleteForeverOutline = PhosphorIconsRegular.trash;
   static const wifiTethering = PhosphorIconsRegular.wifiHigh;
   static const deleteOutline = PhosphorIconsRegular.trash;
+  static const starOutline = PhosphorIconsRegular.star;
+  static const starFilled = PhosphorIconsFill.star;
 }

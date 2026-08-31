@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,12 +13,11 @@ import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/notifications/push_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
-import '../../../core/widgets/card_container.dart';
 import '../../../core/widgets/keyboard_scroll_mixin.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/pressable_scale.dart';
@@ -44,10 +44,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   String? _error;
   String? _recoveryKey;
 
+  // Gesture recognizer for the "Log in" link in the footer.
+  late final TapGestureRecognizer _loginRecognizer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _loginRecognizer = TapGestureRecognizer()
+      ..onTap = () => context.push('/auth/login');
   }
 
   @override
@@ -61,6 +66,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _usernameFocus.dispose();
     _passwordFocus.dispose();
     _confirmPasswordFocus.dispose();
+    _loginRecognizer.dispose();
     super.dispose();
   }
 
@@ -84,8 +90,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       final salt = MasterKeyManager.generateSalt();
 
       // Step 2: Derive master key from password via Argon2id.
-      final masterKey =
-          await MasterKeyManager.deriveMasterKey(password, salt);
+      final masterKey = await MasterKeyManager.deriveMasterKey(password, salt);
 
       // Step 3: Derive auth key from master key via BLAKE2b.
       final authKey = await MasterKeyManager.deriveAuthKey(masterKey);
@@ -148,7 +153,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       final appError = ErrorMapper.map(e);
-      debugPrint('[Register] mapped error: ${appError.runtimeType}: ${appError.message}');
+      debugPrint(
+          '[Register] mapped error: ${appError.runtimeType}: ${appError.message}');
       final message = switch (appError) {
         ConflictException() => l10n.emailOrUsernameTaken,
         ValidationException() => l10n.invalidInput,
@@ -179,6 +185,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // -- Key icon --
                 Container(
@@ -226,34 +233,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
                 const SizedBox(height: AppSpacing.lg),
 
-                // -- Recovery key card --
-                CardContainer(
-                  color: isDark
-                      ? AppColors.accentYellow.withValues(alpha: 0.08)
-                      : AppColors.accentYellowBg,
+                // -- Recovery key preview box (sticky-note style) --
+                Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(AppSpacing.md),
-                  radius: AppRadius.md,
-                  borderColor:
-                      AppColors.accentYellow.withValues(alpha: 0.3),
-                  borderWidth: 1,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.accentYellow.withValues(alpha: 0.08)
+                        : AppColors.accentYellowBg,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(
+                      color: AppColors.accentYellow.withValues(alpha: 0.5),
+                      width: 1,
+                    ),
+                  ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SelectableText(
                         _recoveryKey ?? '',
-                        style: AppTextStyles.caption.copyWith(
-                          fontFamily: 'monospace',
+                        style: AppTextStyles.mono.copyWith(
                           fontSize: 14,
                           height: 1.8,
                           color: isDark
                               ? AppColors.darkTextPrimary
                               : AppColors.lightTextPrimary,
                         ),
-                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      _CopyButton(
-                        l10n: l10n,
-                        recoveryKey: _recoveryKey,
+                      // Copy chip aligned to the bottom-right of the box.
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _CopyButton(
+                          l10n: l10n,
+                          recoveryKey: _recoveryKey,
+                        ),
                       ),
                     ],
                   ),
@@ -269,15 +283,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       Navigator.of(ctx).pop();
                       context.go('/notes');
                     },
-                    borderRadius:
-                        BorderRadius.circular(AppRadius.pill),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16,),
+                      height: 54,
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.pill),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                         boxShadow: [
                           BoxShadow(
                             color: Theme.of(context)
@@ -315,9 +326,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
-    final accentBg = isDark
-        ? AppColors.accentCoral.withValues(alpha: 0.12)
-        : AppColors.accentCoralBg;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textTertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final linkColor = isDark ? AppColors.secondary : AppColors.primaryText;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -336,307 +351,324 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                          // -- Illustration --
-                          Center(
-                            child: Semantics(
-                              label: l10n.registrationScreenLabel,
-                              child: Container(
-                                width: 88,
-                                height: 88,
-                                decoration: BoxDecoration(
-                                  color: accentBg,
-                                  borderRadius: BorderRadius.circular(
-                                      AppRadius.lg,),
-                                  boxShadow: AppShadows.mdOf(
-                                      Theme.of(context).brightness,),
-                                ),
-                                child: Icon(
-                                  Icons.person_add_outlined,
-                                  size: 40,
-                                  color: primaryColor,
-                                ),
-                              ),
-                            ),
+                  // -- Header --
+                  Semantics(
+                    label: l10n.registrationScreenLabel,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.createYourAccount,
+                          style: AppTextStyles.handwritingTitle.copyWith(
+                            fontSize: 34,
+                            color: textPrimary,
                           ),
+                        ),
+                        const SizedBox(height: AppSpacing.s4),
+                        Text(
+                          l10n.registerSubtitle,
+                          style: AppTextStyles.caption.copyWith(
+                            color: textTertiary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-                          const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
 
-                          // -- Headline --
-                          Text(
-                            l10n.createAccount,
-                            style: AppTextStyles.display.copyWith(
-                              fontSize: 30,
+                  // -- Error --
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Semantics(
+                        liveRegion: true,
+                        label: l10n.errorLabel(_error!),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.s12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkErrorBg
+                                : AppColors.lightErrorBg,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            border: Border.all(
                               color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
+                                  ? AppColors.darkErrorBorder
+                                  : AppColors.lightErrorBorder,
+                              width: 1,
                             ),
-                            textAlign: TextAlign.center,
                           ),
-
-                          const SizedBox(height: AppSpacing.sm),
-
-                          Text(
-                            l10n.startEncryptedJourney,
-                            style: AppTextStyles.body.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextTertiary
-                                  : AppColors.lightTextTertiary,
-                              height: 1.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          const SizedBox(height: AppSpacing.xl),
-
-                          // -- Error --
-                          if (_error != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                              child: Semantics(
-                                liveRegion: true,
-                                label: l10n.errorLabel(_error!),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.md,
-                                    vertical: AppSpacing.s12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? AppColors.darkErrorBg
-                                        : AppColors.lightErrorBg,
-                                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                                    border: Border.all(
-                                      color: isDark
-                                          ? AppColors.darkErrorBorder
-                                          : AppColors.lightErrorBorder,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.error_outline,
-                                        size: 18,
-                                        color: Theme.of(context).colorScheme.error,
-                                      ),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      Expanded(
-                                        child: Text(
-                                          _error!,
-                                          style: AppTextStyles.body.copyWith(
-                                            color: Theme.of(context).colorScheme.error,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  _error!,
+                                  style: AppTextStyles.body.copyWith(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 13,
                                   ),
                                 ),
                               ),
-                            ),
-
-                          // -- Email --
-                          FocusTraversalOrder(
-                            order: const NumericFocusOrder(1),
-                            child: TextFormField(
-                              controller: _emailController,
-                              focusNode: _emailFocus,
-                              autofocus: true,
-                              autofillHints: const [
-                                AutofillHints.email,
-                              ],
-                              textInputAction: TextInputAction.next,
-                              scrollPadding: const EdgeInsets.only(bottom: 120),
-                              decoration: InputDecoration(
-                                hintText: l10n.email,
-                                prefixIcon:
-                                    const Icon(Icons.email_outlined),
-                              ),
-                              keyboardType:
-                                  TextInputType.emailAddress,
-                              validator: (v) => v?.isEmpty ?? true
-                                  ? l10n.emailRequired
-                                  : null,
-                            ),
+                            ],
                           ),
+                        ),
+                      ),
+                    ),
 
-                          const SizedBox(height: AppSpacing.s12),
+                  // -- Email --
+                  _FieldLabel(text: l10n.email, color: textSecondary),
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(1),
+                    child: TextFormField(
+                      controller: _emailController,
+                      focusNode: _emailFocus,
+                      autofocus: true,
+                      autofillHints: const [
+                        AutofillHints.email,
+                      ],
+                      textInputAction: TextInputAction.next,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      decoration: InputDecoration(
+                        hintText: l10n.email,
+                        prefixIcon: const Icon(Icons.email_outlined),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) =>
+                          v?.isEmpty ?? true ? l10n.emailRequired : null,
+                    ),
+                  ),
 
-                          // -- Username --
-                          FocusTraversalOrder(
-                            order: const NumericFocusOrder(2),
-                            child: TextFormField(
-                              controller: _usernameController,
-                              focusNode: _usernameFocus,
-                              autofillHints: const [
-                                AutofillHints.username,
-                              ],
-                              textInputAction: TextInputAction.next,
-                              scrollPadding: const EdgeInsets.only(bottom: 120),
-                              decoration: InputDecoration(
-                                hintText: l10n.username,
-                                prefixIcon: const Icon(
-                                    Icons.person_outline,),
-                              ),
-                              validator: (v) => v?.isEmpty ?? true
-                                  ? l10n.usernameRequired
-                                  : null,
-                            ),
+                  const SizedBox(height: AppSpacing.s12),
+
+                  // -- Username --
+                  _FieldLabel(text: l10n.username, color: textSecondary),
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(2),
+                    child: TextFormField(
+                      controller: _usernameController,
+                      focusNode: _usernameFocus,
+                      autofillHints: const [
+                        AutofillHints.username,
+                      ],
+                      textInputAction: TextInputAction.next,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      decoration: InputDecoration(
+                        hintText: l10n.username,
+                        prefixIcon: const Icon(
+                          Icons.person_outline,
+                        ),
+                      ),
+                      validator: (v) =>
+                          v?.isEmpty ?? true ? l10n.usernameRequired : null,
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.s12),
+
+                  // -- Password --
+                  _FieldLabel(text: l10n.password, color: textSecondary),
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(3),
+                    child: PasswordTextField(
+                      controller: _passwordController,
+                      focusNode: _passwordFocus,
+                      hintText: l10n.password,
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      autofillHints: const [
+                        AutofillHints.newPassword,
+                      ],
+                      textInputAction: TextInputAction.next,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      showPasswordTooltip: l10n.showPassword,
+                      hidePasswordTooltip: l10n.hidePassword,
+                      validator: (v) =>
+                          (v?.length ?? 0) < 8 ? l10n.passwordMinLength : null,
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.s12),
+
+                  // -- Confirm password --
+                  _FieldLabel(
+                    text: l10n.confirmPassword,
+                    color: textSecondary,
+                  ),
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(4),
+                    child: PasswordTextField(
+                      controller: _confirmPasswordController,
+                      focusNode: _confirmPasswordFocus,
+                      hintText: l10n.confirmPassword,
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      autofillHints: const [
+                        AutofillHints.newPassword,
+                      ],
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _submit(),
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      showPasswordTooltip: l10n.showPassword,
+                      hidePasswordTooltip: l10n.hidePassword,
+                      validator: (v) => v != _passwordController.text
+                          ? l10n.passwordsDoNotMatch
+                          : null,
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // -- Recovery key section --
+                  Text(
+                    l10n.yourRecoveryKey,
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.s4),
+                  Text(
+                    l10n.recoveryKeyHelp,
+                    style: AppTextStyles.caption.copyWith(
+                      color: textTertiary,
+                      height: 1.5,
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  // -- Encryption notice --
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.shield_outlined,
+                        size: 14,
+                        color: textTertiary,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          l10n.encryptionNotice,
+                          style: AppTextStyles.caption.copyWith(
+                            color: textTertiary,
                           ),
+                        ),
+                      ),
+                    ],
+                  ),
 
-                          const SizedBox(height: AppSpacing.s12),
+                  const SizedBox(height: AppSpacing.lg),
 
-                          // -- Password --
-                          FocusTraversalOrder(
-                            order: const NumericFocusOrder(3),
-                            child: PasswordTextField(
-                              controller: _passwordController,
-                              focusNode: _passwordFocus,
-                              hintText: l10n.password,
-                              prefixIcon:
-                                  const Icon(Icons.lock_outline),
-                              autofillHints: const [
-                                AutofillHints.newPassword,
-                              ],
-                              textInputAction: TextInputAction.next,
-                              scrollPadding: const EdgeInsets.only(bottom: 120),
-                              showPasswordTooltip: l10n.showPassword,
-                              hidePasswordTooltip: l10n.hidePassword,
-                              validator: (v) =>
-                                  (v?.length ?? 0) < 8
-                                      ? l10n.passwordMinLength
-                                      : null,
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.s12),
-
-                          // -- Confirm password --
-                          FocusTraversalOrder(
-                            order: const NumericFocusOrder(4),
-                            child: PasswordTextField(
-                              controller: _confirmPasswordController,
-                              focusNode: _confirmPasswordFocus,
-                              hintText: l10n.confirmPassword,
-                              prefixIcon:
-                                  const Icon(Icons.lock_outline),
-                              autofillHints: const [
-                                AutofillHints.newPassword,
-                              ],
-                              textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (_) => _submit(),
-                              scrollPadding: const EdgeInsets.only(bottom: 120),
-                              showPasswordTooltip: l10n.showPassword,
-                              hidePasswordTooltip: l10n.hidePassword,
-                              validator: (v) => v !=
-                                      _passwordController.text
-                                  ? l10n.passwordsDoNotMatch
-                                  : null,
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.sm),
-
-                          // -- Encryption notice --
-                          Padding(
-                            padding: const EdgeInsets.only(
-                                bottom: AppSpacing.lg,),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.shield_outlined,
-                                  size: 14,
-                                  color: isDark
-                                      ? AppColors.darkTextTertiary
-                                      : AppColors.lightTextTertiary,
-                                ),
-                                const SizedBox(width: AppSpacing.sm),
-                                Expanded(
-                                  child: Text(
-                                    l10n.encryptionNotice,
-                                    style:
-                                        AppTextStyles.caption.copyWith(
-                                      color: isDark
-                                          ? AppColors.darkTextTertiary
-                                          : AppColors
-                                              .lightTextTertiary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // -- Submit button --
-                          PressableScale(
-                            onPressed: _isLoading ? null : _submit,
-                            borderRadius: BorderRadius.circular(
-                                AppRadius.pill,),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 16,),
-                              decoration: BoxDecoration(
-                                color: primaryColor,
-                                borderRadius: BorderRadius.circular(
-                                    AppRadius.pill,),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: primaryColor
-                                        .withValues(alpha: 0.25),
-                                    offset: const Offset(0, 4),
-                                    blurRadius: 16,
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: _isLoading
-                                    ? SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child:
-                                            CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Theme.of(context).colorScheme.onPrimary,
-                                        ),
-                                      )
-                                    : Text(
-                                        l10n.createAccount,
-                                        style: AppTextStyles.body
-                                            .copyWith(
-                                          color: Theme.of(context).colorScheme.onPrimary,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // -- Login link --
-                          TextButton(
-                            onPressed: () =>
-                                context.push('/auth/login'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: primaryColor,
-                            ),
-                            child: Text(
-                              l10n.alreadyHaveAccount,
-                              style: AppTextStyles.body.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                  // -- Submit button --
+                  PressableScale(
+                    onPressed: _isLoading ? null : _submit,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    child: Container(
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withValues(alpha: 0.25),
+                            offset: const Offset(0, 4),
+                            blurRadius: 16,
                           ),
                         ],
                       ),
+                      child: Center(
+                        child: _isLoading
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              )
+                            : Text(
+                                l10n.createAccount,
+                                style: AppTextStyles.body.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                      ),
                     ),
                   ),
-                ),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // -- Footer: link to login --
+                  Text.rich(
+                    TextSpan(
+                      text: '${l10n.alreadyHaveAccountQuestion} ',
+                      style: AppTextStyles.caption.copyWith(
+                        color: textTertiary,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: l10n.signIn,
+                          style: AppTextStyles.caption.copyWith(
+                            color: linkColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          recognizer: _loginRecognizer,
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-      );
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Small w600 field label shown above inputs
+// ---------------------------------------------------------------------------
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _FieldLabel({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+      child: Text(
+        text,
+        style: AppTextStyles.caption.copyWith(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Copy chip for the recovery key preview box
+// ---------------------------------------------------------------------------
 class _CopyButton extends StatefulWidget {
   final AppLocalizations l10n;
   final String? recoveryKey;
@@ -655,33 +687,43 @@ class _CopyButtonState extends State<_CopyButton> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return PressableScale(
       onPressed: () {
         Clipboard.setData(
-            ClipboardData(text: widget.recoveryKey ?? ''),);
-        AppSnackBar.info(context,
-            message: widget.l10n.recoveryKeyCopied,);
+          ClipboardData(text: widget.recoveryKey ?? ''),
+        );
+        AppSnackBar.info(
+          context,
+          message: widget.l10n.recoveryKeyCopied,
+        );
         setState(() => _copied = true);
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) setState(() => _copied = false);
         });
       },
+      borderRadius: AppRadius.pillBorder,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
+          horizontal: AppSpacing.s12,
           vertical: AppSpacing.s4,
         ),
         decoration: BoxDecoration(
-          color: AppColors.accentYellow.withValues(alpha: 0.2),
+          color: isDark ? AppColors.darkCardBg : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorder : AppColors.primarySoftBorder,
+            width: 1,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              _copied ? Icons.check : Icons.copy_rounded,
+              _copied ? Icons.check : AppIcons.copy,
               size: 14,
-              color: AppColors.accentYellowText,
+              color: AppColors.primaryText,
             ),
             const SizedBox(width: AppSpacing.s4),
             Text(
@@ -689,8 +731,9 @@ class _CopyButtonState extends State<_CopyButton> {
                   ? widget.l10n.recoveryKeyCopied
                   : widget.l10n.copyRecoveryKey,
               style: AppTextStyles.caption.copyWith(
-                color: AppColors.accentYellowText,
-                fontWeight: FontWeight.w500,
+                fontSize: 12,
+                color: AppColors.primaryText,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -13,8 +13,8 @@ import '../../settings/providers/plan_providers.dart';
 
 /// Plan selection and comparison screen.
 ///
-/// Shows the user's current plan with usage stats, individual plan cards
-/// for Free/Pro/Lifetime, and upgrade/restore buttons.
+/// Shows the user's current plan with usage stats, compact Free/Pro cards
+/// side by side, a Lifetime card, and upgrade/restore actions.
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
 
@@ -26,6 +26,7 @@ class PlanScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.planTitle),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -57,7 +58,12 @@ class _PlanContent extends ConsumerWidget {
       ),
       children: [
         // ── Current plan hero card ──────────────────────────
-        _CurrentPlanCard(plan: plan),
+        _CurrentPlanCard(
+          plan: plan,
+          onManagePlan: plan.plan != PlanType.lifetime
+              ? () => _showUpgradeDialog(context, ref)
+              : null,
+        ),
 
         const SizedBox(height: AppSpacing.lg),
 
@@ -73,57 +79,45 @@ class _PlanContent extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.s8),
 
-        _PlanCard(
-          icon: Icons.explore_outlined,
-          title: l10n.freePlan,
-          price: l10n.freePlan,
-          accentBg: AppColors.accentPeachBg,
-          accentText: AppColors.accentPeachText,
-          features: [
-            '${l10n.maxNotes}: 500',
-            '${l10n.aiDailyQuota}: 50',
-            '${l10n.storage}: 100 MB',
-            '${l10n.maxDevices}: 2',
-          ],
-          isCurrent: plan.plan == PlanType.free,
+        // Free and Pro side by side. IntrinsicHeight bounds the row height
+        // (a vertical ListView gives its children unbounded height, which
+        // CrossAxisAlignment.stretch requires to be finite).
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _MiniPlanCard(
+                  title: l10n.freePlan,
+                  price: '\$0',
+                  caption: l10n.freePlanCaption,
+                  isCurrent: plan.plan == PlanType.free,
+                  onTap: null,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              Expanded(
+                child: _MiniPlanCard(
+                  title: l10n.proPlan,
+                  price: l10n.proPrice,
+                  caption: l10n.proPlanCaption,
+                  isCurrent: plan.plan == PlanType.pro,
+                  highlight: true,
+                  onTap: plan.plan == PlanType.free
+                      ? () => _showUpgradeDialog(context, ref)
+                      : null,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: AppSpacing.s8),
+        const SizedBox(height: AppSpacing.s12),
 
-        _PlanCard(
-          icon: Icons.workspace_premium_outlined,
-          title: l10n.proPlan,
-          price: l10n.proPrice,
-          accentBg: AppColors.accentYellowBg,
-          accentText: AppColors.accentYellowText,
-          features: [
-            '${l10n.maxNotes}: 10,000',
-            '${l10n.aiDailyQuota}: 500',
-            '${l10n.storage}: 5 GB',
-            '${l10n.maxDevices}: 5',
-            '${l10n.collaboration}: ${l10n.yes}',
-          ],
-          isCurrent: plan.plan == PlanType.pro,
-          isRecommended: plan.plan == PlanType.free,
-          onTap: plan.plan == PlanType.free
-              ? () => _showUpgradeDialog(context, ref)
-              : null,
-        ),
-        const SizedBox(height: AppSpacing.s8),
-
-        _PlanCard(
-          icon: Icons.diamond_outlined,
+        // Lifetime full width.
+        _MiniPlanCard(
           title: l10n.lifetimePlan,
           price: l10n.lifetimePrice,
-          accentBg: AppColors.accentMintBg,
-          accentText: AppColors.accentMintText,
-          features: [
-            '${l10n.maxNotes}: ${l10n.unlimited}',
-            '${l10n.aiDailyQuota}: ${l10n.unlimited}',
-            '${l10n.storage}: ${l10n.unlimited}',
-            '${l10n.maxDevices}: ${l10n.unlimited}',
-            '${l10n.collaboration}: ${l10n.yes}',
-            '${l10n.publishing}: ${l10n.yes}',
-          ],
+          caption: l10n.lifetimePlanDescription,
           isCurrent: plan.plan == PlanType.lifetime,
           onTap: plan.plan != PlanType.lifetime
               ? () => _showUpgradeDialog(context, ref)
@@ -141,7 +135,7 @@ class _PlanContent extends ConsumerWidget {
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
               ),
               child: Text(l10n.upgrade),
@@ -172,7 +166,7 @@ class _PlanContent extends ConsumerWidget {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
               ),
               child: Text(l10n.restorePurchase),
@@ -248,86 +242,83 @@ class _PlanContent extends ConsumerWidget {
 
 // ── Current plan hero card ─────────────────────────────────────
 
+/// Soft periwinkle hero card with the current plan name, description, usage
+/// stats, and an optional "Manage Plan" action.
 class _CurrentPlanCard extends StatelessWidget {
   final PlanInfo plan;
+  final VoidCallback? onManagePlan;
 
-  const _CurrentPlanCard({required this.plan});
+  const _CurrentPlanCard({
+    required this.plan,
+    this.onManagePlan,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final (accentBg, accentText) = switch (plan.plan) {
-      PlanType.free => (AppColors.accentPeachBg, AppColors.accentPeachText),
-      PlanType.pro => (AppColors.accentYellowBg, AppColors.accentYellowText),
-      PlanType.lifetime => (AppColors.accentMintBg, AppColors.accentMintText),
-    };
+    final labelColor =
+        isDark ? AppColors.secondary : AppColors.primaryText;
+    final headlineColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.s16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            accentBg,
-            accentText.withAlpha(20),
-          ],
-        ),
+        color:
+            isDark ? AppColors.primary.withAlpha(38) : AppColors.primarySoft,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: accentText.withAlpha(40)),
-        boxShadow: [
-          BoxShadow(
-            color: accentText.withAlpha(20),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(
+          color: isDark
+              ? AppColors.primary.withAlpha(60)
+              : AppColors.primarySoftBorder,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Plan name row
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: accentText.withAlpha(20),
-                  borderRadius: BorderRadius.circular(AppRadius.xs),
-                ),
-                child: Icon(
-                  plan.plan == PlanType.lifetime
-                      ? Icons.diamond_outlined
-                      : plan.plan == PlanType.pro
-                          ? Icons.workspace_premium_outlined
-                          : Icons.explore_outlined,
-                  size: 20,
-                  color: accentText,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s12),
-              Text(
-                l10n.currentPlan(plan.displayName),
-                style: AppTextStyles.body.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: accentText,
-                ),
-              ),
-            ],
+          // Small "Current Plan" label.
+          Text(
+            l10n.currentPlanLabel,
+            style: AppTextStyles.caption.copyWith(
+              fontWeight: FontWeight.w600,
+              color: labelColor,
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.s4),
 
-          // Usage stats
+          // Plan name in the handwritten voice.
+          Text(
+            plan.displayName,
+            style: AppTextStyles.handwritingTitle.copyWith(
+              color: headlineColor,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s4),
+          Text(
+            _planDescription(l10n),
+            style: AppTextStyles.caption.copyWith(color: subtextColor),
+          ),
+          const SizedBox(height: AppSpacing.s16),
+
+          // Usage stats panel.
           Container(
             padding: const EdgeInsets.all(AppSpacing.s12),
             decoration: BoxDecoration(
               color: isDark
-                  ? AppColors.darkCardBg.withAlpha(180)
-                  : AppColors.lightCardBg.withAlpha(200),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ? AppColors.darkCardBg.withAlpha(160)
+                  : AppColors.lightCardBg,
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+              border: Border.all(
+                color: isDark
+                    ? AppColors.darkBorder
+                    : AppColors.lightBorder,
+              ),
             ),
             child: Column(
               children: [
@@ -338,7 +329,8 @@ class _CurrentPlanCard extends StatelessWidget {
                   limit: plan.limits.maxNotes == -1
                       ? l10n.unlimited
                       : '${plan.limits.maxNotes}',
-                  accentText: accentText,
+                  accent: labelColor,
+                  subtext: subtextColor,
                   progress: plan.limits.maxNotes > 0
                       ? plan.noteCount / plan.limits.maxNotes
                       : 0,
@@ -351,7 +343,8 @@ class _CurrentPlanCard extends StatelessWidget {
                   limit: plan.limits.aiDailyQuota == -1
                       ? l10n.unlimited
                       : '${plan.limits.aiDailyQuota}',
-                  accentText: accentText,
+                  accent: labelColor,
+                  subtext: subtextColor,
                   progress: plan.limits.aiDailyQuota > 0
                       ? plan.aiDailyUsed / plan.limits.aiDailyQuota
                       : 0,
@@ -364,7 +357,8 @@ class _CurrentPlanCard extends StatelessWidget {
                   limit: plan.limits.maxStorageBytes == -1
                       ? l10n.unlimited
                       : _formatBytes(plan.limits.maxStorageBytes),
-                  accentText: accentText,
+                  accent: labelColor,
+                  subtext: subtextColor,
                   progress: plan.limits.maxStorageBytes > 0
                       ? plan.storageBytes / plan.limits.maxStorageBytes
                       : 0,
@@ -372,9 +366,46 @@ class _CurrentPlanCard extends StatelessWidget {
               ],
             ),
           ),
+
+          // Manage plan action.
+          if (onManagePlan != null) ...[
+            const SizedBox(height: AppSpacing.s16),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: onManagePlan,
+                style: TextButton.styleFrom(
+                  backgroundColor: isDark
+                      ? AppColors.darkCardBg
+                      : AppColors.lightCardBg,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.s12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                  ),
+                ),
+                child: Text(
+                  l10n.managePlan,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: labelColor,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  String _planDescription(AppLocalizations l10n) {
+    return switch (plan.plan) {
+      PlanType.pro => l10n.proPlanDescription,
+      PlanType.lifetime => l10n.lifetimePlanDescription,
+      PlanType.free => l10n.freePlanDescription,
+    };
   }
 
   String _formatBytes(int bytes) {
@@ -394,7 +425,8 @@ class _UsageRow extends StatelessWidget {
   final String label;
   final String value;
   final String limit;
-  final Color accentText;
+  final Color accent;
+  final Color subtext;
   final double progress;
 
   const _UsageRow({
@@ -402,16 +434,13 @@ class _UsageRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.limit,
-    required this.accentText,
+    required this.accent,
+    required this.subtext,
     this.progress = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final subtext = isDark
-        ? AppColors.darkTextTertiary
-        : AppColors.lightTextTertiary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -429,7 +458,7 @@ class _UsageRow extends StatelessWidget {
               '$value / $limit',
               style: AppTextStyles.caption.copyWith(
                 fontWeight: FontWeight.w600,
-                color: accentText,
+                color: accent,
               ),
             ),
           ],
@@ -442,7 +471,7 @@ class _UsageRow extends StatelessWidget {
               value: progress.clamp(0.0, 1.0),
               minHeight: 3,
               backgroundColor: subtext.withAlpha(30),
-              valueColor: AlwaysStoppedAnimation(accentText),
+              valueColor: AlwaysStoppedAnimation(accent),
             ),
           ),
         ],
@@ -451,165 +480,121 @@ class _UsageRow extends StatelessWidget {
   }
 }
 
-// ── Individual plan card ───────────────────────────────────────
+// ── Compact plan card ──────────────────────────────────────────
 
-class _PlanCard extends StatelessWidget {
-  final IconData icon;
+/// Compact plan card: title, large price, caption, and a check indicator.
+/// [highlight] renders the card on the periwinkle accent (Pro in the mockup).
+class _MiniPlanCard extends StatelessWidget {
   final String title;
   final String price;
-  final Color accentBg;
-  final Color accentText;
-  final List<String> features;
+  final String caption;
   final bool isCurrent;
-  final bool isRecommended;
+  final bool highlight;
   final VoidCallback? onTap;
 
-  const _PlanCard({
-    required this.icon,
+  const _MiniPlanCard({
     required this.title,
     required this.price,
-    required this.accentBg,
-    required this.accentText,
-    required this.features,
-    this.isCurrent = false,
-    this.isRecommended = false,
+    required this.caption,
+    required this.isCurrent,
+    this.highlight = false,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tertiary = isDark
+        ? AppColors.darkTextTertiary
+        : AppColors.lightTextTertiary;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.s16),
-        decoration: BoxDecoration(
-          color: isCurrent
-              ? accentBg
-              : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: isCurrent
-              ? Border.all(color: accentText.withAlpha(80), width: 1.5)
-              : isRecommended
-                  ? Border.all(color: accentText.withAlpha(40), width: 1)
-                  : null,
-          boxShadow: isCurrent
-              ? [
-                  BoxShadow(
-                    color: accentText.withAlpha(20),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+    final titleColor = highlight
+        ? Colors.white
+        : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary);
+    final priceColor = highlight
+        ? Colors.white
+        : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary);
+    final captionColor = highlight
+        ? Colors.white70
+        : (isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary);
+
+    return Material(
+      color: highlight
+          ? AppColors.primary
+          : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.s16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            border: highlight
+                ? null
+                : Border.all(
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
                   ),
-                ]
-              : AppShadows.smOf(Theme.of(context).brightness),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top row: icon + title + price + badges
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isCurrent
-                        ? accentText.withAlpha(20)
-                        : accentBg,
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title + current-plan check.
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: titleColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  child: Icon(icon, size: 22, color: accentText),
+                  const SizedBox(width: AppSpacing.s4),
+                  // Check indicator: filled when current, outline otherwise.
+                  Icon(
+                    isCurrent
+                        ? AppIcons.checkCircleFilled
+                        : AppIcons.checkCircle,
+                    size: 18,
+                    color: highlight
+                        ? Colors.white
+                        : (isCurrent
+                            ? (isDark
+                                ? AppColors.secondary
+                                : AppColors.primaryText)
+                            : tertiary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.s8),
+
+              // Large price.
+              Text(
+                price,
+                style: AppTextStyles.headline.copyWith(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: priceColor,
                 ),
-                const SizedBox(width: AppSpacing.s12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            title,
-                            style: AppTextStyles.body.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          if (isRecommended) ...[
-                            const SizedBox(width: AppSpacing.s8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: accentText.withAlpha(15),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.pill),
-                              ),
-                              child: Text(
-                                'Recommended',
-                                style: AppTextStyles.caption.copyWith(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: accentText,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      Text(
-                        price,
-                        style: AppTextStyles.caption.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextTertiary
-                              : AppColors.lightTextTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isCurrent)
-                  Icon(Icons.check_circle, size: 20, color: accentText),
-              ],
-            ),
+              ),
+              const SizedBox(height: AppSpacing.s4),
 
-            const SizedBox(height: AppSpacing.s12),
-
-            // Divider
-            Container(
-              height: 0.5,
-              color: isDark
-                  ? AppColors.darkDivider.withAlpha(40)
-                  : AppColors.lightDivider.withAlpha(60),
-            ),
-            const SizedBox(height: AppSpacing.s12),
-
-            // Features
-            ...features.map((f) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.s4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.check,
-                        size: 14,
-                        color: accentText.withAlpha(180),
-                      ),
-                      const SizedBox(width: AppSpacing.s8),
-                      Expanded(
-                        child: Text(
-                          f,
-                          style: AppTextStyles.caption.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),),
-          ],
+              // Caption.
+              Text(
+                caption,
+                style: AppTextStyles.caption.copyWith(color: captionColor),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -629,7 +614,7 @@ class _LifetimeBadge extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
         color: AppColors.accentMintBg,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(color: AppColors.accentMintText.withAlpha(40)),
       ),
       child: Row(

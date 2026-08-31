@@ -395,7 +395,7 @@ class _InviteCodeSection extends StatelessWidget {
                 child: Text(
                   inviteCode,
                   style: AppTextStyles.title.copyWith(
-                    fontFamily: 'monospace',
+                    fontFamily: 'RobotoMono',
                     letterSpacing: 1.2,
                   ),
                 ),

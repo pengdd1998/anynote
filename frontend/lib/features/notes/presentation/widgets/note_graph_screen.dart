@@ -26,9 +26,7 @@ final localGraphDataProvider =
       .map(
         (note) => {
           'id': note.id,
-          'title': note.plainTitle?.isNotEmpty == true
-              ? note.plainTitle!
-              : 'Untitled',
+          'title': note.plainTitle?.isNotEmpty == true ? note.plainTitle! : '',
           'preview': note.plainContent ?? '',
         },
       )
@@ -118,22 +116,22 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.lightbulb_outline),
-            tooltip: 'Suggested links',
+            tooltip: l10n.suggestedLinks,
             onPressed: () => _showSuggestions(context),
           ),
           IconButton(
             icon: const Icon(Icons.scatter_plot_outlined),
-            tooltip: 'Orphaned notes',
+            tooltip: l10n.orphanedNotes,
             onPressed: () => _showOrphanedNotes(context),
           ),
           IconButton(
             icon: const Icon(Icons.link),
-            tooltip: 'Manage links',
+            tooltip: l10n.manageLinks,
             onPressed: () => _showLinkManagement(context),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Reset view',
+            tooltip: l10n.resetView,
             onPressed: () {
               setState(() {});
             },
@@ -168,7 +166,7 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    'No notes yet',
+                    l10n.noNotesYet,
                     style: AppTextStyles.title.copyWith(
                       color: isDark
                           ? AppColors.darkTextSecondary
@@ -181,7 +179,7 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
                       horizontal: AppSpacing.xl,
                     ),
                     child: Text(
-                      'Create some notes and link them with [[wiki links]]',
+                      l10n.graphEmptyHint,
                       style: AppTextStyles.caption.copyWith(
                         color: isDark
                             ? AppColors.darkTextTertiary
@@ -227,7 +225,7 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
-                'Error loading graph',
+                l10n.errorLoadingGraph,
                 style: AppTextStyles.title.copyWith(
                   color: isDark
                       ? AppColors.darkTextSecondary
@@ -431,6 +429,11 @@ class _GraphCanvasState extends State<_GraphCanvas>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final untitled = AppLocalizations.of(context)?.untitled ?? 'Untitled';
+    final localizedTitles = {
+      for (final entry in _titles.entries)
+        entry.key: entry.value.isEmpty ? untitled : entry.value,
+    };
 
     return GestureDetector(
       onScaleStart: _handleScaleStart,
@@ -440,8 +443,7 @@ class _GraphCanvasState extends State<_GraphCanvas>
         for (final node in widget.nodes) {
           final id = node['id']!;
           final pos = _positions[id];
-          if (pos != null &&
-              (tapPos - _transformPoint(pos)).distance < 35) {
+          if (pos != null && (tapPos - _transformPoint(pos)).distance < 35) {
             widget.onNodeTap(id);
             return;
           }
@@ -471,7 +473,7 @@ class _GraphCanvasState extends State<_GraphCanvas>
             nodes: widget.nodes,
             edges: widget.edges,
             positions: _positions,
-            titles: _titles,
+            titles: localizedTitles,
             colorIndices: _colorIndices,
             hoveredNodeId: _hoveredNodeId,
             scale: _scale,
@@ -574,8 +576,7 @@ class _GraphPainter extends CustomPainter {
       if (from == null || to == null) continue;
 
       // Check if either endpoint is hovered to highlight the edge.
-      final isHighlighted =
-          src == hoveredNodeId || tgt == hoveredNodeId;
+      final isHighlighted = src == hoveredNodeId || tgt == hoveredNodeId;
 
       if (isHighlighted) {
         final highlightPaint = Paint()
@@ -602,17 +603,14 @@ class _GraphPainter extends CustomPainter {
       final colorIdx = colorIndices[id] ?? 0;
       final nodeRadius = isHovered ? 30.0 : 24.0;
 
-      final fillColor = isDark
-          ? _bubbleFillsDark[colorIdx]
-          : _bubbleFillsLight[colorIdx];
+      final fillColor =
+          isDark ? _bubbleFillsDark[colorIdx] : _bubbleFillsLight[colorIdx];
       final accentColor = _bubbleAccents[colorIdx];
       final textColor = _bubbleTextColors[colorIdx];
 
       // Soft shadow
       final shadowPaint = Paint()
-        ..color = isDark
-            ? AppColors.shadowDark
-            : AppColors.shadowLight
+        ..color = isDark ? AppColors.shadowDark : AppColors.shadowLight
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
       canvas.drawCircle(
         pos + const Offset(0, 2),

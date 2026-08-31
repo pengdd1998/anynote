@@ -223,6 +223,7 @@ class _PropertyTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
+    final l10n = AppLocalizations.of(context)!;
     final info = BuiltInProperties.getInfo(property.key);
     final displayName = info?.displayName ?? _formatKey(property.key);
     final displayValue = db.notePropertiesDao.getDisplayValue(property);
@@ -237,12 +238,12 @@ class _PropertyTile extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.edit_outlined, size: 18),
             onPressed: onEdit,
-            tooltip: 'Edit',
+            tooltip: l10n.edit,
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 18),
             onPressed: onDelete,
-            tooltip: 'Delete',
+            tooltip: l10n.delete,
           ),
         ],
       ),
@@ -378,8 +379,9 @@ class _PropertyEditorDialogState extends ConsumerState<_PropertyEditorDialog> {
               else
                 Text(
                   l10n.propertyOf(
-                      BuiltInProperties.getInfo(_selectedKey)?.displayName ??
-                          _selectedKey,),
+                    BuiltInProperties.getInfo(_selectedKey)?.displayName ??
+                        _selectedKey,
+                  ),
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               const SizedBox(height: 16),

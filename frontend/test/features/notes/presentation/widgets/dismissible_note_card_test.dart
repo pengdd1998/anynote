@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/database/app_database.dart';
@@ -59,22 +60,26 @@ Future<AppDatabase> pumpDismissibleCard(
   final n = note ?? _defaultNote();
 
   await tester.pumpWidget(
-    MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('en'),
-      home: Scaffold(
-        body: DismissibleNoteCard(
-          note: n,
-          db: db,
-          isGrid: isGrid,
-          time: 'just now',
-          tags: [_makeTag(id: 't1', plainName: 'Work')],
-          isSelected: false,
-          onTap: onTap ?? () {},
-          onLongPress: onLongPress != null ? (_) => onLongPress() : null,
-          onDeleted: onDeleted,
-          untitled: 'Untitled',
+    // NoteRichPreview inside NoteCard reads providers (crypto service),
+    // so a ProviderScope is required.
+    ProviderScope(
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('en'),
+        home: Scaffold(
+          body: DismissibleNoteCard(
+            note: n,
+            db: db,
+            isGrid: isGrid,
+            time: 'just now',
+            tags: [_makeTag(id: 't1', plainName: 'Work')],
+            isSelected: false,
+            onTap: onTap ?? () {},
+            onLongPress: onLongPress != null ? (_) => onLongPress() : null,
+            onDeleted: onDeleted,
+            untitled: 'Untitled',
+          ),
         ),
       ),
     ),
@@ -108,9 +113,13 @@ void main() {
     });
 
     testWidgets('renders note title', (tester) async {
+      // The card derives its title from the first line of the content.
       final db = await pumpDismissibleCard(
         tester,
-        note: _defaultNote(plainTitle: 'Dismissible Title'),
+        note: _defaultNote(
+          plainTitle: 'Dismissible Title',
+          plainContent: 'Dismissible Title\nMore content below.',
+        ),
       );
       addTearDown(() async => db.close());
 
@@ -118,9 +127,11 @@ void main() {
     });
 
     testWidgets('renders untitled fallback', (tester) async {
+      // Without content there is no first line, so the untitled fallback
+      // is used.
       final db = await pumpDismissibleCard(
         tester,
-        note: _defaultNote(plainTitle: null),
+        note: _defaultNote(plainTitle: null, plainContent: null),
       );
       addTearDown(() async => db.close());
 
@@ -142,8 +153,8 @@ void main() {
       );
       addTearDown(() async => db.close());
 
-      // Tap on the card content text (which is inside the Dismissible child).
-      await tester.tap(find.text('Test Note'));
+      // Tap on the card title text (which is inside the Dismissible child).
+      await tester.tap(find.text('Content for dismissible card.'));
       expect(tapped, isTrue);
     });
 
@@ -155,8 +166,8 @@ void main() {
       );
       addTearDown(() async => db.close());
 
-      // Long press on the card content text.
-      await tester.longPress(find.text('Test Note'));
+      // Long press on the card title text.
+      await tester.longPress(find.text('Content for dismissible card.'));
       expect(longPressed, isTrue);
     });
 

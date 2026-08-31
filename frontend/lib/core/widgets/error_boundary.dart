@@ -140,7 +140,7 @@ class _ErrorRecoveryUI extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   color: colorScheme.error,
-                  fontFamily: 'monospace',
+                  fontFamily: 'RobotoMono',
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 5,

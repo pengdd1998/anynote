@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+
 /// The sync engine packs a note for push as a JSON envelope
 /// `{"content": "...", "title": "..."}` (see SyncEngine._encryptNoteForPush).
 ///
@@ -73,6 +75,44 @@ bool containsSyncEnvelope(String content) {
   if (_tryExtractEnvelope(content) != null) return true;
   final deltaText = _deltaInsertText(content);
   return deltaText != null && _tryExtractEnvelope(deltaText) != null;
+}
+
+/// If [content] is a Quill Delta JSON array, return its plain text
+/// (concatenated insert-op text); otherwise return [content] unchanged.
+///
+/// Defensive helper for list previews: notes corrupted by an older version
+/// restore can carry Delta JSON in `plainContent`, which would otherwise be
+/// rendered as raw JSON when the card title is derived from the first line.
+String plainTextFromStoredContent(String content) {
+  final trimmed = content.trim();
+  if (!trimmed.startsWith('[')) return content;
+  return _deltaInsertText(trimmed) ?? content;
+}
+
+/// Converts stored note content to the plain-text form the editor saves in
+/// the `plainContent` column (see NoteEditorScreen._saveNote).
+///
+/// Version snapshots keep the editor's content format (Quill Delta JSON for
+/// rich-editor notes) in their encrypted blob, while the editor stores the
+/// plain-text extraction of that Delta in `plainContent`. Parsing the Delta
+/// through the same Quill document pipeline keeps restored content
+/// byte-equivalent to an editor save, so the home card derives its title and
+/// preview correctly. Non-Delta content (plain notes) is returned unchanged.
+String storedContentToPlainText(String content) {
+  final trimmed = content.trim();
+  if (!trimmed.startsWith('[')) return content;
+  try {
+    final decoded = jsonDecode(trimmed);
+    if (decoded is List &&
+        decoded.isNotEmpty &&
+        decoded.first is Map &&
+        (decoded.first as Map).containsKey('insert')) {
+      return quill.Document.fromJson(decoded).toPlainText();
+    }
+  } catch (_) {
+    // Not Delta JSON — fall through and return as-is.
+  }
+  return content;
 }
 
 /// Extract the balanced JSON object (`{…}`) beginning at [start], respecting

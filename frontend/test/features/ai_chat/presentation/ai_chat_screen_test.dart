@@ -6,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/network/api_client.dart';
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/ai_chat/data/ai_chat_repository.dart';
 import 'package:anynote/features/ai_chat/presentation/ai_chat_screen.dart';
 import 'package:anynote/features/ai_chat/providers/ai_chat_providers.dart';
 import 'package:anynote/features/compose/data/ai_repository.dart' as compose;
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../helpers/test_app_helper.dart';
 
 void main() {
@@ -75,9 +77,10 @@ void main() {
     testWidgets('shows empty state when no messages', (tester) async {
       await pumpChatScreen(tester);
 
-      // Should show the welcome empty state.
+      // Should show the welcome empty state with a sparkles icon tile.
+      // (The "New Session" CTA below also uses a sparkles icon.)
       expect(find.text('Ask me anything about your notes'), findsOneWidget);
-      expect(find.byIcon(Icons.chat_bubble_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.sparkles), findsWidgets);
     });
 
     testWidgets('shows message input field', (tester) async {
@@ -91,20 +94,20 @@ void main() {
     testWidgets('shows send button', (tester) async {
       await pumpChatScreen(tester);
 
-      // The send icon button should be present.
-      expect(find.byIcon(Icons.send), findsOneWidget);
+      // The circular purple send button uses an arrow-up icon.
+      expect(find.byIcon(PhosphorIconsBold.arrowUp), findsOneWidget);
     });
 
     testWidgets('shows new chat button in app bar', (tester) async {
       await pumpChatScreen(tester);
 
-      expect(find.byIcon(Icons.add_comment_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.chat), findsOneWidget);
     });
 
     testWidgets('shows context notes button in app bar', (tester) async {
       await pumpChatScreen(tester);
 
-      expect(find.byIcon(Icons.note_add_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.noteAdd), findsOneWidget);
     });
 
     testWidgets('entering text and tapping send triggers message',
@@ -119,7 +122,7 @@ void main() {
       await tester.pump();
 
       // Tap the send button -- should not throw.
-      await tester.tap(find.byIcon(Icons.send));
+      await tester.tap(find.byIcon(PhosphorIconsBold.arrowUp));
       await tester.pump();
 
       // The user's message text should appear immediately (added synchronously
@@ -137,7 +140,7 @@ void main() {
       await pumpChatScreen(tester);
 
       // Tap the new chat button -- should not throw.
-      await tester.tap(find.byIcon(Icons.add_comment_outlined));
+      await tester.tap(find.byIcon(AppIcons.chat));
       await tester.pumpAndSettle();
 
       // The screen should still be rendered.

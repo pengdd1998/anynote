@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -643,6 +644,24 @@ class MainShell extends StatelessWidget {
   }
 }
 
+/// Last timestamp for the throttled route-stack depth log.
+DateTime _lastRouteStackLog = DateTime.fromMillisecondsSinceEpoch(0);
+
+/// Logs the Navigator route stack depth at most once every 5 seconds in
+/// debug builds, to observe unbounded route stack growth (ANR investigation).
+void _debugLogRouteStack(BuildContext context) {
+  if (!kDebugMode) return;
+  final now = DateTime.now();
+  if (now.difference(_lastRouteStackLog) < const Duration(seconds: 5)) {
+    return;
+  }
+  _lastRouteStackLog = now;
+  final config = GoRouter.of(context).routerDelegate.currentConfiguration;
+  debugPrint(
+    '[RouteStack] depth=${config.routes.length} location=${config.uri.path}',
+  );
+}
+
 /// Phone layout: bottom NavigationBar.
 class _PhoneShell extends StatelessWidget {
   final Widget child;
@@ -650,6 +669,7 @@ class _PhoneShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    _debugLogRouteStack(context);
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
@@ -832,6 +852,9 @@ int _selectedIndex(BuildContext context) {
 }
 
 void _onDestinationSelected(BuildContext context, int index) {
+  // Tab mashing on an already-selected tab would fire redundant go() calls,
+  // each triggering a full-app router notification rebuild storm.
+  if (index == _selectedIndex(context)) return;
   switch (index) {
     case 0:
       context.go('/notes');

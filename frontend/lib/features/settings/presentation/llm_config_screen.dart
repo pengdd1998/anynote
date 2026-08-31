@@ -20,15 +20,23 @@ class LLMConfigScreen extends ConsumerStatefulWidget {
 class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
   // Built-in provider presets. The actual provider list is also fetched from
   // the server via [llmProvidersProvider] and merged when available.
+  // 'id' is the wire value the server validates (lowercase); 'name' is the
+  // display label. The server rejects non-lowercase ids (invalid provider).
   static const _presets = <Map<String, String>>[
-    {'name': 'OpenAI', 'baseUrl': 'https://api.openai.com/v1'},
-    {'name': 'DeepSeek', 'baseUrl': 'https://api.deepseek.com/v1'},
+    {'id': 'openai', 'name': 'OpenAI', 'baseUrl': 'https://api.openai.com/v1'},
     {
+      'id': 'openai',
+      'name': 'Xiaomi MiMo',
+      'baseUrl': 'https://api.xiaomimimo.com/v1',
+    },
+    {'id': 'deepseek', 'name': 'DeepSeek', 'baseUrl': 'https://api.deepseek.com/v1'},
+    {
+      'id': 'qwen',
       'name': 'Qwen',
       'baseUrl': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     },
-    {'name': 'Anthropic', 'baseUrl': 'https://api.anthropic.com/v1'},
-    {'name': 'Custom', 'baseUrl': ''},
+    {'id': 'anthropic', 'name': 'Anthropic', 'baseUrl': 'https://api.anthropic.com/v1'},
+    {'id': 'custom', 'name': 'Custom', 'baseUrl': ''},
   ];
 
   @override
@@ -69,6 +77,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                       onTest: () => _testConfig(id),
                       onEdit: () => _showEditDialog(cfg),
                       onDelete: () => _confirmDelete(context, id, cfg.name),
+                      onSetDefault: () => _setDefault(context, id),
                     ),
                   ),
                 );
@@ -132,7 +141,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
     // Pre-fill the base URL from presets when the provider changes.
     void onProviderChanged(String provider) {
       final preset = _presets.firstWhere(
-        (p) => p['name'] == provider,
+        (p) => p['id'] == provider,
         orElse: () => {'name': provider, 'baseUrl': ''},
       );
       urlCtrl.text = preset['baseUrl'] ?? '';
@@ -219,13 +228,25 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
             FilledButton(
               onPressed: () async {
                 final nav = Navigator.of(ctx);
+                String providerIdFor(String displayName) {
+                  for (final p in _presets) {
+                    if (p['name'] == displayName) return p['id']!;
+                  }
+                  return 'custom';
+                }
+
                 try {
+                  final current = ref.read(llmConfigsProvider);
+                  final isFirst = (current.value ?? const []).isEmpty;
                   await ref.read(llmConfigsProvider.notifier).create({
                     'name': nameCtrl.text,
-                    'provider': selectedProvider,
+                    'provider': providerIdFor(selectedProvider),
                     'base_url': urlCtrl.text,
                     'api_key': keyCtrl.text,
                     'model': modelCtrl.text,
+                    // The AI proxy routes through the default config; the
+                    // first config a user creates becomes the default.
+                    if (isFirst) 'is_default': true,
                   });
                   nav.pop();
                 } catch (e) {
@@ -346,6 +367,29 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
   }
 
   /// Test an LLM config by calling the test endpoint.
+  /// Mark [id] as the user's default LLM config. The AI proxy routes
+  /// requests through the default config; without one the shared LLM and its
+  /// rate limits apply.
+  Future<void> _setDefault(BuildContext context, String id) async {
+    try {
+      await ref
+          .read(llmConfigsProvider.notifier)
+          .updateConfig(id, {'is_default': true});
+      if (mounted) {
+        AppSnackBar.info(
+          context,
+          message:
+              AppLocalizations.of(context)?.setAsDefault ?? 'Set as default',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final appError = ErrorMapper.map(e);
+        ErrorDisplay.showSnackBar(context, appError);
+      }
+    }
+  }
+
   Future<void> _testConfig(String id) async {
     final l10n = AppLocalizations.of(context)!;
     AppSnackBar.info(context, message: l10n.testingConnection);
@@ -358,7 +402,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
           message: success
               ? l10n.connectionSuccessful
               : l10n.connectionFailed(
-                  result['error']?.toString() ?? 'Unknown error',
+                  result['error']?.toString() ?? l10n.unknownError,
                 ),
           type: success ? SnackBarType.info : SnackBarType.error,
         );
@@ -427,7 +471,11 @@ class _LLMConfigCard extends StatelessWidget {
     required this.onTest,
     required this.onEdit,
     required this.onDelete,
+    this.onSetDefault,
   });
+
+  /// Called when the user taps "set as default" on a non-default config.
+  final VoidCallback? onSetDefault;
 
   @override
   Widget build(BuildContext context) {
@@ -469,6 +517,15 @@ class _LLMConfigCard extends StatelessWidget {
                   onPressed: id.isEmpty ? null : onTest,
                 ),
               ),
+              if (!cfg.isDefault && onSetDefault != null)
+                A11yUtils.labeledButton(
+                  label: l10n.setAsDefault,
+                  child: IconButton(
+                    icon: const Icon(AppIcons.starOutline, size: 20),
+                    tooltip: l10n.setAsDefault,
+                    onPressed: onSetDefault,
+                  ),
+                ),
               A11yUtils.labeledButton(
                 label: l10n.delete,
                 child: IconButton(

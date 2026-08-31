@@ -517,7 +517,7 @@ class _SnippetCard extends StatelessWidget {
               child: Text(
                 codePreview,
                 style: TextStyle(
-                  fontFamily: 'monospace',
+                  fontFamily: 'RobotoMono',
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.4,

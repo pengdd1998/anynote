@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/crypto/crypto_service.dart';
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/tags/presentation/tags_screen.dart';
 import '../../../helpers/test_app_helper.dart';
 
@@ -81,7 +82,7 @@ void main() {
       );
 
       expect(find.byType(FloatingActionButton), findsOneWidget);
-      expect(find.byIcon(Icons.add), findsOneWidget);
+      expect(find.byIcon(AppIcons.add), findsOneWidget);
       await handle.dispose();
     });
   });
@@ -108,7 +109,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // The tag name should be visible as a tree tile (InkWell).
-      expect(find.text('Work'), findsOneWidget);
+      // Rows render "# name" via Text.rich, so match the rich text.
+      expect(find.textContaining('Work', findRichText: true), findsOneWidget);
       expect(find.byType(InkWell), findsWidgets);
       await handle.dispose();
     });
@@ -135,8 +137,11 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Work'), findsOneWidget);
-      expect(find.text('Personal'), findsOneWidget);
+      expect(find.textContaining('Work', findRichText: true), findsOneWidget);
+      expect(
+        find.textContaining('Personal', findRichText: true),
+        findsOneWidget,
+      );
       // Both tags are rendered in the tree view ListView.
       expect(find.byType(ListView), findsWidgets);
       await handle.dispose();
@@ -159,7 +164,13 @@ void main() {
       // Dialog should be visible with the New Tag title.
       expect(find.byType(AlertDialog), findsOneWidget);
       expect(find.text('New Tag'), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Cancel'), findsOneWidget);
       expect(find.text('Create'), findsOneWidget);
       await handle.dispose();
@@ -197,7 +208,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // The dialog should contain a TextField with autofocus enabled.
-      final textField = tester.widget<TextField>(find.byType(TextField));
+      final textField = tester.widget<TextField>(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+      );
       expect(textField.autofocus, isTrue);
       await handle.dispose();
     });

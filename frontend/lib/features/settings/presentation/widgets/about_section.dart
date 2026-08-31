@@ -32,7 +32,7 @@ class AboutSection extends ConsumerWidget {
               subtitle: appInfoAsync.when(
                 data: (info) => '${info.version} (${info.buildNumber})',
                 loading: () => '...',
-                error: (_, __) => 'Unknown',
+                error: (_, __) => l10n.unknown,
               ),
             ),
             SettingsItem(

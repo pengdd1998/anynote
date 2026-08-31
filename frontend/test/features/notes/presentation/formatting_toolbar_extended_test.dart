@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/notes/presentation/widgets/formatting_toolbar.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 
@@ -72,22 +74,22 @@ void main() {
   group('FormattingToolbar text style buttons', () {
     testWidgets('has bold button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.format_bold), findsOneWidget);
+      expect(find.byIcon(AppIcons.bold), findsOneWidget);
     });
 
     testWidgets('has italic button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.format_italic), findsOneWidget);
+      expect(find.byIcon(AppIcons.italic), findsOneWidget);
     });
 
     testWidgets('has underline button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.format_underline), findsOneWidget);
+      expect(find.byIcon(AppIcons.underline), findsOneWidget);
     });
 
     testWidgets('has strikethrough button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.format_strikethrough), findsOneWidget);
+      expect(find.byIcon(AppIcons.strikethrough), findsOneWidget);
     });
   });
 
@@ -95,38 +97,38 @@ void main() {
     testWidgets('has three heading buttons (H1, H2, H3)', (tester) async {
       await pumpToolbar(tester);
       // Three title icons for H1, H2, H3.
-      expect(find.byIcon(Icons.title), findsNWidgets(3));
+      expect(find.byIcon(AppIcons.title), findsNWidgets(3));
     });
   });
 
   group('FormattingToolbar list buttons', () {
     testWidgets('has bullet list button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.format_list_bulleted), findsOneWidget);
+      expect(find.byIcon(AppIcons.bulletList), findsOneWidget);
     });
 
     testWidgets('has numbered list button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.format_list_numbered), findsOneWidget);
+      expect(find.byIcon(AppIcons.numberedList), findsOneWidget);
     });
 
     testWidgets('has block quote button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.format_quote), findsOneWidget);
+      expect(find.byIcon(PhosphorIconsRegular.quotes), findsOneWidget);
     });
   });
 
   group('FormattingToolbar code block button', () {
     testWidgets('has code block button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.code), findsOneWidget);
+      expect(find.byIcon(AppIcons.code), findsOneWidget);
     });
 
     testWidgets('code block tooltip is localized', (tester) async {
       await pumpToolbar(tester);
       final button = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.code),
+          of: find.byIcon(AppIcons.code),
           matching: find.byType(IconButton),
         ),
       );
@@ -137,7 +139,7 @@ void main() {
       await pumpToolbar(tester);
       final iconButton = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.code),
+          of: find.byIcon(AppIcons.code),
           matching: find.byType(IconButton),
         ),
       );
@@ -149,14 +151,14 @@ void main() {
   group('FormattingToolbar checklist button', () {
     testWidgets('has checklist button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.checklist), findsOneWidget);
+      expect(find.byIcon(AppIcons.checklist), findsOneWidget);
     });
 
     testWidgets('checklist tooltip is localized', (tester) async {
       await pumpToolbar(tester);
       final button = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.checklist),
+          of: find.byIcon(AppIcons.checklist),
           matching: find.byType(IconButton),
         ),
       );
@@ -167,19 +169,19 @@ void main() {
   group('FormattingToolbar indent/outdent buttons', () {
     testWidgets('has indent button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.format_indent_increase), findsOneWidget);
+      expect(find.byIcon(AppIcons.indentIncrease), findsOneWidget);
     });
 
     testWidgets('has outdent button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.format_indent_decrease), findsOneWidget);
+      expect(find.byIcon(AppIcons.indentDecrease), findsOneWidget);
     });
 
     testWidgets('indent tooltip is localized', (tester) async {
       await pumpToolbar(tester);
       final button = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.format_indent_increase),
+          of: find.byIcon(AppIcons.indentIncrease),
           matching: find.byType(IconButton),
         ),
       );
@@ -190,7 +192,7 @@ void main() {
       await pumpToolbar(tester);
       final button = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.format_indent_decrease),
+          of: find.byIcon(AppIcons.indentDecrease),
           matching: find.byType(IconButton),
         ),
       );
@@ -201,19 +203,19 @@ void main() {
   group('FormattingToolbar undo/redo buttons', () {
     testWidgets('has undo button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.undo), findsOneWidget);
+      expect(find.byIcon(AppIcons.undo), findsOneWidget);
     });
 
     testWidgets('has redo button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.redo), findsOneWidget);
+      expect(find.byIcon(AppIcons.redo), findsOneWidget);
     });
 
     testWidgets('undo tooltip is set', (tester) async {
       await pumpToolbar(tester);
       final button = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.undo),
+          of: find.byIcon(AppIcons.undo),
           matching: find.byType(IconButton),
         ),
       );
@@ -224,7 +226,7 @@ void main() {
       await pumpToolbar(tester);
       final button = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.redo),
+          of: find.byIcon(AppIcons.redo),
           matching: find.byType(IconButton),
         ),
       );
@@ -235,32 +237,32 @@ void main() {
   group('FormattingToolbar optional buttons', () {
     testWidgets('shows image button when onPickImage provided', (tester) async {
       await pumpToolbar(tester, onPickImage: () {});
-      expect(find.byIcon(Icons.image_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.imageIcon), findsOneWidget);
     });
 
     testWidgets('hides image button when onPickImage is null', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.image_outlined), findsNothing);
+      expect(find.byIcon(AppIcons.imageIcon), findsNothing);
     });
 
     testWidgets('shows AI button when onAiAction provided', (tester) async {
       await pumpToolbar(tester, onAiAction: () {});
-      expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.sparkles), findsOneWidget);
     });
 
     testWidgets('hides AI button when onAiAction is null', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.auto_awesome_outlined), findsNothing);
+      expect(find.byIcon(AppIcons.sparkles), findsNothing);
     });
 
     testWidgets('shows link button when onInsertLink provided', (tester) async {
       await pumpToolbar(tester, onInsertLink: () {});
-      expect(find.byIcon(Icons.link), findsOneWidget);
+      expect(find.byIcon(AppIcons.link), findsOneWidget);
     });
 
     testWidgets('hides link button when onInsertLink is null', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(Icons.link), findsNothing);
+      expect(find.byIcon(AppIcons.link), findsNothing);
     });
   });
 
@@ -298,56 +300,68 @@ void main() {
     testWidgets('bold button formats selection', (tester) async {
       await pumpToolbar(tester);
 
-      await tester.tap(find.byIcon(Icons.format_bold));
+      await tester.tap(find.byIcon(AppIcons.bold));
       await tester.pump();
 
       // After tapping bold, the selection style should contain bold.
       // The toolbar rebuilds with updated style (may need a second pump).
-      expect(find.byIcon(Icons.format_bold), findsOneWidget);
+      expect(find.byIcon(AppIcons.bold), findsOneWidget);
     });
 
     testWidgets('undo button can be tapped without error', (tester) async {
       await pumpToolbar(tester);
-      await tester.tap(find.byIcon(Icons.undo));
+      await tester.ensureVisible(find.byIcon(AppIcons.undo));
+      await tester.pump();
+      await tester.tap(find.byIcon(AppIcons.undo));
       await tester.pump();
       // No exception means success.
-      expect(find.byIcon(Icons.undo), findsOneWidget);
+      expect(find.byIcon(AppIcons.undo), findsOneWidget);
     });
 
     testWidgets('redo button can be tapped without error', (tester) async {
       await pumpToolbar(tester);
-      await tester.tap(find.byIcon(Icons.redo));
+      await tester.ensureVisible(find.byIcon(AppIcons.redo));
       await tester.pump();
-      expect(find.byIcon(Icons.redo), findsOneWidget);
+      await tester.tap(find.byIcon(AppIcons.redo));
+      await tester.pump();
+      expect(find.byIcon(AppIcons.redo), findsOneWidget);
     });
 
     testWidgets('indent button can be tapped without error', (tester) async {
       await pumpToolbar(tester);
-      await tester.tap(find.byIcon(Icons.format_indent_increase));
+      await tester.ensureVisible(find.byIcon(AppIcons.indentIncrease));
       await tester.pump();
-      expect(find.byIcon(Icons.format_indent_increase), findsOneWidget);
+      await tester.tap(find.byIcon(AppIcons.indentIncrease));
+      await tester.pump();
+      expect(find.byIcon(AppIcons.indentIncrease), findsOneWidget);
     });
 
     testWidgets('outdent button can be tapped without error', (tester) async {
       await pumpToolbar(tester);
-      await tester.tap(find.byIcon(Icons.format_indent_decrease));
+      await tester.ensureVisible(find.byIcon(AppIcons.indentDecrease));
       await tester.pump();
-      expect(find.byIcon(Icons.format_indent_decrease), findsOneWidget);
+      await tester.tap(find.byIcon(AppIcons.indentDecrease));
+      await tester.pump();
+      expect(find.byIcon(AppIcons.indentDecrease), findsOneWidget);
     });
 
     testWidgets('code block button can be tapped without error',
         (tester) async {
       await pumpToolbar(tester);
-      await tester.tap(find.byIcon(Icons.code));
+      await tester.ensureVisible(find.byIcon(AppIcons.code));
       await tester.pump();
-      expect(find.byIcon(Icons.code), findsOneWidget);
+      await tester.tap(find.byIcon(AppIcons.code));
+      await tester.pump();
+      expect(find.byIcon(AppIcons.code), findsOneWidget);
     });
 
     testWidgets('checklist button can be tapped without error', (tester) async {
       await pumpToolbar(tester);
-      await tester.tap(find.byIcon(Icons.checklist));
+      await tester.ensureVisible(find.byIcon(AppIcons.checklist));
       await tester.pump();
-      expect(find.byIcon(Icons.checklist), findsOneWidget);
+      await tester.tap(find.byIcon(AppIcons.checklist));
+      await tester.pump();
+      expect(find.byIcon(AppIcons.checklist), findsOneWidget);
     });
   });
 

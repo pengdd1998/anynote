@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -11,9 +10,10 @@ import '../../../core/widgets/keyboard_scroll_mixin.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/plan_providers.dart';
 
-/// Profile editing screen.
+/// Profile screen.
 ///
-/// Allows the user to set a display name, bio, and toggle public profile.
+/// Shows the user's avatar, display name, email, and account info cards,
+/// with an inline editor for display name, bio, and public profile visibility.
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -30,6 +30,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   late bool _publicProfileEnabled;
   bool _initialized = false;
   bool _saving = false;
+  bool _editing = false;
 
   @override
   void initState() {
@@ -60,7 +61,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: Text(l10n.profileTitle),
+        title: Text(l10n.profile),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -99,7 +101,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 profile['public_profile_enabled'] as bool? ?? false;
             _initialized = true;
           }
-          return _buildForm(context, l10n);
+          return _buildBody(context, l10n, profile);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => Center(child: Text(l10n.unableToLoadProfile)),
@@ -107,141 +109,83 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  Widget _buildForm(BuildContext context, AppLocalizations l10n) {
+  Widget _buildBody(
+    BuildContext context,
+    AppLocalizations l10n,
+    Map<String, dynamic> profile,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final initial = _displayNameController.text.trim().isNotEmpty
         ? _displayNameController.text.trim().substring(0, 1).toUpperCase()
         : '?';
+    final email = profile['email'] as String? ?? '';
+    final createdAtRaw = profile['created_at'] as String?;
+    final createdAt =
+        createdAtRaw == null ? null : DateTime.tryParse(createdAtRaw);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.s4,
-              AppSpacing.md,
-              200,
-            ),
-      children: [
-        // ── Avatar hero ─────────────────────────────────────
-        Center(
-          child: Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.accentPeachBg,
-                  AppColors.accentMintBg.withAlpha(180),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withAlpha(30),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.s4,
+            AppSpacing.md,
+            200,
+          ),
+          children: [
+            // ── Avatar hero ─────────────────────────────────────
+            Center(
+              child: Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark
+                      ? AppColors.primary.withAlpha(45)
+                      : AppColors.primarySoft,
                 ),
-              ],
+                child: Center(
+                  child: Text(
+                    initial,
+                    style: AppTextStyles.headline.copyWith(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.secondary
+                          : AppColors.primaryText,
+                    ),
+                  ),
+                ),
+              ),
             ),
-            child: Center(
+            const SizedBox(height: AppSpacing.s8),
+
+            // Display name in the handwritten voice.
+            Center(
               child: Text(
-                initial,
-                style: AppTextStyles.headline.copyWith(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.accentPeachText,
+                _displayNameController.text.trim().isNotEmpty
+                    ? _displayNameController.text.trim()
+                    : l10n.displayNameHint,
+                style: AppTextStyles.handwritingBody.copyWith(
+                  fontSize: 26,
+                  color: _displayNameController.text.trim().isNotEmpty
+                      ? (isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary)
+                      : (isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary),
                 ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.s8),
 
-        // Name preview below avatar
-        Center(
-          child: Text(
-            _displayNameController.text.trim().isNotEmpty
-                ? _displayNameController.text.trim()
-                : l10n.displayNameHint,
-            style: AppTextStyles.body.copyWith(
-              fontWeight: FontWeight.w600,
-              color: _displayNameController.text.trim().isNotEmpty
-                  ? (isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary)
-                  : (isDark
-                      ? AppColors.darkTextTertiary
-                      : AppColors.lightTextTertiary),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Form card ───────────────────────────────────────
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.s16),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Display name label
-              Text(
-                l10n.displayName,
-                style: AppTextStyles.caption.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? AppColors.darkTextTertiary
-                      : AppColors.lightTextTertiary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.s8),
-              TextField(
-                controller: _displayNameController,
-                focusNode: _displayNameFocus,
-                maxLength: 100,
-                scrollPadding: const EdgeInsets.only(bottom: 120),
-                decoration: InputDecoration(
-                  hintText: l10n.displayNameHint,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  counterText: '',
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-
-              const SizedBox(height: AppSpacing.lg),
-
-              // Bio label
-              Text(
-                l10n.bio,
-                style: AppTextStyles.caption.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? AppColors.darkTextTertiary
-                      : AppColors.lightTextTertiary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.s8),
-              TextField(
-                controller: _bioController,
-                focusNode: _bioFocus,
-                maxLength: 500,
-                maxLines: 4,
-                scrollPadding: const EdgeInsets.only(bottom: 120),
-                decoration: InputDecoration(
-                  hintText: l10n.bioHint,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  counterStyle: AppTextStyles.caption.copyWith(
+            // Email caption.
+            if (email.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.s4),
+              Center(
+                child: Text(
+                  email,
+                  style: AppTextStyles.caption.copyWith(
                     color: isDark
                         ? AppColors.darkTextTertiary
                         : AppColors.lightTextTertiary,
@@ -249,48 +193,185 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
               ),
             ],
-          ),
-        ),
+            const SizedBox(height: AppSpacing.s4),
 
-        const SizedBox(height: AppSpacing.lg),
+            // "Edit Profile" link toggles the inline editor.
+            Center(
+              child: TextButton(
+                onPressed: () => setState(() => _editing = !_editing),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.s12,
+                    vertical: AppSpacing.s4,
+                  ),
+                ),
+                child: Text(
+                  l10n.profileTitle,
+                  style: AppTextStyles.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.secondary : AppColors.primaryText,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
 
-        // ── Public profile toggle card ──────────────────────
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.s16,
-            vertical: AppSpacing.s4,
-          ),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.s4,
-                  AppSpacing.s12,
-                  AppSpacing.s4,
-                  0,
+            // ── Account info cards ──────────────────────────────
+            _SectionLabel(
+              label: l10n.account,
+              isDark: isDark,
+            ),
+            const SizedBox(height: AppSpacing.s8),
+            if (email.isNotEmpty)
+              _InfoCard(
+                isDark: isDark,
+                icon: Icons.alternate_email,
+                title: l10n.email,
+                value: email,
+                iconBg: isDark
+                    ? AppColors.accentLavenderText.withAlpha(36)
+                    : AppColors.accentLavenderBg,
+                iconColor: isDark
+                    ? AppColors.accentLavender
+                    : AppColors.accentLavenderText,
+              ),
+            if (email.isNotEmpty) const SizedBox(height: AppSpacing.s12),
+            if (createdAt != null)
+              _InfoCard(
+                isDark: isDark,
+                icon: Icons.calendar_today_outlined,
+                title: l10n.joined,
+                value: _formatJoinedDate(createdAt),
+                iconBg: isDark
+                    ? AppColors.accentPeachText.withAlpha(36)
+                    : AppColors.accentPeachBg,
+                iconColor: isDark
+                    ? AppColors.accentPeach
+                    : AppColors.accentPeachText,
+              ),
+
+            // ── Inline editor (toggled by "Edit Profile") ───────
+            if (_editing) ...[
+              const SizedBox(height: AppSpacing.lg),
+              _SectionLabel(
+                label: l10n.edit,
+                isDark: isDark,
+              ),
+              const SizedBox(height: AppSpacing.s8),
+
+              // Name + bio card.
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.s16),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  border: Border.all(
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Display name label
+                    Text(
+                      l10n.displayName,
+                      style: AppTextStyles.caption.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.s8),
+                    TextField(
+                      controller: _displayNameController,
+                      focusNode: _displayNameFocus,
+                      maxLength: 100,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      decoration: InputDecoration(
+                        hintText: l10n.displayNameHint,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                        counterText: '',
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Bio label
+                    Text(
+                      l10n.bio,
+                      style: AppTextStyles.caption.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.s8),
+                    TextField(
+                      controller: _bioController,
+                      focusNode: _bioFocus,
+                      maxLength: 500,
+                      maxLines: 4,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      decoration: InputDecoration(
+                        hintText: l10n.bioHint,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                        counterStyle: AppTextStyles.caption.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.s12),
+
+              // ── Public profile toggle card ────────────────────
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: AppSpacing.s8,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  border: Border.all(
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: _publicProfileEnabled
-                            ? AppColors.accentMintBg
-                            : AppColors.darkTextTertiary.withAlpha(12),
+                            ? (isDark
+                                ? AppColors.accentMintText.withAlpha(36)
+                                : AppColors.accentMintBg)
+                            : (isDark
+                                ? AppColors.darkTextTertiary.withAlpha(12)
+                                : AppColors.lightInputFill),
                         borderRadius: BorderRadius.circular(AppRadius.xs),
                       ),
                       child: Icon(
                         Icons.public,
                         size: 18,
                         color: _publicProfileEnabled
-                            ? AppColors.accentMintText
+                            ? (isDark
+                                ? AppColors.accentMint
+                                : AppColors.accentMintText)
                             : (isDark
                                 ? AppColors.darkTextTertiary
                                 : AppColors.lightTextTertiary),
@@ -304,7 +385,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           Text(
                             l10n.publicProfile,
                             style: AppTextStyles.body.copyWith(
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
                             ),
                           ),
                           Text(
@@ -330,14 +414,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.s4),
             ],
-          ),
-        ),
-      ],
-    );
+          ],
+        );
       },
     );
+  }
+
+  /// Formats a join date as a compact "Mar 5, 2025" label.
+  static String _formatJoinedDate(DateTime dt) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
   Future<void> _save() async {
@@ -360,5 +460,102 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+}
+
+/// Small tertiary section label used above card groups.
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  final bool isDark;
+
+  const _SectionLabel({required this.label, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: AppTextStyles.caption.copyWith(
+        fontWeight: FontWeight.w600,
+        color:
+            isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
+      ),
+    );
+  }
+}
+
+/// A read-only info row-card (icon tile, label, value).
+class _InfoCard extends StatelessWidget {
+  final bool isDark;
+  final IconData icon;
+  final String title;
+  final String value;
+  final Color iconBg;
+  final Color iconColor;
+
+  const _InfoCard({
+    required this.isDark,
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.iconBg,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 14,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+            ),
+            child: Icon(icon, size: 20, color: iconColor),
+          ),
+          const SizedBox(width: AppSpacing.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: AppTextStyles.caption.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

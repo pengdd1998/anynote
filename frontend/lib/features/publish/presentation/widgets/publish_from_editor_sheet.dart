@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../compose/domain/post_template.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,11 +17,17 @@ class PublishFromEditorSheet extends ConsumerStatefulWidget {
   final String content;
   final List<String> initialTags;
 
+  /// Template selected upstream (e.g. in the AI compose flow). Applied to
+  /// the writing-assist polish pass so platform copy keeps the template's
+  /// structure and tone.
+  final PostTemplate? template;
+
   const PublishFromEditorSheet({
     super.key,
     required this.title,
     required this.content,
     this.initialTags = const [],
+    this.template,
   });
 
   @override
@@ -61,6 +69,7 @@ class _PublishFromEditorSheetState
       ),
       builder: (_) => WritingAssistSheet(
         originalText: _contentController.text,
+        template: widget.template,
         onAccept: (corrected) {
           setState(() {
             _contentController.text = corrected;

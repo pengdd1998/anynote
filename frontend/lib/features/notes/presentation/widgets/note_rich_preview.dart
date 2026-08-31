@@ -25,11 +25,16 @@ class NoteRichPreview extends ConsumerStatefulWidget {
   /// Base text color.
   final Color? color;
 
+  /// When true, the first content line is hidden. Used by the note card,
+  /// which renders the first line as the handwritten title itself.
+  final bool skipFirstLine;
+
   const NoteRichPreview({
     super.key,
     required this.note,
     this.maxLines = 6,
     this.color,
+    this.skipFirstLine = false,
   });
 
   @override
@@ -96,8 +101,13 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     }
 
     if (_ops == null) {
+      var fallback = _plainFallback ?? '';
+      if (widget.skipFirstLine) {
+        // Drop the first line — it is rendered as the card title.
+        fallback = fallback.split('\n').skip(1).join('\n');
+      }
       return Text(
-        _plainFallback ?? '',
+        fallback,
         maxLines: widget.maxLines,
         overflow: TextOverflow.ellipsis,
         style: base,
@@ -119,6 +129,10 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     ThemeData theme,
   ) {
     final lines = _splitIntoLines(ops);
+    if (widget.skipFirstLine && lines.isNotEmpty) {
+      // Drop the first line — it is rendered as the card title.
+      lines.removeAt(0);
+    }
     final spans = <InlineSpan>[];
     var ordered = 0;
     for (final line in lines) {
@@ -224,7 +238,7 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
                 : TextDecoration.lineThrough,
       );
     }
-    if (attrs['code'] == true) s = s.copyWith(fontFamily: 'monospace');
+    if (attrs['code'] == true) s = s.copyWith(fontFamily: 'RobotoMono');
     if (attrs['link'] is String) {
       s = s.copyWith(color: theme.colorScheme.primary, decoration: TextDecoration.underline);
     }

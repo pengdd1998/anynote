@@ -10,6 +10,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
+import '../../domain/note_envelope.dart';
 import '../../domain/text_diff.dart';
 
 /// Decrypted version data used for diff comparison.
@@ -478,7 +479,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
                       pair.left!.text.isEmpty ? ' ' : pair.left!.text,
                       style: TextStyle(
                         fontSize: 13,
-                        fontFamily: 'monospace',
+                        fontFamily: 'RobotoMono',
                         height: 1.5,
                         color: leftTextColor,
                       ),
@@ -516,7 +517,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
                       pair.right!.text.isEmpty ? ' ' : pair.right!.text,
                       style: TextStyle(
                         fontSize: 13,
-                        fontFamily: 'monospace',
+                        fontFamily: 'RobotoMono',
                         height: 1.5,
                         color: rightTextColor,
                       ),
@@ -639,7 +640,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
         id: noteId,
         encryptedContent: encryptedContent,
         encryptedTitle: encryptedTitle,
-        plainContent: version.content,
+        plainContent: storedContentToPlainText(version.content),
         plainTitle: version.title == l10n.untitled ? null : version.title,
       );
 

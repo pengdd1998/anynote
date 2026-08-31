@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/navigation/nav_guard.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
@@ -93,8 +94,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                 session.selectedClusterIndices.length,
               ),
               style: TextStyle(
-                color:
-                    Theme.of(context).textTheme.bodySmall?.color ??
+                color: Theme.of(context).textTheme.bodySmall?.color ??
                     Theme.of(context).disabledColor,
               ),
             ),
@@ -118,7 +118,9 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
         message: session.error!,
         onRetry: () {
           ref.read(composeSessionProvider.notifier).clearError();
-          ref.read(composeSessionProvider.notifier).generateOutline();
+          ref
+              .read(composeSessionProvider.notifier)
+              .generateOutline(quotaExceededMessage: l10n.aiQuotaExceeded);
         },
       );
     }
@@ -144,8 +146,8 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                 child: Text(
                   outline.title,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ],
@@ -314,8 +316,13 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                       : () async {
                           await ref
                               .read(composeSessionProvider.notifier)
-                              .expandToDraft();
+                              .expandToDraft(
+                                quotaExceededMessage: l10n.aiQuotaExceeded,
+                              );
                           if (!context.mounted) return;
+                          if (!NavGuard.canNavigate('/compose/editor')) {
+                            return;
+                          }
                           context.push('/compose/editor/${widget.sessionId}');
                         },
                   icon: const Icon(Icons.edit_note),
@@ -351,9 +358,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
             onPressed: () {
               final newTitle = _titleController.text.trim();
               if (newTitle.isNotEmpty && session.outline != null) {
-                ref
-                    .read(composeSessionProvider.notifier)
-                    .updateOutline(
+                ref.read(composeSessionProvider.notifier).updateOutline(
                       OutlineModel(
                         title: newTitle,
                         sections: session.outline!.sections,

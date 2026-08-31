@@ -13,6 +13,9 @@ import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
@@ -40,20 +43,20 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
     final countsAsync = ref.watch(localItemCountsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.securityEncryption)),
+      appBar: AppBar(
+        title: Text(l10n.securityEncryption),
+        centerTitle: true,
+      ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [
+          // -- Hero: heading, caption, and encryption status card ------------
           StaggeredGroup(
             staggerIndex: 0,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _StatusCard(
-                isActive: encryptionStatus.isInitialized,
-                isUnlocked: encryptionStatus.isUnlocked,
-                colorScheme: colorScheme,
-                l10n: l10n,
-              ),
+            child: _EncryptionHero(
+              isActive: encryptionStatus.isInitialized,
+              isUnlocked: encryptionStatus.isUnlocked,
+              l10n: l10n,
             ),
           ),
           StaggeredGroup(
@@ -516,10 +519,128 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
 }
 
 // =============================================================================
+// Encryption hero (heading + status)
+// =============================================================================
+
+/// Heading block ("End-to-end encrypted") plus a tinted status card with the
+/// algorithm, key derivation, and master-key lock state.
+class _EncryptionHero extends StatelessWidget {
+  final bool isActive;
+  final bool isUnlocked;
+  final AppLocalizations l10n;
+
+  const _EncryptionHero({
+    required this.isActive,
+    required this.isUnlocked,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final statusColor =
+        isActive ? AppColors.success : AppColors.warning;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Heading + supporting caption.
+          Row(
+            children: [
+              Icon(
+                isActive ? AppIcons.verifiedUser : AppIcons.warning,
+                size: 22,
+                color: statusColor,
+              ),
+              const SizedBox(width: AppSpacing.s8),
+              Expanded(
+                child: Text(
+                  isActive ? l10n.e2eEncryptedHeading : l10n.encryptionNotSetUp,
+                  style: AppTextStyles.headline.copyWith(
+                    fontSize: 19,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s4),
+          Text(
+            l10n.e2eEncryptedSubtitle,
+            style: AppTextStyles.caption.copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+
+          // Tinted status card with algorithm and key details.
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: isDark ? 0.14 : 0.08),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              border: Border.all(
+                color: statusColor.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isActive
+                      ? l10n.e2eEncryptionActiveStatus
+                      : l10n.encryptionNotSetUp,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.s4),
+                Text(
+                  l10n.encryptionAlgorithm,
+                  style: AppTextStyles.caption.copyWith(
+                    color: statusColor.withValues(alpha: 0.85),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.keyDerivation,
+                  style: AppTextStyles.caption.copyWith(
+                    color: statusColor.withValues(alpha: 0.75),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isUnlocked ? l10n.masterKeyUnlocked : l10n.masterKeyLocked,
+                  style: AppTextStyles.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isUnlocked
+                        ? statusColor.withValues(alpha: 0.8)
+                        : statusColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
 // Encrypted items group
 // =============================================================================
 
-/// Displays a list of encrypted item counts grouped under a header.
+/// Displays a list of encrypted item counts in a white row-card, each with a
+/// green check and an "Encrypted" trailing label, plus the key status row.
 class _EncryptedItemsGroup extends StatelessWidget {
   final AsyncValue<Map<String, int>> countsAsync;
   final AppLocalizations l10n;
@@ -536,73 +657,172 @@ class _EncryptedItemsGroup extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SettingsGroupHeader(title: l10n.encryptedItems),
-        SettingsGroup(
-          children: [
-            countsAsync.when(
-              data: (counts) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsItem(
-                    icon: AppIcons.notes,
-                    title: l10n.notes,
-                    subtitle: l10n.itemsCount(counts['notes'] ?? 0),
-                  ),
-                  SettingsItem(
-                    icon: AppIcons.tag,
-                    title: l10n.tagsLabel,
-                    subtitle: l10n.itemsCount(counts['tags'] ?? 0),
-                  ),
-                  SettingsItem(
-                    icon: AppIcons.folder,
-                    title: l10n.collectionsLabel,
-                    subtitle: l10n.itemsCount(counts['collections'] ?? 0),
-                  ),
-                  SettingsItem(
-                    icon: AppIcons.compose,
-                    title: l10n.aiContent,
-                    subtitle: l10n.itemsCount(counts['ai_content'] ?? 0),
-                  ),
-                ],
-              ),
-              loading: () => const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              ),
-              error: (_, __) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SettingsItem(
-                    icon: AppIcons.notes,
-                    title: l10n.notes,
-                    subtitle: '--',
-                  ),
-                  SettingsItem(
-                    icon: AppIcons.tag,
-                    title: l10n.tagsLabel,
-                    subtitle: '--',
-                  ),
-                  SettingsItem(
-                    icon: AppIcons.folder,
-                    title: l10n.collectionsLabel,
-                    subtitle: '--',
-                  ),
-                  SettingsItem(
-                    icon: AppIcons.compose,
-                    title: l10n.aiContent,
-                    subtitle: '--',
-                  ),
-                ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.darkCardBg
+                  : AppColors.lightCardBg,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkBorder
+                    : AppColors.lightBorder,
               ),
             ),
-          ],
+            child: Column(
+              children: [
+                countsAsync.when(
+                  data: (counts) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _EncryptedRow(
+                        icon: AppIcons.notes,
+                        title: l10n.notes,
+                        subtitle: l10n.itemsCount(counts['notes'] ?? 0),
+                      ),
+                      _rowDivider(context),
+                      _EncryptedRow(
+                        icon: AppIcons.tag,
+                        title: l10n.tagsLabel,
+                        subtitle: l10n.itemsCount(counts['tags'] ?? 0),
+                      ),
+                      _rowDivider(context),
+                      _EncryptedRow(
+                        icon: AppIcons.folder,
+                        title: l10n.collectionsLabel,
+                        subtitle: l10n.itemsCount(counts['collections'] ?? 0),
+                      ),
+                      _rowDivider(context),
+                      _EncryptedRow(
+                        icon: AppIcons.compose,
+                        title: l10n.aiContent,
+                        subtitle: l10n.itemsCount(counts['ai_content'] ?? 0),
+                      ),
+                    ],
+                  ),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                  error: (_, __) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _EncryptedRow(
+                        icon: AppIcons.notes,
+                        title: l10n.notes,
+                        subtitle: '--',
+                      ),
+                      _rowDivider(context),
+                      _EncryptedRow(
+                        icon: AppIcons.tag,
+                        title: l10n.tagsLabel,
+                        subtitle: '--',
+                      ),
+                      _rowDivider(context),
+                      _EncryptedRow(
+                        icon: AppIcons.folder,
+                        title: l10n.collectionsLabel,
+                        subtitle: '--',
+                      ),
+                      _rowDivider(context),
+                      _EncryptedRow(
+                        icon: AppIcons.compose,
+                        title: l10n.aiContent,
+                        subtitle: '--',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _rowDivider(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Container(
+        height: 0.5,
+        color: isDark
+            ? AppColors.darkDivider.withAlpha(40)
+            : AppColors.lightDivider.withAlpha(60),
+      ),
+    );
+  }
+}
+
+/// A single encrypted-items row: green check, label with count, and a green
+/// "Encrypted" trailing caption.
+class _EncryptedRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _EncryptedRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          const Icon(
+            AppIcons.checkCircleFilled,
+            size: 20,
+            color: AppColors.success,
+          ),
+          const SizedBox(width: AppSpacing.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: AppTextStyles.caption.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            AppLocalizations.of(context)?.encryptedLabel ?? 'Encrypted',
+            style: AppTextStyles.caption.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.success,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -748,91 +968,6 @@ class _DangerZoneSection extends StatelessWidget {
 }
 
 // =============================================================================
-// Encryption status hero card
-// =============================================================================
-
-/// The top status card showing encryption active/inactive with algorithm info.
-class _StatusCard extends StatelessWidget {
-  final bool isActive;
-  final bool isUnlocked;
-  final ColorScheme colorScheme;
-  final AppLocalizations l10n;
-
-  const _StatusCard({
-    required this.isActive,
-    required this.isUnlocked,
-    required this.colorScheme,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    // Status colors based on encryption state
-    final statusColor = isActive
-        ? (isDark ? AppColors.success : const Color(0xFF1E7A42))
-        : (isDark ? AppColors.warning : const Color(0xFFC74A00));
-    final statusBg = isActive
-        ? statusColor.withValues(alpha: isDark ? 0.15 : 0.08)
-        : statusColor.withValues(alpha: isDark ? 0.15 : 0.08);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: statusBg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: statusColor.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            isActive ? AppIcons.verifiedUser : AppIcons.warning,
-            size: 48,
-            color: statusColor,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            isActive ? l10n.e2eEncryptionActiveStatus : l10n.encryptionNotSetUp,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: statusColor,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.encryptionAlgorithm,
-            style: TextStyle(
-              fontSize: 13,
-              color: statusColor.withValues(alpha: 0.8),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.keyDerivation,
-            style: TextStyle(
-              fontSize: 13,
-              color: statusColor.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            isUnlocked ? l10n.masterKeyUnlocked : l10n.masterKeyLocked,
-            style: TextStyle(
-              fontSize: 13,
-              color:
-                  isUnlocked ? statusColor.withValues(alpha: 0.7) : statusColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =============================================================================
 // Cross-platform encryption warning
 // =============================================================================
 
@@ -848,15 +983,14 @@ class _CrossPlatformWarningCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final warningColor =
-        isDark ? AppColors.warning : const Color(0xFFC74A00);
+    const warningColor = AppColors.warning;
     final bgColor = warningColor.withValues(alpha: isDark ? 0.12 : 0.06);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(
           color: warningColor.withValues(alpha: 0.25),
         ),
@@ -866,7 +1000,7 @@ class _CrossPlatformWarningCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(AppIcons.infoOutline, size: 20, color: warningColor),
+              const Icon(AppIcons.infoOutline, size: 20, color: AppColors.warning),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -926,14 +1060,14 @@ class _DangerZoneGroup extends StatelessWidget {
     final borderColor = errorColor.withValues(alpha: 0.2);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(color: borderColor),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.s16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1027,7 +1161,7 @@ class _RecoveryKeyDisplay extends ConsumerWidget {
               child: SelectableText(
                 recoveryKey,
                 style: const TextStyle(
-                  fontFamily: 'monospace',
+                  fontFamily: 'RobotoMono',
                   fontSize: 12,
                 ),
               ),

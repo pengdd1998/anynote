@@ -183,7 +183,7 @@ class MarkdownPreview extends StatelessWidget {
       h4: AppTextStyles.title.copyWith(fontSize: 18, height: 1.35, color: textColor),
       h4Padding: const EdgeInsets.only(top: AppSpacing.s16, bottom: AppSpacing.s8),
       code: const TextStyle(
-        fontFamily: 'monospace',
+        fontFamily: 'RobotoMono',
         fontSize: 11,
       ),
       codeblockDecoration: BoxDecoration(

@@ -27,6 +27,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get emailRequired => '请输入邮箱';
 
   @override
+  String get emailInvalid => '请输入有效的邮箱地址';
+
+  @override
   String get password => '密码';
 
   @override
@@ -2481,6 +2484,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unableToLoadPlan => '无法加载方案信息。';
 
   @override
+  String get currentPlanLabel => '当前方案';
+
+  @override
+  String get managePlan => '管理方案';
+
+  @override
+  String get freePlanDescription => '笔记、AI 功能与更多。';
+
+  @override
+  String get freePlanCaption => '轻松入门';
+
+  @override
+  String get proPlanCaption => '一应俱全';
+
+  @override
   String get profile => '个人资料';
 
   @override
@@ -4255,4 +4273,192 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loadMore => '加载更多';
+
+  @override
+  String get signInToContinue => '登录以继续使用 AnyNote';
+
+  @override
+  String get forgotPassword => '忘记密码？';
+
+  @override
+  String get orContinueWith => '或使用以下方式继续';
+
+  @override
+  String get dontHaveAccount => '没有账号？';
+
+  @override
+  String get signUp => '注册';
+
+  @override
+  String get iCanHelpWith => '我可以帮你……';
+
+  @override
+  String get e2eEncryptedHeading => '端到端加密';
+
+  @override
+  String get e2eEncryptedSubtitle => '笔记在保存前已在你的设备上完成加密。';
+
+  @override
+  String get encryptedLabel => '已加密';
+
+  @override
+  String get joined => '加入于';
+
+  @override
+  String get createYourAccount => '创建你的账号';
+
+  @override
+  String get registerSubtitle => '开启你的 AnyNote 之旅';
+
+  @override
+  String get yourRecoveryKey => '你的恢复密钥';
+
+  @override
+  String get recoveryKeyHelp => '如果你的账号无法登录，我们会用它帮你找回账号。';
+
+  @override
+  String get alreadyHaveAccountQuestion => '已有账号？';
+
+  @override
+  String get needHelp => '需要帮助？';
+
+  @override
+  String get contactSupport => '联系支持';
+
+  @override
+  String get syncConflictNotificationsDesc => '同步冲突需要处理时提醒你';
+
+  @override
+  String get collaborationSharing => '协作与分享';
+
+  @override
+  String get shareNotificationsDesc => '有人与你分享笔记时通知你';
+
+  @override
+  String get pushNotifications => '推送通知';
+
+  @override
+  String get pushNotificationsDesc => '在你的设备上接收推送通知';
+
+  @override
+  String get reminderNotificationsDesc => '笔记提醒到期时通知你';
+
+  @override
+  String get notificationPrefsLocalNote => '偏好设置存储在本地，并会在你的所有设备间同步。';
+
+  @override
+  String get whatsNewTitle => '最新功能';
+
+  @override
+  String get gotIt => '知道了！';
+
+  @override
+  String get formatBold => '粗体';
+
+  @override
+  String get formatItalic => '斜体';
+
+  @override
+  String get formatUnderline => '下划线';
+
+  @override
+  String get formatStrikethrough => '删除线';
+
+  @override
+  String get formatBulletList => '无序列表';
+
+  @override
+  String get formatNumberedList => '有序列表';
+
+  @override
+  String get formatBlockQuote => '引用块';
+
+  @override
+  String get formatInsertLink => '插入链接';
+
+  @override
+  String get showReplace => '显示替换';
+
+  @override
+  String get hideReplace => '隐藏替换';
+
+  @override
+  String get foldViewEmptyHint => '添加标题（以 # 开头的行）即可使用折叠视图。';
+
+  @override
+  String get manageLinks => '管理链接';
+
+  @override
+  String get resetView => '重置视图';
+
+  @override
+  String get graphEmptyHint => '创建一些笔记，并用 [[Wiki 链接]] 将它们连接起来';
+
+  @override
+  String get errorLoadingGraph => '加载关系图失败';
+
+  @override
+  String get orphanedNotesDesc => '没有与其他笔记建立连接的笔记。';
+
+  @override
+  String get noOrphanedNotes => '没有孤立笔记';
+
+  @override
+  String get allNotesConnected => '你的笔记已全部互联！';
+
+  @override
+  String get statisticsEmptyHint => '创建第一篇笔记即可查看统计';
+
+  @override
+  String get createAndAssignTag => '创建并分配标签';
+
+  @override
+  String get imageNotFound => '未找到图片';
+
+  @override
+  String get collapse => '收起';
+
+  @override
+  String get expand => '展开';
+
+  @override
+  String get editOriginal => '编辑原文';
+
+  @override
+  String transclusionNoteNotFound(String title) {
+    return '笔记“$title”不存在或已被删除。';
+  }
+
+  @override
+  String transclusionDepthLimit(String title) {
+    return '“$title”的嵌套引用已达上限。';
+  }
+
+  @override
+  String get invalidTransclusion => '无效的引用';
+
+  @override
+  String get failedToParseTags => '解析标签失败';
+
+  @override
+  String get commentPosted => '评论已发布';
+
+  @override
+  String get unknownError => '未知错误';
+
+  @override
+  String composeMaxNotesLimit(int count) {
+    return '最多可选择 $count 篇笔记，请先取消部分选择。';
+  }
+
+  @override
+  String composeTotalContentLimit(int limit) {
+    return '所选内容总计超过 ${limit}K 字符，请减少所选笔记或缩短内容。';
+  }
+
+  @override
+  String get aiQuotaExceeded => 'AI 配额已用尽，请稍后再试。';
+
+  @override
+  String get setAsDefault => '设为默认';
 }

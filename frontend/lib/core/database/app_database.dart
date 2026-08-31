@@ -7,6 +7,7 @@ import 'database_native.dart'
     if (dart.library.js) 'database_native_stub.dart';
 
 import 'tables.dart';
+import 'post_template_seed.dart';
 import 'daos/notes_dao.dart';
 import 'daos/tags_dao.dart';
 import 'daos/collections_dao.dart';
@@ -21,6 +22,7 @@ import 'daos/note_properties_dao.dart';
 import 'daos/saved_searches_dao.dart';
 import 'daos/snippets_dao.dart';
 import 'daos/images_dao.dart';
+import 'daos/post_template_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -43,6 +45,7 @@ part 'app_database.g.dart';
     SavedSearches,
     Snippets,
     NoteImages,
+    PostTemplates,
   ],
   daos: [
     NotesDao,
@@ -59,6 +62,7 @@ part 'app_database.g.dart';
     SavedSearchesDao,
     SnippetsDao,
     ImagesDao,
+    PostTemplateDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -84,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration {
@@ -104,6 +108,7 @@ class AppDatabase extends _$AppDatabase {
         // nothing. Drop it and recreate as a real FTS5 virtual table.
         // _recreateFtsTable also rebuilds the index (a no-op on a fresh DB).
         await _recreateFtsTable();
+        await _seedBuiltInPostTemplates();
       },
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 2) {
@@ -286,6 +291,12 @@ class AppDatabase extends _$AppDatabase {
           // and note creation threw. Recreate with the corrected directive.
           await _recreateFtsTable();
         }
+        if (from < 22) {
+          // v21 -> v22: Add post_templates table for the compose template
+          // system and seed the three built-in templates.
+          await m.createTable(postTemplates);
+          await _seedBuiltInPostTemplates();
+        }
       },
     );
   }
@@ -314,6 +325,30 @@ class AppDatabase extends _$AppDatabase {
       FROM notes
       WHERE plain_content IS NOT NULL AND deleted_at IS NULL;
     ''');
+  }
+
+  /// Seed the three built-in post templates. Idempotent (INSERT OR IGNORE).
+  ///
+  /// The canonical wording lives in `post_template_seed.dart`
+  /// ([kBuiltInPostTemplates]) so the seeder and the domain fallback
+  /// constants always match.
+  Future<void> _seedBuiltInPostTemplates() async {
+    for (final t in kBuiltInPostTemplates) {
+      await customStatement(
+        'INSERT OR IGNORE INTO post_templates '
+        '(id, name, description, system_prompt, structure_hint, '
+        'tone_hint, is_built_in, created_at) '
+        'VALUES (?, ?, ?, ?, ?, ?, 1, 0)',
+        [
+          t.id,
+          t.name,
+          t.description,
+          t.systemPrompt,
+          t.structureHint,
+          t.toneHint,
+        ],
+      );
+    }
   }
 }
 

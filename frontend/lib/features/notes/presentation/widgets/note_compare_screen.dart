@@ -479,7 +479,7 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
           ' ',
           style: TextStyle(
             fontSize: 13,
-            fontFamily: 'monospace',
+            fontFamily: 'RobotoMono',
             height: 1.5,
             color: Colors.transparent,
           ),
@@ -525,7 +525,7 @@ class _NoteCompareScreenState extends ConsumerState<NoteCompareScreen> {
         line.text.isEmpty ? ' ' : line.text,
         style: TextStyle(
           fontSize: 13,
-          fontFamily: 'monospace',
+          fontFamily: 'RobotoMono',
           height: 1.5,
           color: textColor,
         ),

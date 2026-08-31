@@ -1,6 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/features/compose/domain/post_template.dart';
 import 'package:anynote/features/compose/domain/prompt_builder.dart';
+
+/// A template with a distinctive fragment used to assert prompt injection.
+PostTemplate _templateWithMarker() => PostTemplate(
+      id: 'tpl-1',
+      name: 'Marker Template',
+      description: '',
+      systemPrompt: 'TEMPLATE_FRAGMENT_MARKER',
+      structureHint: 'A -> B -> C',
+      toneHint: 'cheerful',
+      isBuiltIn: true,
+      createdAt: DateTime(2026, 1, 1),
+    );
 
 void main() {
   late PromptBuilder builder;
@@ -70,6 +83,40 @@ void main() {
       expect(result, contains('"quotes"'));
       expect(result, contains('\u4f60\u597d\u4e16\u754c'));
     });
+
+    test('injects the template prompt fragment when provided', () {
+      final result = builder.buildClusterPrompt(
+        ['a note'],
+        'topic',
+        template: _templateWithMarker(),
+      );
+      expect(result, contains('TEMPLATE_FRAGMENT_MARKER'));
+      expect(result, contains('Target format guidance'));
+    });
+
+    test('omits the template fragment when no template is given', () {
+      final result = builder.buildClusterPrompt(['a note'], 'topic');
+      expect(result, isNot(contains('TEMPLATE_FRAGMENT_MARKER')));
+    });
+
+    test('separates notes with the kNoteSeparator sentinel', () {
+      final result = builder.buildClusterPrompt(
+        ['First note', 'Second note'],
+        'topic',
+      );
+      const sep = '\n$kNoteSeparator\n';
+      expect(result, contains('[0] First note$sep[1] Second note'));
+    });
+
+    test('note separator constant round-trips through join/split', () {
+      const notes = [
+        'multi-line note\nwith a second line\nand a third',
+        'plain note',
+        'unicode \u4f60\u597d note',
+      ];
+      final joined = notes.join('\n$kNoteSeparator\n');
+      expect(joined.split('\n$kNoteSeparator\n'), notes);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -114,6 +161,39 @@ void main() {
     test('handles empty cluster list', () {
       final result = builder.buildOutlinePrompt([], 'Medium');
       expect(result, contains('Medium post'));
+    });
+
+    test('injects the user topic into the prompt', () {
+      final result = builder.buildOutlinePrompt(
+        [
+          {'name': 'C', 'summary': 'S'},
+        ],
+        'blog',
+        topic: 'My Special Topic',
+      );
+      expect(result, contains('User topic: My Special Topic'));
+    });
+
+    test('omits the topic line when topic is empty', () {
+      final result = builder.buildOutlinePrompt(
+        [
+          {'name': 'C', 'summary': 'S'},
+        ],
+        'blog',
+        topic: '',
+      );
+      expect(result, isNot(contains('User topic:')));
+    });
+
+    test('injects the template prompt fragment when provided', () {
+      final result = builder.buildOutlinePrompt(
+        [
+          {'name': 'C', 'summary': 'S'},
+        ],
+        'blog',
+        template: _templateWithMarker(),
+      );
+      expect(result, contains('TEMPLATE_FRAGMENT_MARKER'));
     });
   });
 
@@ -194,6 +274,46 @@ void main() {
       final result = builder.buildExpandPrompt(outline, []);
       expect(result.toLowerCase(), contains('engaging'));
     });
+
+    test('injects the user topic into the prompt', () {
+      final outline = {
+        'title': 'Title',
+        'sections': [],
+      };
+      final result = builder.buildExpandPrompt(
+        outline,
+        ['note'],
+        topic: 'Grow Tomatoes',
+      );
+      expect(result, contains('User topic: Grow Tomatoes'));
+    });
+
+    test('omits the topic line when topic is empty', () {
+      final outline = {
+        'title': 'Title',
+        'sections': [],
+      };
+      final result = builder.buildExpandPrompt(
+        outline,
+        ['note'],
+        topic: '',
+      );
+      expect(result, isNot(contains('User topic:')));
+    });
+
+    test('injects the template prompt fragment when provided', () {
+      final outline = {
+        'title': 'Title',
+        'sections': [],
+      };
+      final result = builder.buildExpandPrompt(
+        outline,
+        ['note'],
+        template: _templateWithMarker(),
+      );
+      expect(result, contains('TEMPLATE_FRAGMENT_MARKER'));
+      expect(result, contains('template specification'));
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -230,6 +350,45 @@ void main() {
     test('handles empty content string', () {
       final result = builder.buildStyleAdaptPrompt('', 'Xiaohongshu');
       expect(result, contains('Xiaohongshu'));
+    });
+
+    test('injects the template prompt fragment when provided', () {
+      final result = builder.buildStyleAdaptPrompt(
+        'content',
+        'XHS',
+        template: _templateWithMarker(),
+      );
+      expect(result, contains('TEMPLATE_FRAGMENT_MARKER'));
+      expect(result, contains('template specification'));
+    });
+
+    test('omits the template fragment when no template is given', () {
+      final result = builder.buildStyleAdaptPrompt('content', 'XHS');
+      expect(result, isNot(contains('TEMPLATE_FRAGMENT_MARKER')));
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // buildRefineSystemPrompt
+  // ---------------------------------------------------------------------------
+
+  group('buildRefineSystemPrompt', () {
+    test('establishes the editor role and full-output contract', () {
+      final result = builder.buildRefineSystemPrompt(null);
+      expect(result, contains('post editor'));
+      expect(result, contains('FULL updated post'));
+    });
+
+    test('injects the template prompt fragment when provided', () {
+      final result =
+          builder.buildRefineSystemPrompt(_templateWithMarker());
+      expect(result, contains('TEMPLATE_FRAGMENT_MARKER'));
+    });
+
+    test('omits the template section when no template is given', () {
+      final result = builder.buildRefineSystemPrompt(null);
+      expect(result, isNot(contains('TEMPLATE_FRAGMENT_MARKER')));
+      expect(result, isNot(contains('Template specification')));
     });
   });
 }

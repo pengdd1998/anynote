@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/theme/app_colors.dart';
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/notes/presentation/quick_capture_screen.dart';
 import '../../../helpers/test_app_helper.dart';
 
@@ -54,7 +56,7 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows save button in header row', (tester) async {
+    testWidgets('shows save button as circular purple check', (tester) async {
       final handle = await pumpScreen(
         tester,
         _wrapInMaterial(const QuickCaptureScreen()),
@@ -62,9 +64,18 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
-      // The header row has an IconButton with check_circle_outline icon.
+      // The restyled save button is a circular purple IconButton with a
+      // check icon in the bottom toolbar.
+      final saveButton = tester.widget<IconButton>(
+        find.ancestor(
+          of: find.byIcon(AppIcons.check),
+          matching: find.byType(IconButton),
+        ),
+      );
       expect(
-          find.byIcon(Icons.check_circle_outline), findsOneWidget);
+        saveButton.style?.backgroundColor?.resolve({}),
+        AppColors.primary,
+      );
 
       await handle.dispose();
     });
@@ -77,7 +88,8 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
-      expect(find.text('Save and close'), findsOneWidget);
+      // The save action is an IconButton whose tooltip is "Save and close".
+      expect(find.byTooltip('Save and close'), findsOneWidget);
 
       await handle.dispose();
     });
@@ -90,7 +102,7 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
-      expect(find.byIcon(Icons.label_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.tag), findsOneWidget);
 
       await handle.dispose();
     });
@@ -171,7 +183,7 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows save icon button in header', (tester) async {
+    testWidgets('shows close button in header', (tester) async {
       final handle = await pumpScreen(
         tester,
         _wrapInMaterial(const QuickCaptureScreen()),
@@ -179,8 +191,8 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
-      // The check_circle_outline icon is the save button in the header.
-      expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
+      // The header row now holds a tertiary close (X) button.
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
 
       await handle.dispose();
     });

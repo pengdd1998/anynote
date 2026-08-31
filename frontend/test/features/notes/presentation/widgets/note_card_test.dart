@@ -125,18 +125,24 @@ void main() {
 
   group('NoteCard (list)', () {
     testWidgets('renders note title', (tester) async {
+      // The card derives its title from the first line of the content.
       await pumpNoteCard(
         tester,
-        note: _defaultNote(plainTitle: 'My Note'),
+        note: _defaultNote(
+          plainTitle: 'My Note',
+          plainContent: 'My Note\nMore content below.',
+        ),
       );
       expect(find.text('My Note'), findsOneWidget);
     });
 
     testWidgets('renders untitled fallback when plainTitle is null',
         (tester) async {
+      // Without content there is no first line, so the untitled fallback
+      // is used.
       await pumpNoteCard(
         tester,
-        note: _defaultNote(plainTitle: null),
+        note: _defaultNote(plainTitle: null, plainContent: null),
         untitled: 'No title',
       );
       expect(find.text('No title'), findsOneWidget);
@@ -150,14 +156,20 @@ void main() {
       expect(find.textContaining('Short preview text'), findsOneWidget);
     });
 
-    testWidgets('truncates long content to 100 chars with ellipsis',
-        (tester) async {
-      final longContent = 'A' * 150;
+    testWidgets('truncates long content with ellipsis', (tester) async {
+      // Truncation is done via maxLines + ellipsis: the first line becomes
+      // the single-line title, the rest is a 3-line preview.
+      final longContent = '${'A' * 150}\n${'B' * 150}';
       await pumpNoteCard(
         tester,
         note: _defaultNote(plainContent: longContent),
       );
-      expect(find.textContaining('...'), findsOneWidget);
+      final title = tester.widget<Text>(find.textContaining('AAA'));
+      expect(title.maxLines, 1);
+      expect(title.overflow, TextOverflow.ellipsis);
+      final preview = tester.widget<Text>(find.textContaining('BBB'));
+      expect(preview.maxLines, 3);
+      expect(preview.overflow, TextOverflow.ellipsis);
     });
 
     testWidgets('renders time string', (tester) async {
@@ -220,18 +232,24 @@ void main() {
 
   group('NoteCard (grid)', () {
     testWidgets('renders note title in grid', (tester) async {
+      // The card derives its title from the first line of the content.
       await pumpNoteCard(
         tester,
-        note: _defaultNote(plainTitle: 'Grid Note'),
+        note: _defaultNote(
+          plainTitle: 'Grid Note',
+          plainContent: 'Grid Note\nMore content below.',
+        ),
         layout: NoteCardLayout.grid,
       );
       expect(find.text('Grid Note'), findsOneWidget);
     });
 
     testWidgets('renders untitled fallback in grid', (tester) async {
+      // Without content there is no first line, so the untitled fallback
+      // is used.
       await pumpNoteCard(
         tester,
-        note: _defaultNote(plainTitle: null),
+        note: _defaultNote(plainTitle: null, plainContent: null),
         untitled: 'Empty',
         layout: NoteCardLayout.grid,
       );
@@ -247,14 +265,22 @@ void main() {
       expect(find.textContaining('Grid preview text'), findsOneWidget);
     });
 
-    testWidgets('truncates long content to 80 chars in grid', (tester) async {
-      final longContent = 'B' * 150;
+    testWidgets('truncates long content with ellipsis in grid',
+        (tester) async {
+      // Truncation is done via maxLines + ellipsis: the first line becomes
+      // the single-line title, the rest is a 4-line preview.
+      final longContent = '${'A' * 150}\n${'B' * 150}';
       await pumpNoteCard(
         tester,
         note: _defaultNote(plainContent: longContent),
         layout: NoteCardLayout.grid,
       );
-      expect(find.textContaining('...'), findsOneWidget);
+      final title = tester.widget<Text>(find.textContaining('AAA'));
+      expect(title.maxLines, 1);
+      expect(title.overflow, TextOverflow.ellipsis);
+      final preview = tester.widget<Text>(find.textContaining('BBB'));
+      expect(preview.maxLines, 4);
+      expect(preview.overflow, TextOverflow.ellipsis);
     });
 
     testWidgets('renders time in grid', (tester) async {

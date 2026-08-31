@@ -9,7 +9,9 @@ import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../l10n/app_localizations.dart';
@@ -107,6 +109,10 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
       final crypto = ref.read(cryptoServiceProvider);
       final title = _extractTitle(content);
 
+      // Try to unlock the vault so quick notes are encrypted, not plaintext.
+      if (!crypto.isUnlocked) {
+        await crypto.unlock();
+      }
       String encryptedContent = content;
       String? encryptedTitle;
       if (crypto.isUnlocked) {
@@ -329,6 +335,17 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenHeight = MediaQuery.of(context).size.height;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final tertiaryColor =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+
+    // Sticky-note surface: warm yellow tint in light mode, a subtle yellow
+    // wash over the dark card in dark mode.
+    final cardBg = isDark
+        ? Color.alphaBlend(
+            AppColors.accentYellowBg.withAlpha(28),
+            AppColors.darkCardBg,
+          )
+        : AppColors.accentYellowBg;
 
     return GestureDetector(
       onVerticalDragUpdate: (details) {
@@ -337,48 +354,47 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
         }
       },
       child: SafeArea(
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: screenHeight * 0.85 + bottomInset,
-          ),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppRadius.xl),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: screenHeight * 0.85 + bottomInset,
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // -- Drag handle --
-              Padding(
-                padding: const EdgeInsets.only(top: 12, bottom: 4),
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: (isDark
-                            ? AppColors.darkTextTertiary
-                            : AppColors.lightTextTertiary)
-                        .withAlpha(80),
-                    borderRadius: BorderRadius.circular(2),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.s20,
+              vertical: AppSpacing.s16,
+            ),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              boxShadow: AppShadows.lgOf(Theme.of(context).brightness),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // -- Drag handle --
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: AppSpacing.s8),
+                    decoration: BoxDecoration(
+                      color: tertiaryColor.withAlpha(80),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
 
-              // -- Header row --
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.s16,
-                  vertical: AppSpacing.s8,
-                ),
-                child: Row(
+                // -- Header row: handwritten title + close action --
+                Row(
                   children: [
                     Expanded(
                       child: Text(
                         l10n.quickCapture,
-                        style: AppTextStyles.headline.copyWith(
-                          fontSize: 18,
+                        style:
+                            AppTextStyles.handwritingBody.copyWith(
+                          fontSize: 24,
                           color: isDark
                               ? AppColors.darkTextPrimary
                               : AppColors.lightTextPrimary,
@@ -393,7 +409,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.cloud_done,
+                              AppIcons.cloudDone,
                               size: 14,
                               color: AppColors.accentMintText,
                             ),
@@ -408,28 +424,23 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                           ],
                         ),
                       ),
-                    // Save button
+                    // Close (top-right, tertiary) — discards with confirmation.
                     IconButton(
-                      icon: const Icon(Icons.check_circle_outline),
-                      iconSize: 24,
-                      color: Theme.of(context).colorScheme.primary,
-                      tooltip: l10n.save,
-                      onPressed: _saveAndClose,
+                      icon: const Icon(AppIcons.close),
+                      iconSize: 20,
+                      color: tertiaryColor,
+                      tooltip: l10n.cancel,
+                      onPressed: _dismissWithConfirmation,
                     ),
                   ],
                 ),
-              ),
 
-              // -- Metadata chips --
-              if (_selectedTagIds.isNotEmpty || _selectedPriority != null)
-                _buildMetadataChips(isDark),
+                // -- Metadata chips --
+                if (_selectedTagIds.isNotEmpty || _selectedPriority != null)
+                  _buildMetadataChips(isDark),
 
-              // -- Text input --
-              Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                  ),
+                // -- Text input --
+                Flexible(
                   child: TextField(
                     controller: _contentController,
                     focusNode: _contentFocusNode,
@@ -440,10 +451,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                       hintStyle: AppTextStyles.body.copyWith(
                         fontSize: 17,
                         height: 1.7,
-                        color: (isDark
-                                ? AppColors.darkTextTertiary
-                                : AppColors.lightTextTertiary)
-                            .withAlpha(120),
+                        color: tertiaryColor.withAlpha(120),
                       ),
                     ),
                     style: AppTextStyles.body.copyWith(
@@ -459,13 +467,13 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                     textAlignVertical: TextAlignVertical.top,
                   ),
                 ),
-              ),
 
-              const SizedBox(height: AppSpacing.s8),
+                const SizedBox(height: AppSpacing.s8),
 
-              // -- Bottom toolbar --
-              _buildBottomToolbar(isDark, l10n),
-            ],
+                // -- Bottom toolbar --
+                _buildBottomToolbar(isDark, l10n),
+              ],
+            ),
           ),
         ),
       ),
@@ -530,70 +538,67 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
     final tertiaryColor =
         isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: (isDark ? AppColors.darkDivider : AppColors.lightDivider)
-                .withAlpha(80),
-            width: 0.5,
+    return Row(
+      children: [
+        // Secondary actions — small tertiary icon buttons.
+        IconButton(
+          icon: Badge(
+            isLabelVisible: _selectedTagIds.isNotEmpty,
+            label: Text('${_selectedTagIds.length}'),
+            child: Icon(AppIcons.tag, color: tertiaryColor),
           ),
+          tooltip: l10n.tags,
+          onPressed: _showTagPicker,
         ),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.s8,
-        vertical: AppSpacing.s4,
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Badge(
-              isLabelVisible: _selectedTagIds.isNotEmpty,
-              label: Text('${_selectedTagIds.length}'),
-              child: Icon(Icons.label_outline, color: tertiaryColor),
-            ),
-            tooltip: l10n.tags,
-            onPressed: _showTagPicker,
+        IconButton(
+          icon: Icon(
+            _selectedPriority == 'High'
+                ? Icons.keyboard_double_arrow_up
+                : _selectedPriority == 'Medium'
+                    ? Icons.keyboard_double_arrow_right
+                    : _selectedPriority == 'Low'
+                        ? Icons.keyboard_double_arrow_down
+                        : Icons.flag_outlined,
+            color: _selectedPriority == 'High'
+                ? AppColors.error
+                : _selectedPriority == 'Medium'
+                    ? AppColors.warning
+                    : _selectedPriority == 'Low'
+                        ? AppColors.success
+                        : tertiaryColor,
           ),
-          IconButton(
-            icon: Icon(
-              _selectedPriority == 'High'
-                  ? Icons.keyboard_double_arrow_up
-                  : _selectedPriority == 'Medium'
-                      ? Icons.keyboard_double_arrow_right
-                      : _selectedPriority == 'Low'
-                          ? Icons.keyboard_double_arrow_down
-                          : Icons.flag_outlined,
-              color: _selectedPriority == 'High'
-                  ? AppColors.error
-                  : _selectedPriority == 'Medium'
-                      ? AppColors.warning
-                      : _selectedPriority == 'Low'
-                          ? AppColors.success
-                          : tertiaryColor,
-            ),
-            tooltip: l10n.setPriority,
-            onPressed: _showPrioritySelector,
-          ),
-          const Spacer(),
-          if (_isSaving)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
-              child: SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: tertiaryColor,
-                ),
+          tooltip: l10n.setPriority,
+          onPressed: _showPrioritySelector,
+        ),
+        const Spacer(),
+        if (_isSaving)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: tertiaryColor,
               ),
             ),
-          TextButton(
-            onPressed: _saveAndClose,
-            child: Text(l10n.saveAndClose),
           ),
-        ],
-      ),
+        // Save — purple circular check button per the design mockup.
+        SizedBox(
+          width: 48,
+          height: 48,
+          child: IconButton(
+            icon: const Icon(AppIcons.check, size: 24),
+            tooltip: l10n.saveAndClose,
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: const CircleBorder(),
+            ),
+            onPressed: _saveAndClose,
+          ),
+        ),
+      ],
     );
   }
 }

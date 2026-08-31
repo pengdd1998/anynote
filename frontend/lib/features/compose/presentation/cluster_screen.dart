@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/navigation/nav_guard.dart';
 import '../../../core/theme/alpha_constants.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
@@ -34,7 +35,13 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
     if (_hasTriggeredClustering) return;
     _hasTriggeredClustering = true;
     try {
-      await ref.read(composeSessionProvider.notifier).generateClusters();
+      final l10n = AppLocalizations.of(context);
+      await ref.read(composeSessionProvider.notifier).generateClusters(
+            maxContentMessage: l10n?.composeTotalContentLimit(
+              maxTotalContentChars ~/ 1000,
+            ),
+            quotaExceededMessage: l10n?.aiQuotaExceeded,
+          );
     } catch (e) {
       debugPrint('[ClusterScreen] generateClusters failed: $e');
     }
@@ -78,8 +85,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                 session.topic,
               ),
               style: TextStyle(
-                color:
-                    Theme.of(context).textTheme.bodySmall?.color ??
+                color: Theme.of(context).textTheme.bodySmall?.color ??
                     Theme.of(context).disabledColor,
               ),
               textAlign: TextAlign.center,
@@ -128,8 +134,8 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                 child: Text(
                   l10n.foundThemesSelect(session.clusters.length),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ),
             ],
@@ -150,8 +156,10 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Card(
                   color: isSelected
-                      ? Theme.of(context).colorScheme.primaryContainer
-                            .withAlpha(AppAlpha.semiBold)
+                      ? Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withAlpha(AppAlpha.semiBold)
                       : null,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -210,8 +218,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                                 Text(
                                   cluster.summary,
                                   style: TextStyle(
-                                    color:
-                                        Theme.of(
+                                    color: Theme.of(
                                           context,
                                         ).textTheme.bodySmall?.color ??
                                         Theme.of(context).disabledColor,
@@ -250,22 +257,25 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                 Text(
                   l10n.clustersSelected(session.selectedClusterIndices.length),
                   style: TextStyle(
-                    color:
-                        Theme.of(context).textTheme.bodySmall?.color ??
+                    color: Theme.of(context).textTheme.bodySmall?.color ??
                         Theme.of(context).disabledColor,
                   ),
                 ),
                 const Spacer(),
                 FilledButton.icon(
-                  onPressed:
-                      session.selectedClusterIndices.isEmpty ||
+                  onPressed: session.selectedClusterIndices.isEmpty ||
                           session.isLoading
                       ? null
                       : () async {
                           await ref
                               .read(composeSessionProvider.notifier)
-                              .generateOutline();
+                              .generateOutline(
+                                quotaExceededMessage: l10n.aiQuotaExceeded,
+                              );
                           if (!context.mounted) return;
+                          if (!NavGuard.canNavigate('/compose/outline')) {
+                            return;
+                          }
                           context.push('/compose/outline/${widget.sessionId}');
                         },
                   icon: const Icon(Icons.list_alt),

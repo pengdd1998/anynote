@@ -24,12 +24,18 @@ import 'sync_engine.dart' show SyncResult;
 class SyncLifecycle {
   final Ref _ref;
   Timer? _timer;
+  Timer? _debounce;
+  bool _syncInProgress = false;
   DateTime? _lastSyncAt;
 
   SyncLifecycle(this._ref);
 
   /// Interval between automatic syncs.
   static const syncInterval = Duration(minutes: 5);
+
+  /// Debounce window for [requestSyncSoon] -- rapid consecutive saves
+  /// (e.g. autosave while typing) collapse into a single sync.
+  static const syncDebounce = Duration(seconds: 5);
 
   /// Whether periodic sync is currently active.
   bool get isActive => _timer != null;
@@ -48,6 +54,24 @@ class SyncLifecycle {
   void stop() {
     _timer?.cancel();
     _timer = null;
+    _debounce?.cancel();
+    _debounce = null;
+  }
+
+  /// Request a sync shortly after a local change (e.g. a note save) so the
+  /// user sees their edits on other devices without waiting for the next
+  /// periodic cycle. Calls are debounced: several requests within the
+  /// debounce window collapse into one sync. No-op while a sync is running
+  /// or the app is logged out.
+  void requestSyncSoon({Duration delay = syncDebounce}) {
+    if (!_ref.read(authStateProvider)) return;
+    _debounce?.cancel();
+    _debounce = Timer(delay, () {
+      _debounce = null;
+      if (!_syncInProgress) {
+        _doSync();
+      }
+    });
   }
 
   /// Run a single sync cycle immediately.
@@ -59,6 +83,9 @@ class SyncLifecycle {
   /// After the main sync engine cycle completes, the sync queue manager
   /// processes any pending offline operations.
   Future<SyncResult?> syncNow() async {
+    // Re-entrancy guard: a sync triggered by requestSyncSoon must not overlap
+    // a periodic cycle (the engine is not safe for concurrent runs).
+    if (_syncInProgress) return null;
     // Skip sync entirely when offline. The queue will be flushed when
     // the device reconnects.
     final isConnected = _ref.read(connectivityServiceProvider);
@@ -66,6 +93,7 @@ class SyncLifecycle {
       return null;
     }
 
+    _syncInProgress = true;
     final engine = _ref.read(syncEngineProvider);
     try {
       final result = await engine.sync();
@@ -92,6 +120,8 @@ class SyncLifecycle {
         debugPrint('[SyncLifecycle] queue processing failed: $e2');
       }
       return null;
+    } finally {
+      _syncInProgress = false;
     }
   }
 

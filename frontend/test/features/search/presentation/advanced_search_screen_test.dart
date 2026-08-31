@@ -37,15 +37,16 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows Search title in app bar', (tester) async {
+    testWidgets('shows Advanced search title in app bar', (tester) async {
       final handle = await pumpScreen(
         tester,
         const AdvancedSearchScreen(),
         overrides: searchOverrides(),
       );
 
-      // Tab bar has three tabs: Search, Saved Searches, Search History.
-      expect(find.text('Search'), findsWidgets);
+      // The restyled screen dropped the Search/Saved/History tab bar and
+      // uses an "Advanced search" app bar title instead.
+      expect(find.text('Advanced search'), findsOneWidget);
       await handle.dispose();
     });
 

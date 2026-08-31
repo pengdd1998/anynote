@@ -92,6 +92,46 @@ class AppTextStyles {
     letterSpacing: 0,
   );
 
+  // ---------------------------------------------------------------------------
+  // Handwritten display styles (Caveat) — brand moments, note titles, section
+  // headings. Used per the design mockup to give the app a journal-like voice.
+  // ---------------------------------------------------------------------------
+
+  static const String handwritingFamily = 'Caveat';
+
+  /// Brand wordmark / hero headings ("AnyNote", "Welcome back").
+  static final TextStyle handwritingDisplay = TextStyle(
+    fontFamily: handwritingFamily,
+    fontSize: 40,
+    fontWeight: FontWeight.w600,
+    height: 1.1,
+    letterSpacing: 0,
+  );
+
+  /// Screen titles and note titles in the handwritten voice.
+  static final TextStyle handwritingTitle = TextStyle(
+    fontFamily: handwritingFamily,
+    fontSize: 28,
+    fontWeight: FontWeight.w600,
+    height: 1.15,
+  );
+
+  /// Smaller handwritten headings (card titles, group labels).
+  static final TextStyle handwritingBody = TextStyle(
+    fontFamily: handwritingFamily,
+    fontSize: 22,
+    fontWeight: FontWeight.w500,
+    height: 1.2,
+  );
+
+  /// Compact handwritten labels (timestamps inside cards, signatures).
+  static final TextStyle handwritingCaption = TextStyle(
+    fontFamily: handwritingFamily,
+    fontSize: 17,
+    fontWeight: FontWeight.w500,
+    height: 1.2,
+  );
+
   /// Link text (underlined, accent color applied at usage site).
   static final TextStyle link = TextStyle(
     fontFamily: fontFamily,

@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../l10n/app_localizations.dart';
 import '../data/notification_preferences.dart';
 
 /// Settings screen for configuring notification preferences.
@@ -17,13 +17,15 @@ class NotificationSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = Theme.of(context);
+    final theme = Theme.of(context);
     final prefs = ref.watch(notificationPreferencesProvider);
-    final isDark = l10n.brightness == Brightness.dark;
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(l10n.notifications),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -36,74 +38,80 @@ class NotificationSettingsScreen extends ConsumerWidget {
           AppSpacing.xl,
         ),
         children: [
-          // ── Core notifications ─────────────────────────────
-          const _SectionLabel(label: 'Notification Types'),
+          // ── General ─────────────────────────────────────────
+          _SectionLabel(label: l10n.general),
           const SizedBox(height: AppSpacing.s8),
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              boxShadow: AppShadows.smOf(Theme.of(context).brightness),
-            ),
-            child: Column(
-              children: [
-                _NotificationToggle(
-                  icon: Icons.alarm_outlined,
-                  title: 'Reminders',
-                  subtitle: 'Get notified when a note reminder is due',
-                  value: prefs.reminderNotifications,
-                  accentBg: AppColors.accentPeachBg,
-                  accentText: AppColors.accentPeachText,
-                  onChanged: (value) {
-                    ref
-                        .read(notificationPreferencesProvider.notifier)
-                        .setField('reminderNotifications', value);
-                  },
-                ),
-                _Divider(isDark: isDark),
-                _NotificationToggle(
-                  icon: Icons.sync_problem_outlined,
-                  title: 'Sync Conflicts',
-                  subtitle: 'Alert when sync conflicts need resolution',
-                  value: prefs.syncConflictNotifications,
-                  accentBg: AppColors.accentYellowBg,
-                  accentText: AppColors.accentYellowText,
-                  onChanged: (value) {
-                    ref
-                        .read(notificationPreferencesProvider.notifier)
-                        .setField('syncConflictNotifications', value);
-                  },
-                ),
-                _Divider(isDark: isDark),
-                _NotificationToggle(
-                  icon: Icons.person_add_outlined,
-                  title: 'Collaboration & Sharing',
-                  subtitle: 'Notify when someone shares a note with you',
-                  value: prefs.shareNotifications,
-                  accentBg: AppColors.accentMintBg,
-                  accentText: AppColors.accentMintText,
-                  onChanged: (value) {
-                    ref
-                        .read(notificationPreferencesProvider.notifier)
-                        .setField('shareNotifications', value);
-                  },
-                ),
-                _Divider(isDark: isDark),
-                _NotificationToggle(
-                  icon: Icons.notifications_active_outlined,
-                  title: 'Push Notifications',
-                  subtitle: 'Receive push notifications on your device',
-                  value: prefs.pushNotifications,
-                  accentBg: AppColors.accentPeachBg,
-                  accentText: AppColors.accentPeachText,
-                  onChanged: (value) {
-                    ref
-                        .read(notificationPreferencesProvider.notifier)
-                        .setField('pushNotifications', value);
-                  },
-                ),
-              ],
-            ),
+          _NotificationToggle(
+            icon: Icons.sync_problem_outlined,
+            title: l10n.syncConflicts,
+            subtitle: l10n.syncConflictNotificationsDesc,
+            value: prefs.syncConflictNotifications,
+            accentBg: isDark
+                ? AppColors.accentYellowText.withAlpha(36)
+                : AppColors.accentYellowBg,
+            accentIcon:
+                isDark ? AppColors.accentYellow : AppColors.accentYellowText,
+            onChanged: (value) {
+              ref
+                  .read(notificationPreferencesProvider.notifier)
+                  .setField('syncConflictNotifications', value);
+            },
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          _NotificationToggle(
+            icon: Icons.person_add_outlined,
+            title: l10n.collaborationSharing,
+            subtitle: l10n.shareNotificationsDesc,
+            value: prefs.shareNotifications,
+            accentBg: isDark
+                ? AppColors.accentMintText.withAlpha(36)
+                : AppColors.accentMintBg,
+            accentIcon:
+                isDark ? AppColors.accentMint : AppColors.accentMintText,
+            onChanged: (value) {
+              ref
+                  .read(notificationPreferencesProvider.notifier)
+                  .setField('shareNotifications', value);
+            },
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          _NotificationToggle(
+            icon: Icons.notifications_active_outlined,
+            title: l10n.pushNotifications,
+            subtitle: l10n.pushNotificationsDesc,
+            value: prefs.pushNotifications,
+            accentBg: isDark
+                ? AppColors.accentPeachText.withAlpha(36)
+                : AppColors.accentPeachBg,
+            accentIcon:
+                isDark ? AppColors.accentPeach : AppColors.accentPeachText,
+            onChanged: (value) {
+              ref
+                  .read(notificationPreferencesProvider.notifier)
+                  .setField('pushNotifications', value);
+            },
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // ── Reminders ───────────────────────────────────────
+          _SectionLabel(label: l10n.reminders),
+          const SizedBox(height: AppSpacing.s8),
+          _NotificationToggle(
+            icon: Icons.alarm_outlined,
+            title: l10n.reminders,
+            subtitle: l10n.reminderNotificationsDesc,
+            value: prefs.reminderNotifications,
+            accentBg: isDark
+                ? AppColors.accentPeachText.withAlpha(36)
+                : AppColors.accentPeachBg,
+            accentIcon:
+                isDark ? AppColors.accentPeach : AppColors.accentPeachText,
+            onChanged: (value) {
+              ref
+                  .read(notificationPreferencesProvider.notifier)
+                  .setField('reminderNotifications', value);
+            },
           ),
 
           const SizedBox(height: AppSpacing.lg),
@@ -116,7 +124,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
             ),
             decoration: BoxDecoration(
               color: AppColors.accentPeachBg.withAlpha(80),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
             child: Row(
               children: [
@@ -128,7 +136,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: Text(
-                    'Preferences are stored locally and sync across all your devices.',
+                    l10n.notificationPrefsLocalNote,
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.accentPeachText,
                     ),
@@ -156,35 +164,14 @@ class _SectionLabel extends StatelessWidget {
       label,
       style: AppTextStyles.caption.copyWith(
         fontWeight: FontWeight.w600,
-        color: isDark
-            ? AppColors.darkTextTertiary
-            : AppColors.lightTextTertiary,
+        color:
+            isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
       ),
     );
   }
 }
 
-// ── Inline divider between toggles ─────────────────────────────
-
-class _Divider extends StatelessWidget {
-  final bool isDark;
-  const _Divider({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
-      child: Container(
-        height: 0.5,
-        color: isDark
-            ? AppColors.darkDivider.withAlpha(40)
-            : AppColors.lightDivider.withAlpha(60),
-      ),
-    );
-  }
-}
-
-// ── Notification toggle row ────────────────────────────────────
+// ── Notification toggle row-card ───────────────────────────────
 
 class _NotificationToggle extends StatelessWidget {
   final IconData icon;
@@ -192,7 +179,7 @@ class _NotificationToggle extends StatelessWidget {
   final String? subtitle;
   final bool value;
   final Color accentBg;
-  final Color accentText;
+  final Color accentIcon;
   final ValueChanged<bool> onChanged;
 
   const _NotificationToggle({
@@ -201,16 +188,25 @@ class _NotificationToggle extends StatelessWidget {
     this.subtitle,
     required this.value,
     required this.accentBg,
-    required this.accentText,
+    required this.accentIcon,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.s12,
-        vertical: AppSpacing.s8,
+        horizontal: 14,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Row(
         children: [
@@ -219,15 +215,19 @@ class _NotificationToggle extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: value ? accentBg : AppColors.darkTextTertiary.withAlpha(8),
+              color: value
+                  ? accentBg
+                  : (isDark
+                      ? AppColors.darkTextTertiary.withAlpha(12)
+                      : AppColors.lightInputFill),
               borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
             child: Icon(
               icon,
               size: 18,
               color: value
-                  ? accentText
-                  : (Theme.of(context).brightness == Brightness.dark
+                  ? accentIcon
+                  : (isDark
                       ? AppColors.darkTextTertiary
                       : AppColors.lightTextTertiary),
             ),
@@ -241,7 +241,10 @@ class _NotificationToggle extends StatelessWidget {
                 Text(
                   title,
                   style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                 ),
                 if (subtitle != null)
@@ -250,7 +253,7 @@ class _NotificationToggle extends StatelessWidget {
                     child: Text(
                       subtitle!,
                       style: AppTextStyles.caption.copyWith(
-                        color: Theme.of(context).brightness == Brightness.dark
+                        color: isDark
                             ? AppColors.darkTextTertiary
                             : AppColors.lightTextTertiary,
                       ),

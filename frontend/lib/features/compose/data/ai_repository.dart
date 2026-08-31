@@ -11,6 +11,9 @@ import '../../../main.dart';
 /// Repository for AI proxy calls.
 /// Communicates with server's /api/v1/ai/proxy endpoint.
 class AIRepository {
+  /// Sentinel returned by [parseSseLine] for the SSE terminating event.
+  static const String _doneMarker = '[DONE]';
+
   final ApiClient _apiClient;
 
   AIRepository(this._apiClient);
@@ -78,23 +81,51 @@ class AIRepository {
       },
     );
 
+    yield* parseSseContentStream(stream);
+  }
+
+  /// Extract content chunks from the proxy's SSE byte stream.
+  ///
+  /// Buffers bytes across network chunks: an SSE line may be split by TCP at
+  /// any boundary (including mid-JSON or mid-UTF-8 multibyte character), so
+  /// each chunk must be appended to the pending buffer and only complete
+  /// newline-terminated lines decoded.
+  static Stream<String> parseSseContentStream(Stream<List<int>> stream) async* {
+    var pending = <int>[];
+
     await for (final chunk in stream) {
-      final data = utf8.decode(chunk);
-      for (final line in data.split('\n')) {
-        if (line.startsWith('data: ')) {
-          final jsonStr = line.substring(6).trim();
-          if (jsonStr == '[DONE]') return;
-          if (jsonStr.isEmpty) continue;
-          try {
-            final json = jsonDecode(jsonStr);
-            if (json['content'] != null) {
-              yield json['content'] as String;
-            }
-          } catch (e) {
-            debugPrint('[AIRepository] SSE parse error: $e');
-          }
-        }
+      pending.addAll(chunk);
+      while (true) {
+        final nl = pending.indexOf(10); // '\n'
+        if (nl < 0) break;
+        // Strip a preceding '\r' for CRLF servers.
+        var end = nl;
+        if (end > 0 && pending[end - 1] == 13) end--;
+        final lineBytes = pending.sublist(0, end);
+        pending = pending.sublist(nl + 1);
+
+        final content = parseSseLine(utf8.decode(lineBytes, allowMalformed: true));
+        if (content == _doneMarker) return;
+        if (content != null) yield content;
       }
+    }
+  }
+
+  /// Parse one SSE line; returns the extracted content, [_doneMarker] for the
+  /// terminating event, or null for lines carrying no content.
+  static String? parseSseLine(String line) {
+    if (!line.startsWith('data: ')) return null;
+    final jsonStr = line.substring(6).trim();
+    if (jsonStr.isEmpty) return null;
+    if (jsonStr == '[DONE]') return _doneMarker;
+    try {
+      final json = jsonDecode(jsonStr);
+      final content = json['content'];
+      if (content is String) return content;
+      return null;
+    } catch (e) {
+      debugPrint('[AIRepository] SSE parse error: $e');
+      return null;
     }
   }
 

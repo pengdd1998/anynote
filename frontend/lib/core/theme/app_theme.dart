@@ -59,7 +59,16 @@ class AppTheme {
       brightness: Brightness.light,
       surface: AppColors.lightSurface,
     );
-    colorScheme = colorScheme.copyWith(onPrimary: const Color(0xFFFFFFFF));
+    // Pin the brand roles to the design tokens so themed widgets (buttons,
+    // switches, FABs) use the exact mockup purple instead of a derived tone.
+    colorScheme = colorScheme.copyWith(
+      onPrimary: const Color(0xFFFFFFFF),
+      primary: AppColors.primary,
+      secondary: AppColors.primaryDark,
+      onSecondary: const Color(0xFFFFFFFF),
+      primaryContainer: AppColors.primarySoft,
+      onPrimaryContainer: AppColors.primaryText,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -413,10 +422,19 @@ class AppTheme {
   static ThemeData darkTheme() => dark;
 
   static ThemeData _buildDarkTheme() {
-    final colorScheme = ColorScheme.fromSeed(
+    final baseScheme = ColorScheme.fromSeed(
       seedColor: _seed,
       brightness: Brightness.dark,
       surface: AppColors.darkSurface,
+    );
+    // Pin the brand roles to light periwinkle so accents glow on deep navy.
+    final colorScheme = baseScheme.copyWith(
+      primary: AppColors.secondary,
+      onPrimary: AppColors.darkSurface,
+      secondary: AppColors.secondary,
+      onSecondary: AppColors.darkSurface,
+      primaryContainer: const Color(0xFF463D6B),
+      onPrimaryContainer: const Color(0xFFDCD5FA),
     );
 
     return ThemeData(

@@ -136,7 +136,7 @@ class _ShortcutTile extends StatelessWidget {
             child: Text(
               shortcut,
               style: theme.textTheme.bodySmall?.copyWith(
-                fontFamily: 'monospace',
+                fontFamily: 'RobotoMono',
                 fontWeight: FontWeight.w600,
                 color: colorScheme.onSurface,
               ),

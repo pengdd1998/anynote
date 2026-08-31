@@ -61,7 +61,8 @@ class DismissibleNoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final cardRadius = BorderRadius.circular(isGrid ? AppRadius.md : AppRadius.sm);
+    // Matches the sticky-note card radius (AppRadius.md).
+    final cardRadius = BorderRadius.circular(AppRadius.md);
 
     final card = NoteCard(
       note: note,
@@ -115,7 +116,7 @@ class DismissibleNoteCard extends StatelessWidget {
           ),
           child: Semantics(
             label: note.isPinned ? l10n.unpinNote : l10n.pinNote,
-            child: Column(
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(

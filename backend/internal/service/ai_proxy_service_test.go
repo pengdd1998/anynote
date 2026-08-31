@@ -21,6 +21,10 @@ type mockLLMConfigRepo struct {
 	err    error
 }
 
+func (m *mockLLMConfigRepo) ListByUser(ctx context.Context, userID uuid.UUID) ([]domain.LLMConfig, error) {
+	return nil, nil
+}
+
 func (m *mockLLMConfigRepo) GetDefaultByUser(ctx context.Context, userID uuid.UUID) (*domain.LLMConfig, error) {
 	if m.err != nil {
 		return nil, m.err

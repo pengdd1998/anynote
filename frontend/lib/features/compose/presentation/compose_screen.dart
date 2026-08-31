@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,8 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error.dart';
+import '../../../core/navigation/nav_guard.dart';
+import '../../../core/database/post_template_seed.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -18,6 +21,9 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../routing/app_router.dart';
 import '../data/compose_providers.dart';
+import '../domain/post_template.dart';
+import '../../notes/domain/note_envelope.dart';
+import 'template_selector_sheet.dart';
 
 /// Guard to prevent multiple bottom sheet invocations on rapid tap.
 final _noteSelectorShowingProvider = StateProvider<bool>((ref) => false);
@@ -279,8 +285,7 @@ class ComposeScreen extends ConsumerWidget {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withAlpha(12),
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.pill),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: Text(
                             platform,
@@ -453,13 +458,13 @@ class _NoteSelectorSheet extends ConsumerStatefulWidget {
   const _NoteSelectorSheet({required this.notesAsync});
 
   @override
-  ConsumerState<_NoteSelectorSheet> createState() =>
-      _NoteSelectorSheetState();
+  ConsumerState<_NoteSelectorSheet> createState() => _NoteSelectorSheetState();
 }
 
 class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   final _topicController = TextEditingController();
   String _platformStyle = 'generic';
+  PostTemplate? _selectedTemplate;
   final Set<String> _selectedIds = {};
   late final VoidCallback _routeListener;
 
@@ -476,14 +481,44 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
     super.initState();
     _routeListener = () {
       if (!mounted) return;
-      final location = GoRouterState.of(context).uri.path;
-      if (!location.startsWith('/compose')) {
-        Navigator.pop(context);
-      }
+      // Dependency-free read: GoRouterState.of(context) here would register an
+      // inherited dependency from a notification context, re-entering
+      // dependOnInheritedElement on every router notification and amplifying
+      // global rebuild jank.
+      final location = GoRouter.of(context)
+          .routerDelegate
+          .currentConfiguration
+          .uri
+          .path;
+      if (location.startsWith('/compose')) return;
+      // Only pop when this sheet route is still the current one.
+      final modal = ModalRoute.of(context);
+      if (modal == null || !modal.isCurrent) return;
+      Navigator.pop(context);
     };
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       GoRouter.of(context).routerDelegate.addListener(_routeListener);
+      // The label reads 通用模板（默认）even before the user picks anything,
+      // so make that true: pre-select the general template for new sessions.
+      if (_selectedTemplate == null) {
+        final db = ref.read(databaseProvider);
+        db.postTemplateDao.getById(kBuiltInTemplateGeneral).then((tpl) {
+          if (!mounted || tpl == null || _selectedTemplate != null) return;
+          final loaded = PostTemplate(
+            id: tpl.id,
+            name: tpl.name,
+            description: tpl.description,
+            systemPrompt: tpl.systemPrompt,
+            structureHint: tpl.structureHint,
+            toneHint: tpl.toneHint,
+            isBuiltIn: tpl.isBuiltIn,
+            createdAt: tpl.createdAt,
+          );
+          setState(() => _selectedTemplate = loaded);
+          ref.read(composeSessionProvider.notifier).setTemplate(loaded);
+        });
+      }
     });
   }
 
@@ -587,8 +622,9 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                   ),
                 ),
                 items: _platformOptions(l10n)
-                    .map((o) =>
-                        DropdownMenuItem(value: o.$1, child: Text(o.$2)),)
+                    .map(
+                      (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)),
+                    )
                     .toList(),
                 onChanged: (v) {
                   if (v != null) {
@@ -598,6 +634,40 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                         .setPlatformStyle(v);
                   }
                 },
+              ),
+            ),
+            // Template selector
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, 0, AppSpacing.md, AppSpacing.s8),
+              child: InkWell(
+                onTap: () async {
+                  await TemplateSelectorSheet.show(
+                    context,
+                    selectedTemplate: _selectedTemplate,
+                    onSelected: (template) {
+                      setState(() => _selectedTemplate = template);
+                      ref
+                          .read(composeSessionProvider.notifier)
+                          .setTemplate(template);
+                    },
+                  );
+                },
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: '文章模板',
+                    prefixIcon: const Icon(Icons.description_outlined),
+                    suffixIcon: const Icon(Icons.arrow_drop_down),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                  ),
+                  child: Text(
+                    _selectedTemplate?.name ?? '通用模板（默认）',
+                    style: AppTextStyles.body,
+                  ),
+                ),
               ),
             ),
             // Note list label
@@ -660,10 +730,13 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                     itemBuilder: (context, index) {
                       final note = notes[index];
                       final title = note.plainTitle ?? l10n.untitled;
-                      final preview = note.plainContent != null &&
-                              note.plainContent!.length > 60
-                          ? '${note.plainContent!.substring(0, 60)}...'
-                          : note.plainContent ?? '';
+                      // Decode Delta-JSON content defensively so legacy
+                      // corrupted rows never render raw JSON in the picker.
+                      final plain =
+                          plainTextFromStoredContent(note.plainContent ?? '');
+                      final preview = plain.length > 60
+                          ? '${plain.substring(0, 60)}...'
+                          : plain;
                       final isSelected = _selectedIds.contains(note.id);
 
                       return CheckboxListTile(
@@ -685,6 +758,20 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                           ),
                         ),
                         onChanged: (checked) {
+                          // Only mirror into local checkbox state when the
+                          // session actually accepted the toggle — at the
+                          // note limit the notifier rejects the addition and
+                          // the checkbox must stay unchanged.
+                          final accepted = ref
+                              .read(composeSessionProvider.notifier)
+                              .toggleNoteSelection(
+                                note.id,
+                                note.plainContent ?? '',
+                                maxNotesMessage: l10n.composeMaxNotesLimit(
+                                  maxSelectedNotes,
+                                ),
+                              );
+                          if (!accepted) return;
                           setState(() {
                             if (checked == true) {
                               _selectedIds.add(note.id);
@@ -692,12 +779,6 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                               _selectedIds.remove(note.id);
                             }
                           });
-                          ref
-                              .read(composeSessionProvider.notifier)
-                              .toggleNoteSelection(
-                                note.id,
-                                note.plainContent ?? '',
-                              );
                         },
                       );
                     },
@@ -709,6 +790,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                   itemBuilder: (_, __) => const AppLoadingCard(),
                 ),
                 error: (err, _) {
+                  debugPrint('[COMPOSE] notesForSelection error: $err');
                   final appError = ErrorMapper.map(err);
                   return Center(
                     child: Padding(
@@ -736,12 +818,16 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                             _topicController.text.isEmpty
                         ? null
                         : () {
-                            final sessionId = ref.read(
-                              composeSessionProvider,
-                            ).sessionId;
+                            final sessionId = ref
+                                .read(
+                                  composeSessionProvider,
+                                )
+                                .sessionId;
                             Navigator.pop(context);
-                            final navContext =
-                                rootNavigatorKey.currentContext;
+                            if (!NavGuard.canNavigate('/compose/cluster')) {
+                              return;
+                            }
+                            final navContext = rootNavigatorKey.currentContext;
                             if (navContext != null && navContext.mounted) {
                               navContext.push('/compose/cluster/$sessionId');
                             }
@@ -751,8 +837,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.sm),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                     ),
                   ),
@@ -778,8 +863,7 @@ class _ContentPreviewSheet extends ConsumerStatefulWidget {
       _ContentPreviewSheetState();
 }
 
-class _ContentPreviewSheetState
-    extends ConsumerState<_ContentPreviewSheet> {
+class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
   bool _isSaving = false;
 
   Future<void> _copyToClipboard() async {
@@ -804,8 +888,7 @@ class _ContentPreviewSheetState
       String? encryptedTitle;
 
       if (crypto.isUnlocked) {
-        encryptedContent =
-            await crypto.encryptForItem(noteId, widget.content);
+        encryptedContent = await crypto.encryptForItem(noteId, widget.content);
         final title = widget.content.length > 50
             ? widget.content.substring(0, 50)
             : widget.content;
@@ -900,8 +983,7 @@ class _ContentPreviewSheetState
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withAlpha(15),
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.pill),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: Text(
                         widget.platform,
@@ -930,9 +1012,8 @@ class _ContentPreviewSheetState
             ),
             padding: const EdgeInsets.all(AppSpacing.s12),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkInputFill
-                  : AppColors.lightInputFill,
+              color:
+                  isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: SingleChildScrollView(
@@ -956,8 +1037,7 @@ class _ContentPreviewSheetState
                     label: Text(l10n.copy),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.sm),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                     ),
                   ),
@@ -979,8 +1059,7 @@ class _ContentPreviewSheetState
                     label: Text(l10n.saveAsNote),
                     style: FilledButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.sm),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                     ),
                   ),

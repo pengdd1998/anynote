@@ -17,6 +17,7 @@ import '../../../main.dart';
 import '../../../core/collab/crdt_text.dart';
 import '../../../core/collab/presence_indicator.dart';
 import '../../../core/collab/ws_client.dart';
+import '../../../core/sync/sync_lifecycle.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -25,6 +26,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_animation.dart';
 import '../../../features/collab/presentation/share_dialog.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/error/exceptions.dart';
 import '../../../core/tts/speech_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
@@ -779,17 +781,32 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final imagePath = _extractFirstImagePath(content);
 
     if (!mounted) return;
-    _isSaving = true;
-    _errorMessage = null;
+    setState(() {
+      _isSaving = true;
+      _errorMessage = null;
+    });
 
     try {
       final db = ref.read(databaseProvider);
       final crypto = ref.read(cryptoServiceProvider);
       final noteId = _noteId!;
 
-      final String encryptedContent = crypto.isUnlocked
-          ? await crypto.encryptForItem(noteId, content)
-          : content;
+      // Never fall back to storing plaintext: if the vault is locked, try
+      // the stored keys first; if the unlock still fails, abort the save
+      // with a crypto-locked error instead of writing readable content.
+      if (!crypto.isUnlocked) {
+        final unlocked = await crypto.unlock();
+        if (!unlocked) {
+          pm.end('note_save');
+          if (mounted) {
+            setState(() {
+              _errorMessage = const CryptoLockedException().message;
+            });
+          }
+          return;
+        }
+      }
+      final String encryptedContent = await crypto.encryptForItem(noteId, content);
 
       if (_isNew) {
         await db.notesDao.createNote(
@@ -812,16 +829,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       pm.end('note_save');
       if (mounted) {
         HapticFeedback.lightImpact();
-        _isDirty = false;
+        // Clear the "unsaved" chip immediately; without setState the chip
+        // stayed up after the save completed until an unrelated rebuild.
+        setState(() => _isDirty = false);
       }
+      // Push the local change to the server shortly after the save so edits
+      // reach other devices without waiting for the 5-minute periodic cycle.
+      // The lifecycle debounces rapid consecutive saves and skips offline.
+      ref.read(syncLifecycleProvider).requestSyncSoon();
     } catch (e) {
       pm.end('note_save');
       if (mounted) {
         final appError = ErrorMapper.map(e);
-        _errorMessage = ErrorDisplay.userMessage(appError);
+        setState(() => _errorMessage = ErrorDisplay.userMessage(appError));
       }
     } finally {
       _isSaving = false;
+      if (mounted) setState(() {});
     }
   }
 
@@ -1304,24 +1328,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           ),
 
         // Floating formatting toolbar — only in rich mode, not preview/zen.
+        // Styled as a floating rounded card per the design mockup:
+        // white/card background, 1px light border, subtle shadow.
         if (!_isZenMode && _useRichEditor && !_isPreview) ...[
-          // Gentle warm-tinted divider between editor and toolbar.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-            child: Divider(
-              height: AppSpacing.s2,
-              thickness: 0.5,
-              color: isDark
-                  ? AppColors.darkDivider.withAlpha(80)
-                  : AppColors.lightDivider.withAlpha(120),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.s16,
               AppSpacing.s4,
               AppSpacing.s16,
-              0,
+              AppSpacing.s8,
             ),
             child: Center(
               child: ConstrainedBox(
@@ -1331,17 +1346,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     color: isDark
                         ? AppColors.darkCardBg
                         : AppColors.lightCardBg,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    boxShadow: AppShadows.lgOf(Theme.of(context).brightness),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    boxShadow: AppShadows.mdOf(Theme.of(context).brightness),
                     border: Border.all(
                       color: isDark
-                          ? AppColors.darkBorder.withAlpha(60)
-                          : AppColors.lightBorder.withAlpha(60),
-                      width: 0.5,
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
+                      width: 1,
                     ),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                     child: FormattingToolbar(
                       quillController: _quillController,
                       onPickImage: () => _pickImage(context),
@@ -1395,14 +1410,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title — matches NoteDetailScreen: 20px, w800, tight tracking
+          // Title — handwritten display voice per the design mockup
+          // (Caveat ~30, near-black), matching NoteDetailScreen.
           if (title.isNotEmpty)
             Text(
               title,
-              style: AppTextStyles.headline.copyWith(
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
-                letterSpacing: -0.5,
+              style: AppTextStyles.handwritingTitle.copyWith(
+                fontSize: 30,
                 color: isDark
                     ? AppColors.darkTextPrimary
                     : AppColors.lightTextPrimary,
@@ -1908,6 +1922,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     try {
       final db = ref.read(databaseProvider);
       final crypto = ref.read(cryptoServiceProvider);
+      if (!crypto.isUnlocked) {
+        await crypto.unlock();
+      }
       for (final tagName in tags) {
         final tagId = const Uuid().v4();
         final encryptedName = crypto.isUnlocked

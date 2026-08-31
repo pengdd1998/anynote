@@ -465,3 +465,35 @@ class NoteImages extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// Reusable templates for AI-generated posts (compose feature).
+/// Built-in templates are seeded by the migration; users can create custom
+/// ones or extract them from sample posts via the AI agent.
+@DataClassName('PostTemplateRow')
+class PostTemplates extends Table {
+  /// UUID (stable for built-in templates, random for user-created).
+  TextColumn get id => text()();
+
+  /// Display name (e.g. "小红书种草文").
+  TextColumn get name => text()();
+
+  /// Short description shown in the picker.
+  TextColumn get description => text().withDefault(const Constant(''))();
+
+  /// LLM instructions injected into compose prompts.
+  TextColumn get systemPrompt => text()();
+
+  /// Structure overview (e.g. "标题 → 钩子 → 正文 → CTA").
+  TextColumn get structureHint => text().nullable()();
+
+  /// Tone descriptor (e.g. "轻松活泼").
+  TextColumn get toneHint => text().nullable()();
+
+  /// Built-in templates cannot be deleted.
+  BoolColumn get isBuiltIn => boolean().withDefault(const Constant(false))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

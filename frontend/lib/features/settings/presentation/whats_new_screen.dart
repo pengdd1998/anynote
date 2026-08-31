@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/changelog.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// A dialog that displays the changelog for the current app version.
 ///
@@ -43,6 +44,7 @@ class WhatsNewDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final entries = Changelog.entries[Changelog.kCurrentVersion] ?? [];
 
     return Dialog(
@@ -77,13 +79,13 @@ class WhatsNewDialog extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "What's New",
+                        l10n?.whatsNewTitle ?? "What's New",
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        'Version ${Changelog.kCurrentVersion}',
+                        '${l10n?.version ?? 'Version'} ${Changelog.kCurrentVersion}',
                         style: TextStyle(
                           fontSize: 13,
                           color: colorScheme.onSurfaceVariant,
@@ -144,9 +146,9 @@ class WhatsNewDialog extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Got it!',
-                  style: TextStyle(fontSize: 15),
+                child: Text(
+                  l10n?.gotIt ?? 'Got it!',
+                  style: const TextStyle(fontSize: 15),
                 ),
               ),
             ),

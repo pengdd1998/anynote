@@ -163,7 +163,7 @@ class _TagPickerSheetState extends ConsumerState<TagPickerSheet> {
                 const SizedBox(width: 8),
                 Semantics(
                   button: true,
-                  label: 'Create and assign tag',
+                  label: l10n.createAndAssignTag,
                   child: FilledButton(
                     onPressed: _createAndAssignTag,
                     child: Text(l10n.add),
@@ -187,7 +187,8 @@ class _TagPickerSheetState extends ConsumerState<TagPickerSheet> {
               child: Text(
                 l10n.noTagsYet,
                 style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             )
           else

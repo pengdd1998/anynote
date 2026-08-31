@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Centralized color tokens for the warm design system.
 ///
-/// Light mode uses warm cream surfaces with coral-amber accents and a warm
-/// accent palette (peach, yellow, coral, mint).
+/// Light mode uses warm cream surfaces with soft periwinkle-purple accents
+/// and a warm accent palette (lavender, yellow, mint, peach).
 /// Dark mode uses deep navy with muted highlights.
 /// All neutrals are warm-tinted.
 ///
@@ -39,11 +39,21 @@ class AppColors {
   static const darkTextSecondary = Color(0xFFC4C0E0);
   static const darkTextTertiary = Color(0xFF9E9AB8);
 
-  // -- Brand accent (warm coral-amber — matching design reference) ---------
+  // -- Brand accent (soft periwinkle purple — matching design mockup) --------
 
-  static const primary = Color(0xFFD9774A); // warm coral-amber
-  static const primaryDark = Color(0xFFC46838); // deeper coral
-  static const secondary = Color(0xFFE8A87C); // warm peach-lavender
+  static const primary = Color(0xFF8B7CE8); // soft periwinkle purple
+  static const primaryDark = Color(0xFF7466D6); // pressed / deeper purple
+  static const secondary = Color(0xFFB7ADF5); // light periwinkle
+
+  /// Soft lavender tint used for selected chips, subtle fills, highlights.
+  static const primarySoft = Color(0xFFEFECFE);
+  static const primarySoftBorder = Color(0xFFDCD5FA);
+
+  /// Disabled-state accent (light washed purple, e.g. inactive CTA buttons).
+  static const primaryDisabled = Color(0xFFCFC8F7);
+
+  /// Deep accent for link text / body accents (AA on light surfaces).
+  static const primaryText = Color(0xFF6C5BC4);
 
   // -- Warm accent palette ----------------------------------------------------
 
@@ -110,8 +120,8 @@ class AppColors {
 
   // -- High contrast (WCAG AAA 7:1) -------------------------------------------
 
-  static const hcPrimary = Color(0xFFB45A25);
-  static const hcDarkPrimary = Color(0xFFF4A28C);
+  static const hcPrimary = Color(0xFF4F3DB8); // deep violet
+  static const hcDarkPrimary = Color(0xFFC9C0FF); // pale periwinkle
 
   // -- Semantic variants for light mode ---------------------------------------
 

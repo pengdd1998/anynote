@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../l10n/app_localizations.dart';
@@ -23,6 +23,7 @@ class AIAgentScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.aiAgent),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -35,42 +36,44 @@ class AIAgentScreen extends ConsumerWidget {
           96,
         ),
         children: [
-          // Section header
+          // Section heading
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.s12),
             child: Text(
-              l10n.selectAction,
-              style: AppTextStyles.caption.copyWith(
-                fontWeight: FontWeight.w600,
+              l10n.iCanHelpWith,
+              style: AppTextStyles.title.copyWith(
                 color: isDark
-                    ? AppColors.darkTextTertiary
-                    : AppColors.lightTextTertiary,
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
               ),
             ),
           ),
 
-          // Action cards
+          // Capability cards
           _ActionCard(
-            icon: Icons.folder_outlined,
+            icon: AppIcons.folder,
             title: l10n.organizeNotes,
-            accentBg: AppColors.accentLavenderBg,
-            accentIcon: AppColors.accentLavenderText,
+            description: 'Group related notes into tidy collections.',
+            accentBg: AppColors.accentYellowBg,
+            accentIcon: AppColors.accentYellowText,
             onTap: () => _executeAction(context, ref, 'organize'),
             enabled: !agentState.isLoading,
           ),
-          const SizedBox(height: AppSpacing.s8),
+          const SizedBox(height: AppSpacing.s12),
           _ActionCard(
-            icon: Icons.summarize_outlined,
+            icon: AppIcons.summarize,
             title: l10n.summarizeNotes,
-            accentBg: AppColors.accentYellowBg,
-            accentIcon: AppColors.accentYellowText,
+            description: 'Distill long notes into the key points.',
+            accentBg: AppColors.accentLavenderBg,
+            accentIcon: AppColors.accentLavenderText,
             onTap: () => _executeAction(context, ref, 'summarize'),
             enabled: !agentState.isLoading,
           ),
-          const SizedBox(height: AppSpacing.s8),
+          const SizedBox(height: AppSpacing.s12),
           _ActionCard(
-            icon: Icons.add_circle_outline,
+            icon: AppIcons.noteAdd,
             title: l10n.createNote,
+            description: 'Draft a fresh note from a quick prompt.',
             accentBg: AppColors.accentMintBg,
             accentIcon: AppColors.accentMintText,
             onTap: () => _executeAction(context, ref, 'create_note'),
@@ -104,8 +107,10 @@ class AIAgentScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Column(
         children: [
@@ -113,7 +118,7 @@ class AIAgentScreen extends ConsumerWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.accentLavenderBg,
+              color: AppColors.primarySoft,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Center(
@@ -122,7 +127,7 @@ class AIAgentScreen extends ConsumerWidget {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: AppColors.accentLavenderText,
+                  color: AppColors.primaryText,
                 ),
               ),
             ),
@@ -154,10 +159,12 @@ class AIAgentScreen extends ConsumerWidget {
   }
 }
 
-/// A warm action card with icon badge, title, subtitle, and chevron.
+/// A pastel capability card with a white icon square, title, description,
+/// and chevron.
 class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String description;
   final Color accentBg;
   final Color accentIcon;
   final VoidCallback onTap;
@@ -166,6 +173,7 @@ class _ActionCard extends StatelessWidget {
   const _ActionCard({
     required this.icon,
     required this.title,
+    required this.description,
     required this.accentBg,
     required this.accentIcon,
     required this.onTap,
@@ -182,42 +190,65 @@ class _ActionCard extends StatelessWidget {
         opacity: enabled ? 1.0 : 0.5,
         duration: const Duration(milliseconds: 200),
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.s12),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+            color: isDark ? AppColors.darkCardBg : accentBg,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            border: isDark
+                ? Border.all(color: AppColors.darkBorder)
+                : null,
           ),
           child: Row(
             children: [
-              // Icon badge
+              // Leading white rounded icon square
               Container(
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: accentBg,
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  color: isDark
+                      ? AppColors.darkInputFill
+                      : AppColors.lightCardBg,
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
                 child: Icon(
                   icon,
-                  size: 22,
+                  size: 20,
                   color: accentIcon,
                 ),
               ),
               const SizedBox(width: AppSpacing.s12),
-              // Text content
+              // Title + description
               Expanded(
-                child: Text(
-                  title,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.s2),
+                    Text(
+                      description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              // Chevron
+              const SizedBox(width: AppSpacing.s8),
               Icon(
-                Icons.chevron_right,
-                size: 20,
+                AppIcons.chevronRight,
+                size: 16,
                 color: isDark
                     ? AppColors.darkTextTertiary
                     : AppColors.lightTextTertiary,
@@ -249,17 +280,19 @@ class _ResultCard extends StatelessWidget {
         ? AppColors.accentMintBg
         : AppColors.lightErrorBg;
     final iconColor = isSuccess
-        ? AppColors.accentMintText
+        ? (isDark ? AppColors.success : AppColors.accentMintText)
         : AppColors.error;
     final icon = isSuccess
         ? Icons.check_circle_outline
         : Icons.error_outline;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.s12),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        color: isDark
+            ? (isSuccess ? AppColors.darkSuccessBg : AppColors.darkErrorBg)
+            : bgColor,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

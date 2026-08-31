@@ -9,7 +9,7 @@ import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/constants/app_durations.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/widgets/toc_extractor.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -84,7 +84,10 @@ class _MarkdownPreviewScreenState extends ConsumerState<MarkdownPreviewScreen> {
           future: db.notesDao.getNoteById(widget.noteId),
           builder: (context, snapshot) {
             if (snapshot.hasData && snapshot.data != null) {
-              return Text(snapshot.data!.plainTitle ?? 'Preview');
+              return Text(
+                snapshot.data!.plainTitle ??
+                    (AppLocalizations.of(context)?.preview ?? 'Preview'),
+              );
             }
             return Text(AppLocalizations.of(context)?.preview ?? 'Preview');
           },
@@ -349,11 +352,17 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
       );
     }
 
-    // Code block background: warm fill from the design system.
-    final codeBlockBg =
-        isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill;
+    // Code block background: neutral slate fill (dark: deep input fill).
+    final codeBlockBg = isDark ? AppColors.darkInputFill : AppColors.slate50;
     final codeBlockText =
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
+    // Accent heading colors: purple per the design mockup. In dark mode the
+    // lighter periwinkle keeps AA contrast on the navy surface.
+    final headingColor = isDark ? AppColors.secondary : AppColors.primaryText;
+    final quoteBg =
+        isDark ? AppColors.primarySoft.withAlpha(30) : AppColors.primarySoft;
+    final quoteColor = isDark ? AppColors.secondary : AppColors.primaryText;
 
     final styleSheet = MarkdownStyleSheet(
       p: TextStyle(
@@ -362,47 +371,52 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
         color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h1: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
+        fontSize: 26,
+        fontWeight: FontWeight.w800,
+        height: 1.3,
         color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       h2: TextStyle(
         fontSize: 22,
-        fontWeight: FontWeight.bold,
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+        fontWeight: FontWeight.w700,
+        height: 1.3,
+        color: headingColor,
       ),
       h3: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+        fontSize: 19,
+        fontWeight: FontWeight.w700,
+        height: 1.35,
+        color: headingColor,
       ),
       h4: TextStyle(
-        fontSize: 18,
+        fontSize: 17,
         fontWeight: FontWeight.w600,
         color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       code: TextStyle(
         fontSize: 14,
-        fontFamily: 'monospace',
+        // RobotoMono is registered in pubspec and gives consistent code blocks
+        // family used by AppTextStyles.mono is not registered in pubspec.
+        fontFamily: 'RobotoMono',
         backgroundColor: codeBlockBg,
         color: codeBlockText,
       ),
       codeblockDecoration: BoxDecoration(
         color: codeBlockBg,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       codeblockAlign: WrapAlignment.start,
       blockquote: TextStyle(
-        color:
-            isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+        color: quoteColor,
         fontStyle: FontStyle.italic,
       ),
       blockquoteDecoration: BoxDecoration(
-        color: codeBlockBg,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+        color: quoteBg,
+        borderRadius: BorderRadius.circular(AppRadius.xs),
+      ),
+      blockquotePadding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 8,
       ),
       listBullet: TextStyle(
         color:
@@ -457,17 +471,15 @@ class _CodeBlockBuilder extends MarkdownElementBuilder {
       code = element.textContent;
     }
 
-    final bgColor = isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill;
+    final bgColor = isDark ? AppColors.darkInputFill : AppColors.slate50;
     final textColor =
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -476,7 +488,7 @@ class _CodeBlockBuilder extends MarkdownElementBuilder {
           code,
           style: TextStyle(
             fontSize: 14,
-            fontFamily: 'monospace',
+            fontFamily: 'RobotoMono',
             height: 1.5,
             color: textColor,
           ),

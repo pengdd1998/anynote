@@ -1,22 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../l10n/app_localizations.dart';
-
-/// Tooltip strings for formatting toolbar buttons.
-/// These are universal editor terms that don't need localization.
-/// ignore: unused_element
-final class _Tooltips {
-  static const String bold = 'Bold';
-  static const String italic = 'Italic';
-  static const String underline = 'Underline';
-  static const String strikethrough = 'Strikethrough';
-  static const String bulletList = 'Bullet list';
-  static const String numberedList = 'Numbered list';
-  static const String quote = 'Block quote';
-  static const String insertLink = 'Insert link';
-}
 
 /// A horizontal formatting toolbar for the rich text editor.
 ///
@@ -61,185 +50,191 @@ class FormattingToolbar extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: IntrinsicHeight(
-          child: Row(children: [
-          // --- Aa prefix ---
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Aa',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.onSurface,
-                  ),
+          child: Row(
+            children: [
+              // --- Aa prefix ---
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Aa',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 16,
+                      margin: const EdgeInsets.only(left: 12),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
+                    ),
+                  ],
                 ),
-                Container(
-                  width: 1,
-                  height: 16,
-                  margin: const EdgeInsets.only(left: 12),
-                  color: colorScheme.outlineVariant,
+              ),
+              // --- Text style group ---
+              _FormatButton(
+                icon: AppIcons.bold,
+                tooltip: l10n.formatBold,
+                isActive: attrs.containsKey(quill.Attribute.bold.key),
+                onPressed: () => _toggleAttribute(quill.Attribute.bold),
+              ),
+              _FormatButton(
+                icon: AppIcons.italic,
+                tooltip: l10n.formatItalic,
+                isActive: attrs.containsKey(quill.Attribute.italic.key),
+                onPressed: () => _toggleAttribute(quill.Attribute.italic),
+              ),
+              _FormatButton(
+                icon: AppIcons.underline,
+                tooltip: l10n.formatUnderline,
+                isActive: attrs.containsKey(quill.Attribute.underline.key),
+                onPressed: () => _toggleAttribute(quill.Attribute.underline),
+              ),
+              _FormatButton(
+                icon: AppIcons.strikethrough,
+                tooltip: l10n.formatStrikethrough,
+                isActive: attrs.containsKey(quill.Attribute.strikeThrough.key),
+                onPressed: () =>
+                    _toggleAttribute(quill.Attribute.strikeThrough),
+              ),
+
+              _groupDivider(colorScheme),
+
+              // --- Heading group ---
+              _FormatButton(
+                icon: AppIcons.title,
+                tooltip: 'H1',
+                isActive: attrs[quill.Attribute.header.key]?.value == 1,
+                onPressed: () => _toggleHeading(1),
+              ),
+              _FormatButton(
+                icon: AppIcons.title,
+                tooltip: 'H2',
+                iconSize: 18,
+                isActive: attrs[quill.Attribute.header.key]?.value == 2,
+                onPressed: () => _toggleHeading(2),
+              ),
+              _FormatButton(
+                icon: AppIcons.title,
+                tooltip: 'H3',
+                iconSize: 16,
+                isActive: attrs[quill.Attribute.header.key]?.value == 3,
+                onPressed: () => _toggleHeading(3),
+              ),
+
+              _groupDivider(colorScheme),
+
+              // --- List group ---
+              _FormatButton(
+                icon: AppIcons.bulletList,
+                tooltip: l10n.formatBulletList,
+                isActive: attrs.containsKey(quill.Attribute.list.key) &&
+                    attrs[quill.Attribute.list.key]?.value ==
+                        quill.Attribute.ul.value,
+                onPressed: () => _toggleList(quill.Attribute.ul),
+              ),
+              _FormatButton(
+                icon: AppIcons.numberedList,
+                tooltip: l10n.formatNumberedList,
+                isActive: attrs.containsKey(quill.Attribute.list.key) &&
+                    attrs[quill.Attribute.list.key]?.value ==
+                        quill.Attribute.ol.value,
+                onPressed: () => _toggleList(quill.Attribute.ol),
+              ),
+              _FormatButton(
+                icon: PhosphorIconsRegular.quotes,
+                tooltip: l10n.formatBlockQuote,
+                isActive: attrs.containsKey(quill.Attribute.blockQuote.key),
+                onPressed: () => _toggleAttribute(quill.Attribute.blockQuote),
+              ),
+
+              // --- Code block / Checklist ---
+              _FormatButton(
+                icon: AppIcons.code,
+                tooltip: l10n.codeBlock,
+                isActive: attrs.containsKey(quill.Attribute.codeBlock.key),
+                onPressed: () => _toggleAttribute(quill.Attribute.codeBlock),
+              ),
+              _FormatButton(
+                icon: AppIcons.checklist,
+                tooltip: l10n.checklist,
+                isActive: attrs.containsKey(quill.Attribute.list.key) &&
+                    attrs[quill.Attribute.list.key]?.value ==
+                        quill.Attribute.checked.value,
+                onPressed: () => _toggleChecklist(),
+              ),
+
+              _groupDivider(colorScheme),
+
+              // --- Indent / Outdent ---
+              _FormatButton(
+                icon: AppIcons.indentIncrease,
+                tooltip: l10n.indent,
+                isActive: false,
+                onPressed: () => _indent(),
+              ),
+              _FormatButton(
+                icon: AppIcons.indentDecrease,
+                tooltip: l10n.outdent,
+                isActive: false,
+                onPressed: () => _outdent(),
+              ),
+
+              _groupDivider(colorScheme),
+
+              // --- Insert group ---
+              if (onInsertLink != null)
+                _FormatButton(
+                  icon: AppIcons.link,
+                  tooltip: l10n.formatInsertLink,
+                  isActive: false,
+                  onPressed: onInsertLink!,
+                ),
+              if (onPickImage != null)
+                _FormatButton(
+                  icon: AppIcons.imageIcon,
+                  tooltip: l10n.addImage,
+                  isActive: false,
+                  onPressed: onPickImage!,
+                ),
+
+              // --- AI group ---
+              if (onAiAction != null) ...[
+                _groupDivider(colorScheme),
+                _FormatButton(
+                  icon: AppIcons.sparkles,
+                  tooltip: l10n.aiFeatures,
+                  isActive: false,
+                  onPressed: onAiAction!,
                 ),
               ],
-            ),
-          ),
-          // --- Text style group ---
-          _FormatButton(
-            icon: Icons.format_bold,
-            tooltip: _Tooltips.bold,
-            isActive: attrs.containsKey(quill.Attribute.bold.key),
-            onPressed: () => _toggleAttribute(quill.Attribute.bold),
-          ),
-          _FormatButton(
-            icon: Icons.format_italic,
-            tooltip: _Tooltips.italic,
-            isActive: attrs.containsKey(quill.Attribute.italic.key),
-            onPressed: () => _toggleAttribute(quill.Attribute.italic),
-          ),
-          _FormatButton(
-            icon: Icons.format_underline,
-            tooltip: _Tooltips.underline,
-            isActive: attrs.containsKey(quill.Attribute.underline.key),
-            onPressed: () => _toggleAttribute(quill.Attribute.underline),
-          ),
-          _FormatButton(
-            icon: Icons.format_strikethrough,
-            tooltip: _Tooltips.strikethrough,
-            isActive: attrs.containsKey(quill.Attribute.strikeThrough.key),
-            onPressed: () => _toggleAttribute(quill.Attribute.strikeThrough),
-          ),
 
-          _groupDivider(colorScheme),
+              _groupDivider(colorScheme),
 
-          // --- Heading group ---
-          _FormatButton(
-            icon: Icons.title,
-            tooltip: 'H1',
-            isActive: attrs[quill.Attribute.header.key]?.value == 1,
-            onPressed: () => _toggleHeading(1),
+              // --- Undo / Redo ---
+              _FormatButton(
+                icon: AppIcons.undo,
+                tooltip: l10n.undo,
+                isActive: false,
+                onPressed: () => quillController.undo(),
+              ),
+              _FormatButton(
+                icon: AppIcons.redo,
+                tooltip: l10n.menuRedo,
+                isActive: false,
+                onPressed: () => quillController.redo(),
+              ),
+            ],
           ),
-          _FormatButton(
-            icon: Icons.title,
-            tooltip: 'H2',
-            iconSize: 18,
-            isActive: attrs[quill.Attribute.header.key]?.value == 2,
-            onPressed: () => _toggleHeading(2),
-          ),
-          _FormatButton(
-            icon: Icons.title,
-            tooltip: 'H3',
-            iconSize: 16,
-            isActive: attrs[quill.Attribute.header.key]?.value == 3,
-            onPressed: () => _toggleHeading(3),
-          ),
-
-          _groupDivider(colorScheme),
-
-          // --- List group ---
-          _FormatButton(
-            icon: Icons.format_list_bulleted,
-            tooltip: _Tooltips.bulletList,
-            isActive: attrs.containsKey(quill.Attribute.list.key) &&
-                attrs[quill.Attribute.list.key]?.value ==
-                    quill.Attribute.ul.value,
-            onPressed: () => _toggleList(quill.Attribute.ul),
-          ),
-          _FormatButton(
-            icon: Icons.format_list_numbered,
-            tooltip: _Tooltips.numberedList,
-            isActive: attrs.containsKey(quill.Attribute.list.key) &&
-                attrs[quill.Attribute.list.key]?.value ==
-                    quill.Attribute.ol.value,
-            onPressed: () => _toggleList(quill.Attribute.ol),
-          ),
-          _FormatButton(
-            icon: Icons.format_quote,
-            tooltip: _Tooltips.quote,
-            isActive: attrs.containsKey(quill.Attribute.blockQuote.key),
-            onPressed: () => _toggleAttribute(quill.Attribute.blockQuote),
-          ),
-
-          // --- Code block / Checklist ---
-          _FormatButton(
-            icon: Icons.code,
-            tooltip: l10n.codeBlock,
-            isActive: attrs.containsKey(quill.Attribute.codeBlock.key),
-            onPressed: () => _toggleAttribute(quill.Attribute.codeBlock),
-          ),
-          _FormatButton(
-            icon: Icons.checklist,
-            tooltip: l10n.checklist,
-            isActive: attrs.containsKey(quill.Attribute.list.key) &&
-                attrs[quill.Attribute.list.key]?.value ==
-                    quill.Attribute.checked.value,
-            onPressed: () => _toggleChecklist(),
-          ),
-
-          _groupDivider(colorScheme),
-
-          // --- Indent / Outdent ---
-          _FormatButton(
-            icon: Icons.format_indent_increase,
-            tooltip: l10n.indent,
-            isActive: false,
-            onPressed: () => _indent(),
-          ),
-          _FormatButton(
-            icon: Icons.format_indent_decrease,
-            tooltip: l10n.outdent,
-            isActive: false,
-            onPressed: () => _outdent(),
-          ),
-
-          _groupDivider(colorScheme),
-
-          // --- Insert group ---
-          if (onInsertLink != null)
-            _FormatButton(
-              icon: Icons.link,
-              tooltip: _Tooltips.insertLink,
-              isActive: false,
-              onPressed: onInsertLink!,
-            ),
-          if (onPickImage != null)
-            _FormatButton(
-              icon: Icons.image_outlined,
-              tooltip: l10n.addImage,
-              isActive: false,
-              onPressed: onPickImage!,
-            ),
-
-          // --- AI group ---
-          if (onAiAction != null) ...[
-            _groupDivider(colorScheme),
-            _FormatButton(
-              icon: Icons.auto_awesome_outlined,
-              tooltip: l10n.aiFeatures,
-              isActive: false,
-              onPressed: onAiAction!,
-            ),
-          ],
-
-          _groupDivider(colorScheme),
-
-          // --- Undo / Redo ---
-          _FormatButton(
-            icon: Icons.undo,
-            tooltip: l10n.undo,
-            isActive: false,
-            onPressed: () => quillController.undo(),
-          ),
-          _FormatButton(
-            icon: Icons.redo,
-            tooltip: l10n.menuRedo,
-            isActive: false,
-            onPressed: () => quillController.redo(),
-          ),
-        ],
         ),
-       ),
       ),
     );
   }
@@ -328,6 +323,9 @@ class FormattingToolbar extends StatelessWidget {
 }
 
 /// A single formatting button that highlights when active.
+///
+/// Active state uses the periwinkle accent (primary on a primarySoft pill);
+/// idle state uses the muted secondary text tier per the design mockup.
 class _FormatButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
@@ -345,21 +343,23 @@ class _FormatButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final idleColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    // Dark mode uses a translucent accent tint instead of the light
+    // lavender pill so the active state stays visible without glaring.
+    final activeBg =
+        isDark ? AppColors.primary.withAlpha(40) : AppColors.primarySoft;
 
     return IconButton(
       icon: Icon(icon, size: iconSize),
       tooltip: tooltip,
       iconSize: iconSize,
-      color: isActive ? colorScheme.primary : colorScheme.onSurfaceVariant,
+      color: isActive ? AppColors.primary : idleColor,
       style: IconButton.styleFrom(
-        backgroundColor: isActive
-            ? colorScheme.primaryContainer.withAlpha(50)
-            : Colors.transparent,
-        foregroundColor: isActive
-            ? colorScheme.primary
-            : colorScheme.onSurfaceVariant,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.xsBorder),
+        backgroundColor: isActive ? activeBg : Colors.transparent,
+        foregroundColor: isActive ? AppColors.primary : idleColor,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.xsBorder),
       ),
       onPressed: onPressed,
     );

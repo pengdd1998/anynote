@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -32,6 +33,34 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
 
   final Map<String, int> _noteCountCache = {};
 
+  // -- Mockup pastel palette for collection icon tiles ------------------------
+  // Rotated deterministically per collection so colors are stable across
+  // rebuilds and consistent with the collection detail screen.
+
+  static const List<Color> _pastelIconBgs = [
+    AppColors.accentLavenderBg,
+    AppColors.accentPeachBg,
+    AppColors.accentYellowBg,
+    AppColors.accentMintBg,
+  ];
+
+  static const List<Color> _pastelIconLightTexts = [
+    AppColors.accentLavenderText,
+    AppColors.accentPeachText,
+    AppColors.accentYellowText,
+    AppColors.accentMintText,
+  ];
+
+  static const List<Color> _pastelIconDarkTexts = [
+    AppColors.accentLavender,
+    AppColors.accentPeach,
+    AppColors.accentYellow,
+    AppColors.accentMint,
+  ];
+
+  /// Stable pastel index derived from the collection id.
+  static int _pastelIndex(String id) => (id.hashCode & 0x7fffffff) % 4;
+
   Future<void> _loadNoteCount(String collectionId, AppDatabase db) async {
     if (_noteCountCache.containsKey(collectionId)) return;
     final notes = await db.collectionsDao.getCollectionNotes(collectionId);
@@ -50,15 +79,11 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.collectionsTitle),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: l10n.newCollection,
-            onPressed: () => _showCreateCollectionDialog(context, db),
-          ),
           IconButton(
             icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
             tooltip: _isGridView ? l10n.listView : l10n.gridView,
@@ -68,6 +93,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: _buildNewCollectionButton(l10n),
       body: StreamBuilder(
         stream: db.collectionsDao.watchAllCollections(),
         builder: (context, snapshot) {
@@ -109,6 +135,85 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Bottom soft button (mockup style)
+  // ---------------------------------------------------------------------------
+
+  Widget _buildNewCollectionButton(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.s8,
+          AppSpacing.md,
+          AppSpacing.s12,
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          height: AppSpacing.buttonHeight,
+          child: TextButton.icon(
+            onPressed: () => _showCreateCollectionDialog(context, ref.read(databaseProvider)),
+            icon: const Icon(AppIcons.add, size: 18),
+            label: Text(
+              l10n.newCollection,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: TextButton.styleFrom(
+              backgroundColor:
+                  isDark ? AppColors.primary.withAlpha(36) : AppColors.primarySoft,
+              foregroundColor:
+                  isDark ? AppColors.secondary : AppColors.primaryText,
+              shape: StadiumBorder(
+                side: isDark
+                    ? BorderSide(color: AppColors.primary.withAlpha(60))
+                    : const BorderSide(color: AppColors.primarySoftBorder),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Icon tile (pastel background + collection icon)
+  // ---------------------------------------------------------------------------
+
+  Widget _collectionIcon(Collection collection, bool isDark) {
+    final colColor = parseHexColor(collection.color);
+    final i = _pastelIndex(collection.id);
+    final Color bg;
+    final Color iconColor;
+    if (colColor != null) {
+      // Explicit collection color wins over the cycled pastels.
+      bg = isDark ? colColor.withAlpha(40) : colColor.withAlpha(25);
+      iconColor = colColor;
+    } else if (isDark) {
+      bg = AppColors.darkInputFill;
+      iconColor = _pastelIconDarkTexts[i];
+    } else {
+      bg = _pastelIconBgs[i];
+      iconColor = _pastelIconLightTexts[i];
+    }
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.xs),
+      ),
+      child: Icon(
+        Icons.folder,
+        size: 22,
+        color: iconColor,
+      ),
+    );
+  }
+
   Widget _buildErrorState(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
@@ -119,7 +224,9 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: AppColors.lightErrorBg,
+              color: isDark
+                  ? AppColors.darkErrorBg
+                  : AppColors.lightErrorBg,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(
@@ -154,12 +261,12 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
         AppSpacing.md,
         AppSpacing.s4,
         AppSpacing.md,
-        80,
+        AppSpacing.xl,
       ),
       itemBuilder: (context, index) {
         final collection = collections[index];
         return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+          padding: const EdgeInsets.only(bottom: AppSpacing.s12),
           child: _buildDismissibleCard(collection, db, isGrid: false),
         );
       },
@@ -177,8 +284,8 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
         return GridView.builder(
           gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: maxExtent,
-            mainAxisSpacing: AppSpacing.s8,
-            crossAxisSpacing: AppSpacing.s8,
+            mainAxisSpacing: AppSpacing.s12,
+            crossAxisSpacing: AppSpacing.s12,
             childAspectRatio: 0.9,
           ),
           itemCount: collections.length,
@@ -186,7 +293,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
             AppSpacing.md,
             AppSpacing.s4,
             AppSpacing.md,
-            80,
+            AppSpacing.xl,
           ),
           itemBuilder: (context, index) {
             final collection = collections[index];
@@ -265,36 +372,26 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     final title = collection.plainTitle ?? l10n.untitledCollection;
     final noteCount = _noteCountCache[collection.id] ?? 0;
     final colColor = parseHexColor(collection.color);
-
-    final accentBg = colColor?.withAlpha(25) ??
-        (isDark ? AppColors.darkInputFill : AppColors.lightInputFill);
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
 
     return GestureDetector(
       onTap: () => context.push('/collections/${collection.id}'),
       onLongPress: () => _showCollectionEditMenu(collection, db),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.s16),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
           borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          ),
           boxShadow: AppShadows.smOf(Theme.of(context).brightness),
         ),
         child: Row(
           children: [
-            // Folder icon in tinted circle
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: accentBg,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Icon(
-                Icons.folder,
-                color: colColor ?? AppColors.primary,
-                size: 20,
-              ),
-            ),
+            // Pastel icon tile
+            _collectionIcon(collection, isDark),
             const SizedBox(width: AppSpacing.s12),
             // Title + note count
             Expanded(
@@ -307,6 +404,9 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -314,9 +414,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                     l10n.noteCount(noteCount),
                     style: AppTextStyles.caption.copyWith(
                       fontSize: 12,
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
+                      color: tertiary,
                     ),
                   ),
                 ],
@@ -334,6 +432,9 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                 ),
               ),
             SyncStatusBadge(isSynced: collection.isSynced),
+            const SizedBox(width: AppSpacing.s8),
+            // Chevron
+            Icon(AppIcons.chevronRight, size: 16, color: tertiary),
           ],
         ),
       ),
@@ -347,38 +448,26 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     final noteCount = _noteCountCache[collection.id] ?? 0;
     final colColor = parseHexColor(collection.color);
 
-    final accentBg = colColor?.withAlpha(25) ??
-        (isDark ? AppColors.darkInputFill : AppColors.lightInputFill);
-
     return GestureDetector(
       onTap: () => context.push('/collections/${collection.id}'),
       onLongPress: () => _showCollectionEditMenu(collection, db),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.s16),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
           borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          ),
           boxShadow: AppShadows.smOf(Theme.of(context).brightness),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Folder icon in tinted badge + sync badge
+            // Pastel icon tile + sync badge
             Row(
               children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: accentBg,
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  child: Icon(
-                    Icons.folder,
-                    color: colColor ?? AppColors.primary,
-                    size: 18,
-                  ),
-                ),
+                _collectionIcon(collection, isDark),
                 const Spacer(),
                 if (colColor != null)
                   Container(
@@ -401,7 +490,9 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.body.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
               ),
             ),
             const Spacer(),

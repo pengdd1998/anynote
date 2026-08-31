@@ -48,7 +48,10 @@ class _TagSuggestionNotifier extends StateNotifier<_TagSuggestionState> {
   _TagSuggestionNotifier(this._aiRepo) : super(const _TagSuggestionState());
 
   /// Request AI-generated tag suggestions for the given content.
-  Future<void> suggestTags(String content) async {
+  Future<void> suggestTags(
+    String content, {
+    String? parseErrorMessage,
+  }) async {
     if (content.trim().isEmpty) return;
 
     _activeToken?.cancel('Replaced by new request');
@@ -80,7 +83,10 @@ class _TagSuggestionNotifier extends StateNotifier<_TagSuggestionState> {
       final jsonStart = cleaned.indexOf('[');
       final jsonEnd = cleaned.lastIndexOf(']');
       if (jsonStart == -1 || jsonEnd == -1) {
-        state = state.copyWith(isLoading: false, error: 'Failed to parse tags');
+        state = state.copyWith(
+          isLoading: false,
+          error: parseErrorMessage ?? 'Failed to parse tags',
+        );
         return;
       }
 
@@ -94,7 +100,9 @@ class _TagSuggestionNotifier extends StateNotifier<_TagSuggestionState> {
       );
     } catch (e) {
       state = state.copyWith(
-          isLoading: false, error: ErrorMapper.map(e).toString(),);
+        isLoading: false,
+        error: ErrorMapper.map(e).toString(),
+      );
     }
   }
 
@@ -216,9 +224,10 @@ class AiTagSuggestionSheet extends ConsumerWidget {
                   if (!state.isLoading && state.suggestedTags.isEmpty)
                     TextButton(
                       onPressed: () {
-                        ref
-                            .read(_tagSuggestionProvider.notifier)
-                            .suggestTags(content);
+                        ref.read(_tagSuggestionProvider.notifier).suggestTags(
+                              content,
+                              parseErrorMessage: l10n.failedToParseTags,
+                            );
                       },
                       child: Text(l10n.suggestTags),
                     ),
@@ -269,7 +278,10 @@ class AiTagSuggestionSheet extends ConsumerWidget {
       return ErrorStateWidget(
         message: state.error!,
         onRetry: () {
-          ref.read(_tagSuggestionProvider.notifier).suggestTags(content);
+          ref.read(_tagSuggestionProvider.notifier).suggestTags(
+                content,
+                parseErrorMessage: l10n.failedToParseTags,
+              );
         },
       );
     }
