@@ -202,6 +202,10 @@ type mockLLMConfigRepo struct {
 	getDefaultFn func(ctx context.Context, userID uuid.UUID) (*domain.LLMConfig, error)
 }
 
+func (m *mockLLMConfigRepo) ListByUser(ctx context.Context, userID uuid.UUID) ([]domain.LLMConfig, error) {
+	return nil, nil
+}
+
 func (m *mockLLMConfigRepo) GetDefaultByUser(ctx context.Context, userID uuid.UUID) (*domain.LLMConfig, error) {
 	if m.getDefaultFn != nil {
 		return m.getDefaultFn(ctx, userID)
