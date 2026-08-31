@@ -76,6 +76,29 @@ func (s *llmConfigService) Update(ctx context.Context, userID uuid.UUID, cfg dom
 		return nil, fmt.Errorf("unauthorized")
 	}
 
+	// Merge with existing: the handler decodes a partial body into a fresh
+	// struct, so empty fields mean "not provided" and MUST NOT wipe stored
+	// values (a PATCH of is_default alone would otherwise clear the name,
+	// base URL, model and — critically — the encrypted API key).
+	if cfg.Name == "" {
+		cfg.Name = existing.Name
+	}
+	if cfg.Provider == "" {
+		cfg.Provider = existing.Provider
+	}
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = existing.BaseURL
+	}
+	if cfg.Model == "" {
+		cfg.Model = existing.Model
+	}
+	if cfg.MaxTokens == 0 {
+		cfg.MaxTokens = existing.MaxTokens
+	}
+	if cfg.Temperature == 0 {
+		cfg.Temperature = existing.Temperature
+	}
+
 	// Validate BaseURL if it is being updated.
 	if cfg.BaseURL != "" {
 		if err := llm.ValidateBaseURL(cfg.BaseURL); err != nil {
@@ -90,6 +113,10 @@ func (s *llmConfigService) Update(ctx context.Context, userID uuid.UUID, cfg dom
 		}
 		cfg.EncryptedKey = encryptedKey
 		cfg.DecryptedKey = ""
+	} else {
+		// No new key provided: keep the stored encrypted key so partial
+		// updates (e.g. is_default only) don't lose the API key.
+		cfg.EncryptedKey = existing.EncryptedKey
 	}
 
 	if err := s.repo.Update(ctx, &cfg); err != nil {

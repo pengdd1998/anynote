@@ -24,7 +24,13 @@ func UserLLMConfig(
 ) (*llm.GatewayConfig, error) {
 	userCfg, err := llmRepo.GetDefaultByUser(ctx, userID)
 	if err != nil || userCfg == nil {
-		return nil, nil // No user config: fall back to shared mode.
+		// No config flagged default: fall back to the user's first config so
+		// a freshly created config is used even if the default flag was lost.
+		if list, listErr := llmRepo.ListByUser(ctx, userID); listErr == nil && len(list) > 0 {
+			userCfg = &list[0]
+		} else {
+			return nil, nil // No user config: fall back to shared mode.
+		}
 	}
 
 	decryptedKey, decErr := llm.DecryptAPIKey(userCfg.EncryptedKey, encryptionKey)
