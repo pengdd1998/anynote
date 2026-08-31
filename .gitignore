@@ -147,3 +147,6 @@ doc/*
 
 # ── Deploy configs (contain server-specific values) ───────────
 deploy/
+
+# uiautomator debug dumps accidentally committed earlier
+frontend/ui*.xml
