@@ -21,23 +21,76 @@ import 'widgets/account_section.dart';
 import 'widgets/sign_out_section.dart';
 import 'widgets/sync_section.dart';
 
+/// Pastel accent pair used by settings row-cards: a soft tinted background
+/// with a matching deep icon color (light), and a washed tint with a bright
+/// icon color (dark).
+class _TileAccent {
+  final Color bg;
+  final Color fg;
+  final Color bright;
+
+  const _TileAccent(this.bg, this.fg, this.bright);
+}
+
+/// Rotating pastel accents for settings icon tiles (lavender, peach, yellow,
+/// mint, coral), matching the design mockup.
+const _tileAccents = <_TileAccent>[
+  _TileAccent(
+    AppColors.accentLavenderBg,
+    AppColors.accentLavenderText,
+    AppColors.accentLavender,
+  ),
+  _TileAccent(
+    AppColors.accentPeachBg,
+    AppColors.accentPeachText,
+    AppColors.accentPeach,
+  ),
+  _TileAccent(
+    AppColors.accentYellowBg,
+    AppColors.accentYellowText,
+    AppColors.accentYellow,
+  ),
+  _TileAccent(
+    AppColors.accentMintBg,
+    AppColors.accentMintText,
+    AppColors.accentMint,
+  ),
+  _TileAccent(
+    AppColors.accentCoralBg,
+    AppColors.accentCoralText,
+    AppColors.accentCoral,
+  ),
+];
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settings),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              AppIcons.settings,
+              size: 18,
+              color: isDark ? AppColors.secondary : AppColors.primaryText,
+            ),
+            const SizedBox(width: AppSpacing.s8),
+            Text(l10n.settings),
+          ],
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
           IconButton(
             onPressed: () => context.push('/notifications'),
-            icon: NotificationBadge(
+            icon: const NotificationBadge(
               child: Icon(AppIcons.notificationsActive),
             ),
           ),
@@ -69,13 +122,13 @@ class SettingsScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SettingsGroupHeader(title: l10n.aiSection),
-                    SettingsGroup(
+                    _SettingsCardGroup(
                       children: [
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.aiRobot,
+                          accent: _tileAccents[0],
                           title: l10n.llmConfiguration,
                           subtitle: l10n.configureAIProviders,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/llm'),
                         ),
                         const _AiQuotaSection(),
@@ -97,13 +150,13 @@ class SettingsScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SettingsGroupHeader(title: l10n.publishing),
-                    SettingsGroup(
+                    _SettingsCardGroup(
                       children: [
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.share,
+                          accent: _tileAccents[2],
                           title: l10n.platformConnections,
                           subtitle: l10n.manageConnectedPlatforms,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/platforms'),
                         ),
                       ],
@@ -124,19 +177,20 @@ class SettingsScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SettingsGroupHeader(title: l10n.securityPrivacy),
-                    SettingsGroup(
+                    _SettingsCardGroup(
                       children: [
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.shield,
+                          accent: _tileAccents[3],
                           title: l10n.encryptionSettings,
                           subtitle: l10n.e2eEncryptionActive,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/security'),
                         ),
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.tag,
+                          accent: _tileAccents[4],
                           title: l10n.manageTags,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
+                          subtitle: l10n.tagsLabel,
                           onTap: () => context.push('/tags'),
                         ),
                       ],
@@ -157,7 +211,7 @@ class SettingsScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SettingsGroupHeader(title: l10n.sync),
-                    const SettingsGroup(
+                    const _SettingsCardGroup(
                       children: [
                         _SyncStatusSection(),
                       ],
@@ -179,13 +233,13 @@ class SettingsScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SettingsGroupHeader(title: l10n.notifications),
-                    SettingsGroup(
+                    _SettingsCardGroup(
                       children: [
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.notification,
+                          accent: _tileAccents[1],
                           title: l10n.notifications,
                           subtitle: l10n.notificationPreferences,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/notifications'),
                         ),
                       ],
@@ -206,40 +260,41 @@ class SettingsScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SettingsGroupHeader(title: l10n.data),
-                    SettingsGroup(
+                    _SettingsCardGroup(
                       children: [
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.fileUpload,
+                          accent: _tileAccents[2],
                           title: l10n.importNotes,
                           subtitle: l10n.importNotesDesc,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => _showImportSheet(context),
                         ),
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.fileDownload,
+                          accent: _tileAccents[3],
                           title: l10n.exportAllNotes,
                           subtitle: l10n.exportAllNotesDesc,
                           onTap: () => _showBatchExportDialog(context, ref),
                         ),
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.restore,
+                          accent: _tileAccents[4],
                           title: l10n.restoreFromBackup,
                           subtitle: l10n.restoreFromBackupDesc,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/restore'),
                         ),
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.photoLibrary,
+                          accent: _tileAccents[0],
                           title: l10n.imageManagement,
                           subtitle: l10n.totalStorage,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/images'),
                         ),
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.description,
+                          accent: _tileAccents[1],
                           title: l10n.templateManagement,
                           subtitle: l10n.templates,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/templates'),
                         ),
                       ],
@@ -266,12 +321,12 @@ class SettingsScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SettingsGroupHeader(title: l10n.keyboardShortcuts),
-                    SettingsGroup(
+                    _SettingsCardGroup(
                       children: [
-                        SettingsItem(
+                        _SettingsTile(
                           icon: AppIcons.keyboard,
+                          accent: _tileAccents[3],
                           title: l10n.keyboardShortcuts,
-                          trailing: const Icon(AppIcons.chevronRight, size: 20),
                           onTap: () => context.push('/settings/shortcuts'),
                         ),
                       ],
@@ -338,17 +393,147 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-/// A settings item with an inline switch that doesn't navigate when tapped.
+// ---------------------------------------------------------------------------
+// Local row-card components (design mockup: white cards, radius 16, 1px
+// border, 40px pastel rounded-square icon tiles, ~12px spacing).
+// ---------------------------------------------------------------------------
+
+/// A vertical stack of individual row-cards separated by ~12px gaps.
+class _SettingsCardGroup extends StatelessWidget {
+  final List<Widget> children;
+
+  const _SettingsCardGroup({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (int i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i < children.length - 1) const SizedBox(height: AppSpacing.s12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A single settings row-card: 40px pastel rounded-square icon tile, title
+/// (Inter w600 15), optional tertiary caption subtitle, and a trailing
+/// chevron by default.
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final _TileAccent accent;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.accent,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
+            ),
+            child: Row(
+              children: [
+                // 40px pastel rounded-square icon tile.
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isDark ? accent.fg.withAlpha(36) : accent.bg,
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: isDark ? accent.bright : accent.fg,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.s12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
+                      ),
+                      if (subtitle != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            subtitle!,
+                            style: AppTextStyles.caption.copyWith(
+                              color: tertiary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (trailing != null)
+                  trailing!
+                else if (onTap != null)
+                  Icon(AppIcons.chevronRight, size: 18, color: tertiary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A settings row-card with an inline switch that doesn't navigate when tapped.
 class _SettingsItemWithSwitch extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final _TileAccent accent;
 
   const _SettingsItemWithSwitch({
     required this.icon,
     required this.title,
+    required this.accent,
     this.subtitle,
     required this.value,
     required this.onChanged,
@@ -358,62 +543,71 @@ class _SettingsItemWithSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 6,
-      ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.s12,
-            vertical: AppSpacing.s12,
-          ),
-          child: Row(
-            children: [
-              IconCircle(icon: icon),
-              const SizedBox(width: AppSpacing.s12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 8,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isDark ? accent.fg.withAlpha(36) : accent.bg,
+                borderRadius: BorderRadius.circular(AppRadius.xs),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: isDark ? accent.bright : accent.fg,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                     ),
-                    if (subtitle != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          subtitle!,
-                          style: AppTextStyles.caption.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextTertiary
-                                : AppColors.lightTextTertiary,
-                          ),
+                  ),
+                  if (subtitle != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        subtitle!,
+                        style: AppTextStyles.caption.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary,
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
-              Semantics(
-                hint: title,
-                child: Switch(
-                  value: value,
-                  onChanged: onChanged,
-                ),
+            ),
+            Semantics(
+              hint: title,
+              child: Switch(
+                value: value,
+                onChanged: onChanged,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -444,8 +638,9 @@ class _AiQuotaSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final quotaAsync = ref.watch(aiQuotaProvider);
-    return SettingsItem(
+    return _SettingsTile(
       icon: AppIcons.dataUsage,
+      accent: _tileAccents[1],
       title: l10n.aiQuota,
       subtitle: quotaAsync.when(
         data: (quota) {
@@ -466,8 +661,9 @@ class _SyncStatusSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final syncStatusAsync = ref.watch(syncStatusProvider);
-    return SettingsItem(
+    return _SettingsTile(
       icon: AppIcons.cloud,
+      accent: _tileAccents[0],
       title: l10n.syncStatus,
       subtitle: syncStatusAsync.when(
         data: (status) {
@@ -475,7 +671,7 @@ class _SyncStatusSection extends ConsumerWidget {
           if (lastSynced == null) {
             return l10n.lastSyncedNever;
           }
-          return l10n.lastSynced(_formatSyncTime(lastSynced));
+          return l10n.lastSynced(_formatSyncTime(lastSynced, l10n));
         },
         loading: () => l10n.checking,
         error: (_, __) => l10n.unableToLoadSyncStatus,
@@ -484,11 +680,11 @@ class _SyncStatusSection extends ConsumerWidget {
     );
   }
 
-  static String _formatSyncTime(DateTime dt) {
+  static String _formatSyncTime(DateTime dt, AppLocalizations l10n) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inMinutes < 1) return l10n.justNow;
+    if (diff.inMinutes < 60) return l10n.minutesAgo(diff.inMinutes);
     if (diff.inHours < 24) {
       return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     }
@@ -512,13 +708,13 @@ class _LanguageSection extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SettingsGroupHeader(title: l10n.language),
-          SettingsGroup(
+          _SettingsCardGroup(
             children: [
-              SettingsItem(
+              _SettingsTile(
                 icon: AppIcons.language,
+                accent: _tileAccents[2],
                 title: l10n.language,
                 subtitle: _getLanguageDisplayName(locale, l10n),
-                trailing: const Icon(AppIcons.chevronRight, size: 20),
                 onTap: () => _showLanguageDialog(context, ref),
               ),
             ],
@@ -699,13 +895,13 @@ class _AppearanceSection extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SettingsGroupHeader(title: l10n.appearance),
-          SettingsGroup(
+          _SettingsCardGroup(
             children: [
-              SettingsItem(
+              _SettingsTile(
                 icon: AppIcons.palette,
+                accent: _tileAccents[4],
                 title: l10n.theme,
                 subtitle: _getThemeDisplayName(themeOption, l10n),
-                trailing: const Icon(AppIcons.chevronRight, size: 20),
                 onTap: () => _showThemeDialog(context, ref),
               ),
               _ReduceMotionItem(l10n: l10n),
@@ -927,6 +1123,7 @@ class _ReduceMotionItem extends ConsumerWidget {
 
         return _SettingsItemWithSwitch(
           icon: AppIcons.animation,
+          accent: _tileAccents[0],
           title: l10n.reduceMotion,
           subtitle: override == null
               ? l10n.reduceMotionSystem

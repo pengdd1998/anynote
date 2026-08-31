@@ -50,9 +50,26 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
-      // Field labels.
+      // The restyled screen shows a hero header first; the form is revealed
+      // by tapping the "Edit Profile" link, then scrolled into view (the
+      // ListView builds children lazily).
+      expect(find.text('Jane Doe'), findsOneWidget);
+      await tester.tap(find.text('Edit Profile'));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Display Name'),
+        200.0,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Display Name'), findsOneWidget);
       expect(find.text('Bio'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Public Profile'),
+        200.0,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Public Profile'), findsOneWidget);
 
       // Pre-filled values.
@@ -103,6 +120,16 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
+      // The toggle lives in the inline editor, revealed via "Edit Profile"
+      // and scrolled into view (the ListView builds children lazily).
+      await tester.tap(find.text('Edit Profile'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byType(Switch),
+        200.0,
+        scrollable: find.byType(Scrollable).first,
+      );
+
       // Public profile switch should be present and off by default.
       // The UI uses a plain Switch widget (not SwitchListTile).
       final switchWidget = tester.widget<Switch>(
@@ -129,6 +156,16 @@ void main() {
         ],
       );
       addTearDown(() => handle.dispose());
+
+      // The toggle lives in the inline editor, revealed via "Edit Profile"
+      // and scrolled into view (the ListView builds children lazily).
+      await tester.tap(find.text('Edit Profile'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byType(Switch),
+        200.0,
+        scrollable: find.byType(Scrollable).first,
+      );
 
       // Tap the switch to enable.
       await tester.tap(find.byType(Switch));
@@ -182,6 +219,16 @@ void main() {
         ],
       );
       addTearDown(() => handle.dispose());
+
+      // The editor fields are revealed via the "Edit Profile" link and
+      // scrolled into view (the ListView builds children lazily).
+      await tester.tap(find.text('Edit Profile'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Display Name'),
+        200.0,
+        scrollable: find.byType(Scrollable).first,
+      );
 
       // Find the display name TextField and enter new text.
       final textFields = find.byType(TextField);

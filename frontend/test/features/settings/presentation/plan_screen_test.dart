@@ -85,9 +85,10 @@ void main() {
       final handle = await pumpWithPlan(tester, makePlan(PlanType.free));
       addTearDown(() => handle.dispose());
 
-      // Should show the current plan banner. The l10n format is
-      // "Current Plan: Free" (capital P).
-      expect(find.text('Current Plan: Free'), findsOneWidget);
+      // Should show the current plan hero card: a "Current Plan" label with
+      // the plan name below it in the handwritten voice.
+      expect(find.text('Current Plan'), findsOneWidget);
+      expect(find.text('Free'), findsWidgets);
 
       // Should show usage stats.
       expect(find.text('Notes'), findsOneWidget);
@@ -174,14 +175,14 @@ void main() {
       final handle = await pumpWithPlan(tester, makePlan(PlanType.pro));
       addTearDown(() => handle.dispose());
 
-      // The comparison table should show plan names.
-      // "Free" appears as both title and price in the Free plan card.
+      // The plan cards should show plan names. "Pro" also appears in the
+      // current-plan hero card, so allow multiple matches.
       expect(find.text('Free'), findsAtLeast(1));
-      expect(find.text('Pro'), findsOneWidget);
+      expect(find.text('Pro'), findsAtLeast(1));
       expect(find.text('Lifetime'), findsOneWidget);
 
       // Should show current plan label.
-      expect(find.text('Current Plan: Pro'), findsOneWidget);
+      expect(find.text('Current Plan'), findsOneWidget);
 
       await handle.dispose();
     });
