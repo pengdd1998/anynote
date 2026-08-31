@@ -7,7 +7,7 @@ class Changelog {
 
   /// The current application version. Compared against the value stored
   /// in SharedPreferences to detect first launch after an update.
-  static const kCurrentVersion = '2.7.6';
+  static const kCurrentVersion = '2.7.9';
 
   /// Maps version strings to a list of brief feature descriptions.
   ///
@@ -15,7 +15,7 @@ class Changelog {
   /// unless they contain user-visible changes). The order of entries
   /// within each list reflects the order they should be displayed.
   static const Map<String, List<String>> entries = {
-    '2.7.6': [
+    '2.7.9': [
       'AI 写作全链路：笔记聚类 → 大纲 → 扩写 → 润色 → 一键发布',
       '自定义 LLM 提供商（支持小米 MiMo 等兼容接口）',
       '文章模板应用与发布环节模板透传',
