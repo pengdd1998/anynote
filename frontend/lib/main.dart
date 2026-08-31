@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -21,6 +20,7 @@ import 'core/notifications/local_notification_service.dart';
 import 'core/notifications/push_service.dart';
 import 'core/platform/platform_utils.dart';
 import 'core/share/receive_share_service.dart';
+import 'core/storage/app_secure_storage.dart';
 import 'core/storage/window_state.dart';
 import 'core/sync/sync_lifecycle.dart';
 import 'core/sync/background_sync_service.dart';
@@ -136,7 +136,12 @@ void main() async {
   // Restore auth state from stored tokens. If an access token exists,
   // the user is considered authenticated. The interceptor will handle
   // refresh on the first API call if the token is expired.
-  if (apiClient.accessToken != null) {
+  final restoredAuth = apiClient.accessToken != null;
+  debugPrint(
+    '[AuthRestore] startup auth state: '
+    '${restoredAuth ? 'authenticated' : 'not authenticated'}',
+  );
+  if (restoredAuth) {
     globalContainer.read(authStateProvider.notifier).state = true;
   }
 
@@ -435,7 +440,7 @@ final _hasSeenOnboardingFutureProvider = FutureProvider<bool>((ref) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('has_seen_onboarding') ?? false;
   }
-  const storage = FlutterSecureStorage();
+  const storage = AppSecureStorage.instance;
   final value = await storage.read(key: 'has_seen_onboarding');
   if (value == 'true') return true;
   // First launch after install/reinstall: mark onboarding as seen immediately

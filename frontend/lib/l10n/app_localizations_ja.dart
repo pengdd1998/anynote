@@ -27,6 +27,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get emailRequired => 'メールアドレスを入力してください';
 
   @override
+  String get emailInvalid => '有効なメールアドレスを入力してください';
+
+  @override
   String get password => 'パスワード';
 
   @override
@@ -2492,6 +2495,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get unableToLoadPlan => 'プラン情報を読み込めません。';
 
   @override
+  String get currentPlanLabel => '現在のプラン';
+
+  @override
+  String get managePlan => 'プラン管理';
+
+  @override
+  String get freePlanDescription => 'ノート、AI機能など。';
+
+  @override
+  String get freePlanCaption => 'はじめるために';
+
+  @override
+  String get proPlanCaption => 'すべて揃う';
+
+  @override
   String get profile => 'プロフィール';
 
   @override
@@ -3928,7 +3946,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get proPlan => 'Pro';
 
   @override
-  String get lifetimePlan => 'Lifetime';
+  String get lifetimePlan => '買い切り';
 
   @override
   String get proPrice => '\$4.99/月';
@@ -4268,4 +4286,192 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get loadMore => 'もっと読み込む';
+
+  @override
+  String get signInToContinue => 'AnyNote を続行するにはサインイン';
+
+  @override
+  String get forgotPassword => 'パスワードをお忘れですか？';
+
+  @override
+  String get orContinueWith => 'または次の方法で続行';
+
+  @override
+  String get dontHaveAccount => 'アカウントをお持ちでないですか？';
+
+  @override
+  String get signUp => '新規登録';
+
+  @override
+  String get iCanHelpWith => 'お手伝いできること……';
+
+  @override
+  String get e2eEncryptedHeading => 'エンドツーエンド暗号化';
+
+  @override
+  String get e2eEncryptedSubtitle => 'ノートは保存前に端末上で暗号化されます。';
+
+  @override
+  String get encryptedLabel => '暗号化済み';
+
+  @override
+  String get joined => '登録日';
+
+  @override
+  String get createYourAccount => 'アカウントを作成';
+
+  @override
+  String get registerSubtitle => 'AnyNoteであなたの旅を始めましょう';
+
+  @override
+  String get yourRecoveryKey => 'リカバリーキー';
+
+  @override
+  String get recoveryKeyHelp => 'アカウントにアクセスできなくなった場合の復旧に使用します。';
+
+  @override
+  String get alreadyHaveAccountQuestion => 'アカウントをお持ちですか？';
+
+  @override
+  String get needHelp => 'ヘルプが必要ですか？';
+
+  @override
+  String get contactSupport => 'サポートに連絡';
+
+  @override
+  String get syncConflictNotificationsDesc => '同期の競合の解決が必要なときに通知します';
+
+  @override
+  String get collaborationSharing => '共同編集と共有';
+
+  @override
+  String get shareNotificationsDesc => '誰かがノートを共有したときに通知します';
+
+  @override
+  String get pushNotifications => 'プッシュ通知';
+
+  @override
+  String get pushNotificationsDesc => 'デバイスでプッシュ通知を受け取ります';
+
+  @override
+  String get reminderNotificationsDesc => 'ノートのリマインダー時刻に通知します';
+
+  @override
+  String get notificationPrefsLocalNote => '設定はローカルに保存され、すべてのデバイス間で同期されます。';
+
+  @override
+  String get whatsNewTitle => '最新機能';
+
+  @override
+  String get gotIt => '了解';
+
+  @override
+  String get formatBold => '太字';
+
+  @override
+  String get formatItalic => '斜体';
+
+  @override
+  String get formatUnderline => '下線';
+
+  @override
+  String get formatStrikethrough => '取り消し線';
+
+  @override
+  String get formatBulletList => '箇条書き';
+
+  @override
+  String get formatNumberedList => '番号付きリスト';
+
+  @override
+  String get formatBlockQuote => '引用ブロック';
+
+  @override
+  String get formatInsertLink => 'リンク挿入';
+
+  @override
+  String get showReplace => '置換を表示';
+
+  @override
+  String get hideReplace => '置換を隠す';
+
+  @override
+  String get foldViewEmptyHint => '見出し（# で始まる行）を追加すると折りたたみビューを使用できます。';
+
+  @override
+  String get manageLinks => 'リンク管理';
+
+  @override
+  String get resetView => 'ビューをリセット';
+
+  @override
+  String get graphEmptyHint => 'ノートを作成して [[ウィキリンク]] でつなげてみましょう';
+
+  @override
+  String get errorLoadingGraph => 'グラフの読み込みに失敗しました';
+
+  @override
+  String get orphanedNotesDesc => '他のノートとつながっていないノートです。';
+
+  @override
+  String get noOrphanedNotes => '孤立ノートはありません';
+
+  @override
+  String get allNotesConnected => 'すべてのノートがつながっています。';
+
+  @override
+  String get statisticsEmptyHint => '最初のノートを作成すると統計が表示されます';
+
+  @override
+  String get createAndAssignTag => 'タグを作成して割り当て';
+
+  @override
+  String get imageNotFound => '画像が見つかりません';
+
+  @override
+  String get collapse => '折りたたむ';
+
+  @override
+  String get expand => '展開';
+
+  @override
+  String get editOriginal => '元のノートを編集';
+
+  @override
+  String transclusionNoteNotFound(String title) {
+    return 'ノート「$title」が見つからないか、削除されました。';
+  }
+
+  @override
+  String transclusionDepthLimit(String title) {
+    return '「$title」のネスト参照上限に達しました。';
+  }
+
+  @override
+  String get invalidTransclusion => '無効な参照';
+
+  @override
+  String get failedToParseTags => 'タグの解析に失敗しました';
+
+  @override
+  String get commentPosted => 'コメントを投稿しました';
+
+  @override
+  String get unknownError => '不明なエラー';
+
+  @override
+  String composeMaxNotesLimit(int count) {
+    return '選択できるのは最大 $count 件のノートです。追加する前に一部の選択を解除してください。';
+  }
+
+  @override
+  String composeTotalContentLimit(int limit) {
+    return '合計コンテンツが ${limit}K 文字を超えています。ノートの選択を減らすか、内容を短くしてください。';
+  }
+
+  @override
+  String get aiQuotaExceeded => 'AIクォータを使い切りました。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get setAsDefault => 'デフォルトに設定';
 }

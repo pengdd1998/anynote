@@ -27,6 +27,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get emailRequired => '이메일을 입력해 주세요';
 
   @override
+  String get emailInvalid => '유효한 이메일 주소를 입력해 주세요';
+
+  @override
   String get password => '비밀번호';
 
   @override
@@ -2493,6 +2496,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get unableToLoadPlan => '플랜 정보를 불러올 수 없습니다.';
 
   @override
+  String get currentPlanLabel => '현재 플랜';
+
+  @override
+  String get managePlan => '플랜 관리';
+
+  @override
+  String get freePlanDescription => '노트, AI 기능 등';
+
+  @override
+  String get freePlanCaption => '시작하기에 적합';
+
+  @override
+  String get proPlanCaption => '모두 갖춤';
+
+  @override
   String get profile => '프로필';
 
   @override
@@ -3930,7 +3948,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get proPlan => 'Pro';
 
   @override
-  String get lifetimePlan => 'Lifetime';
+  String get lifetimePlan => '평생';
 
   @override
   String get proPrice => '\$4.99/월';
@@ -4271,4 +4289,192 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get loadMore => '더 보기';
+
+  @override
+  String get signInToContinue => 'AnyNote을 계속하려면 로그인하세요';
+
+  @override
+  String get forgotPassword => '비밀번호를 잊으셨나요?';
+
+  @override
+  String get orContinueWith => '또는 다음으로 계속';
+
+  @override
+  String get dontHaveAccount => '계정이 없으신가요?';
+
+  @override
+  String get signUp => '회원가입';
+
+  @override
+  String get iCanHelpWith => '제가 도와드릴 일은...';
+
+  @override
+  String get e2eEncryptedHeading => '종단간 암호화';
+
+  @override
+  String get e2eEncryptedSubtitle => '노트는 저장하기 전에 기기에서 암호화됩니다.';
+
+  @override
+  String get encryptedLabel => '암호화됨';
+
+  @override
+  String get joined => '가입일';
+
+  @override
+  String get createYourAccount => '계정 만들기';
+
+  @override
+  String get registerSubtitle => 'AnyNote로 여정을 시작하세요';
+
+  @override
+  String get yourRecoveryKey => '내 복구 키';
+
+  @override
+  String get recoveryKeyHelp => '계정에 접근할 수 없게 될 때 복구하는 데 사용됩니다.';
+
+  @override
+  String get alreadyHaveAccountQuestion => '이미 계정이 있으신가요?';
+
+  @override
+  String get needHelp => '도움이 필요하신가요?';
+
+  @override
+  String get contactSupport => '고객 지원 문의';
+
+  @override
+  String get syncConflictNotificationsDesc => '동기화 충돌 해결이 필요할 때 알려줍니다';
+
+  @override
+  String get collaborationSharing => '협업 및 공유';
+
+  @override
+  String get shareNotificationsDesc => '누군가 노트를 공유하면 알려줍니다';
+
+  @override
+  String get pushNotifications => '푸시 알림';
+
+  @override
+  String get pushNotificationsDesc => '기기에서 푸시 알림을 받습니다';
+
+  @override
+  String get reminderNotificationsDesc => '노트 리마인더 시간에 알려줍니다';
+
+  @override
+  String get notificationPrefsLocalNote => '설정은 로컬에 저장되며 모든 기기에서 동기화됩니다.';
+
+  @override
+  String get whatsNewTitle => '새로운 소식';
+
+  @override
+  String get gotIt => '확인';
+
+  @override
+  String get formatBold => '굵게';
+
+  @override
+  String get formatItalic => '기울임꼴';
+
+  @override
+  String get formatUnderline => '밑줄';
+
+  @override
+  String get formatStrikethrough => '취소선';
+
+  @override
+  String get formatBulletList => '글머리 기호 목록';
+
+  @override
+  String get formatNumberedList => '번호 매기기 목록';
+
+  @override
+  String get formatBlockQuote => '인용 블록';
+
+  @override
+  String get formatInsertLink => '링크 삽입';
+
+  @override
+  String get showReplace => '바꾸기 표시';
+
+  @override
+  String get hideReplace => '바꾸기 숨기기';
+
+  @override
+  String get foldViewEmptyHint => '제목(#으로 시작하는 줄)을 추가하면 접기 보기를 사용할 수 있습니다.';
+
+  @override
+  String get manageLinks => '링크 관리';
+
+  @override
+  String get resetView => '보기 초기화';
+
+  @override
+  String get graphEmptyHint => '노트를 만들고 [[위키 링크]]로 연결해 보세요';
+
+  @override
+  String get errorLoadingGraph => '그래프를 불러오지 못했습니다';
+
+  @override
+  String get orphanedNotesDesc => '다른 노트와 연결되지 않은 노트입니다.';
+
+  @override
+  String get noOrphanedNotes => '고립된 노트 없음';
+
+  @override
+  String get allNotesConnected => '모든 노트가 연결되어 있습니다.';
+
+  @override
+  String get statisticsEmptyHint => '첫 노트를 만들면 통계가 표시됩니다';
+
+  @override
+  String get createAndAssignTag => '태그 만들기 및 할당';
+
+  @override
+  String get imageNotFound => '이미지를 찾을 수 없습니다';
+
+  @override
+  String get collapse => '접기';
+
+  @override
+  String get expand => '펼치기';
+
+  @override
+  String get editOriginal => '원본 편집';
+
+  @override
+  String transclusionNoteNotFound(String title) {
+    return '노트 \"$title\"을(를) 찾을 수 없거나 삭제되었습니다.';
+  }
+
+  @override
+  String transclusionDepthLimit(String title) {
+    return '\"$title\"의 중첩 참조 한도에 도달했습니다.';
+  }
+
+  @override
+  String get invalidTransclusion => '잘못된 참조';
+
+  @override
+  String get failedToParseTags => '태그를 분석하지 못했습니다';
+
+  @override
+  String get commentPosted => '댓글이 게시되었습니다';
+
+  @override
+  String get unknownError => '알 수 없는 오류';
+
+  @override
+  String composeMaxNotesLimit(int count) {
+    return '최대 $count개의 노트를 선택할 수 있습니다. 추가하기 전에 일부 선택을 해제하세요.';
+  }
+
+  @override
+  String composeTotalContentLimit(int limit) {
+    return '총 콘텐츠가 ${limit}K자를 초과했습니다. 노트 선택을 줄이거나 내용을 줄이세요.';
+  }
+
+  @override
+  String get aiQuotaExceeded => 'AI 쿼터를 모두 사용했습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get setAsDefault => '기본으로 설정';
 }

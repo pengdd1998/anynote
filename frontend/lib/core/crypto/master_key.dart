@@ -1,8 +1,8 @@
 import 'dart:convert';
+import '../storage/app_secure_storage.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'encryptor.dart';
@@ -45,10 +45,7 @@ class MasterKeyManager {
   static const _saltKey = 'anynote_salt';
   static const _kdfVersionKey = 'anynote_kdf_version';
 
-  static const _secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-  );
+  static const _secureStorage = AppSecureStorage.instance;
 
   /// Generate a new 32-byte salt for key derivation.
   static Uint8List generateSalt() {

@@ -15,7 +15,9 @@ class PasswordTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
   final void Function(String)? onFieldSubmitted;
+  final ValueChanged<String>? onChanged;
   final String? Function(String?)? validator;
+  final AutovalidateMode? autovalidateMode;
   final bool enabled;
   final bool autofocus;
   final String? obscuringCharacter;
@@ -34,7 +36,9 @@ class PasswordTextField extends StatelessWidget {
     this.textInputAction,
     this.autofillHints,
     this.onFieldSubmitted,
+    this.onChanged,
     this.validator,
+    this.autovalidateMode,
     this.enabled = true,
     this.autofocus = false,
     this.obscuringCharacter,
@@ -56,7 +60,9 @@ class PasswordTextField extends StatelessWidget {
       textInputAction: textInputAction,
       autofillHints: autofillHints,
       onFieldSubmitted: onFieldSubmitted,
+      onChanged: onChanged,
       validator: validator,
+      autovalidateMode: autovalidateMode,
       enabled: enabled,
       autofocus: autofocus,
       obscuringCharacter: obscuringCharacter,
@@ -77,7 +83,9 @@ class _PasswordField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
   final void Function(String)? onFieldSubmitted;
+  final ValueChanged<String>? onChanged;
   final String? Function(String?)? validator;
+  final AutovalidateMode? autovalidateMode;
   final bool enabled;
   final bool autofocus;
   final String? obscuringCharacter;
@@ -96,7 +104,9 @@ class _PasswordField extends StatefulWidget {
     this.textInputAction,
     this.autofillHints,
     this.onFieldSubmitted,
+    this.onChanged,
     this.validator,
+    this.autovalidateMode,
     this.enabled = true,
     this.autofocus = false,
     this.obscuringCharacter,
@@ -121,7 +131,9 @@ class _PasswordFieldState extends State<_PasswordField> {
       textInputAction: widget.textInputAction,
       autofillHints: widget.autofillHints,
       onFieldSubmitted: widget.onFieldSubmitted,
+      onChanged: widget.onChanged,
       validator: widget.validator,
+      autovalidateMode: widget.autovalidateMode,
       enabled: widget.enabled,
       autofocus: widget.autofocus,
       obscuringCharacter: widget.obscuringCharacter ?? '•',

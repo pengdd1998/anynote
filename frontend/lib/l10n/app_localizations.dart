@@ -138,6 +138,12 @@ abstract class AppLocalizations {
   /// **'Email is required'**
   String get emailRequired;
 
+  /// Validation error when the email format is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get emailInvalid;
+
   /// Password form field label
   ///
   /// In en, this message translates to:
@@ -4660,6 +4666,36 @@ abstract class AppLocalizations {
   /// **'Unable to load plan info.'**
   String get unableToLoadPlan;
 
+  /// Label above the current plan name in the plan hero card
+  ///
+  /// In en, this message translates to:
+  /// **'Current Plan'**
+  String get currentPlanLabel;
+
+  /// Button to manage the current plan
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Plan'**
+  String get managePlan;
+
+  /// Free plan description in the current plan hero card
+  ///
+  /// In en, this message translates to:
+  /// **'Notes, AI features, and more.'**
+  String get freePlanDescription;
+
+  /// Caption on the Free plan card
+  ///
+  /// In en, this message translates to:
+  /// **'For getting started'**
+  String get freePlanCaption;
+
+  /// Caption on the Pro plan card
+  ///
+  /// In en, this message translates to:
+  /// **'Everything you need'**
+  String get proPlanCaption;
+
   /// Profile settings item title
   ///
   /// In en, this message translates to:
@@ -7923,6 +7959,366 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Load more'**
   String get loadMore;
+
+  /// No description provided for @signInToContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to continue to AnyNote'**
+  String get signInToContinue;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @orContinueWith.
+  ///
+  /// In en, this message translates to:
+  /// **'or continue with'**
+  String get orContinueWith;
+
+  /// No description provided for @dontHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get dontHaveAccount;
+
+  /// No description provided for @signUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get signUp;
+
+  /// No description provided for @iCanHelpWith.
+  ///
+  /// In en, this message translates to:
+  /// **'I can help you with...'**
+  String get iCanHelpWith;
+
+  /// No description provided for @e2eEncryptedHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'End-to-end encrypted'**
+  String get e2eEncryptedHeading;
+
+  /// No description provided for @e2eEncryptedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your notes are encrypted on your device before they\'re saved.'**
+  String get e2eEncryptedSubtitle;
+
+  /// No description provided for @encryptedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted'**
+  String get encryptedLabel;
+
+  /// No description provided for @joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joined;
+
+  /// Register screen headline
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account'**
+  String get createYourAccount;
+
+  /// Register screen subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Start your journey with AnyNote'**
+  String get registerSubtitle;
+
+  /// Section label above the recovery key on the register screen
+  ///
+  /// In en, this message translates to:
+  /// **'Your recovery key'**
+  String get yourRecoveryKey;
+
+  /// Helper text explaining what the recovery key is for
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll use this to help you recover your account if you ever lose access.'**
+  String get recoveryKeyHelp;
+
+  /// Footer question on the register screen linking to login
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get alreadyHaveAccountQuestion;
+
+  /// Footer question before the contact support link
+  ///
+  /// In en, this message translates to:
+  /// **'Need help?'**
+  String get needHelp;
+
+  /// Link to contact support
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get contactSupport;
+
+  /// Subtitle for the sync conflict notification toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Alert when sync conflicts need resolution'**
+  String get syncConflictNotificationsDesc;
+
+  /// Title for the collaboration notification toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Collaboration & Sharing'**
+  String get collaborationSharing;
+
+  /// Subtitle for the share notification toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Notify when someone shares a note with you'**
+  String get shareNotificationsDesc;
+
+  /// Title for the push notification toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Push Notifications'**
+  String get pushNotifications;
+
+  /// Subtitle for the push notification toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Receive push notifications on your device'**
+  String get pushNotificationsDesc;
+
+  /// Subtitle for the reminder notification toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when a note reminder is due'**
+  String get reminderNotificationsDesc;
+
+  /// Info note at the bottom of notification settings
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences are stored locally and sync across all your devices.'**
+  String get notificationPrefsLocalNote;
+
+  /// Title of the What's New dialog
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New'**
+  String get whatsNewTitle;
+
+  /// Dismiss button of the What's New dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Got it!'**
+  String get gotIt;
+
+  /// Tooltip for the bold formatting button
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get formatBold;
+
+  /// Tooltip for the italic formatting button
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get formatItalic;
+
+  /// Tooltip for the underline formatting button
+  ///
+  /// In en, this message translates to:
+  /// **'Underline'**
+  String get formatUnderline;
+
+  /// Tooltip for the strikethrough formatting button
+  ///
+  /// In en, this message translates to:
+  /// **'Strikethrough'**
+  String get formatStrikethrough;
+
+  /// Tooltip for the bullet list formatting button
+  ///
+  /// In en, this message translates to:
+  /// **'Bullet list'**
+  String get formatBulletList;
+
+  /// Tooltip for the numbered list formatting button
+  ///
+  /// In en, this message translates to:
+  /// **'Numbered list'**
+  String get formatNumberedList;
+
+  /// Tooltip for the block quote formatting button
+  ///
+  /// In en, this message translates to:
+  /// **'Block quote'**
+  String get formatBlockQuote;
+
+  /// Tooltip for the insert link formatting button
+  ///
+  /// In en, this message translates to:
+  /// **'Insert link'**
+  String get formatInsertLink;
+
+  /// Tooltip to expand the replace field in find and replace bar
+  ///
+  /// In en, this message translates to:
+  /// **'Show replace'**
+  String get showReplace;
+
+  /// Tooltip to collapse the replace field in find and replace bar
+  ///
+  /// In en, this message translates to:
+  /// **'Hide replace'**
+  String get hideReplace;
+
+  /// Empty state hint for the folded outline view
+  ///
+  /// In en, this message translates to:
+  /// **'Add headings (lines starting with #) to use the fold view.'**
+  String get foldViewEmptyHint;
+
+  /// Tooltip for the manage links button in note graph
+  ///
+  /// In en, this message translates to:
+  /// **'Manage links'**
+  String get manageLinks;
+
+  /// Tooltip for the reset view button in note graph
+  ///
+  /// In en, this message translates to:
+  /// **'Reset view'**
+  String get resetView;
+
+  /// Empty state hint for the note graph
+  ///
+  /// In en, this message translates to:
+  /// **'Create some notes and link them with [[wiki links]]'**
+  String get graphEmptyHint;
+
+  /// Error title when the note graph fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading graph'**
+  String get errorLoadingGraph;
+
+  /// Description at the top of the orphaned notes sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Notes with no connections to other notes.'**
+  String get orphanedNotesDesc;
+
+  /// Empty state title for the orphaned notes sheet
+  ///
+  /// In en, this message translates to:
+  /// **'No Orphaned Notes'**
+  String get noOrphanedNotes;
+
+  /// Empty state subtitle for the orphaned notes sheet
+  ///
+  /// In en, this message translates to:
+  /// **'All your notes are connected!'**
+  String get allNotesConnected;
+
+  /// Empty state hint for the statistics screen
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first note to see statistics'**
+  String get statisticsEmptyHint;
+
+  /// Button to create a new tag and assign it to the note
+  ///
+  /// In en, this message translates to:
+  /// **'Create and assign tag'**
+  String get createAndAssignTag;
+
+  /// Placeholder shown when an embedded image is missing
+  ///
+  /// In en, this message translates to:
+  /// **'Image not found'**
+  String get imageNotFound;
+
+  /// Tooltip to collapse an expanded embed
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapse;
+
+  /// Tooltip to expand a collapsed embed
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expand;
+
+  /// Tooltip to open the source note of a transclusion
+  ///
+  /// In en, this message translates to:
+  /// **'Edit original'**
+  String get editOriginal;
+
+  /// Shown when a transcluded note no longer exists
+  ///
+  /// In en, this message translates to:
+  /// **'Note \"{title}\" not found or was deleted.'**
+  String transclusionNoteNotFound(String title);
+
+  /// Shown when nested transclusions exceed the maximum depth
+  ///
+  /// In en, this message translates to:
+  /// **'Nested transclusion limit reached for \"{title}\".'**
+  String transclusionDepthLimit(String title);
+
+  /// Shown when a transclusion embed has malformed data
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid transclusion'**
+  String get invalidTransclusion;
+
+  /// Error when AI tag suggestions cannot be parsed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to parse tags'**
+  String get failedToParseTags;
+
+  /// SnackBar after successfully posting a comment
+  ///
+  /// In en, this message translates to:
+  /// **'Comment posted'**
+  String get commentPosted;
+
+  /// Fallback detail when an error has no message
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get unknownError;
+
+  /// Error when too many notes are selected for AI compose
+  ///
+  /// In en, this message translates to:
+  /// **'You can select at most {count} notes. Deselect some notes before adding more.'**
+  String composeMaxNotesLimit(int count);
+
+  /// Error when total selected content exceeds the size limit
+  ///
+  /// In en, this message translates to:
+  /// **'Total content exceeds {limit}K characters. Please select fewer notes or shorten the content.'**
+  String composeTotalContentLimit(int limit);
+
+  /// Error when the daily AI quota is used up
+  ///
+  /// In en, this message translates to:
+  /// **'AI quota exceeded. Please wait before trying again.'**
+  String get aiQuotaExceeded;
+
+  /// Tooltip/action to set an LLM config as the default
+  ///
+  /// In en, this message translates to:
+  /// **'Set as default'**
+  String get setAsDefault;
 }
 
 class _AppLocalizationsDelegate

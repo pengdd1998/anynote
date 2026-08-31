@@ -1,8 +1,8 @@
 import 'dart:convert';
+import '../storage/app_secure_storage.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Secure storage interface for cryptographic keys.
@@ -47,10 +47,7 @@ class KeyStorage {
 
   static bool _migrated = false;
 
-  static const _secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-  );
+  static const _secureStorage = AppSecureStorage.instance;
 
   /// Store the master key.
   static Future<void> saveMasterKey(Uint8List key) async {

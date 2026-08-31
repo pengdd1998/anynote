@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import '../storage/app_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../routing/app_router.dart';
@@ -36,7 +38,7 @@ class ApiClient {
   void Function()? onAuthFailure;
 
   ApiClient({required String baseUrl})
-      : _secureStorage = const FlutterSecureStorage(),
+      : _secureStorage = AppSecureStorage.instance,
         _dio = Dio(
           BaseOptions(
             baseUrl: _normalizeBaseUrl(baseUrl),
@@ -95,11 +97,37 @@ class ApiClient {
   }
 
   /// Load tokens from secure storage into memory. Call during app startup.
+  ///
+  /// If the access token is missing or empty but a refresh token exists,
+  /// attempts a single token refresh to restore the session. This covers
+  /// cold starts where the access token expired or was never re-persisted
+  /// while the refresh token is still valid. Never logs token values.
   Future<void> loadStoredTokens() async {
     final accessToken = await _secureStorage.read(key: 'access_token');
-    if (accessToken != null) {
+    final hasAccessToken = accessToken != null && accessToken.isNotEmpty;
+    debugPrint(
+      '[AuthRestore] access token ${hasAccessToken ? 'found' : 'not found'}',
+    );
+    if (hasAccessToken) {
       _accessToken = accessToken;
+      return;
     }
+
+    // Access token missing: try to restore the session from the refresh
+    // token before giving up.
+    final refreshToken = await _secureStorage.read(key: 'refresh_token');
+    if (refreshToken == null || refreshToken.isEmpty) {
+      debugPrint(
+        '[AuthRestore] refresh token not found, session not restored',
+      );
+      return;
+    }
+    debugPrint('[AuthRestore] attempting startup refresh');
+    final newAccessToken = await tryRefreshToken();
+    debugPrint(
+      '[AuthRestore] startup refresh '
+      '${newAccessToken != null ? 'succeeded' : 'failed'}',
+    );
   }
 
   /// Attempt to refresh the access token using the stored refresh token.
@@ -380,7 +408,11 @@ class ApiClient {
 
   Future<List<Map<String, dynamic>>> listLlmConfigs() async {
     final res = await _dio.get('/api/v1/llm/configs');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    // The server serializes a Go nil slice as JSON `null` when the user has
+    // no configs yet — treat that as an empty list instead of throwing.
+    final data = res.data;
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return const [];
   }
 
   Future<Map<String, dynamic>> createLlmConfig(

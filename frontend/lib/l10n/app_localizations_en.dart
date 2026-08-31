@@ -27,6 +27,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailRequired => 'Email is required';
 
   @override
+  String get emailInvalid => 'Please enter a valid email address';
+
+  @override
   String get password => 'Password';
 
   @override
@@ -2588,6 +2591,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unableToLoadPlan => 'Unable to load plan info.';
 
   @override
+  String get currentPlanLabel => 'Current Plan';
+
+  @override
+  String get managePlan => 'Manage Plan';
+
+  @override
+  String get freePlanDescription => 'Notes, AI features, and more.';
+
+  @override
+  String get freePlanCaption => 'For getting started';
+
+  @override
+  String get proPlanCaption => 'Everything you need';
+
+  @override
   String get profile => 'Profile';
 
   @override
@@ -4489,4 +4507,202 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadMore => 'Load more';
+
+  @override
+  String get signInToContinue => 'Sign in to continue to AnyNote';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get orContinueWith => 'or continue with';
+
+  @override
+  String get dontHaveAccount => 'Don\'t have an account?';
+
+  @override
+  String get signUp => 'Sign up';
+
+  @override
+  String get iCanHelpWith => 'I can help you with...';
+
+  @override
+  String get e2eEncryptedHeading => 'End-to-end encrypted';
+
+  @override
+  String get e2eEncryptedSubtitle =>
+      'Your notes are encrypted on your device before they\'re saved.';
+
+  @override
+  String get encryptedLabel => 'Encrypted';
+
+  @override
+  String get joined => 'Joined';
+
+  @override
+  String get createYourAccount => 'Create your account';
+
+  @override
+  String get registerSubtitle => 'Start your journey with AnyNote';
+
+  @override
+  String get yourRecoveryKey => 'Your recovery key';
+
+  @override
+  String get recoveryKeyHelp =>
+      'We\'ll use this to help you recover your account if you ever lose access.';
+
+  @override
+  String get alreadyHaveAccountQuestion => 'Already have an account?';
+
+  @override
+  String get needHelp => 'Need help?';
+
+  @override
+  String get contactSupport => 'Contact support';
+
+  @override
+  String get syncConflictNotificationsDesc =>
+      'Alert when sync conflicts need resolution';
+
+  @override
+  String get collaborationSharing => 'Collaboration & Sharing';
+
+  @override
+  String get shareNotificationsDesc =>
+      'Notify when someone shares a note with you';
+
+  @override
+  String get pushNotifications => 'Push Notifications';
+
+  @override
+  String get pushNotificationsDesc =>
+      'Receive push notifications on your device';
+
+  @override
+  String get reminderNotificationsDesc =>
+      'Get notified when a note reminder is due';
+
+  @override
+  String get notificationPrefsLocalNote =>
+      'Preferences are stored locally and sync across all your devices.';
+
+  @override
+  String get whatsNewTitle => 'What\'s New';
+
+  @override
+  String get gotIt => 'Got it!';
+
+  @override
+  String get formatBold => 'Bold';
+
+  @override
+  String get formatItalic => 'Italic';
+
+  @override
+  String get formatUnderline => 'Underline';
+
+  @override
+  String get formatStrikethrough => 'Strikethrough';
+
+  @override
+  String get formatBulletList => 'Bullet list';
+
+  @override
+  String get formatNumberedList => 'Numbered list';
+
+  @override
+  String get formatBlockQuote => 'Block quote';
+
+  @override
+  String get formatInsertLink => 'Insert link';
+
+  @override
+  String get showReplace => 'Show replace';
+
+  @override
+  String get hideReplace => 'Hide replace';
+
+  @override
+  String get foldViewEmptyHint =>
+      'Add headings (lines starting with #) to use the fold view.';
+
+  @override
+  String get manageLinks => 'Manage links';
+
+  @override
+  String get resetView => 'Reset view';
+
+  @override
+  String get graphEmptyHint =>
+      'Create some notes and link them with [[wiki links]]';
+
+  @override
+  String get errorLoadingGraph => 'Error loading graph';
+
+  @override
+  String get orphanedNotesDesc => 'Notes with no connections to other notes.';
+
+  @override
+  String get noOrphanedNotes => 'No Orphaned Notes';
+
+  @override
+  String get allNotesConnected => 'All your notes are connected!';
+
+  @override
+  String get statisticsEmptyHint => 'Create your first note to see statistics';
+
+  @override
+  String get createAndAssignTag => 'Create and assign tag';
+
+  @override
+  String get imageNotFound => 'Image not found';
+
+  @override
+  String get collapse => 'Collapse';
+
+  @override
+  String get expand => 'Expand';
+
+  @override
+  String get editOriginal => 'Edit original';
+
+  @override
+  String transclusionNoteNotFound(String title) {
+    return 'Note \"$title\" not found or was deleted.';
+  }
+
+  @override
+  String transclusionDepthLimit(String title) {
+    return 'Nested transclusion limit reached for \"$title\".';
+  }
+
+  @override
+  String get invalidTransclusion => 'Invalid transclusion';
+
+  @override
+  String get failedToParseTags => 'Failed to parse tags';
+
+  @override
+  String get commentPosted => 'Comment posted';
+
+  @override
+  String get unknownError => 'Unknown error';
+
+  @override
+  String composeMaxNotesLimit(int count) {
+    return 'You can select at most $count notes. Deselect some notes before adding more.';
+  }
+
+  @override
+  String composeTotalContentLimit(int limit) {
+    return 'Total content exceeds ${limit}K characters. Please select fewer notes or shorten the content.';
+  }
+
+  @override
+  String get aiQuotaExceeded =>
+      'AI quota exceeded. Please wait before trying again.';
+
+  @override
+  String get setAsDefault => 'Set as default';
 }

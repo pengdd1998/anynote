@@ -314,7 +314,7 @@ class _MermaidRendererState extends State<MermaidRenderer> {
           widget.code,
           style: TextStyle(
             fontSize: 13,
-            fontFamily: 'monospace',
+            fontFamily: 'RobotoMono',
             height: 1.5,
             color: textColor,
           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'app_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Web-compatible secure storage fallback.
@@ -62,10 +62,7 @@ class WebSecureStorage {
 
   // --- Native implementation (flutter_secure_storage) ---
 
-  static const _nativeStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-  );
+  static const _nativeStorage = AppSecureStorage.instance;
 
   static Future<String?> _readNative(String key) async {
     return _nativeStorage.read(key: key);

@@ -506,7 +506,7 @@ class AppMenuBar extends ConsumerWidget {
             child: Text(
               keys,
               style: const TextStyle(
-                fontFamily: 'monospace',
+                fontFamily: 'RobotoMono',
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
