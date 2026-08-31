@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 import '../../../../core/storage/image_storage.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Embed builder for local images stored by [ImageStorage].
 ///
@@ -109,7 +110,7 @@ class _BrokenImage extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Image not found',
+              AppLocalizations.of(context)?.imageNotFound ?? 'Image not found',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),

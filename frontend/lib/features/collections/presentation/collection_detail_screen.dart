@@ -1,3 +1,6 @@
+import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,15 +8,17 @@ import 'package:go_router/go_router.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
+import '../../../core/navigation/nav_guard.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/color_utils.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../notes/presentation/widgets/note_card.dart';
 
 class CollectionDetailScreen extends ConsumerStatefulWidget {
   final String collectionId;
@@ -33,6 +38,26 @@ class _CollectionDetailScreenState
 
   bool _isLoading = true;
   String? _error;
+
+  // -- Mockup pastel palette for icon/letter thumbnails ------------------------
+  // Parallel to AppColors.accentBackgrounds (peach, yellow, coral, mint).
+
+  static const List<Color> _thumbLightTexts = [
+    AppColors.accentPeachText,
+    AppColors.accentYellowText,
+    AppColors.accentCoralText,
+    AppColors.accentMintText,
+  ];
+
+  static const List<Color> _thumbDarkTexts = [
+    AppColors.accentPeach,
+    AppColors.accentYellow,
+    AppColors.accentCoral,
+    AppColors.accentMint,
+  ];
+
+  /// Stable pastel index derived from an entity id.
+  static int _pastelIndex(String id) => (id.hashCode & 0x7fffffff) % 4;
 
   @override
   void initState() {
@@ -96,19 +121,20 @@ class _CollectionDetailScreenState
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_collection?.plainTitle ?? l10n.collectionFallback),
+        titleSpacing: 0,
+        title: _buildHeader(l10n),
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined),
+            icon: const Icon(AppIcons.edit),
             tooltip: l10n.renameCollectionTooltip,
             onPressed:
                 _collection != null ? () => _showRenameDialog(context) : null,
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(AppIcons.delete),
             tooltip: l10n.deleteCollectionTooltip,
             onPressed: () => _confirmDelete(context),
           ),
@@ -117,11 +143,87 @@ class _CollectionDetailScreenState
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddNotesSheet,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
-        child: const Icon(Icons.add),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+        child: const Icon(AppIcons.add),
       ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Header (mockup "Journal" style): thumbnail + handwritten title + count
+  // ---------------------------------------------------------------------------
+
+  Widget _buildHeader(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final title = _collection?.plainTitle ?? l10n.collectionFallback;
+
+    return Row(
+      children: [
+        _collectionHeaderThumb(isDark),
+        const SizedBox(width: AppSpacing.s12),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.handwritingBody.copyWith(
+                  fontSize: 24,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
+              ),
+              Text(
+                l10n.noteCount(_collectionNotes.length),
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 12,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Small rounded thumbnail for the header: pastel tile with the collection
+  /// icon (the model carries no image, so we always use the icon tile).
+  Widget _collectionHeaderThumb(bool isDark) {
+    final collection = _collection;
+    final i = collection == null ? 0 : _pastelIndex(collection.id);
+    final colColor =
+        collection == null ? null : parseHexColor(collection.color);
+
+    final Color bg;
+    final Color iconColor;
+    if (colColor != null) {
+      bg = isDark ? colColor.withAlpha(40) : colColor.withAlpha(25);
+      iconColor = colColor;
+    } else if (isDark) {
+      bg = AppColors.darkInputFill;
+      iconColor = AppColors.secondary;
+    } else {
+      bg = AppColors.accentBackgrounds[i];
+      iconColor = _thumbLightTexts[i];
+    }
+
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.xs),
+      ),
+      child: Icon(Icons.folder, size: 24, color: iconColor),
     );
   }
 
@@ -224,83 +326,141 @@ class _CollectionDetailScreenState
               );
               _loadData();
             },
-            child: Stack(
-              children: [
-                NoteCard(
-                  note: note,
-                  time: _formatTime(note.updatedAt),
-                  tags: const [],
-                  isSelected: false,
-                  onTap: () => context.push('/notes/${cn.noteId}'),
-                  onLongPress: null,
-                  untitled: l10n.untitled,
-                  layout: NoteCardLayout.list,
-                  listIndex: index,
+            child: GestureDetector(
+              onTap: () {
+                final target = '/notes/${cn.noteId}';
+                if (!NavGuard.canNavigate(target)) return;
+                context.push(target);
+              },
+              child: _buildNoteCard(note, title, index),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Note row card (mockup style): thumbnail + title + date + row actions
+  // ---------------------------------------------------------------------------
+
+  Widget _buildNoteCard(Note note, String title, int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final previewPath = note.firstImagePath;
+    final hasImage = previewPath != null && previewPath.isNotEmpty && !kIsWeb;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Leading thumbnail (56px, rounded): preview image if any,
+          // otherwise a pastel tile with the first letter of the title.
+          if (hasImage)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+              child: SizedBox(
+                width: 56,
+                height: 56,
+                child: Image.file(
+                  File(previewPath),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      _letterThumb(title, note.id, isDark),
                 ),
-                // Drag handle overlay
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: ReorderableDragStartListener(
-                    index: index,
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.darkCardBg.withAlpha(200)
-                            : AppColors.lightCardBg.withAlpha(200),
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.sm),
-                      ),
-                      child: Icon(
-                        Icons.drag_handle,
-                        size: 18,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.darkTextTertiary
-                            : AppColors.lightTextTertiary,
-                      ),
-                    ),
+              ),
+            )
+          else
+            _letterThumb(title, note.id, isDark),
+          const SizedBox(width: AppSpacing.s12),
+          // Title + date
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                 ),
-                // Remove button overlay
-                Positioned(
-                  top: 0,
-                  right: 40,
-                  child: GestureDetector(
-                    onTap: () async {
-                      final db = ref.read(databaseProvider);
-                      await db.collectionsDao.removeNoteFromCollection(
-                        widget.collectionId,
-                        cn.noteId,
-                      );
-                      _loadData();
-                    },
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.darkCardBg.withAlpha(200)
-                            : AppColors.lightCardBg.withAlpha(200),
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.sm),
-                      ),
-                      child: Icon(
-                        Icons.close,
-                        size: 16,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.darkTextTertiary
-                            : AppColors.lightTextTertiary,
-                      ),
-                    ),
+                const SizedBox(height: 2),
+                Text(
+                  _formatTime(note.updatedAt),
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 12,
+                    color: tertiary,
                   ),
                 ),
               ],
             ),
           ),
-        );
-      },
+          // Remove-from-collection button (kept from previous overlay)
+          GestureDetector(
+            onTap: () async {
+              final db = ref.read(databaseProvider);
+              await db.collectionsDao.removeNoteFromCollection(
+                widget.collectionId,
+                note.id,
+              );
+              _loadData();
+            },
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: Icon(Icons.close, size: 16, color: tertiary),
+            ),
+          ),
+          // Drag handle for reordering (kept from previous overlay)
+          ReorderableDragStartListener(
+            index: index,
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: Icon(Icons.drag_indicator, size: 18, color: tertiary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Pastel tile with the first letter of the note title.
+  Widget _letterThumb(String title, String noteId, bool isDark) {
+    final trimmed = title.trim();
+    final letter = trimmed.isEmpty
+        ? '-'
+        : String.fromCharCode(trimmed.runes.first).toUpperCase();
+    final i = _pastelIndex(noteId);
+    return Container(
+      width: 56,
+      height: 56,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkInputFill : AppColors.accentBackgrounds[i],
+        borderRadius: BorderRadius.circular(AppRadius.xs),
+      ),
+      child: Text(
+        letter,
+        style: AppTextStyles.title.copyWith(
+          fontSize: 20,
+          color: isDark ? _thumbDarkTexts[i] : _thumbLightTexts[i],
+        ),
+      ),
     );
   }
 

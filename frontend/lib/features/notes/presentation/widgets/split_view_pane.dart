@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// A horizontal split pane with a draggable divider between two child widgets.
 ///
 /// Used for side-by-side editing of two notes on wide screens. The divider
@@ -155,7 +157,8 @@ class _SecondaryPaneHeader extends StatelessWidget {
           const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.close, size: 18),
-            tooltip: 'Close split view',
+            tooltip: AppLocalizations.of(context)?.closeSplitView ??
+                'Close split view',
             onPressed: onClose,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             padding: EdgeInsets.zero,

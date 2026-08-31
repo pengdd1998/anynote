@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state_widget.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 
 /// Bottom sheet showing notes with no connections (orphaned notes).
@@ -17,6 +18,7 @@ class OrphanedNotesSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
@@ -36,7 +38,7 @@ class OrphanedNotesSheet extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Orphaned Notes',
+                  l10n.orphanedNotes,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
@@ -66,7 +68,7 @@ class OrphanedNotesSheet extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Notes with no connections to other notes.',
+                        l10n.orphanedNotesDesc,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
@@ -94,10 +96,10 @@ class OrphanedNotesSheet extends ConsumerWidget {
                 final orphans = snapshot.data ?? [];
 
                 if (orphans.isEmpty) {
-                  return const EmptyState(
+                  return EmptyState(
                     icon: Icons.check_circle_outline,
-                    title: 'No Orphaned Notes',
-                    subtitle: 'All your notes are connected!',
+                    title: l10n.noOrphanedNotes,
+                    subtitle: l10n.allNotesConnected,
                   );
                 }
 

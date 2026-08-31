@@ -19,10 +19,15 @@ class QuillReadOnlyViewer extends StatefulWidget {
   /// Optional padding around the content.
   final EdgeInsets padding;
 
+  /// Optional Quill style theme override. When null the editor falls back
+  /// to its built-in defaults, keeping parity with the editor screens.
+  final quill.DefaultStyles? customStyles;
+
   const QuillReadOnlyViewer({
     super.key,
     required this.deltaJson,
     this.padding = EdgeInsets.zero,
+    this.customStyles,
   });
 
   @override
@@ -96,6 +101,7 @@ class _QuillReadOnlyViewerState extends State<QuillReadOnlyViewer> {
         autoFocus: false,
         expands: false,
         scrollable: false,
+        customStyles: widget.customStyles,
         embedBuilders: const [
           LocalImageEmbedBuilder(),
           TableEmbedBuilder(),

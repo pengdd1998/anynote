@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -58,12 +59,8 @@ class NoteDetailScreen extends ConsumerWidget {
             tooltip: l10n.editNote,
             onPressed: () => context.push('/notes/$noteId/edit'),
           ),
-          // Star / bookmark
-          IconButton(
-            icon: const Icon(Icons.star_outline),
-            tooltip: l10n.moreActions,
-            onPressed: () {},
-          ),
+          // Star / bookmark — toggles the note's pinned (favorite) state.
+          _StarButton(noteId: noteId),
           // Share
           IconButton(
             icon: const Icon(Icons.share_outlined),
@@ -202,6 +199,10 @@ class NoteDetailScreen extends ConsumerWidget {
   // ---------------------------------------------------------------------------
 
   Widget _buildContent(BuildContext context, DecryptedNote data, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
+    // Hide the title row when the note has no real title.
+    final hasTitle = data.title.isNotEmpty && data.title != l10n.untitled;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.s20,
@@ -213,18 +214,31 @@ class NoteDetailScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // -- Title — handwritten display voice per the design mockup --
+              if (hasTitle) ...[
+                Text(
+                  data.title,
+                  style: AppTextStyles.handwritingTitle.copyWith(
+                    fontSize: 30,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+
               // -- Body --
-              // Render via the same read-only Quill viewer the editor uses,
-              // WITHOUT a DefaultTextStyle override: the previous wrapper
-              // forced fontSize 13 / w500 / height 1.6, which made the body
-              // render smaller and differently than the editor. Letting the
-              // viewer use its native Quill styling keeps detail and edit
-              // visually identical.
+              // Render via the same read-only Quill viewer the editor uses.
+              // A design-tuned Quill style theme is applied (Inter body
+              // 16/1.6, warm headings, lavender blockquotes) so the read
+              // view matches the mockup's calm reading experience.
               Semantics(
-                label: AppLocalizations.of(context)!.noteContent,
+                label: l10n.noteContent,
                 child: QuillReadOnlyViewer(
                   deltaJson: data.content,
                   padding: EdgeInsets.zero,
+                  customStyles: _buildReaderStyles(isDark),
                 ),
               ),
 
@@ -233,7 +247,7 @@ class NoteDetailScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 Wrap(
                   spacing: AppSpacing.s8,
-                  runSpacing: AppSpacing.s4,
+                  runSpacing: AppSpacing.s8,
                   children: data.tags.map((tag) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
@@ -241,15 +255,15 @@ class NoteDetailScreen extends ConsumerWidget {
                         vertical: AppSpacing.s4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.indigo50,
-                        borderRadius: BorderRadius.circular(AppRadius.xxs),
+                        color: AppColors.primarySoft,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: Text(
                         '#${tag.plainName}',
                         style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryText,
                         ),
                       ),
                     );
@@ -270,6 +284,118 @@ class NoteDetailScreen extends ConsumerWidget {
     );
   }
 
+  /// Builds the read-view Quill style theme matching the design mockup:
+  /// Inter body 16/1.6 near-black, strong headings, lavender blockquotes
+  /// and soft-tinted code blocks.
+  quill.DefaultStyles _buildReaderStyles(bool isDark) {
+    final textColor =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final codeBg = isDark ? AppColors.darkInputFill : AppColors.slate50;
+    final quoteBg = isDark
+        ? AppColors.primarySoft.withAlpha(30)
+        : AppColors.primarySoft;
+
+    final base = TextStyle(
+      fontFamily: AppTextStyles.fontFamily,
+      fontSize: 16,
+      height: 1.6,
+      color: textColor,
+    );
+    final monoBase = base.copyWith(
+      // RobotoMono is registered in pubspec and gives consistent code blocks
+      // family used by AppTextStyles.mono is not registered in pubspec.
+      fontFamily: 'RobotoMono',
+      fontSize: 14,
+      height: 1.5,
+    );
+
+    return quill.DefaultStyles(
+      h1: quill.DefaultTextBlockStyle(
+        base.copyWith(
+          fontSize: 26,
+          fontWeight: FontWeight.w800,
+          height: 1.3,
+          letterSpacing: -0.5,
+        ),
+        quill.HorizontalSpacing.zero,
+        const quill.VerticalSpacing(16, 8),
+        quill.VerticalSpacing.zero,
+        null,
+      ),
+      h2: quill.DefaultTextBlockStyle(
+        base.copyWith(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          height: 1.3,
+          letterSpacing: -0.3,
+        ),
+        quill.HorizontalSpacing.zero,
+        const quill.VerticalSpacing(14, 6),
+        quill.VerticalSpacing.zero,
+        null,
+      ),
+      h3: quill.DefaultTextBlockStyle(
+        base.copyWith(
+          fontSize: 19,
+          fontWeight: FontWeight.w700,
+          height: 1.35,
+        ),
+        quill.HorizontalSpacing.zero,
+        const quill.VerticalSpacing(12, 4),
+        quill.VerticalSpacing.zero,
+        null,
+      ),
+      paragraph: quill.DefaultTextBlockStyle(
+        base,
+        quill.HorizontalSpacing.zero,
+        const quill.VerticalSpacing(6, 0),
+        quill.VerticalSpacing.zero,
+        null,
+      ),
+      lists: quill.DefaultListBlockStyle(
+        base,
+        quill.HorizontalSpacing.zero,
+        const quill.VerticalSpacing(4, 4),
+        quill.VerticalSpacing.zero,
+        null,
+        null,
+      ),
+      quote: quill.DefaultTextBlockStyle(
+        base.copyWith(
+          color: isDark ? AppColors.secondary : AppColors.primaryText,
+          fontStyle: FontStyle.italic,
+        ),
+        quill.HorizontalSpacing.zero,
+        const quill.VerticalSpacing(8, 8),
+        quill.VerticalSpacing.zero,
+        BoxDecoration(
+          color: quoteBg,
+          borderRadius: BorderRadius.circular(AppRadius.xs),
+        ),
+      ),
+      code: quill.DefaultTextBlockStyle(
+        monoBase,
+        quill.HorizontalSpacing.zero,
+        const quill.VerticalSpacing(8, 8),
+        quill.VerticalSpacing.zero,
+        BoxDecoration(
+          color: codeBg,
+          borderRadius: BorderRadius.circular(AppRadius.xs),
+        ),
+      ),
+      inlineCode: quill.InlineCodeStyle(
+        style: monoBase.copyWith(color: textColor),
+        backgroundColor: codeBg,
+        radius: const Radius.circular(AppRadius.xxs),
+      ),
+      link: base.copyWith(
+        color: isDark ? AppColors.secondary : AppColors.primaryText,
+        decoration: TextDecoration.underline,
+      ),
+      color: textColor,
+    );
+  }
+
   Widget _buildMetaFooter(
     BuildContext context,
     DecryptedNote data,
@@ -286,9 +412,9 @@ class NoteDetailScreen extends ConsumerWidget {
     return Row(
       children: [
         Text(
-          '${l10n.updatedDate(dateStr)}  ·  $minutes min read',
+          '${l10n.updatedDate(dateStr)} · $minutes min read',
           style: AppTextStyles.caption.copyWith(
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
             color: metaColor,
           ),
@@ -300,7 +426,7 @@ class NoteDetailScreen extends ConsumerWidget {
           Text(
             l10n.notSynced,
             style: AppTextStyles.caption.copyWith(
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
               color: AppColors.warning,
             ),
@@ -603,4 +729,58 @@ class NoteDetailScreen extends ConsumerWidget {
     );
   }
 
+}
+
+/// Star action in the app bar: toggles the note's pinned (favorite) state
+/// via [NotesDao.togglePin], the same property the note list uses for its
+/// pin badge. Self-contained so the stateless detail screen does not need
+/// to rebuild when the pin state changes.
+class _StarButton extends ConsumerStatefulWidget {
+  final String noteId;
+
+  const _StarButton({required this.noteId});
+
+  @override
+  ConsumerState<_StarButton> createState() => _StarButtonState();
+}
+
+class _StarButtonState extends ConsumerState<_StarButton> {
+  bool _isPinned = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPinState();
+  }
+
+  Future<void> _loadPinState() async {
+    final db = ref.read(databaseProvider);
+    final note = await db.notesDao.getNoteById(widget.noteId);
+    if (mounted) {
+      setState(() => _isPinned = note?.isPinned ?? false);
+    }
+  }
+
+  Future<void> _togglePin() async {
+    final db = ref.read(databaseProvider);
+    await db.notesDao.togglePin(widget.noteId);
+    if (!mounted) return;
+    setState(() => _isPinned = !_isPinned);
+    final l10n = AppLocalizations.of(context)!;
+    AppSnackBar.info(
+      context,
+      message: _isPinned ? l10n.pinNote : l10n.unpinNote,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return IconButton(
+      icon: Icon(_isPinned ? Icons.star : Icons.star_outline),
+      color: _isPinned ? AppColors.primary : null,
+      tooltip: _isPinned ? l10n.unpinNote : l10n.pinNote,
+      onPressed: _togglePin,
+    );
+  }
 }

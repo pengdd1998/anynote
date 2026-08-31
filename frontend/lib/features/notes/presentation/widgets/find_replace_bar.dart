@@ -143,7 +143,7 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
                   _showReplace ? Icons.expand_less : Icons.expand_more,
                   size: 20,
                 ),
-                tooltip: _showReplace ? 'Hide replace' : 'Show replace',
+                tooltip: _showReplace ? l10n.hideReplace : l10n.showReplace,
                 onPressed: () => setState(() => _showReplace = !_showReplace),
                 visualDensity: VisualDensity.compact,
               ),

@@ -28,6 +28,7 @@ import '../../../core/import/apple_notes_import.dart';
 import '../../../core/import/import_models.dart';
 import '../../../core/import/markdown_import_service.dart';
 import '../../../core/import/text_import.dart';
+import '../../../core/navigation/nav_guard.dart';
 import '../../../core/widgets/adaptive_scaffold.dart';
 import '../../../core/widgets/color_picker_sheet.dart';
 import '../../../core/widgets/app_components.dart';
@@ -627,13 +628,84 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   }
 
   // ---------------------------------------------------------------------------
+  // Wordmark
+  // ---------------------------------------------------------------------------
+
+  /// Handwritten "AnyNote" wordmark with a small golden sparkle at its
+  /// top-right corner (per the design mockup).
+  Widget _buildWordmark() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'AnyNote',
+          style: AppTextStyles.handwritingTitle.copyWith(
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.s4),
+        // Golden sparkle hugging the wordmark's top-right corner.
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.s2),
+          child: Text(
+            '\u2726', // four-pointed sparkle
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 14,
+              color: AppColors.warning,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // Filter chips
   // ---------------------------------------------------------------------------
 
+  /// Decorative emoji shown before the "All" filter chip label.
+  static const String _allFilterEmoji = '\u{1F4DA}'; // books
+
+  /// Emoji palette cycled for tags without a keyword match.
+  static const List<String> _fallbackTagEmojis = [
+    '\u{1F4A1}', // light bulb
+    '\u{1F4BC}', // briefcase
+    '\u{1F33F}', // herb
+    '\u2728', // sparkles
+    '\u{1F3AF}', // dart
+    '\u{1F4D6}', // open book
+  ];
+
+  /// Returns a decorative emoji for a tag name. Well-known keywords map to a
+  /// matching emoji; anything else cycles the fallback palette deterministically.
+  String _emojiForTag(String name) {
+    final n = name.toLowerCase();
+    if (n.contains('idea')) return '\u{1F4A1}'; // light bulb
+    if (n.contains('work') || n.contains('project') || n.contains('job')) {
+      return '\u{1F4BC}'; // briefcase
+    }
+    if (n.contains('personal') || n.contains('life') || n.contains('journal')) {
+      return '\u{1F33F}'; // herb
+    }
+    if (n.contains('todo') || n.contains('task')) return '\u2705'; // check
+    if (n.contains('read') || n.contains('book')) return '\u{1F4D6}'; // book
+    if (n.contains('travel') || n.contains('trip')) return '\u2708\uFE0F'; // plane
+    return _fallbackTagEmojis[name.hashCode.abs() % _fallbackTagEmojis.length];
+  }
+
   Widget _buildFilterChips(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final unselectedBg = isDark ? AppColors.darkInputFill : AppColors.accentPeachBg;
-    final unselectedText = isDark ? AppColors.darkTextSecondary : AppColors.accentPeachText;
+    // Unselected: white card surface with a hairline warm border.
+    final unselectedBg =
+        isDark ? AppColors.darkInputFill : AppColors.lightCardBg;
+    final unselectedBorder =
+        isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final unselectedText =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     // Show first 8 tags, then a "+N more" chip.
     final visibleTags = _allTags.take(8).toList();
@@ -656,13 +728,20 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               vertical: AppSpacing.s8,
             ),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary : unselectedBg,
+              // Selected: soft periwinkle tint, no border (mockup style).
+              color: isSelected
+                  ? AppColors.primarySoft
+                  : unselectedBg,
               borderRadius: AppRadius.pillBorder,
+              border: isSelected
+                  ? null
+                  : Border.all(color: unselectedBorder, width: 1),
             ),
             child: Text(
               label,
               style: AppTextStyles.filterChip.copyWith(
-                color: isSelected ? Colors.white : unselectedText,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? AppColors.primaryText : unselectedText,
               ),
             ),
           ),
@@ -676,7 +755,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         children: [
           // "All" chip
           buildChip(
-            label: l10n.filterAll,
+            label: '$_allFilterEmoji ${l10n.filterAll}',
             isSelected: _quickTagFilter == null && (_tagFilter == null || _tagFilter!.isEmpty),
             onTap: () => setState(() {
               _quickTagFilter = null;
@@ -686,8 +765,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           // Tag chips
           ...visibleTags.map((tag) {
             final isSelected = _quickTagFilter == tag.id;
+            final tagName = tag.plainName ?? tag.id;
             return buildChip(
-              label: tag.plainName ?? tag.id,
+              label: '${_emojiForTag(tagName)} $tagName',
               isSelected: isSelected,
               onTap: () => setState(() {
                 if (_quickTagFilter == tag.id) {
@@ -772,24 +852,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     l10n.selectedNotes(_selectedNoteIds.length),
                     style: AppTextStyles.title,
                   )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'AnyNote',
-                        style: AppTextStyles.headline.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.s8),
-                      Icon(
-                        Icons.auto_awesome,
-                        size: 20,
-                        color: AppColors.primary,
-                      ),
-                    ],
-                  ),
+                : _buildWordmark(),
         actions: [
           if (_isSearching && !_isSelectionMode) ...[
             IconButton(
@@ -1047,56 +1110,56 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                   AppSpacing.md,
                   0,
                 ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: AppRadius.smBorder,
-                    boxShadow: AppShadows.smOf(Theme.of(context).brightness),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: l10n.searchNotes,
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.darkTextTertiary
-                            : AppColors.lightTextTertiary,
-                        size: 20,
-                      ),
-                      filled: true,
-                      fillColor: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.darkInputFill
-                          : AppColors.lightInputFill,
-                      border: OutlineInputBorder(
-                        borderRadius: AppRadius.smBorder,
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: AppRadius.smBorder,
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: AppRadius.smBorder,
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.s16,
-                        vertical: AppSpacing.s12,
-                      ),
-                      isDense: true,
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchNotes,
+                    hintStyle: AppTextStyles.body.copyWith(
+                      fontSize: 14,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
                     ),
-                    style: AppTextStyles.body.copyWith(fontSize: 14),
-                    onTap: () {
-                      if (!_isSearching) {
-                        setState(() {
-                          _isSearching = true;
-                          _pageSubscription?.cancel();
-                        });
-                      }
-                    },
-                    onChanged: _onSearchChanged,
-                    scrollPadding: const EdgeInsets.only(bottom: 120),
+                    prefixIcon: Icon(
+                      AppIcons.search,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                      size: 20,
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkInputFill
+                        : AppColors.lightInputFill,
+                    border: const OutlineInputBorder(
+                      borderRadius: AppRadius.pillBorder,
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderRadius: AppRadius.pillBorder,
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderRadius: AppRadius.pillBorder,
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.s16,
+                      vertical: AppSpacing.s12,
+                    ),
+                    isDense: true,
                   ),
+                  style: AppTextStyles.body.copyWith(fontSize: 14),
+                  onTap: () {
+                    if (!_isSearching) {
+                      setState(() {
+                        _isSearching = true;
+                        _pageSubscription?.cancel();
+                      });
+                    }
+                  },
+                  onChanged: _onSearchChanged,
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
                 ),
               ),
             // Filter chips row
@@ -1228,7 +1291,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           ? null
           : Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.lg),
+                shape: BoxShape.circle,
                 boxShadow: AppShadows.mdOf(Theme.of(context).brightness),
               ),
               child: FloatingActionButton(
@@ -1240,12 +1303,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 elevation: 0,
                 highlightElevation: 0,
                 backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                ),
-                child: Icon(
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+                child: const Icon(
                   AppIcons.add,
-                  color: Colors.white,
+                  size: 28,
                 ),
               ),
             ),
@@ -1275,6 +1337,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         subtitle: l10n.tapToCapture,
         actionLabel: l10n.newNote,
         onAction: () => context.push('/notes/new'),
+        accentBg: AppColors.primarySoft,
+        accentText: AppColors.primaryText,
       );
     }
 
@@ -1305,6 +1369,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         icon: Icons.filter_list_off,
         title: l10n.noMatchingNotes,
         subtitle: l10n.tryChangingFilters,
+        accentBg: AppColors.primarySoft,
+        accentText: AppColors.primaryText,
       );
     }
 
@@ -1327,7 +1393,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.info_outline,
                       size: 16,
                       color: AppColors.accentPeachText,
@@ -1374,6 +1440,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         icon: Icons.search_off,
         title: l10n.noResults,
         subtitle: l10n.tryDifferentSearch,
+        accentBg: AppColors.primarySoft,
+        accentText: AppColors.primaryText,
       );
     }
 
@@ -1673,7 +1741,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         _splitViewNoteTitle = null;
       });
     } else {
-      context.push('/notes/$noteId');
+      final target = '/notes/$noteId';
+      if (!NavGuard.canNavigate(target)) return;
+      context.push(target);
     }
   }
 

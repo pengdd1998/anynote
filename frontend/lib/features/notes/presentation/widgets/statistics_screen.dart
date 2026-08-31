@@ -127,9 +127,8 @@ class _EmptyState extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkInputFill
-                  : AppColors.lightInputFill,
+              color:
+                  isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Icon(
@@ -153,7 +152,7 @@ class _EmptyState extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
             child: Text(
-              l10n?.createFirstNoteHint ??
+              l10n?.statisticsEmptyHint ??
                   'Create your first note to see statistics',
               style: AppTextStyles.caption.copyWith(
                 color: isDark
@@ -202,8 +201,7 @@ class _OverviewCards extends StatelessWidget {
         ),
         StatCard(
           icon: Icons.analytics_outlined,
-          label:
-              AppLocalizations.of(context)?.averageWords ?? 'Avg Words/Note',
+          label: AppLocalizations.of(context)?.averageWords ?? 'Avg Words/Note',
           value: stats.averageWordsPerNote.toStringAsFixed(0),
           color: AppColors.accentYellowText,
         ),
@@ -489,14 +487,12 @@ class _BarChartPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    final labelColor = isDark
-        ? AppColors.darkTextTertiary
-        : AppColors.lightTextTertiary;
+    final labelColor =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
 
     for (int i = 0; i < months.length; i++) {
       final count = values[months[i]] ?? 0;
-      final barHeight =
-          maxValue > 0 ? (count / maxValue) * barAreaHeight : 0.0;
+      final barHeight = maxValue > 0 ? (count / maxValue) * barAreaHeight : 0.0;
 
       final x = i * (clampedBarWidth + 4);
       final y = barAreaHeight - barHeight;
@@ -510,8 +506,7 @@ class _BarChartPainter extends CustomPainter {
           topRight: barRadius,
         );
 
-        final barPaint = Paint()
-          ..color = AppColors.primary.withAlpha(160);
+        final barPaint = Paint()..color = AppColors.primary.withAlpha(160);
         canvas.drawRRect(rect, barPaint);
       }
 
@@ -574,8 +569,8 @@ class _TopTagsSection extends StatelessWidget {
               separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.s8),
               itemBuilder: (context, index) {
                 final tag = topTags[index];
-                final accentBg =
-                    AppColors.accentBackgrounds[index % AppColors.accentBackgrounds.length];
+                final accentBg = AppColors.accentBackgrounds[
+                    index % AppColors.accentBackgrounds.length];
                 final accentTextColors = [
                   AppColors.accentPeachText,
                   AppColors.accentYellowText,
@@ -852,9 +847,8 @@ class _PriorityDistributionSection extends StatelessWidget {
                   child: CustomPaint(
                     painter: _DonutChartPainter(
                       segments: segments,
-                      centerColor: isDark
-                          ? AppColors.darkCardBg
-                          : AppColors.lightCardBg,
+                      centerColor:
+                          isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
                     ),
                     child: Center(
                       child: Text(
@@ -958,14 +952,13 @@ class _DonutChartPainter extends CustomPainter {
         ..color = seg.color
         ..style = PaintingStyle.fill;
 
-      final sweepWithGap =
-          seg.sweepAngle > gapAngle * 2 ? seg.sweepAngle - gapAngle : seg.sweepAngle;
+      final sweepWithGap = seg.sweepAngle > gapAngle * 2
+          ? seg.sweepAngle - gapAngle
+          : seg.sweepAngle;
       final startWithGap = seg.startAngle + gapAngle / 2;
 
-      final outerRect =
-          Rect.fromCircle(center: center, radius: outerRadius);
-      final innerRect =
-          Rect.fromCircle(center: center, radius: innerRadius);
+      final outerRect = Rect.fromCircle(center: center, radius: outerRadius);
+      final innerRect = Rect.fromCircle(center: center, radius: innerRadius);
 
       final path = Path()
         ..arcTo(outerRect, startWithGap, sweepWithGap, false)
@@ -1063,9 +1056,8 @@ class _KnowledgeGraphSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppSpacing.s12),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkInputFill
-                    : AppColors.lightInputFill,
+                color:
+                    isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Row(

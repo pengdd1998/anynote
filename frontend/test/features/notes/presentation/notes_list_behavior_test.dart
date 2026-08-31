@@ -47,8 +47,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Search option should be in the overflow menu.
-      expect(find.byIcon(AppIcons.search), findsOneWidget);
+      // Search option should be in the overflow menu. (A persistent pill
+      // search bar below the app bar also shows a search icon, so scope
+      // the finder to the menu item.)
+      expect(
+        find.descendant(
+          of: find.byType(PopupMenuItem<String>),
+          matching: find.byIcon(AppIcons.search),
+        ),
+        findsOneWidget,
+      );
 
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));
@@ -105,8 +113,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap the search menu item.
-      await tester.tap(find.byIcon(AppIcons.search));
+      // Tap the search menu item. (A persistent pill search bar below the
+      // app bar also shows a search icon, so scope the finder.)
+      await tester.tap(
+        find.descendant(
+          of: find.byType(PopupMenuItem<String>),
+          matching: find.byIcon(AppIcons.search),
+        ),
+      );
       await tester.pumpAndSettle();
 
       // The app bar title should now be a TextField for search.

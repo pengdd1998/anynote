@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/collections/presentation/collections_list_screen.dart';
 import '../../../helpers/test_app_helper.dart';
 
@@ -48,8 +49,11 @@ void main() {
         overrides: defaultProviderOverrides(),
       );
 
-      // The add button is now in the AppBar actions, not a FAB.
-      expect(find.byIcon(Icons.add), findsOneWidget);
+      // The create action is the "New Collection" CTA (which carries a
+      // phosphor add icon) instead of an AppBar/FAB add button. It appears
+      // both in the empty state and as a persistent action button.
+      expect(find.text('New Collection'), findsAtLeast(1));
+      expect(find.byIcon(AppIcons.add), findsOneWidget);
       await handle.dispose();
     });
 

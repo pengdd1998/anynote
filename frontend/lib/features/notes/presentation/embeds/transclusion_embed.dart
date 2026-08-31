@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 
 const String _transclusionEmbedKey = 'transclusion';
@@ -131,6 +132,7 @@ class _TransclusionWidgetState extends ConsumerState<TransclusionWidget> {
 
     // Watch the note for live updates
     final noteAsync = ref.watch(noteStreamProvider(widget.noteId!));
+    final l10n = AppLocalizations.of(context);
 
     return noteAsync.when(
       data: (note) {
@@ -141,7 +143,7 @@ class _TransclusionWidgetState extends ConsumerState<TransclusionWidget> {
           );
         }
 
-        final displayTitle = note.plainTitle ?? 'Untitled';
+        final displayTitle = note.plainTitle ?? (l10n?.untitled ?? 'Untitled');
         final content = note.plainContent ?? '';
 
         return _buildContainer(
@@ -267,7 +269,9 @@ class _Header extends StatelessWidget {
               size: 18,
             ),
             onPressed: onToggle,
-            tooltip: isExpanded ? 'Collapse' : 'Expand',
+            tooltip: isExpanded
+                ? (AppLocalizations.of(context)?.collapse ?? 'Collapse')
+                : (AppLocalizations.of(context)?.expand ?? 'Expand'),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
@@ -275,7 +279,8 @@ class _Header extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.edit_outlined, size: 16),
               onPressed: onEdit,
-              tooltip: 'Edit original',
+              tooltip:
+                  AppLocalizations.of(context)?.editOriginal ?? 'Edit original',
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             ),
@@ -307,7 +312,12 @@ class _BrokenTransclusionContent extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Note "${title ?? 'Untitled'}" not found or was deleted.',
+              AppLocalizations.of(context)?.transclusionNoteNotFound(
+                    title ??
+                        AppLocalizations.of(context)?.untitled ??
+                        'Untitled',
+                  ) ??
+                  'Note "$title" not found or was deleted.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.error,
               ),
@@ -341,7 +351,12 @@ class _DepthLimitContent extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Nested transclusion limit reached for "$title".',
+              AppLocalizations.of(context)?.transclusionDepthLimit(
+                    title ??
+                        AppLocalizations.of(context)?.untitled ??
+                        'Untitled',
+                  ) ??
+                  'Nested transclusion limit reached for "$title".',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -380,7 +395,8 @@ class _BrokenTransclusionWidget extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            'Invalid transclusion',
+            AppLocalizations.of(context)?.invalidTransclusion ??
+                'Invalid transclusion',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.error,
             ),

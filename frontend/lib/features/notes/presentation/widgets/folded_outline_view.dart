@@ -155,14 +155,14 @@ class _FoldedOutlineViewState extends State<FoldedOutlineView> {
               ),
               const SizedBox(height: 16),
               Text(
-                'No headings found',
+                l10n.noHeadings,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Add headings (lines starting with #) to use the fold view.',
+                l10n.foldViewEmptyHint,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colorScheme.outline,
                     ),
