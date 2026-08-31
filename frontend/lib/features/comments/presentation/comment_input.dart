@@ -37,9 +37,10 @@ class _CommentInputState extends ConsumerState<CommentInput> {
 
     if (commentId != null) {
       // Comment created successfully — show brief confirmation.
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Comment posted'),
+          content: Text(l10n?.commentPosted ?? 'Comment posted'),
           duration: const Duration(seconds: 1),
           behavior: SnackBarBehavior.floating,
         ),

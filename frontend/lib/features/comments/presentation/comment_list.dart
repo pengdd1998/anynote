@@ -68,7 +68,8 @@ class _CommentListState extends ConsumerState<CommentList> {
         ).future,
       );
       if (!mounted) return;
-      final list = (result['comments'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final list =
+          (result['comments'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       final total = result['total'] as int? ?? 0;
       setState(() {
         _comments = list;
@@ -93,7 +94,8 @@ class _CommentListState extends ConsumerState<CommentList> {
         ).future,
       );
       if (!mounted) return;
-      final list = (result['comments'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final list =
+          (result['comments'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       setState(() {
         _comments.addAll(list);
         _hasMore = _comments.length < _total;
@@ -178,6 +180,7 @@ class _CommentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final userId = comment['user_id'] as String?;
     final createdAt = comment['created_at'] as String?;
     final content = comment['encrypted_content'] as String? ?? '';
@@ -219,7 +222,7 @@ class _CommentTile extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.delete_outline, size: 18),
                     onPressed: onDelete,
-                    tooltip: 'Delete',
+                    tooltip: l10n?.delete ?? 'Delete',
                     visualDensity: VisualDensity.compact,
                   ),
               ],

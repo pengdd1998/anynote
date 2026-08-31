@@ -5,8 +5,8 @@ import 'package:uuid/uuid.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/color_utils.dart';
@@ -31,6 +31,9 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
 
   final Set<String> _expandedTags = {};
 
+  /// Local filter query for the tag search field (UI-only filtering).
+  String _searchQuery = '';
+
   @override
   void dispose() {
     _tagNameController.dispose();
@@ -45,6 +48,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.tagsTitle),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -84,46 +88,65 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
           const SyncStatusWidget(),
         ],
       ),
-      body: StreamBuilder<List<Tag>>(
-        stream: db.tagsDao.watchAllTags(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          _buildSearchField(l10n),
+          Expanded(
+            child: StreamBuilder<List<Tag>>(
+              stream: db.tagsDao.watchAllTags(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          final tags = snapshot.data ?? [];
+                final tags = snapshot.data ?? [];
 
-          if (tags.isEmpty) {
-            return EmptyState(
-              icon: Icons.label_outline,
-              title: l10n.noTags,
-              subtitle: l10n.createTagsToOrganize,
-            );
-          }
+                if (tags.isEmpty) {
+                  return EmptyState(
+                    icon: Icons.label_outline,
+                    title: l10n.noTags,
+                    subtitle: l10n.createTagsToOrganize,
+                  );
+                }
 
-          final tree = buildTagTree(tags);
-          final flatItems = flattenTagTree(tree);
+                final flatItems = _visibleItems(tags);
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              await db.tagsDao.getAllTags();
-            },
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.s4,
-                AppSpacing.md,
-                96,
-              ),
-              itemCount: flatItems.length,
-              itemBuilder: (context, index) {
-                final item = flatItems[index];
-                return _buildTagChip(item, l10n, db, index);
+                if (flatItems.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No tags found',
+                      style: AppTextStyles.body.copyWith(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkTextTertiary
+                            : AppColors.lightTextTertiary,
+                      ),
+                    ),
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    await db.tagsDao.getAllTags();
+                  },
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.s4,
+                      AppSpacing.md,
+                      96,
+                    ),
+                    itemCount: flatItems.length,
+                    itemBuilder: (context, index) {
+                      final item = flatItems[index];
+                      return _buildTagRow(item, l10n, db);
+                    },
+                  ),
+                );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButton: Semantics(
         button: true,
@@ -132,20 +155,94 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
           onPressed: () =>
               _showCreateDialog(db, ref.read(cryptoServiceProvider)),
           tooltip: l10n.newTag,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-          child: const Icon(Icons.add),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          shape: const CircleBorder(),
+          child: const Icon(AppIcons.add),
         ),
       ),
     );
   }
 
-  Widget _buildTagChip(
+  // ---------------------------------------------------------------------------
+  // Search field (mockup style: pill, input fill, magnifier)
+  // ---------------------------------------------------------------------------
+
+  Widget _buildSearchField(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final fill = isDark ? AppColors.darkInputFill : AppColors.lightInputFill;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s4,
+        AppSpacing.md,
+        AppSpacing.s8,
+      ),
+      child: TextField(
+        onChanged: (value) => setState(() => _searchQuery = value),
+        decoration: InputDecoration(
+          hintText: 'Search tags...',
+          hintStyle: AppTextStyles.body.copyWith(color: tertiary),
+          prefixIcon: Icon(AppIcons.search, size: 20, color: tertiary),
+          isDense: true,
+          filled: true,
+          fillColor: fill,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.s16,
+            vertical: AppSpacing.s12,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            borderSide: const BorderSide(color: AppColors.primary),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Visible tree items: full hierarchy respecting the expanded set, or a flat
+  /// name-filtered list while searching.
+  List<TagTreeItem> _visibleItems(List<Tag> tags) {
+    final tree = buildTagTree(tags);
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      return flattenTagTree(tree)
+          .where((item) => (item.tag.plainName ?? '')
+              .toLowerCase()
+              .contains(query),)
+          .toList();
+    }
+
+    // Depth-first walk that only descends into expanded nodes.
+    final result = <TagTreeItem>[];
+    void walk(List<TagTreeItem> items) {
+      for (final item in items) {
+        result.add(item);
+        if (_expandedTags.contains(item.tag.id)) {
+          walk(item.children);
+        }
+      }
+    }
+
+    walk(tree);
+    return result;
+  }
+
+  Widget _buildTagRow(
     TagTreeItem item,
     AppLocalizations l10n,
     AppDatabase db,
-    int index,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tag = item.tag;
@@ -153,28 +250,24 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     final indent = item.level * 20.0;
     final isExpanded = _expandedTags.contains(tag.id);
     final hasChildren = item.hasChildren;
-
-    final accentBg = tagColor?.withAlpha(20) ??
-        (isDark ? AppColors.darkInputFill : AppColors.lightInputFill);
-    final accentText = tagColor ?? AppColors.primary;
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
     return Padding(
-      padding: EdgeInsets.only(left: indent, bottom: AppSpacing.s8),
+      padding: EdgeInsets.only(left: indent),
       child: GestureDetector(
         onLongPress: () => _showTagEditMenu(db, tag),
+        behavior: HitTestBehavior.opaque,
         child: Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.s12,
+            horizontal: AppSpacing.s4,
             vertical: 10,
-          ),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
           ),
           child: Row(
             children: [
-              // Expand/collapse toggle
+              // Expand/collapse caret (only for rows with children)
               if (hasChildren)
                 GestureDetector(
                   onTap: () {
@@ -186,85 +279,81 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                       }
                     });
                   },
-                  child: AnimatedRotation(
-                    turns: isExpanded ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      Icons.chevron_right,
-                      size: 18,
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: AnimatedRotation(
+                      turns: isExpanded ? 0.25 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        AppIcons.chevronRight,
+                        size: 16,
+                        color: tertiary,
+                      ),
                     ),
                   ),
                 )
               else
-                const SizedBox(width: 18),
-              const SizedBox(width: AppSpacing.s8),
-              // Color badge
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: accentBg,
-                  borderRadius: BorderRadius.circular(AppRadius.xs),
-                ),
-                child: tagColor != null
-                    ? Icon(Icons.label, size: 14, color: accentText)
-                    : Icon(
-                        Icons.label_outline,
-                        size: 14,
-                        color: accentText,
-                      ),
-              ),
-              const SizedBox(width: AppSpacing.s12),
-              // Tag name
-              Expanded(
-                child: Text(
-                  tag.plainName ?? l10n.encrypted,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              // Child count badge
-              if (hasChildren)
+                const SizedBox(width: 24),
+              // Optional tag color dot
+              if (tagColor != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: AppSpacing.s8),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkInputFill
-                        : AppColors.lightInputFill,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: Text(
-                    '${item.children.length}',
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                    ),
+                    color: tagColor,
+                    shape: BoxShape.circle,
                   ),
                 ),
+              // "# name"
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '# ',
+                        style: AppTextStyles.body.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: tertiary,
+                        ),
+                      ),
+                      TextSpan(
+                        text: tag.plainName ?? l10n.encrypted,
+                        style: AppTextStyles.body.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Child count (right-aligned caption)
+              if (hasChildren) ...[
+                const SizedBox(width: AppSpacing.s8),
+                Text(
+                  '${item.children.length}',
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 12,
+                    color: tertiary,
+                  ),
+                ),
+              ],
               // Delete button
               GestureDetector(
                 onTap: () => _deleteTag(db, tag),
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  margin: const EdgeInsets.only(left: AppSpacing.s4),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withAlpha(12),
-                    borderRadius: BorderRadius.circular(AppRadius.xs),
-                  ),
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
                   child: Icon(
                     Icons.close,
-                    size: 14,
-                    color: AppColors.error.withAlpha(140),
+                    size: 16,
+                    color: AppColors.error.withAlpha(150),
                   ),
                 ),
               ),

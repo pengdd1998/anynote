@@ -252,7 +252,7 @@ class _SnippetFormFields extends StatelessWidget {
             isDense: true,
             alignLabelWithHint: true,
           ),
-          style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+          style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 13),
           maxLines: 8,
           minLines: 4,
           scrollPadding: const EdgeInsets.only(bottom: 120),

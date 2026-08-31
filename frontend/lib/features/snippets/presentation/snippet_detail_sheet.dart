@@ -285,7 +285,7 @@ class _SnippetCodeBlock extends StatelessWidget {
         child: SelectableText(
           snippet.code,
           style: TextStyle(
-            fontFamily: 'monospace',
+            fontFamily: 'RobotoMono',
             fontSize: 13,
             height: 1.5,
             color: theme.brightness == Brightness.dark

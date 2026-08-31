@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/error/error.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_components.dart';
@@ -369,22 +368,24 @@ class _DiscoverCard extends ConsumerWidget {
     return GestureDetector(
       onTap: () => context.push('/share/$shareId'),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.s12),
+        padding: const EdgeInsets.all(AppSpacing.s16),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Author row + time
+            // Header row: avatar + author handle + time
             Row(
               children: [
                 // Author avatar
                 Container(
-                  width: 28,
-                  height: 28,
+                  width: 24,
+                  height: 24,
                   decoration: BoxDecoration(
                     color: accentBg,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -393,7 +394,7 @@ class _DiscoverCard extends ConsumerWidget {
                   child: Text(
                     authorName.isNotEmpty ? authorName[0].toUpperCase() : '?',
                     style: AppTextStyles.caption.copyWith(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: accentText,
                     ),
@@ -401,16 +402,15 @@ class _DiscoverCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.s8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        authorName.isNotEmpty ? authorName : '---',
-                        style: AppTextStyles.caption.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    authorName.isNotEmpty ? authorName : '---',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.caption.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
                   ),
                 ),
                 if (timeAgo.isNotEmpty)
@@ -442,34 +442,18 @@ class _DiscoverCard extends ConsumerWidget {
               encryptedTitle.isNotEmpty ? encryptedTitle : l10n.encryptedNote,
               style: AppTextStyles.body.copyWith(
                 fontWeight: FontWeight.w600,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: AppSpacing.s8),
+            const SizedBox(height: AppSpacing.s12),
 
-            // Bottom row: views + reactions
+            // Footer row: reactions + views
             Row(
               children: [
-                // Views
-                Icon(
-                  Icons.visibility_outlined,
-                  size: 14,
-                  color: isDark
-                      ? AppColors.darkTextTertiary
-                      : AppColors.lightTextTertiary,
-                ),
-                const SizedBox(width: AppSpacing.s4),
-                Text(
-                  '$viewCount',
-                  style: AppTextStyles.caption.copyWith(
-                    fontSize: 12,
-                    color: isDark
-                        ? AppColors.darkTextTertiary
-                        : AppColors.lightTextTertiary,
-                  ),
-                ),
-                const Spacer(),
                 // Heart
                 _ReactionButton(
                   icon: isHearted ? Icons.favorite : Icons.favorite_border,
@@ -488,6 +472,25 @@ class _DiscoverCard extends ConsumerWidget {
                   activeColor: AppColors.primary,
                   isDark: isDark,
                   onTap: () => onReact(shareId, 'bookmark'),
+                ),
+                const Spacer(),
+                // Views
+                Icon(
+                  Icons.visibility_outlined,
+                  size: 16,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+                const SizedBox(width: AppSpacing.s4),
+                Text(
+                  '$viewCount',
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 12,
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
                 ),
               ],
             ),

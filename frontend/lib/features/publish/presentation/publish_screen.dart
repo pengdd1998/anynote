@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/error/error.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -112,13 +111,15 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
             platformsAsync.when(
               data: (platforms) {
                 if (platforms.isEmpty) return _buildNoPlatforms(l10n);
-                return Column(
-                  children: platforms.map((p) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.s8),
-                      child: _buildPlatformCard(p, l10n),
-                    );
-                  }).toList(),
+                // Row of 48px rounded share-target squares.
+                return Wrap(
+                  spacing: AppSpacing.s12,
+                  runSpacing: AppSpacing.s12,
+                  children: platforms
+                      .map(
+                        (p) => _buildPlatformSquare(p, l10n),
+                      )
+                      .toList(),
                 );
               },
               loading: () => const Center(
@@ -126,7 +127,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
                   padding: EdgeInsets.all(AppSpacing.lg),
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: AppColors.accentPeachText,
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -177,7 +178,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
                   padding: EdgeInsets.all(AppSpacing.lg),
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: AppColors.accentPeachText,
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -204,14 +205,14 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
     );
   }
 
-  Widget _buildPlatformCard(Map<String, dynamic> p, AppLocalizations l10n) {
+  /// A 48px rounded share-target square with the platform name below.
+  /// Selected state fills the square with the brand purple.
+  Widget _buildPlatformSquare(Map<String, dynamic> p, AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final name =
         p['name']?.toString() ?? p['platform']?.toString() ?? l10n.unknown;
     final platformKey = p['key']?.toString() ?? name.toLowerCase();
     final icon = _platformIcons[platformKey] ?? Icons.language;
-    final subtitle =
-        p['display_name']?.toString() ?? p['subtitle']?.toString() ?? '';
     final isSelected = _selectedPlatform == platformKey;
     final accent = _platformAccents[platformKey] ??
         const _PlatformAccent(
@@ -221,63 +222,48 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
 
     return GestureDetector(
       onTap: () => setState(() => _selectedPlatform = platformKey),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.s12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? accent.bg
-              : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: isSelected
-              ? Border.all(color: accent.text.withAlpha(80), width: 1.5)
-              : null,
-          boxShadow: isSelected
-              ? null
-              : AppShadows.smOf(Theme.of(context).brightness),
-        ),
-        child: Row(
+      child: SizedBox(
+        width: 64,
+        child: Column(
           children: [
-            // Icon badge
             Container(
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? accent.text.withAlpha(20)
-                    : accent.bg,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Icon(icon, size: 20, color: accent.text),
-            ),
-            const SizedBox(width: AppSpacing.s12),
-            // Name + subtitle
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (subtitle.isNotEmpty)
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.caption.copyWith(
+                    ? AppColors.primary
+                    : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
+                borderRadius: BorderRadius.circular(AppRadius.xs),
+                border: isSelected
+                    ? null
+                    : Border.all(
                         color: isDark
-                            ? AppColors.darkTextTertiary
-                            : AppColors.lightTextTertiary,
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
                       ),
-                    ),
-                ],
+              ),
+              child: Icon(
+                icon,
+                size: 22,
+                color: isSelected ? Colors.white : accent.text,
               ),
             ),
-            // Selection indicator
-            if (isSelected)
-              Icon(Icons.check_circle, size: 20, color: accent.text),
+            const SizedBox(height: AppSpacing.s4),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? AppColors.primaryText
+                    : (isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary),
+              ),
+            ),
           ],
         ),
       ),
@@ -287,10 +273,14 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
   Widget _buildNoPlatforms(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Column(
         children: [
@@ -374,11 +364,13 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
     final canPublish = _selectedPlatform != null && !state.isLoading;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.s12),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,14 +509,6 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
     final createdAt = item['created_at']?.toString() ?? '';
     final platformURL = item['platform_url']?.toString() ?? '';
 
-    final statusColor = switch (status) {
-      'published' => AppColors.success,
-      'failed' => AppColors.error,
-      'publishing' => AppColors.warning,
-      'pending' => AppColors.info,
-      _ => AppColors.info,
-    };
-
     final statusIcon = switch (status) {
       'published' => Icons.check_circle,
       'failed' => Icons.error,
@@ -533,12 +517,42 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
       _ => Icons.help_outline,
     };
 
+    // Pill chip colors per status (published = mint, pending = yellow).
+    final chipBg = isDark
+        ? (switch (status) {
+            'published' => AppColors.darkSuccessBg,
+            'failed' => AppColors.darkErrorBg,
+            _ => AppColors.darkWarningBg,
+          })
+        : (switch (status) {
+            'published' => AppColors.accentMintBg,
+            'failed' => AppColors.lightErrorBg,
+            'publishing' => AppColors.accentYellowBg,
+            'pending' => AppColors.accentYellowBg,
+            _ => AppColors.accentYellowBg,
+          });
+    final chipText = isDark
+        ? (switch (status) {
+            'published' => AppColors.success,
+            'failed' => AppColors.error,
+            _ => AppColors.warning,
+          })
+        : (switch (status) {
+            'published' => AppColors.accentMintText,
+            'failed' => AppColors.error,
+            'publishing' => AppColors.accentYellowText,
+            'pending' => AppColors.accentYellowText,
+            _ => AppColors.accentYellowText,
+          });
+
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.s12),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Row(
         children: [
@@ -547,10 +561,10 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: statusColor.withAlpha(15),
+              color: chipBg,
               borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
-            child: Icon(statusIcon, size: 18, color: statusColor),
+            child: Icon(statusIcon, size: 18, color: chipText),
           ),
           const SizedBox(width: AppSpacing.s12),
           // Title + metadata
@@ -563,7 +577,10 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                 ),
                 Text(
@@ -611,16 +628,17 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
             )
           else
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: statusColor.withAlpha(12),
+                color: chipBg,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: Text(
                 status,
                 style: AppTextStyles.caption.copyWith(
                   fontSize: 11,
-                  color: statusColor,
+                  fontWeight: FontWeight.w600,
+                  color: chipText,
                 ),
               ),
             ),
@@ -632,10 +650,14 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
   Widget _buildNoPublications(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Column(
         children: [
