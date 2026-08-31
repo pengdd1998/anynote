@@ -2330,6 +2330,21 @@ Structured search operators, saved searches, and search history.
 - Authenticated pprof behind PPROF_ENABLED env
 - RecoverAccount dead code removal (E2E incompatible)
 
+### UI Restyle — 2026-05-20 Design Mockup (2026-08-29, COMPLETED)
+- Accent migrated coral-amber -> soft periwinkle purple (#8B7CE8); links #6C5BC4;
+  selected tint #EFECFE; disabled CTA #CFC8F7 (see `frontend/lib/core/theme/app_colors.dart`)
+- Bundled Caveat (handwritten display: wordmark, greetings, note titles) and
+  RobotoMono (code blocks) fonts; all `monospace` usages migrated to RobotoMono
+- Screens aligned to the mockup: auth flow (onboarding mascot, social login row,
+  recovery-key box, word-chip grid), notes home (pastel sticky cards, pill search,
+  purple chips/FAB), note detail/editor/quick-capture/markdown preview/version
+  history, collections/tags/advanced search, settings/profile/plan/encryption/
+  notifications, AI chat/agent, discover/publish
+- App IA unchanged (4-tab bottom nav kept); all changes UI-only, no logic/routes
+- Verification: `flutter analyze` 0 errors / 0 warnings; `flutter build web` release
+  compiles (headless web boot blocked by offline canvaskit/wasm CDNs — env issue,
+  pre-existing; see work-log-2026-08-29)
+
 ---
 
 ## Future Considerations
