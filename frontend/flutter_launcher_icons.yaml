@@ -19,13 +19,13 @@ flutter_launcher_icons:
 
   image_path: "assets/icons/app_icon.png"
 
-  # Orange gradient background matching app icon
-  adaptive_icon_background: "#FF8C42"
+  # Periwinkle gradient background matching app icon
+  adaptive_icon_background: "#8B7CE8"
   adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
 
   ios_settings:
     remove_alpha: true
 
   web_settings:
-    background_color: "#FF8C42"
-    theme_color: "#8B5CF6"
+    background_color: "#8B7CE8"
+    theme_color: "#8B7CE8"
