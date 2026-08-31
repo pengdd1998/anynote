@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/error/error_display.dart';
+import '../../../core/error/exceptions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -88,7 +91,15 @@ class AIAgentScreen extends ConsumerWidget {
           else if (agentState.error != null)
             _ResultCard(
               status: l10n.agentFailed,
-              detail: agentState.error!,
+              detail: ErrorDisplay.userMessage(
+                agentState.error is AppException
+                    ? agentState.error! as AppException
+                    : UnknownException(
+                        message:
+                            agentState.error?.toString() ?? 'Unknown error',
+                      ),
+                l10n,
+              ),
               isSuccess: false,
             )
           else if (agentState.result != null)
@@ -194,9 +205,7 @@ class _ActionCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkCardBg : accentBg,
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: isDark
-                ? Border.all(color: AppColors.darkBorder)
-                : null,
+            border: isDark ? Border.all(color: AppColors.darkBorder) : null,
           ),
           child: Row(
             children: [
@@ -205,9 +214,8 @@ class _ActionCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkInputFill
-                      : AppColors.lightCardBg,
+                  color:
+                      isDark ? AppColors.darkInputFill : AppColors.lightCardBg,
                   borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
                 child: Icon(
@@ -276,15 +284,11 @@ class _ResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isSuccess
-        ? AppColors.accentMintBg
-        : AppColors.lightErrorBg;
+    final bgColor = isSuccess ? AppColors.accentMintBg : AppColors.lightErrorBg;
     final iconColor = isSuccess
         ? (isDark ? AppColors.success : AppColors.accentMintText)
         : AppColors.error;
-    final icon = isSuccess
-        ? Icons.check_circle_outline
-        : Icons.error_outline;
+    final icon = isSuccess ? Icons.check_circle_outline : Icons.error_outline;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s16),

@@ -174,7 +174,9 @@ void main() {
       final state = container.read(aiAgentProvider);
       expect(state.isLoading, isFalse);
       expect(state.error, isNotNull);
-      expect(state.error, contains('Server unreachable'));
+      // error now stores the mapped AppException; its toString carries the
+      // original message.
+      expect(state.error.toString(), contains('Server unreachable'));
       expect(state.result, isNull);
     });
 

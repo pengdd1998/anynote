@@ -23,8 +23,9 @@ class ChatSession {
   /// Whether an AI response is currently being generated.
   final bool isLoading;
 
-  /// Error message to display, if any.
-  final String? error;
+  /// Active error, if any. Stores the mapped [AppException] (not a string)
+  /// so the UI can render a localized message via ErrorDisplay.userMessage.
+  final Object? error;
 
   const ChatSession({
     required this.id,
@@ -68,7 +69,7 @@ class ChatSession {
     Map<String, String>? contextNoteContents,
     List<dynamic>? messages,
     bool? isLoading,
-    String? error,
+    Object? error,
   }) {
     return ChatSession(
       id: id,

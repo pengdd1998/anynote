@@ -485,11 +485,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
       // inherited dependency from a notification context, re-entering
       // dependOnInheritedElement on every router notification and amplifying
       // global rebuild jank.
-      final location = GoRouter.of(context)
-          .routerDelegate
-          .currentConfiguration
-          .uri
-          .path;
+      final location =
+          GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
       if (location.startsWith('/compose')) return;
       // Only pop when this sheet route is still the current one.
       final modal = ModalRoute.of(context);
@@ -559,154 +556,169 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                 ),
               ),
             ),
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.s8,
-                AppSpacing.md,
-                AppSpacing.s4,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    l10n.newComposition,
-                    style: AppTextStyles.headline,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            // Topic field
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.s8,
-                AppSpacing.md,
-                AppSpacing.s4,
-              ),
-              child: TextField(
-                controller: _topicController,
-                decoration: InputDecoration(
-                  labelText: l10n.topicOrTheme,
-                  hintText: l10n.topicHint,
-                  prefixIcon: const Icon(Icons.lightbulb_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                ),
-                onChanged: (v) =>
-                    ref.read(composeSessionProvider.notifier).setTopic(v),
-                scrollPadding: const EdgeInsets.only(bottom: 120),
-              ),
-            ),
-            // Platform selector
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.s8,
-                AppSpacing.md,
-                AppSpacing.s4,
-              ),
-              child: DropdownButtonFormField<String>(
-                initialValue: _platformStyle,
-                decoration: InputDecoration(
-                  labelText: l10n.targetPlatform,
-                  prefixIcon: const Icon(Icons.share_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                ),
-                items: _platformOptions(l10n)
-                    .map(
-                      (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)),
-                    )
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) {
-                    setState(() => _platformStyle = v);
-                    ref
-                        .read(composeSessionProvider.notifier)
-                        .setPlatformStyle(v);
-                  }
-                },
-              ),
-            ),
-            // Template selector
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md, 0, AppSpacing.md, AppSpacing.s8),
-              child: InkWell(
-                onTap: () async {
-                  await TemplateSelectorSheet.show(
-                    context,
-                    selectedTemplate: _selectedTemplate,
-                    onSelected: (template) {
-                      setState(() => _selectedTemplate = template);
-                      ref
-                          .read(composeSessionProvider.notifier)
-                          .setTemplate(template);
-                    },
-                  );
-                },
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: '文章模板',
-                    prefixIcon: const Icon(Icons.description_outlined),
-                    suffixIcon: const Icon(Icons.arrow_drop_down),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                  ),
-                  child: Text(
-                    _selectedTemplate?.name ?? '通用模板（默认）',
-                    style: AppTextStyles.body,
-                  ),
-                ),
-              ),
-            ),
-            // Note list label
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.s8,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    l10n.selectNotes,
-                    style: AppTextStyles.title.copyWith(fontSize: 14),
-                  ),
-                  const SizedBox(width: AppSpacing.s8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(15),
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                    ),
-                    child: Text(
-                      l10n.selectedCount(_selectedIds.length),
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+            // Header + form fields: scrollable when the keyboard
+            // compresses the sheet (prevents bottom overflow).
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.s8,
+                        AppSpacing.md,
+                        AppSpacing.s4,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            l10n.newComposition,
+                            style: AppTextStyles.headline,
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                    // Topic field
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.s8,
+                        AppSpacing.md,
+                        AppSpacing.s4,
+                      ),
+                      child: TextField(
+                        controller: _topicController,
+                        decoration: InputDecoration(
+                          labelText: l10n.topicOrTheme,
+                          hintText: l10n.topicHint,
+                          prefixIcon: const Icon(Icons.lightbulb_outline),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
+                        ),
+                        onChanged: (v) => ref
+                            .read(composeSessionProvider.notifier)
+                            .setTopic(v),
+                        scrollPadding: const EdgeInsets.only(bottom: 120),
+                      ),
+                    ),
+                    // Platform selector
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.s8,
+                        AppSpacing.md,
+                        AppSpacing.s4,
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _platformStyle,
+                        decoration: InputDecoration(
+                          labelText: l10n.targetPlatform,
+                          prefixIcon: const Icon(Icons.share_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
+                        ),
+                        items: _platformOptions(l10n)
+                            .map(
+                              (o) => DropdownMenuItem(
+                                  value: o.$1, child: Text(o.$2)),
+                            )
+                            .toList(),
+                        onChanged: (v) {
+                          if (v != null) {
+                            setState(() => _platformStyle = v);
+                            ref
+                                .read(composeSessionProvider.notifier)
+                                .setPlatformStyle(v);
+                          }
+                        },
+                      ),
+                    ),
+                    // Template selector
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md, 0, AppSpacing.md, AppSpacing.s8),
+                      child: InkWell(
+                        onTap: () async {
+                          await TemplateSelectorSheet.show(
+                            context,
+                            selectedTemplate: _selectedTemplate,
+                            onSelected: (template) {
+                              setState(() => _selectedTemplate = template);
+                              ref
+                                  .read(composeSessionProvider.notifier)
+                                  .setTemplate(template);
+                            },
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: '文章模板',
+                            prefixIcon: const Icon(Icons.description_outlined),
+                            suffixIcon: const Icon(Icons.arrow_drop_down),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                            ),
+                          ),
+                          child: Text(
+                            _selectedTemplate?.name ?? '通用模板（默认）',
+                            style: AppTextStyles.body,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Note list label
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        AppSpacing.s8,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            l10n.selectNotes,
+                            style: AppTextStyles.title.copyWith(fontSize: 14),
+                          ),
+                          const SizedBox(width: AppSpacing.s8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(15),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.pill),
+                            ),
+                            child: Text(
+                              l10n.selectedCount(_selectedIds.length),
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Note list
+                  ],
+                ),
               ),
             ),
-            // Note list
             Expanded(
               child: widget.notesAsync.when(
                 data: (notes) {

@@ -209,7 +209,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Action failed'), findsOneWidget);
-      expect(find.textContaining('Server error'), findsOneWidget);
+      // Unknown errors render the generic localized message rather than the
+      // raw server text.
+      expect(find.textContaining('An unexpected error'), findsOneWidget);
     });
 
     testWidgets('error result card uses error container color', (tester) async {

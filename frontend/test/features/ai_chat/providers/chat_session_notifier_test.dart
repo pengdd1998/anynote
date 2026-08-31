@@ -292,7 +292,7 @@ void main() {
       await notifier.sendMessage('test');
 
       expect(notifier.state.error, isNotNull);
-      expect(notifier.state.error, contains('Network down'));
+      expect(notifier.state.error.toString(), contains('Network down'));
       expect(notifier.state.isLoading, isFalse);
     });
 

@@ -7,14 +7,14 @@ import '../../../main.dart';
 class AgentState {
   final bool isLoading;
   final Map<String, dynamic>? result;
-  final String? error;
+  final Object? error;
 
   const AgentState({this.isLoading = false, this.result, this.error});
 
   AgentState copyWith({
     bool? isLoading,
     Map<String, dynamic>? result,
-    String? error,
+    Object? error,
   }) {
     return AgentState(
       isLoading: isLoading ?? this.isLoading,
@@ -51,7 +51,7 @@ class AgentNotifier extends StateNotifier<AgentState> {
       });
       state = AgentState(result: resp);
     } catch (e) {
-      state = AgentState(error: ErrorMapper.map(e).toString());
+      state = AgentState(error: ErrorMapper.map(e));
     }
   }
 

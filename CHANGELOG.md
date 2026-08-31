@@ -5,6 +5,37 @@ All notable changes to AnyNote will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.6] — 2026-08-31
+
+### Added
+
+- **User-configured LLM providers**: connect any OpenAI-compatible provider
+  (Xiaomi MiMo preset added) from 设置 → LLM 配置; AI requests route through
+  the user's own provider with the first config auto-set as default
+- **Set as default**: star action on LLM config cards; AI proxy resolves the
+  default config for dedicated (non-quota) mode
+- **Publish handoff from AI compose**: the polished draft flows into the
+  publish sheet with template carried through to the AI polish pass
+- **Template application**: general template pre-selected for new sessions,
+  publish-polish reshapes content to the template's structure and tone
+
+### Fixed
+
+- **Navigation stability**: fixed main-thread ANR storms after extended
+  navigation (duplicate-push guard, dependency-free route listener,
+  route-stack depth monitoring)
+- **Session restore**: cold starts now reliably restore the session and the
+  encryption vault (unified secure storage backend + startup key refresh)
+- **Streaming robustness**: AI streaming no longer drops characters when
+  responses split across network chunks (mid-UTF-8 safe)
+- **Encrypted saves**: all write paths unlock the vault before encrypting;
+  the editor no longer falls back to storing plaintext when locked
+- **Server compatibility**: empty list responses no longer crash list screens
+  (platforms, LLM configs, publish history, discover, devices)
+- **Version restore**: timeline's latest entry now always matches the live note
+- Validation/localization: email format validation, error banners localized
+  (en/zh/ja/ko), publish titles stripped of markdown markers
+
 ## [2.6.0] — 2026-05-08
 
 ### Added

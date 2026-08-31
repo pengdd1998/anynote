@@ -129,7 +129,7 @@ class ChatSessionNotifier extends StateNotifier<ChatSession> {
       state = state.copyWith(
         messages: messages,
         isLoading: false,
-        error: appError.message,
+        error: appError,
       );
     } finally {
       _isProcessing = false;
