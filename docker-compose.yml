@@ -23,7 +23,7 @@ services:
     container_name: anynote-postgres
     environment:
       POSTGRES_USER: anynote
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-anynote_dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oF7dXBA5xI4CcplUy4mur4gZ}
       POSTGRES_DB: anynote
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -94,7 +94,7 @@ services:
       dockerfile: Dockerfile
     container_name: anynote-server
     environment:
-      - DATABASE_URL=postgres://anynote:${POSTGRES_PASSWORD:-anynote_dev}@postgres:5432/anynote?sslmode=disable
+      - DATABASE_URL=postgres://anynote:${POSTGRES_PASSWORD:-oF7dXBA5xI4CcplUy4mur4gZ}@postgres:5432/anynote?sslmode=disable
       - REDIS_URL=redis://redis:6379/0
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
@@ -127,7 +127,7 @@ services:
       dockerfile: Dockerfile.worker
     container_name: anynote-worker
     environment:
-      - DATABASE_URL=postgres://anynote:${POSTGRES_PASSWORD:-anynote_dev}@postgres:5432/anynote?sslmode=disable
+      - DATABASE_URL=postgres://anynote:${POSTGRES_PASSWORD:-oF7dXBA5xI4CcplUy4mur4gZ}@postgres:5432/anynote?sslmode=disable
       - REDIS_URL=redis://redis:6379/0
       - CHROME_WS_URL=ws://chrome:9222
       - LOG_LEVEL=${LOG_LEVEL:-info}

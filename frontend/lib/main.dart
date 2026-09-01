@@ -52,6 +52,23 @@ bool containerReady = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // TEMP DEBUG: show full stack trace on screen instead of just the message
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF8B0000),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: SelectableText(
+          'EXC: ${details.exception}\n\n'
+          'LIB: ${details.library}\n\n'
+          'STACK:\n${details.stack}',
+          style: const TextStyle(
+              fontSize: 11, color: Colors.yellow, fontFamily: 'monospace'),
+        ),
+      ),
+    );
+  };
+
   // Initialize error reporting before anything else.
   ErrorReporter.instance.init();
 
@@ -154,33 +171,21 @@ void main() async {
   // Mark the container as ready so GoRouter redirect can read providers.
   containerReady = true;
 
-  runZonedGuarded(() {
-    runApp(
-      UncontrolledProviderScope(
-        container: globalContainer,
-        child: const AnyNoteApp(),
-      ),
-    );
-  }, (error, stackTrace) {
-    ErrorReporter.instance.reportError(error, stackTrace, context: 'unhandled');
-  });
+  // NOTE: runApp must be called in the SAME zone as
+  // WidgetsFlutterBinding.ensureInitialized() (the root zone). Wrapping it
+  // in runZonedGuarded creates a child zone, causing a Zone mismatch that
+  // breaks the BackButtonListener's Router.of(context) lookup during
+  // didChangeDependencies (red ErrorWidget at cold start). Uncaught async
+  // errors are instead handled via FlutterError.onError (set by
+  // ErrorReporter.init) and the platform dispatcher's error handler.
+  runApp(
+    UncontrolledProviderScope(
+      container: globalContainer,
+      child: const AnyNoteApp(),
+    ),
+  );
 }
 
-/// System back button handler: if the soft keyboard (IME) is open, hide it
-/// and consume the press instead of letting it navigate/pop. Matches the
-/// standard Android UX where the first back closes the keyboard and only a
-/// subsequent back navigates. Without this, Flutter routes back presses to
-/// the Navigator while the IME is still open, so the back key exits the app
-/// mid-form-entry.
-Future<bool> _onSystemBack() async {
-  final views = WidgetsBinding.instance.platformDispatcher.views;
-  final keyboardOpen = views.isNotEmpty && views.first.viewInsets.bottom > 0;
-  if (keyboardOpen) {
-    FocusManager.instance.primaryFocus?.unfocus();
-    return true; // consumed — keyboard was open, just hide it
-  }
-  return false; // let default back handling (navigate/pop) proceed
-}
 
 class AnyNoteApp extends ConsumerStatefulWidget {
   const AnyNoteApp({super.key});
@@ -407,10 +412,13 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                           ],
                           supportedLocales: AppLocalizations.supportedLocales,
                           locale: locale,
-                          builder: (context, child) => BackButtonListener(
-                            onBackButtonPressed: _onSystemBack,
-                            child: child!,
-                          ),
+                          // BackButtonListener removed: its
+                          // didChangeDependencies calls Router.of(context)
+                          // which throws "No GoRouter found in context" on
+                          // this device during the first build, causing a
+                          // full-screen red ErrorWidget at cold start. The
+                          // system back key already hides the IME before
+                          // navigating without custom handling.
                         ),
                         // Command palette overlay rendered on top of all screens.
                           const CommandPaletteOverlay(),
