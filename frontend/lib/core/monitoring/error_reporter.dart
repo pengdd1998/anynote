@@ -49,6 +49,10 @@ class ErrorReporter {
   void reportError(Object error, StackTrace stackTrace, {String? context}) {
     if (!_enabled) return;
     final prefix = context != null ? '[ERROR] $context' : '[ERROR]';
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print('=== REPORTED ERROR ($context) === $error\n$stackTrace');
+    }
     developer.log('$prefix: $error', name: 'ErrorReporter');
     developer.log('[STACK] $stackTrace', name: 'ErrorReporter');
     _callback?.call(error, stackTrace, context: context);
@@ -57,6 +61,12 @@ class ErrorReporter {
   /// Report a Flutter framework error captured by [FlutterError.onError].
   void reportFlutterError(FlutterErrorDetails details) {
     if (!_enabled) return;
+    // Debug builds: print the FULL details (including stack) to logcat so
+    // startup crashes are visible without an attached debugger.
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print('=== FLUTTER ERROR === exception: ' + details.exception.toString() + ' stack: ' + (details.stack ?? StackTrace.empty).toString());
+    }
     developer.log(
       '[FLUTTER_ERROR] ${details.exceptionAsString()}',
       name: 'ErrorReporter',
