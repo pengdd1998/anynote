@@ -177,3 +177,31 @@ When diagnosing environment or tooling issues:
 3. AI proxy streaming (SSE parsing, quota enforcement)
 4. FTS5 search (Chinese text, performance with large datasets)
 5. Platform adapter integration (XHS publish flow)
+
+
+<!-- auto-review:rules:start -->
+## 代码评审规则（auto-review 自动生成，请勿手改）
+
+本仓库由 auto-review 门禁把守。以下是当前生效的规则摘要——**写代码时就遵守，而不是等门禁失败后再修**。
+
+**语言规则**：
+- `python`：圈复杂度 ≥10 报 major / ≥15 报 blocker：生产代码变更必须伴随测试变更（TDD 耦合检查）；改动行覆盖率 ≥80%
+- `javascript`：圈复杂度 ≥10 报 major / ≥15 报 blocker：生产代码变更必须伴随测试变更（TDD 耦合检查）；改动行覆盖率 ≥80%
+- `golang`：圈复杂度 ≥10 报 major / ≥15 报 blocker：生产代码变更必须伴随测试变更（TDD 耦合检查）；改动行覆盖率 ≥60%
+- `dart`：生产代码变更必须伴随测试变更（TDD 耦合检查）；改动行覆盖率 ≥60%
+
+**通用要求**：
+- 函数要小：一个函数只做一件事，圈复杂度超过阈值必须拆分；
+- 测试先行：新行为先写失败测试再写实现；测行为，不测实现细节；
+- 童子军规则：改到的文件不允许比改动前更复杂（Boy Scout 引擎比对基线）；
+- 小批量提交：超大变更集会被直接拒绝，拆分为多个小 PR；
+- 提交前自检：运行 `auto-review review --tier fast`，通过后再提交；
+- 门禁失败时：用 `auto-review fix-hints`（或 CI artifact 的 report.json）获取修复指令，修复后重新验证，不要用 --no-verify 绕过。
+
+**自定义检查**（命令失败即按配置级别计 finding）：
+- `go-vet`：`command -v go >/dev/null 2>&1 || exit 0; cd backend && go vet ./...`
+- `gofmt`：`command -v go >/dev/null 2>&1 || exit 0; cd backend && test -z "$(gofmt -l .)"`
+- `flutter-analyze`：`command -v flutter >/dev/null 2>&1 || exit 0; cd frontend && flutter analyze --no-fatal-infos`
+
+完整配置见 `.auto-review.yaml`；规则参考见 auto-review 的 `docs/rules.md`。
+<!-- auto-review:rules:end -->

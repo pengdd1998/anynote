@@ -68,7 +68,7 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Install auto-review
-        run: pip install "auto-review @ git+https://github.com/pengdd1998/auto-review.git@v0.2.1"
+        run: pip install "auto-review @ git+https://github.com/pengdd1998/auto-review.git@v0.3.0"
 
       - name: Run review gate
         run: |
@@ -77,6 +77,18 @@ jobs:
             --head HEAD \
             --report-md  auto-review-report.md \
             --report-json auto-review-report.json
+
+      - name: Generate agent fix instructions (on failure)
+        if: failure()
+        run: auto-review fix-hints auto-review-report.json > fix-instructions.md || true
+
+      - name: Upload fix instructions (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auto-review-fix-instructions
+          path: fix-instructions.md
+          retention-days: 14
 
       - name: Upload reports (always)
         if: always()
@@ -98,3 +110,41 @@ jobs:
       - name: Add job summary
         if: always()
         run: cat auto-review-report.md >> "$GITHUB_STEP_SUMMARY" || true
+
+  # One-off (workflow_dispatch): snapshot existing debt as the ratchet
+  # baseline, committed back to main. Review then blocks only NEW or WORSE
+  # violations; re-run after paying debt down to tighten the ratchet.
+  snapshot-baseline:
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Go 1.25
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: backend/go.sum
+
+      - name: Install gocyclo (complexity snapshot)
+        run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+
+      - name: Install auto-review
+        run: pip install "auto-review @ git+https://github.com/pengdd1998/auto-review.git@v0.3.0"
+
+      - name: Snapshot baseline
+        run: auto-review baseline . --update
+
+      - name: Commit baseline (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .auto-review/baseline.json
+          git diff --cached --quiet && echo "baseline unchanged" && exit 0
+          git commit -m "chore: refresh auto-review baseline (ratchet)"
+          git push
