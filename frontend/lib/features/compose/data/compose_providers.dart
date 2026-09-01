@@ -318,6 +318,8 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   }) async {
     if (state.selectedNoteIds.isEmpty || state.topic.isEmpty) return;
     if (_isProcessing) return;
+    // Cache: skip LLM call if clusters already generated for this session.
+    if (state.clusters.isNotEmpty) return;
 
     // Validate total content size before sending.
     if (state.totalContentChars > maxTotalContentChars) {
@@ -418,6 +420,8 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   Future<void> generateOutline({String? quotaExceededMessage}) async {
     if (state.selectedClusterIndices.isEmpty) return;
     if (_isProcessing) return;
+    // Cache: skip LLM call if outline already generated for this session.
+    if (state.outline != null) return;
 
     _isProcessing = true;
     state = state.copyWith(isLoading: true, error: null);
@@ -487,6 +491,10 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
   Future<void> expandToDraft({String? quotaExceededMessage}) async {
     if (state.outline == null) return;
     if (_isProcessing) return;
+    // Cache: skip LLM call if a draft was already generated for this
+    // session — the user can edit the existing draft in the editor
+    // instead of wasting an LLM call on re-generation.
+    if (state.draft.isNotEmpty) return;
 
     _isProcessing = true;
     state = state.copyWith(
