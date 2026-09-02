@@ -134,6 +134,30 @@ flutter:
           weight: 600
         - asset: assets/fonts/caveat/Caveat.ttf
           weight: 700
+        # CJK companion faces INSIDE the Caveat family: Caveat has Latin
+        # glyphs only, and the engine's per-glyph fallback does not honor
+        # non-400 weights, so Chinese in w600 handwritten titles fell back
+        # to the system sans. Registering Ma Shan Zheng (kai handwriting,
+        # SIL OFL — see assets/fonts/mashanzheng/OFL.txt) under the same
+        # family lets glyph coverage pick it at any weight.
+        - asset: assets/fonts/mashanzheng/MaShanZheng-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/mashanzheng/MaShanZheng-Regular.ttf
+          weight: 500
+        - asset: assets/fonts/mashanzheng/MaShanZheng-Regular.ttf
+          weight: 600
+        - asset: assets/fonts/mashanzheng/MaShanZheng-Regular.ttf
+          weight: 700
+    - family: MaShanZheng
+      fonts:
+        - asset: assets/fonts/mashanzheng/MaShanZheng-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/mashanzheng/MaShanZheng-Regular.ttf
+          weight: 500
+        - asset: assets/fonts/mashanzheng/MaShanZheng-Regular.ttf
+          weight: 600
+        - asset: assets/fonts/mashanzheng/MaShanZheng-Regular.ttf
+          weight: 700
     - family: RobotoMono
       fonts:
         - asset: assets/fonts/roboto-mono/RobotoMono.ttf

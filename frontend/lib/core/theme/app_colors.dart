@@ -164,6 +164,36 @@ class AppColors {
     notePeach,
   ];
 
+  // -- Sticky-note PAPER palette (skeuomorphic mockup style) -------------------
+  // Saturated candy pastels sampled from the 2026-05 mockup: grid cards read
+  // as real paper sticky notes (color block + soft shadow, no border).
+
+  static const paperYellow = Color(0xFFFBE48E); // Morning thoughts yellow
+  static const paperWhite = Color(0xFFF9F4EA); // plain paper (Book recs)
+  static const paperPink = Color(0xFFFDD0CB); // salmon pink (That's a wrap)
+  static const paperLavender = Color(0xFFE4D3F6); // Quote to remember
+  static const paperCream = Color(0xFFFCF7EA); // Tiny ideas cream
+  static const paperGreen = Color(0xFFE2EFD0); // Plant care mint
+
+  /// Ordered paper cycle for auto-cycling card colors. Mirrors the mockup's
+  /// rhythm: strong yellow, plain paper, pink, lavender, cream, green.
+  static const notePapers = <Color>[
+    paperYellow,
+    paperWhite,
+    paperPink,
+    paperLavender,
+    paperCream,
+    paperGreen,
+  ];
+
+  /// Warm shadow ink for paper cards (light mode): soft brown-gray, like a
+  /// note resting slightly above the desk.
+  static const paperShadow = Color(0x26786442); // ~15% warm brown
+  static const paperShadowNear = Color(0x1F786442); // ~12% tighter layer
+
+  /// Slightly deeper page background so paper cards pop (notes home screen).
+  static const lightDeskBg = Color(0xFFF2EFE9);
+
   // -- Note card border colors (soft, warm-tinted) ---------------------------
 
   static const noteBorderYellow = Color(0xFFFEECC0);

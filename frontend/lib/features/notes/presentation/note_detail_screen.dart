@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +10,9 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/paper_tokens.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/paper_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -38,6 +42,9 @@ class NoteDetailScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      // Paper tokens carry the desk color: the note reads as a sheet of
+      // paper resting on the desk (matches the notes home surface).
+      backgroundColor: PaperTokens.of(context).desk,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -200,84 +207,101 @@ class NoteDetailScreen extends ConsumerWidget {
 
   Widget _buildContent(BuildContext context, DecryptedNote data, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
+    final paper = PaperTokens.of(context);
     // Hide the title row when the note has no real title.
     final hasTitle = data.title.isNotEmpty && data.title != l10n.untitled;
 
+    // The whole note reads as one sheet of paper on the desk: title,
+    // body, tags and meta share the sheet, inked in the paper voice.
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.s20,
-        vertical: AppSpacing.s20,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.s8,
+        AppSpacing.md,
+        AppSpacing.xl,
       ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // -- Title — handwritten display voice per the design mockup --
-              if (hasTitle) ...[
-                Text(
-                  data.title,
-                  style: AppTextStyles.handwritingTitle.copyWith(
-                    fontSize: 30,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
-
-              // -- Body --
-              // Render via the same read-only Quill viewer the editor uses.
-              // A design-tuned Quill style theme is applied (Inter body
-              // 16/1.6, warm headings, lavender blockquotes) so the read
-              // view matches the mockup's calm reading experience.
-              Semantics(
-                label: l10n.noteContent,
-                child: QuillReadOnlyViewer(
-                  deltaJson: data.content,
-                  padding: EdgeInsets.zero,
-                  customStyles: _buildReaderStyles(isDark),
-                ),
+          child: PaperSurface(
+            tilted: false,
+            tone: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.md,
               ),
-
-              // -- Tags --
-              if (data.tags.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.md),
-                Wrap(
-                  spacing: AppSpacing.s8,
-                  runSpacing: AppSpacing.s8,
-                  children: data.tags.map((tag) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.s12,
-                        vertical: AppSpacing.s4,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // -- Title — handwritten display voice per the design mockup --
+                  if (hasTitle) ...[
+                    Text(
+                      stripObjectPlaceholders(data.title),
+                      style: AppTextStyles.handwritingTitle.copyWith(
+                        fontSize: 30,
+                        color: paper.ink,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primarySoft,
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                      child: Text(
-                        '#${tag.plainName}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primaryText,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
 
-              // -- Date / meta footer --
-              const SizedBox(height: AppSpacing.s8),
-              _buildMetaFooter(context, data, isDark),
+                  // -- Body --
+                  // Render via the same read-only Quill viewer the editor uses.
+                  // A design-tuned Quill style theme is applied (Inter body
+                  // 16/1.6, warm headings, lavender blockquotes) so the read
+                  // view matches the mockup's calm reading experience.
+                  Semantics(
+                    label: l10n.noteContent,
+                    child: QuillReadOnlyViewer(
+                      deltaJson: data.content,
+                      padding: EdgeInsets.zero,
+                      customStyles: _buildReaderStyles(isDark),
+                    ),
+                  ),
 
-              // Bottom breathing room
-              const SizedBox(height: AppSpacing.xl),
-            ],
+                  // -- Tags --
+                  if (data.tags.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Wrap(
+                      spacing: AppSpacing.s8,
+                      runSpacing: AppSpacing.s8,
+                      children: data.tags.map((tag) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.s12,
+                            vertical: AppSpacing.s4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primarySoft,
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Text(
+                            '#${tag.plainName}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryText,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+
+                  // -- Date / meta footer --
+                  const SizedBox(height: AppSpacing.s8),
+                  _buildMetaFooter(context, data, isDark, paper.inkMuted),
+
+                  // Bottom breathing room
+                  const SizedBox(height: AppSpacing.xs),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -399,12 +423,12 @@ class NoteDetailScreen extends ConsumerWidget {
   Widget _buildMetaFooter(
     BuildContext context,
     DecryptedNote data,
-    bool isDark,
-  ) {
+    bool isDark, [
+    Color? metaColorOverride,
+  ]) {
     final l10n = AppLocalizations.of(context)!;
-    final metaColor = isDark
-        ? AppColors.darkTextTertiary
-        : AppColors.lightTextTertiary;
+    final metaColor = metaColorOverride ??
+        (isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary);
 
     final minutes = (data.content.length ~/ 250) + 1;
     final dateStr = data.updatedAt.toLocal().toString().substring(0, 16);
@@ -542,6 +566,18 @@ class NoteDetailScreen extends ConsumerWidget {
     // so the detail view renders the actual body, not the raw envelope JSON.
     content = _unwrapContentEnvelope(content);
 
+    // Notes saved without an explicit title keep it only as the first
+    // content line (the home cards derive it the same way). Derive it here
+    // too and drop that line from the body so the title is not rendered
+    // twice — once in the handwritten title voice, once as plain body text.
+    if (title.isEmpty || title == l10n.untitled) {
+      final derived = _deriveTitleFromBody(content);
+      if (derived != null) {
+        title = derived;
+        content = _stripFirstLineFromBody(content);
+      }
+    }
+
     return DecryptedNote(
       title: title,
       content: content,
@@ -549,6 +585,58 @@ class NoteDetailScreen extends ConsumerWidget {
       isSynced: note.isSynced,
       tags: tags,
     );
+  }
+
+  /// First non-empty line of the note body, or null when the body is empty.
+  /// Mirrors NoteCard's title derivation.
+  String? _deriveTitleFromBody(String content) {
+    final plain = plainTextFromStoredContent(content);
+    for (final line in plain.split('\n')) {
+      final trimmed = line.trim();
+      if (trimmed.isNotEmpty) return trimmed;
+    }
+    return null;
+  }
+
+  /// Removes everything up to and including the first line break so the
+  /// derived title line does not duplicate inside the body viewer. Delta
+  /// JSON loses its first text run's line; plain content loses line one.
+  String _stripFirstLineFromBody(String content) {
+    final trimmed = content.trim();
+    if (trimmed.startsWith('[')) {
+      try {
+        final decoded = jsonDecode(trimmed);
+        if (decoded is List) {
+          final ops = sanitizeDeltaOps(decoded);
+          var seenFirstBreak = false;
+          final remaining = <Map<String, dynamic>>[];
+          for (final op in ops) {
+            final insert = op['insert'];
+            if (insert is! String) {
+              if (seenFirstBreak) remaining.add(op);
+              continue;
+            }
+            if (!seenFirstBreak) {
+              final idx = insert.indexOf('\n');
+              if (idx < 0) continue; // whole op is part of the title line
+              seenFirstBreak = true;
+              final rest = insert.substring(idx + 1);
+              if (rest.isNotEmpty) {
+                remaining.add({...op, 'insert': rest});
+              }
+              continue;
+            }
+            remaining.add(op);
+          }
+          if (seenFirstBreak) return jsonEncode(remaining);
+          return content;
+        }
+      } catch (_) {
+        // Not Delta JSON — fall through to plain handling.
+      }
+    }
+    final idx = content.indexOf('\n');
+    return idx < 0 ? '' : content.substring(idx + 1);
   }
 
   /// Delegate to the shared [unwrapSyncEnvelope] (see note_envelope.dart),

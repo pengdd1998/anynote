@@ -12,6 +12,19 @@ void main() {
     expect(AppColors.primaryText, const Color(0xFF6C5BC4));
   });
 
+  test('handwritten styles fall back to the CJK handwriting font', () {
+    // Caveat carries Latin; MaShanZheng carries Chinese so handwritten
+    // note titles/timestamps keep the journal voice in CJK content.
+    for (final style in [
+      AppTextStyles.handwritingDisplay,
+      AppTextStyles.handwritingTitle,
+      AppTextStyles.handwritingBody,
+      AppTextStyles.handwritingCaption,
+    ]) {
+      expect(style.fontFamilyFallback, contains('MaShanZheng'));
+    }
+  });
+
   testWidgets('theme renders with pinned purple and bundled fonts',
       (tester) async {
     await tester.pumpWidget(

@@ -60,6 +60,35 @@ class AppShadows {
     ),
   ];
 
+  /// Skeuomorphic paper lift — sticky-note cards. Two layers: a tight contact
+  /// shadow plus a warm diffuse one, so the paper looks placed on a desk.
+  static final List<BoxShadow> paper = [
+    BoxShadow(
+      color: AppColors.paperShadow,
+      offset: const Offset(3, 6),
+      blurRadius: 16,
+    ),
+    BoxShadow(
+      color: AppColors.paperShadowNear,
+      offset: const Offset(1, 2),
+      blurRadius: 4,
+    ),
+  ];
+
+  /// Paper lift in dark mode — soft black, no warm tint needed on navy.
+  static final List<BoxShadow> paperDark = [
+    BoxShadow(
+      color: AppColors.shadowDark,
+      offset: const Offset(3, 6),
+      blurRadius: 16,
+    ),
+    BoxShadow(
+      color: AppColors.shadowDark,
+      offset: const Offset(1, 2),
+      blurRadius: 4,
+    ),
+  ];
+
   // ---------------------------------------------------------------------------
   // Dark mode
   // ---------------------------------------------------------------------------
@@ -111,4 +140,7 @@ class AppShadows {
 
   static List<BoxShadow> xlOf(Brightness brightness) =>
       brightness == Brightness.dark ? xlDark : xl;
+
+  static List<BoxShadow> paperOf(Brightness brightness) =>
+      brightness == Brightness.dark ? paperDark : paper;
 }

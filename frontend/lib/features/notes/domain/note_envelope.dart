@@ -77,6 +77,22 @@ bool containsSyncEnvelope(String content) {
   return deltaText != null && _tryExtractEnvelope(deltaText) != null;
 }
 
+/// Object replacement / noncharacter code points that appear inside stored
+/// text (e.g. notes pasted from Apple Notes carry U+FFFC for embedded
+/// objects). Flutter renders them as a dotted "[OBJ]" box, so they are
+/// stripped from everything the user sees.
+final RegExp _objectPlaceholderPattern = RegExp('[\uFFFC\uFFFE\uFFFF]');
+
+/// Removes object-replacement placeholders (U+FFFC/U+FFFE/U+FFFF) from [s].
+///
+/// Display-time hygiene only — encrypted content is never rewritten.
+String stripObjectPlaceholders(String s) {
+  if (!s.contains('\uFFFC') && !s.contains('\uFFFE') && !s.contains('\uFFFF')) {
+    return s;
+  }
+  return s.replaceAll(_objectPlaceholderPattern, '');
+}
+
 /// If [content] is a Quill Delta JSON array, return its plain text
 /// (concatenated insert-op text); otherwise return [content] unchanged.
 ///
@@ -85,8 +101,8 @@ bool containsSyncEnvelope(String content) {
 /// rendered as raw JSON when the card title is derived from the first line.
 String plainTextFromStoredContent(String content) {
   final trimmed = content.trim();
-  if (!trimmed.startsWith('[')) return content;
-  return _deltaInsertText(trimmed) ?? content;
+  if (!trimmed.startsWith('[')) return stripObjectPlaceholders(content);
+  return stripObjectPlaceholders(_deltaInsertText(trimmed) ?? content);
 }
 
 /// Converts stored note content to the plain-text form the editor saves in
@@ -100,19 +116,36 @@ String plainTextFromStoredContent(String content) {
 /// preview correctly. Non-Delta content (plain notes) is returned unchanged.
 String storedContentToPlainText(String content) {
   final trimmed = content.trim();
-  if (!trimmed.startsWith('[')) return content;
+  if (!trimmed.startsWith('[')) return stripObjectPlaceholders(content);
   try {
     final decoded = jsonDecode(trimmed);
     if (decoded is List &&
         decoded.isNotEmpty &&
         decoded.first is Map &&
         (decoded.first as Map).containsKey('insert')) {
-      return quill.Document.fromJson(decoded).toPlainText();
+      return stripObjectPlaceholders(
+        quill.Document.fromJson(decoded).toPlainText(),
+      );
     }
   } catch (_) {
     // Not Delta JSON — fall through and return as-is.
   }
-  return content;
+  return stripObjectPlaceholders(content);
+}
+
+/// Strips object-replacement placeholders from every string insert op of a
+/// parsed Quill Delta (see [stripObjectPlaceholders]). Returns a new list;
+/// embed ops (non-string inserts) are left untouched.
+List<Map<String, dynamic>> sanitizeDeltaOps(List<dynamic> ops) {
+  return ops.map((op) {
+    if (op is Map && op['insert'] is String) {
+      return {
+        ...op.cast<String, dynamic>(),
+        'insert': stripObjectPlaceholders(op['insert'] as String),
+      };
+    }
+    return (op as Map).cast<String, dynamic>();
+  }).toList(growable: false);
 }
 
 /// Extract the balanced JSON object (`{…}`) beginning at [start], respecting

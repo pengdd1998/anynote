@@ -95,30 +95,45 @@ class AppTextStyles {
   // ---------------------------------------------------------------------------
   // Handwritten display styles (Caveat) — brand moments, note titles, section
   // headings. Used per the design mockup to give the app a journal-like voice.
+  // Caveat has Latin glyphs only; MaShanZheng (bundled) carries the handwritten
+  // voice for CJK so Chinese titles don't fall back to the plain UI font.
   // ---------------------------------------------------------------------------
 
   static const String handwritingFamily = 'Caveat';
 
+  /// Per-glyph fallback chain for handwritten styles: Latin/digits resolve in
+  /// Caveat, Chinese characters resolve in Ma Shan Zheng.
+  static const List<String> _handwritingFallback = ['MaShanZheng'];
+
   /// Brand wordmark / hero headings ("AnyNote", "Welcome back").
+  ///
+  /// Weight stays at w500: Caveat and Ma Shan Zheng are each a single file
+  /// registered under multiple weight aliases, so heavier weights change
+  /// nothing for Latin — and the engine's per-glyph CJK fallback was observed
+  /// to skip the fallback family entirely at w600 on Android.
   static final TextStyle handwritingDisplay = TextStyle(
     fontFamily: handwritingFamily,
+    fontFamilyFallback: _handwritingFallback,
     fontSize: 40,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w500,
     height: 1.1,
     letterSpacing: 0,
   );
 
   /// Screen titles and note titles in the handwritten voice.
+  /// w500 (not w600) for the same CJK fallback reason as [handwritingDisplay].
   static final TextStyle handwritingTitle = TextStyle(
     fontFamily: handwritingFamily,
+    fontFamilyFallback: _handwritingFallback,
     fontSize: 28,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w500,
     height: 1.15,
   );
 
   /// Smaller handwritten headings (card titles, group labels).
   static final TextStyle handwritingBody = TextStyle(
     fontFamily: handwritingFamily,
+    fontFamilyFallback: _handwritingFallback,
     fontSize: 22,
     fontWeight: FontWeight.w500,
     height: 1.2,
@@ -127,9 +142,20 @@ class AppTextStyles {
   /// Compact handwritten labels (timestamps inside cards, signatures).
   static final TextStyle handwritingCaption = TextStyle(
     fontFamily: handwritingFamily,
+    fontFamilyFallback: _handwritingFallback,
     fontSize: 17,
     fontWeight: FontWeight.w500,
     height: 1.2,
+  );
+
+  /// Handwritten-print body for sticky-note card previews (mockup: note
+  /// bodies on paper cards are handwritten, not the UI sans).
+  static final TextStyle handwritingNoteBody = TextStyle(
+    fontFamily: handwritingFamily,
+    fontFamilyFallback: _handwritingFallback,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    height: 1.45,
   );
 
   /// Link text (underlined, accent color applied at usage site).

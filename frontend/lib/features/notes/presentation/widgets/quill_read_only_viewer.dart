@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
+import '../../domain/note_envelope.dart';
 import '../embeds/local_image_embed.dart';
 import '../embeds/table_embed.dart';
 import '../embeds/transclusion_embed.dart';
@@ -63,12 +64,14 @@ class _QuillReadOnlyViewerState extends State<QuillReadOnlyViewer> {
     if (!trimmed.startsWith('[')) {
       // Plain text — wrap in a minimal Delta document.
       _controller = quill.QuillController.basic();
-      _controller!.document.insert(0, trimmed);
+      _controller!
+          .document
+          .insert(0, stripObjectPlaceholders(trimmed));
     } else {
       try {
         final deltaList = jsonDecode(trimmed) as List;
         final doc = quill.Document.fromJson(
-          deltaList.cast<Map<String, dynamic>>(),
+          sanitizeDeltaOps(deltaList),
         );
         _controller = quill.QuillController(
           document: doc,
@@ -77,7 +80,9 @@ class _QuillReadOnlyViewerState extends State<QuillReadOnlyViewer> {
       } catch (_) {
         // Fallback: treat as plain text.
         _controller = quill.QuillController.basic();
-        _controller!.document.insert(0, trimmed);
+        _controller!
+            .document
+            .insert(0, stripObjectPlaceholders(trimmed));
       }
     }
   }

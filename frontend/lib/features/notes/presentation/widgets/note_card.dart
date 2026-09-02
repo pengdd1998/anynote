@@ -8,10 +8,12 @@ import '../../../../core/accessibility/a11y_utils.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
-import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/color_utils.dart';
+import '../../../../core/theme/paper_tokens.dart';
+import '../../../../core/widgets/paper_doodle.dart';
+import '../../../../core/widgets/paper_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/note_envelope.dart';
 import 'tag_chips_row.dart';
@@ -99,35 +101,30 @@ class NoteCard extends StatelessWidget {
   }
 
   static final _pastelColors = <String, Color>{
-    'yellow': AppColors.noteYellow,
-    'peach': AppColors.notePeach,
-    'green': AppColors.noteGreen,
-    'pink': AppColors.notePink,
-    'blue': AppColors.noteBlue,
-    'orange': AppColors.noteOrange,
+    'yellow': AppColors.paperYellow,
+    'peach': AppColors.paperPink,
+    'green': AppColors.paperGreen,
+    'pink': AppColors.paperPink,
+    'blue': AppColors.paperLavender,
+    'orange': AppColors.paperYellow,
+    'lavender': AppColors.paperLavender,
+    'purple': AppColors.paperLavender,
   };
 
-  Color _cardBackgroundColor(
-    BuildContext context,
-    Color? noteColor,
-    Color defaultColor,
-  ) {
-    if (noteColor == null) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      final pastel =
-          AppColors.notePastels[listIndex % AppColors.notePastels.length];
-      if (isDark) return pastel.withAlpha(30);
-      // Light mode: warm card surface tinted with the pastel so grid cards
-      // read as sticky notes (mockup style).
-      return Color.alphaBlend(
-        pastel.withAlpha(60),
-        AppColors.lightCardBg,
-      );
-    }
+  /// Paper tone override for a user-picked note color, or null to let
+  /// [PaperSurface] cycle the token palette by list index.
+  Color? _paperToneOverride(BuildContext context, Color? noteColor) {
+    if (noteColor == null) return null;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorStr = note.color?.toLowerCase();
     if (colorStr != null) {
       for (final entry in _pastelColors.entries) {
-        if (colorStr.contains(entry.key)) return entry.value;
+        if (colorStr.contains(entry.key)) {
+          final tone = entry.value;
+          return isDark
+              ? Color.alphaBlend(tone.withAlpha(58), AppColors.darkCardBg)
+              : tone;
+        }
       }
     }
     return noteColor.withAlpha(40);
@@ -152,46 +149,33 @@ class NoteCard extends StatelessWidget {
     final hasImage = previewImagePath != null && !kIsWeb;
     final noteColor = _noteColor;
 
-    final cardBgColor = isSelected
-        ? (isDark
-            ? AppColors.primary.withAlpha(40)
-            : AppColors.primarySoft)
-        : hasImage
-            ? (isDark ? AppColors.darkCardBg : AppColors.lightCardBg)
-            : _cardBackgroundColor(
-                context,
-                noteColor,
-                colorScheme.surfaceContainerLow,
-              );
-
-    // Sticky-note cards use radius 20 per the mockup.
-    const radius = AppRadius.md;
-
-    // Soft matching border: pastel border for tinted grid cards (light mode),
-    // neutral warm border elsewhere, periwinkle when selected.
-    final borderColor = isSelected
-        ? AppColors.primary
-        : _isGrid && !isDark
-            ? AppColors.noteBorderColors[
-                listIndex % AppColors.noteBorderColors.length]
-            : isDark
-                ? AppColors.darkBorder
-                : AppColors.lightBorder;
-
-    final card = Container(
-      decoration: BoxDecoration(
-        color: cardBgColor,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: borderColor,
-          width: isSelected ? 1.5 : 1,
-        ),
-        boxShadow: _isGrid ? AppShadows.smOf(theme.brightness) : null,
-      ),
+    // Grid cards are sheets of sticky-note paper (PaperSurface applies the
+    // paper tokens: tone cycle, tilt, Post-it radius, warm shadow). List
+    // rows stay neutral straight cards for scannability.
+    final card = PaperSurface(
+      seed: listIndex,
+      tone: _isGrid
+          ? (isSelected
+              ? (isDark
+                  ? AppColors.primary.withAlpha(40)
+                  : AppColors.primarySoft)
+              : hasImage
+                  ? (isDark ? AppColors.darkCardBg : AppColors.lightCardBg)
+                  : _paperToneOverride(context, noteColor))
+          : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
+      tilted: _isGrid,
+      selected: isSelected,
+      borderRadius:
+          _isGrid ? null : BorderRadius.circular(AppRadius.md),
+      border: isSelected
+          ? null // PaperSurface draws the periwinkle selection ring.
+          : (_isGrid
+              ? null // Paper edge: tone + shadow only (mockup style).
+              : Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                )),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(radius),
-        clipBehavior: Clip.antiAlias,
         child: GestureDetector(
           onLongPressStart: onLongPress != null
               ? (details) {
@@ -201,7 +185,6 @@ class NoteCard extends StatelessWidget {
               : null,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(radius),
             splashColor: colorScheme.primary.withAlpha(20),
             highlightColor: colorScheme.primary.withAlpha(10),
             child: _isGrid
@@ -245,7 +228,7 @@ class NoteCard extends StatelessWidget {
         if (hasImage)
           ClipRRect(
             borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppRadius.sm),
+              top: Radius.circular(AppRadius.xs),
             ),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 200, minHeight: 80),
@@ -272,12 +255,13 @@ class NoteCard extends StatelessWidget {
               // Handwritten title with pin/lock icons.
               _buildTitleRow(context, theme, isDark, title),
 
-              // Formatted body — rendered the same way as the editor.
+              // Handwritten body — rendered the same way as the editor.
               const SizedBox(height: AppSpacing.s4),
               NoteRichPreview(
                 note: note,
                 maxLines: 4,
                 skipFirstLine: previewSkipsTitle,
+                handwritten: true,
                 color: isDark
                     ? AppColors.darkTextSecondary
                     : AppColors.lightTextSecondary,
@@ -292,8 +276,8 @@ class NoteCard extends StatelessWidget {
 
               const SizedBox(height: AppSpacing.s4),
 
-              // Date row
-              _buildDateRow(theme, isDark),
+              // Date row with corner doodle (sticky-note footer).
+              _buildDateRow(context, theme, isDark, withDoodle: true),
             ],
           ),
         ),
@@ -344,7 +328,7 @@ class NoteCard extends StatelessWidget {
                     child: TagChipsRow(tags: tags),
                   ),
                 const SizedBox(height: AppSpacing.s8),
-                _buildDateRow(theme, isDark),
+                _buildDateRow(context, theme, isDark),
               ],
             ),
           ),
@@ -426,16 +410,36 @@ class NoteCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDateRow(ThemeData theme, bool isDark) {
+  Widget _buildDateRow(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark, {
+    bool withDoodle = false,
+  }) {
+    final paper = PaperTokens.of(context);
+    final timestamp = Text(
+      time,
+      style: AppTextStyles.handwritingCaption.copyWith(color: paper.inkMuted),
+    );
+
+    if (!withDoodle) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [timestamp],
+      );
+    }
+
+    // Sticky-note footer like the mockup: timestamp bottom-left, a small
+    // hand-drawn ink sketch bottom-right. The doodle is keyed to the note
+    // id so it never changes between list rebuilds.
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          time,
-          style: AppTextStyles.handwritingCaption.copyWith(
-            color: isDark
-                ? AppColors.darkTextTertiary
-                : AppColors.lightTextTertiary,
+        timestamp,
+        ExcludeSemantics(
+          child: PaperDoodle(
+            kind: PaperDoodleKindX.forSeed(note.id.hashCode),
+            color: paper.inkDoodle.withAlpha(150),
           ),
         ),
       ],

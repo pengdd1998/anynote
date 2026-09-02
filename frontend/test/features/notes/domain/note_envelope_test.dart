@@ -114,4 +114,51 @@ void main() {
       });
     });
   });
+
+  group('stripObjectPlaceholders — [OBJ] placeholder hygiene', () {
+    test('strips U+FFFC object replacement chars', () {
+      expect(stripObjectPlaceholders('￼'), '');
+      expect(stripObjectPlaceholders('a￼b'), 'ab');
+    });
+
+    test('strips U+FFFE / U+FFFF noncharacters', () {
+      expect(stripObjectPlaceholders('￾￿'), '');
+    });
+
+    test('keeps emoji and normal text untouched', () {
+      const text = '红红的太阳 🌞 egg 🥚!';
+      expect(stripObjectPlaceholders(text), text);
+    });
+
+    test('plainContent with FFFC is cleaned by plainTextFromStoredContent', () {
+      expect(
+        plainTextFromStoredContent('标题￼正文'),
+        '标题正文',
+      );
+    });
+
+    test('delta text inserts with FFFC are cleaned', () {
+      final delta = jsonEncode([
+        {'insert': '红红的太阳￼\n'},
+      ]);
+      expect(plainTextFromStoredContent(delta), '红红的太阳\n');
+    });
+
+    test('sanitizeDeltaOps cleans string inserts, keeps embeds', () {
+      final ops = sanitizeDeltaOps([
+        {
+          'insert': 'text￼',
+        },
+        {
+          'insert': {'image': 'x.png'},
+        },
+      ]);
+      expect(ops[0]['insert'], 'text');
+      expect(ops[1]['insert'], isMap);
+    });
+
+    test('storedContentToPlainText strips placeholders', () {
+      expect(storedContentToPlainText('abc￼'), 'abc');
+    });
+  });
 }

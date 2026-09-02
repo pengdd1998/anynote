@@ -4,6 +4,7 @@ import '../platform/platform_utils.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_text_styles.dart';
+import 'paper_tokens.dart';
 
 /// Design system for AnyNote — warm, soft, modern UI.
 ///
@@ -76,6 +77,7 @@ class AppTheme {
       brightness: Brightness.light,
       fontFamily: _fontFamily,
       scaffoldBackgroundColor: AppColors.lightSurface,
+      extensions: const [PaperTokens.light],
 
       // -- Typography --------------------------------------------------------
       textTheme: AppTextStyles.textTheme,
@@ -443,6 +445,7 @@ class AppTheme {
       brightness: Brightness.dark,
       fontFamily: _fontFamily,
       scaffoldBackgroundColor: AppColors.darkSurface,
+      extensions: const [PaperTokens.dark],
 
       // -- Typography --------------------------------------------------------
       textTheme: AppTextStyles.textTheme,
@@ -917,6 +920,13 @@ class AppTheme {
       brightness: colorScheme.brightness,
       fontFamily: _fontFamily,
       scaffoldBackgroundColor: scaffoldBg,
+      extensions: [
+        // Paper tokens resolve on high-contrast themes too, so paper-styled
+        // surfaces never crash — though HC layouts should prefer flat cards.
+        colorScheme.brightness == Brightness.dark
+            ? PaperTokens.dark
+            : PaperTokens.light,
+      ],
 
       // -- Typography --------------------------------------------------------
       textTheme: AppTextStyles.textTheme.apply(

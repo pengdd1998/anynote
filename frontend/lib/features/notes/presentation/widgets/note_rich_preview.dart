@@ -29,12 +29,18 @@ class NoteRichPreview extends ConsumerStatefulWidget {
   /// which renders the first line as the handwritten title itself.
   final bool skipFirstLine;
 
+  /// Renders the preview in the handwritten-print voice (sticky-note cards).
+  /// The mockup draws note bodies on paper in a handwriting font, not the
+  /// UI sans. Latin resolves in Caveat, CJK in Ma Shan Zheng.
+  final bool handwritten;
+
   const NoteRichPreview({
     super.key,
     required this.note,
     this.maxLines = 6,
     this.color,
     this.skipFirstLine = false,
+    this.handwritten = false,
   });
 
   @override
@@ -90,18 +96,21 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
   Widget build(BuildContext context) {
     // Compact preview base (smaller than the editor's body size) so the card
     // reads as a preview, not a full document.
-    final base = AppTextStyles.body.copyWith(
+    var base = AppTextStyles.body.copyWith(
       color: widget.color,
       height: 1.4,
       fontSize: 13,
     );
+    if (widget.handwritten) {
+      base = AppTextStyles.handwritingNoteBody.copyWith(color: widget.color);
+    }
 
     if (_ops == null && _plainFallback == null) {
       return const SizedBox.shrink(); // still decrypting
     }
 
     if (_ops == null) {
-      var fallback = _plainFallback ?? '';
+      var fallback = stripObjectPlaceholders(_plainFallback ?? '');
       if (widget.skipFirstLine) {
         // Drop the first line — it is rendered as the card title.
         fallback = fallback.split('\n').skip(1).join('\n');
@@ -146,6 +155,12 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
       } else if (line.blockAttrs['list'] == 'ordered') {
         ordered++;
         children.add(TextSpan(text: '$ordered.  ', style: blockStyle));
+      } else if (line.blockAttrs['list'] == 'checked') {
+        ordered = 0;
+        children.add(TextSpan(text: '☑  ', style: blockStyle));
+      } else if (line.blockAttrs['list'] == 'unchecked') {
+        ordered = 0;
+        children.add(TextSpan(text: '☐  ', style: blockStyle));
       } else {
         ordered = 0;
       }
@@ -191,7 +206,7 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
       final segments = insert.split('\n');
       for (var i = 0; i < segments.length; i++) {
         if (segments[i].isNotEmpty) {
-          runs.add(_Run(segments[i], attrs));
+          runs.add(_Run(stripObjectPlaceholders(segments[i]), attrs));
         }
         if (i < segments.length - 1) {
           lines.add(_Line(List.of(runs), attrs));

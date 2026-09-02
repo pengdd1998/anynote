@@ -16,6 +16,7 @@ import '../../../core/constants/app_durations.dart';
 import '../../../core/error/error.dart' show ErrorDisplay;
 import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/paper_tokens.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -749,7 +750,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       );
     }
 
-    return SingleChildScrollView(
+    // Full width so a single short chip row hugs the left edge instead of
+    // centering inside the body column (design mockup: chips start left).
+    return SizedBox(
+      width: double.infinity,
+      child: SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
@@ -817,6 +822,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             ),
         ],
       ),
+      ),
     );
   }
 
@@ -831,6 +837,9 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      // Paper tokens carry the desk color — slightly deeper than the app
+      // background so the sticky-note sheets pop (mockup page surface).
+      backgroundColor: PaperTokens.of(context).desk,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: _isSearching

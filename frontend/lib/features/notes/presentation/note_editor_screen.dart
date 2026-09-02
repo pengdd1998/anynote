@@ -35,6 +35,8 @@ import '../../../core/storage/image_storage.dart';
 import 'embeds/local_image_embed.dart';
 import '../../../core/widgets/keyboard_shortcuts.dart';
 import '../../../core/widgets/markdown_preview.dart';
+import '../../../core/widgets/paper_surface.dart';
+import '../../../core/theme/paper_tokens.dart';
 import '../../collab/providers/collab_provider.dart';
 import 'widgets/backlinks_sheet.dart';
 import 'package:anynote/core/accessibility/a11y_utils.dart';
@@ -650,7 +652,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         final firstOp = decoded.first;
         // Delta JSON ops always have an 'insert' key.
         if (firstOp is Map && firstOp.containsKey('insert')) {
-          _quillController.document = quill.Document.fromJson(decoded);
+          // Strip object-replacement placeholders (U+FFFC from e.g. Apple
+          // Notes pastes) so the editor never shows dotted "[OBJ]" boxes.
+          _quillController.document =
+              quill.Document.fromJson(sanitizeDeltaOps(decoded));
           // Migrate legacy markdown image text to proper image embeds.
           convertMarkdownImagesToEmbeds(_quillController);
           return;
@@ -661,7 +666,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
 
     // Plain text or unrecognised format — insert as-is.
-    _quillController.document.insert(0, content);
+    _quillController.document.insert(0, stripObjectPlaceholders(content));
     // Also migrate if the plain text contains markdown images.
     convertMarkdownImagesToEmbeds(_quillController);
   }
@@ -1024,6 +1029,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       },
       child: Scaffold(
         resizeToAvoidBottomInset: true,
+        // Paper tokens carry the desk color: the editor reads as writing on
+        // a sheet of paper resting on the desk (zen mode keeps it immersive).
+        backgroundColor: PaperTokens.of(context).desk,
         extendBodyBehindAppBar: _isZenMode,
         extendBody: _isZenMode,
         appBar: _isZenMode
@@ -1245,71 +1253,95 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                 : _buildEditorWithCollabCursors(
                                     context,
                                     l10n,
-                                    AnimatedSwitcher(
-                                      duration: AppDurations.shortAnimation,
-                                      switchInCurve: Curves.easeOutCubic,
-                                      switchOutCurve: Curves.easeInCubic,
-                                      child: _isPreview
-                                          ? _buildPreviewView(isDark)
-
-                                          : _useRichEditor
-                                              ? KeyedSubtree(
-                                                  key: const ValueKey(
-                                                    'rich_editor',
-                                                  ),
-                                                  child: RichEditorWithShortcuts(
-                                                    quillController:
-                                                        _quillController,
-                                                    focusNode: _editorFocusNode,
-                                                    onExitZenMode:
-                                                        _exitZenMode,
-                                                    onToggleHeading:
-                                                        _toggleHeading,
-                                                    onToggleBulletList:
-                                                        _toggleBulletList,
-                                                    onSlashCommand:
-                                                        _handleSlashCommand,
-                                                    readOnly: _isLocked,
-                                                  ),
-                                                )
-                                              : Semantics(
-                                                  key: const ValueKey(
-                                                    'plain_editor',
-                                                  ),
-                                                  label: l10n.noteContent,
-                                                  child: TextField(
-                                                    controller:
-                                                        _effectiveContentController,
-                                                    scrollController:
-                                                        _bodyScrollController,
-                                                    readOnly: _isLocked,
-                                                    decoration: InputDecoration(
-                                                      hintText:
-                                                          l10n.startWriting,
-                                                      border: InputBorder.none,
+                                    // The writing surface is a sheet of
+                                    // paper (paper design system).
+                                    PaperSurface(
+                                      tilted: false,
+                                      tone: isDark
+                                          ? AppColors.darkCardBg
+                                          : AppColors.lightCardBg,
+                                      borderRadius:
+                                          BorderRadius.circular(16),
+                                      child: AnimatedSwitcher(
+                                        duration: AppDurations.shortAnimation,
+                                        switchInCurve: Curves.easeOutCubic,
+                                        switchOutCurve: Curves.easeInCubic,
+                                        child: _isPreview
+                                            ? _buildPreviewView(isDark)
+                                            : _useRichEditor
+                                                ? KeyedSubtree(
+                                                    key: const ValueKey(
+                                                      'rich_editor',
                                                     ),
-                                                    maxLines: null,
-                                                    style: AppTextStyles.body
-                                                        .copyWith(
-                                                      fontSize: 16,
-                                                      height: 1.8,
-                                                      color: isDark
-                                                          ? AppColors
-                                                              .darkTextPrimary
-                                                          : AppColors
-                                                              .lightTextPrimary,
+                                                    child:
+                                                        RichEditorWithShortcuts(
+                                                      quillController:
+                                                          _quillController,
+                                                      focusNode:
+                                                          _editorFocusNode,
+                                                      onExitZenMode:
+                                                          _exitZenMode,
+                                                      onToggleHeading:
+                                                          _toggleHeading,
+                                                      onToggleBulletList:
+                                                          _toggleBulletList,
+                                                      onSlashCommand:
+                                                          _handleSlashCommand,
+                                                      readOnly: _isLocked,
                                                     ),
-                                                    onChanged: (_) =>
-                                                        _scheduleTypewriterScroll(),
-                                                    scrollPadding: const EdgeInsets.only(bottom: 120),
+                                                  )
+                                                : Semantics(
+                                                    key: const ValueKey(
+                                                      'plain_editor',
+                                                    ),
+                                                    label: l10n.noteContent,
+                                                    child: Padding(
+                                                      // The plain text field has
+                                                      // no built-in padding, so
+                                                      // give it the sheet's own.
+                                                      padding: const EdgeInsets
+                                                          .all(16),
+                                                      child: TextField(
+                                                        controller:
+                                                            _effectiveContentController,
+                                                        scrollController:
+                                                            _bodyScrollController,
+                                                        readOnly: _isLocked,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          hintText: l10n
+                                                              .startWriting,
+                                                          border: InputBorder
+                                                              .none,
+                                                        ),
+                                                        maxLines: null,
+                                                        style: AppTextStyles
+                                                            .body
+                                                            .copyWith(
+                                                          fontSize: 16,
+                                                          height: 1.8,
+                                                          color: isDark
+                                                              ? AppColors
+                                                                  .darkTextPrimary
+                                                              : AppColors
+                                                                  .lightTextPrimary,
+                                                        ),
+                                                        onChanged: (_) =>
+                                                            _scheduleTypewriterScroll(),
+                                                        scrollPadding:
+                                                            const EdgeInsets
+                                                                .only(
+                                                                bottom: 120),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
+                                      ),
+                                    ),
                                   ),
                                 ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
