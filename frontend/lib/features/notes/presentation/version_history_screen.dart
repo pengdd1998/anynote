@@ -16,6 +16,7 @@ import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../domain/note_envelope.dart';
+import 'widgets/quill_read_only_viewer.dart';
 
 /// Screen that displays the version history of a note as a vertical timeline.
 ///
@@ -180,21 +181,37 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
-        title: Text(
-          version.displayTitle,
-          style: AppTextStyles.title,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              version.displayTitle,
+              style: AppTextStyles.title,
+            ),
+            const SizedBox(height: AppSpacing.s4),
+            Text(
+              '${l10n.versionNumber(version.versionNumber)} · '
+              '${_formatDate(version.createdAt)}',
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 12,
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+              ),
+            ),
+          ],
         ),
         content: SizedBox(
           width: double.maxFinite,
+          height: MediaQuery.of(ctx).size.height * 0.55,
           child: SingleChildScrollView(
-            child: Text(
-              version.bodyPlainText,
-              style: AppTextStyles.body.copyWith(
-                height: 1.7,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-              ),
+            // Rendered with the same viewer as the note detail — images,
+            // headings and lists are visible so the version can be judged
+            // before restoring. Falls back to plain text internally for
+            // non-Delta content.
+            child: QuillReadOnlyViewer(
+              deltaJson: version.content,
+              padding: EdgeInsets.zero,
             ),
           ),
         ),
@@ -684,6 +701,31 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                               color: textColor,
                             ),
                           ),
+                        // Body snippet: makes the version's content
+                        // recognizable at a glance, before restoring.
+                        Builder(
+                          builder: (context) {
+                            final snippet = _bodySnippet(version);
+                            if (snippet.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                top: AppSpacing.s4,
+                              ),
+                              child: Text(
+                                snippet,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  color: tertiaryColor,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -700,6 +742,21 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     final date = _formatDate(version.createdAt);
     final charCount = version.bodyPlainText.length;
     return '$date · $charCount chars';
+  }
+
+  /// Two-line body snippet for the timeline entry, so the version's
+  /// content is recognizable without opening the preview. Skips the first
+  /// line for no-title notes since it already is the displayed title.
+  String _bodySnippet(_DecryptedVersion version) {
+    final lines = version.bodyPlainText
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    if (lines.isNotEmpty && lines.first == version.displayTitle) {
+      lines.removeAt(0);
+    }
+    return lines.join('  ');
   }
 
   Widget _buildTrailing(bool isCurrent, bool isSelected) {
