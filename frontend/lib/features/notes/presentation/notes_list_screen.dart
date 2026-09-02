@@ -39,6 +39,7 @@ import '../../../core/widgets/offline_banner.dart';
 import '../../../core/widgets/sidebar_provider.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/platform/platform_utils.dart';
 import '../../../main.dart';
 import '../../settings/data/settings_providers.dart';
 import 'widgets/command_palette.dart';
@@ -997,15 +998,19 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
-                PopupMenuItem(
-                  value: 'command_palette',
-                  child: ListTile(
-                    leading: const Icon(AppIcons.keyboard),
-                    title: Text(l10n.commandPalette),
-                    subtitle: const Text('Ctrl+K'),
-                    contentPadding: EdgeInsets.zero,
+                // Command palette is a desktop (Ctrl+K) quick-navigation
+                // tool — AnyNote on phones has no use for it, so the menu
+                // entry only appears on desktop platforms.
+                if (PlatformUtils.isDesktop)
+                  PopupMenuItem(
+                    value: 'command_palette',
+                    child: ListTile(
+                      leading: const Icon(AppIcons.keyboard),
+                      title: Text(l10n.commandPalette),
+                      subtitle: const Text('Ctrl+K'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
                 PopupMenuItem(
                   value: 'select_notes',
                   child: ListTile(
