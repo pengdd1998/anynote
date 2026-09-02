@@ -59,7 +59,7 @@ class CharacterCountBar extends StatelessWidget {
                   label: l10n.enterZenMode,
                   child: IconButton(
                     icon: Icon(
-                      Icons.fullscreen,
+                      Icons.fullscreen_outlined,
                       size: 18,
                       color: captionColor,
                     ),

@@ -711,15 +711,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       }
     });
     if (_isZenMode) {
-      // Hide system UI for a distraction-free experience.
+      // Hide system UI for a distraction-free experience. The zen chrome
+      // (which hosts the exit controls) fades IN — it is the only visible
+      // way out while the app bar is hidden.
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-      _zenChromeAnimController!.reverse();
+      _zenChromeAnimController!.forward();
     } else {
       // Restore system UI.
       SystemChrome.setEnabledSystemUIMode(
         SystemUiMode.edgeToEdge,
       );
-      _zenChromeAnimController!.forward();
+      _zenChromeAnimController!.reverse();
     }
   }
 
@@ -1023,6 +1025,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop) {
+          // The first back gesture leaves zen mode (restores chrome and
+          // system UI); the next one saves and closes the editor.
+          if (_isZenMode) {
+            _exitZenMode();
+            return;
+          }
           await _saveNote();
           if (context.mounted) context.pop();
         }
@@ -2334,7 +2342,7 @@ class _EditorBottomBar extends StatelessWidget {
                   label: l10n.enterZenMode,
                   child: IconButton(
                     icon: Icon(
-                      Icons.fullscreen_rounded,
+                      Icons.fullscreen_outlined,
                       size: 20,
                       color: captionColor,
                     ),

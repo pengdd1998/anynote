@@ -116,42 +116,36 @@ class EditorAppBarActions {
       // Save status indicator in AppBar: spinner when saving, checkmark when
       // saved, amber dot when there are unsaved changes.
       _AppBarSaveStatus(isSaving: config.isSaving, isDirty: config.isDirty),
-      // Undo/Redo buttons for quick access.
-      IconButton(
-        icon: const Icon(Icons.undo),
-        tooltip: l10n.undo,
-        onPressed: null,
-      ),
-      IconButton(
-        icon: const Icon(Icons.redo),
-        tooltip: l10n.menuRedo,
-        onPressed: null,
-      ),
       // Save-and-close done button with primary color.
       IconButton(
         icon: Icon(Icons.check, color: colorScheme.primary),
         tooltip: l10n.saveAndClose,
         onPressed: config.onSaveAndClose,
       ),
-      // Rich/plain text mode toggle.
+      // Rich/plain text mode toggle (icon shows the mode to switch to).
       IconButton(
         icon: Icon(
-          config.useRichEditor ? Icons.short_text : Icons.text_fields,
+          config.useRichEditor
+              ? Icons.subject_outlined
+              : Icons.text_fields_outlined,
         ),
         tooltip: config.useRichEditor ? l10n.plainText : l10n.richText,
         onPressed: config.onToggleRichEditor,
       ),
       // Preview toggle.
       IconButton(
-        icon: Icon(config.isPreview ? Icons.edit : Icons.visibility),
+        icon: Icon(
+          config.isPreview ? Icons.edit_outlined : Icons.visibility_outlined,
+        ),
         tooltip: config.isPreview
             ? '${l10n.edit} (Ctrl+P)'
             : '${l10n.preview} (Ctrl+P)',
         onPressed: config.onTogglePreview,
       ),
-      // Overflow menu with all secondary actions.
+      // Overflow menu with all secondary actions. Horizontal dots match the
+      // note detail screen's overflow trigger.
       PopupMenuButton<String>(
-        icon: const Icon(Icons.more_vert),
+        icon: const Icon(Icons.more_horiz),
         tooltip: l10n.moreActions,
         onSelected: (value) => _handleOverflowSelection(
           context,
@@ -276,7 +270,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'ai_translate',
             child: ListTile(
-              leading: const Icon(Icons.translate),
+              leading: const Icon(Icons.translate_outlined),
               title: Text(l10n.aiTranslation),
               contentPadding: EdgeInsets.zero,
             ),
@@ -284,7 +278,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'ai_polish',
             child: ListTile(
-              leading: const Icon(Icons.spellcheck),
+              leading: const Icon(Icons.spellcheck_outlined),
               title: Text(l10n.writingPolish),
               contentPadding: EdgeInsets.zero,
             ),
@@ -340,7 +334,9 @@ class EditorAppBarActions {
             value: 'zen',
             child: ListTile(
               leading: Icon(
-                config.isZenMode ? Icons.fullscreen_exit : Icons.fullscreen,
+                config.isZenMode
+                    ? Icons.fullscreen_exit_outlined
+                    : Icons.fullscreen_outlined,
               ),
               title: Text(
                 config.isZenMode ? l10n.exitZenMode : l10n.enterZenMode,
@@ -375,7 +371,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'save_close',
             child: ListTile(
-              leading: const Icon(Icons.check),
+              leading: const Icon(Icons.check_outlined),
               title: Text(l10n.saveAndClose),
               contentPadding: EdgeInsets.zero,
             ),
@@ -559,7 +555,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'ai_translate',
             child: ListTile(
-              leading: const Icon(Icons.translate),
+              leading: const Icon(Icons.translate_outlined),
               title: Text(l10n.aiTranslation),
               contentPadding: EdgeInsets.zero,
             ),
