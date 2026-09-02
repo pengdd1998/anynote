@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/error/error.dart';
@@ -17,15 +18,28 @@ import '../../domain/text_diff.dart';
 class _VersionData {
   final String id;
   final int versionNumber;
+
+  /// Stored note title (decrypted); used by restore semantics.
   final String title;
+
+  /// Display title: stored title or first body line for no-title notes.
+  final String displayTitle;
+
+  /// Raw stored body (Delta JSON for rich notes) — the restore source.
   final String content;
+
+  /// Human-readable body for diffing and display.
+  final String plainBody;
+
   final DateTime createdAt;
 
   const _VersionData({
     required this.id,
     required this.versionNumber,
     required this.title,
+    required this.displayTitle,
     required this.content,
+    required this.plainBody,
     required this.createdAt,
   });
 }
@@ -100,10 +114,12 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
         return;
       }
 
-      final older = await _decryptVersion(olderRaw, crypto, l10n);
-      final newer = await _decryptVersion(newerRaw, crypto, l10n);
+        final older = await _decryptVersion(olderRaw, crypto, l10n);
+        final newer = await _decryptVersion(newerRaw, crypto, l10n);
 
-      final diff = TextDiff.compute(older.content, newer.content);
+        // Diff the human-readable bodies — rich notes store Delta JSON,
+        // which would otherwise diff raw markup lines.
+        final diff = TextDiff.compute(older.plainBody, newer.plainBody);
 
       if (mounted) {
         setState(() {
@@ -148,11 +164,28 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       }
     }
 
+    // Human-readable body and display title mirror the version history
+    // screen: rich Delta resolves to plain text; no-title notes take the
+    // first body line. `content` stays the raw body (restore source).
+    final plainBody = plainTextFromStoredContent(content);
+    var displayTitle = title;
+    if (displayTitle.isEmpty || displayTitle == l10n.untitled) {
+      for (final line in plainBody.split('\n')) {
+        final trimmed = line.trim();
+        if (trimmed.isNotEmpty) {
+          displayTitle = trimmed;
+          break;
+        }
+      }
+    }
+
     return _VersionData(
       id: raw.id,
       versionNumber: raw.versionNumber,
       title: title,
+      displayTitle: displayTitle,
       content: content,
+      plainBody: plainBody,
       createdAt: raw.createdAt,
     );
   }
@@ -610,10 +643,9 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       final currentNote = await db.notesDao.getNoteById(noteId);
       if (currentNote != null) {
         final count = await db.noteVersionsDao.getVersionCount(noteId);
-        final newVersionId = const Object().hashCode.toString();
 
         await db.noteVersionsDao.createVersion(
-          id: newVersionId,
+          id: const Uuid().v4(),
           noteId: noteId,
           encryptedTitle: currentNote.encryptedTitle,
           plainTitle: currentNote.plainTitle,
@@ -625,14 +657,23 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
         await db.noteVersionsDao.deleteVersionsOlderThan(noteId, 20);
       }
 
+      // Never fall back to storing plaintext in the encrypted column: the
+      // vault must be unlocked to re-encrypt the restored body.
+      if (!crypto.isUnlocked) {
+        final unlocked = await crypto.unlock();
+        if (!unlocked) {
+          throw const CryptoLockedException();
+        }
+      }
+
       String encryptedContent = version.content;
       String? encryptedTitle;
 
-      if (crypto.isUnlocked && version.content.isNotEmpty) {
+      if (version.content.isNotEmpty) {
         encryptedContent =
             await crypto.encryptForItem(noteId, version.content);
       }
-      if (crypto.isUnlocked && version.title != l10n.untitled) {
+      if (version.title != l10n.untitled) {
         encryptedTitle = await crypto.encryptForItem(noteId, version.title);
       }
 
@@ -642,6 +683,9 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
         encryptedTitle: encryptedTitle,
         plainContent: storedContentToPlainText(version.content),
         plainTitle: version.title == l10n.untitled ? null : version.title,
+        // updateNote overwrites firstImagePath unconditionally — derive it
+        // from the restored body so the card preview follows the content.
+        firstImagePath: firstImagePathFromStoredContent(version.content),
       );
 
       if (mounted) {

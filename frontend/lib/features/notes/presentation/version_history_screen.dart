@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -84,13 +85,31 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
           }
         }
 
+        // Rich-editor notes carry the body as Delta JSON and no stored
+        // title. Derive the human-readable body (previews, char counts)
+        // and the display title (first body line) the same way home cards
+        // do, while `title` keeps the stored value for restore semantics.
+        final bodyPlainText = plainTextFromStoredContent(content);
+        var displayTitle = title;
+        if (displayTitle.isEmpty || displayTitle == l10n.untitled) {
+          for (final line in bodyPlainText.split('\n')) {
+            final trimmed = line.trim();
+            if (trimmed.isNotEmpty) {
+              displayTitle = trimmed;
+              break;
+            }
+          }
+        }
+
         decrypted.add(
           _DecryptedVersion(
             id: v.id,
             noteId: v.noteId,
             versionNumber: v.versionNumber,
             title: title,
+            displayTitle: displayTitle,
             content: content,
+            bodyPlainText: bodyPlainText,
             encryptedContent: v.encryptedContent,
             encryptedTitle: v.encryptedTitle,
             createdAt: v.createdAt,
@@ -162,14 +181,14 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         title: Text(
-          version.title,
+          version.displayTitle,
           style: AppTextStyles.title,
         ),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
             child: Text(
-              version.content,
+              version.bodyPlainText,
               style: AppTextStyles.body.copyWith(
                 height: 1.7,
                 color: isDark
@@ -237,21 +256,14 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
       final currentNote = await db.notesDao.getNoteById(noteId);
       if (currentNote != null) {
         final count = await db.noteVersionsDao.getVersionCount(noteId);
-        final newVersionId = const Object().hashCode.toString();
 
-        final String? versionPlainTitle = currentNote.plainTitle;
-        final String? versionPlainContent = currentNote.plainContent;
-
-        // Re-encrypt to store in the version snapshot.
-        // The encryptedContent on the note is already encrypted with the noteId,
-        // so we can reuse it directly for the version snapshot.
         await db.noteVersionsDao.createVersion(
-          id: newVersionId,
+          id: const Uuid().v4(),
           noteId: noteId,
           encryptedTitle: currentNote.encryptedTitle,
-          plainTitle: versionPlainTitle,
+          plainTitle: currentNote.plainTitle,
           encryptedContent: currentNote.encryptedContent,
-          plainContent: versionPlainContent,
+          plainContent: currentNote.plainContent,
           versionNumber: count + 1,
         );
 
@@ -282,6 +294,10 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         encryptedTitle: encryptedTitle,
         plainContent: storedContentToPlainText(version.content),
         plainTitle: version.title == l10n.untitled ? null : version.title,
+        // updateNote overwrites firstImagePath unconditionally — derive it
+        // from the restored body so the home card preview follows the
+        // restored content instead of going null.
+        firstImagePath: firstImagePathFromStoredContent(version.content),
       );
 
       // Snapshot the restored content as the newest version so the timeline's
@@ -292,7 +308,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         final restoredCount =
             await db.noteVersionsDao.getVersionCount(noteId);
         await db.noteVersionsDao.createVersion(
-          id: const Object().hashCode.toString(),
+          id: const Uuid().v4(),
           noteId: noteId,
           encryptedTitle: restoredNote.encryptedTitle,
           plainTitle: restoredNote.plainTitle,
@@ -649,7 +665,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                                   : null,
                             ),
                             child: Text(
-                              version.title,
+                              version.displayTitle,
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.body.copyWith(
@@ -660,7 +676,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                           )
                         else
                           Text(
-                            version.title,
+                            version.displayTitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTextStyles.body.copyWith(
@@ -682,7 +698,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
 
   String _buildSubtitle(_DecryptedVersion version, AppLocalizations l10n) {
     final date = _formatDate(version.createdAt);
-    final charCount = version.content.length;
+    final charCount = version.bodyPlainText.length;
     return '$date · $charCount chars';
   }
 
@@ -745,8 +761,22 @@ class _DecryptedVersion {
   final String id;
   final String noteId;
   final int versionNumber;
+
+  /// Stored note title (decrypted); empty-ish for no-title notes. Used by
+  /// restore so a derived display title never leaks into plainTitle.
   final String title;
+
+  /// Title shown in the timeline/preview: stored title, or the first body
+  /// line for no-title notes (mirrors home card derivation).
+  final String displayTitle;
+
+  /// Raw stored body (Delta JSON for rich notes) — the restore source.
   final String content;
+
+  /// Human-readable body text (Delta resolved to plain text) for the
+  /// preview dialog and char counts.
+  final String bodyPlainText;
+
   final String encryptedContent;
   final String? encryptedTitle;
   final DateTime createdAt;
@@ -756,7 +786,9 @@ class _DecryptedVersion {
     required this.noteId,
     required this.versionNumber,
     required this.title,
+    required this.displayTitle,
     required this.content,
+    required this.bodyPlainText,
     required this.encryptedContent,
     required this.encryptedTitle,
     required this.createdAt,
