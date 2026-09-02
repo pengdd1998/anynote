@@ -15,6 +15,7 @@ import '../storage/image_storage.dart';
 import 'conflict_resolver.dart';
 import 'sync_progress.dart';
 import '../error/error.dart';
+import '../../features/notes/domain/note_envelope.dart';
 
 /// Sync engine orchestrates bidirectional sync between client and server
 /// with full E2E encryption.
@@ -429,15 +430,23 @@ class SyncEngine {
       }
     }
 
+    // plainContent is the plain-TEXT projection (FTS index + card
+    // previews). Since push now carries the editor's authoritative body
+    // (rich Delta JSON for rich notes), derive the text form here instead
+    // of storing the Delta itself.
+    final plainTextProjection =
+        plainContent == null ? null : plainTextFromStoredContent(plainContent);
+    final imagePath =
+        plainContent == null ? null : firstImagePathFromStoredContent(plainContent);
+
     final encryptedBase64 = base64Encode(blob.encryptedData);
 
     // Store the UNWRAPPED body as encryptedContent (not the raw envelope).
     // The server blob decrypts to the envelope {"content":…,"title":…}; if we
     // stored that envelope as encryptedContent, the editor/detail would later
     // decrypt it to the envelope JSON and render it as raw text. Re-encrypting
-    // plainContent (the already-unwrapped body) keeps encryptedContent as the
-    // actual note body. Push always re-wraps from plainContent/plainTitle, so
-    // this stays consistent with the wire format.
+    // the body (the already-unwrapped content) keeps encryptedContent as the
+    // actual note body.
     final String innerEncryptedContent = plainContent != null
         ? await _crypto.encryptForItem(blob.itemId, plainContent)
         : encryptedBase64;
@@ -450,8 +459,9 @@ class SyncEngine {
         encryptedTitle: plainTitle != null
             ? await _crypto.encryptForItem(blob.itemId, plainTitle)
             : null,
-        plainContent: plainContent,
+        plainContent: plainTextProjection,
         plainTitle: plainTitle,
+        firstImagePath: imagePath,
       );
     } else {
       // Existing note -- resolve conflict with LWW.
@@ -470,8 +480,9 @@ class SyncEngine {
           encryptedTitle: plainTitle != null
               ? await _crypto.encryptForItem(blob.itemId, plainTitle)
               : null,
-          plainContent: plainContent,
+          plainContent: plainTextProjection,
           plainTitle: plainTitle,
+          firstImagePath: imagePath,
         );
       }
       // If local wins, we keep the local version (will be pushed next sync).
@@ -599,19 +610,35 @@ class SyncEngine {
 
   /// Encrypt a note for push. Returns null if encryption fails.
   ///
-  /// The note's plainContent and plainTitle are packed into a JSON envelope
+  /// The note's body and title are packed into a JSON envelope
   /// {"content": "...", "title": "..."} and encrypted as a single blob.
+  ///
+  /// The body packed here is the decrypted [Note.encryptedContent] — the
+  /// editor's authoritative content (rich Delta JSON with embeds for notes
+  /// saved in rich mode). Packing [Note.plainContent] instead silently
+  /// downgraded rich notes to plain text (embeds became U+FFFC), and the
+  /// next pull then overwrote the local rich content — permanently
+  /// stripping images from synced notes.
   Future<Uint8List?> _encryptNoteForPush(Note note) async {
     try {
-      // Build the plaintext envelope for the note.
-      final envelope = <String, dynamic>{};
-      if (note.plainContent != null) {
-        envelope['content'] = note.plainContent!;
-      } else {
+      String? content;
+      try {
+        content = await _crypto.decryptForItem(
+          note.id,
+          note.encryptedContent,
+        );
+      } catch (e) {
+        debugPrint('[SyncEngine] Note body decrypt for push failed: $e');
+      }
+      // Legacy/plain-only notes have no encrypted body yet.
+      content ??= note.plainContent;
+      if (content == null) {
         // No plaintext available -- the note may have been created before
         // crypto was unlocked. Use the existing encrypted content as-is.
         return _existingEncryptedData(note.encryptedContent);
       }
+
+      final envelope = <String, dynamic>{'content': content};
       if (note.plainTitle != null) {
         envelope['title'] = note.plainTitle!;
       }

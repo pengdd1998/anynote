@@ -613,7 +613,10 @@ class NoteDetailScreen extends ConsumerWidget {
           for (final op in ops) {
             final insert = op['insert'];
             if (insert is! String) {
-              if (seenFirstBreak) remaining.add(op);
+              // Embeds (images, tables, links) are body content, never part
+              // of the derived title line — title derivation only reads
+              // string inserts. Keep them wherever they appear.
+              remaining.add(op);
               continue;
             }
             if (!seenFirstBreak) {
@@ -628,7 +631,18 @@ class NoteDetailScreen extends ConsumerWidget {
             }
             remaining.add(op);
           }
-          if (seenFirstBreak) return jsonEncode(remaining);
+          if (seenFirstBreak) {
+            // A Quill document must end with a line break. Stripping the
+            // title line can leave an embed-only delta (no trailing "\n"),
+            // which Document.fromJson rejects — append the break so the
+            // viewer parses it as a Delta instead of raw JSON text.
+            final lastInsert =
+                remaining.isEmpty ? null : remaining.last['insert'];
+            if (lastInsert is! String || !lastInsert.endsWith('\n')) {
+              remaining.add(<String, dynamic>{'insert': '\n'});
+            }
+            return jsonEncode(remaining);
+          }
           return content;
         }
       } catch (_) {

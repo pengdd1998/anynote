@@ -1905,8 +1905,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _replaceSelectedOrAllText(String newText, bool replaceAll) {
     if (_useRichEditor) {
       if (replaceAll) {
+        // The AI only sees plain text — clearing the document here would
+        // silently delete embeds (images, tables, wiki links). Capture them
+        // first and re-append below the polished text so whole-note
+        // polish/translate never destroys media.
+        final embeds = _collectEmbeds();
         _quillController.clear();
         _quillController.document.insert(0, newText);
+        _reAppendEmbeds(embeds);
       } else {
         _quillController.replaceText(
           _quillController.selection.start,
@@ -1931,6 +1937,37 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       }
     }
     _saveNote();
+  }
+
+  /// All embeds currently in the document, in document order.
+  List<quill.Embeddable> _collectEmbeds() {
+    try {
+      final embeds = <quill.Embeddable>[];
+      for (final op in _quillController.document.toDelta().toJson()) {
+        if (op['insert'] is Map) {
+          final map = Map<String, dynamic>.from(op['insert'] as Map);
+          if (map.isNotEmpty) {
+            embeds.add(quill.Embeddable.fromJson(map));
+          }
+        }
+      }
+      return embeds;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Append [embeds] at the end of the document, each on its own block.
+  void _reAppendEmbeds(List<quill.Embeddable> embeds) {
+    if (embeds.isEmpty) return;
+    final doc = _quillController.document;
+    for (final embed in embeds) {
+      // A Quill document always ends with a block break and inserts must
+      // stay strictly inside it (index < length). Append a fresh line, then
+      // place the embed just before the final break so it owns its line.
+      doc.insert(doc.length - 1, '\n');
+      doc.insert(doc.length - 1, embed);
+    }
   }
 
   /// Insert text below the current cursor position.

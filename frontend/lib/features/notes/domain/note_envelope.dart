@@ -105,6 +105,38 @@ String plainTextFromStoredContent(String content) {
   return stripObjectPlaceholders(_deltaInsertText(trimmed) ?? content);
 }
 
+/// Extract the first image file path from stored note content (Delta JSON
+/// or legacy markdown). Returns null when the content carries no image.
+///
+/// Mirrors the editor's save-time extraction so sync pulls can populate the
+/// notes.firstImagePath column without re-implementing the rules.
+String? firstImagePathFromStoredContent(String content) {
+  final trimmed = content.trim();
+  if (trimmed.isEmpty) return null;
+
+  // Rich editor saves: {"insert": {"image": "path"}} ops.
+  if (trimmed.startsWith('[')) {
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is List) {
+        for (final op in decoded) {
+          if (op is Map && op['insert'] is Map) {
+            final image = (op['insert'] as Map)['image'];
+            if (image is String && image.isNotEmpty) return image;
+          }
+        }
+      }
+    } catch (_) {
+      // Not Delta JSON — fall through to markdown.
+    }
+  }
+
+  // Legacy markdown image syntax.
+  final match =
+      RegExp(r'!\[.*?\]\((file://)?([^)]+)\)').firstMatch(trimmed);
+  return match?.group(2);
+}
+
 /// Converts stored note content to the plain-text form the editor saves in
 /// the `plainContent` column (see NoteEditorScreen._saveNote).
 ///
