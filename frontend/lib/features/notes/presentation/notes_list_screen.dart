@@ -1267,14 +1267,18 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                           return const InlineDetailPlaceholder();
                         }
 
-                        // Primary detail widget
+                        // Primary detail widget. The split-view (side-by-side
+                        // compare) toggle is a desktop large-screen feature —
+                        // a 50/50 horizontal split is unusable on a phone.
+                        final splitToggle =
+                            PlatformUtils.isDesktop && _splitViewNoteId == null
+                                ? () => _showSplitNotePicker(context)
+                                : null;
                         final primaryDetail = InlineNoteDetail(
                           noteId: selectedId,
                           db: db,
                           crypto: ref.read(cryptoServiceProvider),
-                          onSplitViewToggle: _splitViewNoteId == null
-                              ? () => _showSplitNotePicker(context)
-                              : null,
+                          onSplitViewToggle: splitToggle,
                         );
 
                         // If split view is active, wrap in SplitViewPane

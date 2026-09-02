@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/locale/locale_provider.dart';
+import '../../../core/platform/platform_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
@@ -310,31 +311,33 @@ class SettingsScreen extends ConsumerWidget {
               child: _LanguageSection(),
             ),
 
-            // -- Keyboard shortcuts section -------------------------------------
-            StaggeredGroup(
-              staggerIndex: 8,
-              child: Semantics(
-                container: true,
-                label: l10n.settingsGroup(l10n.keyboardShortcuts),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SettingsGroupHeader(title: l10n.keyboardShortcuts),
-                    _SettingsCardGroup(
-                      children: [
-                        _SettingsTile(
-                          icon: AppIcons.keyboard,
-                          accent: _tileAccents[3],
-                          title: l10n.keyboardShortcuts,
-                          onTap: () => context.push('/settings/shortcuts'),
-                        ),
-                      ],
-                    ),
-                  ],
+            // -- Keyboard shortcuts section (desktop only — phones have no
+            //    physical keyboard, the page is meaningless there) ------------
+            if (PlatformUtils.isDesktop)
+              StaggeredGroup(
+                staggerIndex: 8,
+                child: Semantics(
+                  container: true,
+                  label: l10n.settingsGroup(l10n.keyboardShortcuts),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SettingsGroupHeader(title: l10n.keyboardShortcuts),
+                      _SettingsCardGroup(
+                        children: [
+                          _SettingsTile(
+                            icon: AppIcons.keyboard,
+                            accent: _tileAccents[3],
+                            title: l10n.keyboardShortcuts,
+                            onTap: () => context.push('/settings/shortcuts'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
             // -- Appearance section ---------------------------------------------
             const StaggeredGroup(

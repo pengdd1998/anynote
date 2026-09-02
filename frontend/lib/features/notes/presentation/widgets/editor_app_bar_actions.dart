@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/platform/platform_utils.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/collab/presence_indicator.dart';
 import '../../../../core/tts/speech_service.dart';
@@ -137,9 +138,7 @@ class EditorAppBarActions {
         icon: Icon(
           config.isPreview ? Icons.edit_outlined : Icons.visibility_outlined,
         ),
-        tooltip: config.isPreview
-            ? '${l10n.edit} (Ctrl+P)'
-            : '${l10n.preview} (Ctrl+P)',
+        tooltip: config.isPreview ? l10n.edit : l10n.preview,
         onPressed: config.onTogglePreview,
       ),
       // Overflow menu with all secondary actions. Horizontal dots match the
@@ -356,14 +355,17 @@ class EditorAppBarActions {
               contentPadding: EdgeInsets.zero,
             ),
           ),
-          PopupMenuItem(
-            value: 'paste_image',
-            child: ListTile(
-              leading: const Icon(Icons.content_paste_outlined),
-              title: Text(l10n.pasteImage),
-              contentPadding: EdgeInsets.zero,
+          // Clipboard image paste is a keyboard/mouse workflow — phones
+          // insert images via gallery/camera instead.
+          if (PlatformUtils.isDesktop)
+            PopupMenuItem(
+              value: 'paste_image',
+              child: ListTile(
+                leading: const Icon(Icons.content_paste_outlined),
+                title: Text(l10n.pasteImage),
+                contentPadding: EdgeInsets.zero,
+              ),
             ),
-          ),
 
           const PopupMenuDivider(),
 
