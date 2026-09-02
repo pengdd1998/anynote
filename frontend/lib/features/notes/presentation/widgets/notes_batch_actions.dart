@@ -77,60 +77,78 @@ class NotesBatchActionBar extends ConsumerWidget {
             horizontal: AppSpacing.md,
             vertical: AppSpacing.s8,
           ),
-          child: Row(
-            children: [
-              // Pin/Unpin button
-              IconButton(
-                icon:
-                    Icon(hasPinned ? Icons.push_pin : Icons.push_pin_outlined),
-                tooltip: hasPinned ? l10n.batchUnpin : l10n.batchPin,
-                onPressed: selectedNoteIds.isEmpty ? null : onTogglePin,
-              ),
-              // Batch color button
-              IconButton(
-                icon: const Icon(Icons.palette_outlined),
-                tooltip: l10n.batchColor,
-                onPressed: selectedNoteIds.isEmpty ? null : onColor,
-              ),
-              // Batch lock/unlock button
-              IconButton(
-                icon: const Icon(Icons.lock_outline),
-                tooltip: l10n.batchLock,
-                onPressed: selectedNoteIds.isEmpty ? null : onLock,
-              ),
-              // Delete button
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: l10n.batchDelete,
-                onPressed: selectedNoteIds.isEmpty ? null : onDelete,
-              ),
-              // Export button
-              IconButton(
-                icon: const Icon(Icons.file_download_outlined),
-                tooltip: l10n.exportSelectedNotes,
-                onPressed: selectedNoteIds.isEmpty ? null : onExport,
-              ),
-              // Compare button (only when exactly 2 notes selected)
-              if (onCompare != null)
+          // Horizontal scroll keeps the bar usable on narrow screens and
+          // large font scales — the icon row alone overflows 45px at the
+          // default text scale on a 576dp-wide phone.
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Pin/Unpin button
                 IconButton(
-                  icon: const Icon(Icons.compare),
-                  tooltip: l10n.compareNotes,
-                  onPressed: onCompare,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    hasPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                  ),
+                  tooltip: hasPinned ? l10n.batchUnpin : l10n.batchPin,
+                  onPressed: selectedNoteIds.isEmpty ? null : onTogglePin,
                 ),
-              // Move to Collection button
-              IconButton(
-                icon: const Icon(Icons.create_new_folder_outlined),
-                tooltip: l10n.addToCollection,
-                onPressed: selectedNoteIds.isEmpty ? null : onMoveToCollection,
-              ),
-              const Spacer(),
-              // Add Tags button
-              FilledButton.tonalIcon(
-                icon: const Icon(Icons.add_circle),
-                label: Text(l10n.batchAddTags),
-                onPressed: selectedNoteIds.isEmpty ? null : onAddTags,
-              ),
-            ],
+                // Batch color button
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.palette_outlined),
+                  tooltip: l10n.batchColor,
+                  onPressed: selectedNoteIds.isEmpty ? null : onColor,
+                ),
+                // Batch lock/unlock button
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.lock_outline),
+                  tooltip: l10n.batchLock,
+                  onPressed: selectedNoteIds.isEmpty ? null : onLock,
+                ),
+                // Delete button
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: l10n.batchDelete,
+                  onPressed: selectedNoteIds.isEmpty ? null : onDelete,
+                ),
+                // Export button
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.file_download_outlined),
+                  tooltip: l10n.exportSelectedNotes,
+                  onPressed: selectedNoteIds.isEmpty ? null : onExport,
+                ),
+                // Compare button (only when exactly 2 notes selected)
+                if (onCompare != null)
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.compare),
+                    tooltip: l10n.compareNotes,
+                    onPressed: onCompare,
+                  ),
+                // Move to Collection button
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.create_new_folder_outlined),
+                  tooltip: l10n.addToCollection,
+                  onPressed: selectedNoteIds.isEmpty ? null : onMoveToCollection,
+                ),
+                const SizedBox(width: AppSpacing.s8),
+                // Add Tags button
+                FilledButton.tonalIcon(
+                  style: FilledButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  icon: const Icon(Icons.add_circle),
+                  label: Text(l10n.batchAddTags),
+                  onPressed: selectedNoteIds.isEmpty ? null : onAddTags,
+                ),
+              ],
+            ),
           ),
         ),
       ),

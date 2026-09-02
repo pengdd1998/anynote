@@ -94,11 +94,28 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
   Timer? _debounce;
   List<CommandPaletteItem> _results = [];
   int _selectedIndex = 0;
+  bool _seededInitialResults = false;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Seed the palette with actions + recents so it opens showing usable
+    // content instead of a blank panel (mobile has no type-ahead affordance).
+    if (!_seededInitialResults) {
+      _seededInitialResults = true;
+      final l10n = AppLocalizations.of(context);
+      final recent = _buildRecentItems();
+      setState(() {
+        _results = [...recent, ..._allActions(l10n)];
+        _selectedIndex = 0;
+      });
+    }
   }
 
   @override
@@ -115,7 +132,10 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
     if (query.isEmpty) {
       _debounce?.cancel();
       setState(() {
-        _results = _buildRecentItems();
+        _results = [
+          ..._buildRecentItems(),
+          ..._allActions(AppLocalizations.of(context)),
+        ];
         _selectedIndex = 0;
       });
       return;
@@ -470,8 +490,10 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
                   ],
                 ),
                 clipBehavior: Clip.antiAlias,
+                // Fixed-height column: the results area is Expanded (not a
+                // Flexible inside a min-size column), which keeps the layout
+                // well-defined under any incoming constraints.
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Search field
                     Container(
@@ -534,7 +556,7 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
                       ),
                     ),
                     // Results list
-                    Flexible(
+                    Expanded(
                       child: _results.isEmpty && _searchController.text.isEmpty
                           ? _buildEmptyState(theme, l10n)
                           : Scrollbar(
@@ -542,7 +564,6 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
                               child: ListView(
                                 controller: _scrollController,
                                 padding: const EdgeInsets.only(bottom: 8),
-                                shrinkWrap: true,
                                 children: _buildResultItems(),
                               ),
                             ),

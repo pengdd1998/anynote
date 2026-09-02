@@ -295,7 +295,12 @@ class _GraphCanvasState extends State<_GraphCanvas>
     _positions = {};
     _titles = {};
     _colorIndices = {};
-    _initializeData();
+    // Defer: _runForceLayout reads MediaQuery.of(context), which throws
+    // "dependOnInheritedWidget called before initState completed" when run
+    // synchronously from initState.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _initializeData();
+    });
   }
 
   @override

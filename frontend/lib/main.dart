@@ -396,33 +396,38 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                     ),
                     child: Directionality(
                       textDirection: TextDirection.ltr,
-                      child: Stack(
-                        children: [
-                        MaterialApp.router(
-                          title: 'AnyNote',
-                          debugShowCheckedModeBanner: false,
-                          showSemanticsDebugger: false,
-                          theme: selectEffectiveTheme(themeOption, brightness),
-                          darkTheme: selectEffectiveTheme(themeOption, brightness),
-                          themeMode: ThemeMode.system,
-                          routerConfig: appRouter,
-                          localizationsDelegates: [
-                            ...AppLocalizations.localizationsDelegates,
-                            quill.FlutterQuillLocalizations.delegate,
-                          ],
-                          supportedLocales: AppLocalizations.supportedLocales,
-                          locale: locale,
-                          // BackButtonListener removed: its
-                          // didChangeDependencies calls Router.of(context)
-                          // which throws "No GoRouter found in context" on
-                          // this device during the first build, causing a
-                          // full-screen red ErrorWidget at cold start. The
-                          // system back key already hides the IME before
-                          // navigating without custom handling.
-                        ),
-                        // Command palette overlay rendered on top of all screens.
-                          const CommandPaletteOverlay(),
+                      child: MaterialApp.router(
+                        title: 'AnyNote',
+                        debugShowCheckedModeBanner: false,
+                        showSemanticsDebugger: false,
+                        theme: selectEffectiveTheme(themeOption, brightness),
+                        darkTheme: selectEffectiveTheme(themeOption, brightness),
+                        themeMode: ThemeMode.system,
+                        routerConfig: appRouter,
+                        localizationsDelegates: [
+                          ...AppLocalizations.localizationsDelegates,
+                          quill.FlutterQuillLocalizations.delegate,
                         ],
+                        supportedLocales: AppLocalizations.supportedLocales,
+                        locale: locale,
+                        // The command palette renders above every screen and
+                        // needs MaterialApp's localizations/constraints —
+                        // mounting it OUTSIDE MaterialApp (sibling of the
+                        // router) left it without l10n and with broken
+                        // layout constraints (infinite overflow).
+                        builder: (context, child) => Stack(
+                          children: [
+                            child ?? const SizedBox.shrink(),
+                            const CommandPaletteOverlay(),
+                          ],
+                        ),
+                        // BackButtonListener removed: its
+                        // didChangeDependencies calls Router.of(context)
+                        // which throws "No GoRouter found in context" on
+                        // this device during the first build, causing a
+                        // full-screen red ErrorWidget at cold start. The
+                        // system back key already hides the IME before
+                        // navigating without custom handling.
                       ),
                     ),
                   );
