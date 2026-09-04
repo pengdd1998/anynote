@@ -2406,7 +2406,7 @@
     "@notesTabLabel": {
         "description": "Accessibility label for the Notes navigation tab"
     },
-    "composeTabLabel": "Dream Plan",
+    "composeTabLabel": "Compose",
     "@composeTabLabel": {
         "description": "Accessibility label for the Compose navigation tab"
     },

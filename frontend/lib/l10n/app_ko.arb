@@ -527,7 +527,7 @@
     "shortcutFullScreen": "전체 화면 전환",
     "shortcutExitZen": "집중 모드 종료 / 대화상자 닫기",
     "notesTabLabel": "홈",
-    "composeTabLabel": "플랜",
+    "composeTabLabel": "창작",
     "aiTabLabel": "AI",
     "settingsTabLabel": "설정",
     "versionSemanticLabel": "버전 {versionNumber}, {title}, {date}{currentSuffix}",

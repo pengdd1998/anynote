@@ -844,6 +844,19 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get llmProviderTimeout =>
+      'Timed out connecting to the AI provider — check your network or Base URL';
+
+  @override
+  String get llmProviderUnreachable =>
+      'Cannot reach the AI provider — check the Base URL and network';
+
+  @override
+  String llmProviderHttpError(int code) {
+    return 'AI provider returned an error (HTTP $code) — check the API key, model name, or Base URL';
+  }
+
+  @override
   String deleteConfigQuestion(String name) {
     return '$nameを削除しますか？';
   }
@@ -1725,7 +1738,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notesTabLabel => 'ホーム';
 
   @override
-  String get composeTabLabel => 'プラン';
+  String get composeTabLabel => '執筆';
 
   @override
   String get aiTabLabel => 'AI';

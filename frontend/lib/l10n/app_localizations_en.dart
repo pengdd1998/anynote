@@ -1785,7 +1785,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesTabLabel => 'Home';
 
   @override
-  String get composeTabLabel => 'Dream Plan';
+  String get composeTabLabel => 'Compose';
 
   @override
   String get aiTabLabel => 'AI';

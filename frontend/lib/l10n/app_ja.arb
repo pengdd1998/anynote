@@ -527,7 +527,7 @@
     "shortcutFullScreen": "フルスクリーンの切り替え",
     "shortcutExitZen": "集中モードを終了 / ダイアログを閉じる",
     "notesTabLabel": "ホーム",
-    "composeTabLabel": "プラン",
+    "composeTabLabel": "執筆",
     "aiTabLabel": "AI",
     "settingsTabLabel": "設定",
     "versionSemanticLabel": "バージョン {versionNumber}、{title}、{date}{currentSuffix}",

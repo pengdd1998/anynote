@@ -530,7 +530,7 @@
     "shortcutFullScreen": "切换全屏",
     "shortcutExitZen": "退出专注模式 / 关闭对话框",
     "notesTabLabel": "首页",
-    "composeTabLabel": "计划",
+    "composeTabLabel": "创作",
     "aiTabLabel": "AI",
     "settingsTabLabel": "设置",
     "versionSemanticLabel": "版本 {versionNumber}，{title}，{date}{currentSuffix}",

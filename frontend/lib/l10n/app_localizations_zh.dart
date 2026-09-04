@@ -1726,7 +1726,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesTabLabel => '首页';
 
   @override
-  String get composeTabLabel => '计划';
+  String get composeTabLabel => '创作';
 
   @override
   String get aiTabLabel => 'AI';
