@@ -838,6 +838,17 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get llmProviderTimeout => '连接 AI 服务商超时，请检查网络或 Base URL';
+
+  @override
+  String get llmProviderUnreachable => '无法连接到 AI 服务商，请检查 Base URL 和网络';
+
+  @override
+  String llmProviderHttpError(int code) {
+    return 'AI 服务商返回错误（HTTP $code），请检查 API Key、模型名或 Base URL';
+  }
+
+  @override
   String deleteConfigQuestion(String name) {
     return '删除 $name？';
   }

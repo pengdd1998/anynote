@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -411,12 +412,31 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final appError = ErrorMapper.map(e);
+        // The call goes straight to the LLM provider, so the failure is
+        // about the PROVIDER or the network — a generic "server error"
+        // mapping would wrongly blame the AnyNote backend. Surface the
+        // actual cause instead.
+        String reason;
+        if (e is DioException) {
+          switch (e.type) {
+            case DioExceptionType.connectionTimeout:
+            case DioExceptionType.receiveTimeout:
+            case DioExceptionType.sendTimeout:
+              reason = l10n.llmProviderTimeout;
+            case DioExceptionType.connectionError:
+              reason = l10n.llmProviderUnreachable;
+            case DioExceptionType.badResponse:
+              final code = e.response?.statusCode ?? 0;
+              reason = l10n.llmProviderHttpError(code);
+            default:
+              reason = ErrorDisplay.userMessage(ErrorMapper.map(e), l10n);
+          }
+        } else {
+          reason = ErrorDisplay.userMessage(ErrorMapper.map(e), l10n);
+        }
         AppSnackBar.show(
           context,
-          message: l10n.connectionFailed(
-            ErrorDisplay.userMessage(appError, l10n),
-          ),
+          message: l10n.connectionFailed(reason),
           type: SnackBarType.error,
         );
       }
