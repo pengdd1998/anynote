@@ -202,20 +202,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                A11yUtils.labeledTextField(
-                  label: l10n.apiKey,
-                  child: TextField(
-                    controller: keyCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.apiKey,
-                      suffixIcon: const ExcludeSemantics(
-                        child: Icon(AppIcons.visibilityOff),
-                      ),
-                    ),
-                    obscureText: true,
-                    scrollPadding: const EdgeInsets.only(bottom: 120),
-                  ),
-                ),
+                _ApiKeyField(controller: keyCtrl, label: l10n.apiKey),
                 const SizedBox(height: 12),
                 A11yUtils.labeledTextField(
                   label: l10n.model,
@@ -308,20 +295,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              A11yUtils.labeledTextField(
-                label: l10n.newApiKeyHint,
-                child: TextField(
-                  controller: keyCtrl,
-                  decoration: InputDecoration(
-                    labelText: l10n.newApiKeyHint,
-                    suffixIcon: const ExcludeSemantics(
-                      child: Icon(AppIcons.visibilityOff),
-                    ),
-                  ),
-                  obscureText: true,
-                  scrollPadding: const EdgeInsets.only(bottom: 120),
-                ),
-              ),
+              _ApiKeyField(controller: keyCtrl, label: l10n.newApiKeyHint),
               const SizedBox(height: 12),
               A11yUtils.labeledTextField(
                 label: l10n.model,
@@ -599,6 +573,47 @@ class _LLMConfigCard extends StatelessWidget {
           onTap: onEdit,
         ),
       ],
+    );
+  }
+}
+
+/// API key input with a working show/hide toggle.
+///
+/// Self-contained StatefulWidget: the surrounding create/edit dialogs are
+/// stateless `showDialog`s, so the obscure state has to live here — the
+/// previous static suffix icon was decoration only and the field was
+/// permanently obscured.
+class _ApiKeyField extends StatefulWidget {
+  final TextEditingController controller;
+  final String label;
+
+  const _ApiKeyField({required this.controller, required this.label});
+
+  @override
+  State<_ApiKeyField> createState() => _ApiKeyFieldState();
+}
+
+class _ApiKeyFieldState extends State<_ApiKeyField> {
+  bool _visible = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return A11yUtils.labeledTextField(
+      label: widget.label,
+      child: TextField(
+        controller: widget.controller,
+        obscureText: !_visible,
+        decoration: InputDecoration(
+          labelText: widget.label,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _visible ? AppIcons.visibility : AppIcons.visibilityOff,
+            ),
+            onPressed: () => setState(() => _visible = !_visible),
+          ),
+        ),
+        scrollPadding: const EdgeInsets.only(bottom: 120),
+      ),
     );
   }
 }

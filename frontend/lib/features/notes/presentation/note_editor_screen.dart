@@ -780,12 +780,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     pm.start('note_save');
     final content = _getContentForSave();
     final plainText = _extractPlainText();
-
-    if (plainText.isEmpty) return;
-
-    // Notes have no separate title — the content is the whole note.
     // Extract first image path from Delta JSON for card preview.
     final imagePath = _extractFirstImagePath(content);
+
+    // Trim before the emptiness check: a fresh Quill document's toPlainText
+    // is "\n" (the mandatory trailing block break), which slipped past the
+    // old isEmpty check and created empty notes just by opening and leaving
+    // the editor. Whitespace-only notes are skipped too; image-only notes
+    // still save because U+FFFC is not whitespace.
+    if (plainText.trim().isEmpty && imagePath == null) return;
 
     if (!mounted) return;
     setState(() {
