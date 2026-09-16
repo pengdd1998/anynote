@@ -1674,6 +1674,24 @@ abstract class AppLocalizations {
   /// **'Connection failed: {error}'**
   String connectionFailed(String error);
 
+  /// No description provided for @llmProviderTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out connecting to the AI provider — check your network or Base URL'**
+  String get llmProviderTimeout;
+
+  /// No description provided for @llmProviderUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach the AI provider — check the Base URL and network'**
+  String get llmProviderUnreachable;
+
+  /// No description provided for @llmProviderHttpError.
+  ///
+  /// In en, this message translates to:
+  /// **'AI provider returned an error (HTTP {code}) — check the API key, model name, or Base URL'**
+  String llmProviderHttpError(int code);
+
   /// Confirmation dialog title for deleting a config
   ///
   /// In en, this message translates to:
@@ -1691,6 +1709,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No platforms available'**
   String get noPlatformsAvailable;
+
+  /// No description provided for @connectPlatformSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a platform to connect'**
+  String get connectPlatformSectionTitle;
+
+  /// No description provided for @addMorePlatforms.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more platforms'**
+  String get addMorePlatforms;
+
+  /// No description provided for @connectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connectAction;
 
   /// Empty state subtitle
   ///
@@ -3273,7 +3309,7 @@ abstract class AppLocalizations {
   /// Accessibility label for the Compose navigation tab
   ///
   /// In en, this message translates to:
-  /// **'Dream Plan'**
+  /// **'Compose'**
   String get composeTabLabel;
 
   /// Accessibility label for the AI Chat navigation tab
@@ -5811,6 +5847,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Less than 1 min read'**
   String get lessThan1Min;
+
+  /// No description provided for @chatChipShorter.
+  ///
+  /// In en, this message translates to:
+  /// **'Make it shorter'**
+  String get chatChipShorter;
+
+  /// No description provided for @chatChipUplifting.
+  ///
+  /// In en, this message translates to:
+  /// **'More uplifting'**
+  String get chatChipUplifting;
+
+  /// No description provided for @chatChipSummarize.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize key points'**
+  String get chatChipSummarize;
 
   /// Line count display
   ///

@@ -868,6 +868,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get noPlatformsAvailable => '사용 가능한 플랫폼이 없습니다';
 
   @override
+  String get connectPlatformSectionTitle => '接続するプラットフォームを選択';
+
+  @override
+  String get addMorePlatforms => 'プラットフォームを追加';
+
+  @override
+  String get connectAction => '接続';
+
+  @override
   String get platformConnectionsWillAppear => '플랫폼 연결이 여기에 표시됩니다';
 
   @override
@@ -3119,6 +3128,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lessThan1Min => '1분 미만';
+
+  @override
+  String get chatChipShorter => '더 짧게';
+
+  @override
+  String get chatChipUplifting => '더 긍정적으로';
+
+  @override
+  String get chatChipSummarize => '핵심 정리';
 
   @override
   String lineCount(int count) {

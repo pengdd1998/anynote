@@ -49,6 +49,28 @@ func (h *PlatformHandler) List(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, connections)
 }
 
+// Catalog returns every registered adapter with the user's connection state.
+// Unlike List (connected only), it gives fresh accounts a discoverable
+// first-connect entry point.
+func (h *PlatformHandler) Catalog(w http.ResponseWriter, r *http.Request) {
+	userID, err := parseUserID(r)
+	if err != nil {
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+
+	entries, err := h.platformService.Catalog(r.Context(), userID)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "catalog_error", "Failed to list platform catalog")
+		return
+	}
+	if entries == nil {
+		entries = []domain.PlatformCatalogEntry{}
+	}
+
+	writeJSON(w, http.StatusOK, entries)
+}
+
 // Connect initiates the platform authentication flow.
 // For QR-code-based platforms (e.g. XHS), the response is an SSE stream:
 //

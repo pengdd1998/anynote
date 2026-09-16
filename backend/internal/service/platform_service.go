@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sort"
 	"sync"
 	"time"
 
@@ -21,6 +22,10 @@ const statusActive = "active"
 
 type PlatformService interface {
 	List(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error)
+	// Catalog returns every registered adapter with the user's connection
+	// state, so clients can offer a first-connect entry point even when the
+	// user has zero connections.
+	Catalog(ctx context.Context, userID uuid.UUID) ([]domain.PlatformCatalogEntry, error)
 	Connect(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error)
 	Disconnect(ctx context.Context, userID uuid.UUID, platformName string) error
 	Verify(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error)
@@ -125,6 +130,44 @@ func (s *platformService) CancelAuth(userID uuid.UUID, platformName string, auth
 
 func (s *platformService) List(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error) {
 	return s.platformRepo.ListByUser(ctx, userID)
+}
+
+// platformDisplayNames maps adapter IDs to user-facing names. Adapters not
+// listed here fall back to their registry ID.
+var platformDisplayNames = map[string]string{
+	"xiaohongshu": "小红书",
+	"wechat":      "微信",
+	"zhihu":       "知乎",
+	"medium":      "Medium",
+	"wordpress":   "WordPress",
+	"webhook":     "Webhook",
+}
+
+func (s *platformService) Catalog(ctx context.Context, userID uuid.UUID) ([]domain.PlatformCatalogEntry, error) {
+	connected := make(map[string]bool)
+	conns, err := s.platformRepo.ListByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range conns {
+		connected[c.Platform] = true
+	}
+
+	names := s.registry.List()
+	sort.Strings(names)
+	entries := make([]domain.PlatformCatalogEntry, 0, len(names))
+	for _, name := range names {
+		display, ok := platformDisplayNames[name]
+		if !ok {
+			display = name
+		}
+		entries = append(entries, domain.PlatformCatalogEntry{
+			Platform:    name,
+			DisplayName: display,
+			Connected:   connected[name],
+		})
+	}
+	return entries, nil
 }
 
 func (s *platformService) Connect(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error) {

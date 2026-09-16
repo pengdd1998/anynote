@@ -89,6 +89,16 @@ type PlatformConnection struct {
 	UpdatedAt     time.Time  `json:"updated_at"`
 }
 
+// PlatformCatalogEntry is one row of the platform catalog: every registered
+// adapter with the current user's connection state. Unlike List (connected
+// connections only), the catalog lets a fresh account discover and connect
+// its first platform.
+type PlatformCatalogEntry struct {
+	Platform    string `json:"platform"`
+	DisplayName string `json:"display_name"`
+	Connected   bool   `json:"connected"`
+}
+
 // ── Platform Auth ─────────────────────────────────
 
 // AuthStartResult is returned when starting a platform authentication flow.

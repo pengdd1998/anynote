@@ -860,6 +860,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noPlatformsAvailable => '暂无可用平台';
 
   @override
+  String get connectPlatformSectionTitle => '选择要连接的平台';
+
+  @override
+  String get addMorePlatforms => '添加更多平台';
+
+  @override
+  String get connectAction => '连接';
+
+  @override
   String get platformConnectionsWillAppear => '平台连接将显示在这里';
 
   @override
@@ -3102,6 +3111,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lessThan1Min => '不到1分钟';
+
+  @override
+  String get chatChipShorter => '缩短一点';
+
+  @override
+  String get chatChipUplifting => '更积极一些';
+
+  @override
+  String get chatChipSummarize => '总结要点';
 
   @override
   String lineCount(int count) {

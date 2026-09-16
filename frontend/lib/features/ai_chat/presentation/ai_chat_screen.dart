@@ -641,28 +641,29 @@ class _ChatInput extends StatelessWidget {
 
 /// Follow-up suggestion chips shown under the last completed AI message.
 ///
-/// Tapping a chip sends its label as a regular user message through the
-/// existing chat session provider.
+/// Tapping a chip sends it as a regular user message through the existing
+/// chat session provider. Labels are localized; the sent prompt uses the
+/// localized label as-is (the LLM answers in the conversation language).
 class _FollowUpChips extends StatelessWidget {
   final void Function(String text) onSelect;
   final bool isDark;
 
   const _FollowUpChips({required this.onSelect, required this.isDark});
 
-  static const _suggestions = <String>[
-    'Make it shorter',
-    'More uplifting',
-    'Summarize key points',
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final suggestions = <String>[
+      l10n.chatChipShorter,
+      l10n.chatChipUplifting,
+      l10n.chatChipSummarize,
+    ];
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.s4),
       child: Wrap(
         spacing: AppSpacing.s8,
         runSpacing: AppSpacing.s8,
-        children: _suggestions
+        children: suggestions
             .map(
               (label) => GestureDetector(
                 onTap: () => onSelect(label),

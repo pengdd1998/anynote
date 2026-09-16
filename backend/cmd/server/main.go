@@ -83,14 +83,20 @@ func main() {
 	// Initialize LLM Gateway
 	gateway := llm.NewGateway()
 
-	// Initialize Redis client early so it can be used for rate limiting.
-	// If Redis URL is not configured, rate limiting falls back to in-memory.
+	// Initialize Redis client early so it can be used for rate limiting and
+	// presence. The config value is a URL (redis://user:pass@host:port), so
+	// it must go through ParseURL — passing it raw as Options.Addr produced
+	// "too many colons in address" on the deployed server and left presence
+	// and health degraded.
 	var redisClient *redisv9.Client
 	if cfg.Redis.URL != "" {
-		redisClient = redisv9.NewClient(&redisv9.Options{
-			Addr: cfg.Redis.URL,
-		})
-		defer redisClient.Close()
+		redisOpts, redisErr := redisv9.ParseURL(cfg.Redis.URL)
+		if redisErr != nil {
+			slog.Warn("invalid Redis URL, continuing without Redis", "error", redisErr)
+		} else {
+			redisClient = redisv9.NewClient(redisOpts)
+			defer redisClient.Close()
+		}
 	}
 
 	// Initialize rate limiter (50 req/day for free users).
@@ -278,11 +284,27 @@ func main() {
 		if err != nil {
 			slog.Warn("MinIO client initialization failed, skipping MinIO health check", "error", err)
 		} else {
+			bucket := cfg.MinIO.BucketName()
+			// Ensure the bucket exists so image sync works on fresh
+			// environments without a manual bootstrap step (/ready reported
+			// "bucket missing" on prod until this lands).
+			bucketCtx, bucketCancel := context.WithTimeout(context.Background(), 10*time.Second)
+			exists, exErr := minioClient.BucketExists(bucketCtx, bucket)
+			if exErr == nil && !exists {
+				if mkErr := minioClient.MakeBucket(bucketCtx, bucket); mkErr != nil {
+					slog.Warn("MinIO bucket auto-create failed", "bucket", bucket, "error", mkErr)
+				} else {
+					slog.Info("MinIO bucket created", "bucket", bucket)
+				}
+			} else if exErr != nil {
+				slog.Warn("MinIO bucket check failed", "bucket", bucket, "error", exErr)
+			}
+			bucketCancel()
 			minioChecker = &minioBucketChecker{
 				client: minioClient,
-				bucket: cfg.MinIO.BucketName(),
+				bucket: bucket,
 			}
-			slog.Info("MinIO client initialized", "endpoint", cfg.MinIO.Endpoint, "bucket", cfg.MinIO.BucketName())
+			slog.Info("MinIO client initialized", "endpoint", cfg.MinIO.Endpoint, "bucket", bucket)
 		}
 	}
 

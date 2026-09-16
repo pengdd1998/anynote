@@ -302,6 +302,38 @@ final platformsProvider =
   PlatformsNotifier.new,
 );
 
+/// One row of the platform catalog: a registered adapter plus the current
+/// user's connection state.
+class PlatformCatalogEntry {
+  final String platform;
+  final String displayName;
+  final bool connected;
+
+  const PlatformCatalogEntry({
+    required this.platform,
+    required this.displayName,
+    required this.connected,
+  });
+
+  factory PlatformCatalogEntry.fromJson(Map<String, dynamic> json) {
+    return PlatformCatalogEntry(
+      platform: json['platform'] as String? ?? '',
+      displayName: json['display_name'] as String? ?? json['platform'] as String? ?? '',
+      connected: json['connected'] as bool? ?? false,
+    );
+  }
+}
+
+/// Full catalog of connectable platforms (connected AND not). Backed by
+/// GET /platforms/catalog, so it works for accounts with zero connections —
+/// the connected-only [platformsProvider] hides everything for them.
+final platformCatalogProvider = FutureProvider.autoDispose<
+    List<PlatformCatalogEntry>>((ref) async {
+  final api = ref.read(apiClientProvider);
+  final raw = await api.listPlatformCatalog();
+  return raw.map(PlatformCatalogEntry.fromJson).toList();
+});
+
 // ── Encryption Status ─────────────────────────────────
 
 /// Checks whether encryption is initialized and the crypto service is unlocked.

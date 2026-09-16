@@ -1165,6 +1165,9 @@
         "description": "Confirmation body for deleting config"
     },
     "noPlatformsAvailable": "No platforms available",
+    "connectPlatformSectionTitle": "Choose a platform to connect",
+    "addMorePlatforms": "Add more platforms",
+    "connectAction": "Connect",
     "@noPlatformsAvailable": {
         "description": "Empty state for platform connections"
     },
@@ -4376,6 +4379,9 @@
         }
     },
     "lessThan1Min": "Less than 1 min read",
+    "chatChipShorter": "Make it shorter",
+    "chatChipUplifting": "More uplifting",
+    "chatChipSummarize": "Summarize key points",
     "@lessThan1Min": {
         "description": "Reading time when under 1 minute"
     },

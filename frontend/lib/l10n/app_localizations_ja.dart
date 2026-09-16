@@ -868,6 +868,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noPlatformsAvailable => '利用可能なプラットフォームがありません';
 
   @override
+  String get connectPlatformSectionTitle => '接続するプラットフォームを選択';
+
+  @override
+  String get addMorePlatforms => 'プラットフォームを追加';
+
+  @override
+  String get connectAction => '接続';
+
+  @override
   String get platformConnectionsWillAppear => 'プラットフォーム連携がここに表示されます';
 
   @override
@@ -3117,6 +3126,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lessThan1Min => '1分未満';
+
+  @override
+  String get chatChipShorter => 'もっと短く';
+
+  @override
+  String get chatChipUplifting => 'もっと前向きに';
+
+  @override
+  String get chatChipSummarize => '要点をまとめて';
 
   @override
   String lineCount(int count) {

@@ -884,6 +884,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noPlatformsAvailable => 'No platforms available';
 
   @override
+  String get connectPlatformSectionTitle => 'Choose a platform to connect';
+
+  @override
+  String get addMorePlatforms => 'Add more platforms';
+
+  @override
+  String get connectAction => 'Connect';
+
+  @override
   String get platformConnectionsWillAppear =>
       'Platform connections will appear here';
 
@@ -3264,6 +3273,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lessThan1Min => 'Less than 1 min read';
+
+  @override
+  String get chatChipShorter => 'Make it shorter';
+
+  @override
+  String get chatChipUplifting => 'More uplifting';
+
+  @override
+  String get chatChipSummarize => 'Summarize key points';
 
   @override
   String lineCount(int count) {

@@ -36,67 +36,88 @@ class _PlatformConnectionScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final platformsAsync = ref.watch(platformsProvider);
+    // Catalog (all adapters + connection state) drives the first-connect
+    // grid: the connected-only list above hides everything for fresh
+    // accounts, which made connecting the FIRST platform impossible.
+    final catalogAsync = ref.watch(platformCatalogProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.platformConnections)),
       body: platformsAsync.when(
         data: (platforms) {
           if (platforms.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    AppIcons.share,
-                    size: 48,
-                    color: Theme.of(context).disabledColor,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(l10n.noPlatformsAvailable),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.platformConnectionsWillAppear,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context).disabledColor,
-                    ),
-                  ),
-                ],
+            return catalogAsync.when(
+              data: (catalog) => _buildCatalogList(l10n, catalog),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => ErrorStateWidget(
+                message: '${l10n.failedToLoadPlatforms}\n$e',
+                onRetry: () => ref.invalidate(platformCatalogProvider),
               ),
             );
           }
           return RefreshIndicator(
-            onRefresh: () => ref.read(platformsProvider.notifier).refresh(),
+            onRefresh: () async {
+              await ref.read(platformsProvider.notifier).refresh();
+              ref.invalidate(platformCatalogProvider);
+            },
             child: ListView(
               padding: const EdgeInsets.only(top: 8, bottom: 32),
-              children: platforms.asMap().entries.map((entry) {
-                final index = entry.key;
-                final p = entry.value;
-                return StaggeredGroup(
-                  staggerIndex: index,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _PlatformCard(
-                      platform: p,
-                      platformIcons: _platformIcons,
-                      isConnecting: _isConnecting &&
-                          _connectingPlatform == p.platform.toLowerCase(),
-                      l10n: l10n,
-                      onConnect: () => _connect(
-                        p.platform.toLowerCase(),
-                        p.displayName ?? p.platform,
-                      ),
-                      onVerify: () => _verify(
-                        p.platform.toLowerCase(),
-                      ),
-                      onDisconnect: () => _confirmDisconnect(
-                        p.platform.toLowerCase(),
-                        p.displayName ?? p.platform,
+              children: [
+                ...platforms.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final p = entry.value;
+                  return StaggeredGroup(
+                    staggerIndex: index,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _PlatformCard(
+                        platform: p,
+                        platformIcons: _platformIcons,
+                        isConnecting: _isConnecting &&
+                            _connectingPlatform == p.platform.toLowerCase(),
+                        l10n: l10n,
+                        onConnect: () => _connect(
+                          p.platform.toLowerCase(),
+                          p.displayName ?? p.platform,
+                        ),
+                        onVerify: () => _verify(
+                          p.platform.toLowerCase(),
+                        ),
+                        onDisconnect: () => _confirmDisconnect(
+                          p.platform.toLowerCase(),
+                          p.displayName ?? p.platform,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }),
+                // Section offering the not-yet-connected adapters so a
+                // second/third platform is reachable without an empty state.
+                catalogAsync.maybeWhen(
+                  data: (catalog) {
+                    final available = catalog
+                        .where((c) => !c.connected)
+                        .toList();
+                    if (available.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        SettingsGroupHeader(title: l10n.addMorePlatforms),
+                        const SizedBox(height: 8),
+                        _CatalogSection(
+                          entries: available,
+                          isConnecting: _isConnecting,
+                          connectingPlatform: _connectingPlatform,
+                          onConnect: (platform, name) =>
+                              _connect(platform, name),
+                        ),
+                      ],
+                    );
+                  },
+                  orElse: () => const SizedBox.shrink(),
+                ),
+              ],
             ),
           );
         },
@@ -366,5 +387,107 @@ class _PlatformCard extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+extension _CatalogUi on _PlatformConnectionScreenState {
+  /// Full-screen catalog list for the zero-connections case: every adapter
+  /// with a connect button, reusing the same _connect flow (QR dialog for
+  /// XHS) as an existing card.
+  Widget _buildCatalogList(
+    AppLocalizations l10n,
+    List<PlatformCatalogEntry> catalog,
+  ) {
+    return RefreshIndicator(
+      onRefresh: () async => ref.invalidate(platformCatalogProvider),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          Text(
+            l10n.connectPlatformSectionTitle,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 12),
+          _CatalogSection(
+            entries: catalog,
+            isConnecting: _isConnecting,
+            connectingPlatform: _connectingPlatform,
+            onConnect: (platform, name) => _connect(platform, name),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Platform catalog rows with a connect action for each not-yet-connected
+/// adapter. Used both for the empty state (full catalog) and as the trailing
+/// "add more" section when some platforms are already connected.
+class _CatalogSection extends StatelessWidget {
+  final List<PlatformCatalogEntry> entries;
+  final bool isConnecting;
+  final String? connectingPlatform;
+  final void Function(String platform, String displayName) onConnect;
+
+  const _CatalogSection({
+    required this.entries,
+    required this.isConnecting,
+    required this.connectingPlatform,
+    required this.onConnect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final entry in entries)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: SettingsGroup(
+              children: [
+                SettingsItem(
+                  icon: _iconFor(entry.platform),
+                  title: entry.displayName,
+                  trailing: FilledButton.tonal(
+                    onPressed: isConnecting &&
+                            connectingPlatform == entry.platform
+                        ? null
+                        : () => onConnect(entry.platform, entry.displayName),
+                    style: FilledButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: isConnecting &&
+                            connectingPlatform == entry.platform
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(l10n.connectAction),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  static IconData _iconFor(String platform) {
+    switch (platform) {
+      case 'xiaohongshu':
+        return AppIcons.camera;
+      case 'wechat':
+        return AppIcons.chat;
+      case 'zhihu':
+        return AppIcons.questionAnswer;
+      case 'medium':
+        return AppIcons.article;
+      default:
+        return AppIcons.share;
+    }
   }
 }

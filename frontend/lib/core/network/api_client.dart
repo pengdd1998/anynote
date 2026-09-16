@@ -471,6 +471,16 @@ class ApiClient {
     return const [];
   }
 
+  /// Every registered adapter with the user's connection state — unlike
+  /// [listPlatforms] (connected only), this gives fresh accounts a
+  /// discoverable first-connect entry point.
+  Future<List<Map<String, dynamic>>> listPlatformCatalog() async {
+    final res = await _dio.get('/api/v1/platforms/catalog');
+    final data = res.data;
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return const [];
+  }
+
   Future<Map<String, dynamic>> connectPlatform(String platform) async {
     final res = await _dio.post('/api/v1/platforms/$platform/connect');
     return res.data as Map<String, dynamic>;

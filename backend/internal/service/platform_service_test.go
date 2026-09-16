@@ -665,3 +665,67 @@ func TestPlatformService_CancelAuth(t *testing.T) {
 		t.Error("expected error after CancelAuth, session should be removed")
 	}
 }
+
+func TestPlatformService_Catalog(t *testing.T) {
+	repo := newMockPlatformConnRepo()
+	userID := uuid.New()
+	repo.conns[repo.key(userID, "xiaohongshu")] = &domain.PlatformConnection{
+		ID:       uuid.New(),
+		UserID:   userID,
+		Platform: "xiaohongshu",
+		Status:   "active",
+	}
+
+	registry := platform.NewRegistry()
+	registry.Register("xiaohongshu", &mockPlatformAdapter{})
+	registry.Register("zhihu", &mockPlatformAdapter{})
+	registry.Register("webhook", &mockPlatformAdapter{})
+
+	svc := NewPlatformService(repo, registry)
+
+	entries, err := svc.Catalog(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("Catalog: %v", err)
+	}
+	if len(entries) != 3 {
+		t.Fatalf("len(entries) = %d, want 3", len(entries))
+	}
+
+	// Sorted by platform id; every entry carries a display name and the
+	// xiaohongshu row is the only connected one.
+	byPlatform := make(map[string]domain.PlatformCatalogEntry, len(entries))
+	for _, e := range entries {
+		byPlatform[e.Platform] = e
+	}
+	if e, ok := byPlatform["xiaohongshu"]; !ok || !e.Connected {
+		t.Errorf("xiaohongshu entry = %+v, want connected", e)
+	}
+	if e, ok := byPlatform["zhihu"]; !ok || e.Connected {
+		t.Errorf("zhihu entry = %+v, want not connected", e)
+	}
+	if e, ok := byPlatform["webhook"]; !ok || e.Connected {
+		t.Errorf("webhook entry = %+v, want not connected", e)
+	}
+	if byPlatform["xiaohongshu"].DisplayName == "" || byPlatform["zhihu"].DisplayName == "" {
+		t.Error("catalog entries must carry display names")
+	}
+}
+
+func TestPlatformService_Catalog_EmptyUser(t *testing.T) {
+	repo := newMockPlatformConnRepo()
+	registry := platform.NewRegistry()
+	registry.Register("xiaohongshu", &mockPlatformAdapter{})
+
+	svc := NewPlatformService(repo, registry)
+
+	entries, err := svc.Catalog(context.Background(), uuid.New())
+	if err != nil {
+		t.Fatalf("Catalog: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("len(entries) = %d, want 1", len(entries))
+	}
+	if entries[0].Connected {
+		t.Error("fresh account entry must not be connected")
+	}
+}

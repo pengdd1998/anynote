@@ -1503,7 +1503,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         '${months[dt.month]} ${dt.day}, ${dt.year}';
     final readingTime = _writingStats.estimatedReadingTime;
     if (readingTime.inMinutes > 0) {
-      return '$dateStr · ${readingTime.inMinutes} min read';
+      final l10n = AppLocalizations.of(context)!;
+      return '$dateStr · ${l10n.readingTime(readingTime.inMinutes)}';
     }
     return dateStr;
   }

@@ -436,7 +436,7 @@ class NoteDetailScreen extends ConsumerWidget {
     return Row(
       children: [
         Text(
-          '${l10n.updatedDate(dateStr)} · $minutes min read',
+          '${l10n.updatedDate(dateStr)} · ${l10n.readingTime(minutes)}',
           style: AppTextStyles.caption.copyWith(
             fontSize: 12,
             fontWeight: FontWeight.w500,

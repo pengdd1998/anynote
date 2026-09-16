@@ -177,6 +177,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 			// Platform connections
 			r.Get("/platforms", platformH.List)
+			r.Get("/platforms/catalog", platformH.Catalog)
 			r.Post("/platforms/{platform}/connect", platformH.Connect)
 			r.Delete("/platforms/{platform}/connect", platformH.Disconnect)
 			r.Post("/platforms/{platform}/verify", platformH.Verify)
