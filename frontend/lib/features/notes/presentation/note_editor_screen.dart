@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
+import '../../../core/ai/auto_tagger.dart';
 import '../../../core/collab/crdt_text.dart';
 import '../../../core/collab/presence_indicator.dart';
 import '../../../core/collab/ws_client.dart';
@@ -117,6 +118,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _isPreview = false;
   bool _useRichEditor = true;
   String? _errorMessage;
+
+  // Capture-time AI tag suggestions for the current new note (Phase 129).
+  // Populated fire-and-forget after the first save; empty = none pending.
+  List<String> _autoTagSuggestions = [];
 
   // Tags for the current note (loaded for preview display).
   List<Tag> _noteTags = [];
@@ -826,6 +831,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           firstImagePath: imagePath,
         );
         _isNew = false;
+        // First save of a new note: fire-and-forget AI tag suggestions
+        // (daily-capped in AutoTagger, never blocks or fails the save).
+        if (mounted) _maybeAutoTag(noteId, plainText);
       } else {
         await _saveVersionSnapshot(db, noteId);
 
@@ -1427,9 +1435,90 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           isZenMode: _isZenMode,
           onToggleZenMode: _toggleZenMode,
         ),
+        // Capture-time AI tag suggestions (Phase 129): dismissible chip row
+        // between the editor and the status bar; tap = accept.
+        if (_autoTagSuggestions.isNotEmpty)
+          _buildAutoTagRow(),
         // TTS player bar (only visible when speaking).
         const TtsPlayerBar(),
       ],
+    );
+  }
+
+  /// AI-suggested tag chips: tap a chip to accept it, X to dismiss the row.
+  Widget _buildAutoTagRow() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.s8,
+      ),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        border: Border(
+          top: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.auto_awesome,
+            size: 14,
+            color: colorScheme.primary,
+          ),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(
+            child: Wrap(
+              spacing: AppSpacing.s8,
+              runSpacing: AppSpacing.s4,
+              children: [
+                for (final tag in _autoTagSuggestions)
+                  InkWell(
+                    borderRadius: AppRadius.pillBorder,
+                    onTap: () => _acceptAutoTag(tag),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.s12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySoft,
+                        borderRadius: AppRadius.pillBorder,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '#$tag',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primaryText,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.add,
+                            size: 12,
+                            color: AppColors.primaryText,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.close, size: 16),
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+            onPressed: () => setState(() => _autoTagSuggestions = []),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2001,6 +2090,27 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   /// Apply AI-suggested tags to the current note.
+  /// Fire-and-forget capture-time auto-tag: asks AutoTagger for suggestions
+  /// on a newly created note and shows them as a dismissible chip row.
+  Future<void> _maybeAutoTag(String noteId, String plainText) async {
+    try {
+      final tags = await ref.read(autoTaggerProvider).suggestTags(plainText);
+      if (tags.isEmpty || !mounted) return;
+      setState(() => _autoTagSuggestions = tags);
+    } catch (e) {
+      debugPrint('[NoteEditor] auto-tag failure: $e');
+    }
+  }
+
+  /// Applies one accepted auto-tag suggestion to the note.
+  Future<void> _acceptAutoTag(String tag) async {
+    setState(() {
+      _autoTagSuggestions = List<String>.from(_autoTagSuggestions)
+        ..remove(tag);
+    });
+    await _applySuggestedTags({tag});
+  }
+
   Future<void> _applySuggestedTags(Set<String> tags) async {
     try {
       final db = ref.read(databaseProvider);
