@@ -24,6 +24,7 @@ import (
 
 type mockPlatformService struct {
 	listFn        func(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error)
+	catalogFn     func(ctx context.Context, userID uuid.UUID) ([]domain.PlatformCatalogEntry, error)
 	connectFn     func(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error)
 	disconnectFn  func(ctx context.Context, userID uuid.UUID, platformName string) error
 	verifyFn      func(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error)
@@ -32,6 +33,13 @@ type mockPlatformService struct {
 	cancelAuthFn  func(userID uuid.UUID, platformName string, authRef string)
 	publishFn     func(ctx context.Context, userID uuid.UUID, platformName string, req service.PlatformPublishRequest, masterKey []byte) (*domain.PublishLog, error)
 	checkStatusFn func(ctx context.Context, userID uuid.UUID, platformName string, platformID string, masterKey []byte) (string, error)
+}
+
+func (m *mockPlatformService) Catalog(ctx context.Context, userID uuid.UUID) ([]domain.PlatformCatalogEntry, error) {
+	if m.catalogFn != nil {
+		return m.catalogFn(ctx, userID)
+	}
+	return []domain.PlatformCatalogEntry{}, nil
 }
 
 func (m *mockPlatformService) List(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error) {

@@ -291,7 +291,7 @@ func main() {
 			bucketCtx, bucketCancel := context.WithTimeout(context.Background(), 10*time.Second)
 			exists, exErr := minioClient.BucketExists(bucketCtx, bucket)
 			if exErr == nil && !exists {
-				if mkErr := minioClient.MakeBucket(bucketCtx, bucket); mkErr != nil {
+				if mkErr := minioClient.MakeBucket(bucketCtx, bucket, minio.MakeBucketOptions{}); mkErr != nil {
 					slog.Warn("MinIO bucket auto-create failed", "bucket", bucket, "error", mkErr)
 				} else {
 					slog.Info("MinIO bucket created", "bucket", bucket)

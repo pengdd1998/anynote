@@ -1,3 +1,5 @@
+//go:build integration
+
 // Integration tests using testcontainers-go for real PostgreSQL and Redis.
 //
 // These tests verify:
@@ -6,6 +8,11 @@
 // - Sync engine integration with PostgreSQL
 // - WebSocket presence with real Redis
 // - End-to-end flow of sync operations
+//
+// Gated behind the `integration` build tag (like the repository/handler
+// integration suites): without it these testcontainer tests also ran in the
+// plain `go test ./...` CI job, where Docker image pulls intermittently
+// timed out and failed every push.
 
 package service
 

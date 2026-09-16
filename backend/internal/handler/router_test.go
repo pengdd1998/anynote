@@ -145,6 +145,9 @@ type routerStubPlatformService struct{}
 func (s *routerStubPlatformService) List(ctx context.Context, userID uuid.UUID) ([]domain.PlatformConnection, error) {
 	return nil, nil
 }
+func (s *routerStubPlatformService) Catalog(ctx context.Context, userID uuid.UUID) ([]domain.PlatformCatalogEntry, error) {
+	return nil, nil
+}
 func (s *routerStubPlatformService) Connect(ctx context.Context, userID uuid.UUID, platformName string) (*domain.PlatformConnection, error) {
 	return nil, nil
 }
