@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,9 +22,11 @@ import '../../../core/crypto/decryption_exception.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/export/export_service.dart';
+import '../../../core/tts/speech_service.dart';
 import '../domain/decrypted_note.dart';
 import '../domain/note_envelope.dart';
 import 'widgets/quill_read_only_viewer.dart';
+import 'widgets/tts_player_bar.dart';
 import 'share_sheet.dart';
 import 'widgets/export_sheet.dart';
 import 'widgets/print_preview_sheet.dart';
@@ -66,6 +70,8 @@ class NoteDetailScreen extends ConsumerWidget {
             tooltip: l10n.editNote,
             onPressed: () => context.push('/notes/$noteId/edit'),
           ),
+          // Read aloud — plays/stops TTS for the note body.
+          _ReadAloudButton(noteId: noteId),
           // Star / bookmark — toggles the note's pinned (favorite) state.
           _StarButton(noteId: noteId),
           // Share
@@ -107,6 +113,14 @@ class NoteDetailScreen extends ConsumerWidget {
                 child: ListTile(
                   leading: const Icon(Icons.history),
                   title: Text(l10n.versionHistory),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'read_aloud',
+                child: ListTile(
+                  leading: const Icon(Icons.volume_up_outlined),
+                  title: Text(l10n.readAloud),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -198,6 +212,9 @@ class NoteDetailScreen extends ConsumerWidget {
           return _buildContent(context, data, isDark);
         },
       ),
+      // Read-aloud controls appear here while speech is active (the menu's
+      // 朗读 entry drives playback; the bar hides itself when stopped).
+      bottomNavigationBar: const TtsPlayerBar(),
     );
   }
 
@@ -662,6 +679,38 @@ class NoteDetailScreen extends ConsumerWidget {
   // Actions dispatch
   // ---------------------------------------------------------------------------
 
+  /// Toggle read-aloud for this note: speak the decrypted plain body via the
+  /// shared SpeechService; a second invocation stops playback. The TTS
+  /// player bar mounted at the bottom of the scaffold shows progress.
+  Future<void> _toggleReadAloud(
+    BuildContext context,
+    WidgetRef ref,
+    AppDatabase db,
+  ) async {
+    final service = ref.read(speechServiceProvider);
+    final speechState = ref.read(speechStateProvider).valueOrNull ??
+        SpeechState.stopped;
+    if (speechState != SpeechState.stopped) {
+      service.stop();
+      return;
+    }
+
+    final crypto = ref.read(cryptoServiceProvider);
+    final note = await db.notesDao.getNoteById(noteId);
+    if (note == null) return;
+
+    var body = note.plainContent ?? '';
+    if (crypto.isUnlocked) {
+      final decrypted =
+          await crypto.decryptForItem(noteId, note.encryptedContent);
+      if (decrypted != null) body = decrypted;
+    }
+    final plain = plainTextFromStoredContent(unwrapSyncEnvelope(body));
+    if (plain.trim().isNotEmpty) {
+      unawaited(service.speak(plain));
+    }
+  }
+
   void _onActionSelected(
     BuildContext context,
     WidgetRef ref,
@@ -673,6 +722,8 @@ class NoteDetailScreen extends ConsumerWidget {
         context.push('/notes/$noteId/preview');
       case 'history':
         context.push('/notes/$noteId/history');
+      case 'read_aloud':
+        _toggleReadAloud(context, ref, db);
       case 'delete':
         _confirmDelete(context, db);
       case 'share_link':
@@ -831,6 +882,58 @@ class NoteDetailScreen extends ConsumerWidget {
     );
   }
 
+}
+
+/// Read-aloud action in the app bar: plays/stops TTS for this note's
+/// decrypted plain body via the shared [SpeechService]. Self-contained
+/// (same pattern as [_StarButton]) so the stateless detail screen does not
+/// rebuild on speech-state changes.
+class _ReadAloudButton extends ConsumerWidget {
+  final String noteId;
+
+  const _ReadAloudButton({required this.noteId});
+
+  Future<void> _toggle(WidgetRef ref) async {
+    final service = ref.read(speechServiceProvider);
+    final speechState = ref.read(speechStateProvider).valueOrNull ??
+        SpeechState.stopped;
+    if (speechState != SpeechState.stopped) {
+      service.stop();
+      return;
+    }
+
+    final db = ref.read(databaseProvider);
+    final crypto = ref.read(cryptoServiceProvider);
+    final note = await db.notesDao.getNoteById(noteId);
+    if (note == null) return;
+
+    var body = note.plainContent ?? '';
+    if (crypto.isUnlocked) {
+      final decrypted =
+          await crypto.decryptForItem(noteId, note.encryptedContent);
+      if (decrypted != null) body = decrypted;
+    }
+    final plain = plainTextFromStoredContent(unwrapSyncEnvelope(body));
+    if (plain.trim().isNotEmpty) {
+      unawaited(service.speak(plain));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final stateAsync = ref.watch(speechStateProvider);
+    final isSpeaking =
+        (stateAsync.valueOrNull ?? SpeechState.stopped) != SpeechState.stopped;
+    return IconButton(
+      icon: Icon(
+        isSpeaking ? Icons.stop_circle_outlined : Icons.volume_up_outlined,
+        color: isSpeaking ? AppColors.primary : null,
+      ),
+      tooltip: isSpeaking ? l10n.stopReading : l10n.readAloud,
+      onPressed: () => _toggle(ref),
+    );
+  }
 }
 
 /// Star action in the app bar: toggles the note's pinned (favorite) state

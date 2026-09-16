@@ -1097,7 +1097,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         service.stop();
                       } else {
                         final content = _extractPlainText();
-                        if (content.isNotEmpty) service.speak(content);
+                        if (content.isNotEmpty) {
+                          unawaited(service.speak(content));
+                        }
                       }
                     },
                     onShowTagPicker: () => _showTagPicker(context),
