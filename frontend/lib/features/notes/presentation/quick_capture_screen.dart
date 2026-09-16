@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_durations.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
+import '../../../core/storage/image_storage.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
@@ -42,6 +45,9 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
   String? _selectedPriority;
   bool _isSaving = false;
   final Set<String> _selectedTagIds = {};
+
+  /// Pending image attachments (local file paths) captured in this session.
+  final List<String> _attachedImagePaths = [];
 
   @override
   void initState() {
@@ -97,7 +103,12 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
   }
 
   Future<void> _saveNote({bool showIndicator = false}) async {
-    final content = _contentController.text;
+    var content = _contentController.text;
+    // Append pending image attachments as markdown references so the note
+    // body keeps them across save/restore (rendered as image embeds).
+    for (final path in _attachedImagePaths) {
+      content += '\n![image](file://$path)';
+    }
     if (content.trim().isEmpty && _savedNoteId == null) return;
     if (content == _lastSavedContent && _savedNoteId != null) return;
 
@@ -175,7 +186,8 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
   Future<void> _saveAndClose() async {
     _autoSaveTimer?.cancel();
     final content = _contentController.text;
-    if (content.trim().isNotEmpty) {
+    // Text OR an attached image justifies a save.
+    if (content.trim().isNotEmpty || _attachedImagePaths.isNotEmpty) {
       await _saveNote();
     }
     if (mounted) {
@@ -468,6 +480,73 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                   ),
                 ),
 
+                // -- Attached image thumbnails --
+                if (_attachedImagePaths.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+                    child: SizedBox(
+                      height: 64,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          for (final path in _attachedImagePaths)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                right: AppSpacing.s8,
+                              ),
+                              child: Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.xs),
+                                    child: Image.file(
+                                      File(path),
+                                      width: 64,
+                                      height: 64,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          Container(
+                                        width: 64,
+                                        height: 64,
+                                        color: AppColors.lightInputFill,
+                                        child: const Icon(
+                                          Icons.broken_image_outlined,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: GestureDetector(
+                                      onTap: () => setState(
+                                        () => _attachedImagePaths.remove(path),
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.6,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.close,
+                                          size: 12,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 const SizedBox(height: AppSpacing.s8),
 
                 // -- Bottom toolbar --
@@ -534,6 +613,60 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
     );
   }
 
+  /// Pick an image (gallery/camera), store it, and stage it as an
+  /// attachment. Saved into the note body as a markdown image reference.
+  Future<void> _attachImage() async {
+    final l10n = AppLocalizations.of(context)!;
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(l10n.fromGallery),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: Text(l10n.fromCamera),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1920,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+      final noteId = _savedNoteId ?? const Uuid().v4();
+      final path = await ImageStorage.saveImage(
+        await picked.readAsBytes(),
+        noteId,
+      );
+      if (mounted) {
+        setState(() => _attachedImagePaths.add(path));
+        _scheduleAutoSave();
+      }
+    } catch (e) {
+      debugPrint('QuickCapture: image attach failed: $e');
+    }
+  }
+
+  void _scheduleAutoSave() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(AppDurations.snackbarDuration, () {
+      if (mounted) _saveNote(showIndicator: true);
+    });
+  }
+
   Widget _buildBottomToolbar(bool isDark, AppLocalizations l10n) {
     final tertiaryColor =
         isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
@@ -569,6 +702,16 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
           ),
           tooltip: l10n.setPriority,
           onPressed: _showPrioritySelector,
+        ),
+        // Attach image — capture modality from scenario 1.
+        IconButton(
+          icon: Badge(
+            isLabelVisible: _attachedImagePaths.isNotEmpty,
+            label: Text('${_attachedImagePaths.length}'),
+            child: Icon(Icons.image_outlined, color: tertiaryColor),
+          ),
+          tooltip: l10n.addImage,
+          onPressed: _attachImage,
         ),
         const Spacer(),
         if (_isSaving)
