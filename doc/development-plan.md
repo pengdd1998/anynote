@@ -2355,3 +2355,104 @@ Structured search operators, saved searches, and search history.
 | Web App Deployment | P2 |
 | Performance Profiling | P3 |
 | Dependency Maintenance (major version bumps) | P3 |
+
+---
+
+## Sprint Plan 2026-09 — from product gap analysis (doc/product-gap-analysis-2026-09-16.md)
+
+Basis: PM audit against v2.7.9 (52f1881) + deployed server. Verdict: capture→compose
+verified on device; publish blocked at first connection; TTS simulated; prod Redis/MinIO
+degraded. Plan below converts the audit's G1–G15 into sequenced phases with acceptance
+criteria. Status markers follow the usual convention (PENDING unless noted).
+
+### Sprint A — make the promise real (P0, ~1–2 weeks)
+
+#### Phase 124: Platform Connection Bootstrap — PENDING (G1, vision-blocking)
+Connect flow is a dead loop for fresh accounts: `GET /platforms` returns only connected
+platforms; connect action unreachable with zero connections (platform_connection_screen
+empty state has no CTA; publish sheet likewise).
+- Ship a platform catalog (the 6 registered adapters) on the 平台连接 screen with a
+  连接平台 CTA on the empty state.
+- Wire `POST /platforms/{platform}/connect` XHS SSE QR flow from the catalog entry.
+- Publish sheet falls back to the same picker when no platform is connected.
+- Acceptance: fresh account → connect XHS via QR → connected card appears → publish
+  sheet offers XHS. E2E with a real XHS account.
+- Files: frontend/lib/features/publish/... (platform_connection_screen, publish_screen),
+  backend adapter catalog endpoint if needed.
+
+#### Phase 125: Prod Infra Repair + Backend Deploy — PENDING (G2 + G8)
+`/ready` degraded: Redis DSN bug (cmd/server/main.go:90 passes full URL as
+redis.Options.Addr — worker correctly uses ParseURL); MinIO bucket `anynote` missing.
+- Fix server main.go Redis init to ParseURL (parity with worker).
+- Init MinIO bucket in deploy compose / startup.
+- Redeploy current main (also ships llm_config merged-Update + resolver fallback, G8).
+- Acceptance: `/ready` all-ok; note image round-trips to a second device; Redis-backed
+  rate limiting active; PUT /llm/configs/{id} partial update keeps name/model/key.
+
+#### Phase 126: zh l10n Sweep — PENDING (G7)
+English leaks on shipped surfaces: detail meta "1 min read", AI chat follow-up chips,
+server error strings.
+- Fix the three known leaks; add "no English on zh locale" gate to the QA checklist
+  (home/detail/editor/AI/publish/settings screenshots).
+- Acceptance: zero visible English strings on zh across those screens.
+
+### Sprint B — deepen the moat (P1)
+
+#### Phase 127: Real TTS — PENDING (G3)
+SpeechService.isAvailable => kIsWeb; native path simulates with a timer, no audio;
+no 朗读 entry in detail menu on device.
+- Integrate flutter_tts; real playback + rate control on Android/iOS.
+- Add 朗读 to detail overflow menu; remove/gate the simulation.
+- Acceptance: audible speech from note detail; rate slider works.
+
+#### Phase 128: Capture Modalities — PENDING (G4)
+Scenario 1 promises text/voice/image/URL capture; today voice and URL are missing,
+image attach is editor-only.
+- Quick capture accepts an image attachment.
+- Voice memo → speech_to_text → note body.
+- Pasting a URL offers a capture snippet (title + url).
+- Acceptance: all four modalities captured to a note from home in < 3 s each.
+
+#### Phase 129: Capture-time AI Auto-tag — PENDING (G6)
+AI 标签推荐 exists but is a manual editor action; scenario 1 wants automatic
+classification at capture.
+- On note save (first N/day to bound LLM cost), request tag suggestions in the
+  background; surface as dismissible chip row on card/detail; one-tap accept.
+- Acceptance: tags suggested without user action after save; accept = one tap;
+  dismissable; never blocks save.
+
+#### Phase 130: Startup Performance — PENDING (G12)
+Cold start blank ~10 s on Note 9 (debug) before Home paints.
+- Define time-to-interactive budget; profile release build (timeline traces).
+- Show splash/native preview instead of blank; defer non-critical init off the
+  first frame.
+- Acceptance: budget documented + met on mid-range Android; no blank screen.
+
+### Sprint C — complete the loop (P2)
+
+#### Phase 131: Publish Stats + Content Calendar — PENDING (G5)
+No per-post views/likes/comments anywhere; history records attempts only.
+- Publish history cards: platform, time, status, stats where the platform exposes
+  them (fetch via adapter).
+- Content-calendar view aggregating published posts.
+- Acceptance: history card shows fetched stats for XHS posts; calendar renders.
+
+#### Phase 132: Semantic Search (pgvector) — PENDING (G9)
+FTS5 covers exact tokens only; scenario 4 core is paraphrase retrieval.
+- Embed public-content-only per privacy decision; ranked results incl. paraphrase
+  matches; hybrid with FTS5.
+- Acceptance: "写一篇关于X的文章" returns ranked relevant notes incl. paraphrases.
+
+#### Phase 133: Paper Rollout + Dead-feature Decision — PENDING (G10 + G15)
+- Migrate remaining surfaces (collection covers, compose cluster cards, settings
+  banner) to PaperSurface/PaperTokens.
+- Fix editor polish leftovers: edit-mode first line handwritten, duplicated
+  专注模式 entries, version-history "current" chars (G11).
+- Decide G15: home widgets + template marketplace — ship or strip the COMPLETED
+  label from docs.
+
+### Cross-sprint instrumentation (start of Sprint B)
+
+North-star metrics (PRODUCT-ANALYSIS 7.2) are unmeasurable today: capture < 3 s,
+material reuse rate, publish conversion, W4 retention. Add privacy-preserving
+opt-in analytics before Sprint C so baseline exists.
