@@ -29,6 +29,11 @@ class ApiClient {
   final Dio _dio;
   final FlutterSecureStorage _secureStorage;
   String? _accessToken;
+  DateTime? _accessTokenExpiresAt;
+
+  /// Refresh this long before expiry so requests never see a 401.
+  static const _refreshLeadTime = Duration(seconds: 60);
+  static const _defaultAccessTtl = Duration(hours: 24);
 
   /// Completer used as a mutex to prevent concurrent token refresh attempts.
   Completer<String?>? _refreshCompleter;
@@ -71,8 +76,16 @@ class ApiClient {
 
   // ── Auth ──────────────────────────────────────────
 
-  void setAccessToken(String token) {
+  void setAccessToken(String token, {DateTime? expiresAt}) {
     _accessToken = token;
+    _accessTokenExpiresAt = expiresAt;
+  }
+
+  /// True when the access token is known and expires within the lead time.
+  bool _isAccessExpiring() {
+    final exp = _accessTokenExpiresAt;
+    if (exp == null) return false;
+    return DateTime.now().isAfter(exp.subtract(_refreshLeadTime));
   }
 
   String? get accessToken => _accessToken;
@@ -110,6 +123,12 @@ class ApiClient {
     );
     if (hasAccessToken) {
       _accessToken = accessToken;
+      final storedExpiry = await _secureStorage.read(key: 'access_expires_at');
+      final ms = int.tryParse(storedExpiry ?? '');
+      if (ms != null) {
+        _accessTokenExpiresAt =
+            DateTime.fromMillisecondsSinceEpoch(ms);
+      }
       return;
     }
 
@@ -164,15 +183,30 @@ class ApiClient {
         },
       );
 
-      final newAccessToken = response.data['access_token'] as String;
-      final newRefreshToken = response.data['refresh_token'] as String;
+      // Defensive parsing: a shape we do not understand must fail as a
+      // transient refresh failure, never as a cast crash.
+      final body = response.data;
+      if (body is! Map) {
+        throw const FormatException('refresh response was not an object');
+      }
+      final newAccessToken = body['access_token'] as String?;
+      final newRefreshToken = body['refresh_token'] as String?;
+      if (newAccessToken == null || newRefreshToken == null) {
+        throw const FormatException(
+          'refresh response missing tokens',
+        );
+      }
+      final expiresAt = _parseExpiresAt(
+        body['expires_at'],
+        fallback: DateTime.now().add(_defaultAccessTtl),
+      );
 
-      // Store new tokens in secure storage.
-      await _secureStorage.write(key: 'access_token', value: newAccessToken);
-      await _secureStorage.write(key: 'refresh_token', value: newRefreshToken);
-
-      // Update in-memory token.
-      _accessToken = newAccessToken;
+      // Persist new credentials (memory + secure storage).
+      await _applyAuth(
+        newAccessToken,
+        newRefreshToken,
+        expiresAt: expiresAt,
+      );
 
       _refreshCompleter!.complete(newAccessToken);
       return newAccessToken;
@@ -202,10 +236,25 @@ class ApiClient {
     }
   }
 
+  /// Parse the server's expiry hint (RFC3339 or epoch millis); falls back
+  /// to [fallback] when absent or malformed.
+  DateTime _parseExpiresAt(dynamic raw, {required DateTime fallback}) {
+    if (raw is String) {
+      final parsed = DateTime.tryParse(raw);
+      if (parsed != null) return parsed.toUtc();
+    }
+    if (raw is num) {
+      return DateTime.fromMillisecondsSinceEpoch(raw.toInt());
+    }
+    return fallback;
+  }
+
   /// Clear all stored tokens and redirect to login.
   Future<void> _clearAllTokens() async {
     _accessToken = null;
+    _accessTokenExpiresAt = null;
     await _secureStorage.delete(key: 'access_token');
+    await _secureStorage.delete(key: 'access_expires_at');
     await _secureStorage.delete(key: 'refresh_token');
   }
 
@@ -257,9 +306,8 @@ class ApiClient {
       },
     );
     final authRes = AuthResponse.fromJson(res.data);
-    setAccessToken(authRes.accessToken);
-    await storeAccessTokenSecure(authRes.accessToken);
-    await storeRefreshToken(authRes.refreshToken);
+    await _applyAuth(authRes.accessToken, authRes.refreshToken,
+        expiresAt: authRes.expiresAt,);
     return authRes;
   }
 
@@ -271,8 +319,26 @@ class ApiClient {
       },
     );
     final authRes = AuthResponse.fromJson(res.data);
-    setAccessToken(authRes.accessToken);
+    await _applyAuth(authRes.accessToken, authRes.refreshToken,
+        expiresAt: authRes.expiresAt,);
     return authRes;
+  }
+
+  /// Apply freshly issued credentials: memory + secure storage.
+  Future<void> _applyAuth(
+    String accessToken,
+    String refreshToken, {
+    DateTime? expiresAt,
+  }) async {
+    setAccessToken(accessToken, expiresAt: expiresAt);
+    await storeAccessTokenSecure(accessToken);
+    await storeRefreshToken(refreshToken);
+    if (expiresAt != null) {
+      await _secureStorage.write(
+        key: 'access_expires_at',
+        value: expiresAt.millisecondsSinceEpoch.toString(),
+      );
+    }
   }
 
   /// Get the current authenticated user's profile.
@@ -847,7 +913,17 @@ class _AuthInterceptor extends Interceptor {
   _AuthInterceptor(this._client);
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    // Proactive silent renewal: refresh ahead of expiry so requests never
+    // hit a 401 in the first place. Mutex-protected; the refreshed token is
+    // used for this request immediately.
+    if (_client._isAccessExpiring() &&
+        options.path != '/api/v1/auth/refresh') {
+      await _client.tryRefreshToken();
+    }
     if (_client._accessToken != null) {
       options.headers['Authorization'] = 'Bearer ${_client._accessToken}';
     }
