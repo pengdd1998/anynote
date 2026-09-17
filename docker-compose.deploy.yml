@@ -2,7 +2,8 @@
 #
 # Deploys only the AnyNote application services (server, worker, chrome).
 # Connects to shared infrastructure (postgres, redis, minio) via the
-# `shared-infra` external network managed by infra/docker-compose.yml.
+# `shared-infra` external network, managed externally on the VPS at
+# /srv/infra (platform group, manual ops — see infra/README.md).
 #
 # Pulls pre-built images from GitHub Container Registry:
 #   docker compose -f docker-compose.deploy.yml pull

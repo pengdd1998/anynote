@@ -200,18 +200,24 @@ jobs:
 
             echo "Images pulled. Starting deploy..."
 
-            # Ensure shared infrastructure is running
-            docker compose -f infra/docker-compose.yml up -d
+            # Shared infra (postgres/redis/minio) is managed externally at
+            # /srv/infra by the platform group — do NOT converge it from project CD.
 
             # Wait for postgres
             echo "Waiting for postgres..."
+            PG_READY=false
             for i in $(seq 1 30); do
               if docker exec infra-postgres pg_isready -U readpal -q 2>/dev/null; then
+                PG_READY=true
                 echo "Postgres ready."
                 break
               fi
               sleep 1
             done
+            if [ "$PG_READY" != true ]; then
+              echo "ERROR: infra-postgres unreachable — shared-infra is externally managed (/srv/infra); contact platform group"
+              exit 1
+            fi
 
             # Create anynote database if it doesn't exist
             docker exec infra-postgres psql -U readpal -tc "SELECT 1 FROM pg_database WHERE datname='anynote'" | grep -q 1 || \
