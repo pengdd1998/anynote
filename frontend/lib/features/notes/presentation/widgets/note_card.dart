@@ -394,10 +394,12 @@ class NoteCard extends StatelessWidget {
             ),
           ),
         // Handwritten note title (first line of content), near-black.
+        // Long first lines wrap so the note's real content stays visible;
+        // the rich preview below still carries the remaining lines.
         Expanded(
           child: Text(
             title,
-            maxLines: 1,
+            maxLines: _isGrid ? 4 : 2,
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.handwritingBody.copyWith(
               color: isDark
