@@ -16,6 +16,7 @@ import '../../../core/constants/app_durations.dart';
 import '../../../core/error/error.dart' show ErrorDisplay;
 import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../search/data/search_providers.dart';
 import '../../../core/theme/paper_tokens.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
@@ -865,6 +866,17 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 : _buildWordmark(),
         actions: [
           if (_isSearching && !_isSelectionMode) ...[
+            // Jump to the advanced search screen (operator filters +
+            // semantic toggle), carrying the current query along.
+            IconButton(
+              icon: const Icon(Icons.tune),
+              tooltip: l10n.advancedSearch,
+              onPressed: () {
+                ref.read(operatorSearchQueryProvider.notifier).state =
+                    _searchQuery;
+                context.push('/search');
+              },
+            ),
             IconButton(
               icon: const Icon(AppIcons.close),
               tooltip: l10n.close,
