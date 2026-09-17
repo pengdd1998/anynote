@@ -180,16 +180,17 @@ infra 变更（镜像升级/调参）今后只能走平台 runbook：通告平�
 前提：DNS `anynote.chishenma.top` A 记录 → 175.178.66.207；平台组
 登记别名 `anynote-api`。
 
-部署序列（顺序即正确性——片段先生效，旧入口后关）：
+部署序列（**up 先行使 anynote-api 别名就绪，reload 后路由零窗口生效**。
+首次接入无存量路由，与 read-pal C-3"替换存量路由"的 reload→up 序不同）：
 
 ```bash
-# 1) 边缘片段收敛 + 原子 reload（validate 失败即中止部署，旧入口无损）
+# 1) 应用服务滚动（compose 变更 = server 容器重建接入 edge-net，获得别名）
+IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml up -d
+# 2) 边缘片段收敛 + 原子 reload（validate 失败即中止部署，旧入口无损）
 cp docker/edge.caddy /srv/infra/sites/anynote.caddy
 docker exec edge-caddy caddy validate --config /etc/caddy/Caddyfile \
   && docker exec edge-caddy caddy reload --config /etc/caddy/Caddyfile
-# 2) 应用服务滚动（compose 变更 = server 容器重建接入 edge-net）
-IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml up -d
-# 3) 健康检查（新入口为主，回环旧入口为辅）
+# 3) 健康检查（新入口 + 回环旧入口；CD 已内置，边缘检查带 ACME 首签重试）
 curl -sf https://anynote.chishenma.top/health
 curl -sf http://localhost:36661/health
 ```

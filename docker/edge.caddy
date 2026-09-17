@@ -1,0 +1,16 @@
+# anynote edge fragment — 只写 site 块, 全局选项归骨架（平台手册:
+# read-pal ops/edge/README.md 三不变式）。
+#
+# 收敛方式：CD 钩子拷贝到 /srv/infra/sites/anynote.caddy 后
+# caddy validate + reload（原子，失败即中止部署）。首次落位需人工执行一次
+# cp + reload（见 doc/tech-plan-2026-09-deploy.md E-1 前提）。
+anynote.chishenma.top {
+	encode gzip
+
+	reverse_proxy anynote-api:36661 {
+		# 后端限流键依赖此头（backend realip.go 仅信任 Docker 内网来源）
+		header_up X-Real-IP {remote_host}
+		# AI 对话 / SSE 流式接口
+		flush_interval -1
+	}
+}

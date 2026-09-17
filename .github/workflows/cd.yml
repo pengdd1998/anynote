@@ -250,6 +250,16 @@ jobs:
             echo "Starting services..."
             IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml up -d
 
+            # --- Edge fragment convergence (platform edge-caddy) ---
+            # up 先行使 anynote-api 别名就绪，随后 reload 让路由生效（首次
+            # 接入无存量路由，此顺序零窗口）。validate 失败必须响亮中止。
+            if [ -f docker/edge.caddy ]; then
+              echo "Converging edge fragment..."
+              cp docker/edge.caddy /srv/infra/sites/anynote.caddy
+              docker exec edge-caddy caddy validate --config /etc/caddy/Caddyfile
+              docker exec edge-caddy caddy reload --config /etc/caddy/Caddyfile
+            fi
+
             # Health check (60s window)
             echo "Health check..."
             for i in $(seq 1 30); do
@@ -263,6 +273,20 @@ jobs:
               fi
               sleep 2
             done
+
+            # Edge entry check (retryable: first ACME issuance can take seconds)
+            EDGE_OK=false
+            for i in $(seq 1 5); do
+              if curl -sf --max-time 10 https://anynote.chishenma.top/health > /dev/null 2>&1; then
+                EDGE_OK=true
+                echo "Edge entry healthy."
+                break
+              fi
+              sleep 6
+            done
+            if [ "$EDGE_OK" != true ]; then
+              echo "WARNING: edge entry health check failed (DNS/cert/fragment?) — check docker logs edge-caddy"
+            fi
 
             # Cleanup
             echo "Cleaning up..."

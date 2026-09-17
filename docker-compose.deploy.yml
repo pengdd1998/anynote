@@ -29,6 +29,9 @@ services:
       QWEN_API_KEY: ${QWEN_API_KEY:-}
       PORT: "36661"
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Networks whose forwarded-client headers (X-Real-IP etc.) are trusted
+      # — edge-caddy dials from Docker-internal networks (backend realip.go).
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.16.0.0/12,192.168.0.0/16}
     ports:
       - "${PORT:-36661}:36661"
     healthcheck:
@@ -53,7 +56,10 @@ services:
         max-size: "20m"
         max-file: "10"
     networks:
-      - shared-infra
+      shared-infra: {}
+      edge-net:
+        aliases:
+          - anynote-api
 
   worker:
     image: ghcr.io/pengdd1998/anynote/worker:${IMAGE_TAG:-latest}
@@ -122,6 +128,8 @@ services:
 networks:
   shared-infra:
     name: shared-infra
+    external: true
+  edge-net:
     external: true
   anynote-backend:
     name: anynote-backend
