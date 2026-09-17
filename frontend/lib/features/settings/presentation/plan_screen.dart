@@ -7,6 +7,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/paper_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/plan_model.dart';
 import '../../settings/providers/plan_providers.dart';
@@ -267,19 +268,21 @@ class _CurrentPlanCard extends StatelessWidget {
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color:
-            isDark ? AppColors.primary.withAlpha(38) : AppColors.primarySoft,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: isDark
-              ? AppColors.primary.withAlpha(60)
-              : AppColors.primarySoftBorder,
-        ),
+    // The plan banner is a wide sheet of paper pinned to the brand-soft
+    // tone (identity card, not a cycled note), no tilt, doodle for charm.
+    return PaperSurface(
+      seed: 3,
+      tone: isDark ? AppColors.primary.withAlpha(38) : AppColors.primarySoft,
+      tilted: false,
+      showDoodle: true,
+      border: Border.all(
+        color: isDark
+            ? AppColors.primary.withAlpha(60)
+            : AppColors.primarySoftBorder,
       ),
-      child: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Small "Current Plan" label.
@@ -396,6 +399,7 @@ class _CurrentPlanCard extends StatelessWidget {
             ),
           ],
         ],
+        ),
       ),
     );
   }

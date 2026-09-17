@@ -16,6 +16,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/paper_surface.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -121,80 +122,63 @@ class ComposeScreen extends ConsumerWidget {
   ) {
     return GestureDetector(
       onTap: () => _showNoteSelector(context, ref, notesAsync),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [
-                    AppColors.primary.withAlpha(40),
-                    AppColors.accentLavender.withAlpha(30),
-                  ]
-                : [
-                    AppColors.primary.withAlpha(20),
-                    AppColors.accentPeachBg,
-                  ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(
-            color: isDark
-                ? AppColors.darkBorder.withAlpha(60)
-                : AppColors.lightBorder.withAlpha(80),
-            width: 0.5,
-          ),
-          boxShadow: AppShadows.mdOf(Theme.of(context).brightness),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(25),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
+      // Wide hero sheet: paper surface without tilt (too wide to rotate),
+      // with the hand-drawn doodle for the hand-placed feel.
+      child: PaperSurface(
+        seed: 7,
+        tilted: false,
+        showDoodle: true,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(25),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    color: AppColors.primary,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.s12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.startComposing,
-                        style: AppTextStyles.title,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.selectNotes,
-                        style: AppTextStyles.caption.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextTertiary
-                              : AppColors.lightTextTertiary,
+                  const SizedBox(width: AppSpacing.s12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.startComposing,
+                          style: AppTextStyles.title,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.selectNotes,
+                          style: AppTextStyles.caption.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextTertiary
+                                : AppColors.lightTextTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  color: isDark
-                      ? AppColors.darkTextTertiary
-                      : AppColors.lightTextTertiary,
-                ),
-              ],
-            ),
-          ],
+                  Icon(
+                    Icons.chevron_right,
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

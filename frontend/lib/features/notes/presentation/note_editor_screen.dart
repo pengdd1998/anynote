@@ -843,6 +843,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           plainContent: plainText,
           firstImagePath: imagePath,
         );
+
+        // Snapshot the just-saved state as the newest version so the
+        // timeline's top entry (labeled 当前) matches the live note instead
+        // of the pre-save safety snapshot (same pattern as version restore).
+        await _savePostWriteSnapshot(db, noteId);
       }
       pm.end('note_save');
       if (mounted) {
@@ -1022,6 +1027,31 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       debugPrint('[NoteEditor] Version snapshot failure: $e');
       // Version snapshot failure should not block the save.
       // The user's content is more important than version history.
+    }
+  }
+
+  /// Snapshot the note as it exists right after a successful write, so the
+  /// newest timeline entry always equals the live note (the pre-save snapshot
+  /// one entry below still preserves the overwritten state).
+  Future<void> _savePostWriteSnapshot(AppDatabase db, String noteId) async {
+    try {
+      final savedNote = await db.notesDao.getNoteById(noteId);
+      if (savedNote == null) return;
+
+      final count = await db.noteVersionsDao.getVersionCount(noteId);
+      await db.noteVersionsDao.createVersion(
+        id: const Uuid().v4(),
+        noteId: noteId,
+        encryptedTitle: savedNote.encryptedTitle,
+        plainTitle: savedNote.plainTitle,
+        encryptedContent: savedNote.encryptedContent,
+        plainContent: savedNote.plainContent,
+        versionNumber: count + 1,
+      );
+      await db.noteVersionsDao.deleteVersionsOlderThan(noteId, 20);
+    } catch (e) {
+      debugPrint('[NoteEditor] Post-write snapshot failure: $e');
+      // Same policy as the pre-save snapshot: never block the save.
     }
   }
 

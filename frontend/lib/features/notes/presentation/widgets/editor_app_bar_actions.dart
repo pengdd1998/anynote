@@ -319,16 +319,8 @@ class EditorAppBarActions {
               contentPadding: EdgeInsets.zero,
             ),
           ),
-          PopupMenuItem(
-            value: 'focus',
-            child: ListTile(
-              leading: Icon(
-                config.isFocusMode ? Icons.highlight : Icons.highlight_outlined,
-              ),
-              title: Text(l10n.focusMode),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
+          // Focus mode has no standalone menu item: entering zen mode
+          // auto-enables it (and typewriter scroll). One entry, one label.
           PopupMenuItem(
             value: 'zen',
             child: ListTile(
@@ -437,8 +429,6 @@ class EditorAppBarActions {
         config.onReadAloud();
       case 'typewriter':
         config.onToggleTypewriterScroll();
-      case 'focus':
-        config.onToggleFocusMode();
       case 'zen':
         config.onToggleZenMode();
       case 'image':

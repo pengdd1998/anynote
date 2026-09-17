@@ -15,6 +15,7 @@ import '../../../core/theme/color_utils.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/color_picker_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/paper_surface.dart';
 import '../../../core/widgets/sync_status_badge.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -451,62 +452,68 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
     return GestureDetector(
       onTap: () => context.push('/collections/${collection.id}'),
       onLongPress: () => _showCollectionEditMenu(collection, db),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.s16),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-          ),
-          boxShadow: AppShadows.smOf(Theme.of(context).brightness),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Pastel icon tile + sync badge
-            Row(
-              children: [
-                _collectionIcon(collection, isDark),
-                const Spacer(),
-                if (colColor != null)
-                  Container(
-                    width: 8,
-                    height: 8,
-                    margin: const EdgeInsets.only(right: AppSpacing.s4),
-                    decoration: BoxDecoration(
-                      color: colColor,
-                      shape: BoxShape.circle,
+      // Collection covers are sheets of sticky-note paper, matching the
+      // notes home grid (tone cycle, tilt, doodle — all seeded by id so a
+      // collection keeps its look across restarts).
+      child: PaperSurface(
+        seed: collection.id.hashCode & 0x7fffffff,
+        tilted: true,
+        showDoodle: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push('/collections/${collection.id}'),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.s16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Pastel icon tile + sync badge
+                  Row(
+                    children: [
+                      _collectionIcon(collection, isDark),
+                      const Spacer(),
+                      if (colColor != null)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.only(right: AppSpacing.s4),
+                          decoration: BoxDecoration(
+                            color: colColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      SyncStatusBadge(isSynced: collection.isSynced),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.s12),
+                  // Title
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                     ),
                   ),
-                SyncStatusBadge(isSynced: collection.isSynced),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.s12),
-            // Title
-            Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.body.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                  const Spacer(),
+                  // Note count
+                  Text(
+                    l10n.noteCount(noteCount),
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 12,
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const Spacer(),
-            // Note count
-            Text(
-              l10n.noteCount(noteCount),
-              style: AppTextStyles.caption.copyWith(
-                fontSize: 12,
-                color: isDark
-                    ? AppColors.darkTextTertiary
-                    : AppColors.lightTextTertiary,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

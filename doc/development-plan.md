@@ -68,7 +68,7 @@ Build a local-first, privacy-first note-taking application where the server neve
 3. **Phase 2: Sync & AI** — COMPLETED (E2E sync, AI composition workflow, structured logging, retry)
 4. **Phase 3: Publishing** — COMPLETED (XHS, WeChat, Zhihu, Medium, WordPress, Webhook adapters)
 5. **Phase 4: Polish & Testing** — COMPLETED (comprehensive tests, error handling, UX polish)
-6. **Phase 5-13: Post-MVP Features** — COMPLETED (tags, collections, templates, import/export, backup/restore, home widgets, template marketplace, performance)
+6. **Phase 5-13: Post-MVP Features** — COMPLETED (tags, collections, templates, import/export, backup/restore, performance). G15 decision (2026-09-17): home widgets + template marketplace STRIPPED — label-only completions, YAGNI until requested.
 7. **Phase 21: Production Hardening** — COMPLETED (accessibility, security headers, expanded tests)
 8. **Phase 22: WebCrypto + Web** — COMPLETED (AES-256-GCM + PBKDF2 for web)
 9. **Phase 23: Share Extension** — COMPLETED (Android/iOS share-to-app)
@@ -2093,9 +2093,8 @@ Structured search operators, saved searches, and search history.
 - **export_sheet_test.dart**: 11 tests (format options, scope, frontmatter toggle, organization)
 - **print_preview_sheet_test.dart**: 12 tests (content rendering, toggles, clipboard, actions)
 - **version_diff_screen_test.dart**: 17 tests (14 TextDiff LCS algorithm + 3 widget tests)
-- **home_widget_service_test.dart**: 12 tests (NoteSummary, JSON serialization, no-op platform)
 - **tts_player_bar_test.dart**: 13 tests (state icons, callbacks, speed selector, progress)
-- Total: 65 new tests, all passing
+- Total: 53 new tests, all passing (12 home-widget tests removed with the G15 strip)
 
 ## Phase 120: Tag Hierarchy — COMPLETED
 
