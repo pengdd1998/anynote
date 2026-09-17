@@ -1108,7 +1108,14 @@
     "@model": {
         "description": "Form field label"
     },
-    "embeddingModel": "Embedding model",
+    "embeddingBaseUrl": "Embedding base URL",
+    "@embeddingBaseUrl": {
+        "description": "Optional separate endpoint for embeddings"
+    },
+    "embeddingBaseUrlHint": "e.g., http://192.168.1.12:11434/v1 (optional)",
+    "@embeddingBaseUrlHint": {
+        "description": "Hint for the embedding base URL field"
+    },    "embeddingModel": "Embedding model",
     "@embeddingModel": {
         "description": "Optional LLM embedding model for semantic search"
     },

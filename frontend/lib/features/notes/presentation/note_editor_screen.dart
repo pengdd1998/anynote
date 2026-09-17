@@ -719,7 +719,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       final embeddingModel = cfg?.embeddingModel;
       if (cfg == null ||
           (cfg.apiKey ?? '').isEmpty ||
-          cfg.baseUrl == null ||
+          (cfg.embeddingBaseUrl ?? cfg.baseUrl) == null ||
           embeddingModel == null ||
           embeddingModel.isEmpty) {
         if (mounted) {
@@ -738,7 +738,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       final input = body.length > 8000 ? body.substring(0, 8000) : body;
 
       final vector = await LlmDirectClient().embeddings(
-        baseUrl: cfg.baseUrl!,
+        baseUrl: (cfg.embeddingBaseUrl ?? cfg.baseUrl)!,
         apiKey: cfg.apiKey!,
         model: embeddingModel,
         input: input,

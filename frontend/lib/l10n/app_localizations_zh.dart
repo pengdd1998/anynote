@@ -815,6 +815,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get model => '模型';
 
   @override
+  String get embeddingBaseUrl => 'Embedding 服务地址';
+
+  @override
+  String get embeddingBaseUrlHint => '例如 http://192.168.1.12:11434/v1（可选）';
+
+  @override
   String get embeddingModel => 'Embedding 模型';
 
   @override

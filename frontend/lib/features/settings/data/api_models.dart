@@ -81,6 +81,11 @@ class LlmConfig {
   /// Optional embedding model name used by semantic search (e.g.
   /// "embedding-2" or "text-embedding-3-small"). Null disables the feature.
   final String? embeddingModel;
+
+  /// Optional base URL for the embeddings endpoint. Falls back to [baseUrl]
+  /// when null. Set this when embeddings come from a different server than
+  /// chat (e.g. a local LAN bge-m3/Ollama while chat uses a cloud provider).
+  final String? embeddingBaseUrl;
   final bool isDefault;
   final int maxTokens;
   final double temperature;
@@ -95,6 +100,7 @@ class LlmConfig {
     this.apiKey,
     required this.model,
     this.embeddingModel,
+    this.embeddingBaseUrl,
     required this.isDefault,
     required this.maxTokens,
     required this.temperature,
@@ -110,6 +116,7 @@ class LlmConfig {
         apiKey: json['api_key'] as String?,
         model: json['model'] as String,
         embeddingModel: json['embedding_model'] as String?,
+        embeddingBaseUrl: json['embedding_base_url'] as String?,
         isDefault: json['is_default'] as bool? ?? false,
         maxTokens: json['max_tokens'] as int? ?? 4096,
         temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
@@ -128,6 +135,7 @@ class LlmConfig {
         'api_key': apiKey,
         'model': model,
         'embedding_model': embeddingModel,
+        'embedding_base_url': embeddingBaseUrl,
         'is_default': isDefault,
         'max_tokens': maxTokens,
         'temperature': temperature,
@@ -145,6 +153,7 @@ class LlmConfig {
     String? apiKey,
     String? model,
     String? embeddingModel,
+    String? embeddingBaseUrl,
     bool? isDefault,
     int? maxTokens,
     double? temperature,
@@ -159,6 +168,7 @@ class LlmConfig {
         apiKey: apiKey ?? this.apiKey,
         model: model ?? this.model,
         embeddingModel: embeddingModel ?? this.embeddingModel,
+        embeddingBaseUrl: embeddingBaseUrl ?? this.embeddingBaseUrl,
         isDefault: isDefault ?? this.isDefault,
         maxTokens: maxTokens ?? this.maxTokens,
         temperature: temperature ?? this.temperature,

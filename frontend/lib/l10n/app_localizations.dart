@@ -1632,6 +1632,18 @@ abstract class AppLocalizations {
   /// **'Model'**
   String get model;
 
+  /// Optional separate endpoint for embeddings
+  ///
+  /// In en, this message translates to:
+  /// **'Embedding base URL'**
+  String get embeddingBaseUrl;
+
+  /// Hint for the embedding base URL field
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., http://192.168.1.12:11434/v1 (optional)'**
+  String get embeddingBaseUrlHint;
+
   /// Optional LLM embedding model for semantic search
   ///
   /// In en, this message translates to:

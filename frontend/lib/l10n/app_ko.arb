@@ -254,6 +254,8 @@
     "baseUrl": "기본 URL",
     "apiKey": "API 키",
     "model": "모델",
+    "embeddingBaseUrl": "임베딩 서버 주소",
+    "embeddingBaseUrlHint": "예: http://192.168.1.12:11434/v1 (선택)",
     "embeddingModel": "임베딩 모델",
     "embeddingModelHint": "예: text-embedding-3-small (선택)",
     "semanticSearch": "의미",

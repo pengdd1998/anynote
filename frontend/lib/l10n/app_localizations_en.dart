@@ -836,6 +836,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get model => 'Model';
 
   @override
+  String get embeddingBaseUrl => 'Embedding base URL';
+
+  @override
+  String get embeddingBaseUrlHint =>
+      'e.g., http://192.168.1.12:11434/v1 (optional)';
+
+  @override
   String get embeddingModel => 'Embedding model';
 
   @override

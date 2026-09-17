@@ -821,6 +821,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get model => '모델';
 
   @override
+  String get embeddingBaseUrl => '임베딩 서버 주소';
+
+  @override
+  String get embeddingBaseUrlHint => '예: http://192.168.1.12:11434/v1 (선택)';
+
+  @override
   String get embeddingModel => '임베딩 모델';
 
   @override

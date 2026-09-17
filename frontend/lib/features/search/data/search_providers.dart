@@ -209,7 +209,7 @@ final semanticSearchResultsProvider =
   if (cfg == null ||
       cfg.apiKey == null ||
       cfg.apiKey!.isEmpty ||
-      cfg.baseUrl == null ||
+      (cfg.embeddingBaseUrl ?? cfg.baseUrl) == null ||
       embeddingModel == null ||
       embeddingModel.isEmpty) {
     throw const SemanticSearchUnavailableException();
@@ -218,7 +218,7 @@ final semanticSearchResultsProvider =
   // Embed the query locally; the vector (numbers only) is what leaves the
   // device — the query text itself is never uploaded.
   final vector = await LlmDirectClient().embeddings(
-    baseUrl: cfg.baseUrl!,
+    baseUrl: (cfg.embeddingBaseUrl ?? cfg.baseUrl)!,
     apiKey: cfg.apiKey!,
     model: embeddingModel,
     input: rawQuery,

@@ -821,6 +821,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get model => 'モデル';
 
   @override
+  String get embeddingBaseUrl => '埋め込みエンドポイント';
+
+  @override
+  String get embeddingBaseUrlHint => '例: http://192.168.1.12:11434/v1（任意）';
+
+  @override
   String get embeddingModel => '埋め込みモデル';
 
   @override

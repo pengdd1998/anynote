@@ -168,6 +168,7 @@ class LlmConfigsNotifier extends AsyncNotifier<List<LlmConfig>> {
         apiKey: config['api_key'] as String?,
         model: config['model'] as String? ?? '',
         embeddingModel: config['embedding_model'] as String?,
+        embeddingBaseUrl: config['embedding_base_url'] as String?,
         isDefault: config['is_default'] as bool? ?? existing.isEmpty,
         maxTokens: config['max_tokens'] as int? ?? 4096,
         temperature: (config['temperature'] as num?)?.toDouble() ?? 0.7,
@@ -203,6 +204,10 @@ class LlmConfigsNotifier extends AsyncNotifier<List<LlmConfig>> {
         embeddingModel: (config['embedding_model'] as String?) == ''
             ? null
             : config['embedding_model'] as String? ?? current.embeddingModel,
+        embeddingBaseUrl: (config['embedding_base_url'] as String?) == ''
+            ? null
+            : config['embedding_base_url'] as String? ??
+                current.embeddingBaseUrl,
         apiKey: merged(config['api_key'] as String?, current.apiKey ?? ''),
         maxTokens: config['max_tokens'] as int? ?? current.maxTokens,
         temperature:
