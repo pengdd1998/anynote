@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   flutter_tts: ^4.2.3
+  speech_to_text: ^7.0.0
   flutter:
     sdk: flutter
   flutter_localizations:

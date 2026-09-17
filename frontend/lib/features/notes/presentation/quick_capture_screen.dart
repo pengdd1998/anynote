@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_durations.dart';
@@ -17,6 +19,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 
@@ -49,6 +52,13 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
   /// Pending image attachments (local file paths) captured in this session.
   final List<String> _attachedImagePaths = [];
 
+  // -- Voice dictation (speech_to_text) --
+  final stt.SpeechToText _stt = stt.SpeechToText();
+  bool _sttReady = false;
+  bool _isListening = false;
+  String _dictationBase = ''; // text before the live dictation segment.
+  bool _urlExpansionPending = true;
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +73,18 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
     _contentController = TextEditingController(text: initialContent);
     _contentFocusNode = FocusNode();
     _lastSavedContent = initialContent;
+
+    // URL capture: submitting/pasting a bare URL expands into a snippet.
+    _contentController.addListener(() {
+      final text = _contentController.text.trim();
+      if (RegExp(r'^https?://\S+$').hasMatch(text) &&
+          _urlExpansionPending) {
+        _urlExpansionPending = false;
+        _expandUrlIfNeeded();
+      } else if (!RegExp(r'^https?://\S+$').hasMatch(text)) {
+        _urlExpansionPending = true;
+      }
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _contentFocusNode.requestFocus();
@@ -613,6 +635,88 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
     );
   }
 
+  /// Toggle voice dictation: interim results stream into the text field,
+  /// finalized words are committed on completion.
+  Future<void> _toggleDictation() async {
+    if (_isListening) {
+      await _stt.stop();
+      setState(() => _isListening = false);
+      return;
+    }
+
+    if (!_sttReady) {
+      try {
+        _sttReady = await _stt.initialize(
+          onStatus: (status) {
+            if ((status == 'done' || status == 'notListening') && mounted) {
+              setState(() => _isListening = false);
+            }
+          },
+          onError: (e) {
+            debugPrint('QuickCapture: stt error: ${e.errorMsg}');
+            if (mounted) setState(() => _isListening = false);
+          },
+        );
+      } catch (e) {
+        debugPrint('QuickCapture: stt init failed: $e');
+      }
+    }
+    if (!_sttReady) {
+      if (mounted) {
+        AppSnackBar.error(context, message: '语音识别不可用');
+      }
+      return;
+    }
+
+    _dictationBase = _contentController.text;
+    setState(() => _isListening = true);
+    await _stt.listen(
+      onResult: (result) {
+        if (!mounted) return;
+        final separator = _dictationBase.isEmpty ? '' : '\n';
+        _contentController.value = TextEditingValue(
+          text: '$_dictationBase$separator${result.recognizedWords}',
+          selection: TextSelection.collapsed(
+            offset: _dictationBase.length + 1 + result.recognizedWords.length,
+          ),
+        );
+      },
+      localeId: 'zh_CN',
+      listenOptions: stt.SpeechListenOptions(
+        partialResults: true,
+        cancelOnError: true,
+      ),
+    );
+  }
+
+  /// If the whole capture is a bare URL, expand it into a link snippet with
+  /// the page <title> fetched client-side (no server involvement).
+  Future<void> _expandUrlIfNeeded() async {
+    final text = _contentController.text.trim();
+    final url = RegExp(r'^https?://\S+$').firstMatch(text);
+    if (url == null) return;
+
+    try {
+      final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
+      final req = await client.getUrl(Uri.parse(text));
+      final res = await req.close();
+      final body = await res.transform(utf8.decoder).join();
+      client.close();
+      final match =
+          RegExp(r'<title[^>]*>([^<]{1,200})</title>', caseSensitive: false)
+              .firstMatch(body);
+      final title = match?.group(1)?.trim();
+      if (title != null && title.isNotEmpty && mounted) {
+        _contentController.value = TextEditingValue(
+          text: '[$title]($text)',
+          selection: TextSelection.collapsed(offset: title.length + 4),
+        );
+      }
+    } catch (e) {
+      debugPrint('QuickCapture: URL title fetch failed: $e');
+    }
+  }
+
   /// Pick an image (gallery/camera), store it, and stage it as an
   /// attachment. Saved into the note body as a markdown image reference.
   Future<void> _attachImage() async {
@@ -702,6 +806,14 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
           ),
           tooltip: l10n.setPriority,
           onPressed: _showPrioritySelector,
+        ),
+        IconButton(
+          icon: Icon(
+            _isListening ? Icons.mic : Icons.mic_none,
+            color: _isListening ? AppColors.error : tertiaryColor,
+          ),
+          tooltip: '语音输入',
+          onPressed: _toggleDictation,
         ),
         // Attach image — capture modality from scenario 1.
         IconButton(
