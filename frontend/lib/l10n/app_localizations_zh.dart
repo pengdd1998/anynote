@@ -1367,13 +1367,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageChangedNotice => '语言更改将在重启应用后生效';
 
   @override
-  String get zenMode => '专注模式';
+  String get zenMode => '沉浸模式';
 
   @override
-  String get enterZenMode => '进入专注模式';
+  String get enterZenMode => '进入沉浸模式';
 
   @override
-  String get exitZenMode => '退出专注模式';
+  String get exitZenMode => '退出沉浸模式';
 
   @override
   String wordCount(int count) {

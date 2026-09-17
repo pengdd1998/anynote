@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   flutter_tts: ^4.2.3
+  flutter_native_splash: ^2.4.6
   speech_to_text: ^7.0.0
   flutter:
     sdk: flutter
@@ -171,3 +172,10 @@ flutter:
   assets:
     - assets/
     - assets/fonts/
+
+flutter_native_splash:
+  color: "#FAF8F5"
+  color_dark: "#1A1E2E"
+  android_12:
+    color: "#FAF8F5"
+    color_dark: "#1A1E2E"
