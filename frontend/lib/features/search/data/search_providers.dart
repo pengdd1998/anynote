@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../main.dart';
 import '../../../core/database/app_database.dart';
 import '../../notes/domain/search_query_parser.dart';
+import '../../settings/data/local_llm_store.dart';
+import '../../settings/data/llm_direct_client.dart';
 
 // ── Search Filter State ────────────────────────────────
 
@@ -188,6 +190,65 @@ final searchResultCountProvider = StateProvider<int>((ref) => 0);
 
 /// The current operator-based search query text.
 final operatorSearchQueryProvider = StateProvider<String>((ref) => '');
+
+/// Whether search runs in semantic (embedding) mode instead of FTS5.
+final semanticModeProvider = StateProvider<bool>((ref) => false);
+
+/// Semantic search: embeds the query on-device with the user's default LLM
+/// config, asks the server for nearest indexed notes, and resolves the hits
+/// against the local database. Only note IDs travel back from the server.
+final semanticSearchResultsProvider =
+    FutureProvider<List<OperatorSearchResult>>((ref) async {
+  final rawQuery = ref.watch(operatorSearchQueryProvider);
+  if (rawQuery.trim().isEmpty) return [];
+
+  final cfg = await ref.read(localLlmStoreProvider).getDefault();
+  final embeddingModel = cfg?.embeddingModel;
+  if (cfg == null ||
+      cfg.apiKey == null ||
+      cfg.apiKey!.isEmpty ||
+      cfg.baseUrl == null ||
+      embeddingModel == null ||
+      embeddingModel.isEmpty) {
+    throw const SemanticSearchUnavailableException();
+  }
+
+  // Embed the query locally; the vector (numbers only) is what leaves the
+  // device — the query text itself is never uploaded.
+  final vector = await LlmDirectClient().embeddings(
+    baseUrl: cfg.baseUrl!,
+    apiKey: cfg.apiKey!,
+    model: embeddingModel,
+    input: rawQuery,
+  );
+
+  final api = ref.read(apiClientProvider);
+  final hits = await api.semanticSearch(vector);
+
+  final db = ref.read(databaseProvider);
+  final results = <OperatorSearchResult>[];
+  for (final hit in hits) {
+    final note = await db.notesDao.getNoteById(hit['note_id'] as String);
+    if (note == null) continue; // Indexed remotely but gone locally.
+    final distance = (hit['distance'] as num?)?.toDouble() ?? 1.0;
+    results.add(OperatorSearchResult(
+      note: note,
+      rank: 1.0 - distance.clamp(0.0, 1.0),
+      contentSnippet: '',
+      titleSnippet: '',
+      tags: const [],
+    ));
+  }
+  return results;
+});
+
+/// Thrown when semantic search cannot run: no default LLM config, no API
+/// key, or no embedding model configured.
+class SemanticSearchUnavailableException implements Exception {
+  const SemanticSearchUnavailableException();
+  @override
+  String toString() => 'semantic search unavailable';
+}
 
 /// Performs the operator-based advanced search using [parseSearchQuery].
 final operatorSearchResultsProvider =

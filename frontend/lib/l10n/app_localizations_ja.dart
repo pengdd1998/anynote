@@ -821,6 +821,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get model => 'モデル';
 
   @override
+  String get embeddingModel => '埋め込みモデル';
+
+  @override
+  String get embeddingModelHint => '例: text-embedding-3-small（任意）';
+
+  @override
+  String get semanticSearch => 'セマンティック';
+
+  @override
+  String get semanticEmptyHint => 'エディタでノートを索引すると意味で検索できます';
+
+  @override
+  String get embeddingModelMissing => '先にデフォルトLLM設定で埋め込みモデルを指定してください';
+
+  @override
+  String get semanticIndex => 'ノートを意味検索に索引';
+
+  @override
+  String get semanticIndexed => '意味検索に索引しました';
+
+  @override
   String get modelHint => '例: gpt-4o';
 
   @override

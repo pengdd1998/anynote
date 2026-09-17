@@ -821,6 +821,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get model => '모델';
 
   @override
+  String get embeddingModel => '임베딩 모델';
+
+  @override
+  String get embeddingModelHint => '예: text-embedding-3-small (선택)';
+
+  @override
+  String get semanticSearch => '의미';
+
+  @override
+  String get semanticEmptyHint => '편집기에서 노트를 색인하면 의미로 검색할 수 있습니다';
+
+  @override
+  String get embeddingModelMissing => '먼저 기본 LLM 구성에 임베딩 모델을 설정하세요';
+
+  @override
+  String get semanticIndex => '노트를 의미 검색에 색인';
+
+  @override
+  String get semanticIndexed => '의미 검색에 색인되었습니다';
+
+  @override
   String get modelHint => '예: gpt-4o';
 
   @override

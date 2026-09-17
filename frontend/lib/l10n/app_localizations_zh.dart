@@ -815,6 +815,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get model => '模型';
 
   @override
+  String get embeddingModel => 'Embedding 模型';
+
+  @override
+  String get embeddingModelHint => '例如 text-embedding-3-small（可选）';
+
+  @override
+  String get semanticSearch => '语义';
+
+  @override
+  String get semanticEmptyHint => '在编辑器中为笔记建立语义索引后，即可按含义搜索';
+
+  @override
+  String get embeddingModelMissing => '请先在默认 LLM 配置中填写 Embedding 模型';
+
+  @override
+  String get semanticIndex => '为笔记建立语义索引';
+
+  @override
+  String get semanticIndexed => '已建立语义索引';
+
+  @override
   String get modelHint => '例如 gpt-4o';
 
   @override

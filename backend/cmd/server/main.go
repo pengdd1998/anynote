@@ -13,14 +13,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/anynote/backend/internal/appsetup"
-	"github.com/anynote/backend/internal/fcmadapter"
-	"github.com/anynote/backend/internal/stripeadapter"
 	"github.com/anynote/backend/internal/config"
+	"github.com/anynote/backend/internal/fcmadapter"
 	"github.com/anynote/backend/internal/handler"
 	"github.com/anynote/backend/internal/llm"
 	"github.com/anynote/backend/internal/platform"
 	"github.com/anynote/backend/internal/repository"
 	"github.com/anynote/backend/internal/service"
+	"github.com/anynote/backend/internal/stripeadapter"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -132,6 +132,7 @@ func main() {
 	planRepo := repository.NewPlanRepository(pool)
 	profileRepo := repository.NewProfileRepository(pool)
 	noteLinkRepo := repository.NewNoteLinkRepository(pool)
+	noteEmbeddingRepo := repository.NewNoteEmbeddingRepository(pool)
 	deviceRepo := repository.NewDeviceRepository(pool)
 	collabRepo := repository.NewCollabRepository(pool)
 	collabOpsRepo := repository.NewCollabOperationsRepository(pool)
@@ -246,6 +247,7 @@ func main() {
 	planSvc := service.NewPlanService(planRepo, quotaRepo)
 	profileSvc := service.NewProfileService(profileRepo)
 	noteLinkSvc := service.NewNoteLinkService(noteLinkRepo)
+	semanticSearchSvc := service.NewSemanticSearchService(noteEmbeddingRepo)
 	aiAgentSvc := service.NewAIAgentService(aiProxySvc)
 	collabSvc := service.NewCollabService(collabRepo)
 
@@ -310,27 +312,28 @@ func main() {
 
 	// Setup router
 	services := &handler.Services{
-		Auth:         authSvc,
-		Sync:         syncSvc,
-		AIProxy:      aiProxySvc,
-		Quota:        quotaSvc,
-		LLMConfig:    llmConfigSvc,
-		Publish:      publishSvc,
-		Platform:     platformSvc,
-		Share:        shareSvc,
-		Push:         pushSvc,
-		Comment:      commentSvc,
-		Presence:     presenceSvc,
-		Plan:         planSvc,
-		Profile:      profileSvc,
-		NoteLink:     noteLinkSvc,
-		AIAgent:      aiAgentSvc,
-		Collab:       collabSvc,
-		Payment:      paymentSvc,
-		Notification: notificationSvc,
-		Device:        service.NewDeviceService(deviceRepo),
-		CollabRepo:    collabRepo,
-		CollabOpsRepo: collabOpsRepo,
+		Auth:           authSvc,
+		Sync:           syncSvc,
+		AIProxy:        aiProxySvc,
+		Quota:          quotaSvc,
+		LLMConfig:      llmConfigSvc,
+		Publish:        publishSvc,
+		Platform:       platformSvc,
+		Share:          shareSvc,
+		Push:           pushSvc,
+		Comment:        commentSvc,
+		Presence:       presenceSvc,
+		Plan:           planSvc,
+		Profile:        profileSvc,
+		NoteLink:       noteLinkSvc,
+		SemanticSearch: semanticSearchSvc,
+		AIAgent:        aiAgentSvc,
+		Collab:         collabSvc,
+		Payment:        paymentSvc,
+		Notification:   notificationSvc,
+		Device:         service.NewDeviceService(deviceRepo),
+		CollabRepo:     collabRepo,
+		CollabOpsRepo:  collabOpsRepo,
 	}
 
 	// Health handler: pgxpool.Pool implements the Pinger interface used by

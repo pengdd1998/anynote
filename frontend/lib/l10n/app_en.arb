@@ -1108,7 +1108,32 @@
     "@model": {
         "description": "Form field label"
     },
-    "modelHint": "e.g., gpt-4o",
+    "embeddingModel": "Embedding model",
+    "@embeddingModel": {
+        "description": "Optional LLM embedding model for semantic search"
+    },
+    "embeddingModelHint": "e.g., text-embedding-3-small (optional)",
+    "@embeddingModelHint": {
+        "description": "Hint for the embedding model field"
+    },    "semanticSearch": "Semantic",
+    "@semanticSearch": {
+        "description": "Toggle label for embedding-based search mode"
+    },
+    "semanticEmptyHint": "Index notes from the editor to search them by meaning",
+    "@semanticEmptyHint": {
+        "description": "Empty-state hint for semantic search"
+    },
+    "embeddingModelMissing": "Set an embedding model on your default LLM config first",
+    "@embeddingModelMissing": {
+        "description": "Explains what to configure when semantic search cannot run"
+    },    "semanticIndex": "Index note for semantic search",
+    "@semanticIndex": {
+        "description": "Editor menu action: embed note and upload vector"
+    },
+    "semanticIndexed": "Note indexed for semantic search",
+    "@semanticIndexed": {
+        "description": "Confirmation after the note embedding was uploaded"
+    },    "modelHint": "e.g., gpt-4o",
     "@modelHint": {
         "description": "Hint text for model field"
     },

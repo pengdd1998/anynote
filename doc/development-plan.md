@@ -2443,7 +2443,16 @@ No per-post views/likes/comments anywhere; history records attempts only.
 - Content-calendar view aggregating published posts.
 - Acceptance: history card shows fetched stats for XHS posts; calendar renders.
 
-#### Phase 132: Semantic Search (pgvector) — PENDING (G9)
+#### Phase 132: Semantic Search (pgvector) — SHIPPED (G9)
+
+Landed (v2.8.4): migration 033 enables pgvector and stores
+client-computed note vectors (dim-flexible); /search/embeddings +
+/search/semantic endpoints; client embeds with the user's own LLM
+(embeddingModel on the LLM config), uploads vectors only, editor menu
+action indexes a note, search screen Semantic toggle queries by
+meaning and resolves hits locally. CD now snapshots the DB before
+migrations. RRF hybrid merge with FTS5 deferred until both baselines
+exist in practice.
 FTS5 covers exact tokens only; scenario 4 core is paraphrase retrieval.
 - Embed public-content-only per privacy decision; ranked results incl. paraphrase
   matches; hybrid with FTS5.

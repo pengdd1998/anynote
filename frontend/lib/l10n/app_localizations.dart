@@ -1632,6 +1632,48 @@ abstract class AppLocalizations {
   /// **'Model'**
   String get model;
 
+  /// Optional LLM embedding model for semantic search
+  ///
+  /// In en, this message translates to:
+  /// **'Embedding model'**
+  String get embeddingModel;
+
+  /// Hint for the embedding model field
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., text-embedding-3-small (optional)'**
+  String get embeddingModelHint;
+
+  /// Toggle label for embedding-based search mode
+  ///
+  /// In en, this message translates to:
+  /// **'Semantic'**
+  String get semanticSearch;
+
+  /// Empty-state hint for semantic search
+  ///
+  /// In en, this message translates to:
+  /// **'Index notes from the editor to search them by meaning'**
+  String get semanticEmptyHint;
+
+  /// Explains what to configure when semantic search cannot run
+  ///
+  /// In en, this message translates to:
+  /// **'Set an embedding model on your default LLM config first'**
+  String get embeddingModelMissing;
+
+  /// Editor menu action: embed note and upload vector
+  ///
+  /// In en, this message translates to:
+  /// **'Index note for semantic search'**
+  String get semanticIndex;
+
+  /// Confirmation after the note embedding was uploaded
+  ///
+  /// In en, this message translates to:
+  /// **'Note indexed for semantic search'**
+  String get semanticIndexed;
+
   /// Hint text for model field
   ///
   /// In en, this message translates to:

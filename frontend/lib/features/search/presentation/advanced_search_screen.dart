@@ -78,9 +78,12 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
       body: Column(
         children: [
           _buildSearchBar(l10n),
+          _buildSemanticToggle(l10n),
           Expanded(
             child: hasActiveSearch
-                ? _buildResults(l10n)
+                ? (ref.watch(semanticModeProvider)
+                    ? _buildSemanticResults(l10n)
+                    : _buildResults(l10n))
                 : _buildIdleState(l10n),
           ),
         ],
@@ -698,6 +701,68 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
   // ---------------------------------------------------------------------------
   // Results
   // ---------------------------------------------------------------------------
+
+  /// Semantic/FTS mode toggle chip shown under the search bar.
+  Widget _buildSemanticToggle(AppLocalizations l10n) {
+    final isSemantic = ref.watch(semanticModeProvider);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: FilterChip(
+          selected: isSemantic,
+          showCheckmark: false,
+          avatar: Icon(
+            Icons.psychology_outlined,
+            size: 18,
+            color: isSemantic
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.primary,
+          ),
+          label: Text(l10n.semanticSearch),
+          onSelected: (v) {
+            ref.read(semanticModeProvider.notifier).state = v;
+            setState(() {});
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Semantic results: nearest indexed notes by embedding distance.
+  Widget _buildSemanticResults(AppLocalizations l10n) {
+    final resultsAsync = ref.watch(semanticSearchResultsProvider);
+
+    return resultsAsync.when(
+      data: (results) {
+        if (results.isEmpty) {
+          return EmptyState(
+            icon: Icons.search_off,
+            title: l10n.noResultsFound,
+            subtitle: l10n.semanticEmptyHint,
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+          itemCount: results.length,
+          itemBuilder: (context, index) {
+            return _buildResultCard(results[index], l10n, index);
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) {
+        if (error is SemanticSearchUnavailableException) {
+          return EmptyState(
+            icon: Icons.psychology_alt_outlined,
+            title: l10n.semanticSearch,
+            subtitle: l10n.embeddingModelMissing,
+          );
+        }
+        return Center(child: Text(l10n.searchError('$error')));
+      },
+    );
+  }
 
   Widget _buildResults(AppLocalizations l10n) {
     final resultsAsync = ref.watch(operatorSearchResultsProvider);

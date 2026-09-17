@@ -108,6 +108,43 @@ class LlmDirectClient {
     );
   }
 
+  /// Client-direct embeddings call against the config's OpenAI-compatible
+  /// `{baseUrl}/embeddings` endpoint. Used by semantic search: note text is
+  /// embedded on-device and only the resulting vector is uploaded anywhere.
+  ///
+  /// [model] is the provider's embedding model (e.g. embedding-2), which is
+  /// usually different from the chat model.
+  Future<List<double>> embeddings({
+    required String baseUrl,
+    required String apiKey,
+    required String model,
+    required String input,
+    CancelToken? cancelToken,
+  }) async {
+    final res = await _dio.post<dynamic>(
+      '${_normalizedBaseUrl(baseUrl)}/embeddings',
+      data: {'model': model, 'input': input},
+      options: Options(headers: {'Authorization': 'Bearer $apiKey'}),
+      cancelToken: cancelToken,
+    );
+    final data = res.data;
+    if (data is Map<String, dynamic>) {
+      final list = data['data'];
+      if (list is List && list.isNotEmpty) {
+        final first = list.first;
+        if (first is Map) {
+          final vec = first['embedding'];
+          if (vec is List) {
+            return vec.whereType<num>().map((n) => n.toDouble()).toList();
+          }
+        }
+      }
+    }
+    throw const FormatException(
+      'Embeddings response had an unexpected shape',
+    );
+  }
+
   String _normalizedBaseUrl(String baseUrl) {
     final base = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)

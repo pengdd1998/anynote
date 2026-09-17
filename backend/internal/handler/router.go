@@ -66,6 +66,7 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	profileH := NewProfileHandler(services.Profile)
 	wsH := NewWSHandler(services.Presence, services.CollabRepo, services.CollabOpsRepo, cfg.Auth.JWTSecret, cfg.Server.AllowOrigins)
 	noteLinkH := NewNoteLinkHandler(services.NoteLink)
+	semanticH := NewSemanticSearchHandler(services.SemanticSearch)
 	aiAgentH := NewAIAgentHandler(services.AIAgent)
 	collabH := NewCollabHandler(services.Collab)
 
@@ -88,12 +89,12 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	}
 
 	// Rate limiters
-	authRateLimiter := service.NewRateLimiter(20, time.Minute)    // 20 req/min per IP
-	syncRateLimiter := service.NewRateLimiter(30, time.Minute)    // 30 req/min per user
-	publishRateLimiter := service.NewRateLimiter(10, time.Minute) // 10 req/min per user
+	authRateLimiter := service.NewRateLimiter(20, time.Minute)     // 20 req/min per IP
+	syncRateLimiter := service.NewRateLimiter(30, time.Minute)     // 30 req/min per user
+	publishRateLimiter := service.NewRateLimiter(10, time.Minute)  // 10 req/min per user
 	discoverRateLimiter := service.NewRateLimiter(60, time.Minute) // 60 req/min per IP
-	aiRateLimiter := service.NewRateLimiter(20, time.Minute)      // 20 req/min per user
-	llmRateLimiter := service.NewRateLimiter(10, time.Minute)     // 10 req/min per user
+	aiRateLimiter := service.NewRateLimiter(20, time.Minute)       // 20 req/min per user
+	llmRateLimiter := service.NewRateLimiter(10, time.Minute)      // 10 req/min per user
 	// Webhook rate limiter: separate from the global/authenticated rate limiters
 	// because Stripe may retry delivery up to several times during outages.
 	// 100 req/min per IP is generous enough for legitimate retries while still
@@ -216,6 +217,12 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			r.Get("/notes/{noteId}/links", noteLinkH.GetOutboundLinks)
 			r.Delete("/notes/links/{sourceId}/{targetId}", noteLinkH.DeleteLink)
 
+			// Semantic search (client-computed vectors; privacy note in handler)
+			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Put("/search/embeddings", semanticH.UpsertEmbedding)
+			r.Get("/search/embeddings", semanticH.ListEmbeddings)
+			r.Delete("/search/embeddings/{noteId}", semanticH.DeleteEmbedding)
+			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Post("/search/semantic", semanticH.Search)
+
 			// Collab rooms
 			r.Route("/collab/rooms", func(r chi.Router) {
 				r.Post("/", collabH.CreateRoom)
@@ -255,27 +262,28 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 
 // Services holds all service instances.
 type Services struct {
-	Auth         service.AuthService
-	Sync         service.SyncService
-	AIProxy      service.AIProxyService
-	Quota        service.QuotaService
-	LLMConfig    service.LLMConfigService
-	Publish      service.PublishService
-	Platform     service.PlatformService
-	Share        service.ShareService
-	Push         service.PushService
-	Comment      service.CommentService
-	Presence     service.PresenceService
-	Plan         service.PlanService
-	Profile      service.ProfileService
-	NoteLink     service.NoteLinkService
-	AIAgent      service.AIAgentService
-	Collab       service.CollabService
-	Payment      service.PaymentService
-	Notification service.NotificationService
-	Device       service.DeviceService
-	CollabRepo   *repository.CollabRepository
-	CollabOpsRepo *repository.CollabOperationsRepository
+	Auth           service.AuthService
+	Sync           service.SyncService
+	AIProxy        service.AIProxyService
+	Quota          service.QuotaService
+	LLMConfig      service.LLMConfigService
+	Publish        service.PublishService
+	Platform       service.PlatformService
+	Share          service.ShareService
+	Push           service.PushService
+	Comment        service.CommentService
+	Presence       service.PresenceService
+	Plan           service.PlanService
+	Profile        service.ProfileService
+	NoteLink       service.NoteLinkService
+	SemanticSearch service.SemanticSearchService
+	AIAgent        service.AIAgentService
+	Collab         service.CollabService
+	Payment        service.PaymentService
+	Notification   service.NotificationService
+	Device         service.DeviceService
+	CollabRepo     *repository.CollabRepository
+	CollabOpsRepo  *repository.CollabOperationsRepository
 }
 
 // registerPprofRoutes mounts /debug/pprof/* endpoints when the PPROF_ENABLED

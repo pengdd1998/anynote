@@ -461,6 +461,38 @@ class ApiClient {
     return res.data as Map<String, dynamic>;
   }
 
+  // ── Semantic Search API ───────────────────────────
+  // Embeddings are computed on-device by the user's own LLM provider; only
+  // the resulting vectors are uploaded (server never sees note text).
+
+  Future<void> upsertEmbedding(
+    String noteId,
+    List<double> embedding, {
+    String lang = '',
+  }) async {
+    await _dio.put('/api/v1/search/embeddings', data: {
+      'note_id': noteId,
+      'lang': lang,
+      'embedding': embedding,
+    });
+  }
+
+  Future<void> deleteEmbedding(String noteId) async {
+    await _dio.delete('/api/v1/search/embeddings/$noteId');
+  }
+
+  Future<List<Map<String, dynamic>>> semanticSearch(
+    List<double> queryVector, {
+    int limit = 20,
+  }) async {
+    final res = await _dio.post('/api/v1/search/semantic', data: {
+      'query_vector': queryVector,
+      'limit': limit,
+    });
+    final hits = (res.data as Map<String, dynamic>)['hits'] as List?;
+    return (hits ?? const []).cast<Map<String, dynamic>>();
+  }
+
   // ── Platform API ──────────────────────────────────
 
   Future<List<Map<String, dynamic>>> listPlatforms() async {

@@ -503,6 +503,46 @@ type NoteGraphNode struct {
 	ItemID uuid.UUID `json:"item_id"`
 }
 
+// ── Semantic Search ───────────────────────────────
+
+// NoteEmbedding is a client-computed vector for one of the user's indexed
+// notes. The server stores vectors only — never note text (E2E design).
+type NoteEmbedding struct {
+	NoteID    uuid.UUID `json:"note_id"`
+	Lang      string    `json:"lang,omitempty"`
+	Dim       int       `json:"dim"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// UpsertEmbeddingRequest is the payload for PUT /search/embeddings.
+// The embedding is a client-side computation from note content that the
+// user chose to index (shared or published); only numbers are uploaded.
+type UpsertEmbeddingRequest struct {
+	NoteID    uuid.UUID `json:"note_id"`
+	Lang      string    `json:"lang,omitempty"`
+	Embedding []float64 `json:"embedding"`
+}
+
+// SemanticSearchRequest is the payload for POST /search/semantic.
+type SemanticSearchRequest struct {
+	// QueryVector is the client-side embedding of the search phrase, using
+	// the same model as the stored note embeddings.
+	QueryVector []float64 `json:"query_vector"`
+	Limit       int       `json:"limit,omitempty"`
+}
+
+// SemanticSearchHit is one matched note with its vector distance.
+type SemanticSearchHit struct {
+	NoteID   uuid.UUID `json:"note_id"`
+	Lang     string    `json:"lang,omitempty"`
+	Distance float64   `json:"distance"`
+}
+
+// SemanticSearchResponse lists hits ordered nearest-first.
+type SemanticSearchResponse struct {
+	Hits []SemanticSearchHit `json:"hits"`
+}
+
 // ── Collab Rooms ──────────────────────────────────
 
 // CollabRoom represents a collaboration room with an invite code.

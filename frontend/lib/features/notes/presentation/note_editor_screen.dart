@@ -31,6 +31,8 @@ import '../../../core/error/exceptions.dart';
 import '../../../core/tts/speech_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
+import '../../settings/data/local_llm_store.dart';
+import '../../settings/data/llm_direct_client.dart';
 import '../../../core/performance/performance_monitor.dart';
 import '../../../core/storage/image_storage.dart';
 import 'embeds/local_image_embed.dart';
@@ -704,6 +706,56 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
+  // ── Semantic index ────────────────────────────────────
+
+  /// Embeds the note body with the user's default LLM provider and uploads
+  /// the vector to the server (numbers only — the text never leaves the
+  /// device). Bounded to the first 8000 characters to keep the request small.
+  Future<void> _buildSemanticIndex(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final cfg = await ref.read(localLlmStoreProvider).getDefault();
+      final embeddingModel = cfg?.embeddingModel;
+      if (cfg == null ||
+          (cfg.apiKey ?? '').isEmpty ||
+          cfg.baseUrl == null ||
+          embeddingModel == null ||
+          embeddingModel.isEmpty) {
+        if (mounted) {
+          AppSnackBar.info(context, message: l10n.embeddingModelMissing);
+        }
+        return;
+      }
+
+      final body = _extractPlainText();
+      if (body.trim().isEmpty) {
+        if (mounted) {
+          AppSnackBar.info(context, message: l10n.noResultsFound);
+        }
+        return;
+      }
+      final input = body.length > 8000 ? body.substring(0, 8000) : body;
+
+      final vector = await LlmDirectClient().embeddings(
+        baseUrl: cfg.baseUrl!,
+        apiKey: cfg.apiKey!,
+        model: embeddingModel,
+        input: input,
+      );
+      await ref.read(apiClientProvider).upsertEmbedding(_noteId!, vector);
+      if (mounted) {
+        AppSnackBar.info(context, message: l10n.semanticIndexed);
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.error(
+          context,
+          message: ErrorDisplay.userMessage(ErrorMapper.map(e)),
+        );
+      }
+    }
+  }
+
   // ── Zen mode ──────────────────────────────────────────
 
   void _toggleZenMode() {
@@ -1167,6 +1219,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       if (context.mounted) context.pop();
                     },
                     onPublishToPlatform: () => _showPublishSheet(context),
+                    onSemanticIndex: () => _buildSemanticIndex(context),
                   ),
                 ),
               ),

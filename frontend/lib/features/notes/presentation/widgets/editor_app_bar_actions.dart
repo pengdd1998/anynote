@@ -44,6 +44,10 @@ class EditorActionsConfig {
   final VoidCallback onSaveAndClose;
   final VoidCallback? onPublishToPlatform;
 
+  /// Builds (or refreshes) the semantic-search embedding for this note.
+  /// Null when the action is unavailable (e.g. preview mode).
+  final VoidCallback? onSemanticIndex;
+
   const EditorActionsConfig({
     required this.noteId,
     required this.isNew,
@@ -77,6 +81,7 @@ class EditorActionsConfig {
     required this.onToggleZenMode,
     required this.onSaveAndClose,
     this.onPublishToPlatform,
+    this.onSemanticIndex,
   });
 }
 
@@ -338,6 +343,18 @@ class EditorAppBarActions {
 
           const PopupMenuDivider(),
 
+          if (config.onSemanticIndex != null) ...[
+            PopupMenuItem(
+              value: 'semantic_index',
+              child: ListTile(
+                leading: const Icon(Icons.psychology_outlined),
+                title: Text(l10n.semanticIndex),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ],
+          const PopupMenuDivider(),
+
           // --- Insert section ---
           PopupMenuItem(
             value: 'image',
@@ -435,6 +452,8 @@ class EditorAppBarActions {
         config.onPickImage();
       case 'paste_image':
         config.onPasteImage();
+      case 'semantic_index':
+        config.onSemanticIndex?.call();
       case 'save_close':
         config.onSaveAndClose();
     }

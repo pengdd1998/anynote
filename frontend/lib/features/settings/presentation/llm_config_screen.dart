@@ -147,6 +147,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
     final urlCtrl = TextEditingController();
     final keyCtrl = TextEditingController();
     final modelCtrl = TextEditingController();
+    final embeddingModelCtrl = TextEditingController();
     String selectedProvider = 'OpenAI';
 
     // Pre-fill the base URL from presets when the provider changes.
@@ -215,6 +216,18 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                     scrollPadding: const EdgeInsets.only(bottom: 120),
                   ),
                 ),
+                const SizedBox(height: 12),
+                A11yUtils.labeledTextField(
+                  label: l10n.embeddingModel,
+                  child: TextField(
+                    controller: embeddingModelCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.embeddingModel,
+                      hintText: l10n.embeddingModelHint,
+                    ),
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
+                  ),
+                ),
               ],
             ),
           ),
@@ -242,6 +255,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                     'base_url': urlCtrl.text,
                     'api_key': keyCtrl.text,
                     'model': modelCtrl.text,
+                    'embedding_model': embeddingModelCtrl.text,
                   });
                   nav.pop();
                 } catch (e) {
@@ -268,6 +282,8 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
     final urlCtrl = TextEditingController(text: cfg.baseUrl ?? '');
     final keyCtrl = TextEditingController(); // Never pre-fill API key
     final modelCtrl = TextEditingController(text: cfg.model);
+    final embeddingModelCtrl =
+        TextEditingController(text: cfg.embeddingModel ?? '');
 
     showDialog(
       context: context,
@@ -308,6 +324,18 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   scrollPadding: const EdgeInsets.only(bottom: 120),
                 ),
               ),
+              const SizedBox(height: 12),
+              A11yUtils.labeledTextField(
+                label: l10n.embeddingModel,
+                child: TextField(
+                  controller: embeddingModelCtrl,
+                  decoration: InputDecoration(
+                    labelText: l10n.embeddingModel,
+                    hintText: l10n.embeddingModelHint,
+                  ),
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
+                ),
+              ),
             ],
           ),
         ),
@@ -324,6 +352,7 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                   'name': nameCtrl.text,
                   'base_url': urlCtrl.text,
                   'model': modelCtrl.text,
+                  'embedding_model': embeddingModelCtrl.text,
                 };
                 // Only include API key if the user entered a new one.
                 if (keyCtrl.text.isNotEmpty) {

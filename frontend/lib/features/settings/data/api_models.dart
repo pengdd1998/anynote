@@ -77,6 +77,10 @@ class LlmConfig {
   /// Provider API key. Device-local only; never uploaded to the server.
   final String? apiKey;
   final String model;
+
+  /// Optional embedding model name used by semantic search (e.g.
+  /// "embedding-2" or "text-embedding-3-small"). Null disables the feature.
+  final String? embeddingModel;
   final bool isDefault;
   final int maxTokens;
   final double temperature;
@@ -90,6 +94,7 @@ class LlmConfig {
     this.baseUrl,
     this.apiKey,
     required this.model,
+    this.embeddingModel,
     required this.isDefault,
     required this.maxTokens,
     required this.temperature,
@@ -104,6 +109,7 @@ class LlmConfig {
         baseUrl: json['base_url'] as String?,
         apiKey: json['api_key'] as String?,
         model: json['model'] as String,
+        embeddingModel: json['embedding_model'] as String?,
         isDefault: json['is_default'] as bool? ?? false,
         maxTokens: json['max_tokens'] as int? ?? 4096,
         temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
@@ -121,6 +127,7 @@ class LlmConfig {
         'base_url': baseUrl,
         'api_key': apiKey,
         'model': model,
+        'embedding_model': embeddingModel,
         'is_default': isDefault,
         'max_tokens': maxTokens,
         'temperature': temperature,
@@ -137,6 +144,7 @@ class LlmConfig {
     String? baseUrl,
     String? apiKey,
     String? model,
+    String? embeddingModel,
     bool? isDefault,
     int? maxTokens,
     double? temperature,
@@ -150,6 +158,7 @@ class LlmConfig {
         baseUrl: baseUrl ?? this.baseUrl,
         apiKey: apiKey ?? this.apiKey,
         model: model ?? this.model,
+        embeddingModel: embeddingModel ?? this.embeddingModel,
         isDefault: isDefault ?? this.isDefault,
         maxTokens: maxTokens ?? this.maxTokens,
         temperature: temperature ?? this.temperature,

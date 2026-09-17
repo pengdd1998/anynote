@@ -836,6 +836,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get model => 'Model';
 
   @override
+  String get embeddingModel => 'Embedding model';
+
+  @override
+  String get embeddingModelHint => 'e.g., text-embedding-3-small (optional)';
+
+  @override
+  String get semanticSearch => 'Semantic';
+
+  @override
+  String get semanticEmptyHint =>
+      'Index notes from the editor to search them by meaning';
+
+  @override
+  String get embeddingModelMissing =>
+      'Set an embedding model on your default LLM config first';
+
+  @override
+  String get semanticIndex => 'Index note for semantic search';
+
+  @override
+  String get semanticIndexed => 'Note indexed for semantic search';
+
+  @override
   String get modelHint => 'e.g., gpt-4o';
 
   @override

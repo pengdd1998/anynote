@@ -217,6 +217,20 @@ jobs:
             docker exec infra-postgres psql -U readpal -tc "SELECT 1 FROM pg_database WHERE datname='anynote'" | grep -q 1 || \
               docker exec infra-postgres psql -U readpal -c "CREATE DATABASE anynote"
 
+            # --- Pre-deploy DB snapshot (the deploy-time rehearsal) ---
+            # Always dump before migrations/image swaps so any bad release
+            # can be restored. Keep the 5 most recent dumps.
+            echo "Backing up database..."
+            BACKUP_DIR="$HOME/anynote-backups"
+            mkdir -p "$BACKUP_DIR"
+            BACKUP_FILE="$BACKUP_DIR/anynote-$(date +%Y%m%d-%H%M%S).sql.gz"
+            if docker exec infra-postgres pg_dump -U readpal -d anynote | gzip > "$BACKUP_FILE"; then
+              echo "Backup written: $BACKUP_FILE ($(du -h "$BACKUP_FILE" | cut -f1))"
+              ls -1t "$BACKUP_DIR"/anynote-*.sql.gz | tail -n +6 | xargs -r rm -f
+            else
+              echo "WARNING: pg_dump failed — continuing, but no restore point was created."
+            fi
+
             # Run migrations
             echo "Running migrations..."
             IMAGE_TAG="$TAG" docker compose -f docker-compose.deploy.yml run --rm --no-deps server /app/migrate up || true
