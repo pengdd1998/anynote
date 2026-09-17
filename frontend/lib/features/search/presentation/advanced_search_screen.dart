@@ -703,23 +703,51 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
   // ---------------------------------------------------------------------------
 
   /// Semantic/FTS mode toggle chip shown under the search bar.
+  /// Selected state is deliberately loud (filled tint, checkmark, primary
+  /// border, bold label) — the mode changes which engine runs, so it must
+  /// be readable at a glance.
   Widget _buildSemanticToggle(AppLocalizations l10n) {
     final isSemantic = ref.watch(semanticModeProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = isDark ? AppColors.secondary : AppColors.primary;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: Align(
         alignment: Alignment.centerLeft,
         child: FilterChip(
           selected: isSemantic,
-          showCheckmark: false,
+          showCheckmark: true,
+          checkmarkColor: accent,
+          selectedColor:
+              isDark ? AppColors.primary.withAlpha(70) : AppColors.primarySoft,
+          backgroundColor: Colors.transparent,
+          side: BorderSide(
+            color: isSemantic
+                ? accent
+                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+            width: isSemantic ? 1.5 : 1,
+          ),
           avatar: Icon(
-            Icons.psychology_outlined,
+            isSemantic ? Icons.psychology : Icons.psychology_outlined,
             size: 18,
             color: isSemantic
-                ? Theme.of(context).colorScheme.onPrimary
-                : Theme.of(context).colorScheme.primary,
+                ? accent
+                : (isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary),
           ),
-          label: Text(l10n.semanticSearch),
+          label: Text(
+            l10n.semanticSearch,
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 13,
+              fontWeight: isSemantic ? FontWeight.w700 : FontWeight.w400,
+              color: isSemantic
+                  ? accent
+                  : (isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary),
+            ),
+          ),
           onSelected: (v) {
             ref.read(semanticModeProvider.notifier).state = v;
             setState(() {});
@@ -742,12 +770,35 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
             subtitle: l10n.semanticEmptyHint,
           );
         }
-        return ListView.builder(
-          padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-          itemCount: results.length,
-          itemBuilder: (context, index) {
-            return _buildResultCard(results[index], l10n, index);
-          },
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s8,
+                AppSpacing.md,
+                AppSpacing.s4,
+              ),
+              child: Text(
+                '${l10n.semanticSearch} · ${l10n.resultsCount('${results.length}')}',
+                style: AppTextStyles.caption.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                itemCount: results.length,
+                itemBuilder: (context, index) {
+                  return _buildResultCard(results[index], l10n, index);
+                },
+              ),
+            ),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
