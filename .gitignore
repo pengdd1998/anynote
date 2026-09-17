@@ -141,6 +141,7 @@ doc/*
 !doc/api.md
 !doc/development-plan.md
 !doc/work-log-*.md
+!doc/tech-plan-*.md
 !doc/*-review-*.md
 !doc/*-test-*.md
 !doc/usb-device-testing-plan.md
