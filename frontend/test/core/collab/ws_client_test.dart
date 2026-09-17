@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -554,6 +555,97 @@ void main() {
       client.dispose();
 
       // Should not throw or crash.
+    });
+  });
+
+  // ===========================================================================
+  // WSClient -- ws-token flow against a local WebSocket server
+  // ===========================================================================
+
+  group('WSClient ws-token flow', () {
+    test('connect dials with the ws token from wsTokenProvider', () async {
+      Uri? requestUri;
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final serverSub = server.listen((req) async {
+        requestUri = req.uri;
+        if (WebSocketTransformer.isUpgradeRequest(req)) {
+          final ws = await WebSocketTransformer.upgrade(req);
+          ws.listen((_) {}, onDone: () => ws.close());
+        } else {
+          await req.response.close();
+        }
+      });
+
+      final client = WSClient(
+        baseUrl: 'ws://127.0.0.1:${server.port}/api/v1/ws',
+        wsTokenProvider: () async => 'ws-jwt-abc',
+      );
+      await client.connect();
+
+      expect(client.state, equals(WSConnectionState.connected));
+      expect(requestUri?.path, equals('/api/v1/ws'));
+      expect(requestUri?.queryParameters['token'], equals('ws-jwt-abc'));
+
+      client.dispose();
+      await serverSub.cancel();
+      server.close();
+    });
+
+    test('provider returning null skips the dial and schedules a retry',
+        () async {
+      var requestCount = 0;
+      var providerCalls = 0;
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final serverSub = server.listen((req) async {
+        requestCount++;
+        await req.response.close();
+      });
+
+      final client = WSClient(
+        baseUrl: 'ws://127.0.0.1:${server.port}/api/v1/ws',
+        wsTokenProvider: () async {
+          providerCalls++;
+          return null;
+        },
+      );
+      await client.connect();
+
+      expect(providerCalls, equals(1));
+      expect(requestCount, equals(0));
+      expect(client.state, equals(WSConnectionState.error));
+
+      // Cancel the reconnect timer scheduled by the failed attempt.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      client.dispose();
+      await serverSub.cancel();
+      server.close();
+    });
+
+    test('without a provider the legacy access-JWT token is used', () async {
+      Uri? requestUri;
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final serverSub = server.listen((req) async {
+        requestUri = req.uri;
+        if (WebSocketTransformer.isUpgradeRequest(req)) {
+          final ws = await WebSocketTransformer.upgrade(req);
+          ws.listen((_) {}, onDone: () => ws.close());
+        } else {
+          await req.response.close();
+        }
+      });
+
+      final client = WSClient(
+        baseUrl: 'ws://127.0.0.1:${server.port}/api/v1/ws',
+        token: 'legacy-access-jwt',
+      );
+      await client.connect();
+
+      expect(client.state, equals(WSConnectionState.connected));
+      expect(requestUri?.queryParameters['token'], equals('legacy-access-jwt'));
+
+      client.dispose();
+      await serverSub.cancel();
+      server.close();
     });
   });
 

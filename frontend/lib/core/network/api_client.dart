@@ -324,6 +324,31 @@ class ApiClient {
     return authRes;
   }
 
+  /// Fetch a short-lived (60s) WebSocket token via POST /api/v1/ws/token.
+  ///
+  /// The backend's GET /api/v1/ws endpoint accepts ONLY these WS-specific
+  /// tokens (token_type "ws") — access JWTs are rejected with 401. Goes
+  /// through the auth interceptor, so an expired access token is refreshed
+  /// and the request retried transparently.
+  ///
+  /// Returns null when the token cannot be obtained (signed out, offline,
+  /// or unexpected response shape); callers should retry later.
+  Future<String?> getWsToken() async {
+    try {
+      final res = await _dio.post('/api/v1/ws/token');
+      final body = res.data;
+      if (body is Map) {
+        final token = body['token'];
+        if (token is String && token.isNotEmpty) return token;
+      }
+      return null;
+    } on DioException {
+      // Network/auth failures are surfaced as null; the WS client treats
+      // that as "retry later" via its reconnect backoff.
+      return null;
+    }
+  }
+
   /// Apply freshly issued credentials: memory + secure storage.
   Future<void> _applyAuth(
     String accessToken,

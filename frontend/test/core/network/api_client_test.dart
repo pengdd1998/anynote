@@ -1,8 +1,56 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/network/api_client.dart';
 
 void main() {
+  // ===========================================================================
+  // ApiClient -- getWsToken
+  // ===========================================================================
+
+  group('ApiClient getWsToken', () {
+    test('returns the token from a /ws/token response', () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      HttpRequest? seen;
+      final serverSub = server.listen((req) async {
+        seen = req;
+        req.response.headers.contentType = ContentType.json;
+        req.response.write('{"token":"ws-token-123","expires_in":60}');
+        await req.response.close();
+      });
+
+      final client = ApiClient(baseUrl: 'http://127.0.0.1:${server.port}');
+      expect(await client.getWsToken(), equals('ws-token-123'));
+      expect(seen?.method, equals('POST'));
+      expect(seen?.uri.path, equals('/api/v1/ws/token'));
+
+      await serverSub.cancel();
+      server.close();
+    });
+
+    test('returns null on unexpected response shape', () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final serverSub = server.listen((req) async {
+        req.response.headers.contentType = ContentType.json;
+        req.response.write('{"nope":true}');
+        await req.response.close();
+      });
+
+      final client = ApiClient(baseUrl: 'http://127.0.0.1:${server.port}');
+      expect(await client.getWsToken(), isNull);
+
+      await serverSub.cancel();
+      server.close();
+    });
+
+    test('returns null when the server is unreachable', () async {
+      // Port 1 on loopback: nothing listens there; connection fails fast.
+      final client = ApiClient(baseUrl: 'http://127.0.0.1:1');
+      expect(await client.getWsToken(), isNull);
+    });
+  });
+
   // ===========================================================================
   // ApiClient -- construction
   // ===========================================================================

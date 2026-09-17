@@ -49,14 +49,16 @@ class WSClient {
   final String baseUrl;
   final String token;
 
-  /// Optional resolver invoked before each (re)connect to obtain the
-  /// CURRENT access token. Without it the client replays the token it was
-  /// constructed with forever — after the JWT expires the server rejects
-  /// every reconnect with 401 "token is expired".
-  final Future<String?> Function()? tokenResolver;
-
-  /// Token resolved via [tokenResolver], preferred over [token] when set.
-  String? _resolvedToken;
+  /// Legacy fallback: [token] is an access JWT, which the backend's /ws
+  /// endpoint always rejects (401 "WebSocket token required") — it only
+  /// serves as a last resort when no [wsTokenProvider] is configured.
+  ///
+  /// Preferred: [wsTokenProvider] resolves a short-lived (60s) WebSocket
+  /// token (POST /api/v1/ws/token) before EACH connect attempt, so the
+  /// token is always within its TTL. Auth-token freshness is handled
+  /// inside the provider (ApiClient's auth interceptor refreshes and
+  /// retries transparently).
+  final Future<String?> Function()? wsTokenProvider;
 
   WebSocketChannel? _channel;
   final _messageController = StreamController<WSMessage>.broadcast();
@@ -76,7 +78,7 @@ class WSClient {
   /// Random number generator for jitter in reconnection backoff.
   final Random _rng = Random();
 
-  WSClient({required this.baseUrl, required this.token, this.tokenResolver});
+  WSClient({required this.baseUrl, this.token = '', this.wsTokenProvider});
 
   Stream<WSMessage> get messages => _messageController.stream;
   Stream<WSConnectionState> get connectionState => _stateController.stream;
@@ -87,21 +89,25 @@ class WSClient {
     if (_state == WSConnectionState.connected) return;
     _setState(WSConnectionState.connecting);
 
-    // After a couple of failed attempts, re-resolve the access token —
-    // the captured one has likely expired (JWT TTL is finite), and
-    // replaying it makes the server reject every reconnect with 401.
-    if (_reconnectAttempts >= 2 && tokenResolver != null) {
+    // The /ws endpoint only accepts WS-specific tokens minted by
+    // POST /api/v1/ws/token (60s TTL) — dial with a fresh one per attempt.
+    var effectiveToken = token;
+    if (wsTokenProvider != null) {
       try {
-        final fresh = await tokenResolver!();
-        if (fresh != null && fresh.isNotEmpty) _resolvedToken = fresh;
+        final resolved = await wsTokenProvider!();
+        if (resolved != null && resolved.isNotEmpty) effectiveToken = resolved;
       } catch (_) {
-        // Resolution failed (e.g. offline) — retry with whatever we have.
+        // Resolution failed (e.g. offline) — fall back or retry later.
       }
     }
-    final effectiveToken =
-        (_resolvedToken != null && _resolvedToken!.isNotEmpty)
-            ? _resolvedToken!
-            : token;
+
+    if (effectiveToken.isEmpty) {
+      // Nothing to authenticate with (signed out / provider unavailable).
+      // Back off and retry; a later attempt can succeed after login.
+      _setState(WSConnectionState.error);
+      _scheduleReconnect();
+      return;
+    }
 
     try {
       final uri = Uri.parse('$baseUrl?token=$effectiveToken');
@@ -277,13 +283,12 @@ class WSClientNotifier extends StateNotifier<WSConnectionState> {
 
   WSClientNotifier(this._ref) : super(WSConnectionState.disconnected);
 
-  /// Resolves the current access token for WS reconnects: prefers a fresh
-  /// silent refresh, falling back to the in-memory token (which may still be
-  /// valid if the refresh failed for transient reasons).
-  Future<String?> _resolveFreshToken() async {
+  /// Resolves a short-lived WebSocket token for each (re)connect: delegated
+  /// to ApiClient.getWsToken (POST /api/v1/ws/token), whose auth interceptor
+  /// refreshes an expired access token and retries transparently.
+  Future<String?> _resolveWsToken() async {
     final api = _ref.read(apiClientProvider);
-    final refreshed = await api.tryRefreshToken();
-    return refreshed ?? api.accessToken;
+    return api.getWsToken();
   }
 
   /// The active [WSClient]. Lazily created on first access.
@@ -296,7 +301,7 @@ class WSClientNotifier extends StateNotifier<WSConnectionState> {
         _ref.read(apiClientProvider).baseUrl,
       ),
       token: _ref.read(apiClientProvider).accessToken ?? '',
-      tokenResolver: _resolveFreshToken,
+      wsTokenProvider: _resolveWsToken,
     );
     return _client!;
   }
@@ -309,7 +314,7 @@ class WSClientNotifier extends StateNotifier<WSConnectionState> {
         _ref.read(apiClientProvider).baseUrl,
       ),
       token: token,
-      tokenResolver: _resolveFreshToken,
+      wsTokenProvider: _resolveWsToken,
     );
     _client!.connectionState.listen((s) {
       if (mounted) state = s;
