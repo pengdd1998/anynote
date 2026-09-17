@@ -135,7 +135,7 @@ func TestValidate_Success(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
+			JWTSecret:           "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "a-valid-master-key-32-bytes-long!!",
 		},
 	}
@@ -161,7 +161,7 @@ func TestValidate_ShortJWTSecret(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			JWTSecret:          "short",
+			JWTSecret:           "short",
 			MasterEncryptionKey: "a-valid-master-key-32-bytes-long!!",
 		},
 	}
@@ -188,7 +188,7 @@ func TestValidate_ShortMasterKey(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
+			JWTSecret:           "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "short",
 		},
 	}
@@ -203,7 +203,7 @@ func TestValidate_MasterKey_HexEncoded(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
+			JWTSecret:           "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
 		},
 	}
@@ -217,7 +217,7 @@ func TestValidate_MasterKey_ShortHexEncoded(t *testing.T) {
 	cfg := &Config{
 		Database: DatabaseConfig{URL: "postgres://localhost/db"},
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
+			JWTSecret:           "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "0123456789abcdef0123456789abcdef",
 		},
 	}
@@ -230,7 +230,7 @@ func TestValidate_MasterKey_ShortHexEncoded(t *testing.T) {
 func TestValidate_MissingDatabaseURL(t *testing.T) {
 	cfg := &Config{
 		Auth: AuthConfig{
-			JWTSecret:          "a-valid-jwt-secret-32-characters!!",
+			JWTSecret:           "a-valid-jwt-secret-32-characters!!",
 			MasterEncryptionKey: "a-valid-master-key-32-bytes-long!!",
 		},
 	}
@@ -322,6 +322,22 @@ func TestApplyEnvOverrides_RedisURL(t *testing.T) {
 	cfg, _ := Load("/nonexistent")
 	if cfg.Redis.URL != "redis://envhost:6379" {
 		t.Errorf("Redis.URL = %q, want %q", cfg.Redis.URL, "redis://envhost:6379")
+	}
+}
+
+func TestApplyEnvOverrides_TrustedProxies(t *testing.T) {
+	os.Setenv("TRUSTED_PROXIES", "172.16.0.0/12, 192.168.0.0/16")
+	defer os.Unsetenv("TRUSTED_PROXIES")
+
+	cfg, _ := Load("/nonexistent")
+	want := []string{"172.16.0.0/12", "192.168.0.0/16"}
+	if len(cfg.Server.TrustedProxies) != len(want) {
+		t.Fatalf("TrustedProxies = %v, want %v", cfg.Server.TrustedProxies, want)
+	}
+	for i := range want {
+		if cfg.Server.TrustedProxies[i] != want[i] {
+			t.Errorf("TrustedProxies[%d] = %q, want %q", i, cfg.Server.TrustedProxies[i], want[i])
+		}
 	}
 }
 
@@ -530,9 +546,9 @@ func TestApplyEnvOverrides_WSAllowedOrigins(t *testing.T) {
 
 func TestSplitCSV(t *testing.T) {
 	tests := []struct {
-		name string
+		name  string
 		input string
-		want []string
+		want  []string
 	}{
 		{name: "single value", input: "https://example.com", want: []string{"https://example.com"}},
 		{name: "comma separated", input: "a, b, c", want: []string{"a", "b", "c"}},

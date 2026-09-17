@@ -58,6 +58,11 @@ type ServerConfig struct {
 	ReadTimeout  time.Duration `yaml:"read_timeout"`
 	WriteTimeout time.Duration `yaml:"write_timeout"`
 	AllowOrigins []string      `yaml:"allow_origins"`
+	// TrustedProxies lists IPs/CIDRs whose forwarded-client headers
+	// (True-Client-IP / X-Real-IP / X-Forwarded-For) may override the
+	// socket peer address, e.g. the edge reverse proxy's Docker network.
+	// Empty (default) never trusts these headers.
+	TrustedProxies []string `yaml:"trusted_proxies"`
 }
 
 type DatabaseConfig struct {
@@ -80,10 +85,10 @@ type MinIOConfig struct {
 }
 
 type AuthConfig struct {
-	JWTSecret          string        `yaml:"jwt_secret"`
-	TokenExpiry        time.Duration `yaml:"token_expiry"`
-	RefreshExpiry      time.Duration `yaml:"refresh_expiry"`
-	MasterEncryptionKey string       `yaml:"master_encryption_key"`
+	JWTSecret           string        `yaml:"jwt_secret"`
+	TokenExpiry         time.Duration `yaml:"token_expiry"`
+	RefreshExpiry       time.Duration `yaml:"refresh_expiry"`
+	MasterEncryptionKey string        `yaml:"master_encryption_key"`
 }
 
 type LLMConfig struct {
@@ -92,12 +97,12 @@ type LLMConfig struct {
 }
 
 type LLMProviderConfig struct {
-	Provider     string        `yaml:"provider"`
-	BaseURL      string        `yaml:"base_url"`
-	APIKey       string        `yaml:"api_key"`
-	Model        string        `yaml:"model"`
-	MaxConcurrent int          `yaml:"max_concurrent"`
-	Timeout      time.Duration `yaml:"timeout"`
+	Provider      string        `yaml:"provider"`
+	BaseURL       string        `yaml:"base_url"`
+	APIKey        string        `yaml:"api_key"`
+	Model         string        `yaml:"model"`
+	MaxConcurrent int           `yaml:"max_concurrent"`
+	Timeout       time.Duration `yaml:"timeout"`
 }
 
 type ChromeConfig struct {
@@ -111,9 +116,9 @@ type FirebaseConfig struct {
 
 // StripeConfig holds Stripe payment integration settings.
 type StripeConfig struct {
-	SecretKey      string `yaml:"secret_key"`       // Stripe secret API key
-	WebhookSecret  string `yaml:"webhook_secret"`   // Stripe webhook signing secret
-	ProPriceID     string `yaml:"pro_price_id"`     // Stripe Price ID for Pro plan
+	SecretKey       string `yaml:"secret_key"`        // Stripe secret API key
+	WebhookSecret   string `yaml:"webhook_secret"`    // Stripe webhook signing secret
+	ProPriceID      string `yaml:"pro_price_id"`      // Stripe Price ID for Pro plan
 	LifetimePriceID string `yaml:"lifetime_price_id"` // Stripe Price ID for Lifetime plan
 }
 
@@ -227,6 +232,12 @@ func (c *Config) applyEnvOverrides() {
 	} else if v := os.Getenv("WS_ALLOWED_ORIGINS"); v != "" {
 		// Legacy fallback for CORS origins.
 		c.Server.AllowOrigins = splitCSV(v)
+	}
+	if v := os.Getenv("TRUSTED_PROXIES"); v != "" {
+		// Comma-separated IPs/CIDRs allowed to set forwarded-client headers
+		// (e.g. "172.16.0.0/12,192.168.0.0/16" for a Docker-internal reverse
+		// proxy). Empty = never trust these headers.
+		c.Server.TrustedProxies = splitCSV(v)
 	}
 	if v := os.Getenv("STRIPE_SECRET_KEY"); v != "" {
 		c.Stripe.SecretKey = v

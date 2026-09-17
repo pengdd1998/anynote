@@ -25,7 +25,14 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	r.Use(SecurityHeaders)
 	r.Use(MaxBodySize(DefaultMaxBodyBytes))
 	r.Use(chiMiddleware.RequestID)
-	r.Use(chiMiddleware.RealIP)
+	// Trusted-proxy-gated client IP: unlike chi's RealIP (unconditional
+	// header trust — spoofable by direct clients), forwarded headers are
+	// only honored when the peer is inside TRUSTED_PROXIES (see realip.go).
+	realIP, err := TrustedRealIP(cfg.Server.TrustedProxies)
+	if err != nil {
+		log.Fatal("router: invalid TRUSTED_PROXIES: ", err)
+	}
+	r.Use(realIP)
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(MetricsMiddleware)
 	r.Use(RequestLogger)
