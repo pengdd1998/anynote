@@ -2430,7 +2430,14 @@ Cold start blank ~10 s on Note 9 (debug) before Home paints.
 
 ### Sprint C — complete the loop (P2)
 
-#### Phase 131: Publish Stats + Content Calendar — PENDING (G5)
+#### Phase 131: Publish Stats + Content Calendar — PARTIAL (G5)
+
+Shipped (8d7bb59, v2.8.2): platform_post_id persistence + post_stats
+snapshot table; hourly worker refresh task (30-day lookback, 30
+snapshots/post); history + detail API attach latest stats; frontend
+history cards + detail sheet render views/likes/comments.
+Remaining: no adapter implements StatsFetcher yet (XHS chromedp
+scrape follow-up); content-calendar view not started.
 No per-post views/likes/comments anywhere; history records attempts only.
 - Publish history cards: platform, time, status, stats where the platform exposes
   them (fetch via adapter).
