@@ -10,14 +10,13 @@ import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../notes/domain/search_query_parser.dart';
+import '../../notes/presentation/widgets/note_card.dart';
 import '../data/search_providers.dart';
 
 class AdvancedSearchScreen extends ConsumerStatefulWidget {
@@ -866,22 +865,14 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
     );
   }
 
+  /// Search results render with the same paper NoteCard used by the notes
+  /// list, so titles (first line, handwritten), tags and imagery match home.
   Widget _buildResultCard(
     OperatorSearchResult result,
     AppLocalizations l10n,
     int index,
   ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final note = result.note;
-    final title = note.plainTitle ?? l10n.untitled;
-    final time = _formatTime(note.updatedAt);
-    final query = ref.read(operatorSearchQueryProvider);
-    final parsed = parseSearchQuery(query);
-
-    // Warm pastel cycling for result cards
-    const pastels = AppColors.notePastels;
-    final pastelBg = pastels[index % pastels.length];
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -889,58 +880,16 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
         AppSpacing.md,
         AppSpacing.s4,
       ),
-      child: GestureDetector(
+      child: NoteCard(
+        note: note,
+        time: _formatTime(note.updatedAt),
+        tags: result.tags,
+        isSelected: false,
         onTap: () => context.push('/notes/${note.id}'),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.s12),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            boxShadow: AppShadows.smOf(Theme.of(context).brightness),
-            border: Border(
-              left: BorderSide(
-                color: pastelBg,
-                width: 3,
-              ),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title row
-              Row(
-                children: [
-                  Expanded(
-                    child: _highlightText(
-                      title,
-                      parsed.fullTextQuery,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    time,
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                    ),
-                  ),
-                ],
-              ),
-              // Content snippet
-              if (result.contentSnippet.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.s4),
-                _highlightSnippet(result.contentSnippet, parsed.fullTextQuery),
-              ],
-              // Tags + rank
-              if (result.tags.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.s8),
-                _buildTagChips(result.tags, isDark),
-              ],
-            ],
-          ),
-        ),
+        onLongPress: null,
+        untitled: l10n.untitled,
+        layout: NoteCardLayout.grid,
+        listIndex: index,
       ),
     );
   }
@@ -1029,168 +978,6 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
       await db.savedSearchesDao.deleteSearch(search.id);
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Text highlighting
-  // ---------------------------------------------------------------------------
-
-  Widget _highlightText(
-    String text,
-    String query, {
-    int maxLines = 10,
-    FontWeight fontWeight = FontWeight.normal,
-  }) {
-    if (query.isEmpty || text.isEmpty) {
-      return Text(
-        text,
-        maxLines: maxLines,
-        overflow: TextOverflow.ellipsis,
-        style: AppTextStyles.body.copyWith(fontWeight: fontWeight),
-      );
-    }
-
-    final spans = <TextSpan>[];
-    final lowerText = text.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    int start = 0;
-
-    while (start < text.length) {
-      final index = lowerText.indexOf(lowerQuery, start);
-      if (index == -1) {
-        spans.add(
-          TextSpan(
-            text: text.substring(start),
-            style: TextStyle(fontWeight: fontWeight),
-          ),
-        );
-        break;
-      }
-
-      if (index > start) {
-        spans.add(
-          TextSpan(
-            text: text.substring(start, index),
-            style: TextStyle(fontWeight: fontWeight),
-          ),
-        );
-      }
-
-      spans.add(
-        TextSpan(
-          text: text.substring(index, index + query.length),
-          style: const TextStyle(
-            backgroundColor: AppColors.accentYellowBg,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-
-      start = index + query.length;
-    }
-
-    return RichText(
-      maxLines: maxLines,
-      overflow: TextOverflow.ellipsis,
-      text: TextSpan(
-        style: DefaultTextStyle.of(context).style,
-        children: spans,
-      ),
-    );
-  }
-
-  Widget _highlightSnippet(String snippet, String query) {
-    if (snippet.isEmpty) return const SizedBox.shrink();
-
-    if (snippet.contains('**')) {
-      return _buildRichSnippet(snippet, maxLines: 2);
-    }
-
-    return _highlightText(snippet, query, maxLines: 2);
-  }
-
-  Widget _buildRichSnippet(String text, {int maxLines = 2}) {
-    final spans = <TextSpan>[];
-    final parts = text.split('**');
-
-    for (var i = 0; i < parts.length; i++) {
-      if (parts[i].isEmpty) continue;
-      if (i.isOdd) {
-        spans.add(
-          TextSpan(
-            text: parts[i],
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              backgroundColor: AppColors.accentYellowBg,
-            ),
-          ),
-        );
-      } else {
-        spans.add(TextSpan(text: parts[i]));
-      }
-    }
-
-    return RichText(
-      maxLines: maxLines,
-      overflow: TextOverflow.ellipsis,
-      text: TextSpan(
-        style: DefaultTextStyle.of(context).style.copyWith(
-              fontSize: 13,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
-            ),
-        children: spans,
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Tag chips for results
-  // ---------------------------------------------------------------------------
-
-  Widget _buildTagChips(List<Tag> tags, bool isDark) {
-    final displayTags = tags.take(3).toList();
-    final accentBgs = [
-      AppColors.accentPeachBg,
-      AppColors.accentYellowBg,
-      AppColors.accentMintBg,
-      AppColors.accentPeachBg,
-    ];
-    final accentTexts = [
-      AppColors.accentPeachText,
-      AppColors.accentYellowText,
-      AppColors.accentMintText,
-      AppColors.accentPeachText,
-    ];
-
-    return Wrap(
-      spacing: AppSpacing.s4,
-      runSpacing: AppSpacing.s4,
-      children: displayTags.asMap().entries.map((entry) {
-        final i = entry.key;
-        final tag = entry.value;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: accentBgs[i % accentBgs.length],
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-          ),
-          child: Text(
-            tag.plainName ?? '...',
-            style: AppTextStyles.caption.copyWith(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: accentTexts[i % accentTexts.length],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
 
   String _formatTime(DateTime dt) {
     final l10n = AppLocalizations.of(context)!;

@@ -228,17 +228,29 @@ final semanticSearchResultsProvider =
   final hits = await api.semanticSearch(vector);
 
   final db = ref.read(databaseProvider);
-  final results = <OperatorSearchResult>[];
+  final notes = <Note>[];
+  final distances = <double>[];
   for (final hit in hits) {
     final note = await db.notesDao.getNoteById(hit['note_id'] as String);
     if (note == null) continue; // Indexed remotely but gone locally.
     final distance = (hit['distance'] as num?)?.toDouble() ?? 1.0;
+    notes.add(note);
+    distances.add(distance);
+  }
+
+  // Tags in one batch so cards match the notes-list rendering.
+  final tagsMap = await db.tagsDao.batchGetTagsForNotes(
+    notes.map((n) => n.id).toList(),
+  );
+
+  final results = <OperatorSearchResult>[];
+  for (var i = 0; i < notes.length; i++) {
     results.add(OperatorSearchResult(
-      note: note,
-      rank: 1.0 - distance.clamp(0.0, 1.0),
+      note: notes[i],
+      rank: 1.0 - distances[i].clamp(0.0, 1.0),
       contentSnippet: '',
       titleSnippet: '',
-      tags: const [],
+      tags: tagsMap[notes[i].id] ?? [],
     ));
   }
   return results;
