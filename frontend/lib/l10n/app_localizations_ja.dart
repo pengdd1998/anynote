@@ -842,6 +842,29 @@ class AppLocalizationsJa extends AppLocalizations {
   String get semanticIndexed => '意味検索に索引しました';
 
   @override
+  String get usageAnalytics => '利用統計';
+
+  @override
+  String get usageAnalyticsDesc => 'この端末内でのみ利用回数を記録します。アップロードは一切ありません';
+
+  @override
+  String get viewUsageStats => '統計を見る';
+
+  @override
+  String get viewUsageStatsDesc => 'イベント数と平均時間';
+
+  @override
+  String totalEventsCount(int count) {
+    return '$count 件';
+  }
+
+  @override
+  String get noStatsYet => 'まだ記録がありません';
+
+  @override
+  String get resetStats => '統計を消去';
+
+  @override
   String get modelHint => '例: gpt-4o';
 
   @override
@@ -1099,6 +1122,11 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String viewAll(int count) {
     return 'すべて表示（$count件）';
+  }
+
+  @override
+  String publicationsInMonth(int count) {
+    return '今月の投稿 $count 件';
   }
 
   @override

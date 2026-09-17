@@ -17,6 +17,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/analytics/analytics_service.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -125,6 +126,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
   }
 
   Future<void> _saveNote({bool showIndicator = false}) async {
+    final analytics = ref.read(analyticsProvider);
     var content = _contentController.text;
     // Append pending image attachments as markdown references so the note
     // body keeps them across save/restore (rendered as image embeds).
@@ -180,6 +182,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
         }
 
         _savedNoteId = id;
+        analytics.count('quick_capture_saved');
       } else {
         await db.notesDao.updateNote(
           id: _savedNoteId!,

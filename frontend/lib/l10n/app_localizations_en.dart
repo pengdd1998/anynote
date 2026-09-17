@@ -859,6 +859,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get semanticIndexed => 'Note indexed for semantic search';
 
   @override
+  String get usageAnalytics => 'Usage statistics';
+
+  @override
+  String get usageAnalyticsDesc =>
+      'Count feature usage on this device only; nothing is uploaded';
+
+  @override
+  String get viewUsageStats => 'View stats';
+
+  @override
+  String get viewUsageStatsDesc => 'Event counts and average durations';
+
+  @override
+  String totalEventsCount(int count) {
+    return '$count events';
+  }
+
+  @override
+  String get noStatsYet => 'No events recorded yet';
+
+  @override
+  String get resetStats => 'Clear statistics';
+
+  @override
   String get modelHint => 'e.g., gpt-4o';
 
   @override
@@ -1120,6 +1144,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String viewAll(int count) {
     return 'View All ($count)';
+  }
+
+  @override
+  String publicationsInMonth(int count) {
+    return '$count publications this month';
   }
 
   @override

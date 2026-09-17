@@ -1133,6 +1133,36 @@
     "semanticIndexed": "Note indexed for semantic search",
     "@semanticIndexed": {
         "description": "Confirmation after the note embedding was uploaded"
+    },    "usageAnalytics": "Usage statistics",
+    "@usageAnalytics": {
+        "description": "Settings section: opt-in local usage analytics"
+    },
+    "usageAnalyticsDesc": "Count feature usage on this device only; nothing is uploaded",
+    "@usageAnalyticsDesc": {
+        "description": "Explains the opt-in local analytics"
+    },
+    "viewUsageStats": "View stats",
+    "@viewUsageStats": {
+        "description": "Opens the local stats sheet"
+    },
+    "viewUsageStatsDesc": "Event counts and average durations",
+    "@viewUsageStatsDesc": {
+        "description": "Subtitle for the stats entry"
+    },
+    "totalEventsCount": "{count} events",
+    "@totalEventsCount": {
+        "description": "Header summary in the stats sheet",
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },
+    "noStatsYet": "No events recorded yet",
+    "@noStatsYet": {
+        "description": "Empty state in the stats sheet"
+    },
+    "resetStats": "Clear statistics",
+    "@resetStats": {
+        "description": "Button that clears local analytics"
     },    "modelHint": "e.g., gpt-4o",
     "@modelHint": {
         "description": "Hint text for model field"
@@ -1496,7 +1526,13 @@
             }
         }
     },
-    "publishHistory": "Publish History",
+    "publicationsInMonth": "{count} publications this month",
+    "@publicationsInMonth": {
+        "description": "Month summary under the content calendar",
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },    "publishHistory": "Publish History",
     "@publishHistory": {
         "description": "Screen title"
     },

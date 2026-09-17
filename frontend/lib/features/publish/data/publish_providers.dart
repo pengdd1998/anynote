@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/analytics/analytics_service.dart';
 import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../main.dart';
@@ -93,6 +94,7 @@ class PublishActionNotifier extends StateNotifier<PublishActionState> {
     String? contentItemId,
   }) async {
     state = const PublishActionState(isLoading: true);
+    AnalyticsService.instance.count('publish_started');
 
     try {
       final req = <String, dynamic>{

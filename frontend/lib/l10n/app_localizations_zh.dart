@@ -836,6 +836,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get semanticIndexed => '已建立语义索引';
 
   @override
+  String get usageAnalytics => '使用统计';
+
+  @override
+  String get usageAnalyticsDesc => '仅在本机记录功能使用次数，不上传任何数据';
+
+  @override
+  String get viewUsageStats => '查看统计';
+
+  @override
+  String get viewUsageStatsDesc => '事件计数与平均耗时';
+
+  @override
+  String totalEventsCount(int count) {
+    return '共 $count 个事件';
+  }
+
+  @override
+  String get noStatsYet => '还没有记录到事件';
+
+  @override
+  String get resetStats => '清空统计';
+
+  @override
   String get modelHint => '例如 gpt-4o';
 
   @override
@@ -1091,6 +1114,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String viewAll(int count) {
     return '查看全部（$count）';
+  }
+
+  @override
+  String publicationsInMonth(int count) {
+    return '本月 $count 条发布';
   }
 
   @override

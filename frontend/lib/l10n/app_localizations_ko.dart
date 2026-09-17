@@ -842,6 +842,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String get semanticIndexed => '의미 검색에 색인되었습니다';
 
   @override
+  String get usageAnalytics => '사용 통계';
+
+  @override
+  String get usageAnalyticsDesc => '이 기기에서만 사용 횟수를 기록합니다. 업로드 없음';
+
+  @override
+  String get viewUsageStats => '통계 보기';
+
+  @override
+  String get viewUsageStatsDesc => '이벤트 수 및 평균 시간';
+
+  @override
+  String totalEventsCount(int count) {
+    return '$count개 이벤트';
+  }
+
+  @override
+  String get noStatsYet => '아직 기록이 없습니다';
+
+  @override
+  String get resetStats => '통계 지우기';
+
+  @override
   String get modelHint => '예: gpt-4o';
 
   @override
@@ -1099,6 +1122,11 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String viewAll(int count) {
     return '전체 보기 ($count개)';
+  }
+
+  @override
+  String publicationsInMonth(int count) {
+    return '이번 달 게시 $count건';
   }
 
   @override

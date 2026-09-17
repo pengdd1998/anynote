@@ -13,6 +13,7 @@ import '../../../core/widgets/keyboard_scroll_mixin.dart';
 import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/publish_providers.dart';
+import 'widgets/publish_calendar.dart';
 
 class PublishScreen extends ConsumerStatefulWidget {
   const PublishScreen({super.key});
@@ -81,7 +82,9 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
     final historyAsync = ref.watch(publishHistoryProvider);
     final publishState = ref.watch(publishActionProvider);
 
-    return Scaffold(
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(l10n.publish),
@@ -89,8 +92,30 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: const [SyncStatusWidget()],
+        bottom: TabBar(
+          tabs: [
+            Tab(text: l10n.publish),
+            Tab(text: l10n.calendar),
+          ],
+        ),
       ),
-      body: LayoutBuilder(
+      body: TabBarView(
+        children: [
+          _buildPublishTab(l10n, platformsAsync, publishState, historyAsync),
+          const PublishCalendarView(),
+        ],
+      ),
+      ),
+    );
+  }
+
+  Widget _buildPublishTab(
+    AppLocalizations l10n,
+    AsyncValue<List<Map<String, dynamic>>> platformsAsync,
+    PublishActionState publishState,
+    AsyncValue<List<Map<String, dynamic>>> historyAsync,
+  ) {
+    return LayoutBuilder(
         builder: (context, constraints) {
           return RefreshIndicator(
             onRefresh: () async {
@@ -187,9 +212,8 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
           ],
         ),                // ListView
       );                  // RefreshIndicator
-    },                    // builder callback
-  ),                      // LayoutBuilder
-);                        // Scaffold + return
+        },                  // builder callback
+      );                    // LayoutBuilder
   }
 
   Widget _buildSectionLabel(String title) {

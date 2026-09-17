@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/locale/locale_provider.dart';
+import '../../../core/locale/locale_provider.dart';import '../../../core/analytics/analytics_service.dart';
+
 import '../../../core/platform/platform_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
@@ -338,6 +339,27 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+
+            // -- Usage analytics (opt-in, local-only counters) -------------------
+            StaggeredGroup(
+              staggerIndex: 8,
+              child: Semantics(
+                container: true,
+                label: l10n.settingsGroup(l10n.usageAnalytics),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SettingsGroupHeader(title: l10n.usageAnalytics),
+                    const _SettingsCardGroup(
+                      children: [
+                        _UsageAnalyticsSection(),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
             // -- Appearance section ---------------------------------------------
             const StaggeredGroup(
@@ -1139,6 +1161,180 @@ class _ReduceMotionItem extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+
+/// Opt-in, local-only usage analytics. The switch gates recording; the
+/// "view stats" tile (visible only when recording) opens a sheet listing
+/// aggregate counters and average durations. Nothing ever leaves the device.
+class _UsageAnalyticsSection extends StatefulWidget {
+  const _UsageAnalyticsSection();
+
+  @override
+  State<_UsageAnalyticsSection> createState() => _UsageAnalyticsSectionState();
+}
+
+class _UsageAnalyticsSectionState extends State<_UsageAnalyticsSection> {
+  bool _optIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.load().then((_) {
+      if (mounted) {
+        setState(() => _optIn = AnalyticsService.instance.optIn);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        _SettingsItemWithSwitch(
+          icon: Icons.insights_outlined,
+          accent: _tileAccents[5 % _tileAccents.length],
+          title: l10n.usageAnalytics,
+          subtitle: l10n.usageAnalyticsDesc,
+          value: _optIn,
+          onChanged: (v) async {
+            await AnalyticsService.instance.setOptIn(v);
+            if (mounted) setState(() => _optIn = v);
+          },
+        ),
+        if (_optIn)
+          _SettingsTile(
+            icon: Icons.bar_chart_outlined,
+            accent: _tileAccents[0],
+            title: l10n.viewUsageStats,
+            subtitle: l10n.viewUsageStatsDesc,
+            onTap: () => _showStatsSheet(context),
+          ),
+      ],
+    );
+  }
+
+  void _showStatsSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final muted = isDark
+        ? AppColors.darkTextTertiary
+        : AppColors.lightTextTertiary;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: AnalyticsService.instance.snapshot(),
+          builder: (ctx, snap) {
+            final data = snap.data;
+            final events =
+                data?['events'] as Map<String, int>? ?? const {};
+            final durations =
+                data?['durations'] as Map<String, dynamic>? ?? const {};
+            final total = data?['totalEvents'] as int? ?? 0;
+            final names = {...events.keys, ...durations.keys}.toList()..sort();
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 4),
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: muted.withAlpha(80),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.s8,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.viewUsageStats,
+                          style: AppTextStyles.headline.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        l10n.totalEventsCount(total),
+                        style: AppTextStyles.caption.copyWith(color: muted),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: names.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Text(
+                            l10n.noStatsYet,
+                            style: AppTextStyles.caption.copyWith(
+                              color: muted,
+                            ),
+                          ),
+                        )
+                      : ListView(
+                          shrinkWrap: true,
+                          children: names.map((name) {
+                            final count =
+                                events[name] ??
+                                (durations[name]
+                                        as Map<String, dynamic>?)?['count'] ??
+                                0;
+                            final avg = durations[name] == null
+                                ? null
+                                : ((durations[name]
+                                        as Map<String, dynamic>)['avgMs']
+                                    as num?)?.toDouble();
+                            return ListTile(
+                              dense: true,
+                              title: Text(
+                                name,
+                                style: AppTextStyles.body.copyWith(
+                                  fontSize: 14,
+                                ),
+                              ),
+                              trailing: Text(
+                                avg == null
+                                    ? '$count'
+                                    : '$count · ${avg.toStringAsFixed(0)}ms',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: muted,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await AnalyticsService.instance.reset();
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  child: Text(l10n.resetStats),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }

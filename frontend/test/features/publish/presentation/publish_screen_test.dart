@@ -92,11 +92,18 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      // Scroll down to the "Recent Publications" section.
+      // Scroll down to the "Recent Publications" section. The screen now
+      // hosts a TabBarView, so scope the scrollable to the publish tab's
+      // ListView rather than the first Scrollable in the tree.
       await tester.scrollUntilVisible(
         find.text('No publications yet'),
         300,
-        scrollable: find.byType(Scrollable).first,
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
       );
       await tester.pump();
 

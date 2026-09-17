@@ -31,7 +31,8 @@ import '../../../core/error/exceptions.dart';
 import '../../../core/tts/speech_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
-import '../../settings/data/local_llm_store.dart';
+import '../../settings/data/local_llm_store.dart';import '../../../core/analytics/analytics_service.dart';
+
 import '../../settings/data/llm_direct_client.dart';
 import '../../../core/performance/performance_monitor.dart';
 import '../../../core/storage/image_storage.dart';
@@ -874,6 +875,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         }
       }
       final String encryptedContent = await crypto.encryptForItem(noteId, content);
+      final wasNew = _isNew;
 
       if (_isNew) {
         await db.notesDao.createNote(
@@ -901,13 +903,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // of the pre-save safety snapshot (same pattern as version restore).
         await _savePostWriteSnapshot(db, noteId);
       }
-      pm.end('note_save');
+      final saveElapsed = pm.end('note_save');
+      // Opt-in local analytics: save counts and durations only.
+      if (saveElapsed != null) {
+        await ref
+            .read(analyticsProvider)
+            .duration('note_save', saveElapsed.inMilliseconds);
+      }
+      await ref
+          .read(analyticsProvider)
+          .count(wasNew ? 'note_created' : 'note_updated');
       if (mounted) {
         HapticFeedback.lightImpact();
         // Clear the "unsaved" chip immediately; without setState the chip
         // stayed up after the save completed until an unrelated rebuild.
         setState(() => _isDirty = false);
       }
+
       // Push the local change to the server shortly after the save so edits
       // reach other devices without waiting for the 5-minute periodic cycle.
       // The lifecycle debounces rapid consecutive saves and skips offline.

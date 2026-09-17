@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../main.dart';
+import '../../../core/analytics/analytics_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../notes/domain/search_query_parser.dart';
 import '../../settings/data/local_llm_store.dart';
@@ -202,6 +203,7 @@ final semanticSearchResultsProvider =
   final rawQuery = ref.watch(operatorSearchQueryProvider);
   if (rawQuery.trim().isEmpty) return [];
 
+  ref.read(analyticsProvider).count('semantic_search');
   final cfg = await ref.read(localLlmStoreProvider).getDefault();
   final embeddingModel = cfg?.embeddingModel;
   if (cfg == null ||
@@ -258,6 +260,7 @@ final operatorSearchResultsProvider =
 
   final db = ref.read(databaseProvider);
   final parsed = parseSearchQuery(rawQuery);
+  ref.read(analyticsProvider).count('search_performed');
 
   // Add to search history on successful search.
   try {

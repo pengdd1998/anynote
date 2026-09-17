@@ -1674,6 +1674,48 @@ abstract class AppLocalizations {
   /// **'Note indexed for semantic search'**
   String get semanticIndexed;
 
+  /// Settings section: opt-in local usage analytics
+  ///
+  /// In en, this message translates to:
+  /// **'Usage statistics'**
+  String get usageAnalytics;
+
+  /// Explains the opt-in local analytics
+  ///
+  /// In en, this message translates to:
+  /// **'Count feature usage on this device only; nothing is uploaded'**
+  String get usageAnalyticsDesc;
+
+  /// Opens the local stats sheet
+  ///
+  /// In en, this message translates to:
+  /// **'View stats'**
+  String get viewUsageStats;
+
+  /// Subtitle for the stats entry
+  ///
+  /// In en, this message translates to:
+  /// **'Event counts and average durations'**
+  String get viewUsageStatsDesc;
+
+  /// Header summary in the stats sheet
+  ///
+  /// In en, this message translates to:
+  /// **'{count} events'**
+  String totalEventsCount(int count);
+
+  /// Empty state in the stats sheet
+  ///
+  /// In en, this message translates to:
+  /// **'No events recorded yet'**
+  String get noStatsYet;
+
+  /// Button that clears local analytics
+  ///
+  /// In en, this message translates to:
+  /// **'Clear statistics'**
+  String get resetStats;
+
   /// Hint text for model field
   ///
   /// In en, this message translates to:
@@ -2129,6 +2171,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View All ({count})'**
   String viewAll(int count);
+
+  /// Month summary under the content calendar
+  ///
+  /// In en, this message translates to:
+  /// **'{count} publications this month'**
+  String publicationsInMonth(int count);
 
   /// Screen title
   ///
