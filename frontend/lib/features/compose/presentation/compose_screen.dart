@@ -63,12 +63,27 @@ class ComposeScreen extends ConsumerWidget {
           _buildHeroCard(context, ref, notesAsync, l10n, isDark),
           const SizedBox(height: AppSpacing.lg),
 
-          // Recent compositions header
+          // Recent compositions header + entry to the publish screen
+          // (history cards + content calendar tab).
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.s12),
-            child: Text(
-              l10n.recentCompositions,
-              style: AppTextStyles.title,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.recentCompositions,
+                    style: AppTextStyles.title,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => context.push('/publish'),
+                  icon: const Icon(
+                    Icons.calendar_month_outlined,
+                    size: 18,
+                  ),
+                  label: Text(l10n.calendar),
+                ),
+              ],
             ),
           ),
 

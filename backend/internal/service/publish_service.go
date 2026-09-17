@@ -228,6 +228,10 @@ func (s *publishService) GetHistory(ctx context.Context, userID uuid.UUID) ([]do
 			}
 		}
 	}
+	// Never serialize a nil slice: JSON null breaks list parsers.
+	if logs == nil {
+		logs = []domain.PublishLog{}
+	}
 	return logs, nil
 }
 

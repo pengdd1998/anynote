@@ -453,7 +453,10 @@ class ApiClient {
 
   Future<List<Map<String, dynamic>>> publishHistory() async {
     final res = await _dio.get('/api/v1/publish/history');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    // Server nil-slice serializes to JSON null when nothing was published.
+    final data = res.data;
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return const [];
   }
 
   Future<Map<String, dynamic>> getPublish(String id) async {

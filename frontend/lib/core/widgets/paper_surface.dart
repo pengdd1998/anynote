@@ -77,7 +77,7 @@ class PaperSurface extends StatelessWidget {
     final resolvedBorder = border ??
         (selected
             ? Border.all(
-                color: Theme.of(context).colorScheme.primary, width: 1.5)
+                color: Theme.of(context).colorScheme.primary, width: 1.5,)
             : brightness == Brightness.dark
                 ? Border.all(color: AppColors.darkBorder, width: 1)
                 : null);
@@ -94,7 +94,11 @@ class PaperSurface extends StatelessWidget {
         child: showDoodle
             ? Stack(
                 children: [
-                  Positioned.fill(child: child),
+                  // Non-positioned base child: the Stack sizes to it, so
+                  // this also works under unbounded constraints (ListView,
+                  // GridView, scroll views). Positioned.fill would make the
+                  // Stack expand to infinite height there.
+                  child,
                   Positioned.directional(
                     textDirection: Directionality.of(context),
                     end: 12,
