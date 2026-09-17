@@ -159,6 +159,15 @@ func main() {
 	cleanupHandler := queue.NewCleanupHandler(sharedNoteRepo)
 	qSvc.HandleFunc(queue.TaskCleanupExpiredShares, cleanupHandler.HandleCleanupExpiredShares)
 
+	// Register hourly per-post engagement stats refresh (Phase 131).
+	statsHandler := queue.NewStatsRefreshHandler(
+		registry,
+		publishLogRepo,
+		platformConnRepo,
+		masterKey,
+	)
+	qSvc.HandleFunc(queue.TaskRefreshPostStats, statsHandler.HandleRefreshPostStats)
+
 	// Start the asynq worker server. Start runs in the background, so we
 	// block on the signal channel below.
 	slog.Info("worker starting", "queues", []string{"ai", "publish", "push"})
@@ -201,6 +210,10 @@ func main() {
 		_, schedErr := scheduler.Register("@hourly", asynq.NewTask(queue.TaskCleanupExpiredShares, nil))
 		if schedErr != nil {
 			slog.Error("failed to register expired shares cleanup schedule", "error", schedErr)
+		}
+		// Hourly per-post engagement stats refresh (Phase 131).
+		if _, schedErr := scheduler.Register("@hourly", asynq.NewTask(queue.TaskRefreshPostStats, nil)); schedErr != nil {
+			slog.Error("failed to register post stats schedule", "error", schedErr)
 		}
 		if schedErr := scheduler.Run(); schedErr != nil {
 			slog.Error("shared notes cleanup scheduler stopped", "error", schedErr)

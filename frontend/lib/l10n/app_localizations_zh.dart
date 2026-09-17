@@ -1114,6 +1114,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get viewDetails => '查看详情';
 
   @override
+  String get statsViews => '阅读';
+
+  @override
+  String get statsLikes => '点赞';
+
+  @override
+  String get statsComments => '评论';
+
+  @override
   String get platform => '平台';
 
   @override

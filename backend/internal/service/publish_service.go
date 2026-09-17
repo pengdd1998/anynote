@@ -44,6 +44,17 @@ type PublishLogRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.PublishLog, error)
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]domain.PublishLog, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, status string, errMsg string, platformURL string) error
+	UpdateStatusWithPostID(ctx context.Context, id uuid.UUID, status string, errMsg string, platformURL string, platformPostID string) error
+	// LatestPostStats returns the most recent engagement snapshot for a
+	// publish, or nil when none exists yet.
+	LatestPostStats(ctx context.Context, publishID uuid.UUID) (*domain.PostStatsSnapshot, error)
+	// InsertPostStats stores a new engagement snapshot for a publish.
+	InsertPostStats(ctx context.Context, publishID uuid.UUID, views, likes, comments int, fetchedAt time.Time) error
+	// ListRecentPublishedWithPostID lists published logs from the last days
+	// that carry a platform post id (candidates for stats refresh).
+	ListRecentPublishedWithPostID(ctx context.Context, days int) ([]domain.PublishLog, error)
+	// TrimPostStats keeps only the most recent keep snapshots per publish.
+	TrimPostStats(ctx context.Context, publishID uuid.UUID, keep int) error
 }
 
 type publishService struct {
@@ -208,6 +219,13 @@ func (s *publishService) GetHistory(ctx context.Context, userID uuid.UUID) ([]do
 		logs[i].Content, err = s.decryptField(logs[i].Content)
 		if err != nil {
 			return nil, err
+		}
+		// Attach the latest engagement snapshot when the platform exposes
+		// stats and the refresher has collected any (G5).
+		if logs[i].PlatformPostID != "" {
+			if stats, statsErr := s.logRepo.LatestPostStats(ctx, logs[i].ID); statsErr == nil && stats != nil {
+				logs[i].Stats = stats
+			}
 		}
 	}
 	return logs, nil

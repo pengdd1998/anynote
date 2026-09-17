@@ -2166,6 +2166,24 @@ abstract class AppLocalizations {
   /// **'View Details'**
   String get viewDetails;
 
+  /// Engagement stats label: view count
+  ///
+  /// In en, this message translates to:
+  /// **'Views'**
+  String get statsViews;
+
+  /// Engagement stats label: like count
+  ///
+  /// In en, this message translates to:
+  /// **'Likes'**
+  String get statsLikes;
+
+  /// Engagement stats label: comment count
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get statsComments;
+
   /// Detail row label
   ///
   /// In en, this message translates to:

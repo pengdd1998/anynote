@@ -119,6 +119,8 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
     final createdAt = item['created_at']?.toString() ?? '';
     final platformURL = item['platform_url']?.toString() ?? '';
     final errorMessage = item['error_message']?.toString() ?? '';
+    final stats =
+        item['stats'] is Map<String, dynamic> ? item['stats'] as Map<String, dynamic> : null;
 
     final statusIcon = switch (status) {
       'published' => Icons.check_circle,
@@ -252,6 +254,21 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
               ),
             ),
           ],
+          if (stats != null) ...[
+            const SizedBox(height: AppSpacing.s8),
+            Row(
+              children: [
+                _statCell(context, Icons.visibility_outlined,
+                    l10n.statsViews, stats['views'], isDark,),
+                const SizedBox(width: AppSpacing.s16),
+                _statCell(context, Icons.favorite_outline,
+                    l10n.statsLikes, stats['likes'], isDark,),
+                const SizedBox(width: AppSpacing.s16),
+                _statCell(context, Icons.chat_bubble_outline,
+                    l10n.statsComments, stats['comments'], isDark,),
+              ],
+            ),
+          ],
           if (status == 'failed' && errorMessage.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s8),
             Container(
@@ -286,6 +303,43 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
         ],
       ),
     );
+  }
+
+  /// One engagement stat: icon + compact count (e.g. 1.2k).
+  Widget _statCell(
+    BuildContext context,
+    IconData icon,
+    String label,
+    dynamic value,
+    bool isDark,
+  ) {
+    final count = value is num ? value.toInt() : 0;
+    final color = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color, semanticLabel: label),
+        const SizedBox(width: AppSpacing.s4),
+        Text(
+          _compactCount(count),
+          style: AppTextStyles.caption.copyWith(color: color),
+        ),
+      ],
+    );
+  }
+
+  String _compactCount(int n) {
+    if (n >= 10000) {
+      final w = n / 10000;
+      return w >= 10 ? '${w.round()}w' : '${w.toStringAsFixed(1)}w';
+    }
+    if (n >= 1000) {
+      final k = n / 1000;
+      return k >= 10 ? '${k.round()}k' : '${k.toStringAsFixed(1)}k';
+    }
+    return '$n';
   }
 
   void _showDetail(BuildContext context, String id) {
@@ -355,6 +409,14 @@ class _PublishDetailSheet extends ConsumerWidget {
             ),
           if (detail['platform_url'] != null)
             _detailRow(context, l10n.url, detail['platform_url']?.toString()),
+          if (detail['stats'] is Map<String, dynamic>)
+            _detailRow(
+              context,
+              '${l10n.statsViews} / ${l10n.statsLikes} / ${l10n.statsComments}',
+              '${(detail['stats']['views'] as num?) ?? 0} / '
+                  '${(detail['stats']['likes'] as num?) ?? 0} / '
+                  '${(detail['stats']['comments'] as num?) ?? 0}',
+            ),
           if (detail['error_message'] != null &&
               detail['error_message'].toString().isNotEmpty)
             _detailRow(

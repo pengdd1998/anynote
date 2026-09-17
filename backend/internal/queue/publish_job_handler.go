@@ -166,14 +166,15 @@ func (h *PublishJobHandler) HandleTask(ctx context.Context, t *asynq.Task) error
 		return fmt.Errorf("publish failed: %w", err)
 	}
 
-	// Update status to published
+	// Update status to published, persisting the platform post id so the
+	// stats refresher can locate the post later.
 	platformURL := ""
 	platformPostID := ""
 	if result != nil {
 		platformURL = result.PlatformURL
 		platformPostID = result.PlatformID
 	}
-	if err := h.publishRepo.UpdateStatus(ctx, logID, "published", "", platformURL); err != nil {
+	if err := h.publishRepo.UpdateStatusWithPostID(ctx, logID, "published", "", platformURL, platformPostID); err != nil {
 		slog.Error("publish job: failed to update status to published",
 			"publish_log_id", payload.PublishLogID, "error", err,
 		)

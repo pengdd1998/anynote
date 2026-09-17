@@ -123,9 +123,21 @@ type PublishLog struct {
 	Content        string     `json:"content,omitempty"`
 	Status         string     `json:"status"`
 	PlatformURL    string     `json:"platform_url,omitempty"`
+	PlatformPostID string     `json:"platform_post_id,omitempty"`
 	ErrorMessage   string     `json:"error_message,omitempty"`
 	PublishedAt    *time.Time `json:"published_at,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
+
+	// Latest engagement snapshot (nil until the stats refresher has run).
+	Stats *PostStatsSnapshot `json:"stats,omitempty"`
+}
+
+// PostStatsSnapshot is one engagement-stats reading for a published post.
+type PostStatsSnapshot struct {
+	Views     int        `json:"views"`
+	Likes     int        `json:"likes"`
+	Comments  int        `json:"comments"`
+	FetchedAt time.Time  `json:"fetched_at"`
 }
 
 // ── AI Proxy Request ──────────────────────────────

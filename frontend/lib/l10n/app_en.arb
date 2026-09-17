@@ -1528,6 +1528,18 @@
     "@viewDetails": {
         "description": "Button label"
     },
+    "statsViews": "Views",
+    "@statsViews": {
+        "description": "Engagement stats label: view count"
+    },
+    "statsLikes": "Likes",
+    "@statsLikes": {
+        "description": "Engagement stats label: like count"
+    },
+    "statsComments": "Comments",
+    "@statsComments": {
+        "description": "Engagement stats label: comment count"
+    },
     "platform": "Platform",
     "@platform": {
         "description": "Detail row label"

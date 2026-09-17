@@ -1,7 +1,10 @@
 // Package platform defines the adapter interface and registry for platform publishing.
 package platform
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // PublishParams contains the content to publish.
 type PublishParams struct {
@@ -70,4 +73,23 @@ type Adapter interface {
 	// of the return value; this hook lets the adapter perform
 	// platform-specific cleanup (e.g. API-level session revocation).
 	RevokeAuth(ctx context.Context, encryptedAuth []byte, masterKey []byte) error
+}
+
+// PostStats is a per-post engagement snapshot where a platform exposes it.
+type PostStats struct {
+	Views    int `json:"views"`
+	Likes    int `json:"likes"`
+	Comments int `json:"comments"`
+}
+
+// ErrStatsNotSupported is returned by adapters without stats scraping.
+var ErrStatsNotSupported = fmt.Errorf("stats not supported for this platform")
+
+// StatsFetcher is optionally implemented by adapters that can scrape
+// per-post engagement stats. Adapters without the capability simply do not
+// implement it; callers probe with a type assertion.
+type StatsFetcher interface {
+	// FetchStats scrapes the current engagement numbers for a published
+	// post. encryptedAuth is the persisted auth blob (same as Publish).
+	FetchStats(ctx context.Context, encryptedAuth []byte, masterKey []byte, platformPostID string) (*PostStats, error)
 }

@@ -76,6 +76,26 @@ func (m *mockPublishLogRepo) UpdateStatus(ctx context.Context, id uuid.UUID, sta
 	return nil
 }
 
+func (m *mockPublishLogRepo) UpdateStatusWithPostID(ctx context.Context, id uuid.UUID, status string, errMsg string, platformURL string, platformPostID string) error {
+	return m.UpdateStatus(ctx, id, status, errMsg, platformURL)
+}
+
+func (m *mockPublishLogRepo) LatestPostStats(ctx context.Context, publishID uuid.UUID) (*domain.PostStatsSnapshot, error) {
+	return nil, nil
+}
+
+func (m *mockPublishLogRepo) InsertPostStats(ctx context.Context, publishID uuid.UUID, views, likes, comments int, fetchedAt time.Time) error {
+	return nil
+}
+
+func (m *mockPublishLogRepo) ListRecentPublishedWithPostID(ctx context.Context, days int) ([]domain.PublishLog, error) {
+	return nil, nil
+}
+
+func (m *mockPublishLogRepo) TrimPostStats(ctx context.Context, publishID uuid.UUID, keep int) error {
+	return nil
+}
+
 // ---------------------------------------------------------------------------
 // Mock QueueEnqueuer
 // ---------------------------------------------------------------------------

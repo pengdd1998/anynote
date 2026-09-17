@@ -1122,6 +1122,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get viewDetails => '상세 보기';
 
   @override
+  String get statsViews => '조회수';
+
+  @override
+  String get statsLikes => '좋아요';
+
+  @override
+  String get statsComments => '댓글';
+
+  @override
   String get platform => '플랫폼';
 
   @override

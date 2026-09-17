@@ -1122,6 +1122,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get viewDetails => '詳細を表示';
 
   @override
+  String get statsViews => '閲覧数';
+
+  @override
+  String get statsLikes => 'いいね';
+
+  @override
+  String get statsComments => 'コメント';
+
+  @override
   String get platform => 'プラットフォーム';
 
   @override

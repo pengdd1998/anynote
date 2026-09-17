@@ -1141,6 +1141,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewDetails => 'View Details';
 
   @override
+  String get statsViews => 'Views';
+
+  @override
+  String get statsLikes => 'Likes';
+
+  @override
+  String get statsComments => 'Comments';
+
+  @override
   String get platform => 'Platform';
 
   @override
