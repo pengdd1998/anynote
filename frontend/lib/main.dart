@@ -9,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'core/crypto/web_crypto_compat.dart';
-import 'core/collab/ws_client.dart';
 import 'core/database/app_database.dart';
 import 'core/deep_link/deep_link_handler.dart';
 import 'core/locale/locale_provider.dart';
@@ -225,8 +224,6 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
       // Initialize push notifications (graceful no-op if Firebase is not configured).
       if (globalContainer.read(authStateProvider)) {
         globalContainer.read(pushNotificationServiceProvider).init();
-        // Connect WebSocket for real-time collaboration.
-        _initWebSocket();
       }
       // Initialize share extension receiver.
       final shareService = globalContainer.read(receiveShareServiceProvider);
@@ -250,16 +247,11 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
     });
   }
 
-  Future<void> _initWebSocket() async {
-    try {
-      final api = globalContainer.read(apiClientProvider);
-      final token = api.accessToken;
-      if (token == null) return;
-      globalContainer.read(wsClientProvider.notifier).connect(token);
-    } catch (_) {
-      // WebSocket failure is non-critical for app functionality.
-    }
-  }
+  // AnyNote is a personal notes app — realtime collab is not a product
+  // feature, so the app never opens the collab WebSocket. Its reconnect
+  // loop caused constant background traffic (see
+  // doc/tech-plan-2026-09-deploy.md §2.11); the WS client class is kept
+  // for a possible future feature.
 
   @override
   void dispose() {

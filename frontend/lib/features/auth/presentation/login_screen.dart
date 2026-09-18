@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../../core/collab/ws_client.dart';
 import '../../../core/crypto/master_key.dart';
 import '../../../core/error/error.dart';
 import '../../../core/network/api_client.dart';
@@ -183,10 +182,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       // ignore: unawaited_futures
       ref.read(pushNotificationServiceProvider).init();
 
-      // Connect to the WebSocket server for real-time collaboration.
-      // ignore: unawaited_futures
-      _connectWebSocket();
-
       // Step 5: Prompt KDF migration if user logged in with legacy parameters.
       // This is non-blocking: the user can decline and still use the app.
       final shouldMigrate = usedKdfVersion < currentVersion;
@@ -354,8 +349,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       ref.read(authStateProvider.notifier).state = true;
       // ignore: unawaited_futures
       ref.read(pushNotificationServiceProvider).init();
-      // ignore: unawaited_futures
-      _connectWebSocket();
 
       if (mounted) {
         AppSnackBar.info(context,
@@ -435,8 +428,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       ref.read(authStateProvider.notifier).state = true;
       // ignore: unawaited_futures
       ref.read(pushNotificationServiceProvider).init();
-      // ignore: unawaited_futures
-      _connectWebSocket();
 
       if (mounted) {
         AppSnackBar.info(context, message: 'Dev login: $email / $password');
@@ -453,19 +444,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         setState(() {
           _isLoading = false;
         });
-    }
-  }
-
-  Future<void> _connectWebSocket() async {
-    try {
-      final api = ref.read(apiClientProvider);
-      final token = api.accessToken;
-      if (token == null || !mounted) return;
-      // ignore: unawaited_futures
-      ref.read(wsClientProvider.notifier).connect(token);
-    } catch (_) {
-      // WebSocket connection failure is non-critical. The collab feature
-      // will simply be unavailable until the next successful connection.
     }
   }
 
