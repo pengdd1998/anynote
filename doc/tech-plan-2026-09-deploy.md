@@ -280,14 +280,13 @@ E-0 真机排查实测（CI 构建 APK + 服务端日志）：token 层修复后
 与 CRDT catch-up（一房一连模型，read pump 不处理 join/leave 消息）；前端
 WSClient 则是"无 room 连接 + join 消息进房"模型（ws_client.dart）。
 
-**两层模型不兼容，实时协作在 token 层修复后仍不可用**。修复需决策：
-
-- 方案 A（后端兼容前端）：room 可选 + join/leave 消息动态切房——后端
-  改动中等，但连接期 IsMember 校验失效，需在 join 时补；
-- 方案 B（前端对齐后端，推荐）：WSClient 改为每房间一条连接（打开协作
-  文档才连 `?token=&room=<noteId>`），首页不再空连接（顺带省电）。改动
-  集中在 wsClientProvider / presence_indicator / collab_provider 三个
-  消费点。
+**两层模型不兼容，实时协作在 token 层修复后仍不可用**。处置结论
+（2026-09-18，产品定位澄清）：**AnyNote 是个人笔记应用，实时多人协作
+不是产品需求**，不做 A/B 模型对齐。客户端 WS 连接入口（启动、登录、
+DEV 注册路径）已移除（commit 4975092）——重连循环、后台流量与 refresh
+churn 随下个 App 版本发布自然消失。WSClient 类与测试保留作为将来可能的
+功能底座。后续清理项（待立项）：前端 collab/presence 消费模块与测试、
+后端 ws_handler/presence_service/collab API 与相关表。
 
 同轮关联修复（commit 2e22fd9）：`sodium_libs` 平台实例未注册导致全新
 安装注册/登录必崩（LateInitializationError），已在 CryptoCompat.init()
