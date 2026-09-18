@@ -35,7 +35,6 @@ dependencies:
   connectivity_plus: ^6.0.3
   dio: ^5.4.3+1
   json_annotation: ^4.9.0
-  web_socket_channel: ^3.0.1
 
   # Routing
   go_router: ^14.2.1

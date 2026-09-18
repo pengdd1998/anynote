@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/crypto/master_key.dart';
 import '../../../../core/error/error.dart';
 import '../../../../core/notifications/push_service.dart';
-import '../../../../core/collab/ws_client.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/app_components.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -70,8 +69,6 @@ class SignOutSection extends ConsumerWidget {
       // Unregister device token from push notifications before clearing auth.
       await ref.read(pushNotificationServiceProvider).dispose();
 
-      // Disconnect WebSocket for real-time collaboration.
-      ref.read(wsClientProvider.notifier).disconnect();
 
       // Clear API client tokens (both in-memory and secure storage).
       final apiClient = ref.read(apiClientProvider);
@@ -185,7 +182,6 @@ class SignOutSection extends ConsumerWidget {
       await api.deleteAccount(authKeyHashBase64);
 
       // Disconnect WebSocket.
-      ref.read(wsClientProvider.notifier).disconnect();
 
       // Unregister push notifications.
       await ref.read(pushNotificationServiceProvider).dispose();

@@ -58,14 +58,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     AppColors.accentPeachBg,
     AppColors.accentYellowBg,
     AppColors.accentCoralBg,
-    AppColors.accentMintBg,
   ];
 
   static const _pageIcons = <IconData>[
     Icons.shield_outlined,
     Icons.auto_awesome_outlined,
     Icons.publish_outlined,
-    Icons.group_outlined,
   ];
 
   List<String> get _pageTitles {
@@ -74,7 +72,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       l10n.onboardingSecureNotesTitle,
       l10n.onboardingAITitle,
       l10n.onboardingPublishTitle,
-      l10n.onboardingCollaborateTitle,
     ];
   }
 
@@ -84,7 +81,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       l10n.onboardingSecureNotesDesc,
       l10n.onboardingAIDesc,
       l10n.onboardingPublishDesc,
-      l10n.onboardingCollaborateDesc,
     ];
   }
 

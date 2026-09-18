@@ -2535,9 +2535,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get maxDevices => '最大设备数';
 
   @override
-  String get collaboration => '协作';
-
-  @override
   String get no => '否';
 
   @override
@@ -2633,12 +2630,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingPublishDesc => '一键发布到您喜爱的平台，将想法分享给全世界。';
-
-  @override
-  String get onboardingCollaborateTitle => '实时协作';
-
-  @override
-  String get onboardingCollaborateDesc => '与他人实时协作编辑笔记，更改即时同步到所有设备。';
 
   @override
   String get noteLinks => '笔记链接';
@@ -2832,40 +2823,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reduceMotionOff => '关（动画已启用）';
-
-  @override
-  String get copyInviteCode => '复制邀请码';
-
-  @override
-  String get inviteCodeCopied => '邀请码已复制！';
-
-  @override
-  String get enterInviteCode => '输入邀请码';
-
-  @override
-  String joinSharedNote(String code) {
-    return '加入共享笔记：$code';
-  }
-
-  @override
-  String get e2eSharingNotice => '端到端加密：只有您和您的协作者可以阅读此笔记。';
-
-  @override
-  String get anyoneWithCode => '分享此邀请码给他人以协作：';
-
-  @override
-  String get shareSecurely => '请通过加密消息应用安全地分享邀请码，以保持端到端加密。';
-
-  @override
-  String get nooneInRoom => '没有其他人正在查看';
-
-  @override
-  String get onePersonInRoom => '1人正在查看';
-
-  @override
-  String multiplePeopleInRoom(int count) {
-    return '$count人正在查看';
-  }
 
   @override
   String get propertiesDashboard => '属性仪表板';
@@ -3912,11 +3869,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get collapseAll => '全部折叠';
 
   @override
-  String userCursor(String name) {
-    return '$name 的光标';
-  }
-
-  @override
   String get remoteUser => '远程用户';
 
   @override
@@ -4357,15 +4309,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get conflicts => '冲突';
-
-  @override
-  String get failedToCreateRoom => '创建协作房间失败，请检查网络连接。';
-
-  @override
-  String get failedToJoinRoom => '加入房间失败，请检查邀请码。';
-
-  @override
-  String get joining => '正在加入...';
 
   @override
   String get loadMore => '加载更多';

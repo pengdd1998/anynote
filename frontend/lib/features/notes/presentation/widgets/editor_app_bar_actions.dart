@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/platform/platform_utils.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/collab/presence_indicator.dart';
 import '../../../../core/tts/speech_service.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -33,7 +32,7 @@ class EditorActionsConfig {
   final VoidCallback onShowBacklinks;
   final VoidCallback onShowRelatedNotes;
   final VoidCallback onShowProperties;
-  final VoidCallback onShare;
+  final VoidCallback? onShare;
   final VoidCallback onPrint;
   final VoidCallback onPickImage;
   final VoidCallback onPasteImage;
@@ -71,7 +70,7 @@ class EditorActionsConfig {
     required this.onShowBacklinks,
     required this.onShowRelatedNotes,
     required this.onShowProperties,
-    required this.onShare,
+    this.onShare,
     required this.onPrint,
     required this.onPickImage,
     required this.onPasteImage,
@@ -114,11 +113,6 @@ class EditorAppBarActions {
     }
 
     return [
-      // Presence avatars showing active collaborators.
-      if (config.noteId != null)
-        PresenceAvatarStack(
-          users: ref.watch(presenceProvider).values.toList(),
-        ),
       // Save status indicator in AppBar: spinner when saving, checkmark when
       // saved, amber dot when there are unsaved changes.
       _AppBarSaveStatus(isSaving: config.isSaving, isDirty: config.isDirty),
@@ -427,7 +421,7 @@ class EditorAppBarActions {
       case 'properties':
         config.onShowProperties();
       case 'share':
-        config.onShare();
+        config.onShare?.call();
       case 'print':
         config.onPrint();
       case 'publish':
@@ -471,11 +465,12 @@ class EditorAppBarActions {
     return [
       _AppBarSaveStatus(isSaving: config.isSaving, isDirty: config.isDirty),
       // Share action directly visible in preview mode.
-      IconButton(
-        icon: const Icon(Icons.share_outlined),
-        tooltip: l10n.shareNote,
-        onPressed: config.onShare,
-      ),
+      if (config.onShare != null)
+        IconButton(
+          icon: const Icon(Icons.share_outlined),
+          tooltip: l10n.shareNote,
+          onPressed: config.onShare,
+        ),
       // Overflow menu with all secondary actions.
       PopupMenuButton<String>(
         icon: const Icon(Icons.more_horiz),

@@ -4756,12 +4756,6 @@ abstract class AppLocalizations {
   /// **'Max Devices'**
   String get maxDevices;
 
-  /// Feature row label in plan comparison
-  ///
-  /// In en, this message translates to:
-  /// **'Collaboration'**
-  String get collaboration;
-
   /// Negative answer in plan comparison
   ///
   /// In en, this message translates to:
@@ -4953,18 +4947,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'One-click publish to your favorite platforms. Share your ideas with the world instantly.'**
   String get onboardingPublishDesc;
-
-  /// Onboarding page 4 title
-  ///
-  /// In en, this message translates to:
-  /// **'Collaborate in Real-time'**
-  String get onboardingCollaborateTitle;
-
-  /// Onboarding page 4 description
-  ///
-  /// In en, this message translates to:
-  /// **'Work together on notes with live updates. Changes sync instantly across all devices.'**
-  String get onboardingCollaborateDesc;
 
   /// Title for note links section
   ///
@@ -5319,66 +5301,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Off (animations enabled)'**
   String get reduceMotionOff;
-
-  /// Button label to copy invite code
-  ///
-  /// In en, this message translates to:
-  /// **'Copy Invite Code'**
-  String get copyInviteCode;
-
-  /// Snackbar message after invite code is copied
-  ///
-  /// In en, this message translates to:
-  /// **'Invite code copied!'**
-  String get inviteCodeCopied;
-
-  /// Label for text field to enter an invite code
-  ///
-  /// In en, this message translates to:
-  /// **'Enter Invite Code'**
-  String get enterInviteCode;
-
-  /// Button label and snackbar message to join a shared note
-  ///
-  /// In en, this message translates to:
-  /// **'Join shared note: {code}'**
-  String joinSharedNote(String code);
-
-  /// Security notice for E2E encrypted sharing
-  ///
-  /// In en, this message translates to:
-  /// **'End-to-end encrypted: only you and your collaborators can read this note.'**
-  String get e2eSharingNotice;
-
-  /// Instruction text for sharing invite code
-  ///
-  /// In en, this message translates to:
-  /// **'Share this invite code with others to let them collaborate:'**
-  String get anyoneWithCode;
-
-  /// Instruction on how to share the invite code securely
-  ///
-  /// In en, this message translates to:
-  /// **'Share the code securely (e.g., via encrypted messaging app) to maintain end-to-end encryption.'**
-  String get shareSecurely;
-
-  /// Presence text when only current user is in room
-  ///
-  /// In en, this message translates to:
-  /// **'No one else is viewing'**
-  String get nooneInRoom;
-
-  /// Presence text when one other person is viewing
-  ///
-  /// In en, this message translates to:
-  /// **'1 person viewing'**
-  String get onePersonInRoom;
-
-  /// Presence text when multiple people are viewing
-  ///
-  /// In en, this message translates to:
-  /// **'{count} people viewing'**
-  String multiplePeopleInRoom(int count);
 
   /// Title of the properties dashboard screen
   ///
@@ -7294,12 +7216,6 @@ abstract class AppLocalizations {
   /// **'Collapse All'**
   String get collapseAll;
 
-  /// Tooltip shown over a remote collaborator's cursor
-  ///
-  /// In en, this message translates to:
-  /// **'{name}\'s cursor'**
-  String userCursor(String name);
-
   /// Fallback label when remote user name is unknown
   ///
   /// In en, this message translates to:
@@ -8115,24 +8031,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Conflicts'**
   String get conflicts;
-
-  /// Error when share dialog fails to create a room
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to create collaboration room. Please check your connection.'**
-  String get failedToCreateRoom;
-
-  /// Error when join room fails
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to join room. Please check the invite code.'**
-  String get failedToJoinRoom;
-
-  /// Loading text while joining a collaboration room
-  ///
-  /// In en, this message translates to:
-  /// **'Joining...'**
-  String get joining;
 
   /// Button to load more items in a paginated list
   ///

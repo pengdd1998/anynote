@@ -2645,9 +2645,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get maxDevices => 'Max Devices';
 
   @override
-  String get collaboration => 'Collaboration';
-
-  @override
   String get no => 'No';
 
   @override
@@ -2748,13 +2745,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingPublishDesc =>
       'One-click publish to your favorite platforms. Share your ideas with the world instantly.';
-
-  @override
-  String get onboardingCollaborateTitle => 'Collaborate in Real-time';
-
-  @override
-  String get onboardingCollaborateDesc =>
-      'Work together on notes with live updates. Changes sync instantly across all devices.';
 
   @override
   String get noteLinks => 'Note Links';
@@ -2975,43 +2965,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reduceMotionOff => 'Off (animations enabled)';
-
-  @override
-  String get copyInviteCode => 'Copy Invite Code';
-
-  @override
-  String get inviteCodeCopied => 'Invite code copied!';
-
-  @override
-  String get enterInviteCode => 'Enter Invite Code';
-
-  @override
-  String joinSharedNote(String code) {
-    return 'Join shared note: $code';
-  }
-
-  @override
-  String get e2eSharingNotice =>
-      'End-to-end encrypted: only you and your collaborators can read this note.';
-
-  @override
-  String get anyoneWithCode =>
-      'Share this invite code with others to let them collaborate:';
-
-  @override
-  String get shareSecurely =>
-      'Share the code securely (e.g., via encrypted messaging app) to maintain end-to-end encryption.';
-
-  @override
-  String get nooneInRoom => 'No one else is viewing';
-
-  @override
-  String get onePersonInRoom => '1 person viewing';
-
-  @override
-  String multiplePeopleInRoom(int count) {
-    return '$count people viewing';
-  }
 
   @override
   String get propertiesDashboard => 'Properties Dashboard';
@@ -4138,11 +4091,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collapseAll => 'Collapse All';
 
   @override
-  String userCursor(String name) {
-    return '$name\'s cursor';
-  }
-
-  @override
   String get remoteUser => 'Remote user';
 
   @override
@@ -4596,17 +4544,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get conflicts => 'Conflicts';
-
-  @override
-  String get failedToCreateRoom =>
-      'Failed to create collaboration room. Please check your connection.';
-
-  @override
-  String get failedToJoinRoom =>
-      'Failed to join room. Please check the invite code.';
-
-  @override
-  String get joining => 'Joining...';
 
   @override
   String get loadMore => 'Load more';

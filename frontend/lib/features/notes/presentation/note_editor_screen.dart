@@ -15,9 +15,6 @@ import 'package:uuid/uuid.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/ai/auto_tagger.dart';
-import '../../../core/collab/crdt_text.dart';
-import '../../../core/collab/presence_indicator.dart';
-import '../../../core/collab/ws_client.dart';
 import '../../../core/sync/sync_lifecycle.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
@@ -25,7 +22,6 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_animation.dart';
-import '../../../features/collab/presentation/share_dialog.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/exceptions.dart';
 import '../../../core/tts/speech_service.dart';
@@ -41,12 +37,10 @@ import '../../../core/widgets/keyboard_shortcuts.dart';
 import '../../../core/widgets/markdown_preview.dart';
 import '../../../core/widgets/paper_surface.dart';
 import '../../../core/theme/paper_tokens.dart';
-import '../../collab/providers/collab_provider.dart';
 import 'widgets/backlinks_sheet.dart';
 import 'package:anynote/core/accessibility/a11y_utils.dart';
 import 'widgets/command_palette.dart';
 import 'widgets/related_notes_sheet.dart';
-import 'widgets/collab_cursors_widget.dart';
 import 'widgets/rich_editor_with_shortcuts.dart';
 import '../domain/note_envelope.dart';
 import 'widgets/tag_picker_sheet.dart';
@@ -83,21 +77,13 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// Optional initial content to pre-fill the editor (e.g. from a template).
   final String? initialContent;
 
-  /// Optional existing note ID. When provided with [isCollab], the editor
-  /// opens in real-time collaboration mode using CRDT-backed editing.
+  /// Optional existing note ID. When provided, the editor opens that note.
   final String? noteId;
-
-  /// Whether to activate real-time collaboration for this note.
-  /// When true, edits are converted to CRDT operations and broadcast
-  /// via WebSocket. When false (default), the editor uses the standard
-  /// local-only flow.
-  final bool isCollab;
 
   const NoteEditorScreen({
     super.key,
     this.initialContent,
     this.noteId,
-    this.isCollab = false,
   });
 
   @override
@@ -112,7 +98,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   final _bodyScrollController = ScrollController();
 
   Timer? _debounce;
-  Timer? _presenceDebounce;
   String? _noteId;
   bool _isNew = true;
   bool _isSaving = false;
@@ -140,9 +125,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   // Transclusion detection state
   Timer? _transclusionDebounce;
-
-  // CRDT collab mode state
-  bool get _isCollab => widget.isCollab;
 
   // Zen / focus mode state
   bool _isZenMode = false;
@@ -213,10 +195,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _contentController.addListener(_onContentChanged);
     _quillController.addListener(_onContentChanged);
 
-    // Leave the previous presence room so collaborators no longer see stale
-    // active status for the old note.
-    ref.read(presenceProvider.notifier).leaveRoom();
-
     // Cancel stale subscriptions from the previous note.
     _reminderSub?.cancel();
     _reminderSub = null;
@@ -256,15 +234,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Initial count.
     _updateCounts();
 
-    // Post-frame setup: presence room and optional CRDT collab mode.
+    // Post-frame setup.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Load existing note content before joining presence room etc.
+      // Load existing note content.
       if (!_isNew && _noteId != null) {
         _loadExistingNote();
-      }
-      _joinPresenceRoom();
-      if (_isCollab) {
-        _initCollabMode();
       }
       // Track recently opened notes for the command palette.
       if (!_isNew && _noteId != null) {
@@ -294,50 +268,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
-  /// Join the WebSocket presence room so that collaborators can see
-  /// each other's active status and typing indicators.
-  void _joinPresenceRoom() {
-    final wsState = ref.read(wsClientProvider);
-    if (wsState == WSConnectionState.connected) {
-      ref.read(wsClientProvider.notifier).client.joinRoom(_noteId!);
-    }
-  }
-
-  /// Initialize CRDT collaboration mode for this note.
-  ///
-  /// Attempts to load persisted CRDT state from the database. If none exists,
-  /// creates a fresh CRDT document initialized with the current editor content.
-  /// Then joins the collab room via the collab provider.
-  Future<void> _initCollabMode() async {
-    try {
-      final db = ref.read(databaseProvider);
-      final persisted = await db.collabDao.loadState(_noteId!);
-
-      CRDTText? existingCrdt;
-      if (persisted != null) {
-        try {
-          final json =
-              jsonDecode(persisted.documentState) as Map<String, dynamic>;
-          existingCrdt = CRDTText.fromJson(json);
-        } catch (e) {
-          debugPrint('[NoteEditor] Corrupted CRDT state, starting fresh: $e');
-          // Corrupted state; start fresh.
-        }
-      }
-
-      // Join collab room via the provider, which creates the CRDT editor
-      // controller and starts routing operations.
-      ref.read(collabProvider.notifier).joinRoom(
-            _noteId!,
-            existingCrdt: existingCrdt,
-          );
-    } catch (e) {
-      debugPrint('[NoteEditor] Collab init failure: $e');
-      // Collab init failure should not block the editor. The user can still
-      // edit locally; changes just will not be synced in real-time.
-    }
-  }
-
   /// Loads the last edit/preview mode from SharedPreferences.
   Future<void> _loadPreviewPreference() async {
     final prefs = await SharedPreferences.getInstance();
@@ -363,12 +293,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Debounce count updates to avoid recalculating on every keystroke.
     _countDebounceTimer?.cancel();
     _countDebounceTimer = Timer(AppDurations.debounce, _updateCounts);
-    // Debounce presence typing indicator (send at most once per second).
-    _presenceDebounce?.cancel();
-    _presenceDebounce =
-        Timer(AppDurations.autoSaveDelay, _notifyPresenceTyping);
     // Check for wiki link [[ pattern in rich editor mode.
-    if (_useRichEditor && !_isCollab) {
+    if (_useRichEditor) {
       _checkWikiLinkPattern();
       _checkTransclusionPattern();
     }
@@ -513,13 +439,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
 
     _saveNote();
-  }
-
-  /// Send a typing indicator to the presence room.
-  void _notifyPresenceTyping() {
-    if (_noteId != null) {
-      ref.read(presenceProvider.notifier).sendTyping(_noteId!);
-    }
   }
 
   /// Start watching the reminder for the current note so the bell icon
@@ -939,7 +858,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   @override
   void dispose() {
     _debounce?.cancel();
-    _presenceDebounce?.cancel();
     _countDebounceTimer?.cancel();
     _wikiLinkDebounce?.cancel();
     _transclusionDebounce?.cancel();
@@ -954,14 +872,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _findController.dispose();
     _replaceController.dispose();
 
-    // Persist CRDT state and leave collab room if in collab mode.
-    if (_isCollab && _noteId != null) {
-      _persistCollabState();
-      ref.read(collabProvider.notifier).leaveRoom();
-    }
-
-    // Leave presence room.
-    ref.read(presenceProvider.notifier).leaveRoom();
     // Clear keyboard shortcut callbacks registered by this screen.
     AppKeyboardShortcuts.clearPrintCallback();
     AppKeyboardShortcuts.clearFindCallback();
@@ -970,41 +880,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     super.dispose();
   }
 
-  /// Persist the CRDT document state to the database so that offline edits
-  /// are preserved and can be resumed when the note is opened again.
-  Future<void> _persistCollabState() async {
-    try {
-      final collabState = ref.read(collabProvider);
-      final controller = collabState.editorController;
-      if (controller == null) return;
-
-      final crdt = controller.crdt;
-      final stateJson = jsonEncode(crdt.toJson());
-
-      final db = ref.read(databaseProvider);
-      await db.collabDao.saveState(
-        noteId: _noteId!,
-        documentState: stateJson,
-        lastVersion: crdt.clock,
-      );
-    } catch (e) {
-      debugPrint('[NoteEditor] Collab state persistence failure: $e');
-      // Persistence failure should not crash the app on dispose.
-    }
-  }
-
   /// Returns the content to encrypt and store:
-  /// - Collab mode: text from the CRDT document
   /// - Rich editor: Delta JSON string
   /// - Plain text: raw text from the text controller
   String _getContentForSave() {
-    if (_isCollab) {
-      // In collab mode, always use plain text from the CRDT.
-      // The CRDT controller manages its own TextEditingController.
-      final collabState = ref.read(collabProvider);
-      return collabState.editorController?.textController.text ??
-          _contentController.text;
-    }
     if (_useRichEditor) {
       return jsonEncode(_quillController.document.toDelta().toJson());
     }
@@ -1013,11 +892,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Returns plain text for FTS5 search indexing.
   String _extractPlainText() {
-    if (_isCollab) {
-      final collabState = ref.read(collabProvider);
-      return collabState.editorController?.textController.text ??
-          _contentController.text;
-    }
     if (_useRichEditor) {
       return _quillController.document.toPlainText();
     }
@@ -1055,15 +929,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   /// Returns the effective text controller for the content field.
-  /// In collab mode, uses the CRDT editor controller's text controller.
-  /// Otherwise, uses the standard [_contentController].
-  TextEditingController get _effectiveContentController {
-    if (_isCollab) {
-      final collabState = ref.read(collabProvider);
-      return collabState.editorController?.textController ?? _contentController;
-    }
-    return _contentController;
-  }
+  TextEditingController get _effectiveContentController => _contentController;
 
   /// Save a version snapshot of the current note state before overwriting it.
   /// Keeps only the last 20 versions per note.
@@ -1208,11 +1074,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     onShowBacklinks: () => _showBacklinks(context),
                     onShowRelatedNotes: () => _showRelatedNotes(context),
                     onShowProperties: () => _showProperties(context),
-                    onShare: () {
-                      if (_noteId != null) {
-                        showShareBottomSheet(context, _noteId!);
-                      }
-                    },
                     onPrint: () => _showPrintPreview(context),
                     onPickImage: () => _pickImage(context),
                     onPasteImage: () => _pasteImageFromClipboard(context),
@@ -1366,9 +1227,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             isActive: _isFocusMode,
                             child: _isFoldView
                                 ? _buildFoldView(l10n)
-                                : _buildEditorWithCollabCursors(
-                                    context,
-                                    l10n,
+                                :
                                     // The writing surface is a sheet of
                                     // paper (paper design system).
                                     PaperSurface(
@@ -1451,7 +1310,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                                       ),
                                                     ),
                                                   ),
-                                      ),
                                     ),
                                   ),
                                 ),
@@ -1464,16 +1322,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ),
           ),
         ),
-
-        // Typing indicator for collaborators.
-        if (_noteId != null)
-          TypingIndicatorText(
-            typingUsers: ref
-                .watch(presenceProvider)
-                .values
-                .where((u) => u.isTyping)
-                .toList(),
-          ),
 
         // Floating formatting toolbar — only in rich mode, not preview/zen.
         // Styled as a floating rounded card per the design mockup:
@@ -1695,19 +1543,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     return dateStr;
   }
 
-  // ── Collab cursor wrapper ────────────────────────────
-
-  /// Wraps the editor child with [CollabCursorsWidget] when in collab mode.
-  Widget _buildEditorWithCollabCursors(
-    BuildContext context,
-    AppLocalizations l10n,
-    Widget editorChild,
-  ) {
-    if (_isCollab && _noteId != null) {
-      return CollabCursorsWidget(noteId: _noteId!, child: editorChild);
-    }
-    return editorChild;
-  }
 
   // ── Fold / outline view ──────────────────────────────
 
@@ -2324,7 +2159,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Insert an image embed into the content.
   /// Uses BlockEmbed.image for the rich editor or markdown syntax for plain text.
   Future<void> _insertImageRef(String localPath) async {
-    if (_useRichEditor && !_isCollab) {
+    if (_useRichEditor) {
       final controller = _quillController;
       final sel = controller.selection;
       final index = sel.isCollapsed ? sel.baseOffset : sel.start;

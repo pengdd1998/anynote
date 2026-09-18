@@ -16,7 +16,6 @@ import 'daos/sync_meta_dao.dart';
 import 'daos/note_versions_dao.dart';
 import 'daos/templates_dao.dart';
 import 'daos/sync_operations_dao.dart';
-import 'daos/collab_dao.dart';
 import 'daos/note_links_dao.dart';
 import 'daos/note_properties_dao.dart';
 import 'daos/saved_searches_dao.dart';
@@ -41,7 +40,6 @@ part 'app_database.g.dart';
     NoteTemplates,
     SyncMeta,
     SyncOperations,
-    CollabStates,
     SavedSearches,
     Snippets,
     NoteImages,
@@ -56,7 +54,6 @@ part 'app_database.g.dart';
     TemplatesDao,
     SyncMetaDao,
     SyncOperationsDao,
-    CollabDao,
     NoteLinksDao,
     NotePropertiesDao,
     SavedSearchesDao,
@@ -88,7 +85,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration {
@@ -170,10 +167,9 @@ class AppDatabase extends _$AppDatabase {
           // v6 -> v7: Add sync_operations table for offline-first sync queue.
           await m.createTable(syncOperations);
         }
-        if (from < 8) {
-          // v7 -> v8: Add collab_states table for CRDT persistence.
-          await m.createTable(collabStates);
-        }
+        // v7 -> v8 originally created a collab_states table; the collab
+        // feature was removed in v23 and the table is dropped there (v23
+        // uses DROP TABLE IF EXISTS, so installs without it are fine).
         if (from < 9) {
           // v8 -> v9: Add note_links table for wiki-style [[links]].
           await m.createTable(noteLinks);
@@ -296,6 +292,12 @@ class AppDatabase extends _$AppDatabase {
           // system and seed the three built-in templates.
           await m.createTable(postTemplates);
           await _seedBuiltInPostTemplates();
+        }
+        if (from < 23) {
+          // v22 -> v23: Drop the collab_states table. Realtime collaboration
+          // is not a product feature (personal notes app) and the collab
+          // stack was removed; legacy installs may still carry the table.
+          await customStatement('DROP TABLE IF EXISTS collab_states');
         }
       },
     );

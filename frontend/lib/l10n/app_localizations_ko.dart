@@ -2549,9 +2549,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get maxDevices => '최대 기기 수';
 
   @override
-  String get collaboration => '협업';
-
-  @override
   String get no => '아니요';
 
   @override
@@ -2648,13 +2645,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get onboardingPublishDesc =>
       '즐겨 사용하는 플랫폼에 원클릭으로 게시하세요. 아이디어를 즉시 세상과 공유하세요.';
-
-  @override
-  String get onboardingCollaborateTitle => '실시간 협업';
-
-  @override
-  String get onboardingCollaborateDesc =>
-      '노트를 실시간으로 공동 편집하세요. 변경 사항이 모든 기기에 즉시 동기화됩니다.';
 
   @override
   String get noteLinks => '노트 링크';
@@ -2848,41 +2838,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get reduceMotionOff => '끔(애니메이션 사용)';
-
-  @override
-  String get copyInviteCode => '초대 코드 복사';
-
-  @override
-  String get inviteCodeCopied => '초대 코드가 복사되었습니다!';
-
-  @override
-  String get enterInviteCode => '초대 코드 입력';
-
-  @override
-  String joinSharedNote(String code) {
-    return '공유 노트 참가: $code';
-  }
-
-  @override
-  String get e2eSharingNotice => '종단 간 암호화: 사용자와 협력자만 이 노트를 읽을 수 있습니다.';
-
-  @override
-  String get anyoneWithCode => '초대 코드를 공유하여 협업:';
-
-  @override
-  String get shareSecurely =>
-      '종단 간 암호화를 유지하려면 암호화된 메시징 앱 등을 통해 안전하게 초대 코드를 공유하세요.';
-
-  @override
-  String get nooneInRoom => '다른 사람이 보고 있지 않습니다';
-
-  @override
-  String get onePersonInRoom => '1명이 보고 있음';
-
-  @override
-  String multiplePeopleInRoom(int count) {
-    return '$count명이 보고 있음';
-  }
 
   @override
   String get propertiesDashboard => '속성 대시보드';
@@ -3929,11 +3884,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get collapseAll => '모두 접기';
 
   @override
-  String userCursor(String name) {
-    return '$name의 커서';
-  }
-
-  @override
   String get remoteUser => '원격 사용자';
 
   @override
@@ -4375,15 +4325,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get conflicts => '충돌';
-
-  @override
-  String get failedToCreateRoom => '협업 방 생성에 실패했습니다. 연결을 확인해 주세요.';
-
-  @override
-  String get failedToJoinRoom => '방 참여에 실패했습니다. 초대 코드를 확인해 주세요.';
-
-  @override
-  String get joining => '참여 중...';
 
   @override
   String get loadMore => '더 보기';

@@ -248,10 +248,9 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
   }
 
   // AnyNote is a personal notes app — realtime collab is not a product
-  // feature, so the app never opens the collab WebSocket. Its reconnect
-  // loop caused constant background traffic (see
-  // doc/tech-plan-2026-09-deploy.md §2.11); the WS client class is kept
-  // for a possible future feature.
+  // feature, so the app never opens a WebSocket. The collab stack (client,
+  // provider, backend APIs, tables) was removed in 2026-09; see
+  // doc/tech-plan-2026-09-deploy.md §2.11/§2.12.
 
   @override
   void dispose() {
