@@ -13,7 +13,6 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/anynote/backend/internal/config"
-	"github.com/anynote/backend/internal/repository"
 	"github.com/anynote/backend/internal/service"
 )
 
@@ -71,11 +70,9 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	commentH := &CommentHandler{commentService: services.Comment}
 	planH := NewPlanHandler(services.Plan, services.Quota)
 	profileH := NewProfileHandler(services.Profile)
-	wsH := NewWSHandler(services.Presence, services.CollabRepo, services.CollabOpsRepo, cfg.Auth.JWTSecret, cfg.Server.AllowOrigins)
 	noteLinkH := NewNoteLinkHandler(services.NoteLink)
 	semanticH := NewSemanticSearchHandler(services.SemanticSearch)
 	aiAgentH := NewAIAgentHandler(services.AIAgent)
-	collabH := NewCollabHandler(services.Collab)
 
 	// Payment handler (nil-safe: routes are only registered when service is present).
 	var paymentH *PaymentHandler
@@ -127,9 +124,6 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 		// Public profile (no auth required)
 		r.Get("/profile/{username}", profileH.GetPublicProfile)
 
-		// WebSocket (auth handled inside handler via query-param token)
-		r.Get("/ws", wsH.HandleConnection)
-
 		// Payment webhook (no auth -- Stripe calls this directly).
 		// Rate limited per IP to mitigate retry storms while allowing
 		// Stripe's legitimate retry schedule (up to ~3 days with backoff).
@@ -140,9 +134,6 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 		// Authenticated routes
 		r.Group(func(r chi.Router) {
 			r.Use(AuthMiddleware(cfg.Auth.JWTSecret))
-
-			// WebSocket token generation (requires access token)
-			r.Post("/ws/token", wsH.GenerateWSToken)
 
 			// Auth
 			r.Get("/auth/me", authH.Me)
@@ -230,17 +221,6 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			r.Delete("/search/embeddings/{noteId}", semanticH.DeleteEmbedding)
 			r.With(RateLimitMiddleware(syncRateLimiter, UserIDKeyFunc, time.Minute)).Post("/search/semantic", semanticH.Search)
 
-			// Collab rooms
-			r.Route("/collab/rooms", func(r chi.Router) {
-				r.Post("/", collabH.CreateRoom)
-				r.Post("/join", collabH.JoinRoom)
-				r.Get("/", collabH.GetUserRooms)
-				r.Route("/{roomId}", func(r chi.Router) {
-					r.Post("/leave", collabH.LeaveRoom)
-					r.Get("/members", collabH.GetRoomMembers)
-				})
-			})
-
 			// Payments (authenticated)
 			if paymentH != nil {
 				r.Post("/payments/checkout", paymentH.CreateCheckout)
@@ -279,18 +259,14 @@ type Services struct {
 	Share          service.ShareService
 	Push           service.PushService
 	Comment        service.CommentService
-	Presence       service.PresenceService
 	Plan           service.PlanService
 	Profile        service.ProfileService
 	NoteLink       service.NoteLinkService
 	SemanticSearch service.SemanticSearchService
 	AIAgent        service.AIAgentService
-	Collab         service.CollabService
 	Payment        service.PaymentService
 	Notification   service.NotificationService
 	Device         service.DeviceService
-	CollabRepo     *repository.CollabRepository
-	CollabOpsRepo  *repository.CollabOperationsRepository
 }
 
 // registerPprofRoutes mounts /debug/pprof/* endpoints when the PPROF_ENABLED

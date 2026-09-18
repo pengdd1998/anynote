@@ -5,8 +5,8 @@ import "net/http"
 // instrumentedResponseWriter wraps http.ResponseWriter to capture the HTTP status code.
 type instrumentedResponseWriter struct {
 	http.ResponseWriter
-	statusCode   int
-	wroteHeader  bool
+	statusCode  int
+	wroteHeader bool
 }
 
 func newInstrumentedResponseWriter(w http.ResponseWriter) *instrumentedResponseWriter {

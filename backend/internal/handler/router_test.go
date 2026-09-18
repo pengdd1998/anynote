@@ -171,7 +171,8 @@ func (s *routerStubPlatformService) CheckStatus(ctx context.Context, userID uuid
 }
 func (s *routerStubPlatformService) Stop() {}
 
-func (s *routerStubPlatformService) CancelAuth(userID uuid.UUID, platformName string, authRef string) {}
+func (s *routerStubPlatformService) CancelAuth(userID uuid.UUID, platformName string, authRef string) {
+}
 
 // routerStubShareService implements service.ShareService.
 type routerStubShareService struct{}
@@ -215,30 +216,6 @@ func (s *routerStubCommentService) DeleteComment(ctx context.Context, commentID,
 	return nil
 }
 
-// routerStubPresenceService implements service.PresenceService.
-type routerStubPresenceService struct{}
-
-func (s *routerStubPresenceService) Join(ctx context.Context, room, userID, username string) error { return nil }
-func (s *routerStubPresenceService) Leave(ctx context.Context, room, userID string) error          { return nil }
-func (s *routerStubPresenceService) GetRoomMembers(ctx context.Context, room string) ([]service.RoomMember, error) {
-	return nil, nil
-}
-func (s *routerStubPresenceService) SetTyping(ctx context.Context, room, userID string, isTyping bool) error {
-	return nil
-}
-func (s *routerStubPresenceService) GetTypingUsers(ctx context.Context, room string) ([]string, error) {
-	return nil, nil
-}
-func (s *routerStubPresenceService) BroadcastToRoom(ctx context.Context, room string, msg service.WSMessage) error {
-	return nil
-}
-func (s *routerStubPresenceService) SubscribeRoom(ctx context.Context, room string) <-chan service.WSMessage {
-	ch := make(chan service.WSMessage)
-	close(ch)
-	return ch
-}
-func (s *routerStubPresenceService) Heartbeat(ctx context.Context, room string) error { return nil }
-
 // routerStubPinger implements Pinger for health handler.
 type routerStubPinger struct{}
 
@@ -268,7 +245,6 @@ func newTestRouterServices() (*config.Config, *Services, *HealthHandler) {
 		Share:     &routerStubShareService{},
 		Push:      &routerStubPushService{},
 		Comment:   &routerStubCommentService{},
-		Presence:  &routerStubPresenceService{},
 	}
 	healthH := NewHealthHandler(&routerStubPinger{}, nil, nil)
 	return cfg, services, healthH

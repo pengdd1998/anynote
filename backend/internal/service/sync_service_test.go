@@ -534,11 +534,11 @@ func TestSyncService_GetStatus_RepoErrors(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 type customUpsertRepo struct {
-	blobs          []domain.SyncBlob
-	latestVersion  int
-	totalItems     int
-	lastUpdated    time.Time
-	batchUpsertFn  func(blobs []*domain.SyncBlob) []domain.BatchUpsertResult
+	blobs         []domain.SyncBlob
+	latestVersion int
+	totalItems    int
+	lastUpdated   time.Time
+	batchUpsertFn func(blobs []*domain.SyncBlob) []domain.BatchUpsertResult
 }
 
 func (m *customUpsertRepo) PullSince(ctx context.Context, userID uuid.UUID, sinceVersion int) ([]domain.SyncBlob, error) {

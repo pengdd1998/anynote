@@ -79,8 +79,8 @@ type PlanInfo struct {
 
 // UpgradePlanRequest is the payload for POST /api/v1/plan/upgrade.
 type UpgradePlanRequest struct {
-	Plan        Plan   `json:"plan"`
-	PaymentRef  string `json:"payment_ref,omitempty"`
+	Plan       Plan   `json:"plan"`
+	PaymentRef string `json:"payment_ref,omitempty"`
 }
 
 // ── Public Profile ──────────────────────────────────────

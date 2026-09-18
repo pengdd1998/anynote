@@ -38,9 +38,9 @@ func newTestDomainUser() *domain.User {
 		Email:              fmt.Sprintf("test-%s@example.com", suffix),
 		Username:           fmt.Sprintf("user_%s", suffix),
 		AuthKeyHash:        []byte("plaintext-auth-key-for-testing"),
-		Salt:               []byte("0123456789abcdef0123456789abcdef"), // 32 bytes
-		RecoveryKey:        []byte("recovery-key-32-bytes-padding!!!"), // 32 bytes
-		RecoverySalt:       []byte("recovery-salt-32-bytes-padding!!!"), // 32 bytes
+		Salt:               []byte("0123456789abcdef0123456789abcdef"),    // 32 bytes
+		RecoveryKey:        []byte("recovery-key-32-bytes-padding!!!"),    // 32 bytes
+		RecoverySalt:       []byte("recovery-salt-32-bytes-padding!!!"),   // 32 bytes
 		EncryptedMasterKey: []byte("encrypted-master-key-32-bytes-pad!!"), // 32 bytes
 		Plan:               "free",
 	}

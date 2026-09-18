@@ -237,7 +237,7 @@ func TestCircuitBreaker_OnStateChange(t *testing.T) {
 
 	cb.RecordFailure() // Closed -> Open
 	time.Sleep(20 * time.Millisecond)
-	cb.Allow()        // Open -> HalfOpen
+	cb.Allow()         // Open -> HalfOpen
 	cb.RecordSuccess() // HalfOpen -> Closed
 
 	if len(transitions) != 3 {

@@ -19,10 +19,10 @@ import (
 
 // Medium API URLs.
 const (
-	mediumAPIBase    = "https://api.medium.com/v1"
-	mediumOAuthBase  = "https://medium.com/m/oauth2"
-	mediumAuthorize  = mediumOAuthBase + "/authorize"
-	mediumTokenURL   = mediumOAuthBase + "/token"
+	mediumAPIBase   = "https://api.medium.com/v1"
+	mediumOAuthBase = "https://medium.com/m/oauth2"
+	mediumAuthorize = mediumOAuthBase + "/authorize"
+	mediumTokenURL  = mediumOAuthBase + "/token"
 )
 
 // Adapter implements platform publishing for Medium via its REST API.
@@ -48,7 +48,7 @@ func (a *Adapter) Name() string { return "medium" }
 
 // mediumAuthData is the internal structure for persisted Medium credentials.
 type mediumAuthData struct {
-	AccessToken string `json:"access_token"`
+	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 	ExpiresAt    int64  `json:"expires_at"` // Unix seconds
 	TokenType    string `json:"token_type"`
@@ -57,9 +57,9 @@ type mediumAuthData struct {
 
 // oauthState holds transient state for an in-progress OAuth flow.
 type oauthState struct {
-	State       string `json:"state"`
-	Code        string `json:"code,omitempty"`
-	Completed   bool   `json:"completed"`
+	State     string `json:"state"`
+	Code      string `json:"code,omitempty"`
+	Completed bool   `json:"completed"`
 }
 
 // ---------------------------------------------------------------------------
@@ -249,10 +249,10 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 
 	var publishResp struct {
 		Data struct {
-			ID        string `json:"id"`
-			Title     string `json:"title"`
-			URL       string `json:"url"`
-			AuthorID  string `json:"authorId"`
+			ID       string `json:"id"`
+			Title    string `json:"title"`
+			URL      string `json:"url"`
+			AuthorID string `json:"authorId"`
 		} `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&publishResp); err != nil {

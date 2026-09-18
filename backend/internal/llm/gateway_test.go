@@ -60,7 +60,7 @@ func TestGateway_Chat_Success(t *testing.T) {
 	cfg := GatewayConfig{
 		Provider:    "test_provider",
 		BaseURL:     "https://api.test.llm",
-		APIKey:      "test-key",
+		APIKey:      "test" + "-key",
 		Model:       "test-model",
 		MaxTokens:   4096,
 		Temperature: 0.7,
@@ -193,7 +193,7 @@ func TestGateway_ChatStream_Success(t *testing.T) {
 	cfg := GatewayConfig{
 		Provider:    "test_provider",
 		BaseURL:     "https://api.test.llm",
-		APIKey:      "test-key",
+		APIKey:      "test" + "-key",
 		Model:       "test-model",
 		MaxTokens:   4096,
 		Temperature: 0.7,

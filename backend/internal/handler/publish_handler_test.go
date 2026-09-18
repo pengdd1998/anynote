@@ -22,9 +22,9 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockPublishService struct {
-	publishFn        func(ctx context.Context, userID uuid.UUID, req service.PublishRequest) (*domain.PublishLog, error)
-	historyFn        func(ctx context.Context, userID uuid.UUID) ([]domain.PublishLog, error)
-	getByIDFn        func(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*domain.PublishLog, error)
+	publishFn         func(ctx context.Context, userID uuid.UUID, req service.PublishRequest) (*domain.PublishLog, error)
+	historyFn         func(ctx context.Context, userID uuid.UUID) ([]domain.PublishLog, error)
+	getByIDFn         func(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*domain.PublishLog, error)
 	isValidPlatformFn func(name string) bool
 }
 
@@ -367,14 +367,14 @@ func TestPublishHandler_GetByID_Success(t *testing.T) {
 				t.Errorf("logID = %v, want %v", id, logID)
 			}
 			return &domain.PublishLog{
-				ID:           logID,
-				UserID:       userID,
-				Platform:     "xiaohongshu",
-				Title:        "Published Note",
-				Status:       "published",
-				PlatformURL:  "https://xiaohongshu.com/post/123",
-				PublishedAt:  func() *time.Time { t := time.Now(); return &t }(),
-				CreatedAt:    time.Now(),
+				ID:          logID,
+				UserID:      userID,
+				Platform:    "xiaohongshu",
+				Title:       "Published Note",
+				Status:      "published",
+				PlatformURL: "https://xiaohongshu.com/post/123",
+				PublishedAt: func() *time.Time { t := time.Now(); return &t }(),
+				CreatedAt:   time.Now(),
 			}, nil
 		},
 	}

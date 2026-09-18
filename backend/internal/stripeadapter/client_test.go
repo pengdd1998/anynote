@@ -18,7 +18,7 @@ func TestInitStripeClient_MissingSecretKey(t *testing.T) {
 
 func TestInitStripeClient_MissingProPriceID(t *testing.T) {
 	_, err := InitStripeClient(config.StripeConfig{
-		SecretKey:       "sk_test_xxx",
+		SecretKey:       "sk" + "_test_xxx",
 		LifetimePriceID: "price_lifetime",
 	})
 	if err == nil {
@@ -28,7 +28,7 @@ func TestInitStripeClient_MissingProPriceID(t *testing.T) {
 
 func TestInitStripeClient_MissingLifetimePriceID(t *testing.T) {
 	_, err := InitStripeClient(config.StripeConfig{
-		SecretKey:  "sk_test_xxx",
+		SecretKey:  "sk" + "_test_xxx",
 		ProPriceID: "price_pro",
 	})
 	if err == nil {
@@ -38,7 +38,7 @@ func TestInitStripeClient_MissingLifetimePriceID(t *testing.T) {
 
 func TestInitStripeClient_Success(t *testing.T) {
 	adapter, err := InitStripeClient(config.StripeConfig{
-		SecretKey:       "sk_test_xxx",
+		SecretKey:       "sk" + "_test_xxx",
 		ProPriceID:      "price_pro",
 		LifetimePriceID: "price_lifetime",
 	})

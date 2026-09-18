@@ -41,8 +41,8 @@ type SyncBlobRepository interface {
 }
 
 type syncService struct {
-	blobRepo   SyncBlobRepository
-	pushSvc    PushService // optional; nil means no push notifications
+	blobRepo SyncBlobRepository
+	pushSvc  PushService // optional; nil means no push notifications
 }
 
 func NewSyncService(blobRepo SyncBlobRepository, opts ...SyncServiceOption) SyncService {
@@ -184,7 +184,7 @@ func (s *syncService) Push(ctx context.Context, userID uuid.UUID, req domain.Syn
 				Body:     fmt.Sprintf("%d item(s) had conflicts during sync", len(conflicts)),
 				Priority: "high",
 				Data: map[string]interface{}{
-					"type":          "sync_conflict",
+					"type":           "sync_conflict",
 					"conflict_count": len(conflicts),
 				},
 			}

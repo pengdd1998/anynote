@@ -39,11 +39,11 @@ type FCMClient interface {
 // FCMMessage represents a push notification message sent to a single device token.
 // This is a clean domain type that avoids importing the Firebase SDK in the service layer.
 type FCMMessage struct {
-	Token     string                 // Device registration token
-	Title     string                 // Notification title
-	Body      string                 // Notification body
-	Data      map[string]string      // Arbitrary key-value data payload
-	Priority  string                 // "high" or "normal"
+	Token    string            // Device registration token
+	Title    string            // Notification title
+	Body     string            // Notification body
+	Data     map[string]string // Arbitrary key-value data payload
+	Priority string            // "high" or "normal"
 }
 
 // DeviceTokenRepository defines persistence operations for device tokens.

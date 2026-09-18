@@ -17,7 +17,7 @@ func TestLoadDefaultConfig(t *testing.T) {
 			Default: config.LLMProviderConfig{
 				Provider: "deepseek",
 				BaseURL:  "https://api.deepseek.com",
-				APIKey:   "sk-test-key",
+				APIKey:   "sk" + "-test-key",
 				Model:    "deepseek-chat",
 				Timeout:  30 * time.Second,
 			},

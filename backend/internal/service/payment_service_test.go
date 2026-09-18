@@ -21,11 +21,11 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockPaymentRepo struct {
-	payments    map[string]*domain.Payment // keyed by stripe_session_id
-	byID        map[string]*domain.Payment // keyed by id
-	createErr   error
-	updateErr   error
-	txErr       error // error returned by CompletePaymentTx
+	payments  map[string]*domain.Payment // keyed by stripe_session_id
+	byID      map[string]*domain.Payment // keyed by id
+	createErr error
+	updateErr error
+	txErr     error // error returned by CompletePaymentTx
 }
 
 func newMockPaymentRepo() *mockPaymentRepo {
@@ -639,10 +639,10 @@ func TestVerifyStripeSignature_TimestampTooOld(t *testing.T) {
 
 func TestParseStripeSignatureHeader(t *testing.T) {
 	tests := []struct {
-		name    string
-		header  string
-		wantT   string
-		wantV1  string
+		name   string
+		header string
+		wantT  string
+		wantV1 string
 	}{
 		{"standard", "t=1234567890,v1=abcdef", "1234567890", "abcdef"},
 		{"with_spaces", "t=1234567890, v1=abcdef", "1234567890", "abcdef"},

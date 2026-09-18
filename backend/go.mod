@@ -16,12 +16,12 @@ require (
 	github.com/minio/minio-go/v7 v7.0.100
 	github.com/prometheus/client_golang v1.23.2
 	github.com/redis/go-redis/v9 v9.7.0
+	github.com/stripe/stripe-go/v82 v82.1.0
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.42.0
 	golang.org/x/crypto v0.49.0
 	google.golang.org/api v0.276.0
 	gopkg.in/yaml.v3 v3.0.1
-	nhooyr.io/websocket v1.8.17
 )
 
 require (
@@ -113,7 +113,6 @@ require (
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
-	github.com/stripe/stripe-go/v82 v82.1.0 // indirect
 	github.com/tinylib/msgp v1.6.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.16 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect

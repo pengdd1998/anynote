@@ -34,7 +34,7 @@ func writeValidationError(w http.ResponseWriter, ve *ValidationError) {
 		Message string `json:"message"`
 	}
 	type validationResponse struct {
-		Error  errDetail      `json:"error"`
+		Error  errDetail       `json:"error"`
 		Errors []ValidationErr `json:"errors"`
 	}
 	writeJSON(w, http.StatusUnprocessableEntity, validationResponse{

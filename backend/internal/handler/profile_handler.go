@@ -21,9 +21,9 @@ func NewProfileHandler(profileSvc service.ProfileService) *ProfileHandler {
 
 // UpdateProfileRequest is the payload for PUT /api/v1/profile.
 type UpdateProfileRequest struct {
-	DisplayName    string `json:"display_name"`
-	Bio            string `json:"bio"`
-	PublicEnabled  *bool  `json:"public_profile_enabled,omitempty"`
+	DisplayName   string `json:"display_name"`
+	Bio           string `json:"bio"`
+	PublicEnabled *bool  `json:"public_profile_enabled,omitempty"`
 }
 
 // GetPublicProfile returns a user's public profile by username.

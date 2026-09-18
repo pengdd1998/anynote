@@ -249,11 +249,11 @@ func TestLLMConfigService_Update_NoKeyRotation(t *testing.T) {
 
 	originalEncryptedKey, _ := llm.EncryptAPIKey("sk-original", masterKey)
 	repo.configs[configID] = &domain.LLMConfig{
-		ID:            configID,
-		UserID:        userID,
-		Provider:      "mock",
-		EncryptedKey:  originalEncryptedKey,
-		Model:         "gpt-3.5-turbo",
+		ID:           configID,
+		UserID:       userID,
+		Provider:     "mock",
+		EncryptedKey: originalEncryptedKey,
+		Model:        "gpt-3.5-turbo",
 	}
 
 	provider := &mockLLMProvider{}
@@ -434,12 +434,12 @@ func TestLLMConfigService_TestConnection_Success(t *testing.T) {
 
 	encryptedKey, _ := llm.EncryptAPIKey("sk-test-key", masterKey)
 	repo.configs[configID] = &domain.LLMConfig{
-		ID:            configID,
-		UserID:        userID,
-		Provider:      "mock",
-		BaseURL:       "https://api.mock.llm",
-		EncryptedKey:  encryptedKey,
-		Model:         "mock-model",
+		ID:           configID,
+		UserID:       userID,
+		Provider:     "mock",
+		BaseURL:      "https://api.mock.llm",
+		EncryptedKey: encryptedKey,
+		Model:        "mock-model",
 	}
 
 	var capturedKey string

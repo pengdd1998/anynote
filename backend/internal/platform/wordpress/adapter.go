@@ -208,9 +208,9 @@ func (a *Adapter) Publish(ctx context.Context, encryptedAuth []byte, masterKey [
 	}
 
 	var postResp struct {
-		ID      int    `json:"id"`
-		Link    string `json:"link"`
-		Status  string `json:"status"`
+		ID     int    `json:"id"`
+		Link   string `json:"link"`
+		Status string `json:"status"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&postResp); err != nil {
 		return nil, fmt.Errorf("decode publish response: %w", err)

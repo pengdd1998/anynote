@@ -60,8 +60,8 @@ type PublishLogRepository interface {
 type publishService struct {
 	logRepo        PublishLogRepository
 	queue          QueueEnqueuer
-	pushSvc        PushService // optional; nil means no push notifications
-	masterKey      []byte      // server master key for encrypting publish content at rest
+	pushSvc        PushService         // optional; nil means no push notifications
+	masterKey      []byte              // server master key for encrypting publish content at rest
 	validPlatforms map[string]struct{} // set of registered platform names
 }
 

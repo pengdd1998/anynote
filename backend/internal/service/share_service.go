@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	ErrShareNotFound    = errors.New("share not found")
-	ErrShareExpired     = errors.New("share has expired")
-	ErrShareMaxViews    = errors.New("share has reached maximum views")
-	ErrInvalidReaction  = errors.New("invalid reaction type")
+	ErrShareNotFound   = errors.New("share not found")
+	ErrShareExpired    = errors.New("share has expired")
+	ErrShareMaxViews   = errors.New("share has reached maximum views")
+	ErrInvalidReaction = errors.New("invalid reaction type")
 )
 
 // SharedNoteRepository defines the persistence operations for shared notes.

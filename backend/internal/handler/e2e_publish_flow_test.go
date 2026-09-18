@@ -52,14 +52,14 @@ func TestE2EPublishFlow(t *testing.T) {
 			}
 			connectionVerified = true
 			return &domain.PlatformConnection{
-				ID:          connID,
-				UserID:      userID,
-				Platform:    platformName,
-				Status:      "active",
-				DisplayName: "xhs_test_user",
+				ID:           connID,
+				UserID:       userID,
+				Platform:     platformName,
+				Status:       "active",
+				DisplayName:  "xhs_test_user",
 				LastVerified: &publishedAt,
-				CreatedAt:   time.Now(),
-				UpdatedAt:   time.Now(),
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
 			}, nil
 		},
 	}
@@ -75,15 +75,15 @@ func TestE2EPublishFlow(t *testing.T) {
 				t.Errorf("publish: platform = %q, want %q", req.Platform, platformName)
 			}
 			return &domain.PublishLog{
-				ID:            publishLogID,
-				UserID:        userID,
-				Platform:      platformName,
+				ID:             publishLogID,
+				UserID:         userID,
+				Platform:       platformName,
 				PlatformConnID: &connID,
-				ContentItemID: &contentItemID,
-				Title:         req.Title,
-				Content:       req.Content,
-				Status:        "pending",
-				CreatedAt:     time.Now(),
+				ContentItemID:  &contentItemID,
+				Title:          req.Title,
+				Content:        req.Content,
+				Status:         "pending",
+				CreatedAt:      time.Now(),
 			}, nil
 		},
 		historyFn: func(ctx context.Context, uid uuid.UUID) ([]domain.PublishLog, error) {
@@ -92,17 +92,17 @@ func TestE2EPublishFlow(t *testing.T) {
 			}
 			return []domain.PublishLog{
 				{
-					ID:            publishLogID,
-					UserID:        userID,
-					Platform:      platformName,
+					ID:             publishLogID,
+					UserID:         userID,
+					Platform:       platformName,
 					PlatformConnID: &connID,
-					ContentItemID: &contentItemID,
-					Title:         "E2E Test Note",
-					Content:       "Published from E2E test",
-					Status:        "published",
-					PlatformURL:   "https://xiaohongshu.com/post/e2e-test",
-					PublishedAt:   &publishedAt,
-					CreatedAt:     time.Now(),
+					ContentItemID:  &contentItemID,
+					Title:          "E2E Test Note",
+					Content:        "Published from E2E test",
+					Status:         "published",
+					PlatformURL:    "https://xiaohongshu.com/post/e2e-test",
+					PublishedAt:    &publishedAt,
+					CreatedAt:      time.Now(),
 				},
 			}, nil
 		},

@@ -84,10 +84,10 @@ func main() {
 	gateway := llm.NewGateway()
 
 	// Initialize Redis client early so it can be used for rate limiting and
-	// health. The config value is a URL (redis://user:pass@host:port), so
+	// presence. The config value is a URL (redis://user:pass@host:port), so
 	// it must go through ParseURL — passing it raw as Options.Addr produced
-	// "too many colons in address" on the deployed server and left health
-	// degraded.
+	// "too many colons in address" on the deployed server and left presence
+	// and health degraded.
 	var redisClient *redisv9.Client
 	if cfg.Redis.URL != "" {
 		redisOpts, redisErr := redisv9.ParseURL(cfg.Redis.URL)
@@ -134,6 +134,8 @@ func main() {
 	noteLinkRepo := repository.NewNoteLinkRepository(pool)
 	noteEmbeddingRepo := repository.NewNoteEmbeddingRepository(pool)
 	deviceRepo := repository.NewDeviceRepository(pool)
+	collabRepo := repository.NewCollabRepository(pool)
+	collabOpsRepo := repository.NewCollabOperationsRepository(pool)
 	paymentRepo := repository.NewPaymentRepository(pool)
 	notificationRepo := repository.NewNotificationRepository(pool)
 
@@ -247,6 +249,7 @@ func main() {
 	noteLinkSvc := service.NewNoteLinkService(noteLinkRepo)
 	semanticSearchSvc := service.NewSemanticSearchService(noteEmbeddingRepo)
 	aiAgentSvc := service.NewAIAgentService(aiProxySvc)
+	collabSvc := service.NewCollabService(collabRepo)
 
 	// Payment service: operates in test mode when Stripe is not configured.
 	var stripeClient service.StripeClient
@@ -263,6 +266,13 @@ func main() {
 
 	// Notification service.
 	notificationSvc := service.NewNotificationService(notificationRepo)
+
+	// Initialize presence service (nil-safe: if Redis is not configured,
+	// callers must check readiness before using WebSocket endpoints).
+	var presenceSvc service.PresenceService
+	if redisClient != nil {
+		presenceSvc = service.NewPresenceService(redisClient)
+	}
 
 	// Initialize MinIO client for health checks.
 	// If MinIO endpoint is not configured, the health handler gracefully reports
@@ -312,14 +322,18 @@ func main() {
 		Share:          shareSvc,
 		Push:           pushSvc,
 		Comment:        commentSvc,
+		Presence:       presenceSvc,
 		Plan:           planSvc,
 		Profile:        profileSvc,
 		NoteLink:       noteLinkSvc,
 		SemanticSearch: semanticSearchSvc,
 		AIAgent:        aiAgentSvc,
+		Collab:         collabSvc,
 		Payment:        paymentSvc,
 		Notification:   notificationSvc,
 		Device:         service.NewDeviceService(deviceRepo),
+		CollabRepo:     collabRepo,
+		CollabOpsRepo:  collabOpsRepo,
 	}
 
 	// Health handler: pgxpool.Pool implements the Pinger interface used by

@@ -153,8 +153,8 @@ func TestPlanService_GetUserPlan_PlanRepoError(t *testing.T) {
 func TestPlanService_GetUserPlan_QuotaRepoError_GracefulDegradation(t *testing.T) {
 	userID := uuid.New()
 	planRepo := &mockPlanRepo{
-		plan:       "free",
-		noteCount:  5,
+		plan:      "free",
+		noteCount: 5,
 	}
 	quotaRepo := &mockQuotaReader{
 		err: errors.New("quota lookup failed"),
@@ -192,9 +192,9 @@ func TestPlanService_GetUserPlan_StorageRepoError_GracefulDegradation(t *testing
 func TestPlanService_GetUserPlan_NoteCountError_GracefulDegradation(t *testing.T) {
 	userID := uuid.New()
 	planRepo := &mockPlanRepo{
-		plan:          "free",
-		storageUsage:  1024,
-		noteCountErr:  errors.New("count failed"),
+		plan:         "free",
+		storageUsage: 1024,
+		noteCountErr: errors.New("count failed"),
 	}
 	quotaRepo := &mockQuotaReader{quota: &domain.UserQuota{}}
 
@@ -343,8 +343,8 @@ func TestPlanService_CheckLimit_StorageRepoError_GracefulDegradation(t *testing.
 func TestPlanService_CheckLimit_NotesUnderLimit(t *testing.T) {
 	userID := uuid.New()
 	planRepo := &mockPlanRepo{
-		plan:       "free",
-		noteCount:  100, // limit is 500
+		plan:      "free",
+		noteCount: 100, // limit is 500
 	}
 	quotaRepo := &mockQuotaReader{}
 
@@ -388,8 +388,8 @@ func TestPlanService_CheckLimit_NotesUnlimited(t *testing.T) {
 func TestPlanService_CheckLimit_NotesRepoError_GracefulDegradation(t *testing.T) {
 	userID := uuid.New()
 	planRepo := &mockPlanRepo{
-		plan:          "free",
-		noteCountErr:  errors.New("count failed"),
+		plan:         "free",
+		noteCountErr: errors.New("count failed"),
 	}
 	quotaRepo := &mockQuotaReader{}
 

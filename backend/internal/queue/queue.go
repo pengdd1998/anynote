@@ -33,10 +33,10 @@ func ParseAsynqRedisOpt(redisURL string) (asynq.RedisClientOpt, error) {
 }
 
 const (
-	TaskTypeAIProxy           = "ai:proxy"
-	TaskTypePublish           = "publish:execute"
-	TaskTypePush              = "push:send"
-	TaskCleanupExpiredShares  = "cleanup:expired_shares"
+	TaskTypeAIProxy          = "ai:proxy"
+	TaskTypePublish          = "publish:execute"
+	TaskTypePush             = "push:send"
+	TaskCleanupExpiredShares = "cleanup:expired_shares"
 )
 
 // Service manages the asynq task queue.

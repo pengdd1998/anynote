@@ -161,15 +161,15 @@ func (g *Gateway) Chat(ctx context.Context, cfg GatewayConfig, req ChatRequest) 
 
 // GatewayConfig holds LLM provider configuration.
 type GatewayConfig struct {
-	Provider        string
-	BaseURL         string
-	APIKey          string
-	Model           string
-	MaxTokens       int
-	Temperature     float32
-	Timeout         int64 // nanoseconds
-	MaxRetries      int           // maximum retry attempts (default 3)
-	RetryBaseDelay  time.Duration // base delay for exponential backoff (default 1s)
+	Provider       string
+	BaseURL        string
+	APIKey         string
+	Model          string
+	MaxTokens      int
+	Temperature    float32
+	Timeout        int64         // nanoseconds
+	MaxRetries     int           // maximum retry attempts (default 3)
+	RetryBaseDelay time.Duration // base delay for exponential backoff (default 1s)
 }
 
 // ChatRequest is the request payload for LLM chat.

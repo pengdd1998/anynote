@@ -108,7 +108,7 @@ func TestOpenAICompat_Chat_NonRetryable400(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
-		Messages: []domain.ChatMessage{{Role: "user", Content: "test"}},
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
 		MaxRetries:     3,
 		RetryBaseDelay: 1 * time.Millisecond,
 	})
@@ -135,8 +135,8 @@ func TestOpenAICompat_Chat_NonRetryable401(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(context.Background(), "bad-key", server.URL, ChatRequest{
-		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
-		MaxRetries:    3,
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
+		MaxRetries:     3,
 		RetryBaseDelay: 1 * time.Millisecond,
 	})
 	if err == nil {
@@ -158,8 +158,8 @@ func TestOpenAICompat_Chat_NonRetryable403(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
-		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
-		MaxRetries:    3,
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
+		MaxRetries:     3,
 		RetryBaseDelay: 1 * time.Millisecond,
 	})
 	if err == nil {
@@ -197,8 +197,8 @@ func TestOpenAICompat_Chat_RetryOn429(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
-		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
-		MaxRetries:    3,
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
+		MaxRetries:     3,
 		RetryBaseDelay: 1 * time.Millisecond,
 	})
 	if err != nil {
@@ -237,8 +237,8 @@ func TestOpenAICompat_Chat_RetryOn503(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
-		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
-		MaxRetries:    3,
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
+		MaxRetries:     3,
 		RetryBaseDelay: 1 * time.Millisecond,
 	})
 	if err != nil {
@@ -277,8 +277,8 @@ func TestOpenAICompat_Chat_RetryOn502(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
-		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
-		MaxRetries:    3,
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
+		MaxRetries:     3,
 		RetryBaseDelay: 1 * time.Millisecond,
 	})
 	if err != nil {
@@ -300,8 +300,8 @@ func TestOpenAICompat_Chat_RetryExhausted(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
-		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
-		MaxRetries:    2,
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
+		MaxRetries:     2,
 		RetryBaseDelay: 1 * time.Millisecond,
 	})
 	if err == nil {
@@ -346,8 +346,8 @@ func TestOpenAICompat_Chat_RetryAfterHeader(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
-		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
-		MaxRetries:    3,
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
+		MaxRetries:     3,
 		RetryBaseDelay: 1 * time.Millisecond, // base delay is tiny, but Retry-After overrides
 	})
 	if err != nil {
@@ -388,8 +388,8 @@ func TestOpenAICompat_Chat_RetryOn504(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	resp, err := provider.Chat(context.Background(), "key", server.URL, ChatRequest{
-		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
-		MaxRetries:    3,
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
+		MaxRetries:     3,
 		RetryBaseDelay: 1 * time.Millisecond,
 	})
 	if err != nil {
@@ -556,17 +556,17 @@ func TestIsRetriable(t *testing.T) {
 		code int
 		want bool
 	}{
-		{http.StatusTooManyRequests, true},    // 429
-		{http.StatusBadGateway, true},         // 502
-		{http.StatusServiceUnavailable, true},  // 503
-		{http.StatusGatewayTimeout, true},     // 504
-		{http.StatusBadRequest, false},        // 400
-		{http.StatusUnauthorized, false},       // 401
-		{http.StatusForbidden, false},          // 403
-		{http.StatusNotFound, false},           // 404
-		{http.StatusMethodNotAllowed, false},   // 405
+		{http.StatusTooManyRequests, true},      // 429
+		{http.StatusBadGateway, true},           // 502
+		{http.StatusServiceUnavailable, true},   // 503
+		{http.StatusGatewayTimeout, true},       // 504
+		{http.StatusBadRequest, false},          // 400
+		{http.StatusUnauthorized, false},        // 401
+		{http.StatusForbidden, false},           // 403
+		{http.StatusNotFound, false},            // 404
+		{http.StatusMethodNotAllowed, false},    // 405
 		{http.StatusInternalServerError, false}, // 500
-		{http.StatusOK, false},                 // 200
+		{http.StatusOK, false},                  // 200
 	}
 
 	for _, tt := range tests {
@@ -581,9 +581,9 @@ func TestIsRetriable(t *testing.T) {
 
 func TestRetryBackoff(t *testing.T) {
 	tests := []struct {
-		attempt    int
-		baseDelay  time.Duration
-		wantDelay  time.Duration
+		attempt   int
+		baseDelay time.Duration
+		wantDelay time.Duration
 	}{
 		{1, 1 * time.Second, 1 * time.Second},
 		{2, 1 * time.Second, 2 * time.Second},
@@ -672,8 +672,8 @@ func TestOpenAICompat_Chat_ContextCancelled(t *testing.T) {
 
 	provider := NewOpenAICompatProvider(testHTTPClient())
 	_, err := provider.Chat(ctx, "key", server.URL, ChatRequest{
-		Messages:      []domain.ChatMessage{{Role: "user", Content: "test"}},
-		MaxRetries:    0,
+		Messages:       []domain.ChatMessage{{Role: "user", Content: "test"}},
+		MaxRetries:     0,
 		RetryBaseDelay: 1 * time.Millisecond,
 	})
 	if err == nil {

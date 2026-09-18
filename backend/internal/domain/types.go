@@ -15,17 +15,17 @@ var ErrInvalidReaction = errors.New("invalid reaction type")
 // ── User ──────────────────────────────────────────
 
 type User struct {
-	ID                  uuid.UUID `json:"id"`
-	Email               string    `json:"email"`
-	Username            string    `json:"username"`
-	AuthKeyHash         []byte    `json:"-"`
-	Salt                []byte    `json:"-"`
-	RecoveryKey         []byte    `json:"-"`
-	RecoverySalt        []byte    `json:"-"`
-	EncryptedMasterKey  []byte    `json:"-"`
-	Plan                string    `json:"plan"`
-	CreatedAt           time.Time `json:"created_at"`
-	UpdatedAt           time.Time `json:"updated_at"`
+	ID                 uuid.UUID `json:"id"`
+	Email              string    `json:"email"`
+	Username           string    `json:"username"`
+	AuthKeyHash        []byte    `json:"-"`
+	Salt               []byte    `json:"-"`
+	RecoveryKey        []byte    `json:"-"`
+	RecoverySalt       []byte    `json:"-"`
+	EncryptedMasterKey []byte    `json:"-"`
+	Plan               string    `json:"plan"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
 }
 
 // ── Device ────────────────────────────────────────
@@ -45,7 +45,7 @@ type Device struct {
 type SyncBlob struct {
 	ID            uuid.UUID `json:"id"`
 	UserID        uuid.UUID `json:"user_id"`
-	ItemType      string    `json:"item_type"`      // 'note', 'tag', 'collection', 'content'
+	ItemType      string    `json:"item_type"` // 'note', 'tag', 'collection', 'content'
 	ItemID        uuid.UUID `json:"item_id"`
 	Version       int       `json:"version"`
 	EncryptedData []byte    `json:"encrypted_data"`
@@ -58,20 +58,20 @@ type SyncBlob struct {
 // ── LLM Config ────────────────────────────────────
 
 type LLMConfig struct {
-	ID            uuid.UUID `json:"id"`
-	UserID        uuid.UUID `json:"user_id"`
-	Name          string    `json:"name"`
-	Provider      string    `json:"provider"`
-	BaseURL       string    `json:"base_url"`
-	EncryptedKey  []byte    `json:"-"`                // AES-256-GCM encrypted API key (DB storage)
-	DecryptedKey  string    `json:"-"`                // Decrypted API key (never serialized)
-	APIKey        string    `json:"api_key,omitempty"` // Input field for create/update; not stored
-	Model         string    `json:"model"`
-	IsDefault     bool      `json:"is_default"`
-	MaxTokens     int       `json:"max_tokens"`
-	Temperature   float32   `json:"temperature"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID           uuid.UUID `json:"id"`
+	UserID       uuid.UUID `json:"user_id"`
+	Name         string    `json:"name"`
+	Provider     string    `json:"provider"`
+	BaseURL      string    `json:"base_url"`
+	EncryptedKey []byte    `json:"-"`                 // AES-256-GCM encrypted API key (DB storage)
+	DecryptedKey string    `json:"-"`                 // Decrypted API key (never serialized)
+	APIKey       string    `json:"api_key,omitempty"` // Input field for create/update; not stored
+	Model        string    `json:"model"`
+	IsDefault    bool      `json:"is_default"`
+	MaxTokens    int       `json:"max_tokens"`
+	Temperature  float32   `json:"temperature"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // ── Platform Connection ───────────────────────────
@@ -82,7 +82,7 @@ type PlatformConnection struct {
 	Platform      string     `json:"platform"`
 	PlatformUID   string     `json:"platform_uid,omitempty"`
 	DisplayName   string     `json:"display_name,omitempty"`
-	EncryptedAuth []byte     `json:"-"`                        // AES-256-GCM encrypted auth data (cookies/tokens)
+	EncryptedAuth []byte     `json:"-"` // AES-256-GCM encrypted auth data (cookies/tokens)
 	Status        string     `json:"status"`
 	LastVerified  *time.Time `json:"last_verified,omitempty"`
 	CreatedAt     time.Time  `json:"created_at"`
@@ -103,11 +103,11 @@ type PlatformCatalogEntry struct {
 
 // AuthStartResult is returned when starting a platform authentication flow.
 type AuthStartResult struct {
-	QRCodePNG   []byte            `json:"-"`              // QR code image bytes (sent as binary)
-	AuthRef     string            `json:"auth_ref"`       // Reference ID for polling auth status
-	Status      string            `json:"status"`         // "qr_ready", "polling", "done", "failed"
-	DisplayName string            `json:"display_name"`   // Platform display name (set on success)
-	PlatformUID string            `json:"platform_uid"`   // Platform user ID (set on success)
+	QRCodePNG   []byte            `json:"-"`            // QR code image bytes (sent as binary)
+	AuthRef     string            `json:"auth_ref"`     // Reference ID for polling auth status
+	Status      string            `json:"status"`       // "qr_ready", "polling", "done", "failed"
+	DisplayName string            `json:"display_name"` // Platform display name (set on success)
+	PlatformUID string            `json:"platform_uid"` // Platform user ID (set on success)
 	Extra       map[string]string `json:"extra,omitempty"`
 }
 
@@ -134,20 +134,20 @@ type PublishLog struct {
 
 // PostStatsSnapshot is one engagement-stats reading for a published post.
 type PostStatsSnapshot struct {
-	Views     int        `json:"views"`
-	Likes     int        `json:"likes"`
-	Comments  int        `json:"comments"`
-	FetchedAt time.Time  `json:"fetched_at"`
+	Views     int       `json:"views"`
+	Likes     int       `json:"likes"`
+	Comments  int       `json:"comments"`
+	FetchedAt time.Time `json:"fetched_at"`
 }
 
 // ── AI Proxy Request ──────────────────────────────
 
 type AIProxyRequest struct {
-	Model       string         `json:"model,omitempty"`
-	Messages    []ChatMessage  `json:"messages"`
-	Temperature *float32       `json:"temperature,omitempty"`
-	MaxTokens   *int           `json:"max_tokens,omitempty"`
-	Stream      bool           `json:"stream,omitempty"`
+	Model       string        `json:"model,omitempty"`
+	Messages    []ChatMessage `json:"messages"`
+	Temperature *float32      `json:"temperature,omitempty"`
+	MaxTokens   *int          `json:"max_tokens,omitempty"`
+	Stream      bool          `json:"stream,omitempty"`
 }
 
 type ChatMessage struct {
@@ -188,8 +188,8 @@ type SyncPushItem struct {
 }
 
 type SyncPushResponse struct {
-	Accepted []uuid.UUID        `json:"accepted"`
-	Conflicts []SyncConflict    `json:"conflicts,omitempty"`
+	Accepted  []uuid.UUID    `json:"accepted"`
+	Conflicts []SyncConflict `json:"conflicts,omitempty"`
 }
 
 type SyncConflict struct {
@@ -200,9 +200,9 @@ type SyncConflict struct {
 }
 
 type SyncStatusResponse struct {
-	LatestVersion  int       `json:"latest_version"`
-	TotalItems     int       `json:"total_items"`
-	LastSyncedAt   time.Time `json:"last_synced_at"`
+	LatestVersion int       `json:"latest_version"`
+	TotalItems    int       `json:"total_items"`
+	LastSyncedAt  time.Time `json:"last_synced_at"`
 }
 
 // SyncStatusSummary is the raw status data returned by the repository layer.
@@ -237,10 +237,10 @@ type SyncOperationLog struct {
 
 // SyncStatsResponse returns aggregate sync statistics for a user.
 type SyncStatsResponse struct {
-	TotalItems     int                `json:"total_items"`
-	ItemsByType    map[string]int     `json:"items_by_type"`
-	LastSyncedAt   time.Time          `json:"last_synced_at"`
-	TotalConflicts int64              `json:"total_conflicts"`
+	TotalItems     int            `json:"total_items"`
+	ItemsByType    map[string]int `json:"items_by_type"`
+	LastSyncedAt   time.Time      `json:"last_synced_at"`
+	TotalConflicts int64          `json:"total_conflicts"`
 }
 
 // ── Tag Listing ───────────────────────────────────
@@ -275,26 +275,26 @@ type BatchDeleteResponse struct {
 
 // SyncProgressResponse returns the current sync state and health information.
 type SyncProgressResponse struct {
-	TotalItems       int       `json:"total_items"`
-	LatestVersion    int       `json:"latest_version"`
-	LastSyncedAt     time.Time `json:"last_synced_at"`
-	PendingCount     int64     `json:"pending_count"`      // operation logs awaiting processing
-	ConflictCount    int64     `json:"conflict_count"`     // total logged conflicts
-	HealthStatus     string    `json:"health_status"`      // "ok", "warnings", or "errors"
-	PushCount24h     int64     `json:"push_count_24h"`     // push operations in last 24 hours
-	PullCount24h     int64     `json:"pull_count_24h"`     // pull operations in last 24 hours
+	TotalItems    int       `json:"total_items"`
+	LatestVersion int       `json:"latest_version"`
+	LastSyncedAt  time.Time `json:"last_synced_at"`
+	PendingCount  int64     `json:"pending_count"`  // operation logs awaiting processing
+	ConflictCount int64     `json:"conflict_count"` // total logged conflicts
+	HealthStatus  string    `json:"health_status"`  // "ok", "warnings", or "errors"
+	PushCount24h  int64     `json:"push_count_24h"` // push operations in last 24 hours
+	PullCount24h  int64     `json:"pull_count_24h"` // pull operations in last 24 hours
 }
 
 // ── Auth ──────────────────────────────────────────
 
 type RegisterRequest struct {
-	Email               string `json:"email"`
-	Username            string `json:"username"`
-	AuthKeyHash         []byte `json:"auth_key_hash"`            // Client-derived: HKDF(master_key, "auth")
-	Salt                []byte `json:"salt"`
-	RecoveryKey         string `json:"recovery_key"`             // BIP-39 mnemonic
-	RecoverySalt        []byte `json:"recovery_salt"`            // Random 32-byte salt for recovery key derivation
-	EncryptedMasterKey  []byte `json:"encrypted_master_key"`     // Master key encrypted with recovery-derived key
+	Email              string `json:"email"`
+	Username           string `json:"username"`
+	AuthKeyHash        []byte `json:"auth_key_hash"` // Client-derived: HKDF(master_key, "auth")
+	Salt               []byte `json:"salt"`
+	RecoveryKey        string `json:"recovery_key"`         // BIP-39 mnemonic
+	RecoverySalt       []byte `json:"recovery_salt"`        // Random 32-byte salt for recovery key derivation
+	EncryptedMasterKey []byte `json:"encrypted_master_key"` // Master key encrypted with recovery-derived key
 }
 
 type LoginRequest struct {
@@ -332,10 +332,10 @@ type AuthResponse struct {
 // ── Quota ─────────────────────────────────────────
 
 type QuotaResponse struct {
-	Plan        string     `json:"plan"`
-	DailyLimit  int        `json:"daily_limit"`
-	DailyUsed   int        `json:"daily_used"`
-	ResetAt     time.Time  `json:"reset_at"`
+	Plan       string    `json:"plan"`
+	DailyLimit int       `json:"daily_limit"`
+	DailyUsed  int       `json:"daily_used"`
+	ResetAt    time.Time `json:"reset_at"`
 }
 
 // ── Errors ────────────────────────────────────────
@@ -353,9 +353,9 @@ type ErrorResponse struct {
 }
 
 type QuotaExceededResponse struct {
-	Error          string `json:"error"`
-	RetryAfter     int    `json:"retry_after"`
-	QueuePosition  int    `json:"queue_position,omitempty"`
+	Error         string `json:"error"`
+	RetryAfter    int    `json:"retry_after"`
+	QueuePosition int    `json:"queue_position,omitempty"`
 }
 
 // ── User Quota ────────────────────────────────────
@@ -543,55 +543,6 @@ type SemanticSearchResponse struct {
 	Hits []SemanticSearchHit `json:"hits"`
 }
 
-// ── Collab Rooms ──────────────────────────────────
-
-// CollabRoom represents a collaboration room with an invite code.
-type CollabRoom struct {
-	ID          string     `json:"id"`
-	CreatorID   string     `json:"creator_id"`
-	InviteCode  string     `json:"invite_code"`
-	RoomName    string     `json:"room_name"`
-	MaxMembers  int        `json:"max_members"`
-	CreatedAt   time.Time  `json:"created_at"`
-	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
-	IsActive    bool       `json:"is_active"`
-	MemberCount int        `json:"member_count,omitempty"`
-}
-
-// CollabRoomMember represents a user's membership in a collab room.
-type CollabRoomMember struct {
-	ID       string    `json:"id"`
-	RoomID   string    `json:"room_id"`
-	UserID   string    `json:"user_id"`
-	Role     string    `json:"role"`
-	JoinedAt time.Time `json:"joined_at"`
-}
-
-// CreateRoomRequest is the payload for creating a collab room.
-type CreateRoomRequest struct {
-	RoomName string `json:"room_name"`
-	MaxMembers int  `json:"max_members"`
-}
-
-// JoinRoomRequest is the payload for joining a collab room via invite code.
-type JoinRoomRequest struct {
-	InviteCode string `json:"invite_code"`
-}
-
-// ── Collab Operations (CRDT persistence) ───────────
-
-// CollabOperation represents a persisted CRDT operation for a collab room.
-// Operations are stored as encrypted blobs -- the server never inspects payloads.
-type CollabOperation struct {
-	ID            string     `json:"id"`
-	RoomID        string     `json:"room_id"`
-	SiteID        string     `json:"site_id"`
-	Clock         int        `json:"clock"`
-	OperationType string     `json:"operation_type"` // "insert" or "delete"
-	Payload       []byte     `json:"payload"`        // JSONB, opaque to server
-	CreatedAt     time.Time  `json:"created_at"`
-}
-
 // ── AI Agent ────────────────────────────────────────
 
 // AIAgentRequest is the payload for requesting an AI agent action.
@@ -614,15 +565,15 @@ type AIAgentResponse struct {
 
 // Payment represents a payment transaction record.
 type Payment struct {
-	ID               string     `json:"id"`
-	UserID           string     `json:"user_id"`
-	StripeSessionID  string     `json:"stripe_session_id"`
-	AmountCents      int        `json:"amount_cents"`
-	Currency         string     `json:"currency"`
-	Status           string     `json:"status"`
-	Plan             string     `json:"plan"`
-	CreatedAt        time.Time  `json:"created_at"`
-	CompletedAt      *time.Time `json:"completed_at,omitempty"`
+	ID              string     `json:"id"`
+	UserID          string     `json:"user_id"`
+	StripeSessionID string     `json:"stripe_session_id"`
+	AmountCents     int        `json:"amount_cents"`
+	Currency        string     `json:"currency"`
+	Status          string     `json:"status"`
+	Plan            string     `json:"plan"`
+	CreatedAt       time.Time  `json:"created_at"`
+	CompletedAt     *time.Time `json:"completed_at,omitempty"`
 }
 
 // CreateCheckoutRequest is the payload for initiating a Stripe checkout session.

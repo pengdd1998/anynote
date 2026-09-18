@@ -22,10 +22,10 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockNotificationService struct {
-	listFn      func(ctx context.Context, userID string, limit, offset int) ([]domain.Notification, error)
-	unreadFn    func(ctx context.Context, userID string) (int, error)
-	markReadFn  func(ctx context.Context, id, userID string) error
-	markAllFn   func(ctx context.Context, userID string) error
+	listFn     func(ctx context.Context, userID string, limit, offset int) ([]domain.Notification, error)
+	unreadFn   func(ctx context.Context, userID string) (int, error)
+	markReadFn func(ctx context.Context, id, userID string) error
+	markAllFn  func(ctx context.Context, userID string) error
 }
 
 func (m *mockNotificationService) CreateNotification(_ context.Context, _, _, _, _ string, _ json.RawMessage) error {

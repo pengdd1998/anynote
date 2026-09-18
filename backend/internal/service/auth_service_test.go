@@ -18,10 +18,10 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockUserRepo struct {
-	users         map[string]*domain.User // keyed by email
-	usersByID     map[uuid.UUID]*domain.User
+	users           map[string]*domain.User // keyed by email
+	usersByID       map[uuid.UUID]*domain.User
 	usersByUsername map[string]*domain.User
-	createErr   error
+	createErr       error
 }
 
 func newMockUserRepo() *mockUserRepo {
@@ -352,12 +352,12 @@ func TestAuthService_GetCurrentUser_Success(t *testing.T) {
 	svc := newTestAuthService(repo)
 
 	user := &domain.User{
-		ID:          uuid.New(),
-		Email:       "grace@example.com",
-		Username:    "grace",
-		Plan:        "pro",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:        uuid.New(),
+		Email:     "grace@example.com",
+		Username:  "grace",
+		Plan:      "pro",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 	repo.users[user.Email] = user
 	repo.usersByID[user.ID] = user

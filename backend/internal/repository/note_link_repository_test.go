@@ -258,7 +258,7 @@ func TestMockNoteLinkRepo_CreateLinks_MixedDuplicateAndNew(t *testing.T) {
 
 	// Batch with one duplicate and one new.
 	links, err := repo.CreateLinks(ctx, userID, []domain.NoteLinkItem{
-		{SourceID: n1, TargetID: n2, LinkType: "wiki"},   // duplicate
+		{SourceID: n1, TargetID: n2, LinkType: "wiki"},    // duplicate
 		{SourceID: n2, TargetID: n3, LinkType: "mention"}, // new
 	})
 	if err != nil {

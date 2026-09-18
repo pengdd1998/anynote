@@ -133,9 +133,6 @@ func setupFullServer(t *testing.T) *fullTestServer {
 	noteLinkSvc := service.NewNoteLinkService(noteLinkRepo)
 	aiAgentSvc := service.NewAIAgentService(aiProxySvc)
 
-	// PresenceService requires Redis; nil is safe (handlers check readiness).
-	var presenceSvc service.PresenceService
-
 	// -- Wire handler.Services --
 	services := &Services{
 		Auth:      authSvc,
@@ -148,7 +145,6 @@ func setupFullServer(t *testing.T) *fullTestServer {
 		Share:     shareSvc,
 		Push:      pushSvc,
 		Comment:   commentSvc,
-		Presence:  presenceSvc,
 		Plan:      planSvc,
 		Profile:   profileSvc,
 		NoteLink:  noteLinkSvc,
@@ -193,8 +189,6 @@ func cleanAllTables(t *testing.T, pool *pgxpool.Pool) {
 		"stripe_webhook_events",
 		"payments",
 		"notifications",
-		"collab_room_members",
-		"collab_rooms",
 		"device_tokens",
 		"refresh_tokens",
 		"sync_operation_logs",

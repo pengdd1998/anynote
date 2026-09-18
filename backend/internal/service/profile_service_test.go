@@ -15,9 +15,9 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockProfileRepo struct {
-	getPublicFn  func(ctx context.Context, username string) (*domain.PublicProfile, error)
-	updateFn     func(ctx context.Context, userID uuid.UUID, displayName string, bio string, publicEnabled bool) error
-	getByUserFn  func(ctx context.Context, userID uuid.UUID) (*domain.PublicProfile, error)
+	getPublicFn func(ctx context.Context, username string) (*domain.PublicProfile, error)
+	updateFn    func(ctx context.Context, userID uuid.UUID, displayName string, bio string, publicEnabled bool) error
+	getByUserFn func(ctx context.Context, userID uuid.UUID) (*domain.PublicProfile, error)
 }
 
 func (m *mockProfileRepo) GetPublicProfile(ctx context.Context, username string) (*domain.PublicProfile, error) {

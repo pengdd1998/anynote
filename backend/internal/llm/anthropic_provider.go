@@ -36,11 +36,11 @@ func (p *AnthropicProvider) Name() string { return "anthropic" }
 
 // anthropicRequest is the Anthropic Messages API request format.
 type anthropicRequest struct {
-	Model     string              `json:"model"`
-	MaxTokens int                 `json:"max_tokens"`
-	System    string              `json:"system,omitempty"`
-	Messages  []anthropicMessage  `json:"messages"`
-	Stream    bool                `json:"stream"`
+	Model     string             `json:"model"`
+	MaxTokens int                `json:"max_tokens"`
+	System    string             `json:"system,omitempty"`
+	Messages  []anthropicMessage `json:"messages"`
+	Stream    bool               `json:"stream"`
 }
 
 // anthropicMessage is a single message in the Anthropic format.

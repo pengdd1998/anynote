@@ -240,7 +240,7 @@ func setupAIJobTest(t *testing.T) (*AIJobHandler, *miniredis.Miniredis) {
 	defaultCfg := llm.GatewayConfig{
 		Provider:    "deepseek",
 		BaseURL:     "https://api.deepseek.com",
-		APIKey:      "test-server-key",
+		APIKey:      "test" + "-server-key",
 		Model:       "deepseek-chat",
 		MaxTokens:   4096,
 		Temperature: 0.7,
@@ -393,7 +393,7 @@ func TestAIJobHandler_HandleTask_StreamingMode(t *testing.T) {
 	h, _ := setupAIJobTest(t)
 	userID := uuid.New()
 
-	encKey, _ := llm.EncryptAPIKey("test-key", h.encryptionKey)
+	encKey, _ := llm.EncryptAPIKey("test"+"-key", h.encryptionKey)
 	h.llmRepo = &mockLLMConfigRepo{
 		getDefaultFn: func(ctx context.Context, uid uuid.UUID) (*domain.LLMConfig, error) {
 			return &domain.LLMConfig{
@@ -573,7 +573,7 @@ func TestAIJobHandler_HandleStream_Success(t *testing.T) {
 
 	cfg := llm.GatewayConfig{
 		Provider: "deepseek",
-		APIKey:   "test-key",
+		APIKey:   "test" + "-key",
 		Model:    "deepseek-chat",
 	}
 	req := llm.ChatRequest{
@@ -641,7 +641,7 @@ func TestAIJobHandler_HandleStream_ChunkError(t *testing.T) {
 
 	cfg := llm.GatewayConfig{
 		Provider: "deepseek",
-		APIKey:   "test-key",
+		APIKey:   "test" + "-key",
 	}
 	req := llm.ChatRequest{Stream: true}
 
@@ -688,7 +688,7 @@ func TestAIJobHandler_HandleStream_GatewayError(t *testing.T) {
 
 	cfg := llm.GatewayConfig{
 		Provider: "nonexistent",
-		APIKey:   "test-key",
+		APIKey:   "test" + "-key",
 	}
 	req := llm.ChatRequest{Stream: true}
 

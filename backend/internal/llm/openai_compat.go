@@ -372,6 +372,7 @@ func (p *OpenAICompatProvider) Chat(ctx context.Context, apiKey, baseURL string,
 
 	return nil, fmt.Errorf("LLM request failed after %d retries: %w", maxRetries, lastErr)
 }
+
 // requestTimeout returns the configured timeout or a 120s default.
 func requestTimeout(cfg time.Duration) time.Duration {
 	if cfg > 0 {
@@ -386,9 +387,9 @@ func requestTimeout(cfg time.Duration) time.Duration {
 func isRetriable(statusCode int) bool {
 	switch statusCode {
 	case http.StatusTooManyRequests, // 429
-		http.StatusBadGateway,        // 502
+		http.StatusBadGateway,         // 502
 		http.StatusServiceUnavailable, // 503
-		http.StatusGatewayTimeout:    // 504
+		http.StatusGatewayTimeout:     // 504
 		return true
 	default:
 		return false

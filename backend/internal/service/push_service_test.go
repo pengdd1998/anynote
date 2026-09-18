@@ -78,7 +78,7 @@ func (m *mockDeviceTokenRepo) ListByUser(ctx context.Context, userID string) ([]
 
 // mockFCMClient records calls to Send for assertion in tests.
 type mockFCMClient struct {
-	calls []FCMMessage // all messages passed to Send
+	calls   []FCMMessage     // all messages passed to Send
 	sendErr map[string]error // token -> error; if set, Send returns this error
 }
 

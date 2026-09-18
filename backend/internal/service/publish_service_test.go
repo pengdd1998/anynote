@@ -17,11 +17,11 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockPublishLogRepo struct {
-	logs       map[uuid.UUID]*domain.PublishLog
-	createErr  error
-	getErr     error
-	listErr    error
-	updateErr  error
+	logs      map[uuid.UUID]*domain.PublishLog
+	createErr error
+	getErr    error
+	listErr   error
+	updateErr error
 }
 
 func newMockPublishLogRepo() *mockPublishLogRepo {

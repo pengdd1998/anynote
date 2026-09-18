@@ -38,8 +38,8 @@ func (h *AIAgentHandler) ExecuteAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	validActions := map[string]bool{
-		"organize":  true,
-		"summarize": true,
+		"organize":    true,
+		"summarize":   true,
 		"create_note": true,
 	}
 	if !validActions[req.Action] {

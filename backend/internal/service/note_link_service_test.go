@@ -16,11 +16,11 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockNoteLinkRepo struct {
-	createLinksFn     func(ctx context.Context, userID uuid.UUID, links []domain.NoteLinkItem) ([]domain.NoteLink, error)
-	getBacklinksFn    func(ctx context.Context, userID uuid.UUID, noteID uuid.UUID) ([]domain.NoteLink, error)
-	getOutboundFn     func(ctx context.Context, userID uuid.UUID, noteID uuid.UUID) ([]domain.NoteLink, error)
-	getGraphFn        func(ctx context.Context, userID uuid.UUID) (*domain.NoteGraphResponse, error)
-	deleteLinkFn      func(ctx context.Context, userID uuid.UUID, sourceID uuid.UUID, targetID uuid.UUID) error
+	createLinksFn  func(ctx context.Context, userID uuid.UUID, links []domain.NoteLinkItem) ([]domain.NoteLink, error)
+	getBacklinksFn func(ctx context.Context, userID uuid.UUID, noteID uuid.UUID) ([]domain.NoteLink, error)
+	getOutboundFn  func(ctx context.Context, userID uuid.UUID, noteID uuid.UUID) ([]domain.NoteLink, error)
+	getGraphFn     func(ctx context.Context, userID uuid.UUID) (*domain.NoteGraphResponse, error)
+	deleteLinkFn   func(ctx context.Context, userID uuid.UUID, sourceID uuid.UUID, targetID uuid.UUID) error
 }
 
 func (m *mockNoteLinkRepo) CreateLinks(ctx context.Context, userID uuid.UUID, links []domain.NoteLinkItem) ([]domain.NoteLink, error) {

@@ -18,10 +18,10 @@ import (
 
 // AIJobPayload is the structured payload for AI proxy jobs.
 type AIJobPayload struct {
-	UserID    string             `json:"user_id"`
-	Request   domain.AIProxyRequest `json:"request"`
-	JobID     string             `json:"job_id"`
-	Stream    bool               `json:"stream"`
+	UserID  string                `json:"user_id"`
+	Request domain.AIProxyRequest `json:"request"`
+	JobID   string                `json:"job_id"`
+	Stream  bool                  `json:"stream"`
 }
 
 // AIJobHandler processes AI proxy jobs from the shared LLM queue.

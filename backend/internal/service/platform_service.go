@@ -261,9 +261,9 @@ func (s *platformService) PollAuth(ctx context.Context, userID uuid.UUID, platfo
 		return nil, fmt.Errorf("auth session not found or expired")
 	}
 	stored, ok := val.(*storedAuthSession)
-		if !ok {
-			return nil, fmt.Errorf("invalid auth session type")
-		}
+	if !ok {
+		return nil, fmt.Errorf("invalid auth session type")
+	}
 
 	adapter, err := s.registry.Get(platformName)
 	if err != nil {
@@ -387,12 +387,12 @@ func authSessionKey(userID uuid.UUID, platformName, authRef string) string {
 
 // PlatformPublishRequest is the request for publishing content to a platform.
 type PlatformPublishRequest struct {
-	Platform      string                  `json:"platform"`
-	ContentItemID string                  `json:"content_item_id"`
-	Title         string                  `json:"title"`
-	Content       string                  `json:"content"`
-	Tags          []string                `json:"tags"`
-	Images        []PlatformPublishImage  `json:"images"`
+	Platform      string                 `json:"platform"`
+	ContentItemID string                 `json:"content_item_id"`
+	Title         string                 `json:"title"`
+	Content       string                 `json:"content"`
+	Tags          []string               `json:"tags"`
+	Images        []PlatformPublishImage `json:"images"`
 }
 
 // PlatformPublishImage references an image to include in a platform publish request.

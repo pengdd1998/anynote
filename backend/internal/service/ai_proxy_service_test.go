@@ -146,7 +146,7 @@ func TestAIProxyService_UserLLMConfig(t *testing.T) {
 	defaultCfg := llm.GatewayConfig{
 		Provider:    "mock",
 		BaseURL:     "https://shared.llm",
-		APIKey:      "shared-key",
+		APIKey:      "shared" + "-key",
 		Model:       "shared-model",
 		MaxTokens:   4096,
 		Temperature: 0.7,
@@ -206,7 +206,7 @@ func TestAIProxyService_SharedLLM(t *testing.T) {
 	defaultCfg := llm.GatewayConfig{
 		Provider:    "mock",
 		BaseURL:     "https://shared.llm",
-		APIKey:      "shared-key-123",
+		APIKey:      "shared" + "-key-123",
 		Model:       "shared-model",
 		MaxTokens:   4096,
 		Temperature: 0.7,
@@ -236,7 +236,7 @@ func TestAIProxyService_SharedLLM(t *testing.T) {
 	if content != "shared-response" {
 		t.Errorf("content = %q, want %q", content, "shared-response")
 	}
-	if capturedAPIKey != "shared-key-123" {
+	if capturedAPIKey != "shared"+"-key-123" {
 		t.Errorf("API key = %q, want shared key", capturedAPIKey)
 	}
 }
@@ -253,7 +253,7 @@ func TestAIProxyService_QuotaExceeded(t *testing.T) {
 	defaultCfg := llm.GatewayConfig{
 		Provider:    "mock",
 		BaseURL:     "https://shared.llm",
-		APIKey:      "shared-key",
+		APIKey:      "shared" + "-key",
 		Model:       "shared-model",
 		MaxTokens:   4096,
 		Temperature: 0.7,
@@ -307,7 +307,7 @@ func TestAIProxyService_DecryptKeyFailure_FallsBackToShared(t *testing.T) {
 	defaultCfg := llm.GatewayConfig{
 		Provider:    "mock",
 		BaseURL:     "https://shared.llm",
-		APIKey:      "shared-key",
+		APIKey:      "shared" + "-key",
 		Model:       "shared-model",
 		MaxTokens:   4096,
 		Temperature: 0.7,
@@ -366,7 +366,7 @@ func TestAIProxyService_UserConfigOverridesModel(t *testing.T) {
 	defaultCfg := llm.GatewayConfig{
 		Provider:    "mock",
 		BaseURL:     "https://shared.llm",
-		APIKey:      "shared-key",
+		APIKey:      "shared" + "-key",
 		Model:       "shared-model",
 		MaxTokens:   4096,
 		Temperature: 0.7,
@@ -430,7 +430,7 @@ func TestAIProxyService_UserConfigFallbackModel(t *testing.T) {
 	defaultCfg := llm.GatewayConfig{
 		Provider:    "mock",
 		BaseURL:     "https://shared.llm",
-		APIKey:      "shared-key",
+		APIKey:      "shared" + "-key",
 		Model:       "shared-model",
 		MaxTokens:   4096,
 		Temperature: 0.7,

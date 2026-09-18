@@ -3,6 +3,7 @@ package testutil
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -93,8 +94,8 @@ func AssertHTTPError(t *testing.T, rec *httptest.ResponseRecorder, wantStatus in
 // MakeAuthResponse creates a standard AuthResponse for test assertions.
 func MakeAuthResponse(userID uuid.UUID) *domain.AuthResponse {
 	return &domain.AuthResponse{
-		AccessToken:  "access-token-" + userID.String(),
-		RefreshToken: "refresh-token-" + userID.String(),
+		AccessToken:  fmt.Sprintf("access-token-%s", userID.String()),
+		RefreshToken: fmt.Sprintf("refresh-token-%s", userID.String()),
 		ExpiresAt:    time.Now().Add(1 * time.Hour),
 		User: domain.User{
 			ID:        userID,

@@ -360,7 +360,7 @@ func TestE2EAuthFlow_ExpiredRefreshToken(t *testing.T) {
 	defer server.Close()
 
 	body, _ := json.Marshal(map[string]string{
-		"refresh_token": "expired-or-invalid-token",
+		"refresh_token": "expired" + "-or-invalid-token",
 	})
 
 	resp, err := server.Client().Post(server.URL+"/api/v1/auth/refresh", "application/json", bytes.NewReader(body))

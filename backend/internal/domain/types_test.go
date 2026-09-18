@@ -1275,13 +1275,13 @@ func TestDiscoverFeedItem_JSONRoundTrip(t *testing.T) {
 	t.Parallel()
 	now := time.Now().Truncate(time.Millisecond).UTC()
 	item := domain.DiscoverFeedItem{
-		ID:             "share-1",
-		EncryptedTitle: "enc-title",
-		HasPassword:    false,
-		ViewCount:      100,
-		ReactionHeart:  42,
+		ID:               "share-1",
+		EncryptedTitle:   "enc-title",
+		HasPassword:      false,
+		ViewCount:        100,
+		ReactionHeart:    42,
 		ReactionBookmark: 10,
-		CreatedAt:      now,
+		CreatedAt:        now,
 	}
 
 	data, err := json.Marshal(item)

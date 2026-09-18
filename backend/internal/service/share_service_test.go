@@ -16,14 +16,14 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockSharedNoteRepo struct {
-	createFn       func(ctx context.Context, note *domain.SharedNote) error
-	getByIDFn      func(ctx context.Context, id string) (*domain.SharedNote, error)
+	createFn        func(ctx context.Context, note *domain.SharedNote) error
+	getByIDFn       func(ctx context.Context, id string) (*domain.SharedNote, error)
 	incrementViewFn func(ctx context.Context, id string) error
 	deleteExpiredFn func(ctx context.Context) (int64, error)
-	listByUserFn   func(ctx context.Context, userID uuid.UUID) ([]domain.SharedNote, error)
-	listPublicFn   func(ctx context.Context, limit, offset int) ([]domain.DiscoverFeedItem, error)
-	reactFn        func(ctx context.Context, sharedNoteID string, userID uuid.UUID, reactionType string) (*domain.ReactResponse, error)
-	getUserReactFn func(ctx context.Context, sharedNoteID string, userID uuid.UUID) (map[string]bool, error)
+	listByUserFn    func(ctx context.Context, userID uuid.UUID) ([]domain.SharedNote, error)
+	listPublicFn    func(ctx context.Context, limit, offset int) ([]domain.DiscoverFeedItem, error)
+	reactFn         func(ctx context.Context, sharedNoteID string, userID uuid.UUID, reactionType string) (*domain.ReactResponse, error)
+	getUserReactFn  func(ctx context.Context, sharedNoteID string, userID uuid.UUID) (map[string]bool, error)
 }
 
 func (m *mockSharedNoteRepo) Create(ctx context.Context, note *domain.SharedNote) error {

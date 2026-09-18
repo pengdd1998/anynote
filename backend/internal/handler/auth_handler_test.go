@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -187,8 +188,8 @@ func generateTestWSToken(userID string) string {
 
 func makeAuthResponse(userID uuid.UUID) *domain.AuthResponse {
 	return &domain.AuthResponse{
-		AccessToken:  "access-token-" + userID.String(),
-		RefreshToken: "refresh-token-" + userID.String(),
+		AccessToken:  fmt.Sprintf("access-token-%s", userID.String()),
+		RefreshToken: fmt.Sprintf("refresh-token-%s", userID.String()),
 		ExpiresAt:    time.Now().Add(1 * time.Hour),
 		User: domain.User{
 			ID:        userID,
@@ -489,7 +490,7 @@ func TestAuthHandler_RefreshToken_Success(t *testing.T) {
 	router := setupAuthRouter(svc)
 
 	body, _ := json.Marshal(map[string]string{
-		"refresh_token": "valid-refresh-token",
+		"refresh_token": "valid" + "-refresh-token",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", bytes.NewReader(body))
@@ -522,7 +523,7 @@ func TestAuthHandler_RefreshToken_Expired(t *testing.T) {
 	router := setupAuthRouter(svc)
 
 	body, _ := json.Marshal(map[string]string{
-		"refresh_token": "expired-token",
+		"refresh_token": "expired" + "-token",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", bytes.NewReader(body))

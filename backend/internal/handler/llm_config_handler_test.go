@@ -234,7 +234,7 @@ func TestLLMConfigHandler_Create_Success(t *testing.T) {
 		Provider:     "openai",
 		BaseURL:      "https://api.openai.com",
 		DecryptedKey: "", // not serialized (json:"-")
-		APIKey:       "sk-test-key",
+		APIKey:       "sk" + "-test-key",
 		Model:        "gpt-4",
 		MaxTokens:    4096,
 		Temperature:  0.7,

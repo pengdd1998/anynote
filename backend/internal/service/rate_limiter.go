@@ -78,7 +78,6 @@ func (r *RateLimiter) Allow(userID string) bool {
 	}
 	w.timestamps = valid
 
-
 	// Check limit
 	if len(w.timestamps) >= r.limit {
 		return false

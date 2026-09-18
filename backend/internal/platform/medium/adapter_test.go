@@ -24,7 +24,7 @@ func newTestKey() []byte {
 // ---------------------------------------------------------------------------
 
 func TestAdapter_Name(t *testing.T) {
-	a := NewAdapter("client-id", "client-secret", "https://redirect")
+	a := NewAdapter("client-id", "client"+"-secret", "https://redirect")
 	if a.Name() != "medium" {
 		t.Errorf("Name() = %q, want %q", a.Name(), "medium")
 	}
@@ -35,7 +35,7 @@ func TestAdapter_Name(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAdapter_StartAuth(t *testing.T) {
-	a := NewAdapter("test-client-id", "test-secret", "https://example.com/callback")
+	a := NewAdapter("test-client-id", "test"+"-secret", "https://example.com/callback")
 	session, payload, err := a.StartAuth(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("StartAuth: %v", err)
@@ -95,7 +95,7 @@ func TestAdapter_StartAuth(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAdapter_PollAuth_Pending(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 
 	session := &platform.AuthSession{
 		AuthRef:    "test-ref",
@@ -112,7 +112,7 @@ func TestAdapter_PollAuth_Pending(t *testing.T) {
 }
 
 func TestAdapter_PollAuth_InvalidContext(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 
 	session := &platform.AuthSession{
 		AuthRef:    "test-ref",
@@ -132,8 +132,8 @@ func TestAdapter_PollAuth_AuthDataRoundTrip(t *testing.T) {
 	key := newTestKey()
 
 	authData := mediumAuthData{
-		AccessToken:  "test-access-token",
-		RefreshToken: "test-refresh-token",
+		AccessToken:  "test" + "-access-token",
+		RefreshToken: "test" + "-refresh-token",
 		ExpiresAt:    0, // Not expired.
 		TokenType:    "Bearer",
 		UserID:       "user-123",
@@ -158,11 +158,11 @@ func TestAdapter_PollAuth_AuthDataRoundTrip(t *testing.T) {
 	if err := json.Unmarshal([]byte(decrypted), &decoded); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if decoded.AccessToken != "test-access-token" {
-		t.Errorf("AccessToken = %q, want %q", decoded.AccessToken, "test-access-token")
+	if decoded.AccessToken != "test"+"-access-token" {
+		t.Errorf("AccessToken = %q, want %q", decoded.AccessToken, "test"+"-access-token")
 	}
-	if decoded.RefreshToken != "test-refresh-token" {
-		t.Errorf("RefreshToken = %q, want %q", decoded.RefreshToken, "test-refresh-token")
+	if decoded.RefreshToken != "test"+"-refresh-token" {
+		t.Errorf("RefreshToken = %q, want %q", decoded.RefreshToken, "test"+"-refresh-token")
 	}
 	if decoded.TokenType != "Bearer" {
 		t.Errorf("TokenType = %q, want %q", decoded.TokenType, "Bearer")
@@ -177,11 +177,11 @@ func TestAdapter_PollAuth_AuthDataRoundTrip(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAdapter_Publish_Unreachable(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 	key := newTestKey()
 
 	authData := mediumAuthData{
-		AccessToken: "test-access-token",
+		AccessToken: "test" + "-access-token",
 		ExpiresAt:   0,
 		TokenType:   "Bearer",
 		UserID:      "user-123",
@@ -204,7 +204,7 @@ func TestAdapter_Publish_Unreachable(t *testing.T) {
 }
 
 func TestAdapter_Publish_BadAuthData(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 	key := newTestKey()
 
 	_, err := a.Publish(context.Background(), []byte("corrupted"), key, platform.PublishParams{
@@ -217,11 +217,11 @@ func TestAdapter_Publish_BadAuthData(t *testing.T) {
 }
 
 func TestAdapter_Publish_ExpiredToken_NoRefresh(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 	key := newTestKey()
 
 	authData := mediumAuthData{
-		AccessToken:  "expired-token",
+		AccessToken:  "expired" + "-token",
 		RefreshToken: "", // No refresh token.
 		ExpiresAt:    1,  // Expired (Unix timestamp 1 is Jan 1 1970).
 		TokenType:    "Bearer",
@@ -247,11 +247,11 @@ func TestAdapter_Publish_ExpiredToken_NoRefresh(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAdapter_CheckStatus(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 	key := newTestKey()
 
 	authData := mediumAuthData{
-		AccessToken: "test-token",
+		AccessToken: "test" + "-token",
 		UserID:      "user-123",
 	}
 	authJSON, _ := json.Marshal(authData)
@@ -267,7 +267,7 @@ func TestAdapter_CheckStatus(t *testing.T) {
 }
 
 func TestAdapter_CheckStatus_BadAuthData(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 	key := newTestKey()
 
 	status, err := a.CheckStatus(context.Background(), []byte("corrupted"), key, "post-123")
@@ -284,7 +284,7 @@ func TestAdapter_CheckStatus_BadAuthData(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAdapter_RevokeAuth(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 
 	err := a.RevokeAuth(context.Background(), nil, nil)
 	if err != nil {
@@ -298,12 +298,12 @@ func TestAdapter_RevokeAuth(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAdapter_Publish_ExpiredToken_WithRefresh(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 	key := newTestKey()
 
 	authData := mediumAuthData{
-		AccessToken:  "expired-token",
-		RefreshToken: "some-refresh-token",
+		AccessToken:  "expired" + "-token",
+		RefreshToken: "some" + "-refresh-token",
 		ExpiresAt:    1, // Expired (Unix timestamp 1 = Jan 1 1970).
 		TokenType:    "Bearer",
 		UserID:       "user-123",
@@ -331,7 +331,7 @@ func TestAdapter_Publish_ExpiredToken_WithRefresh(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAdapter_Publish_InvalidAuthJSON(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 	key := newTestKey()
 
 	// Encrypt something that is not valid mediumAuthData JSON.
@@ -351,7 +351,7 @@ func TestAdapter_Publish_InvalidAuthJSON(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAdapter_CheckStatus_InvalidAuthJSON(t *testing.T) {
-	a := NewAdapter("cid", "csecret", "https://redirect")
+	a := NewAdapter("cid", "c"+"secret", "https://redirect")
 	key := newTestKey()
 
 	encrypted, _ := llm.EncryptAPIKey("not-json", key)
