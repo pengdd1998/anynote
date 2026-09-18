@@ -271,6 +271,30 @@ E-3 收口验收：`nc -z -w3 175.178.66.207 36661` 不通；回环
 - E-3 后：端口绑定改回 0.0.0.0 一次 up 即恢复（权衡：重新引入直出
   风险，仅应急用）。
 
+### 2.11 WS 实时协作的第二层断裂 — room 契约（2026-09-18 发现，待立项）
+
+E-0 真机排查实测（CI 构建 APK + 服务端日志）：token 层修复后，客户端
+`POST /api/v1/ws/token` 200、旧 401 循环与 refresh 风暴消失，但握手变为
+`GET /api/v1/ws → 400`：后端要求连接 URL 必带 `room` 参数
+（ws_handler.go:171-175），连接即完成成员校验（IsMember）、presence join
+与 CRDT catch-up（一房一连模型，read pump 不处理 join/leave 消息）；前端
+WSClient 则是"无 room 连接 + join 消息进房"模型（ws_client.dart）。
+
+**两层模型不兼容，实时协作在 token 层修复后仍不可用**。修复需决策：
+
+- 方案 A（后端兼容前端）：room 可选 + join/leave 消息动态切房——后端
+  改动中等，但连接期 IsMember 校验失效，需在 join 时补；
+- 方案 B（前端对齐后端，推荐）：WSClient 改为每房间一条连接（打开协作
+  文档才连 `?token=&room=<noteId>`），首页不再空连接（顺带省电）。改动
+  集中在 wsClientProvider / presence_indicator / collab_provider 三个
+  消费点。
+
+同轮关联修复（commit 2e22fd9）：`sodium_libs` 平台实例未注册导致全新
+安装注册/登录必崩（LateInitializationError），已在 CryptoCompat.init()
+显式注册修复并真机回归（注册→登录→主界面全通）。Mobile QA 工作流
+（mobile-qa.yml，workflow_dispatch）产出带 `.debug` 后缀的并行安装
+arm64 APK，供无本地工具链时的真机验证。
+
 ---
 
 ## 3. 附录 — 平台组接口索引
