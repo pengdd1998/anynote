@@ -18,6 +18,11 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -68,9 +73,16 @@ jobs:
       - name: Generate l10n
         run: flutter gen-l10n
 
+      - name: Restore release keystore
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/release-keystore.jks"
+            echo "ANDROID_KEYSTORE_PATH=$GITHUB_WORKSPACE/release-keystore.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 not set — APK will be signed with an ephemeral debug key and won't upgrade-install over signed releases"
+          fi
+
       - name: Build APK (split per ABI)
-        env:
-          ANDROID_KEYSTORE_PATH: ''
         run: flutter build apk --release --split-per-abi
 
       - name: Rename APKs
