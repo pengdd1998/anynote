@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  FLUTTER_VERSION: '3.41.7'
+  FLUTTER_VERSION: '3.41.9'
 
 jobs:
   build:
@@ -32,8 +32,19 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK Platform 36
-        run: sdkmanager "platforms;android-36"
+      - name: Ensure Android SDK Platform 36
+        # sdkmanager 16.x crashes resolving the retired 'tools' package on
+        # some runner images (v2.8.6-2.8.8 builds failed here), so only
+        # invoke it when the platform is genuinely missing — AGP would also
+        # auto-install it during the gradle build (licenses are pre-accepted
+        # by setup-android).
+        run: |
+          if [ ! -d "$ANDROID_HOME/platforms/android-36" ]; then
+            sdkmanager --install "platforms;android-36" || \
+              echo "::warning::sdkmanager failed; relying on AGP auto-install"
+          else
+            echo "android-36 already installed"
+          fi
 
       - name: Install dependencies
         run: flutter pub get
