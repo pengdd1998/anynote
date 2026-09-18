@@ -1,3 +1,5 @@
+import 'crypto_bootstrap.dart';
+
 /// Web crypto compatibility layer.
 ///
 /// Since Phase 142, all platforms use sodium_libs (libsodium) for crypto
@@ -16,11 +18,13 @@ class CryptoCompat {
 
   /// Initialize the crypto backend.
   ///
-  /// On all platforms, this is a no-op because sodium_libs is initialized
-  /// lazily on first use by the Encryptor and MasterKeyManager classes.
+  /// Registers the sodium_libs platform implementation before first use:
+  /// lazy first-use previously crashed on fresh installs with
+  /// `LateInitializationError: Field '_instance' has not been initialized`
+  /// when the generated Dart-plugin registration had not run yet (see
+  /// crypto_bootstrap.dart).
   static Future<void> init() async {
-    // No-op: sodium_libs initializes lazily via SodiumSumoInit.init()
-    // the first time it is needed.
+    await ensureSodiumPlatformRegistered();
   }
 
   /// Check if full E2E encryption is supported on this platform.
