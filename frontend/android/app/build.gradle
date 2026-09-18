@@ -80,6 +80,12 @@ android {
         debug {
             signingConfig signingConfigs.debug
             minifyEnabled false
+            // Optional parallel install of debug builds next to the release
+            // app: FLUTTER_DEBUG_ID_SUFFIX=.debug flutter build apk --debug
+            def idSuffix = System.getenv("FLUTTER_DEBUG_ID_SUFFIX")
+            if (idSuffix) {
+                applicationIdSuffix idSuffix
+            }
         }
         release {
             // Use release keystore if available, otherwise fall back to debug

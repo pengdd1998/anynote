@@ -1,0 +1,38 @@
+name: Mobile QA build
+
+# Builds an installable debug APK (arm64) for on-device QA without a local
+# Flutter toolchain. The APK uses the ".debug" application id suffix, so it
+# installs in parallel with a release build (see android/app/build.gradle).
+on:
+  workflow_dispatch:
+
+jobs:
+  debug-apk:
+    name: QA debug APK (arm64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: stable
+
+      - name: Generate Drift code
+        working-directory: frontend
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build debug APK
+        working-directory: frontend
+        env:
+          FLUTTER_DEBUG_ID_SUFFIX: .debug
+        run: flutter build apk --debug --target-platform android-arm64
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anynote-qa-debug-arm64
+          path: frontend/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
