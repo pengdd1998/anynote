@@ -294,6 +294,62 @@ churn 随下个 App 版本发布自然消失。WSClient 类与测试保留作为
 （mobile-qa.yml，workflow_dispatch）产出带 `.debug` 后缀的并行安装
 arm64 APK，供无本地工具链时的真机验证。
 
+### 2.12 协作功能清理清单（2026-09-18 全工程扫描，待执行）
+
+定位澄清后的全量删除清单。原则：sodium/E2EE 加密、sync_engine（个人
+多设备同步）、share 分享链接、comments（基于 shared_notes）、publish/
+AI/语义搜索全部保留（已验证与 collab 零耦合）。
+
+**后端删除（Go）**
+
+| 目标 | 测试文件 |
+| --- | --- |
+| `internal/handler/ws_handler.go`（520 行，含 clientRateLimiter） | `ws_handler_test.go`（1383 行） |
+| `internal/handler/collab_handler.go`（rooms/join/leave/members） | `collab_handler_test.go`（919 行） |
+| `internal/service/presence_service.go`（Redis presence/typing/pubsub） | `presence_service_test.go`、`presence_service_integration_test.go` |
+| `internal/service/collab_service.go`（邀请码等） | `collab_service_test.go`（798 行） |
+| `internal/repository/collab_repository.go`、`collab_operations_repository.go` | `collab_operations_repository_test.go`（470 行） |
+| go.mod `nhooyr.io/websocket`（仅 ws_handler 使用） | — |
+
+**后端联动编辑**：`cmd/server/main.go`（86-90,137-138,252,270-275,325-336
+collab/presence 装配；Redis 客户端保留——限流/健康/worker 共用）、
+`router.go`（74,78,130-131,144-145,233-242 路由；282,288,292-293
+Services 字段）、`router_test.go`（218-241,271 stub）、
+`e2e_full_server_test.go`（136-137,151,196-197）、`domain/types.go`
+546-594（CollabRoom/Member/Operation 等）、可选：`plan.go` CanCollaborate
++ `plan_service.go:135-137` "collaborate" 分支、`notification_service.go:62`
+collab_invite（DB enum 值 029 已含，保留无害）。
+
+**数据库**：`034_drop_collab` 迁移 `DROP TABLE IF EXISTS collab_operations,
+collab_room_members, collab_rooms`（FK 顺序/CASCADE）；生产现况
+rooms=2 / members=2 / operations=0（实验残留），删前 pg_dump 备份；
+022/023 的 down 文件一并删除。Redis presence 键 TTL≤5min 自愈，无需清理。
+
+**前端删除（Flutter，约 6,100 行代码 + 6,100 行测试）**
+
+| 目标 | 说明 |
+| --- | --- |
+| `lib/core/collab/`：crdt_text(656)、crdt_editor_controller(407)、merge_engine(165)、remote_cursor(172)、cursor_overlay(282)、cursor_position_calculator(231)、presence_indicator(521)、ws_client(337) | 全部仅被 collab 消费方引用 |
+| `lib/features/collab/`：collab_provider(395)、share_dialog(568，协作邀请弹窗，非个人分享) | 仅 note_editor_screen 引用 |
+| `lib/features/notes/presentation/widgets/collab_cursors_widget.dart`(116) | 100% collab |
+| `lib/core/database/daos/collab_dao.dart` + `tables.dart` CollabStates 表 | Drift schemaVersion 22 → 新迁移步 deleteTable('collab_states') 后重新 build_runner |
+| `api_client.dart` 842-864（createCollabRoom/joinCollabRoom） | getWsToken 一并删（若 ws_client 删除） |
+| 测试：test/core/collab/ 全部 7 文件、test/features/collab/ 4 文件、collab_dao_test、collab_cursors_widget_test | ~6,100 行 |
+| pubspec `web_socket_channel: ^3.0.1` | 仅 ws_client 使用 |
+
+**前端联动编辑**：`note_editor_screen.dart`（isCollab 死模式全剥离：
+imports 18,19,20,28,44,49；86-145 字段；216-218,259-268,297-339,366-371,
+518-523,942-1020,1057-1066,1211-1215,1369,1468-1476,1698-1710,2327）；
+`editor_app_bar_actions.dart`（import 6 + 116-121 PresenceAvatarStack）；
+`sign_out_section.dart`（73-74,187-188 disconnect）；`onboarding_screen.dart`
+68-87（协作宣传页，删或换文案）；l10n 四语言 arb 协作键
+（onboardingCollaborate*/inviteCode*/nooneInRoom 等 16 个，保留 shareNote、
+collaborationSharing 标签）。
+
+**需决策**：编辑器 AppBar"分享"按钮当前打开协作邀请弹窗
+（note_editor_screen:1211-1215）——删除后改接个人分享链接 sheet
+（`share_sheet.dart`）或移除入口。
+
 ---
 
 ## 3. 附录 — 平台组接口索引
