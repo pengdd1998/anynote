@@ -23,28 +23,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Ensure Android SDK Platform 36
-        # sdkmanager 16.x crashes resolving the retired 'tools' package on
-        # some runner images (v2.8.6-2.8.8 builds failed here), so only
-        # invoke it when the platform is genuinely missing — AGP would also
-        # auto-install it during the gradle build (licenses are pre-accepted
-        # by setup-android).
+      - name: Install Android SDK
+        # android-actions/setup-android@v3 hardcodes an install of the
+        # retired 'tools' package, which no longer exists in the SDK
+        # repository ("Failed to find package 'tools'") — v2.8.6-v2.8.8
+        # builds all died there. Build a clean standalone SDK instead.
         run: |
-          if [ ! -d "$ANDROID_HOME/platforms/android-36" ]; then
-            sdkmanager --install "platforms;android-36" || \
-              echo "::warning::sdkmanager failed; relying on AGP auto-install"
-          else
-            echo "android-36 already installed"
-          fi
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline.zip
+          unzip -q cmdline.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          # Accept all SDK licenses.
+          yes | sdkmanager --licenses
+          # Install components required for the Android build.
+          # (NDK 28.2.13676358 + CMake are auto-installed by AGP per
+          # android/app/build.gradle ndkVersion / the jni plugin.)
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Flutter Doctor
+        run: flutter doctor -v
 
       - name: Install dependencies
         run: flutter pub get
