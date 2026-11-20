@@ -33,12 +33,15 @@ android {
     compileSdk 36
     ndkVersion "28.2.13676358"
 
-    // sqlcipher_flutter_libs transitively pulls in sqlite3_flutter_libs; both
-    // ship a Gradle plugin class with the same name, which breaks dex
-    // merging. The SQLCipher package is the replacement — drop the plain
-    // SQLite one (see sqlcipher_flutter_libs README).
+    // sqlcipher_flutter_libs brings in net.zetetic:sqlcipher-android, which
+    // ships the same Java plugin classes as eu.simonbinder:sqlite3-native-
+    // library (pulled in transitively via drift_flutter →
+    // sqlite3_flutter_libs). Keep only the SQLCipher artifact — see the
+    // drift SQLCipher documentation.
     configurations.all {
-        exclude group: 'eu.simonbinder', module: 'sqlite3_flutter_libs'
+        resolutionStrategy {
+            exclude group: 'eu.simonbinder', module: 'sqlite3-native-library'
+        }
     }
 
     defaultConfig {
