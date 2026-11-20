@@ -344,6 +344,17 @@ type QuotaResponse struct {
 type ErrorDetail struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	// Problems carries per-field validation findings for validation_error
+	// responses (e.g. publish platform spec violations).
+	Problems []ValidationProblem `json:"problems,omitempty"`
+}
+
+// ValidationProblem is one field-level finding attached to a
+// validation_error response.
+type ValidationProblem struct {
+	Field    string `json:"field"`
+	Severity string `json:"severity"`
+	Message  string `json:"message"`
 }
 
 // ErrorResponse is the standard error envelope for all API responses.

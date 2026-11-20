@@ -3,7 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"unicode/utf8"
 
+	"github.com/anynote/backend/internal/domain"
+	"github.com/anynote/backend/internal/platform/spec"
 	"github.com/anynote/backend/internal/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -69,7 +72,7 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(req.Title) > maxPublishTitleLen {
+	if utf8.RuneCountInString(req.Title) > maxPublishTitleLen {
 		writeError(w, r, http.StatusBadRequest, "validation_error", "Title must be at most 500 characters")
 		return
 	}
@@ -90,6 +93,29 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Platform-specific publishing rules (field lengths, link policies,
+	// content compliance) — adapted from maitian; see
+	// doc/tech-plan-2026-11-publish-spec.md. error-level problems block the
+	// publish; warnings ride along in the 202 response.
+	var warnings []spec.Problem
+	if platformSpec, hasSpec := spec.For(req.Platform); hasSpec {
+		problems := spec.Validate(platformSpec, req.Title, req.Content, req.Tags)
+		errs := spec.Errors(problems)
+		if len(errs) > 0 {
+			domainProblems := make([]domain.ValidationProblem, len(errs))
+			for i, p := range errs {
+				domainProblems[i] = domain.ValidationProblem{
+					Field:    p.Field,
+					Severity: string(p.Severity),
+					Message:  p.Message,
+				}
+			}
+			writeValidationProblems(w, r, "validation_error", errs[0].Message, domainProblems)
+			return
+		}
+		warnings = spec.Warnings(problems)
+	}
+
 	log, err := h.publishService.Publish(r.Context(), userID, service.PublishRequest{
 		Platform:      req.Platform,
 		ContentItemID: req.ContentItemID,
@@ -107,6 +133,14 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 	// never receive these ciphertexts.
 	log.Title = ""
 	log.Content = ""
+
+	if len(warnings) > 0 {
+		writeJSON(w, http.StatusAccepted, struct {
+			*domain.PublishLog
+			Warnings []spec.Problem `json:"warnings,omitempty"`
+		}{log, warnings})
+		return
+	}
 
 	writeJSON(w, http.StatusAccepted, log)
 }

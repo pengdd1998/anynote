@@ -91,3 +91,24 @@ func writeErrorFromSentinel(w http.ResponseWriter, r *http.Request, err error) b
 	}
 	return true
 }
+
+// writeValidationProblems writes a validation_error response that carries
+// per-field findings (platform publish spec, form validation, ...).
+func writeValidationProblems(w http.ResponseWriter, r *http.Request, code, message string, problems []domain.ValidationProblem) {
+	requestID := ""
+	if r != nil {
+		requestID = middleware.GetReqID(r.Context())
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusBadRequest)
+	if err := json.NewEncoder(w).Encode(domain.ErrorResponse{
+		Error: domain.ErrorDetail{
+			Code:     code,
+			Message:  message,
+			Problems: problems,
+		},
+		RequestID: requestID,
+	}); err != nil {
+		slog.Error("failed to encode validation problems response", "error", err)
+	}
+}
