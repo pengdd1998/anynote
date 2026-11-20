@@ -14,6 +14,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Java 17
+        # Runner default Java moved to 25 (class file major 69), which this
+        # project's Gradle cannot parse ("Unsupported class file major
+        # version 69"). Pin the same Temurin 17 the release build uses.
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
