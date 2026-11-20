@@ -27,6 +27,7 @@ import '../../../core/error/exceptions.dart';
 import '../../../core/tts/speech_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
+import '../../../core/monitoring/error_reporter.dart';
 import '../../settings/data/local_llm_store.dart';import '../../../core/analytics/analytics_service.dart';
 
 import '../../settings/data/llm_direct_client.dart';
@@ -848,8 +849,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // reach other devices without waiting for the 5-minute periodic cycle.
       // The lifecycle debounces rapid consecutive saves and skips offline.
       ref.read(syncLifecycleProvider).requestSyncSoon();
-    } catch (e) {
+    } catch (e, st) {
       pm.end('note_save');
+      // Report the raw error: the banner only shows a generic message for
+      // UnknownException, and without this there was no way to diagnose
+      // save failures from the field (QA 2026-11 device regression).
+      ErrorReporter.instance.reportError(e, st, context: 'note_save');
       if (mounted) {
         final appError = ErrorMapper.map(e);
         setState(() => _errorMessage = ErrorDisplay.userMessage(appError));
