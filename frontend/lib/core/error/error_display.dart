@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
+
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -120,6 +122,10 @@ class ErrorDisplay {
       SyncConflictException() => error.message,
       SyncException() => l10n.errorSync(error.message),
       StorageException() => l10n.errorStorage,
+      // Debug builds surface the raw message for field diagnosis
+      // (QA 2026-11: a save failure was undiagnosable from the generic
+      // banner alone). Release keeps the generic copy.
+      UnknownException() when kDebugMode => error.message,
       UnknownException() => l10n.errorUnexpected,
       _ => error.message,
     };
@@ -154,6 +160,7 @@ class ErrorDisplay {
       SyncException() => 'Sync failed: ${error.message}',
       StorageException() =>
         'A local storage error occurred. Please restart the app.',
+      UnknownException() when kDebugMode => error.message,
       UnknownException() => 'An unexpected error occurred. Please try again.',
       _ => error.message,
     };
