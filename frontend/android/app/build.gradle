@@ -33,6 +33,14 @@ android {
     compileSdk 36
     ndkVersion "28.2.13676358"
 
+    // sqlcipher_flutter_libs transitively pulls in sqlite3_flutter_libs; both
+    // ship a Gradle plugin class with the same name, which breaks dex
+    // merging. The SQLCipher package is the replacement — drop the plain
+    // SQLite one (see sqlcipher_flutter_libs README).
+    configurations.all {
+        exclude group: 'eu.simonbinder', module: 'sqlite3_flutter_libs'
+    }
+
     defaultConfig {
         applicationId "com.anynote.app"
         minSdk 24
