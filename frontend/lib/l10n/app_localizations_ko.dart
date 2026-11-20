@@ -4516,4 +4516,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get setAsDefault => '기본으로 설정';
+
+  @override
+  String get filterNoteType => '노트 유형';
+
+  @override
+  String get filterTag => '태그';
+
+  @override
+  String get filterDate => '날짜';
+
+  @override
+  String get filterMore => '더보기';
 }

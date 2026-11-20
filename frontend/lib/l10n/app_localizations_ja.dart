@@ -4513,4 +4513,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get setAsDefault => 'デフォルトに設定';
+
+  @override
+  String get filterNoteType => 'ノート種類';
+
+  @override
+  String get filterTag => 'タグ';
+
+  @override
+  String get filterDate => '日付';
+
+  @override
+  String get filterMore => '詳細';
 }

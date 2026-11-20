@@ -229,12 +229,29 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              session.error!,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.error,
-              ),
-            ),
+            child: Builder(builder: (context) {
+              // session.error holds an AppException (see ErrorMapper.map) —
+              // not a String. Assigning the object to Text crashed with a
+              // red screen on type mismatch when the backend rate-limited.
+              // Extract defensively: AppException.message, any .message,
+              // or toString() fallback.
+              String errorText() {
+                final err = session.error;
+                if (err is String) return err;
+                try {
+                  return (err?.message ?? err.toString()).toString();
+                } catch (_) {
+                  return err.toString();
+                }
+              }
+
+              return Text(
+                errorText(),
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.error,
+                ),
+              );
+            }),
           ),
           GestureDetector(
             onTap: () => ref.read(chatSessionProvider.notifier).clearError(),

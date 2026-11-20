@@ -1473,5 +1473,9 @@
   "composeMaxNotesLimit": "최대 {count}개의 노트를 선택할 수 있습니다. 추가하기 전에 일부 선택을 해제하세요.",
   "composeTotalContentLimit": "총 콘텐츠가 {limit}K자를 초과했습니다. 노트 선택을 줄이거나 내용을 줄이세요.",
   "aiQuotaExceeded": "AI 쿼터를 모두 사용했습니다. 잠시 후 다시 시도해 주세요.",
-  "setAsDefault": "기본으로 설정"
+  "setAsDefault": "기본으로 설정",
+  "filterNoteType": "노트 유형",
+  "filterTag": "태그",
+  "filterDate": "날짜",
+  "filterMore": "더보기"
 }

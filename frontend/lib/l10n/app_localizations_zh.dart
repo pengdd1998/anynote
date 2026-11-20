@@ -4500,4 +4500,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get setAsDefault => '设为默认';
+
+  @override
+  String get filterNoteType => '笔记类型';
+
+  @override
+  String get filterTag => '标签';
+
+  @override
+  String get filterDate => '日期';
+
+  @override
+  String get filterMore => '更多';
 }

@@ -1473,5 +1473,9 @@
   "composeMaxNotesLimit": "選択できるのは最大 {count} 件のノートです。追加する前に一部の選択を解除してください。",
   "composeTotalContentLimit": "合計コンテンツが {limit}K 文字を超えています。ノートの選択を減らすか、内容を短くしてください。",
   "aiQuotaExceeded": "AIクォータを使い切りました。しばらくしてからもう一度お試しください。",
-  "setAsDefault": "デフォルトに設定"
+  "setAsDefault": "デフォルトに設定",
+  "filterNoteType": "ノート種類",
+  "filterTag": "タグ",
+  "filterDate": "日付",
+  "filterMore": "詳細"
 }

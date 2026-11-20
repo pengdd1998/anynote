@@ -801,6 +801,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           id: noteId,
           encryptedContent: encryptedContent,
           plainContent: plainText,
+          // Persist a search/display title (first content line) — before
+          // this, plain_title stayed null and every list/card/a11y label
+          // showed 无标题 (QA BUG-3).
+          plainTitle: AppDatabase.derivePlainTitle(plainText),
           firstImagePath: imagePath,
         );
         _isNew = false;
@@ -814,6 +818,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           id: noteId,
           encryptedContent: encryptedContent,
           plainContent: plainText,
+          plainTitle: AppDatabase.derivePlainTitle(plainText),
           firstImagePath: imagePath,
         );
 
@@ -1021,7 +1026,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 scrolledUnderElevation: 0,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
-                  tooltip: l10n.saveAndClose,
+                  // Distinct from the save-check button in buildActions,
+                  // which is also labeled saveAndClose (BUG-5: duplicated
+                  // a11y labels confused screen readers).
+                  tooltip: l10n.back,
                   onPressed: () async {
                     await _saveNote();
                     if (context.mounted) context.pop();

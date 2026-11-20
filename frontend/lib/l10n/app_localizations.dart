@@ -8397,6 +8397,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set as default'**
   String get setAsDefault;
+
+  /// No description provided for @filterNoteType.
+  ///
+  /// In en, this message translates to:
+  /// **'Note Type'**
+  String get filterNoteType;
+
+  /// No description provided for @filterTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag'**
+  String get filterTag;
+
+  /// No description provided for @filterDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get filterDate;
+
+  /// No description provided for @filterMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get filterMore;
 }
 
 class _AppLocalizationsDelegate

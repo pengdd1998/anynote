@@ -218,25 +218,25 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
             runSpacing: AppSpacing.s8,
             children: [
               _buildFilterChip(
-                'Note Type',
+                l10n.filterNoteType,
                 'status:',
                 isActive: query.contains('status:'),
                 isDark: isDark,
               ),
               _buildFilterChip(
-                'Tag',
+                l10n.filterTag,
                 'tag:',
                 isActive: query.contains('tag:'),
                 isDark: isDark,
               ),
               _buildFilterChip(
-                'Date',
+                l10n.filterDate,
                 'date:',
                 isActive: query.contains('date:'),
                 isDark: isDark,
               ),
               _buildFilterChip(
-                'More',
+                l10n.filterMore,
                 null,
                 isActive: _showHints,
                 isDark: isDark,

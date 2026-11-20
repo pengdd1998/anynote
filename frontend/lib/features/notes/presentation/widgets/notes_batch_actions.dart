@@ -1,11 +1,14 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../main.dart';
 
 /// Batch action bar displayed at the bottom of the notes list during
 /// multi-selection mode. Provides pin, color, lock, delete, export,
@@ -157,13 +160,18 @@ class NotesBatchActionBar extends ConsumerWidget {
 }
 
 /// Dialog for selecting tags to add to notes in batch mode.
-class TagPickerDialog extends StatefulWidget {
+///
+/// Mirrors the single-note tag sheet: existing tags are checkbox-selectable,
+/// and a text field creates a new tag inline (previously the batch dialog had
+/// no way to create a tag, so with no existing tags it was a dead end — the
+/// add button stayed disabled and there was nothing to input into).
+class TagPickerDialog extends ConsumerStatefulWidget {
   final List<Tag> existingTags;
 
   const TagPickerDialog({super.key, required this.existingTags});
 
   @override
-  State<TagPickerDialog> createState() => _TagPickerDialogState();
+  ConsumerState<TagPickerDialog> createState() => _TagPickerDialogState();
 
   /// Convenience method to show this dialog and return the selected tag IDs.
   static Future<List<String>?> show(
@@ -177,44 +185,142 @@ class TagPickerDialog extends StatefulWidget {
   }
 }
 
-class _TagPickerDialogState extends State<TagPickerDialog> {
+class _TagPickerDialogState extends ConsumerState<TagPickerDialog> {
   final Set<String> _selectedTagIds = {};
+  final TextEditingController _newTagController = TextEditingController();
+  bool _creating = false;
+  late List<Tag> _tags = widget.existingTags;
+
+  @override
+  void dispose() {
+    _newTagController.dispose();
+    super.dispose();
+  }
+
+  /// Create a tag from the text field, then auto-select it. Follows the
+  /// single-note tag sheet's encryption behavior (encrypt when unlocked,
+  /// store the plain name alongside for list display and FTS).
+  Future<void> _createTagFromInput() async {
+    final tagName = _newTagController.text.trim();
+    if (tagName.isEmpty || _creating) return;
+
+    setState(() => _creating = true);
+    try {
+      final existing = _tags.firstWhereOrNull(
+        (t) => (t.plainName ?? '').trim() == tagName,
+      );
+      if (existing != null) {
+        // Duplicate name: just select the existing tag.
+        setState(() {
+          _selectedTagIds.add(existing.id);
+          _newTagController.clear();
+        });
+        return;
+      }
+
+      final crypto = ref.read(cryptoServiceProvider);
+      final tagId = const Uuid().v4();
+      String encryptedName;
+      if (crypto.isUnlocked) {
+        encryptedName = await crypto.encryptForItem(tagId, tagName);
+      } else {
+        encryptedName = tagName;
+      }
+
+      final db = ref.read(databaseProvider);
+      await db.tagsDao.createTag(
+        id: tagId,
+        encryptedName: encryptedName,
+        plainName: tagName,
+      );
+
+      final created = Tag(
+        id: tagId,
+        encryptedName: encryptedName,
+        plainName: tagName,
+        version: 0,
+        isSynced: false,
+      );
+      setState(() {
+        _tags = [..._tags, created];
+        _selectedTagIds.add(tagId);
+        _newTagController.clear();
+      });
+    } finally {
+      if (mounted) setState(() => _creating = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final canConfirm =
+        _selectedTagIds.isNotEmpty || _newTagController.text.trim().isNotEmpty;
 
     return AlertDialog(
       title: Text(l10n.batchAddTags),
       content: SizedBox(
         width: double.maxFinite,
-        child: widget.existingTags.isEmpty
-            ? Text(l10n.noTagsYet)
-            : ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.existingTags.length,
-                itemBuilder: (context, index) {
-                  final tag = widget.existingTags[index];
-                  final tagId = tag.id;
-                  final isSelected = _selectedTagIds.contains(tagId);
-                  final tagName = tag.plainName ?? l10n.encrypted;
-
-                  return CheckboxListTile(
-                    value: isSelected,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        if (value == true) {
-                          _selectedTagIds.add(tagId);
-                        } else {
-                          _selectedTagIds.remove(tagId);
-                        }
-                      });
-                    },
-                    title: Text(tagName),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  );
-                },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Inline create: the batch flow previously had no way to create a
+            // tag (the single-note sheet does), which left an empty dialog
+            // with a permanently disabled add button.
+            TextField(
+              controller: _newTagController,
+              decoration: InputDecoration(
+                labelText: l10n.newTag,
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.add_circle),
+                  tooltip: l10n.add,
+                  onPressed: _creating ? null : _createTagFromInput,
+                ),
               ),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _createTagFromInput(),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: AppSpacing.s8),
+            Flexible(
+              child: _tags.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.md,
+                      ),
+                      child: Text(
+                        l10n.noTagsYet,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _tags.length,
+                      itemBuilder: (context, index) {
+                        final tag = _tags[index];
+                        final tagId = tag.id;
+                        final isSelected = _selectedTagIds.contains(tagId);
+                        final tagName = tag.plainName ?? l10n.encrypted;
+
+                        return CheckboxListTile(
+                          value: isSelected,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              if (value == true) {
+                                _selectedTagIds.add(tagId);
+                              } else {
+                                _selectedTagIds.remove(tagId);
+                              }
+                            });
+                          },
+                          title: Text(tagName),
+                          controlAffinity: ListTileControlAffinity.leading,
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -222,9 +328,9 @@ class _TagPickerDialogState extends State<TagPickerDialog> {
           child: Text(l10n.cancel),
         ),
         TextButton(
-          onPressed: _selectedTagIds.isEmpty
-              ? null
-              : () => Navigator.of(context).pop(_selectedTagIds.toList()),
+          onPressed: canConfirm
+              ? () => Navigator.of(context).pop(_selectedTagIds.toList())
+              : null,
           child: Text(l10n.add),
         ),
       ],

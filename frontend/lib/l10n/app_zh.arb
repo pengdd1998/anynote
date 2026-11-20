@@ -1476,5 +1476,9 @@
   "composeMaxNotesLimit": "最多可选择 {count} 篇笔记，请先取消部分选择。",
   "composeTotalContentLimit": "所选内容总计超过 {limit}K 字符，请减少所选笔记或缩短内容。",
   "aiQuotaExceeded": "AI 配额已用尽，请稍后再试。",
-  "setAsDefault": "设为默认"
+  "setAsDefault": "设为默认",
+  "filterNoteType": "笔记类型",
+  "filterTag": "标签",
+  "filterDate": "日期",
+  "filterMore": "更多"
 }

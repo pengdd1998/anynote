@@ -4745,4 +4745,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setAsDefault => 'Set as default';
+
+  @override
+  String get filterNoteType => 'Note Type';
+
+  @override
+  String get filterTag => 'Tag';
+
+  @override
+  String get filterDate => 'Date';
+
+  @override
+  String get filterMore => 'More';
 }

@@ -6342,5 +6342,21 @@
   "setAsDefault": "Set as default",
   "@setAsDefault": {
     "description": "Tooltip/action to set an LLM config as the default"
+  },
+  "filterNoteType": "Note Type",
+  "@filterNoteType": {
+    "type": "text"
+  },
+  "filterTag": "Tag",
+  "@filterTag": {
+    "type": "text"
+  },
+  "filterDate": "Date",
+  "@filterDate": {
+    "type": "text"
+  },
+  "filterMore": "More",
+  "@filterMore": {
+    "type": "text"
   }
 }
