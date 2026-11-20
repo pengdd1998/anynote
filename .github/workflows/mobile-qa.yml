@@ -10,6 +10,11 @@ jobs:
   debug-apk:
     name: QA debug APK (arm64)
     runs-on: ubuntu-latest
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,6 +33,18 @@ jobs:
         with:
           flutter-version: '3.41.9'
           channel: stable
+
+      - name: Restore release keystore
+        # Without the pinned keystore every QA build gets a fresh ephemeral
+        # debug signature and cannot upgrade-install over the previous QA
+        # build (INSTALL_FAILED_UPDATE_INCOMPATIBLE — QA loses its data).
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/release-keystore.jks"
+            echo "ANDROID_KEYSTORE_PATH=$GITHUB_WORKSPACE/release-keystore.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 not set — APK will be signed with an ephemeral debug key and won't upgrade-install over signed QA builds"
+          fi
 
       - name: Generate Drift code
         working-directory: frontend
