@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' if (dart.library.js) 'package:anynote/core/stubs/io_stub.dart';
 
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
@@ -857,7 +857,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ErrorReporter.instance.reportError(e, st, context: 'note_save');
       if (mounted) {
         final appError = ErrorMapper.map(e);
-        setState(() => _errorMessage = ErrorDisplay.userMessage(appError));
+        // Debug builds show the raw error (field diagnosis); release keeps
+        // the friendly copy from ErrorDisplay.
+        setState(() {
+          _errorMessage = kDebugMode
+              ? '$appError'
+              : ErrorDisplay.userMessage(appError);
+        });
       }
     } finally {
       _isSaving = false;
