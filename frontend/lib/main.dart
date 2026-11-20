@@ -106,6 +106,14 @@ void main() async {
   } catch (e, st) {
     ErrorReporter.instance.reportError(e, st, context: 'database_init');
   }
+  // Self-heal the search stack on every launch: legacy installs can carry
+  // notes_fts as a plain table (breaking FTS search — QA BUG-1) and notes
+  // saved before v2.8.10 have no stored title (QA BUG-3).
+  try {
+    await db.ensureSearchHealthy();
+  } catch (e, st) {
+    ErrorReporter.instance.reportError(e, st, context: 'search_self_heal');
+  }
 
   // Initialize API client.
   // Priority: --dart-define=API_BASE_URL > production default.

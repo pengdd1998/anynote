@@ -421,6 +421,11 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           _hasMoreSearchResults = results.length == _kPageSize;
         });
         _batchLoadTagsAndLocks(results, db);
+      }).catchError((Object e) {
+        // Never render a search failure as "no results" (QA BUG-1: an FTS
+        // error used to be swallowed here and look like an empty index).
+        if (!mounted) return;
+        AppSnackBar.info(context, message: e.toString());
       });
     });
   }

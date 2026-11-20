@@ -70,32 +70,6 @@ void main() {
       expect(db.schemaVersion, 23);
     });
 
-    test('encryption key can be set and cleared', () {
-      // These are static methods that should not throw.
-      AppDatabase.setEncryptionKey('0' * 64);
-      AppDatabase.clearEncryptionKey();
-      // No assertion needed -- just verifying no exceptions.
-    });
-  });
-
-  // -- Encryption Key Management --
-
-  group('AppDatabase encryption key', () {
-    test('setEncryptionKey accepts hex string', () {
-      // Should not throw.
-      AppDatabase.setEncryptionKey(
-        'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4'
-        'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4',
-      );
-      AppDatabase.clearEncryptionKey();
-    });
-
-    test('clearEncryptionKey resets to null', () {
-      AppDatabase.setEncryptionKey('ab' * 32);
-      AppDatabase.clearEncryptionKey();
-      // After clearing, the database should open without encryption.
-      // No assertion needed -- the key is an internal static field.
-    });
   });
 
   // -- Database Factory --

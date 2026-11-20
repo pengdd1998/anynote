@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:drift_flutter/drift_flutter.dart' as drift_flutter;
 
 // Native database helpers: conditionally replaced with stub on web.
@@ -66,23 +66,6 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.e);
-
-  /// Set the SQLCipher encryption key derived from the user's master key.
-  ///
-  /// Call this after the crypto service is unlocked (post-login or post-app-
-  /// launch). The key is a hex string produced by [CryptoService.deriveDatabaseKey].
-  /// On the next database connection, the PRAGMA key will be applied.
-  ///
-  /// For backward compatibility, existing unencrypted databases will continue
-  /// to open without a key until this method is called.
-  static void setEncryptionKey(String hexKey) {
-    _dbEncryptionKey = hexKey;
-  }
-
-  /// Clear the SQLCipher encryption key (e.g. on logout).
-  static void clearEncryptionKey() {
-    _dbEncryptionKey = null;
-  }
 
   @override
   int get schemaVersion => 23;
@@ -329,6 +312,88 @@ class AppDatabase extends _$AppDatabase {
     ''');
   }
 
+  /// Self-heal the search stack at startup (BUG-1 from the 2026-11 QA
+  /// report). Idempotent and cheap; call once after opening the database.
+  ///
+  /// 1. If `notes_fts` exists but is NOT an FTS5 virtual table (legacy
+  ///    installs created it as a plain table via `createAll()`, and the
+  ///    onUpgrade path never recreated it), rebuild it as a real FTS5 table
+  ///    and reindex. If the rebuild itself fails (SQLite build without the
+  ///    FTS5 module), fall back to recreating the plain table so note saves
+  ///    keep working; search then degrades to the DAO's LIKE fallback.
+  /// 2. Backfill `plain_title` from the first content line for notes saved
+  ///    by versions that never persisted a title (BUG-3), then refresh the
+  ///    FTS index so title queries hit the repaired data.
+  Future<void> ensureSearchHealthy() async {
+    // -- 1. notes_fts schema check -------------------------------------
+    try {
+      final masterRow = await customSelect(
+        "SELECT sql FROM sqlite_master WHERE name = 'notes_fts'",
+      ).getSingle();
+      final sql = (masterRow.data['sql'] as String? ?? '').toLowerCase();
+      if (!sql.contains('using fts5')) {
+        await _recreateFtsTable();
+      }
+    } on Exception catch (e) {
+      // _recreateFtsTable threw — most plausibly a SQLite build without
+      // the FTS5 module. Restore a plain table (schema-compatible with
+      // _updateFts writes); search falls back to the DAO's LIKE scan.
+      try {
+        await customStatement('DROP TABLE IF EXISTS notes_fts');
+        await customStatement('''
+          CREATE TABLE IF NOT EXISTS notes_fts (
+            note_id TEXT NOT NULL PRIMARY KEY,
+            content TEXT NOT NULL,
+            title TEXT
+          );
+        ''');
+        await rebuildFtsIndex();
+      } on Exception catch (e2) {
+        debugPrint('[AppDatabase] FTS self-heal failed: $e / $e2');
+      }
+    }
+
+    // -- 2. plain_title backfill ---------------------------------------
+    try {
+      final rows = await customSelect(
+        'SELECT id, plain_content FROM notes '
+        'WHERE plain_title IS NULL AND plain_content IS NOT NULL '
+        'AND deleted_at IS NULL',
+      ).get();
+      var backfilled = 0;
+      for (final row in rows) {
+        final content = row.data['plain_content'] as String? ?? '';
+        final title = derivePlainTitle(content);
+        if (title == null || title.isEmpty) continue;
+        await customStatement(
+          'UPDATE notes SET plain_title = ? WHERE id = ?',
+          [title, row.data['id']],
+        );
+        backfilled++;
+      }
+      if (backfilled > 0) {
+        await rebuildFtsIndex();
+      }
+    } on Exception catch (e) {
+      debugPrint('[AppDatabase] plain_title backfill failed: $e');
+    }
+  }
+
+  /// Derive a display/search title from note content: first non-empty line,
+  /// markdown heading markers stripped, capped at 80 chars. Returns null for
+  /// blank content. Kept in step with the editor's own title derivation.
+  static String? derivePlainTitle(String plainText) {
+    for (final raw in plainText.split('\n')) {
+      var line = raw.trim();
+      if (line.isEmpty) continue;
+      line = line.replaceFirst(RegExp(r'^#{1,6}\s*'), '').trim();
+      if (line.isEmpty) continue;
+      if (line.length > 80) line = line.substring(0, 80);
+      return line;
+    }
+    return null;
+  }
+
   /// Seed the three built-in post templates. Idempotent (INSERT OR IGNORE).
   ///
   /// The canonical wording lives in `post_template_seed.dart`
@@ -354,21 +419,14 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-/// Optional SQLCipher encryption key (hex-encoded 32-byte key).
+/// Open database connection.
 ///
-/// Set by [AppDatabase.setEncryptionKey] after the crypto service is unlocked.
-/// When null, the database opens without encryption (backward-compatible with
-/// existing installations). When set, PRAGMA key is issued on every connection
-/// so that new installations get full-database encryption at rest.
-String? _dbEncryptionKey;
-
-/// Open database connection with optional SQLCipher encryption.
-///
-/// On native platforms, creates a [NativeDatabase] with a [setup] callback
-/// that issues PRAGMA key when an encryption key has been provided.
-/// On web, delegates to [drift_flutter.driftDatabase] (SQLCipher is not
-/// available in the browser; reliance on origin isolation and E2E encryption
-/// of synced content provides the security boundary instead).
+/// On native platforms this opens an SQLCipher-encrypted database (key
+/// managed inside database_native.dart; legacy plaintext databases are
+/// migrated in place on first open). On web, delegates to
+/// [drift_flutter.driftDatabase] (SQLCipher is not available in the browser;
+/// reliance on origin isolation and E2E encryption of synced content
+/// provides the security boundary instead).
 QueryExecutor _openConnection() {
   // Web: no native SQLite, so use the drift_flutter default (IndexedDB/OPFS).
   if (kIsWeb) {
@@ -376,5 +434,5 @@ QueryExecutor _openConnection() {
   }
 
   // Native: use SQLite via the platform-specific helper.
-  return openNativeDatabase(_dbEncryptionKey);
+  return openNativeDatabase();
 }

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import '../../../features/notes/domain/search_query_parser.dart';
 import '../tables.dart';
 import '../app_database.dart';
@@ -764,22 +765,31 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   }
 
   /// Update FTS5 index for a single note.
+  ///
+  /// Failures are swallowed deliberately: a broken/absent notes_fts (legacy
+  /// plain table, missing FTS5 module) must never fail the note save itself.
+  /// The index is rebuilt from `notes` by AppDatabase.ensureSearchHealthy()
+  /// at startup and search falls back to a LIKE scan meanwhile.
   Future<void> _updateFts(String noteId, String content, String? title) async {
-    // FTS5 virtual tables restrict DELETE/UPDATE WHERE clauses to the `rowid`
-    // column only — a bare `WHERE note_id = ?` throws on a virtual table
-    // (it worked only because notes_fts used to be a *regular* table). Use a
-    // rowid subquery: the inner SELECT may filter on FTS5 columns, and the
-    // outer DELETE references rowid. This form is valid on both virtual and
-    // regular tables, so it's safe regardless of schema state.
-    await customStatement(
-      'DELETE FROM notes_fts WHERE rowid IN '
-      '(SELECT rowid FROM notes_fts WHERE note_id = ?)',
-      [noteId],
-    );
-    await customStatement(
-      'INSERT INTO notes_fts (note_id, content, title) VALUES (?, ?, ?)',
-      [noteId, content, title ?? ''],
-    );
+    try {
+      // FTS5 virtual tables restrict DELETE/UPDATE WHERE clauses to the `rowid`
+      // column only — a bare `WHERE note_id = ?` throws on a virtual table
+      // (it worked only because notes_fts used to be a *regular* table). Use a
+      // rowid subquery: the inner SELECT may filter on FTS5 columns, and the
+      // outer DELETE references rowid. This form is valid on both virtual and
+      // regular tables, so it's safe regardless of schema state.
+      await customStatement(
+        'DELETE FROM notes_fts WHERE rowid IN '
+        '(SELECT rowid FROM notes_fts WHERE note_id = ?)',
+        [noteId],
+      );
+      await customStatement(
+        'INSERT INTO notes_fts (note_id, content, title) VALUES (?, ?, ?)',
+        [noteId, content, title ?? ''],
+      );
+    } catch (e) {
+      debugPrint('[NotesDao] FTS index update failed (search falls back to LIKE): $e');
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -996,31 +1006,73 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   /// Handles query sanitization and temp table creation internally.
   /// Returns an empty list if the query is empty or matches nothing.
   /// The caller can use the returned IDs for further filtering or sorting.
+  ///
+  /// Falls back to a LIKE scan over plain_content/plain_title when the FTS
+  /// path throws — a legacy install can carry `notes_fts` as a plain table
+  /// (or an SQLite build without FTS5), and previously that made MATCH throw
+  /// and every search render as "no results" (BUG-1 in the 2026-11 QA
+  /// report). The fallback keeps search working regardless of schema state.
   Future<List<String>> ftsSearchNoteIds(String query) async {
     final sanitized = _sanitizeFtsQuery(query);
     if (sanitized.isEmpty) return [];
 
-    await customStatement(
-      'CREATE TEMP TABLE IF NOT EXISTS _fts_id_lookup '
-      '(note_id TEXT NOT NULL PRIMARY KEY)',
-    );
     try {
-      await customStatement('DELETE FROM _fts_id_lookup');
       await customStatement(
-        'INSERT INTO _fts_id_lookup (note_id) '
-        'SELECT note_id FROM notes_fts WHERE notes_fts MATCH ?',
-        [sanitized],
+        'CREATE TEMP TABLE IF NOT EXISTS _fts_id_lookup '
+        '(note_id TEXT NOT NULL PRIMARY KEY)',
       );
+      try {
+        await customStatement('DELETE FROM _fts_id_lookup');
+        await customStatement(
+          'INSERT INTO _fts_id_lookup (note_id) '
+          'SELECT note_id FROM notes_fts WHERE notes_fts MATCH ?',
+          [sanitized],
+        );
 
-      final rows = await customSelect(
-        'SELECT note_id FROM _fts_id_lookup',
-        readsFrom: {notes},
-      ).get();
+        final rows = await customSelect(
+          'SELECT note_id FROM _fts_id_lookup',
+          readsFrom: {notes},
+        ).get();
 
-      return rows.map((r) => r.read<String>('note_id')).toList();
-    } finally {
-      await customStatement('DROP TABLE IF EXISTS _fts_id_lookup');
+        return rows.map((r) => r.read<String>('note_id')).toList();
+      } finally {
+        await customStatement('DROP TABLE IF EXISTS _fts_id_lookup');
+      }
+    } catch (e) {
+      // FTS unavailable or broken (plain table, missing FTS5 module, …).
+      // Fall back to a plain LIKE scan so search stays usable.
+      return _likeSearchNoteIds(query);
     }
+  }
+
+  /// Case-insensitive-ish substring search over plaintext columns. Used as
+  /// the fallback when the FTS5 index is unavailable or broken. All tokens
+  /// must match (same semantics as the sanitized FTS query).
+  Future<List<String>> _likeSearchNoteIds(String query) async {
+    final tokens = query
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty)
+        .toList();
+    if (tokens.isEmpty) return [];
+
+    final conditions =
+        tokens.map((_) => '(plain_content LIKE ? OR plain_title LIKE ?)').join(' AND ');
+    final variables = <Variable>[
+      for (final t in tokens) ...[
+        Variable.withString('%$t%'),
+        Variable.withString('%$t%'),
+      ],
+    ];
+
+    final rows = await customSelect(
+      'SELECT id FROM notes '
+      'WHERE deleted_at IS NULL AND $conditions',
+      variables: variables,
+      readsFrom: {notes},
+    ).get();
+
+    return rows.map((r) => r.read<String>('id')).toList();
   }
 
   // ---------------------------------------------------------------------------
