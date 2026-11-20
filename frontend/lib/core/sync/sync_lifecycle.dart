@@ -177,19 +177,9 @@ final syncLifecycleProvider = Provider<SyncLifecycle>((ref) {
         if (!crypto.isUnlocked) {
           await crypto.unlock();
         }
-        // Derive and set the database encryption key now that crypto is
-        // unlocked. The key is used for SQLCipher PRAGMA on the next
-        // database connection.
-        if (crypto.isUnlocked) {
-          try {
-            final dbKey = await crypto.deriveDatabaseKey();
-            AppDatabase.setEncryptionKey(dbKey);
-          } catch (e) {
-            debugPrint(
-              '[SyncLifecycle] failed to derive database key: $e',
-            );
-          }
-        }
+        // Note: the local database is now encrypted with a device-generated
+        // key managed in database_native.dart (available before login);
+        // no per-session key setup is needed here.
       });
       lifecycle.start();
 
