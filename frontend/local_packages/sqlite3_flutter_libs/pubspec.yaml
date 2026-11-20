@@ -1,0 +1,18 @@
+name: sqlite3_flutter_libs
+description: >-
+  Local stand-in for the real sqlite3_flutter_libs package. drift_flutter
+  depends on sqlite3_flutter_libs, whose Android plugin class clashes with
+  sqlcipher_flutter_libs (this app encrypts the database with SQLCipher —
+  see lib/core/database/database_native.dart). Per the drift author's
+  workaround (simolus3/drift#3702), this stub satisfies drift_flutter's
+  dependency while contributing no native plugin: the old-Android
+  workaround is delegated to sqlcipher_flutter_libs.
+version: 0.5.24
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqlcipher_flutter_libs: 0.6.8

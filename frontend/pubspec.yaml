@@ -101,6 +101,14 @@ dependencies:
 
   sqlite3: ^2.3.0
   flutter_staggered_grid_view: ^0.7.0
+
+# drift_flutter hard-depends on sqlite3_flutter_libs, whose Android plugin
+# class clashes with sqlcipher_flutter_libs (the database is encrypted —
+# see local_packages/sqlite3_flutter_libs/README stub and drift#3702).
+dependency_overrides:
+  sqlite3_flutter_libs:
+    path: local_packages/sqlite3_flutter_libs
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

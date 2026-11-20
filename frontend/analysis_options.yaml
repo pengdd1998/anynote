@@ -24,5 +24,9 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    # Local dependency stub (replaces the real sqlite3_flutter_libs via
+    # dependency_overrides) — it is its own package; the app's analysis
+    # context can't resolve its imports.
+    - "local_packages/**"
   errors:
     invalid_annotation_target: ignore
