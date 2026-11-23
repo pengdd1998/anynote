@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -140,5 +141,48 @@ func TestValidate_ErrorsBeforeWarnings(t *testing.T) {
 	}
 	if problems[0].Severity != SeverityError {
 		t.Errorf("first problem should be the error, got %v", problems[0])
+	}
+}
+
+func TestGuides(t *testing.T) {
+	guides := Guides()
+
+	wantOrder := []string{"xiaohongshu", "wechat", "zhihu", "medium", "wordpress", "webhook"}
+	if len(guides) != len(wantOrder) {
+		t.Fatalf("got %d guides, want %d", len(guides), len(wantOrder))
+	}
+	for i, g := range guides {
+		if g.ID != wantOrder[i] {
+			t.Errorf("guide %d = %q, want %q", i, g.ID, wantOrder[i])
+		}
+		// A guide must agree with the rules that are actually enforced.
+		s, ok := For(g.ID)
+		if !ok {
+			t.Fatalf("%s: no spec", g.ID)
+		}
+		if g.TitleMax != s.Fields["title"].Max || g.ContentMax != s.Fields["content"].Max {
+			t.Errorf("%s: guide limits %d/%d disagree with the spec %d/%d",
+				g.ID, g.TitleMax, g.ContentMax, s.Fields["title"].Max, s.Fields["content"].Max)
+		}
+		if g.MaxTags != s.MaxTags || g.LinksAllowed != s.LinksAllowed {
+			t.Errorf("%s: guide tags/links %d/%v disagree with the spec %d/%v",
+				g.ID, g.MaxTags, g.LinksAllowed, s.MaxTags, s.LinksAllowed)
+		}
+		// Every platform must ship a writing brief, or the composition step
+		// silently falls back to platform-agnostic prompts for it.
+		if len(g.Guidance) == 0 {
+			t.Errorf("%s: no guidance", g.ID)
+		}
+		for _, line := range g.Guidance {
+			if strings.TrimSpace(line) == "" {
+				t.Errorf("%s: blank guidance line", g.ID)
+			}
+		}
+	}
+	// The limits the brief states must not contradict the limits enforced.
+	xhs, _ := For("xiaohongshu")
+	joined := strings.Join(xhs.Guidance, "\n")
+	if !strings.Contains(joined, fmt.Sprintf("%d 字以内", xhs.Fields["title"].Max)) {
+		t.Errorf("xiaohongshu guidance should state the %d-character title cap: %q", xhs.Fields["title"].Max, joined)
 	}
 }

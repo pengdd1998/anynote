@@ -153,6 +153,16 @@ func (s *publishService) Publish(ctx context.Context, userID uuid.UUID, req Publ
 		Content:  encContent,
 		Status:   "pending",
 	}
+	// Optional reference to the generated-content item this post came from.
+	// The handler has already validated the format; a nil pointer is stored
+	// as NULL.
+	if req.ContentItemID != "" {
+		itemID, err := uuid.Parse(req.ContentItemID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid content_item_id: %w", err)
+		}
+		log.ContentItemID = &itemID
+	}
 
 	if err := s.logRepo.Create(ctx, log); err != nil {
 		return nil, err

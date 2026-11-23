@@ -30,6 +30,46 @@ type Spec struct {
 	// Notes documents platform quirks worth remembering when touching the
 	// adapter for this platform.
 	Notes string
+	// Guidance is the writing brief for this platform: what the AI writing
+	// step is told, and what the editor shows as hints. Each item is one
+	// self-contained sentence, ordered the way a writer works (audience and
+	// tone first, structure, then the things that get a post rejected).
+	Guidance []string
+}
+
+// Guide is the client-facing view of a [Spec]: the limits an editor enforces
+// while the user types, plus the writing brief.
+type Guide struct {
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	TitleMax     int      `json:"title_max"`
+	ContentMax   int      `json:"content_max"`
+	MaxTags      int      `json:"max_tags"`
+	LinksAllowed bool     `json:"links_allowed"`
+	Guidance     []string `json:"guidance"`
+}
+
+// Guides lists every supported platform with a declared spec, in a stable
+// order (the order the client offers them in).
+func Guides() []Guide {
+	ids := []string{"xiaohongshu", "wechat", "zhihu", "medium", "wordpress", "webhook"}
+	out := make([]Guide, 0, len(ids))
+	for _, id := range ids {
+		s, ok := specs[id]
+		if !ok {
+			continue
+		}
+		out = append(out, Guide{
+			ID:           s.ID,
+			Name:         s.Name,
+			TitleMax:     s.Fields["title"].Max,
+			ContentMax:   s.Fields["content"].Max,
+			MaxTags:      s.MaxTags,
+			LinksAllowed: s.LinksAllowed,
+			Guidance:     s.Guidance,
+		})
+	}
+	return out
 }
 
 // Severity of a validation problem: "error" blocks the publish, "warning"
@@ -62,6 +102,14 @@ var specs = map[string]Spec{
 		MaxTags:      10,
 		LinksAllowed: false,
 		Notes:        "无链接平台：限流最凶。标题超 20 字会被平台截断；正文不放链接/微信号/引流话术。",
+		Guidance: []string{
+			"写给刷手机的人：像跟朋友讲这周干了什么，第一句就要让人想点开。",
+			"口语化短句和分段，少用 emoji、少列清单；用真实例子和踩过的坑代替说理。",
+			"标题 20 字以内，直接说结论或好处，不做标题党。",
+			"正文 1000 字以内；末尾放 3 到 5 个 #话题，第一个是账号名。",
+			"不能出现链接、微信号或“评论区领、主页搜”这类引流话术。",
+			"不要写 AI 模型或厂商的名字（如 Claude、ChatGPT、GPT、Gemini），统称 Agent 或 AI，否则会被限流。",
+		},
 	},
 	"wechat": {
 		ID:   "wechat",
@@ -73,6 +121,12 @@ var specs = map[string]Spec{
 		MaxTags:      10,
 		LinksAllowed: true,
 		Notes:        "长文平台，链接可放；标题上限 64 字。",
+		Guidance: []string{
+			"写给订阅了公众号的读者：可以展开讲，一篇文章讲透一个主题。",
+			"开头一两段交代这篇文章解决什么问题，再用小标题分节。",
+			"标题 64 字以内；重要结论放段落开头，方便只扫小标题的读者。",
+			"正文 20000 字以内；可以放链接和参考出处。",
+		},
 	},
 	"zhihu": {
 		ID:   "zhihu",
@@ -84,6 +138,12 @@ var specs = map[string]Spec{
 		MaxTags:      10,
 		LinksAllowed: true,
 		Notes:        "长文平台，链接可放。",
+		Guidance: []string{
+			"写给带着问题来搜索的人：先给结论，再给论证和细节。",
+			"用小标题组织论证；有数据、来源或延伸阅读就放链接。",
+			"标题 100 字以内，用具体的问句或判断，不用空泛的大词。",
+			"正文 50000 字以内，长文优先于短文。",
+		},
 	},
 	"medium": {
 		ID:   "medium",
@@ -95,6 +155,12 @@ var specs = map[string]Spec{
 		MaxTags:      5,
 		LinksAllowed: true,
 		Notes:        "Medium 标签最多 5 个。",
+		Guidance: []string{
+			"写给愿意读长文的英文或跨语言读者：一个清晰的主线，段落短。",
+			"用小标题和空行留白；开头先讲为什么这个问题值得关心。",
+			"标题 150 字以内；标签最多 5 个，只放真正相关的。",
+			"正文 50000 字以内；可以放链接。",
+		},
 	},
 	"wordpress": {
 		ID:   "wordpress",
@@ -106,6 +172,12 @@ var specs = map[string]Spec{
 		MaxTags:      30,
 		LinksAllowed: true,
 		Notes:        "自托管站点，规则最宽松。",
+		Guidance: []string{
+			"写给通过搜索引擎或订阅来到博客的读者：结构清晰，便于长期阅读。",
+			"使用小标题、列表和代码块；给出可操作的步骤。",
+			"标题 200 字以内；标签最多 30 个，优先复用已有的分类和标签。",
+			"正文 100000 字以内；可以放链接和图片。",
+		},
 	},
 	"webhook": {
 		ID:   "webhook",
@@ -117,6 +189,10 @@ var specs = map[string]Spec{
 		MaxTags:      50,
 		LinksAllowed: true,
 		Notes:        "自托管管道透传，只保留传输层上限。",
+		Guidance: []string{
+			"透传到你自己的接口，内容格式由接收方决定。",
+			"保持纯文本或 Markdown，不要包含平台特有的排版。",
+		},
 	},
 }
 

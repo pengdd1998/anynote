@@ -93,9 +93,12 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 	}
 
 	// Rate limiters
-	authRateLimiter := service.NewRateLimiter(20, time.Minute)     // 20 req/min per IP
-	syncRateLimiter := service.NewRateLimiter(30, time.Minute)     // 30 req/min per user
-	publishRateLimiter := service.NewRateLimiter(10, time.Minute)  // 10 req/min per user
+	authRateLimiter := service.NewRateLimiter(20, time.Minute)    // 20 req/min per IP
+	syncRateLimiter := service.NewRateLimiter(30, time.Minute)    // 30 req/min per user
+	publishRateLimiter := service.NewRateLimiter(10, time.Minute) // 10 req/min per user
+	// /publish/platforms and /publish/validate: read-only, hit repeatedly
+	// while a post is being written.
+	publishRuleRateLimiter := service.NewRateLimiter(60, time.Minute)
 	discoverRateLimiter := service.NewRateLimiter(60, time.Minute) // 60 req/min per IP
 	aiRateLimiter := service.NewRateLimiter(20, time.Minute)       // 20 req/min per user
 	llmRateLimiter := service.NewRateLimiter(10, time.Minute)      // 10 req/min per user
@@ -172,6 +175,12 @@ func Router(cfg *config.Config, services *Services, healthH *HealthHandler) http
 			// Publish (rate limited by user)
 			r.With(RateLimitMiddleware(publishRateLimiter, UserIDKeyFunc, time.Minute)).Post("/publish", publishH.Publish)
 			r.With(RateLimitMiddleware(publishRateLimiter, UserIDKeyFunc, time.Minute)).Get("/publish/history", publishH.History)
+			// Publishing rules per platform (limits + writing brief), for the
+			// editor and the AI composition step.
+			r.With(RateLimitMiddleware(publishRuleRateLimiter, UserIDKeyFunc, time.Minute)).Get("/publish/platforms", publishH.Platforms)
+			// Pre-publish check for an editor: called as the user types, so it
+			// gets a more generous budget than publishing itself.
+			r.With(RateLimitMiddleware(publishRuleRateLimiter, UserIDKeyFunc, time.Minute)).Post("/publish/validate", publishH.Validate)
 			r.With(RateLimitMiddleware(publishRateLimiter, UserIDKeyFunc, time.Minute)).Get("/publish/{id}", publishH.GetByID)
 
 			// Platform connections

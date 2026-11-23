@@ -47,9 +47,14 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := uuid.Parse(req.ContentItemID); err != nil {
-		writeError(w, r, http.StatusBadRequest, "validation_error", "content_item_id must be a valid UUID")
-		return
+	// An optional reference to the generated-content item this post came
+	// from. Publishing straight from a note or a draft has none, so it must
+	// not be required (requiring it made every client publish fail with 400).
+	if req.ContentItemID != "" {
+		if _, err := uuid.Parse(req.ContentItemID); err != nil {
+			writeError(w, r, http.StatusBadRequest, "validation_error", "content_item_id must be a valid UUID")
+			return
+		}
 	}
 
 	if req.Platform == "" {
@@ -93,27 +98,10 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Platform-specific publishing rules (field lengths, link policies,
-	// content compliance) — adapted from maitian; see
-	// doc/tech-plan-2026-11-publish-spec.md. error-level problems block the
-	// publish; warnings ride along in the 202 response.
-	var warnings []spec.Problem
-	if platformSpec, hasSpec := spec.For(req.Platform); hasSpec {
-		problems := spec.Validate(platformSpec, req.Title, req.Content, req.Tags)
-		errs := spec.Errors(problems)
-		if len(errs) > 0 {
-			domainProblems := make([]domain.ValidationProblem, len(errs))
-			for i, p := range errs {
-				domainProblems[i] = domain.ValidationProblem{
-					Field:    p.Field,
-					Severity: string(p.Severity),
-					Message:  p.Message,
-				}
-			}
-			writeValidationProblems(w, r, "validation_error", errs[0].Message, domainProblems)
-			return
-		}
-		warnings = spec.Warnings(problems)
+	errs, warnings := checkPlatformSpec(req.Platform, req.Title, req.Content, req.Tags)
+	if len(errs) > 0 {
+		writeValidationProblems(w, r, "validation_error", errs[0].Message, toDomainProblems(errs))
+		return
 	}
 
 	log, err := h.publishService.Publish(r.Context(), userID, service.PublishRequest{
@@ -143,6 +131,79 @@ func (h *PublishHandler) Publish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusAccepted, log)
+}
+
+// checkPlatformSpec applies the publishing rules of [platform]. The first
+// slice holds findings that block the publish, the second the advisory ones.
+// A platform without a declared spec has no platform-specific findings.
+func checkPlatformSpec(platform, title, content string, tags []string) (errors, warnings []spec.Problem) {
+	platformSpec, ok := spec.For(platform)
+	if !ok {
+		return nil, nil
+	}
+	problems := spec.Validate(platformSpec, title, content, tags)
+	return spec.Errors(problems), spec.Warnings(problems)
+}
+
+func toDomainProblems(problems []spec.Problem) []domain.ValidationProblem {
+	out := make([]domain.ValidationProblem, len(problems))
+	for i, p := range problems {
+		out[i] = domain.ValidationProblem{
+			Field:    p.Field,
+			Severity: string(p.Severity),
+			Message:  p.Message,
+		}
+	}
+	return out
+}
+
+// Platforms lists every platform that can be published to together with its
+// rules: the limits an editor enforces while the user types, and the writing
+// brief the AI composition step follows. Rules live in one place
+// (internal/platform/spec) and reach the client only through here.
+func (h *PublishHandler) Platforms(w http.ResponseWriter, r *http.Request) {
+	if _, err := parseUserID(r); err != nil {
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+	writeJSON(w, http.StatusOK, spec.Guides())
+}
+
+// Validate runs the publish checks without publishing anything, so an editor
+// can show what is wrong while the user is still writing. Empty fields are
+// reported as problems rather than rejected up front.
+func (h *PublishHandler) Validate(w http.ResponseWriter, r *http.Request) {
+	if _, err := parseUserID(r); err != nil {
+		writeError(w, r, http.StatusUnauthorized, "unauthorized", "")
+		return
+	}
+
+	var req publishRequest
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid_request", "Failed to parse request body")
+		return
+	}
+	if req.Platform == "" {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "Platform is required")
+		return
+	}
+	if !h.publishService.IsValidPlatform(req.Platform) {
+		writeError(w, r, http.StatusBadRequest, "validation_error", "Unsupported platform")
+		return
+	}
+
+	errs, warns := checkPlatformSpec(req.Platform, req.Title, req.Content, req.Tags)
+	writeJSON(w, http.StatusOK, validationResponse{
+		Valid:    len(errs) == 0,
+		Problems: append(toDomainProblems(errs), toDomainProblems(warns)...),
+	})
+}
+
+type validationResponse struct {
+	Valid    bool                       `json:"valid"`
+	Problems []domain.ValidationProblem `json:"problems"`
 }
 
 func (h *PublishHandler) History(w http.ResponseWriter, r *http.Request) {

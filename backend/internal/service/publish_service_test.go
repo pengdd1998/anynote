@@ -131,7 +131,7 @@ func TestPublishService_Publish_Success(t *testing.T) {
 	userID := uuid.New()
 	log, err := svc.Publish(context.Background(), userID, PublishRequest{
 		Platform:      "xiaohongshu",
-		ContentItemID: "item-123",
+		ContentItemID: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 		Title:         "My Note",
 		Content:       "Note content",
 		Tags:          []string{"test"},
@@ -147,6 +147,11 @@ func TestPublishService_Publish_Success(t *testing.T) {
 	}
 	if log.UserID != userID {
 		t.Errorf("UserID = %v, want %v", log.UserID, userID)
+	}
+	// The reference must actually reach the stored log: the service used to
+	// drop it, so content_item_id was never written whatever was sent.
+	if log.ContentItemID == nil || log.ContentItemID.String() != "a1b2c3d4-e5f6-7890-abcd-ef1234567890" {
+		t.Errorf("ContentItemID = %v, want the requested item", log.ContentItemID)
 	}
 	if log.ID == uuid.Nil {
 		t.Error("ID should be set")
@@ -331,7 +336,7 @@ func TestPublishService_Publish_PayloadContents(t *testing.T) {
 	userID := uuid.New()
 	log, err := svc.Publish(context.Background(), userID, PublishRequest{
 		Platform:      "xiaohongshu",
-		ContentItemID: "item-456",
+		ContentItemID: "b1b2c3d4-e5f6-7890-abcd-ef1234567890",
 		Title:         "Payload Test",
 		Content:       "Content here",
 		Tags:          []string{"tag1", "tag2"},
@@ -432,4 +437,46 @@ func (m *mockPushServiceForPublish) wasCalled() bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.sendPushCalled
+}
+
+// Publishing straight from a note or a draft carries no generated-content
+// item; the stored log then has no reference (NULL in the database) and
+// publishing proceeds as usual.
+func TestPublishService_Publish_WithoutContentItemID(t *testing.T) {
+	logRepo := newMockPublishLogRepo()
+	queue := &mockQueueEnqueuer{}
+	svc := NewPublishService(logRepo, queue)
+
+	log, err := svc.Publish(context.Background(), uuid.New(), PublishRequest{
+		Platform: "xiaohongshu",
+		Title:    "My Note",
+		Content:  "Note content",
+	})
+
+	if err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+	if log.ContentItemID != nil {
+		t.Errorf("ContentItemID = %v, want nil", log.ContentItemID)
+	}
+	if !queue.called {
+		t.Error("queue.EnqueuePublishJob should have been called")
+	}
+}
+
+func TestPublishService_Publish_MalformedContentItemID(t *testing.T) {
+	queue := &mockQueueEnqueuer{}
+	svc := NewPublishService(newMockPublishLogRepo(), queue)
+
+	if _, err := svc.Publish(context.Background(), uuid.New(), PublishRequest{
+		Platform:      "xiaohongshu",
+		ContentItemID: "item-123",
+		Title:         "My Note",
+		Content:       "Note content",
+	}); err == nil {
+		t.Fatal("Publish with a malformed content_item_id should fail, got nil error")
+	}
+	if queue.called {
+		t.Error("nothing must be enqueued for a rejected request")
+	}
 }

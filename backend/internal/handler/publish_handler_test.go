@@ -70,6 +70,8 @@ func setupPublishRouter(svc *mockPublishService) *chi.Mux {
 		r.Use(AuthMiddleware(testJWTSecret))
 		r.Post("/api/v1/publish", h.Publish)
 		r.Get("/api/v1/publish/history", h.History)
+		r.Get("/api/v1/publish/platforms", h.Platforms)
+		r.Post("/api/v1/publish/validate", h.Validate)
 		r.Get("/api/v1/publish/{id}", h.GetByID)
 	})
 
