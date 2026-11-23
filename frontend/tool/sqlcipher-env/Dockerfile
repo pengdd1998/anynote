@@ -20,6 +20,10 @@
 #
 # `flutter test` picks the library up automatically through
 # test/flutter_test_config.dart.
+#
+# libsodium is here for the rest of the suite, so the whole of it can run in
+# this image: the crypto, sync and end-to-end tests load the real library
+# (test/core/crypto/sodium_test_init.dart) and fail by the hundred without it.
 
 FROM ghcr.io/cirruslabs/flutter:3.41.9
 
@@ -38,7 +42,7 @@ ARG SQLCIPHER_CFLAGS="-DSQLITE_HAS_CODEC -DSQLCIPHER_CRYPTO_OPENSSL -DSQLITE_TEM
 -DSQLITE_EXTRA_INIT=sqlcipher_extra_init -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown"
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential libssl-dev tcl git ca-certificates \
+    && apt-get install -y --no-install-recommends build-essential libssl-dev tcl git ca-certificates libsodium-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 --branch "v${SQLCIPHER_VERSION}" \
