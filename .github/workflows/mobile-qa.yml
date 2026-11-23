@@ -5,6 +5,18 @@ name: Mobile QA build
 # installs in parallel with a release build (see android/app/build.gradle).
 on:
   workflow_dispatch:
+    inputs:
+      id_suffix:
+        description: >-
+          Application id suffix. ".debug" installs beside the release app.
+          Pick another one (e.g. ".qa2") when an older QA build signed with a
+          different key is still on the device: Android refuses to install
+          over it (INSTALL_FAILED_UPDATE_INCOMPATIBLE), and removing it by
+          hand through Settings is error-prone since every build is called
+          "AnyNote".
+        required: false
+        default: '.debug'
+        type: string
 
 jobs:
   debug-apk:
@@ -18,6 +30,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check the application id suffix
+        env:
+          REQUESTED_SUFFIX: ${{ inputs.id_suffix || '.debug' }}
+        # It becomes part of the application id, so it may only carry what
+        # an id segment allows.
+        run: |
+          if printf '%s' "$REQUESTED_SUFFIX" | grep -Eq '^\.[A-Za-z0-9._]+$'; then
+            echo "ID_SUFFIX=$REQUESTED_SUFFIX" >> "$GITHUB_ENV"
+          else
+            echo "::error::id_suffix must look like '.debug' — a dot, then letters, digits or dots"
+            exit 1
+          fi
 
       - name: Setup Java 17
         # Runner default Java moved to 25 (class file major 69), which this
@@ -53,7 +78,7 @@ jobs:
       - name: Build debug APK
         working-directory: frontend
         env:
-          FLUTTER_DEBUG_ID_SUFFIX: .debug
+          FLUTTER_DEBUG_ID_SUFFIX: ${{ env.ID_SUFFIX }}
         run: flutter build apk --debug --target-platform android-arm64
 
       - name: Upload APK artifact
