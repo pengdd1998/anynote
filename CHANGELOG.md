@@ -5,6 +5,60 @@ All notable changes to AnyNote will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.10] — 2026-11-24
+
+### Added
+
+- **Platform rules where you write**: before a post leaves the app it is
+  checked against its platform's limits (小红书: 20-character title,
+  1,000-character body, no links…) and compliance rules (lead-gen phrases,
+  AI model/vendor names), and the publish sheet says what to change, field
+  by field. It re-checks as you type and shows a length counter per field.
+- **Compose for the platform you will publish to**: compose offers the
+  app's real platforms (小红书, 微信公众号, 知乎, Medium, WordPress) besides
+  the generic style, and every prompt — outline, draft, adapt, refine —
+  carries that platform's writing brief and limits.
+- **Structured hand-off to publishing**: a composed draft arrives as
+  title, body and tags — the title is no longer repeated inside the body
+  and the hashtags become the post's tags — already on the platform it was
+  written for.
+- Batch tag dialog can create tags inline.
+
+### Fixed
+
+- **Saving notes after the database was converted**: the conversion below
+  lost the schema version, so an install that upgraded came up with an
+  empty note list and failed every save (seen in 2.8.0 test builds). The
+  database is now converted in place with its data verified before the
+  swap, and a failed conversion leaves the original untouched.
+- **Search**: the full-text index of installs upgraded from older versions
+  is rebuilt at startup; search falls back to a plain scan if it cannot be.
+- **Note titles** are saved with the note again (cards showed no title).
+- **Publishing from the app** always failed with a 400
+  (`content_item_id` was required); it is now optional.
+- **AI chat** no longer shows a red error screen when a request fails.
+- **Version diff** opened in its error state in debug builds.
+- **Read-aloud**: leaving a note while it was being read raised an error
+  in the background.
+- Editor back button and advanced search chips are localized
+  (en/zh/ja/ko).
+
+### Changed
+
+- **The local database is now encrypted** (SQLCipher) instead of being
+  stored as plain SQLite. An existing database is converted on first
+  launch; notes, tags and collections are kept, and a plaintext backup is
+  kept for a week.
+- Debug builds show the raw error text when a note cannot be saved, for
+  field diagnosis.
+
+### Internal
+
+- The frontend test suite passes in full (it had 45 failing tests for
+  months) and CI's `flutter test` step fails the job again. A new CI job
+  runs the database tests on a SQLCipher build that matches the Android
+  one's version and compile flags.
+
 ## [2.7.9] — 2026-08-31
 
 ### Added
