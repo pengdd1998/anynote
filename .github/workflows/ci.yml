@@ -165,6 +165,48 @@ jobs:
         continue-on-error: true
         run: flutter pub outdated
 
+  # ── Database on the shipped SQLCipher build ──────────────────────────────
+  # The local database is SQLCipher-encrypted. The job above runs the tests
+  # on the runner's plain SQLite and does not fail the build on test failures
+  # (`continue-on-error`), so it cannot tell when the app's database layer
+  # only works on plain SQLite — the 2026-11 upgrade regression that made
+  # every upgraded install unable to open its notes passed that job. This one
+  # runs the database tests inside an image whose SQLCipher matches the
+  # Android build (same version, same compile flags; see the Dockerfile) and
+  # is a hard gate.
+  database-sqlcipher:
+    name: Database on SQLCipher
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build the SQLCipher test image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend/tool/sqlcipher-env
+          file: frontend/tool/sqlcipher-env/Dockerfile
+          tags: anynote-flutter-sqlcipher:4.10.0
+          load: true
+          cache-from: type=gha,scope=sqlcipher-env
+          cache-to: type=gha,mode=max,scope=sqlcipher-env
+
+      - name: Test the database layer
+        # ANYNOTE_REQUIRE_SQLCIPHER=1 turns "no SQLCipher found, skipping
+        # those tests" (test/flutter_test_config.dart) into a hard failure,
+        # so a broken image cannot pass this job by testing nothing.
+        run: |
+          docker run --rm \
+            -e ANYNOTE_REQUIRE_SQLCIPHER=1 \
+            -v "$PWD/frontend:/app" \
+            -v pubcache:/root/.pub-cache \
+            -w /app \
+            anynote-flutter-sqlcipher:4.10.0 \
+            sh -c 'flutter pub get \
+              && dart run build_runner build --delete-conflicting-outputs \
+              && flutter test test/core/database/ --reporter expanded'
+
   # ── Integration Tests ────────────────────────────────────────────────────
   integration:
     name: Integration Tests

@@ -9,6 +9,7 @@ import 'database_native.dart'
 import 'tables.dart';
 import 'post_template_seed.dart';
 import 'daos/notes_dao.dart';
+import 'db_file_flags.dart';
 import 'daos/tags_dao.dart';
 import 'daos/collections_dao.dart';
 import 'daos/generated_contents_dao.dart';
@@ -312,27 +313,47 @@ class AppDatabase extends _$AppDatabase {
     ''');
   }
 
-  /// Self-heal the search stack at startup (BUG-1 from the 2026-11 QA
-  /// report). Idempotent and cheap; call once after opening the database.
+  /// Self-heal the search stack at startup. Idempotent and cheap; call once
+  /// after opening the database.
   ///
-  /// 1. If `notes_fts` exists but is NOT an FTS5 virtual table (legacy
-  ///    installs created it as a plain table via `createAll()`, and the
-  ///    onUpgrade path never recreated it), rebuild it as a real FTS5 table
-  ///    and reindex. If the rebuild itself fails (SQLite build without the
-  ///    FTS5 module), fall back to recreating the plain table so note saves
-  ///    keep working; search then degrades to the DAO's LIKE fallback.
-  /// 2. Backfill `plain_title` from the first content line for notes saved
+  /// 1. A database that [DbFileGuard] just encrypted has empty FTS tables
+  ///    (`sqlcipher_export` does not copy index contents) and says so through
+  ///    `PRAGMA application_id`: rebuild the index and clear the flag.
+  /// 2. If `notes_fts` exists but is NOT an FTS5 virtual table (BUG-1 from the
+  ///    2026-11 QA report: legacy installs created it as a plain table via
+  ///    `createAll()`, and the onUpgrade path never recreated it), rebuild it
+  ///    as a real FTS5 table and reindex. If the rebuild itself fails (SQLite
+  ///    build without the FTS5 module), fall back to recreating the plain
+  ///    table so note saves keep working; search then degrades to the DAO's
+  ///    LIKE fallback.
+  /// 3. Backfill `plain_title` from the first content line for notes saved
   ///    by versions that never persisted a title (BUG-3), then refresh the
   ///    FTS index so title queries hit the repaired data.
   Future<void> ensureSearchHealthy() async {
+    // -- 0. index emptied by the plaintext → encrypted migration ------------
+    try {
+      final row = await customSelect('PRAGMA application_id').getSingle();
+      if (row.read<int>('application_id') == kIndexRebuildPending) {
+        await rebuildFtsIndex();
+        await customStatement('PRAGMA application_id = 0');
+      }
+    } on Exception catch (e) {
+      debugPrint('[AppDatabase] index rebuild after migration failed: $e');
+    }
+
     // -- 1. notes_fts schema check -------------------------------------
     try {
-      final masterRow = await customSelect(
+      final masterRows = await customSelect(
         "SELECT sql FROM sqlite_master WHERE name = 'notes_fts'",
-      ).getSingle();
-      final sql = (masterRow.data['sql'] as String? ?? '').toLowerCase();
-      if (!sql.contains('using fts5')) {
-        await _recreateFtsTable();
+      ).get();
+      // An absent table is left to the schema migration: it either creates
+      // it on a fresh database or drops it on purpose (pre-v23 upgrades).
+      if (masterRows.isNotEmpty) {
+        final sql =
+            (masterRows.single.data['sql'] as String? ?? '').toLowerCase();
+        if (!sql.contains('using fts5')) {
+          await _recreateFtsTable();
+        }
       }
     } on Exception catch (e) {
       // _recreateFtsTable threw — most plausibly a SQLite build without
