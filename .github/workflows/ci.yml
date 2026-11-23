@@ -137,7 +137,9 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Test with coverage
-        continue-on-error: true
+        # A real gate since 2026-11-24. It used to be continue-on-error
+        # because the suite had 45 tests that had failed for months; that
+        # also hid five more broken on 2026-11-20 for days.
         run: flutter test --coverage
 
       - name: Check coverage threshold
