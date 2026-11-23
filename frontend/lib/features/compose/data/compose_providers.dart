@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error_mapper.dart';
+import '../../../core/error/exceptions.dart' show RateLimitException;
 import '../../publish/data/publish_providers.dart';
 import '../../publish/domain/publish_rules.dart';
 import '../../settings/data/settings_providers.dart';
@@ -433,14 +434,29 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         isLoading: false,
       );
     } catch (e) {
-      final appError = ErrorMapper.map(e);
       state = state.copyWith(
         isLoading: false,
-        error: appError.message,
+        error: _failureMessage(e, quotaExceededMessage),
       );
     } finally {
       _isProcessing = false;
     }
+  }
+
+  /// What to show when an AI step fails.
+  ///
+  /// The AI proxy answers an exhausted quota with a 429 whose body carries
+  /// nothing but the code `quota_exceeded`. Shown as it is, that tells the
+  /// user nothing; the screens already have a sentence for the case, so
+  /// that is what they get.
+  static String _failureMessage(Object e, String? quotaExceededMessage) {
+    final appError = ErrorMapper.map(e);
+    if (quotaExceededMessage != null &&
+        appError is RateLimitException &&
+        appError.message == 'quota_exceeded') {
+      return quotaExceededMessage;
+    }
+    return appError.message;
   }
 
   /// Toggle selection of a cluster by index.
@@ -501,10 +517,9 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         isLoading: false,
       );
     } catch (e) {
-      final appError = ErrorMapper.map(e);
       state = state.copyWith(
         isLoading: false,
-        error: appError.message,
+        error: _failureMessage(e, quotaExceededMessage),
       );
     } finally {
       _isProcessing = false;
@@ -616,10 +631,9 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       throttleTimer?.cancel();
       state = state.copyWith(draft: buffer.toString(), isLoading: false);
     } catch (e) {
-      final appError = ErrorMapper.map(e);
       state = state.copyWith(
         isLoading: false,
-        error: appError.message,
+        error: _failureMessage(e, quotaExceededMessage),
       );
     } finally {
       _isProcessing = false;
@@ -670,10 +684,9 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
       throttleTimer?.cancel();
       state = state.copyWith(draft: buffer.toString(), isLoading: false);
     } catch (e) {
-      final appError = ErrorMapper.map(e);
       state = state.copyWith(
         isLoading: false,
-        error: appError.message,
+        error: _failureMessage(e, quotaExceededMessage),
       );
     } finally {
       _isProcessing = false;
@@ -771,10 +784,9 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         ],
       );
     } catch (e) {
-      final appError = ErrorMapper.map(e);
       state = state.copyWith(
         isLoading: false,
-        error: appError.message,
+        error: _failureMessage(e, quotaExceededMessage),
       );
     } finally {
       _isProcessing = false;

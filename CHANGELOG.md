@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Publishing from the app** always failed with a 400
   (`content_item_id` was required); it is now optional.
 - **AI chat** no longer shows a red error screen when a request fails.
+- **AI writing**: a used-up AI quota is reported in words instead of the
+  bare `quota_exceeded` code.
 - **Version diff** opened in its error state in debug builds.
 - **Read-aloud**: leaving a note while it was being read raised an error
   in the background.

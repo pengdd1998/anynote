@@ -33,6 +33,9 @@ class FakeAIRepository extends AIRepository {
   String? chatResponse;
   Stream<String>? chatStreamResponse;
 
+  /// Thrown by [chat] when set, as the server would fail a request.
+  Object? chatError;
+
   /// Track calls for assertions.
   final List<List<ChatMessage>> chatCalls = [];
   final List<List<ChatMessage>> chatStreamCalls = [];
@@ -46,6 +49,7 @@ class FakeAIRepository extends AIRepository {
     CancelToken? cancelToken,
   }) async {
     chatCalls.add(messages);
+    if (chatError != null) throw chatError!;
     if (chatResponse != null) return chatResponse!;
     return '{}';
   }
@@ -1608,6 +1612,72 @@ void main() {
 
       final prompt = fakeAiRepo.chatStreamCalls.single.single.content;
       expect(prompt, isNot(contains('Target platform')));
+    });
+  });
+
+  // ===========================================================================
+  // Failure messages
+  // ===========================================================================
+
+  group('ComposeSessionNotifier failure messages', () {
+    late FakeAIRepository fakeAiRepo;
+    late ComposeSessionNotifier notifier;
+
+    setUp(() {
+      fakeAiRepo = FakeAIRepository();
+      final container = ProviderContainer(overrides: [
+        aiRepositoryProvider.overrideWithValue(fakeAiRepo),
+        databaseProvider.overrideWithValue(_createTestDb()),
+        cryptoServiceProvider.overrideWithValue(_FakeCryptoService()),
+      ]);
+      addTearDown(container.dispose);
+      notifier = container.read(composeSessionProvider.notifier);
+      notifier.state = notifier.state.copyWith(
+        selectedNoteIds: ['n1'],
+        noteContents: const {'n1': 'a note'},
+        topic: 'weekend trip',
+      );
+    });
+
+    DioException serverAnswer(int status, Object? body) => DioException(
+          requestOptions: RequestOptions(path: '/api/v1/ai/proxy'),
+          response: Response<dynamic>(
+            requestOptions: RequestOptions(path: '/api/v1/ai/proxy'),
+            statusCode: status,
+            data: body,
+          ),
+        );
+
+    test('an exhausted AI quota is reported in words', () async {
+      // What the AI proxy answers once the quota is used up: a 429 whose
+      // body is the bare code. On a device that showed up as the literal
+      // text "quota_exceeded".
+      fakeAiRepo.chatError = serverAnswer(429, {
+        'error': 'quota_exceeded',
+        'retry_after': 30,
+      });
+
+      await notifier.generateClusters(quotaExceededMessage: 'AI quota used up');
+
+      expect(notifier.state.error, 'AI quota used up');
+    });
+
+    test('an ordinary rate limit keeps the server message', () async {
+      fakeAiRepo.chatError = serverAnswer(429, {
+        'error': {'code': 'rate_limited', 'message': 'Slow down'},
+      });
+
+      await notifier.generateClusters(quotaExceededMessage: 'AI quota used up');
+
+      expect(notifier.state.error, 'Slow down');
+    });
+
+    test('other failures keep their own message', () async {
+      fakeAiRepo.chatError = Exception('upstream is down');
+
+      await notifier.generateClusters(quotaExceededMessage: 'AI quota used up');
+
+      expect(notifier.state.error, contains('upstream is down'));
     });
   });
 }
