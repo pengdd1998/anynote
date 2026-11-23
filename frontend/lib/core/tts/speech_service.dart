@@ -25,6 +25,10 @@ class SpeechService {
   /// exits instead of racing the new sequence.
   int _speakToken = 0;
 
+  /// Set by [dispose]; nothing is written to the streams afterwards, so a
+  /// loop that was mid-utterance cannot add to a closed controller.
+  bool _disposed = false;
+
   final _stateController = StreamController<SpeechState>.broadcast();
   final _progressController = StreamController<double>.broadcast();
 
@@ -45,7 +49,11 @@ class SpeechService {
 
   void _setState(SpeechState newState) {
     _state = newState;
-    _stateController.add(newState);
+    if (!_disposed) _stateController.add(newState);
+  }
+
+  void _reportProgress(double value) {
+    if (!_disposed) _progressController.add(value);
   }
 
   Future<FlutterTts?> _ensureTts() async {
@@ -109,7 +117,7 @@ class SpeechService {
       stop();
       return;
     }
-    _progressController.add(_currentParagraphIndex / _paragraphs.length);
+    _reportProgress(_currentParagraphIndex / _paragraphs.length);
     await _speakCurrentParagraph(token);
   }
 
@@ -136,7 +144,7 @@ class SpeechService {
     _tts?.stop();
     _currentParagraphIndex = 0;
     _setState(SpeechState.stopped);
-    _progressController.add(0.0);
+    _reportProgress(0.0);
   }
 
   /// Set speech rate (0.5 to 2.0), applied to the next utterance.
@@ -167,12 +175,17 @@ class SpeechService {
     // Fired when the engine cancels (user dismissal, engine switch).
     if (_state != SpeechState.stopped) {
       _setState(SpeechState.stopped);
-      _progressController.add(0.0);
+      _reportProgress(0.0);
     }
   }
 
   /// Dispose resources.
   void dispose() {
+    _disposed = true;
+    // Retire any loop that is still awaiting an utterance: stopping the
+    // engine makes that utterance return, and the loop would otherwise carry
+    // on from there.
+    _speakToken++;
     _tts?.stop();
     _stateController.close();
     _progressController.close();

@@ -6,6 +6,8 @@ import 'package:anynote/core/tts/speech_service.dart';
 import 'package:anynote/features/notes/presentation/widgets/tts_player_bar.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 
+import '../../../../helpers/fake_tts_engine.dart';
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -72,13 +74,18 @@ Future<void> cleanupSpeech(
 void main() {
   group('TtsPlayerBar', () {
     late SpeechService speechService;
+    late FakeTtsEngine engine;
 
     setUp(() {
+      // The service speaks through flutter_tts, which has no platform side
+      // here. Without a stand-in it gives up and the bar never shows.
+      engine = FakeTtsEngine()..install();
       speechService = SpeechService();
     });
 
     tearDown(() {
       speechService.dispose();
+      engine.uninstall();
     });
 
     testWidgets('is hidden when speech state is stopped', (tester) async {
@@ -189,7 +196,11 @@ void main() {
       await startSpeech(tester, speechService);
 
       await tester.tap(find.byType(Chip));
-      await tester.pumpAndSettle();
+      // The progress bar is indeterminate until the first paragraph has been
+      // read, so frames never settle; give the menu's own animation time
+      // instead.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('0.5x'), findsOneWidget);
       expect(find.text('0.75x'), findsOneWidget);

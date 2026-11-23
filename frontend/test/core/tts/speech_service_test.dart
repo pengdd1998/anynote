@@ -1,10 +1,42 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/tts/speech_service.dart';
 
+import '../../helpers/fake_tts_engine.dart';
+
+/// Completes when [service] next reports [state]. Subscribe it before the
+/// call that causes the change: a broadcast stream keeps nothing for late
+/// listeners.
+Future<void> nextState(SpeechService service, SpeechState state) =>
+    service.stateStream
+        .firstWhere((s) => s == state)
+        .timeout(const Duration(seconds: 5));
+
+/// Starts [service] on [text] and waits until it is actually speaking. The
+/// engine is initialised first, so the playing state is not there the
+/// moment `speak` returns — and `speak` itself only returns when speech
+/// ends.
+Future<void> speakUntilPlaying(SpeechService service, String text) async {
+  final playing = nextState(service, SpeechState.playing);
+  service.speak(text);
+  await playing;
+}
+
 void main() {
+  // The service talks to the flutter_tts plugin over a platform channel,
+  // which needs the test binding to exist.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late FakeTtsEngine engine;
+
+  setUp(() {
+    engine = FakeTtsEngine()..install();
+  });
+
+  tearDown(() {
+    engine.uninstall();
+  });
+
   // ===========================================================================
   // SpeechState
   // ===========================================================================
@@ -89,21 +121,21 @@ void main() {
       final sub = service.progressStream.listen(progressValues.add);
 
       service.stop();
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
 
       expect(progressValues, contains(0.0));
 
       await sub.cancel();
     });
 
-    test('speak with empty string does not change state', () {
-      service.speak('');
+    test('speak with empty string does not change state', () async {
+      await service.speak('');
 
       expect(service.state, SpeechState.stopped);
     });
 
-    test('speak with whitespace-only string does not change state', () {
-      service.speak('   \n\n  ');
+    test('speak with whitespace-only string does not change state', () async {
+      await service.speak('   \n\n  ');
 
       expect(service.state, SpeechState.stopped);
     });
@@ -112,10 +144,7 @@ void main() {
       final states = <SpeechState>[];
       final sub = service.stateStream.listen(states.add);
 
-      // Use a long paragraph to ensure timer doesn't complete instantly.
-      service.speak('Hello world ' * 100);
-
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+      await speakUntilPlaying(service, 'Hello world ' * 100);
 
       expect(states, contains(SpeechState.playing));
 
@@ -123,18 +152,36 @@ void main() {
       await sub.cancel();
     });
 
+    test('speak asks the engine to read the text', () async {
+      await speakUntilPlaying(service, 'Hello world');
+
+      expect(engine.spokenTexts, ['Hello world']);
+
+      service.stop();
+    });
+
     test('stop emits stopped state', () async {
       final states = <SpeechState>[];
       final sub = service.stateStream.listen(states.add);
 
-      service.speak('Hello world ' * 100);
-      await Future<void>.delayed(const Duration(milliseconds: 5));
+      await speakUntilPlaying(service, 'Hello world ' * 100);
+      final stopped = nextState(service, SpeechState.stopped);
       service.stop();
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+      await stopped;
 
       expect(states.last, SpeechState.stopped);
 
       await sub.cancel();
+    });
+
+    test('stop ends the utterance without moving on to the next paragraph',
+        () async {
+      await speakUntilPlaying(service, 'First paragraph\n\nSecond paragraph');
+      service.stop();
+      await pumpEventQueue();
+
+      // The loop that awaited the stopped utterance must not read on.
+      expect(engine.spokenTexts, hasLength(1));
     });
   });
 
@@ -153,27 +200,23 @@ void main() {
       service.dispose();
     });
 
-    test('pause on stopped service does nothing', () {
-      service.pause();
+    test('pause on stopped service does nothing', () async {
+      await service.pause();
 
       expect(service.state, SpeechState.stopped);
     });
 
     test('pause transitions from playing to paused', () async {
-      service.speak('Hello world ' * 100);
-
-      // Verify state is playing before pause.
-      expect(service.state, SpeechState.playing);
-
-      service.pause();
+      await speakUntilPlaying(service, 'Hello world ' * 100);
+      await service.pause();
 
       expect(service.state, SpeechState.paused);
 
       service.stop();
     });
 
-    test('resume on stopped service does nothing', () {
-      service.resume();
+    test('resume on stopped service does nothing', () async {
+      await service.resume();
 
       expect(service.state, SpeechState.stopped);
     });
@@ -182,24 +225,41 @@ void main() {
       final states = <SpeechState>[];
       final sub = service.stateStream.listen(states.add);
 
-      service.speak('Hello world ' * 100);
-      await Future<void>.delayed(const Duration(milliseconds: 5));
-      service.pause();
+      await speakUntilPlaying(service, 'Hello world ' * 100);
+      await service.pause();
+      // Not awaited: resume only returns when the paragraph has been read.
       service.resume();
+      await pumpEventQueue();
 
       expect(service.state, SpeechState.playing);
+      expect(
+          states,
+          containsAllInOrder(
+              [SpeechState.playing, SpeechState.paused, SpeechState.playing]));
 
       service.stop();
       await sub.cancel();
     });
 
     test('pause when already paused does nothing', () async {
-      service.speak('Hello world ' * 100);
-      await Future<void>.delayed(const Duration(milliseconds: 5));
-      service.pause();
-      service.pause();
+      await speakUntilPlaying(service, 'Hello world ' * 100);
+      await service.pause();
+      await service.pause();
 
       expect(service.state, SpeechState.paused);
+
+      service.stop();
+    });
+
+    test('resume replays the current paragraph', () async {
+      await speakUntilPlaying(service, 'Read me once');
+      await service.pause();
+      service.resume();
+      await pumpEventQueue();
+
+      // flutter_tts has no imperative continue, so the paragraph is read
+      // again from its start.
+      expect(engine.spokenTexts, ['Read me once', 'Read me once']);
 
       service.stop();
     });
@@ -224,27 +284,48 @@ void main() {
       final states = <SpeechState>[];
       final sub = service.stateStream.listen(states.add);
 
-      // Single short paragraph will complete quickly.
-      service.speak('Short text');
+      await speakUntilPlaying(service, 'Short text');
 
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+      // Starting to speak first stops whatever was before, so "stopped"
+      // comes before "playing".
+      expect(states.last, SpeechState.playing);
 
-      // Either playing or already stopped after simulation finishes.
-      expect(states, isNotEmpty);
-
+      service.stop();
       await sub.cancel();
     });
 
-    test('speak handles multiple paragraphs', () async {
-      final progressValues = <double>[];
-      final sub = service.progressStream.listen(progressValues.add);
+    test('reading a single paragraph to its end stops by itself', () async {
+      final stopped = service.stateStream
+          .firstWhere((s) => s == SpeechState.stopped)
+          .timeout(const Duration(seconds: 5));
+      await speakUntilPlaying(service, 'Short text');
 
-      // Two paragraphs with double newline separator.
-      service.speak('${'Para one ' * 50}\n\n${'Para two ' * 50}');
+      engine.finishUtterance();
+      await stopped;
 
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(service.state, SpeechState.stopped);
+    });
 
-      // Should have received some progress updates.
+    test(
+        'speak reads the paragraphs in order and reports progress between them',
+        () async {
+      final progress = <double>[];
+      final sub = service.progressStream.listen(progress.add);
+
+      await speakUntilPlaying(
+        service,
+        '${'Para one ' * 50}\n\n${'Para two ' * 50}',
+      );
+      expect(engine.spokenTexts, hasLength(1));
+
+      engine.finishUtterance();
+      await pumpEventQueue();
+
+      expect(progress, contains(0.5));
+      expect(engine.spokenTexts, hasLength(2));
+      expect(engine.spokenTexts.last, startsWith('Para two'));
+      expect(service.state, SpeechState.playing);
+
       service.stop();
       await sub.cancel();
     });
@@ -265,15 +346,29 @@ void main() {
       service.dispose();
     });
 
-    test('setRate does not throw', () {
-      // setRate is a no-op on native (non-web) platforms.
-      expect(() => service.setRate(1.0), returnsNormally);
+    test('setRate does not throw', () async {
+      await service.setRate(1.0);
     });
 
-    test('setRate accepts various values', () {
-      expect(() => service.setRate(0.5), returnsNormally);
-      expect(() => service.setRate(1.0), returnsNormally);
-      expect(() => service.setRate(2.0), returnsNormally);
+    test('setRate accepts various values', () async {
+      await service.setRate(0.5);
+      await service.setRate(1.0);
+      await service.setRate(2.0);
+    });
+
+    test('setRate reaches the engine once there is one', () async {
+      await speakUntilPlaying(service, 'Hello world');
+      await service.setRate(1.5);
+
+      final rates = engine.calls
+          .where((c) => c.method == 'setSpeechRate')
+          .map((c) => c.arguments as double)
+          .toList();
+      // The service maps its 0.5–2.0 scale onto the platform's: 1.0 is
+      // normal speed on every platform.
+      expect(rates.last, rates.first * 1.5);
+
+      service.stop();
     });
   });
 
@@ -282,17 +377,19 @@ void main() {
   // ===========================================================================
 
   group('SpeechService dispose', () {
-    test('dispose cancels timers and closes streams', () async {
+    test('dispose while speaking leaves nothing running', () async {
       final service = SpeechService();
 
-      service.speak('Hello world ' * 100);
-      await Future<void>.delayed(const Duration(milliseconds: 5));
+      await speakUntilPlaying(service, 'Hello world ' * 100);
 
       service.dispose();
 
-      // After dispose, the state and progress streams should be closed.
-      // Attempting to listen on a closed stream should work for broadcast
-      // streams but no new events arrive.
+      // Stopping the engine makes the pending utterance return; the loop that
+      // awaited it must exit instead of writing to the closed streams, which
+      // would surface as an uncaught "Cannot add new events after calling
+      // close".
+      await pumpEventQueue();
+
       expect(service.stateStream, isA<Stream<SpeechState>>());
     });
 
