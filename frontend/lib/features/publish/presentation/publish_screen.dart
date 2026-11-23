@@ -14,6 +14,7 @@ import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/publish_providers.dart';
 import 'widgets/publish_calendar.dart';
+import 'widgets/publish_problems_list.dart';
 
 class PublishScreen extends ConsumerStatefulWidget {
   const PublishScreen({super.key});
@@ -85,26 +86,26 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: Text(l10n.publish),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        actions: const [SyncStatusWidget()],
-        bottom: TabBar(
-          tabs: [
-            Tab(text: l10n.publish),
-            Tab(text: l10n.calendar),
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          title: Text(l10n.publish),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          actions: const [SyncStatusWidget()],
+          bottom: TabBar(
+            tabs: [
+              Tab(text: l10n.publish),
+              Tab(text: l10n.calendar),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildPublishTab(l10n, platformsAsync, publishState, historyAsync),
+            const PublishCalendarView(),
           ],
         ),
-      ),
-      body: TabBarView(
-        children: [
-          _buildPublishTab(l10n, platformsAsync, publishState, historyAsync),
-          const PublishCalendarView(),
-        ],
-      ),
       ),
     );
   }
@@ -116,104 +117,106 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
     AsyncValue<List<Map<String, dynamic>>> historyAsync,
   ) {
     return LayoutBuilder(
-        builder: (context, constraints) {
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(connectedPlatformsProvider);
-              ref.invalidate(publishHistoryProvider);
-            },
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.s4,
-                AppSpacing.md,
-                200,
-              ),
-          children: [
-            // Platform cards
-            _buildSectionLabel(l10n.connectedPlatforms),
-            const SizedBox(height: AppSpacing.s8),
-            platformsAsync.when(
-              data: (platforms) {
-                if (platforms.isEmpty) return _buildNoPlatforms(l10n);
-                // Row of 48px rounded share-target squares.
-                return Wrap(
-                  spacing: AppSpacing.s12,
-                  runSpacing: AppSpacing.s12,
-                  children: platforms
-                      .map(
-                        (p) => _buildPlatformSquare(p, l10n),
-                      )
-                      .toList(),
-                );
-              },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primary,
+      builder: (context, constraints) {
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(connectedPlatformsProvider);
+            ref.invalidate(publishHistoryProvider);
+          },
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.s4,
+              AppSpacing.md,
+              200,
+            ),
+            children: [
+              // Platform cards
+              _buildSectionLabel(l10n.connectedPlatforms),
+              const SizedBox(height: AppSpacing.s8),
+              platformsAsync.when(
+                data: (platforms) {
+                  if (platforms.isEmpty) return _buildNoPlatforms(l10n);
+                  // Row of 48px rounded share-target squares.
+                  return Wrap(
+                    spacing: AppSpacing.s12,
+                    runSpacing: AppSpacing.s12,
+                    children: platforms
+                        .map(
+                          (p) => _buildPlatformSquare(p, l10n),
+                        )
+                        .toList(),
+                  );
+                },
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
+                error: (error, _) => _buildPlatformError(error, l10n),
               ),
-              error: (error, _) => _buildPlatformError(error, l10n),
-            ),
 
-            const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
 
-            // Publish form
-            _buildSectionLabel(l10n.publishContent),
-            const SizedBox(height: AppSpacing.s8),
-            _buildPublishForm(publishState),
+              // Publish form
+              _buildSectionLabel(l10n.publishContent),
+              const SizedBox(height: AppSpacing.s8),
+              _buildPublishForm(publishState),
 
-            const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
 
-            // Recent publications
-            _buildSectionLabel(l10n.recentPublications),
-            const SizedBox(height: AppSpacing.s8),
-            historyAsync.when(
-              data: (history) {
-                if (history.isEmpty) return _buildNoPublications(l10n);
-                final recent = history.take(3).toList();
-                return Column(
-                  children: [
-                    ...recent.map((item) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.s8),
-                      child: _buildHistoryCard(item, l10n),
-                    ),),
-                    if (history.length > 3)
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.s4),
-                        child: OutlinedButton(
-                          onPressed: () => context.push('/publish/history'),
-                          style: OutlinedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.sm),
-                            ),
-                          ),
-                          child: Text(l10n.viewAll(history.length)),
+              // Recent publications
+              _buildSectionLabel(l10n.recentPublications),
+              const SizedBox(height: AppSpacing.s8),
+              historyAsync.when(
+                data: (history) {
+                  if (history.isEmpty) return _buildNoPublications(l10n);
+                  final recent = history.take(3).toList();
+                  return Column(
+                    children: [
+                      ...recent.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+                          child: _buildHistoryCard(item, l10n),
                         ),
                       ),
-                  ],
-                );
-              },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primary,
+                      if (history.length > 3)
+                        Padding(
+                          padding: const EdgeInsets.only(top: AppSpacing.s4),
+                          child: OutlinedButton(
+                            onPressed: () => context.push('/publish/history'),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.sm),
+                              ),
+                            ),
+                            child: Text(l10n.viewAll(history.length)),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
+                error: (error, _) => _buildHistoryError(error, l10n),
               ),
-              error: (error, _) => _buildHistoryError(error, l10n),
-            ),
-          ],
-        ),                // ListView
-      );                  // RefreshIndicator
-        },                  // builder callback
-      );                    // LayoutBuilder
+            ],
+          ), // ListView
+        ); // RefreshIndicator
+      }, // builder callback
+    ); // LayoutBuilder
   }
 
   Widget _buildSectionLabel(String title) {
@@ -222,9 +225,8 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
       title,
       style: AppTextStyles.caption.copyWith(
         fontWeight: FontWeight.w600,
-        color: isDark
-            ? AppColors.darkTextTertiary
-            : AppColors.lightTextTertiary,
+        color:
+            isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
       ),
     );
   }
@@ -452,7 +454,17 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
                     : AppColors.lightTextTertiary,
               ),
             ),
-          if (state.error != null)
+          // A rejection that names fields explains itself; one that does not
+          // (network, server) still needs its message.
+          if (state.problems.isNotEmpty || state.warnings.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.s12),
+              child: PublishProblemsList(
+                blocking: state.problems,
+                advisory: state.warnings,
+              ),
+            )
+          else if (state.error != null)
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.s4),
               child: Text(
@@ -776,7 +788,9 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
         Future.delayed(const Duration(seconds: 3), () {
           if (mounted) ref.read(publishActionProvider.notifier).reset();
         });
-      } else if (state.error != null && mounted) {
+      } else if (state.error != null && state.problems.isEmpty && mounted) {
+        // The list above shows field-level problems; a snackbar would repeat
+        // them.
         ErrorDisplay.showSnackBar(
           context,
           ValidationException(message: state.error!),
@@ -845,9 +859,8 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
                     vertical: AppSpacing.s4,
                   ),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkCardBg
-                        : AppColors.lightCardBg,
+                    color:
+                        isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
                     borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                   child: Text(
@@ -870,12 +883,14 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
                       .split(',')
                       .map((t) => t.trim())
                       .where((t) => t.isNotEmpty)
-                      .map((t) => Chip(
-                            label: Text('#$t', style: AppTextStyles.caption),
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),)
+                      .map(
+                        (t) => Chip(
+                          label: Text('#$t', style: AppTextStyles.caption),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
                       .toList(),
                 ),
               ],

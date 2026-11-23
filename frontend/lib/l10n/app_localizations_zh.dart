@@ -4512,4 +4512,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filterMore => '更多';
+
+  @override
+  String get publishFixBeforePublishing => '发布前需要修改';
+
+  @override
+  String get publishSuggestions => '建议';
+
+  @override
+  String get publishChecking => '检查中…';
 }

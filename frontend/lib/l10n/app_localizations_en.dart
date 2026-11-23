@@ -4757,4 +4757,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterMore => 'More';
+
+  @override
+  String get publishFixBeforePublishing => 'Fix before publishing';
+
+  @override
+  String get publishSuggestions => 'Suggestions';
+
+  @override
+  String get publishChecking => 'Checking…';
 }

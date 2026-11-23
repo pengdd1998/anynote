@@ -8421,6 +8421,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More'**
   String get filterMore;
+
+  /// Heading over the problems that stop a post from being published.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix before publishing'**
+  String get publishFixBeforePublishing;
+
+  /// Heading over the server's non-blocking advice for a post.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get publishSuggestions;
+
+  /// Shown while the server is checking a draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get publishChecking;
 }
 
 class _AppLocalizationsDelegate

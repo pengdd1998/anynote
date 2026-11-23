@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/open.dart';
-import 'package:sqlite3/sqlite3.dart' show OperatingSystem;
 
 /// Names under which a SQLCipher shared library is usually installed.
 ///

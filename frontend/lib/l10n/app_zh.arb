@@ -1480,5 +1480,8 @@
   "filterNoteType": "笔记类型",
   "filterTag": "标签",
   "filterDate": "日期",
-  "filterMore": "更多"
+  "filterMore": "更多",
+  "publishFixBeforePublishing": "发布前需要修改",
+  "publishSuggestions": "建议",
+  "publishChecking": "检查中…"
 }

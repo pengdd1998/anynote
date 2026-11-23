@@ -6358,5 +6358,20 @@
   "filterMore": "More",
   "@filterMore": {
     "type": "text"
+  },
+  "publishFixBeforePublishing": "Fix before publishing",
+  "@publishFixBeforePublishing": {
+    "description": "Heading over the problems that stop a post from being published.",
+    "type": "String"
+  },
+  "publishSuggestions": "Suggestions",
+  "@publishSuggestions": {
+    "description": "Heading over the server's non-blocking advice for a post.",
+    "type": "String"
+  },
+  "publishChecking": "Checking…",
+  "@publishChecking": {
+    "description": "Shown while the server is checking a draft.",
+    "type": "String"
   }
 }

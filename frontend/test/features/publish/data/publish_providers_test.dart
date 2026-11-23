@@ -188,7 +188,11 @@ void main() {
       );
 
       expect(failingNotifier.state.isLoading, isFalse);
-      expect(failingNotifier.state.error, 'Connection refused');
+      // The user gets a sentence they can act on, not Dio's internal text.
+      expect(
+        failingNotifier.state.error,
+        'Unable to connect to the server. Please check your internet connection.',
+      );
       expect(failingNotifier.state.result, isNull);
     });
 
@@ -206,7 +210,10 @@ void main() {
         content: 'Content',
       );
 
-      expect(failingNotifier.state.error, 'Network error occurred');
+      expect(
+        failingNotifier.state.error,
+        'Unable to connect to the server. Please check your internet connection.',
+      );
     });
 
     test('publish handles generic exception', () async {

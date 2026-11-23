@@ -11,6 +11,8 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../notes/presentation/widgets/writing_assist_sheet.dart';
 import '../../data/publish_providers.dart';
+import '../../domain/publish_rules.dart';
+import 'publish_problems_list.dart';
 
 class PublishFromEditorSheet extends ConsumerStatefulWidget {
   final String title;
@@ -52,11 +54,64 @@ class _PublishFromEditorSheetState
   String? _selectedPlatform;
 
   @override
+  void initState() {
+    super.initState();
+    for (final controller in [
+      _titleController,
+      _contentController,
+      _tagsController,
+    ]) {
+      controller.addListener(_onDraftChanged);
+    }
+  }
+
+  @override
   void dispose() {
-    _titleController.dispose();
-    _contentController.dispose();
-    _tagsController.dispose();
+    for (final controller in [
+      _titleController,
+      _contentController,
+      _tagsController,
+    ]) {
+      controller.removeListener(_onDraftChanged);
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  List<String> get _tags => _tagsController.text
+      .trim()
+      .split(',')
+      .map((t) => t.trim())
+      .where((t) => t.isNotEmpty)
+      .toList();
+
+  /// Redraws the length counters and asks the server to re-check the draft.
+  void _onDraftChanged() {
+    setState(() {});
+    // Whatever a rejected publish said was about the previous draft.
+    if (ref.read(publishActionProvider).error != null) {
+      ref.read(publishActionProvider.notifier).reset();
+    }
+    _scheduleValidation();
+  }
+
+  /// Nothing to check before a platform is chosen, and an empty title or
+  /// body is already reported when the user tries to publish.
+  void _scheduleValidation() {
+    final validator = ref.read(publishValidationProvider.notifier);
+    final platform = _selectedPlatform;
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+    if (platform == null || title.isEmpty || content.isEmpty) {
+      validator.reset();
+      return;
+    }
+    validator.check(
+      platformId: platform,
+      title: title,
+      content: content,
+      tags: _tags,
+    );
   }
 
   void _showPolishSheet() {
@@ -94,18 +149,11 @@ class _PublishFromEditorSheetState
       return;
     }
 
-    final tags = _tagsController.text
-        .trim()
-        .split(',')
-        .map((t) => t.trim())
-        .where((t) => t.isNotEmpty)
-        .toList();
-
     await ref.read(publishActionProvider.notifier).publish(
           platform: _selectedPlatform!,
           title: title,
           content: content,
-          tags: tags,
+          tags: _tags,
         );
 
     if (!mounted) return;
@@ -114,7 +162,9 @@ class _PublishFromEditorSheetState
       AppSnackBar.info(context, message: l10n.notePublishedSuccess);
       ref.invalidate(publishHistoryProvider);
       Navigator.pop(context);
-    } else if (state.error != null) {
+    } else if (state.error != null && state.problems.isEmpty) {
+      // With field-level problems the list in the sheet explains everything;
+      // only a rejection the server could not break down needs a snackbar.
       ErrorDisplay.showSnackBar(
         context,
         ValidationException(message: state.error!),
@@ -127,7 +177,31 @@ class _PublishFromEditorSheetState
     final l10n = AppLocalizations.of(context)!;
     final platformsAsync = ref.watch(connectedPlatformsProvider);
     final publishState = ref.watch(publishActionProvider);
+    final validation = ref.watch(publishValidationProvider);
+    final guidesAsync = ref.watch(platformGuidesProvider);
     final colorScheme = Theme.of(context).colorScheme;
+
+    // The limits of the selected platform, from the server's rules.
+    final guide = guidesAsync.whenOrNull(
+      data: (guides) => _selectedPlatform == null
+          ? null
+          : guideFor(guides, _selectedPlatform!),
+    );
+    final titleLength = PlatformGuide.lengthOf(_titleController.text.trim());
+    final contentLength =
+        PlatformGuide.lengthOf(_contentController.text.trim());
+    // Judged here rather than by the server so the button reacts as soon as
+    // the user types, not a round trip later.
+    final overLimit = guide != null &&
+        (titleLength > guide.titleMax ||
+            contentLength > guide.contentMax ||
+            _tags.length > guide.maxTags);
+    // A rejected publish explains itself until the draft changes; from then
+    // on the live check is what describes what is on screen.
+    final rejected =
+        publishState.problems.isNotEmpty || publishState.warnings.isNotEmpty;
+    final blocking = rejected ? publishState.problems : validation.blocking;
+    final advisory = rejected ? publishState.warnings : validation.advisory;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -175,7 +249,8 @@ class _PublishFromEditorSheetState
             Expanded(
               child: SingleChildScrollView(
                 controller: scrollController,
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.fromLTRB(
+                    16, 16, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -184,7 +259,17 @@ class _PublishFromEditorSheetState
                       controller: _titleController,
                       scrollPadding: const EdgeInsets.only(bottom: 120),
                       decoration: InputDecoration(
-                        labelText: l10n.title,
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(l10n.title),
+                            if (guide != null) ...[
+                              const SizedBox(width: 8),
+                              LengthCounter(
+                                  length: titleLength, max: guide.titleMax),
+                            ],
+                          ],
+                        ),
                         border: const OutlineInputBorder(),
                         isDense: true,
                       ),
@@ -196,7 +281,17 @@ class _PublishFromEditorSheetState
                       controller: _contentController,
                       scrollPadding: const EdgeInsets.only(bottom: 120),
                       decoration: InputDecoration(
-                        labelText: l10n.content,
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(l10n.content),
+                            if (guide != null) ...[
+                              const SizedBox(width: 8),
+                              LengthCounter(
+                                  length: contentLength, max: guide.contentMax),
+                            ],
+                          ],
+                        ),
                         border: const OutlineInputBorder(),
                         alignLabelWithHint: true,
                       ),
@@ -260,12 +355,10 @@ class _PublishFromEditorSheetState
                                 p['key']?.toString() ?? name.toLowerCase();
                             final icon =
                                 _platformIcons[platformKey] ?? Icons.language;
-                            final subtitle =
-                                p['display_name']?.toString() ??
-                                    p['subtitle']?.toString() ??
-                                    '';
-                            final isSelected =
-                                _selectedPlatform == platformKey;
+                            final subtitle = p['display_name']?.toString() ??
+                                p['subtitle']?.toString() ??
+                                '';
+                            final isSelected = _selectedPlatform == platformKey;
 
                             return Card(
                               color: isSelected
@@ -278,9 +371,8 @@ class _PublishFromEditorSheetState
                                   child: Icon(icon, size: 20),
                                 ),
                                 title: Text(name),
-                                subtitle: subtitle.isNotEmpty
-                                    ? Text(subtitle)
-                                    : null,
+                                subtitle:
+                                    subtitle.isNotEmpty ? Text(subtitle) : null,
                                 trailing: isSelected
                                     ? const Icon(
                                         Icons.check_circle,
@@ -291,6 +383,7 @@ class _PublishFromEditorSheetState
                                   setState(() {
                                     _selectedPlatform = platformKey;
                                   });
+                                  _scheduleValidation();
                                 },
                               ),
                             );
@@ -319,8 +412,8 @@ class _PublishFromEditorSheetState
                                 Text(l10n.failedToLoadPlatforms),
                                 const SizedBox(height: 8),
                                 FilledButton.tonal(
-                                  onPressed: () =>
-                                      ref.invalidate(connectedPlatformsProvider),
+                                  onPressed: () => ref
+                                      .invalidate(connectedPlatformsProvider),
                                   child: Text(l10n.retry),
                                 ),
                               ],
@@ -331,8 +424,21 @@ class _PublishFromEditorSheetState
                     ),
                     const SizedBox(height: 16),
 
-                    // Error display
-                    if (publishState.error != null)
+                    // What is wrong with the draft: live while writing, or
+                    // the reason a submit was rejected.
+                    if (guide != null || rejected)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: PublishProblemsList(
+                          blocking: blocking,
+                          advisory: advisory,
+                          checking: validation.isChecking,
+                        ),
+                      ),
+                    // A rejection the server could not break down by field.
+                    if (publishState.error != null &&
+                        publishState.problems.isEmpty &&
+                        !rejected)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
@@ -348,7 +454,11 @@ class _PublishFromEditorSheetState
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
-                        onPressed: publishState.isLoading
+                        // Over the platform's limits, or the server has
+                        // said the draft cannot go out as it stands.
+                        onPressed: publishState.isLoading ||
+                                overLimit ||
+                                validation.blocking.isNotEmpty
                             ? null
                             : _handlePublish,
                         child: publishState.isLoading

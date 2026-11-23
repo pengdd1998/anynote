@@ -4528,4 +4528,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get filterMore => '더보기';
+
+  @override
+  String get publishFixBeforePublishing => '게시 전에 수정 필요';
+
+  @override
+  String get publishSuggestions => '제안';
+
+  @override
+  String get publishChecking => '확인 중…';
 }

@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../main.dart';
 import '../../features/settings/data/settings_providers.dart';
 import '../crypto/crypto_service.dart';
-import '../database/app_database.dart';
 import '../network/connectivity_service.dart';
 import 'sync_engine.dart' show SyncResult;
 

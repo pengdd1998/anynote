@@ -517,6 +517,21 @@ class ApiClient {
     return res.data as Map<String, dynamic>;
   }
 
+  /// The publishing rules of every platform: limits and writing brief.
+  Future<List<Map<String, dynamic>>> publishPlatforms() async {
+    final res = await _dio.get('/api/v1/publish/platforms');
+    final data = res.data;
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return const [];
+  }
+
+  /// Runs the server's publish checks without publishing anything.
+  /// Never throws for a rejected draft: findings come back in [result].
+  Future<Map<String, dynamic>> validatePublish(Map<String, dynamic> req) async {
+    final res = await _dio.post('/api/v1/publish/validate', data: req);
+    return res.data as Map<String, dynamic>;
+  }
+
   Future<List<Map<String, dynamic>>> publishHistory() async {
     final res = await _dio.get('/api/v1/publish/history');
     // Server nil-slice serializes to JSON null when nothing was published.

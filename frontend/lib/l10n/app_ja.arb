@@ -1477,5 +1477,8 @@
   "filterNoteType": "ノート種類",
   "filterTag": "タグ",
   "filterDate": "日付",
-  "filterMore": "詳細"
+  "filterMore": "詳細",
+  "publishFixBeforePublishing": "公開前に修正が必要",
+  "publishSuggestions": "提案",
+  "publishChecking": "確認中…"
 }

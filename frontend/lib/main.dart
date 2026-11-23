@@ -51,23 +51,6 @@ bool containerReady = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TEMP DEBUG: show full stack trace on screen instead of just the message
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF8B0000),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: SelectableText(
-          'EXC: ${details.exception}\n\n'
-          'LIB: ${details.library}\n\n'
-          'STACK:\n${details.stack}',
-          style: const TextStyle(
-              fontSize: 11, color: Colors.yellow, fontFamily: 'monospace'),
-        ),
-      ),
-    );
-  };
-
   // Initialize error reporting before anything else.
   ErrorReporter.instance.init();
 

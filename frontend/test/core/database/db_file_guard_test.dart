@@ -55,6 +55,11 @@ void main() {
         ),
       );
 
+  AppDatabase openWith(String key) => AppDatabase.forTesting(
+        NativeDatabase(dbFile,
+            setup: (db) => db.execute(databaseKeyPragma(key))),
+      );
+
   Future<int> pragma(String name, {String? withKey}) async {
     final db = sqlite3.open(dbFile.path);
     try {
@@ -96,7 +101,8 @@ void main() {
       await expectLater(db.notesDao.getAllNotes(), throwsA(anything));
     });
 
-    test('encrypts a legacy plaintext database in place, data intact', () async {
+    test('encrypts a legacy plaintext database in place, data intact',
+        () async {
       await buildLegacyPlaintext();
       final before = await pragma('user_version');
 
@@ -116,21 +122,24 @@ void main() {
       addTearDown(db.close);
       final notes = await db.notesDao.getAllNotes();
       expect(notes, hasLength(2));
-      expect(notes.map((n) => n.plainContent), contains('legacy ZEBRA note number 1'));
+      expect(notes.map((n) => n.plainContent),
+          contains('legacy ZEBRA note number 1'));
       // Writing works on the migrated database too.
       await db.notesDao.createNote(
         id: 'after-upgrade',
         encryptedContent: 'ZW5j',
         plainContent: 'written after the upgrade',
       );
-      expect((await db.notesDao.getAllNotes()).map((n) => n.id), contains('after-upgrade'));
+      expect((await db.notesDao.getAllNotes()).map((n) => n.id),
+          contains('after-upgrade'));
     });
 
     test('migration flags the FTS index for rebuild, and the rebuild clears it',
         () async {
       await buildLegacyPlaintext();
       guard.prepare(dbFile: dbFile, key: key);
-      expect(await pragma('application_id', withKey: key), kIndexRebuildPending);
+      expect(
+          await pragma('application_id', withKey: key), kIndexRebuildPending);
 
       final db = await openEncrypted();
       addTearDown(db.close);
@@ -170,7 +179,8 @@ void main() {
       final plan = guard.prepare(dbFile: dbFile, key: key);
       expect(plan.outcome, DbFileOutcome.fresh);
       expect(plan.key, key);
-      expect(dbFile.existsSync(), isFalse, reason: 'creating it is the caller’s job');
+      expect(dbFile.existsSync(), isFalse,
+          reason: 'creating it is the caller’s job');
     });
 
     test('a zero-length file counts as encrypted and ready', () async {
@@ -180,7 +190,8 @@ void main() {
       expect(plan.outcome, DbFileOutcome.ready);
     });
 
-    test('finishes an encryption interrupted between the two renames', () async {
+    test('finishes an encryption interrupted between the two renames',
+        () async {
       await buildLegacyPlaintext();
       guard.prepare(dbFile: dbFile, key: key);
       // Undo the second rename: what a process kill in that window leaves.
@@ -219,9 +230,7 @@ void main() {
       final plan = guard.prepare(dbFile: dbFile, key: generateDatabaseKey());
 
       expect(plan.outcome, DbFileOutcome.migrated);
-      final db = await AppDatabase.forTesting(
-        NativeDatabase(dbFile, setup: (d) => d.execute(databaseKeyPragma(plan.key!))),
-      );
+      final db = openWith(plan.key!);
       addTearDown(db.close);
       expect((await db.notesDao.getAllNotes()).map((n) => n.id),
           unorderedEquals(['legacy-0', 'legacy-1']));
@@ -233,17 +242,19 @@ void main() {
       expect(orphans.single.readAsBytesSync(), previousEncrypted);
     });
 
-    test('with no backup left, a lost key moves the database aside and starts fresh',
+    test(
+        'with no backup left, a lost key moves the database aside and starts fresh',
         () async {
       await buildLegacyPlaintext();
       final plan = guard.prepare(dbFile: dbFile, key: key);
       File('${dbFile.path}.plaintext-backup').deleteSync();
       final encrypted = dbFile.readAsBytesSync();
 
-      final afterLoss = guard.prepare(dbFile: dbFile, key: plan.key! + 'x');
+      final afterLoss = guard.prepare(dbFile: dbFile, key: '${plan.key}x');
 
       expect(afterLoss.outcome, DbFileOutcome.keyMismatch);
-      expect(dbFile.existsSync(), isFalse, reason: 'so a fresh one can be created');
+      expect(dbFile.existsSync(), isFalse,
+          reason: 'so a fresh one can be created');
       final orphans = dir
           .listSync()
           .whereType<File>()
@@ -253,9 +264,7 @@ void main() {
       // The next launch starts clean and can save.
       final fresh = guard.prepare(dbFile: dbFile, key: afterLoss.key!);
       expect(fresh.outcome, DbFileOutcome.fresh);
-      final db = await AppDatabase.forTesting(
-        NativeDatabase(dbFile, setup: (d) => d.execute(databaseKeyPragma(afterLoss.key!))),
-      );
+      final db = openWith(afterLoss.key!);
       addTearDown(db.close);
       await db.notesDao.createNote(
         id: 'new-start',
@@ -277,7 +286,8 @@ void main() {
         key: key,
         now: migratedAt.add(defaultBackupRetention - const Duration(days: 1)),
       );
-      expect(backup.existsSync(), isTrue, reason: 'still inside the retention window');
+      expect(backup.existsSync(), isTrue,
+          reason: 'still inside the retention window');
 
       guard.prepare(
         dbFile: dbFile,
@@ -300,12 +310,16 @@ void main() {
       final plan = guard.prepare(dbFile: dbFile, key: key);
 
       expect(plan.outcome, DbFileOutcome.plaintext);
-      expect(plan.key, isNull, reason: 'opening a plaintext file with a key always fails');
+      expect(plan.key, isNull,
+          reason: 'opening a plaintext file with a key always fails');
       expect(dbFile.readAsBytesSync(), original,
           reason: 'the original database must not be touched');
       final reopened = AppDatabase.forTesting(NativeDatabase(dbFile));
       addTearDown(reopened.close);
       expect(await reopened.notesDao.getAllNotes(), hasLength(2));
     });
-  }, skip: hasSqlCipher ? false : 'requires a SQLCipher library (e.g. apt install libsqlcipher1)');
+  },
+      skip: hasSqlCipher
+          ? false
+          : 'requires a SQLCipher library (e.g. apt install libsqlcipher1)');
 }

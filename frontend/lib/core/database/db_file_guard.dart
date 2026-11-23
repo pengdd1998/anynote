@@ -71,7 +71,8 @@ String generateDatabaseKey() {
 /// helper isolate, because both the key check and `sqlcipher_export` run a
 /// 256,000-round PBKDF2 that would otherwise block the UI thread.
 class DbFileGuard {
-  DbFileGuard({Sqlite3? sqlite3, this.tempDirectory, void Function(String)? logger})
+  DbFileGuard(
+      {Sqlite3? sqlite3, this.tempDirectory, void Function(String)? logger})
       : _sqlite3 = sqlite3 ?? s3.sqlite3,
         _logger = logger ?? log;
 
@@ -122,7 +123,8 @@ class DbFileGuard {
 
     // Encrypted (or unrecognisable): does the key open it?
     if (!_opensWith(dbFile, key)) {
-      return _recoverUnreadable(dbFile, tmp, backup, key, now ?? DateTime.now());
+      return _recoverUnreadable(
+          dbFile, tmp, backup, key, now ?? DateTime.now());
     }
 
     _expireBackup(backup, backupRetention, now ?? DateTime.now());
@@ -205,7 +207,8 @@ class DbFileGuard {
       db.execute(databaseKeyPragma(key));
       final version = db.select('PRAGMA user_version').first.values[0];
       if (version != snapshot.userVersion) {
-        throw StateError('user_version is $version, expected ${snapshot.userVersion}');
+        throw StateError(
+            'user_version is $version, expected ${snapshot.userVersion}');
       }
       final counts = _tableCounts(db);
       for (final entry in snapshot.tableCounts.entries) {

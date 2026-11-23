@@ -4525,4 +4525,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get filterMore => '詳細';
+
+  @override
+  String get publishFixBeforePublishing => '公開前に修正が必要';
+
+  @override
+  String get publishSuggestions => '提案';
+
+  @override
+  String get publishChecking => '確認中…';
 }

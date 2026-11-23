@@ -1477,5 +1477,8 @@
   "filterNoteType": "노트 유형",
   "filterTag": "태그",
   "filterDate": "날짜",
-  "filterMore": "더보기"
+  "filterMore": "더보기",
+  "publishFixBeforePublishing": "게시 전에 수정 필요",
+  "publishSuggestions": "제안",
+  "publishChecking": "확인 중…"
 }
