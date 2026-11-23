@@ -9,9 +9,14 @@ import '../../../helpers/test_app_helper.dart';
 
 void main() {
   group('PlatformConnectionScreen', () {
-    List<Override> platformOverrides() => [
+    /// Overrides for a screen with nothing connected and [catalog] offered.
+    List<Override> platformOverrides({
+      List<PlatformCatalogEntry> catalog = const [],
+    }) =>
+        [
           ...defaultProviderOverrides(),
           platformsProvider.overrideWith(() => _FakePlatformsNotifier()),
+          platformCatalogProvider.overrideWith((ref) async => catalog),
         ];
 
     testWidgets('renders without errors', (tester) async {
@@ -36,14 +41,35 @@ void main() {
       await handle.dispose();
     });
 
-    testWidgets('shows empty state when no platforms', (tester) async {
+    testWidgets('offers every platform to connect when none is connected yet',
+        (tester) async {
+      // A fresh account used to see nothing here but "no platforms", which
+      // left no way to connect the first one.
       final handle = await pumpScreen(
         tester,
         const PlatformConnectionScreen(),
-        overrides: platformOverrides(),
+        overrides: platformOverrides(
+          catalog: const [
+            PlatformCatalogEntry(
+              platform: 'xiaohongshu',
+              displayName: '小红书',
+              connected: false,
+            ),
+            PlatformCatalogEntry(
+              platform: 'zhihu',
+              displayName: '知乎',
+              connected: false,
+            ),
+          ],
+        ),
       );
+      await tester.pump();
 
-      expect(find.text('No platforms available'), findsOneWidget);
+      expect(find.text('Choose a platform to connect'), findsOneWidget);
+      expect(find.text('小红书'), findsOneWidget);
+      expect(find.text('知乎'), findsOneWidget);
+      expect(find.text('Connect'), findsNWidgets(2));
+
       await handle.dispose();
     });
   });

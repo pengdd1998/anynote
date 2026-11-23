@@ -16,6 +16,19 @@ import 'package:anynote/features/auth/presentation/login_screen.dart';
 import 'package:anynote/features/auth/presentation/register_screen.dart';
 import '../helpers/test_app_helper.dart';
 
+/// The login screen's sign-in button. Its social sign-in buttons are
+/// PressableScales too, so the button is told apart by its label.
+final signInButton = find.widgetWithText(PressableScale, 'Sign In');
+
+/// The register screen's submit button, by its label for the same reason:
+/// the recovery-key copy button is a PressableScale as well.
+final createAccountButton =
+    find.widgetWithText(PressableScale, 'Create Account');
+
+/// The register screen's link back to the login screen: the last words of a
+/// sentence, tapped as rich text rather than a button of its own.
+final backToLoginLink = find.textContaining('Already have an account? Sign In');
+
 void main() {
   group('Auth flow - LoginScreen', () {
     testWidgets('renders login form with email and password fields',
@@ -33,11 +46,14 @@ void main() {
       // Two text form fields: email and password.
       expect(find.byType(TextFormField), findsNWidgets(2));
 
-      // PressableScale for sign in.
-      expect(find.byType(PressableScale), findsOneWidget);
+      // The sign-in button.
+      expect(signInButton, findsOneWidget);
 
-      // Two TextButtons: register link and recover link.
-      expect(find.byType(TextButton), findsNWidgets(2));
+      // The two ways out of the screen: recover the account, or go register.
+      // Both are tap targets inside sentences, not buttons of their own.
+      expect(find.text('Forgot password?'), findsOneWidget);
+      expect(find.textContaining("Don't have an account?"), findsOneWidget);
+      expect(find.textContaining('Sign up'), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -66,9 +82,8 @@ void main() {
       );
 
       // Tap the sign-in button without filling fields.
-      // PressableScale uses GestureDetector, so we find the button by its
-      // text content and ensure it is visible before tapping.
-      final signInButton = find.byType(PressableScale);
+      // PressableScale uses GestureDetector, so the button is found by its
+      // text content and ensured visible before tapping.
       await tester.ensureVisible(signInButton);
       await tester.pump();
       await tester.tap(signInButton);
@@ -146,10 +161,9 @@ void main() {
 
       // Tap sign in -- this triggers the async crypto flow which will
       // fail because no salt is stored, but the widget should not crash.
-      final signInBtn = find.byType(PressableScale);
-      await tester.ensureVisible(signInBtn);
+      await tester.ensureVisible(signInButton);
       await tester.pump();
-      await tester.tap(signInBtn);
+      await tester.tap(signInButton);
       await tester.pump();
 
       // The widget tree should still be intact.
@@ -175,7 +189,7 @@ void main() {
       await tester.enterText(passwordField, 'password123');
       await tester.pump();
 
-      final submitBtn = find.byType(PressableScale);
+      final submitBtn = signInButton;
       await tester.ensureVisible(submitBtn);
       await tester.pump();
       await tester.tap(submitBtn);
@@ -196,8 +210,10 @@ void main() {
         overrides: defaultProviderOverrides(),
       );
 
-      // The register TextButton and recover TextButton should be present.
-      expect(find.byType(TextButton), findsNWidgets(2));
+      // The recover link is a button of its own; the register link is the
+      // last words of the footer sentence.
+      expect(find.text('Forgot password?'), findsOneWidget);
+      expect(find.textContaining('Sign up'), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -219,25 +235,31 @@ void main() {
       // Four text form fields: email, username, password, confirm password.
       expect(find.byType(TextFormField), findsNWidgets(4));
 
-      // PressableScale for create account.
-      expect(find.byType(PressableScale), findsOneWidget);
+      // The create-account button.
+      expect(createAccountButton, findsOneWidget);
 
-      // TextButton for "already have account".
-      expect(find.byType(TextButton), findsOneWidget);
+      // And the way back to the login screen.
+      expect(backToLoginLink, findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('shows person_add icon on register screen', (tester) async {
+    testWidgets('shows the person icon on the username field', (tester) async {
       final handle = await pumpScreen(
         tester,
         const RegisterScreen(),
         overrides: defaultProviderOverrides(),
       );
 
-      expect(find.byIcon(Icons.person_add_outlined), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.widgetWithText(TextFormField, 'Username'),
+          matching: find.byIcon(Icons.person_outline),
+        ),
+        findsOneWidget,
+      );
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -252,7 +274,6 @@ void main() {
       );
 
       // Tap create account without filling fields.
-      final createAccountButton = find.byType(PressableScale);
       await tester.ensureVisible(createAccountButton);
       await tester.pump();
       await tester.tap(createAccountButton);
@@ -284,10 +305,9 @@ void main() {
       await tester.enterText(passwordFields.first, 'short');
       await tester.pump();
 
-      final submitButton = find.byType(PressableScale);
-      await tester.ensureVisible(submitButton);
+      await tester.ensureVisible(createAccountButton);
       await tester.pump();
-      await tester.tap(submitButton);
+      await tester.tap(createAccountButton);
       await tester.pumpAndSettle();
 
       // The screen should still be rendered (validation failed).
@@ -332,8 +352,8 @@ void main() {
         overrides: defaultProviderOverrides(),
       );
 
-      // There should be a TextButton to navigate back to login.
-      expect(find.byType(TextButton), findsOneWidget);
+      // There should be a link to navigate back to login.
+      expect(backToLoginLink, findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();

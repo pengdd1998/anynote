@@ -119,8 +119,15 @@ void main() {
       await tester.tap(find.byType(PopupMenuButton<String>).first);
       await tester.pumpAndSettle();
 
-      // Search icon should be visible in the overflow menu.
-      expect(find.byIcon(AppIcons.search), findsOneWidget);
+      // The menu offers search. The search field at the top of the list
+      // carries the same icon, so look inside the menu.
+      expect(
+        find.descendant(
+          of: find.byType(PopupMenuItem<String>),
+          matching: find.byIcon(AppIcons.search),
+        ),
+        findsOneWidget,
+      );
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();

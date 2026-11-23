@@ -12,10 +12,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    // Initialize native sodium for tests.
-    final available = await probeSodiumAvailability();
-    if (!available) return;
+    // CryptoCompat.init() registers the sodium_libs platform of the host OS,
+    // which looks the library up in the running process — and the test
+    // runner does not link it. So exercise it first and put the test
+    // platform in place afterwards; the other way round the test platform
+    // was replaced, and everything that went through it later failed with
+    // "undefined symbol: sodium_init".
     await CryptoCompat.init();
+    await probeSodiumAvailability();
   });
 
   // -- CryptoCompat --
@@ -27,6 +31,9 @@ void main() {
 
     test('init completes without error', () async {
       await CryptoCompat.init();
+      // It registered the host OS's platform again; put the test platform
+      // back for the groups that follow.
+      registerTestSodiumPlatform();
     });
 
     test('supportsNativeCrypto returns true (unified backend)', () {

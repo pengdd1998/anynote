@@ -158,14 +158,15 @@ void main() {
 
     testWidgets('truncates long content with ellipsis', (tester) async {
       // Truncation is done via maxLines + ellipsis: the first line becomes
-      // the single-line title, the rest is a 3-line preview.
+      // the title, which may run to two lines (handwritten titles are often
+      // long), the rest is a 3-line preview.
       final longContent = '${'A' * 150}\n${'B' * 150}';
       await pumpNoteCard(
         tester,
         note: _defaultNote(plainContent: longContent),
       );
       final title = tester.widget<Text>(find.textContaining('AAA'));
-      expect(title.maxLines, 1);
+      expect(title.maxLines, 2);
       expect(title.overflow, TextOverflow.ellipsis);
       final preview = tester.widget<Text>(find.textContaining('BBB'));
       expect(preview.maxLines, 3);
@@ -265,10 +266,10 @@ void main() {
       expect(find.textContaining('Grid preview text'), findsOneWidget);
     });
 
-    testWidgets('truncates long content with ellipsis in grid',
-        (tester) async {
+    testWidgets('truncates long content with ellipsis in grid', (tester) async {
       // Truncation is done via maxLines + ellipsis: the first line becomes
-      // the single-line title, the rest is a 4-line preview.
+      // the title, which may run to four lines in the roomier grid, the rest
+      // is a 4-line preview.
       final longContent = '${'A' * 150}\n${'B' * 150}';
       await pumpNoteCard(
         tester,
@@ -276,7 +277,7 @@ void main() {
         layout: NoteCardLayout.grid,
       );
       final title = tester.widget<Text>(find.textContaining('AAA'));
-      expect(title.maxLines, 1);
+      expect(title.maxLines, 4);
       expect(title.overflow, TextOverflow.ellipsis);
       final preview = tester.widget<Text>(find.textContaining('BBB'));
       expect(preview.maxLines, 4);

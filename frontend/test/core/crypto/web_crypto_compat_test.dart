@@ -13,11 +13,13 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    // Initialize native sodium for recovery key tests (uses BLAKE2b/SHA-256
-    // on native test runner; would use WebCrypto in browser).
-    final available = await probeSodiumAvailability();
-    if (!available) return;
+    // CryptoCompat.init() registers the sodium_libs platform of the host OS,
+    // which looks the library up in the running process — and the test
+    // runner does not link it. So exercise it first and put the test
+    // platform (needed by the recovery key tests: BLAKE2b/SHA-256 on the
+    // native test runner) in place afterwards.
     await CryptoCompat.init();
+    await probeSodiumAvailability();
   });
 
   // ── CryptoCompat ──────────────────────────────────────────────────
@@ -30,6 +32,9 @@ void main() {
     test('init completes without error', () async {
       // Should not throw on any platform.
       await CryptoCompat.init();
+      // It registered the host OS's platform again; put the test platform
+      // back for the groups that follow.
+      registerTestSodiumPlatform();
     });
 
     test('supportsNativeCrypto returns a valid bool', () {

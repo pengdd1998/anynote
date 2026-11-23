@@ -49,16 +49,20 @@ void main() {
       expect(find.textContaining('256'), findsOneWidget);
     });
 
+    // The zen mode button is found by its tooltip rather than its icon,
+    // which is a detail of the design.
+    final zenButton = find.byTooltip('Enter focus mode');
+
     testWidgets('shows zen mode toggle button when not in zen mode',
         (tester) async {
       await pumpCountBar(tester, isZenMode: false);
-      expect(find.byIcon(Icons.fullscreen), findsOneWidget);
+      expect(zenButton, findsOneWidget);
     });
 
     testWidgets('hides zen mode toggle button when in zen mode',
         (tester) async {
       await pumpCountBar(tester, isZenMode: true);
-      expect(find.byIcon(Icons.fullscreen), findsNothing);
+      expect(zenButton, findsNothing);
     });
 
     testWidgets('fires onToggleZenMode when zen button tapped', (tester) async {
@@ -69,7 +73,7 @@ void main() {
         onToggleZenMode: () => toggled = true,
       );
 
-      await tester.tap(find.byIcon(Icons.fullscreen));
+      await tester.tap(zenButton);
       expect(toggled, isTrue);
     });
 
