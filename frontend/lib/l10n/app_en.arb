@@ -2609,22 +2609,6 @@
   "@platformGeneric": {
     "description": "Display name for generic platform in compose"
   },
-  "platformXhs": "XHS",
-  "@platformXhs": {
-    "description": "Display name for XHS (Xiaohongshu) platform"
-  },
-  "platformTwitter": "Twitter",
-  "@platformTwitter": {
-    "description": "Display name for Twitter platform"
-  },
-  "platformBlog": "Blog",
-  "@platformBlog": {
-    "description": "Display name for Blog platform"
-  },
-  "platformLinkedin": "LinkedIn",
-  "@platformLinkedin": {
-    "description": "Display name for LinkedIn platform"
-  },
   "noteClusters": "Note Clusters",
   "@noteClusters": {
     "description": "Title of the note clustering screen"

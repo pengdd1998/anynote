@@ -9,6 +9,8 @@ import 'package:uuid/uuid.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error_mapper.dart';
+import '../../publish/data/publish_providers.dart';
+import '../../publish/domain/publish_rules.dart';
 import '../../settings/data/settings_providers.dart';
 import '../domain/cluster_model.dart';
 import '../domain/outline_model.dart';
@@ -24,6 +26,12 @@ const int maxSelectedNotes = 10;
 
 /// Maximum total character count across all selected note contents.
 const int maxTotalContentChars = 100000; // 100K chars
+
+/// How long a compose step waits for the server's platform rules before
+/// writing with the built-in ones.
+final platformRulesTimeoutProvider = Provider<Duration>(
+  (ref) => const Duration(seconds: 3),
+);
 
 // ── Compose Stage ──────────────────────────────────
 
@@ -58,7 +66,9 @@ class ComposeSessionState {
   /// User-provided topic for the composition.
   final String topic;
 
-  /// Target platform style (e.g. 'generic', 'xhs', 'twitter').
+  /// The platform the post is written for: `generic`, or the id of a
+  /// platform the app can publish to (`xiaohongshu`, `zhihu`, …) — the same
+  /// ids the server's platform rules use.
   final String platformStyle;
 
   /// AI-generated clusters.
@@ -259,9 +269,39 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
     state = state.copyWith(topic: topic);
   }
 
-  /// Set the target platform style.
+  /// Set the platform the post is written for.
   void setPlatformStyle(String style) {
     state = state.copyWith(platformStyle: style);
+  }
+
+  /// The rules of the session's platform, or null for the generic style.
+  ///
+  /// The server's table is the source of truth and is normally in by now —
+  /// the start-up screen lists the platforms from it. A session that started
+  /// before it arrived, or offline, is not left waiting on it: after
+  /// [platformRulesTimeoutProvider] the built-in table, which mirrors it,
+  /// stands in.
+  Future<PlatformGuide?> _platformGuide() async {
+    final id = state.platformStyle;
+    if (id == 'generic') return null;
+    final guides = await _ref
+        .read(platformGuidesProvider.future)
+        .catchError((Object _) => fallbackPlatformGuides)
+        .timeout(
+          _ref.read(platformRulesTimeoutProvider),
+          onTimeout: () => fallbackPlatformGuides,
+        );
+    return guideFor(guides, id);
+  }
+
+  /// Whether [token] was cancelled while its step waited on
+  /// [_platformGuide]. The step then stops before calling the model, and
+  /// the loading state is cleared here because the caller returns ahead of
+  /// its usual clean-up.
+  bool _cancelledWhileWaiting(CancelToken token) {
+    if (!token.isCancelled) return false;
+    if (mounted) state = state.copyWith(isLoading: false);
+    return true;
   }
 
   /// Set the selected post template (controls format/tone/structure).
@@ -436,11 +476,14 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
           .map((i) => state.clusters[i].toJson())
           .toList();
 
+      final platform = await _platformGuide();
+      if (_cancelledWhileWaiting(token)) return;
+
       final prompt = _promptBuilder.buildOutlinePrompt(
         selectedClusters,
-        state.platformStyle,
         topic: state.topic,
         template: state.selectedTemplate,
+        platform: platform,
       );
 
       final response = await _aiRepo.chat(
@@ -540,11 +583,15 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         remaining -= piece.length;
       }
 
+      final platform = await _platformGuide();
+      if (_cancelledWhileWaiting(token)) return;
+
       final prompt = _promptBuilder.buildExpandPrompt(
         state.outline!.toJson(),
         limitedSources,
         topic: state.topic,
         template: state.selectedTemplate,
+        platform: platform,
       );
 
       final buffer = StringBuffer();
@@ -593,10 +640,13 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         return;
       }
 
+      final platform = await _platformGuide();
+      if (_cancelledWhileWaiting(token)) return;
+
       final prompt = _promptBuilder.buildStyleAdaptPrompt(
         state.draft,
-        state.platformStyle,
         template: state.selectedTemplate,
+        platform: platform,
       );
 
       final buffer = StringBuffer();
@@ -652,8 +702,13 @@ class ComposeSessionNotifier extends StateNotifier<ComposeSessionState> {
         return;
       }
 
-      final systemPrompt =
-          _promptBuilder.buildRefineSystemPrompt(state.selectedTemplate);
+      final platform = await _platformGuide();
+      if (_cancelledWhileWaiting(token)) return;
+
+      final systemPrompt = _promptBuilder.buildRefineSystemPrompt(
+        state.selectedTemplate,
+        platform: platform,
+      );
 
       final messages = <ChatMessage>[
         ChatMessage(role: 'system', content: systemPrompt),

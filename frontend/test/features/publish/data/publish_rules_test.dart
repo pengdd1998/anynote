@@ -17,6 +17,9 @@ class _RulesApiClient extends ApiClient {
 
   List<Map<String, dynamic>>? platformsToReturn;
   Object? platformsError;
+
+  /// A test that needs the platform rules to arrive late parks the call here.
+  Completer<void>? platformsGate;
   Map<String, dynamic> validationToReturn = const {'valid': true};
   Object? validationError;
   Map<String, dynamic>? publishToReturn;
@@ -28,6 +31,7 @@ class _RulesApiClient extends ApiClient {
 
   @override
   Future<List<Map<String, dynamic>>> publishPlatforms() async {
+    await platformsGate?.future;
     if (platformsError != null) throw platformsError!;
     return platformsToReturn ?? const [];
   }
@@ -209,6 +213,43 @@ void main() {
       final guides = await container.read(platformGuidesProvider.future);
 
       expect(guides, fallbackPlatformGuides);
+    });
+  });
+
+  group('currentPlatformGuidesProvider', () {
+    test('is the built-in table until the server has answered', () async {
+      final answer = Completer<void>();
+      final api = _RulesApiClient()
+        ..platformsGate = answer
+        ..platformsToReturn = [_xhsGuide];
+      final container = _container(api);
+      addTearDown(container.dispose);
+
+      // Read while the request is still in flight, as an editor that opens
+      // right after start-up would.
+      expect(
+        container.read(currentPlatformGuidesProvider),
+        fallbackPlatformGuides,
+      );
+
+      answer.complete();
+      await container.read(platformGuidesProvider.future);
+
+      expect(container.read(currentPlatformGuidesProvider).single.id,
+          'xiaohongshu');
+    });
+
+    test('stays on the built-in table when the server fails', () async {
+      final api = _RulesApiClient()..platformsError = _dioError(503, null);
+      final container = _container(api);
+      addTearDown(container.dispose);
+
+      await container.read(platformGuidesProvider.future);
+
+      expect(
+        container.read(currentPlatformGuidesProvider),
+        fallbackPlatformGuides,
+      );
     });
   });
 

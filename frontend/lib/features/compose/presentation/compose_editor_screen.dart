@@ -9,8 +9,13 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../publish/data/publish_providers.dart';
+import '../../publish/domain/publish_rules.dart';
 import '../../publish/presentation/widgets/publish_from_editor_sheet.dart';
+import '../../publish/presentation/widgets/publish_problems_list.dart';
 import '../data/compose_providers.dart';
+import '../domain/platform_draft.dart';
+import 'platform_label.dart';
 import 'widgets/refinement_chat.dart';
 
 /// Full text editor with AI-generated content displayed via streaming.
@@ -80,6 +85,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
     }
 
     final l10n = AppLocalizations.of(context)!;
+    final platformGuide = _guideFor(session, ref);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -96,14 +102,18 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
           IconButton(
             icon: const Icon(Icons.ios_share),
             tooltip: l10n.publish,
-            onPressed: session.isLoading
-                ? null
-                : () => _publishDraft(context),
+            onPressed: session.isLoading ? null : () => _publishDraft(context),
           ),
           IconButton(
             icon: const Icon(Icons.style),
-            tooltip: l10n.adaptStyleFor(session.platformStyle),
-            onPressed: session.isLoading || session.draft.isEmpty
+            tooltip: l10n.adaptStyleFor(
+              platformLabel(l10n, ref.watch(currentPlatformGuidesProvider),
+                  session.platformStyle),
+            ),
+            // The generic style has no conventions to adapt to.
+            onPressed: session.isLoading ||
+                    session.draft.isEmpty ||
+                    platformGuide == null
                 ? null
                 : () => _adaptStyle(ref, l10n),
           ),
@@ -344,6 +354,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
     AppLocalizations l10n,
     bool isDark,
   ) {
+    final guide = _guideFor(session, ref);
     return SafeArea(
       child: Container(
         margin: const EdgeInsets.fromLTRB(
@@ -415,7 +426,11 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
-                  session.platformStyle,
+                  platformLabel(
+                    l10n,
+                    ref.watch(currentPlatformGuidesProvider),
+                    session.platformStyle,
+                  ),
                   style: AppTextStyles.caption.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -427,16 +442,26 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
 
             const Spacer(),
 
-            // Word count
-            Text(
-              l10n.wordsCount(_countWords(session.draft)),
-              style: AppTextStyles.caption.copyWith(
-                fontSize: 12,
-                color: isDark
-                    ? AppColors.darkTextTertiary
-                    : AppColors.lightTextTertiary,
+            // For a platform, the body's length against its limit — counted
+            // the way it will be published, without the title and tag lines.
+            // Without one, the word count.
+            if (guide != null)
+              LengthCounter(
+                length: PlatformGuide.lengthOf(
+                  PlatformDraft.parse(session.draft).content,
+                ),
+                max: guide.contentMax,
+              )
+            else
+              Text(
+                l10n.wordsCount(_countWords(session.draft)),
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 12,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
               ),
-            ),
             const SizedBox(width: AppSpacing.s12),
 
             // Save button
@@ -472,10 +497,14 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
     return text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
   }
 
-  /// Hands the current draft off to the publish flow.
-  ///
-  /// The title is the first non-empty line with markdown heading markers
-  /// stripped; the content is the full draft.
+  /// The rules of the session's platform, or null for the generic style or
+  /// one the app does not know.
+  PlatformGuide? _guideFor(ComposeSessionState session, WidgetRef ref) =>
+      guideFor(ref.watch(currentPlatformGuidesProvider), session.platformStyle);
+
+  /// Hands the current draft off to the publish flow, split into the title,
+  /// the body and the tags — the parts a platform takes separately — and
+  /// naming the platform it was written for.
   void _publishDraft(BuildContext context) {
     final session = ref.read(composeSessionProvider);
     final l10n = AppLocalizations.of(context)!;
@@ -485,6 +514,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
       return;
     }
 
+    final draft = PlatformDraft.parse(session.draft);
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -493,29 +523,16 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => PublishFromEditorSheet(
-        title: _extractPublishTitle(session.draft),
-        content: session.draft,
-        initialTags: const [],
+        title: draft.title,
+        content: draft.content,
+        initialTags: draft.tags,
+        initialPlatform:
+            session.platformStyle == 'generic' ? null : session.platformStyle,
         // Carry the compose template through so the publish sheet's AI
         // polish keeps the template's structure and tone.
         template: session.selectedTemplate,
       ),
     );
-  }
-
-  /// Extracts the publish title from the draft: the first non-empty line with
-  /// markdown heading markers (`#`) and emphasis markers (`**`) stripped —
-  /// platform titles should carry plain text, not markdown.
-  String _extractPublishTitle(String draft) {
-    for (final line in draft.split('\n')) {
-      final stripped = line
-          .trim()
-          .replaceFirst(RegExp(r'^#+\s*'), '')
-          .replaceAll('**', '')
-          .trim();
-      if (stripped.isNotEmpty) return stripped;
-    }
-    return '';
   }
 
   Future<void> _adaptStyle(WidgetRef ref, AppLocalizations l10n) async {

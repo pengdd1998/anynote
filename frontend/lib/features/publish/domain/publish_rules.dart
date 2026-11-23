@@ -123,6 +123,15 @@ class PlatformGuide {
   static int lengthOf(String text) => text.runes.length;
 }
 
+/// Looks a platform's rules up in [guides]; null for an id that is not a
+/// platform the app knows.
+PlatformGuide? guideFor(List<PlatformGuide> guides, String platformId) {
+  for (final guide in guides) {
+    if (guide.id == platformId) return guide;
+  }
+  return null;
+}
+
 /// The platform rules to show when the server's cannot be fetched, so an
 /// editor still knows the limits offline. Mirrors the limits in the server's
 /// `internal/platform/spec`; the server stays the source of truth and

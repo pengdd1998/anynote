@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/features/compose/domain/post_template.dart';
 import 'package:anynote/features/compose/domain/prompt_builder.dart';
+import 'package:anynote/features/publish/domain/publish_rules.dart';
 
 /// A template with a distinctive fragment used to assert prompt injection.
 PostTemplate _templateWithMarker() => PostTemplate(
@@ -14,6 +15,29 @@ PostTemplate _templateWithMarker() => PostTemplate(
       isBuiltIn: true,
       createdAt: DateTime(2026, 1, 1),
     );
+
+/// A platform whose brief and limits are distinctive enough to look for.
+const _xiaohongshu = PlatformGuide(
+  id: 'xiaohongshu',
+  name: '小红书',
+  titleMax: 20,
+  contentMax: 1000,
+  maxTags: 10,
+  linksAllowed: false,
+  guidance: ['像跟朋友讲这周干了什么。', '末尾放 3 到 5 个 #话题。'],
+);
+
+const _zhihu = PlatformGuide(
+  id: 'zhihu',
+  name: '知乎',
+  titleMax: 100,
+  contentMax: 50000,
+  maxTags: 10,
+  linksAllowed: true,
+);
+
+const _xhsLimits = 'Hard limits: a title of at most 20 characters; '
+    'a body of at most 1000 characters; at most 10 tags; no links.';
 
 void main() {
   late PromptBuilder builder;
@@ -77,7 +101,10 @@ void main() {
 
     test('handles notes with special characters and unicode', () {
       final result = builder.buildClusterPrompt(
-        ['Note with "quotes" and <brackets>', 'Unicode: \u4f60\u597d\u4e16\u754c'],
+        [
+          'Note with "quotes" and <brackets>',
+          'Unicode: \u4f60\u597d\u4e16\u754c'
+        ],
         'special chars',
       );
       expect(result, contains('"quotes"'));
@@ -124,33 +151,58 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('buildOutlinePrompt', () {
-    test('includes platform name in the prompt', () {
-      final result = builder.buildOutlinePrompt(
-        [
-          {'name': 'Intro', 'summary': 'Introduction to the topic'},
-        ],
-        'Xiaohongshu',
+    const clusters = [
+      {'name': 'Cluster A', 'summary': 'Summary A'},
+      {'name': 'Cluster B', 'summary': 'Summary B'},
+    ];
+
+    test('names the platform the outline is for', () {
+      final result =
+          builder.buildOutlinePrompt(clusters, platform: _xiaohongshu);
+      expect(result, contains('for a 小红书 post.'));
+    });
+
+    test('without a platform, asks for a plain post and states no rules', () {
+      final result = builder.buildOutlinePrompt(clusters);
+      expect(result, contains('for a post.'));
+      expect(result, isNot(contains('Target platform')));
+      expect(result, isNot(contains('Hard limits')));
+    });
+
+    test('carries the platform writing brief and its limits', () {
+      final result =
+          builder.buildOutlinePrompt(clusters, platform: _xiaohongshu);
+      expect(result, contains('Target platform: 小红书'));
+      // One brief line per item, as the server wrote them.
+      expect(result, contains('- 像跟朋友讲这周干了什么。'));
+      expect(result, contains('- 末尾放 3 到 5 个 #话题。'));
+      expect(result, contains(_xhsLimits));
+    });
+
+    test('a platform without a brief still gets its limits', () {
+      final result = builder.buildOutlinePrompt(clusters, platform: _zhihu);
+      expect(result, contains('Target platform: 知乎'));
+      expect(result, isNot(contains('How to write for it')));
+      expect(
+        result,
+        contains('Hard limits: a title of at most 100 characters; '
+            'a body of at most 50000 characters; at most 10 tags.'),
       );
-      expect(result, contains('Xiaohongshu post'));
+    });
+
+    test('does not forbid links where the platform allows them', () {
+      final result = builder.buildOutlinePrompt(clusters, platform: _zhihu);
+      expect(result, isNot(contains('no links')));
     });
 
     test('includes cluster name and summary for each cluster', () {
-      final clusters = [
-        {'name': 'Cluster A', 'summary': 'Summary A'},
-        {'name': 'Cluster B', 'summary': 'Summary B'},
-      ];
-      final result = builder.buildOutlinePrompt(clusters, 'Twitter');
+      final result = builder.buildOutlinePrompt(clusters);
       expect(result, contains('Cluster A: Summary A'));
       expect(result, contains('Cluster B: Summary B'));
     });
 
     test('includes JSON output schema with title and sections', () {
-      final result = builder.buildOutlinePrompt(
-        [
-          {'name': 'C', 'summary': 'S'},
-        ],
-        'blog',
-      );
+      final result = builder.buildOutlinePrompt(clusters);
       expect(result, contains('"title"'));
       expect(result, contains('"sections"'));
       expect(result, contains('"heading"'));
@@ -159,38 +211,26 @@ void main() {
     });
 
     test('handles empty cluster list', () {
-      final result = builder.buildOutlinePrompt([], 'Medium');
-      expect(result, contains('Medium post'));
+      final result = builder.buildOutlinePrompt([]);
+      expect(result, contains('for a post.'));
     });
 
     test('injects the user topic into the prompt', () {
       final result = builder.buildOutlinePrompt(
-        [
-          {'name': 'C', 'summary': 'S'},
-        ],
-        'blog',
+        clusters,
         topic: 'My Special Topic',
       );
       expect(result, contains('User topic: My Special Topic'));
     });
 
     test('omits the topic line when topic is empty', () {
-      final result = builder.buildOutlinePrompt(
-        [
-          {'name': 'C', 'summary': 'S'},
-        ],
-        'blog',
-        topic: '',
-      );
+      final result = builder.buildOutlinePrompt(clusters, topic: '');
       expect(result, isNot(contains('User topic:')));
     });
 
     test('injects the template prompt fragment when provided', () {
       final result = builder.buildOutlinePrompt(
-        [
-          {'name': 'C', 'summary': 'S'},
-        ],
-        'blog',
+        clusters,
         template: _templateWithMarker(),
       );
       expect(result, contains('TEMPLATE_FRAGMENT_MARKER'));
@@ -202,11 +242,9 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('buildExpandPrompt', () {
+    const outline = {'title': 'My Awesome Post', 'sections': []};
+
     test('includes outline title', () {
-      final outline = {
-        'title': 'My Awesome Post',
-        'sections': [],
-      };
       final result = builder.buildExpandPrompt(outline, ['source note']);
       expect(result, contains('My Awesome Post'));
     });
@@ -233,10 +271,6 @@ void main() {
     });
 
     test('includes source notes', () {
-      final outline = {
-        'title': 'Title',
-        'sections': [],
-      };
       final result = builder.buildExpandPrompt(outline, [
         'First source material',
         'Second source material',
@@ -267,19 +301,34 @@ void main() {
     });
 
     test('requests natural engaging style', () {
-      final outline = {
-        'title': 'Title',
-        'sections': [],
-      };
       final result = builder.buildExpandPrompt(outline, []);
       expect(result.toLowerCase(), contains('engaging'));
     });
 
+    test('states the layout the draft is later split by', () {
+      final result = builder.buildExpandPrompt(outline, ['note']);
+      // PlatformDraft.parse relies on each of these.
+      expect(result, contains('title on the first line'));
+      expect(result, contains('"# Title"'));
+      expect(result, contains('one last line holding only the hashtags'));
+      expect(result, contains('Output only the post'));
+    });
+
+    test('carries the platform writing brief and its limits', () {
+      final result =
+          builder.buildExpandPrompt(outline, ['note'], platform: _xiaohongshu);
+      expect(result, contains('Target platform: 小红书'));
+      expect(result, contains('- 像跟朋友讲这周干了什么。'));
+      expect(result, contains(_xhsLimits));
+    });
+
+    test('without a platform, states no platform rules', () {
+      final result = builder.buildExpandPrompt(outline, ['note']);
+      expect(result, isNot(contains('Target platform')));
+      expect(result, isNot(contains('Hard limits')));
+    });
+
     test('injects the user topic into the prompt', () {
-      final outline = {
-        'title': 'Title',
-        'sections': [],
-      };
       final result = builder.buildExpandPrompt(
         outline,
         ['note'],
@@ -289,10 +338,6 @@ void main() {
     });
 
     test('omits the topic line when topic is empty', () {
-      final outline = {
-        'title': 'Title',
-        'sections': [],
-      };
       final result = builder.buildExpandPrompt(
         outline,
         ['note'],
@@ -302,10 +347,6 @@ void main() {
     });
 
     test('injects the template prompt fragment when provided', () {
-      final outline = {
-        'title': 'Title',
-        'sections': [],
-      };
       final result = builder.buildExpandPrompt(
         outline,
         ['note'],
@@ -321,41 +362,45 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('buildStyleAdaptPrompt', () {
-    test('includes the platform name', () {
-      final result = builder.buildStyleAdaptPrompt(
-        'Some content here',
-        'Instagram',
-      );
-      expect(result, contains('Instagram'));
+    test('names the platform', () {
+      final result = builder.buildStyleAdaptPrompt('content', platform: _zhihu);
+      expect(result, contains('for 知乎.'));
     });
 
     test('includes the full content', () {
       const content = 'This is the original content to adapt.';
-      final result = builder.buildStyleAdaptPrompt(content, 'Twitter');
+      final result = builder.buildStyleAdaptPrompt(content);
       expect(result, contains(content));
     });
 
     test('mentions tone, format, and style', () {
-      final result = builder.buildStyleAdaptPrompt('content', 'LinkedIn');
+      final result = builder.buildStyleAdaptPrompt('content');
       expect(result.toLowerCase(), contains('tone'));
       expect(result.toLowerCase(), contains('format'));
       expect(result.toLowerCase(), contains('style'));
     });
 
-    test('instructs to output adapted content directly', () {
-      final result = builder.buildStyleAdaptPrompt('content', 'blog');
-      expect(result.toLowerCase(), contains('adapted content'));
+    test('asks for the same layout as a new draft', () {
+      final result = builder.buildStyleAdaptPrompt('content');
+      expect(result, contains('title on the first line'));
+      expect(result, contains('Output only the post'));
+    });
+
+    test('carries the platform writing brief and its limits', () {
+      final result =
+          builder.buildStyleAdaptPrompt('content', platform: _xiaohongshu);
+      expect(result, contains('- 像跟朋友讲这周干了什么。'));
+      expect(result, contains(_xhsLimits));
     });
 
     test('handles empty content string', () {
-      final result = builder.buildStyleAdaptPrompt('', 'Xiaohongshu');
-      expect(result, contains('Xiaohongshu'));
+      final result = builder.buildStyleAdaptPrompt('', platform: _xiaohongshu);
+      expect(result, contains('小红书'));
     });
 
     test('injects the template prompt fragment when provided', () {
       final result = builder.buildStyleAdaptPrompt(
         'content',
-        'XHS',
         template: _templateWithMarker(),
       );
       expect(result, contains('TEMPLATE_FRAGMENT_MARKER'));
@@ -363,7 +408,7 @@ void main() {
     });
 
     test('omits the template fragment when no template is given', () {
-      final result = builder.buildStyleAdaptPrompt('content', 'XHS');
+      final result = builder.buildStyleAdaptPrompt('content');
       expect(result, isNot(contains('TEMPLATE_FRAGMENT_MARKER')));
     });
   });
@@ -379,9 +424,30 @@ void main() {
       expect(result, contains('FULL updated post'));
     });
 
+    test('has the refinement keep the layout the draft is split by', () {
+      final result = builder.buildRefineSystemPrompt(null);
+      expect(result, contains('title heading on the first line'));
+      expect(result, contains('hashtag line last'));
+      // Chatter around the post would be published along with it.
+      expect(result, contains('output the post only'));
+    });
+
+    test('carries the platform rules so a refinement cannot break them', () {
+      final result = builder.buildRefineSystemPrompt(
+        null,
+        platform: _xiaohongshu,
+      );
+      expect(result, contains('Target platform: 小红书'));
+      expect(result, contains(_xhsLimits));
+    });
+
+    test('without a platform, states no platform rules', () {
+      final result = builder.buildRefineSystemPrompt(null);
+      expect(result, isNot(contains('Target platform')));
+    });
+
     test('injects the template prompt fragment when provided', () {
-      final result =
-          builder.buildRefineSystemPrompt(_templateWithMarker());
+      final result = builder.buildRefineSystemPrompt(_templateWithMarker());
       expect(result, contains('TEMPLATE_FRAGMENT_MARKER'));
     });
 

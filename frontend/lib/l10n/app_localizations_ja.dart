@@ -1872,18 +1872,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get platformGeneric => '汎用';
 
   @override
-  String get platformXhs => '小紅書（RED）';
-
-  @override
-  String get platformTwitter => 'Twitter';
-
-  @override
-  String get platformBlog => 'ブログ';
-
-  @override
-  String get platformLinkedin => 'LinkedIn';
-
-  @override
   String get noteClusters => 'メモクラスタ';
 
   @override

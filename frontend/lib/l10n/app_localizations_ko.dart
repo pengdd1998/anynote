@@ -1872,18 +1872,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get platformGeneric => '일반';
 
   @override
-  String get platformXhs => '샤오홍슈';
-
-  @override
-  String get platformTwitter => 'Twitter';
-
-  @override
-  String get platformBlog => '블로그';
-
-  @override
-  String get platformLinkedin => 'LinkedIn';
-
-  @override
   String get noteClusters => '메모 클러스터';
 
   @override

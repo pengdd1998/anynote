@@ -185,4 +185,13 @@ func TestGuides(t *testing.T) {
 	if !strings.Contains(joined, fmt.Sprintf("%d 字以内", xhs.Fields["title"].Max)) {
 		t.Errorf("xiaohongshu guidance should state the %d-character title cap: %q", xhs.Fields["title"].Max, joined)
 	}
+	// These adapters type the text into the platform's own editor, where a
+	// Markdown marker reaches the reader as literal "**" or "#". Their brief
+	// must tell the model to write plain text; Medium takes Markdown.
+	for _, id := range []string{"xiaohongshu", "wechat", "zhihu"} {
+		s, _ := For(id)
+		if joined := strings.Join(s.Guidance, "\n"); !strings.Contains(joined, "纯文本") {
+			t.Errorf("%s guidance should say the body is plain text: %q", id, joined)
+		}
+	}
 }

@@ -24,12 +24,18 @@ class PublishFromEditorSheet extends ConsumerStatefulWidget {
   /// structure and tone.
   final PostTemplate? template;
 
+  /// The platform the draft was written for (the one chosen in AI compose),
+  /// selected when the sheet opens. It counts only if that platform is
+  /// connected; otherwise the sheet opens with nothing selected.
+  final String? initialPlatform;
+
   const PublishFromEditorSheet({
     super.key,
     required this.title,
     required this.content,
     this.initialTags = const [],
     this.template,
+    this.initialPlatform,
   });
 
   @override
@@ -51,7 +57,7 @@ class _PublishFromEditorSheetState
   late final _tagsController = TextEditingController(
     text: widget.initialTags.join(', '),
   );
-  String? _selectedPlatform;
+  late String? _selectedPlatform = widget.initialPlatform;
 
   @override
   void initState() {
@@ -63,6 +69,11 @@ class _PublishFromEditorSheetState
     ]) {
       controller.addListener(_onDraftChanged);
     }
+    // A draft arrives with a title and a body already, so say right away
+    // what the platform's rules think of it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scheduleValidation();
+    });
   }
 
   @override
@@ -85,6 +96,23 @@ class _PublishFromEditorSheetState
       .where((t) => t.isNotEmpty)
       .toList();
 
+  /// The id a platform is published under, as the server's list names it.
+  static String _platformKey(Map<String, dynamic> p) =>
+      p['key']?.toString() ??
+      (p['name']?.toString() ?? p['platform']?.toString() ?? '').toLowerCase();
+
+  /// The chosen platform once the connected ones are known, and only if it
+  /// is one of them: a draft composed for a platform the user has not
+  /// connected opens with nothing selected rather than offering a publish
+  /// that cannot work.
+  String? get _platform {
+    final selected = _selectedPlatform;
+    if (selected == null) return null;
+    final connected = ref.read(connectedPlatformsProvider).valueOrNull;
+    if (connected == null) return null;
+    return connected.any((p) => _platformKey(p) == selected) ? selected : null;
+  }
+
   /// Redraws the length counters and asks the server to re-check the draft.
   void _onDraftChanged() {
     setState(() {});
@@ -99,7 +127,7 @@ class _PublishFromEditorSheetState
   /// body is already reported when the user tries to publish.
   void _scheduleValidation() {
     final validator = ref.read(publishValidationProvider.notifier);
-    final platform = _selectedPlatform;
+    final platform = _platform;
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
     if (platform == null || title.isEmpty || content.isEmpty) {
@@ -144,13 +172,13 @@ class _PublishFromEditorSheetState
       return;
     }
 
-    if (_selectedPlatform == null) {
+    if (_platform == null) {
       AppSnackBar.error(context, message: l10n.selectPlatformFirst);
       return;
     }
 
     await ref.read(publishActionProvider.notifier).publish(
-          platform: _selectedPlatform!,
+          platform: _platform!,
           title: title,
           content: content,
           tags: _tags,
@@ -181,12 +209,24 @@ class _PublishFromEditorSheetState
     final guidesAsync = ref.watch(platformGuidesProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
-    // The limits of the selected platform, from the server's rules.
-    final guide = guidesAsync.whenOrNull(
-      data: (guides) => _selectedPlatform == null
-          ? null
-          : guideFor(guides, _selectedPlatform!),
+    // A platform counts as chosen only once the connected ones are known, so
+    // that is the earliest moment a preselected one can be checked.
+    ref.listen<AsyncValue<List<Map<String, dynamic>>>>(
+      connectedPlatformsProvider,
+      (previous, next) {
+        if (previous?.hasValue != true && next.hasValue) {
+          _scheduleValidation();
+        }
+      },
     );
+
+    // The limits of the selected platform, from the server's rules.
+    final platform = _platform;
+    final guide = platform == null
+        ? null
+        : guidesAsync.whenOrNull(
+            data: (guides) => guideFor(guides, platform),
+          );
     final titleLength = PlatformGuide.lengthOf(_titleController.text.trim());
     final contentLength =
         PlatformGuide.lengthOf(_contentController.text.trim());
@@ -351,8 +391,7 @@ class _PublishFromEditorSheetState
                             final name = p['name']?.toString() ??
                                 p['platform']?.toString() ??
                                 l10n.unknown;
-                            final platformKey =
-                                p['key']?.toString() ?? name.toLowerCase();
+                            final platformKey = _platformKey(p);
                             final icon =
                                 _platformIcons[platformKey] ?? Icons.language;
                             final subtitle = p['display_name']?.toString() ??

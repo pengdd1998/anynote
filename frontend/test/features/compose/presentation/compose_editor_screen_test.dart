@@ -60,6 +60,109 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
+    group('platform', () {
+      /// Pumps the editor and brings its session to [draft], written for
+      /// [platform].
+      Future<TestAppHandle> editorFor(
+        WidgetTester tester, {
+        required String platform,
+        required String draft,
+      }) async {
+        final handle = await pumpScreen(
+          tester,
+          const ComposeEditorScreen(sessionId: 'test-session'),
+          overrides: defaultProviderOverrides(),
+        );
+        final notifier = handle.container.read(composeSessionProvider.notifier);
+        notifier.setPlatformStyle(platform);
+        notifier.updateDraft(draft);
+        await tester.pump();
+        return handle;
+      }
+
+      /// Cleans up and lets the editor's post-frame callbacks run out.
+      Future<void> close(WidgetTester tester, TestAppHandle handle) async {
+        await handle.dispose();
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      IconButton adaptStyleButton(WidgetTester tester) =>
+          tester.widget<IconButton>(
+            find.ancestor(
+              of: find.byIcon(Icons.style),
+              matching: find.byType(IconButton),
+            ),
+          );
+
+      testWidgets('adapt style has nothing to adapt to without a platform',
+          (tester) async {
+        final handle = await editorFor(
+          tester,
+          platform: 'generic',
+          draft: '# 标题\n正文',
+        );
+
+        expect(adaptStyleButton(tester).onPressed, isNull);
+
+        await close(tester, handle);
+      });
+
+      testWidgets('adapt style is offered for a platform the app knows',
+          (tester) async {
+        final handle = await editorFor(
+          tester,
+          platform: 'xiaohongshu',
+          draft: '# 标题\n正文',
+        );
+
+        expect(adaptStyleButton(tester).onPressed, isNotNull);
+
+        await close(tester, handle);
+      });
+
+      testWidgets('names the platform instead of showing its id',
+          (tester) async {
+        final handle = await editorFor(
+          tester,
+          platform: 'xiaohongshu',
+          draft: '# 标题\n正文',
+        );
+
+        expect(find.text('小红书'), findsOneWidget);
+        expect(find.text('xiaohongshu'), findsNothing);
+
+        await close(tester, handle);
+      });
+
+      testWidgets('shows the body length against the platform limit',
+          (tester) async {
+        // The title line and the hashtag line are not part of the body, so
+        // they do not count towards its limit.
+        final handle = await editorFor(
+          tester,
+          platform: 'xiaohongshu',
+          draft: '# 标题\n${'字' * 990}\n\n#a',
+        );
+
+        expect(find.text('990/1000'), findsOneWidget);
+
+        await close(tester, handle);
+      });
+
+      testWidgets('a style the app does not know gets no limit counter',
+          (tester) async {
+        final handle = await editorFor(
+          tester,
+          platform: 'xhs',
+          draft: '# 标题\n正文',
+        );
+
+        expect(find.textContaining('/'), findsNothing);
+
+        await close(tester, handle);
+      });
+    });
+
     group('publish handoff', () {
       List<Override> overridesWithFakePlatforms() => [
             ...defaultProviderOverrides(),
@@ -76,8 +179,9 @@ void main() {
           overrides: overridesWithFakePlatforms(),
         );
 
-        // Seed a non-empty draft (markdown heading + body).
-        const draft = '# 我的第一篇笔记\n\n这是正文内容。';
+        // Seed a non-empty draft in the layout the AI writes: title heading,
+        // body, then a hashtag line.
+        const draft = '# 我的第一篇笔记\n\n这是正文内容。\n\n#笔记 #效率';
         handle.container.read(composeSessionProvider.notifier).updateDraft(
               draft,
             );
@@ -90,7 +194,7 @@ void main() {
 
         // The publish bottom sheet opens.
         expect(find.byType(PublishFromEditorSheet), findsOneWidget);
-        // Title is the first line with the markdown heading marker stripped.
+        // The title line goes to the title field, heading marker stripped.
         expect(
           find.descendant(
             of: find.byType(PublishFromEditorSheet),
@@ -98,11 +202,27 @@ void main() {
           ),
           findsOneWidget,
         );
-        // Content is the full draft.
+        // The body goes to the content field without the title line: it used
+        // to be sent whole, so the title was published twice.
+        expect(
+          find.descendant(
+            of: find.byType(PublishFromEditorSheet),
+            matching: find.text('这是正文内容。'),
+          ),
+          findsOneWidget,
+        );
         expect(
           find.descendant(
             of: find.byType(PublishFromEditorSheet),
             matching: find.text(draft),
+          ),
+          findsNothing,
+        );
+        // The hashtag line becomes the tags instead of staying in the body.
+        expect(
+          find.descendant(
+            of: find.byType(PublishFromEditorSheet),
+            matching: find.text('笔记, 效率'),
           ),
           findsOneWidget,
         );
@@ -149,7 +269,8 @@ void main() {
         await tester.pump();
 
         // Simulate a refinement failure while a draft exists.
-        notifier.state = notifier.state.copyWith(error: 'AI service unavailable');
+        notifier.state =
+            notifier.state.copyWith(error: 'AI service unavailable');
         await tester.pumpAndSettle();
 
         expect(find.byType(SnackBar), findsOneWidget);

@@ -3518,30 +3518,6 @@ abstract class AppLocalizations {
   /// **'Generic'**
   String get platformGeneric;
 
-  /// Display name for XHS (Xiaohongshu) platform
-  ///
-  /// In en, this message translates to:
-  /// **'XHS'**
-  String get platformXhs;
-
-  /// Display name for Twitter platform
-  ///
-  /// In en, this message translates to:
-  /// **'Twitter'**
-  String get platformTwitter;
-
-  /// Display name for Blog platform
-  ///
-  /// In en, this message translates to:
-  /// **'Blog'**
-  String get platformBlog;
-
-  /// Display name for LinkedIn platform
-  ///
-  /// In en, this message translates to:
-  /// **'LinkedIn'**
-  String get platformLinkedin;
-
   /// Title of the note clustering screen
   ///
   /// In en, this message translates to:

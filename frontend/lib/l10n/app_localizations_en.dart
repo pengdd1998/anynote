@@ -1929,18 +1929,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get platformGeneric => 'Generic';
 
   @override
-  String get platformXhs => 'XHS';
-
-  @override
-  String get platformTwitter => 'Twitter';
-
-  @override
-  String get platformBlog => 'Blog';
-
-  @override
-  String get platformLinkedin => 'LinkedIn';
-
-  @override
   String get noteClusters => 'Note Clusters';
 
   @override

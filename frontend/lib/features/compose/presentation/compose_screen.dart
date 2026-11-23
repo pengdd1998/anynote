@@ -21,13 +21,21 @@ import '../../../core/widgets/sync_status_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../routing/app_router.dart';
+import '../../publish/data/publish_providers.dart';
+import '../../publish/domain/publish_rules.dart';
 import '../data/compose_providers.dart';
 import '../domain/post_template.dart';
 import '../../notes/domain/note_envelope.dart';
+import 'platform_label.dart';
 import 'template_selector_sheet.dart';
 
 /// Guard to prevent multiple bottom sheet invocations on rapid tap.
 final _noteSelectorShowingProvider = StateProvider<bool>((ref) => false);
+
+/// Platforms that only carry a post somewhere else and have no readers of
+/// their own, so there is nothing to write "for": the generic style covers
+/// them.
+const _deliveryOnlyPlatforms = {'webhook'};
 
 /// Home screen for the AI Compose feature.
 ///
@@ -212,6 +220,11 @@ class ComposeScreen extends ConsumerWidget {
         : item.plainBody ?? l10n.untitled;
     final time = _formatTime(context, item.updatedAt);
     final platform = item.platformStyle ?? 'generic';
+    final platformName = platformLabel(
+      l10n,
+      ref.watch(currentPlatformGuidesProvider),
+      platform,
+    );
 
     // Warm pastel cycling for session cards
     const accentBgs = [
@@ -287,7 +300,7 @@ class ComposeScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: Text(
-                            platform,
+                            platformName,
                             style: AppTextStyles.caption.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
@@ -473,12 +486,18 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
   /// ErrorBoundary swap), crashing the widget tree with a red ErrorWidget.
   GoRouter? _router;
 
-  List<(String, String)> _platformOptions(AppLocalizations l10n) => [
+  /// "Generic" and then every platform the app can publish to, in the
+  /// server's order — the list is the server's, so a platform added there
+  /// can be composed for without an app release.
+  List<(String, String)> _platformOptions(
+    AppLocalizations l10n,
+    List<PlatformGuide> guides,
+  ) =>
+      [
         ('generic', l10n.platformGeneric),
-        ('xhs', l10n.platformXhs),
-        ('twitter', l10n.platformTwitter),
-        ('blog', l10n.platformBlog),
-        ('linkedin', l10n.platformLinkedin),
+        for (final guide in guides)
+          if (!_deliveryOnlyPlatforms.contains(guide.id))
+            (guide.id, guide.name),
       ];
 
   @override
@@ -492,8 +511,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
       // inherited dependency from a notification context, re-entering
       // dependOnInheritedElement on every router notification and amplifying
       // global rebuild jank.
-      final location =
-          router.routerDelegate.currentConfiguration.uri.path;
+      final location = router.routerDelegate.currentConfiguration.uri.path;
       if (location.startsWith('/compose')) return;
       // Only pop when this sheet route is still the current one.
       final modal = ModalRoute.of(context);
@@ -634,7 +652,10 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
                         ),
-                        items: _platformOptions(l10n)
+                        items: _platformOptions(
+                          l10n,
+                          ref.watch(currentPlatformGuidesProvider),
+                        )
                             .map(
                               (o) => DropdownMenuItem(
                                   value: o.$1, child: Text(o.$2)),
@@ -1005,7 +1026,11 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                         borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: Text(
-                        widget.platform,
+                        platformLabel(
+                          l10n,
+                          ref.watch(currentPlatformGuidesProvider),
+                          widget.platform,
+                        ),
                         style: AppTextStyles.caption.copyWith(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,

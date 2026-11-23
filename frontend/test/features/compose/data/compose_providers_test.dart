@@ -20,6 +20,8 @@ import 'package:anynote/features/compose/domain/outline_model.dart';
 import 'package:anynote/features/compose/domain/post_template.dart';
 import 'package:anynote/features/compose/domain/prompt_builder.dart';
 import 'package:anynote/features/compose/domain/response_parser.dart';
+import 'package:anynote/features/publish/data/publish_providers.dart';
+import 'package:anynote/features/publish/domain/publish_rules.dart';
 import 'package:anynote/main.dart';
 
 // ---------------------------------------------------------------------------
@@ -213,7 +215,11 @@ void main() {
       const state = ComposeSessionState(sessionId: 's1');
       final clusters = [
         const ClusterModel(
-            name: 'A', theme: 't', noteIndices: [0], summary: 's',),
+          name: 'A',
+          theme: 't',
+          noteIndices: [0],
+          summary: 's',
+        ),
       ];
       final updated = state.copyWith(
         clusters: clusters,
@@ -619,9 +625,17 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
+            name: 'A',
+            theme: 't',
+            noteIndices: [0],
+            summary: 's',
+          ),
           const ClusterModel(
-              name: 'B', theme: 't', noteIndices: [1], summary: 's',),
+            name: 'B',
+            theme: 't',
+            noteIndices: [1],
+            summary: 's',
+          ),
         ],
         selectedClusterIndices: {0},
       );
@@ -639,7 +653,11 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
+            name: 'A',
+            theme: 't',
+            noteIndices: [0],
+            summary: 's',
+          ),
         ],
         selectedClusterIndices: {0},
       );
@@ -672,7 +690,11 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
+            name: 'A',
+            theme: 't',
+            noteIndices: [0],
+            summary: 's',
+          ),
         ],
         selectedClusterIndices: {0},
       );
@@ -693,7 +715,11 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
+            name: 'A',
+            theme: 't',
+            noteIndices: [0],
+            summary: 's',
+          ),
         ],
         selectedClusterIndices: {0},
       );
@@ -716,7 +742,11 @@ void main() {
         stage: ComposeStage.cluster,
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
+            name: 'A',
+            theme: 't',
+            noteIndices: [0],
+            summary: 's',
+          ),
         ],
         selectedClusterIndices: {0},
       );
@@ -874,9 +904,11 @@ void main() {
       // UUID v4 format.
       expect(
         result,
-        matches(RegExp(
-          r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-        ),),
+        matches(
+          RegExp(
+            r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+          ),
+        ),
       );
     });
 
@@ -1091,7 +1123,12 @@ void main() {
         selectedNoteIds: ['n1', 'n2'],
         noteContents: {'n1': '', 'n2': 'Second real content'},
         clusters: const [
-          ClusterModel(name: 'C', theme: 't', noteIndices: [0], summary: 's',),
+          ClusterModel(
+            name: 'C',
+            theme: 't',
+            noteIndices: [0],
+            summary: 's',
+          ),
         ],
         selectedClusterIndices: {0},
         outline: const OutlineModel(title: 'T', sections: []),
@@ -1115,7 +1152,11 @@ void main() {
       notifier.state = notifier.state.copyWith(
         clusters: [
           const ClusterModel(
-              name: 'A', theme: 't', noteIndices: [0], summary: 's',),
+            name: 'A',
+            theme: 't',
+            noteIndices: [0],
+            summary: 's',
+          ),
         ],
         selectedClusterIndices: {0},
       );
@@ -1236,8 +1277,7 @@ void main() {
       expect(messages.last.content, 'tighten it');
     });
 
-    test('refineDraft omits the template section without a template',
-        () async {
+    test('refineDraft omits the template section without a template', () async {
       final notifier = container.read(composeSessionProvider.notifier);
 
       notifier.updateDraft('Draft');
@@ -1343,9 +1383,11 @@ void main() {
       // UUID v4 format: 8-4-4-4-12 hex chars.
       expect(
         sessionId,
-        matches(RegExp(
-          r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-        ),),
+        matches(
+          RegExp(
+            r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+          ),
+        ),
       );
     });
 
@@ -1380,6 +1422,192 @@ void main() {
       addTearDown(() => container.dispose());
 
       expect(container.read(composeSessionIdProvider), isNull);
+    });
+  });
+
+  // ===========================================================================
+  // Platform rules in the prompts
+  // ===========================================================================
+
+  group('ComposeSessionNotifier platform rules', () {
+    late FakeAIRepository fakeAiRepo;
+
+    /// A session written for [platform], waiting at the outline stage unless
+    /// [atOutline] is false. Its platform rules come from [guides] when
+    /// given, and it gives up waiting for them after [rulesTimeout].
+    ComposeSessionNotifier sessionFor(
+      String platform, {
+      bool atOutline = true,
+      Future<List<PlatformGuide>> Function(Ref)? guides,
+      Duration? rulesTimeout,
+    }) {
+      fakeAiRepo = FakeAIRepository();
+      final container = ProviderContainer(overrides: [
+        aiRepositoryProvider.overrideWithValue(fakeAiRepo),
+        databaseProvider.overrideWithValue(_createTestDb()),
+        cryptoServiceProvider.overrideWithValue(_FakeCryptoService()),
+        if (guides != null) platformGuidesProvider.overrideWith(guides),
+        if (rulesTimeout != null)
+          platformRulesTimeoutProvider.overrideWithValue(rulesTimeout),
+      ]);
+      addTearDown(container.dispose);
+      final notifier = container.read(composeSessionProvider.notifier);
+      notifier.state = notifier.state.copyWith(
+        platformStyle: platform,
+        clusters: const [
+          ClusterModel(name: 'A', theme: 't', noteIndices: [0], summary: 's'),
+        ],
+        selectedClusterIndices: {0},
+        outline:
+            atOutline ? const OutlineModel(title: 'T', sections: []) : null,
+      );
+      return notifier;
+    }
+
+    test('the outline is planned with the platform brief and its limits',
+        () async {
+      final notifier = sessionFor('xiaohongshu', atOutline: false);
+      fakeAiRepo.chatResponse = '{"title": "T", "sections": []}';
+
+      await notifier.generateOutline();
+
+      final prompt = fakeAiRepo.chatCalls.single.single.content;
+      expect(prompt, contains('for a 小红书 post.'));
+      expect(prompt, contains('Target platform: 小红书'));
+      expect(prompt, contains('a title of at most 20 characters'));
+    });
+
+    test('the draft is written with the platform brief and its limits',
+        () async {
+      // The expand prompt used to carry no platform at all, so a draft was
+      // platform-neutral unless the user ran "adapt style" afterwards.
+      final notifier = sessionFor('xiaohongshu');
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['# T', 'body']);
+
+      await notifier.expandToDraft();
+
+      final prompt = fakeAiRepo.chatStreamCalls.single.single.content;
+      expect(prompt, contains('Target platform: 小红书'));
+      expect(prompt, contains('a body of at most 1000 characters'));
+      expect(prompt, contains('no links'));
+      expect(prompt, contains('title on the first line'));
+    });
+
+    test('a refinement is told the platform rules', () async {
+      final notifier = sessionFor('xiaohongshu');
+      notifier.state = notifier.state.copyWith(draft: '# T\nbody');
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['# T\nbetter body']);
+
+      await notifier.refineDraft('make it better');
+
+      final system = fakeAiRepo.chatStreamCalls.single.first;
+      expect(system.role, 'system');
+      expect(system.content, contains('Target platform: 小红书'));
+      expect(system.content, contains('no links'));
+    });
+
+    test('style adaptation is for the platform, by name', () async {
+      final notifier = sessionFor('zhihu');
+      notifier.state = notifier.state.copyWith(draft: 'draft');
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['adapted']);
+
+      await notifier.adaptStyle();
+
+      final prompt = fakeAiRepo.chatStreamCalls.single.single.content;
+      expect(prompt, contains('for 知乎.'));
+    });
+
+    test('the generic style states no platform rules', () async {
+      final notifier = sessionFor('generic');
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['draft']);
+
+      await notifier.expandToDraft();
+
+      final prompt = fakeAiRepo.chatStreamCalls.single.single.content;
+      expect(prompt, isNot(contains('Target platform')));
+      expect(prompt, isNot(contains('Hard limits')));
+      // The layout is asked for regardless: the publish step splits every
+      // draft by it.
+      expect(prompt, contains('title on the first line'));
+    });
+
+    test('the built-in rules stand in when the server cannot be reached',
+        () async {
+      final notifier = sessionFor(
+        'xiaohongshu',
+        guides: (ref) async => throw StateError('offline'),
+      );
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['draft']);
+
+      await notifier.expandToDraft();
+
+      final prompt = fakeAiRepo.chatStreamCalls.single.single.content;
+      expect(prompt, contains('Target platform: 小红书'));
+      expect(prompt, contains('a title of at most 20 characters'));
+    });
+
+    test('the server rules are preferred over the built-in ones', () async {
+      final notifier = sessionFor(
+        'xiaohongshu',
+        guides: (ref) async => const [
+          PlatformGuide(
+            id: 'xiaohongshu',
+            name: '小红书',
+            titleMax: 30,
+            contentMax: 2000,
+            maxTags: 10,
+            linksAllowed: false,
+          ),
+        ],
+      );
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['draft']);
+
+      await notifier.expandToDraft();
+
+      final prompt = fakeAiRepo.chatStreamCalls.single.single.content;
+      expect(prompt, contains('a title of at most 30 characters'));
+      expect(prompt, isNot(contains('at most 20 characters')));
+    });
+
+    test('does not wait long when the rules are slow to arrive', () async {
+      final notifier = sessionFor(
+        'xiaohongshu',
+        guides: (ref) => Completer<List<PlatformGuide>>().future,
+        rulesTimeout: const Duration(milliseconds: 50),
+      );
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['draft']);
+
+      await notifier.expandToDraft();
+
+      final prompt = fakeAiRepo.chatStreamCalls.single.single.content;
+      expect(prompt, contains('a title of at most 20 characters'));
+      expect(notifier.state.isLoading, isFalse);
+    });
+
+    test('cancelling while the rules load makes no AI call', () async {
+      final notifier = sessionFor(
+        'xiaohongshu',
+        guides: (ref) => Completer<List<PlatformGuide>>().future,
+        rulesTimeout: const Duration(milliseconds: 50),
+      );
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['draft']);
+
+      final pending = notifier.expandToDraft();
+      notifier.cancel();
+      await pending;
+
+      expect(fakeAiRepo.chatStreamCalls, isEmpty);
+      expect(notifier.state.isLoading, isFalse);
+    });
+
+    test('a platform the app does not know gets no rules', () async {
+      final notifier = sessionFor('myspace');
+      fakeAiRepo.chatStreamResponse = Stream.fromIterable(['draft']);
+
+      await notifier.expandToDraft();
+
+      final prompt = fakeAiRepo.chatStreamCalls.single.single.content;
+      expect(prompt, isNot(contains('Target platform')));
     });
   });
 }

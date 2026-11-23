@@ -177,13 +177,13 @@ final platformGuidesProvider = FutureProvider<List<PlatformGuide>>((ref) async {
   }
 });
 
-/// Looks a platform's rules up in [guides].
-PlatformGuide? guideFor(List<PlatformGuide> guides, String platformId) {
-  for (final guide in guides) {
-    if (guide.id == platformId) return guide;
-  }
-  return null;
-}
+/// [platformGuidesProvider] as a plain list: the server's rules once they
+/// have arrived, the built-in table until then. For places that only label
+/// a platform or read a limit and should not wait on a future.
+final currentPlatformGuidesProvider = Provider<List<PlatformGuide>>(
+  (ref) =>
+      ref.watch(platformGuidesProvider).valueOrNull ?? fallbackPlatformGuides,
+);
 
 /// What the last pre-publish check said about a draft.
 class PublishValidationState {

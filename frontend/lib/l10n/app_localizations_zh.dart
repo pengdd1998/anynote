@@ -1860,18 +1860,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get platformGeneric => '通用';
 
   @override
-  String get platformXhs => '小红书';
-
-  @override
-  String get platformTwitter => 'Twitter';
-
-  @override
-  String get platformBlog => '博客';
-
-  @override
-  String get platformLinkedin => 'LinkedIn';
-
-  @override
   String get noteClusters => '笔记聚类';
 
   @override

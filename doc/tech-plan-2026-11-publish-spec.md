@@ -107,7 +107,9 @@ type Spec struct {
 
 ---
 
-## Phase 2（下一迭代）— compose 中间格式 + 平台差异化提示词
+## Phase 2 — compose 中间格式 + 平台差异化提示词
+
+> 2026-11-23 已落地，范围与未做项见文末"执行记录"。
 
 1. 中间格式：compose 扩写产物落为"按平台分节"的发布草稿（title/content/
    tags 每平台一份），确认页逐平台审改后分平台提交；
@@ -123,3 +125,70 @@ type Spec struct {
 2. stats.go 扩展为每平台采集器集合（小红书已有，逐平台补）+ 粉丝历史；
 3. UTM 归因规范（`utm_campaign=<主题>-<期号>`）与自有站点转化对接；
 4. 单期复盘页：同龄对比曲线 + 平台卡片 + 转化漏斗。
+
+---
+
+## 执行记录
+
+### 2026-11-23 — Phase 2
+
+**先修掉的两个回归**（不修则 Phase 2 无从验证）：
+
+- `ccfae57` App 内发布全部失败：handler 把 `content_item_id` 当必填 UUID 且
+  先于一切校验执行，而两个客户端调用点都不传。改为可选。
+- `0f239f5` 明文库升级后打不开、存不了笔记：`sqlcipher_export` 不保留
+  `user_version`，Drift 把升级后的库当新库重跑 onCreate。迁移换成
+  `DbFileGuard`，并加 CI 硬门槛（数据库套件必须在真 SQLCipher 上跑）。
+- `7722fe5` 顺带修掉 5 个被 `continue-on-error` 掩盖的前端测试失败：
+  `VersionDiffScreen` 在 `initState` 里读本地化字符串，debug 构建下一打开
+  就是错误态（正式版不受影响），另有两个测试还按旧的通用错误文案断言。
+
+> 前端全量测试目前有 **45 个既有失败**（TTS、BIP-39、登录页等，9 月基线
+> `6db31ad` 的 CI 就是这 45 个），CI 的 `flutter test` 步骤是
+> `continue-on-error`，不构成门槛。本次改动没有新增失败。
+
+**1. 平台词汇与规则同源**
+
+- compose 的目标平台由写死的 `generic | xhs | twitter | blog | linkedin`
+  改为 `generic` + 服务端 `GET /api/v1/publish/platforms` 的列表，id 与发布
+  接口一致。webhook 只是投递管道、没有自己的读者，不作为创作目标。
+- `platformGuidesProvider` 拉服务端规则；`currentPlatformGuidesProvider`
+  是它的同步视图（服务端未到时用内置表）。创作各步在调用模型前等服务端
+  规则，最多 3 秒（`platformRulesTimeoutProvider`），超时用内置表。
+- `PromptBuilder` 的大纲 / 扩写 / 适配文风 / 润色四个提示词都注入平台写作
+  指导（服务端 `Spec.Guidance`）和硬上限（标题、正文、标签、链接）。此前
+  **扩写提示词完全不带平台**，成稿默认平台无关。
+- 服务端指导补充一条：小红书 / 公众号 / 知乎的正文是纯文本——发布时逐字
+  输入编辑器，Markdown 标记会原样出现在读者面前。
+
+**2. 中间格式与确定性转换**
+
+- 成稿布局（提示词明确要求，`PlatformDraft.parse` 确定性解析）：第一行
+  `# 标题`，然后正文，最后一行只放 `#话题`。模型不产出 JSON，用户删掉标题行
+  或手敲标签也能被识别。
+- 交接发布时按布局拆成 title / content / tags，并带上创作时选的平台
+  （`PublishFromEditorSheet.initialPlatform`；该平台未连接则不预选）。
+  修掉三个交接缺陷：标题行在正文里重复一遍、标签恒为空、平台选择丢失。
+- 润色提示词要求保持布局、只输出正文本身，避免"以下是修改后的稿子"这类
+  前后缀被发布出去。
+
+**3. 编辑期提示**
+
+- 发布面板（`b8b1e32`）：逐条展示 problems / warnings；每个字段按平台上限
+  显示字数；输入时防抖预校验，过期结果丢弃；打开即校验一次。
+- 创作编辑器底栏：平台名 + 正文字数 / 上限；通用风格仍显示词数。"适配文风"
+  在通用风格下禁用——没有可适配的对象。
+
+**未做，留待下一步**
+
+- **按平台分槽的多版本草稿**（上文"每平台一份"）：一次会话仍是单稿，
+  "适配文风"会覆盖原稿。建议设计：`ComposeSessionState` 增加
+  `platformDrafts: Map<platformId, text>` 与按槽位的润色历史，编辑器用平台
+  chip 切换槽位，切到尚无稿的平台时才触发"适配"（一次 AI 调用，先确认消耗
+  额度），发布用当前槽位。需要先定产品交互（以哪一版为底稿、是否确认消耗
+  额度），且 notifier 与编辑器改动面大，没有真机验证不宜贸然做。
+- WordPress 适配器把 content 原样交给 REST API（期望 HTML），AI 产出的
+  Markdown 会在站点上原样显示。应在适配器内做 Markdown → HTML 转换。
+- 创作编辑器内不做服务端实时校验：发布面板一步之遥且规则相同，编辑器只给
+  离线即可判断的字数信号。
+- 知乎链接的 UTM 归因属于 Phase 3。
