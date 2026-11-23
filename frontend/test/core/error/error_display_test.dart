@@ -151,9 +151,18 @@ void main() {
       expect(msg, contains('restart the app'));
     });
 
-    test('UnknownException returns generic error message', () {
+    test('UnknownException shows its raw text in a debug build', () {
       const error = UnknownException(message: 'Weird error');
-      final msg = ErrorDisplay.userMessage(error);
+      // For field diagnosis (QA 2026-11). A test binary is a debug build, so
+      // this is what the default gives too.
+      expect(ErrorDisplay.userMessage(error, null, true), 'Weird error');
+      expect(ErrorDisplay.userMessage(error), 'Weird error');
+    });
+
+    test('UnknownException returns generic error message in a release build',
+        () {
+      const error = UnknownException(message: 'Weird error');
+      final msg = ErrorDisplay.userMessage(error, null, false);
       expect(msg, contains('unexpected error'));
     });
   });
@@ -413,8 +422,10 @@ void main() {
       // Dialog title.
       expect(find.text('Server Error'), findsOneWidget);
       // Dialog body.
-      expect(find.text('A server error occurred. Please try again later.'),
-          findsOneWidget,);
+      expect(
+        find.text('A server error occurred. Please try again later.'),
+        findsOneWidget,
+      );
       // Dismiss button always present.
       expect(find.text('Dismiss'), findsOneWidget);
     });

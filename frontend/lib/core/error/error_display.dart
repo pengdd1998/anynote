@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 
-
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_icons.dart';
@@ -32,9 +31,11 @@ class ErrorDisplay {
       SnackBar(
         content: Row(
           children: [
-            Icon(errorIcon(error),
-                color: Colors.white,
-                size: 20,), // white icon on colored snackbar bg
+            Icon(
+              errorIcon(error),
+              color: Colors.white,
+              size: 20,
+            ), // white icon on colored snackbar bg
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -101,8 +102,16 @@ class ErrorDisplay {
   ///
   /// When [l10n] is provided, localized strings are used. Otherwise, English
   /// fallback strings are returned.
-  static String userMessage(AppException error, [AppLocalizations? l10n]) {
-    if (l10n == null) return _fallbackUserMessage(error);
+  ///
+  /// [debug] says whether the message is for a debug build. It follows the
+  /// binary unless given — only tests pass it, since one test binary cannot
+  /// be both.
+  static String userMessage(
+    AppException error, [
+    AppLocalizations? l10n,
+    bool debug = kDebugMode,
+  ]) {
+    if (l10n == null) return _fallbackUserMessage(error, debug);
     return switch (error) {
       NetworkException() => l10n.errorConnection,
       ServerException() => l10n.errorServer,
@@ -125,14 +134,14 @@ class ErrorDisplay {
       // Debug builds surface the raw message for field diagnosis
       // (QA 2026-11: a save failure was undiagnosable from the generic
       // banner alone). Release keeps the generic copy.
-      UnknownException() when kDebugMode => error.message,
+      UnknownException() when debug => error.message,
       UnknownException() => l10n.errorUnexpected,
       _ => error.message,
     };
   }
 
   /// English fallback messages when l10n is not available.
-  static String _fallbackUserMessage(AppException error) {
+  static String _fallbackUserMessage(AppException error, bool debug) {
     return switch (error) {
       NetworkException() =>
         'Unable to connect to the server. Please check your internet connection.',
@@ -160,7 +169,7 @@ class ErrorDisplay {
       SyncException() => 'Sync failed: ${error.message}',
       StorageException() =>
         'A local storage error occurred. Please restart the app.',
-      UnknownException() when kDebugMode => error.message,
+      UnknownException() when debug => error.message,
       UnknownException() => 'An unexpected error occurred. Please try again.',
       _ => error.message,
     };

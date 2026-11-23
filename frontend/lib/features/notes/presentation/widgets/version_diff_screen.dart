@@ -82,7 +82,10 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
   @override
   void initState() {
     super.initState();
-    _loadVersions();
+    // Loading reads localizations from the context, which Flutter forbids
+    // before the first build is done; in a debug build that threw on every
+    // open and the screen came up in its error state.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadVersions());
   }
 
   Future<void> _loadVersions() async {
@@ -114,12 +117,12 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
         return;
       }
 
-        final older = await _decryptVersion(olderRaw, crypto, l10n);
-        final newer = await _decryptVersion(newerRaw, crypto, l10n);
+      final older = await _decryptVersion(olderRaw, crypto, l10n);
+      final newer = await _decryptVersion(newerRaw, crypto, l10n);
 
-        // Diff the human-readable bodies — rich notes store Delta JSON,
-        // which would otherwise diff raw markup lines.
-        final diff = TextDiff.compute(older.plainBody, newer.plainBody);
+      // Diff the human-readable bodies — rich notes store Delta JSON,
+      // which would otherwise diff raw markup lines.
+      final diff = TextDiff.compute(older.plainBody, newer.plainBody);
 
       if (mounted) {
         setState(() {
@@ -259,38 +262,42 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.lightErrorBg,
-                borderRadius: BorderRadius.circular(AppRadius.md),
+        // Scrollable rather than a bare Column: in a debug build the message
+        // is the raw error text, which can be longer than the screen.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.lightErrorBg,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: const Icon(
+                  Icons.error_outline,
+                  size: 28,
+                  color: AppColors.error,
+                ),
               ),
-              child: const Icon(
-                Icons.error_outline,
-                size: 28,
-                color: AppColors.error,
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.body.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              _errorMessage!,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.body.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+              const SizedBox(height: AppSpacing.md),
+              FilledButton.tonal(
+                onPressed: _loadVersions,
+                child: Text(l10n.retry),
               ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            FilledButton.tonal(
-              onPressed: _loadVersions,
-              child: Text(l10n.retry),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -466,15 +473,11 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
         pair.right != null && pair.right!.type != DiffType.unchanged;
 
     final leftBg = pair.left?.type == DiffType.removed
-        ? (isDark
-            ? AppColors.error.withAlpha(25)
-            : AppColors.lightErrorBg)
+        ? (isDark ? AppColors.error.withAlpha(25) : AppColors.lightErrorBg)
         : Colors.transparent;
 
     final rightBg = pair.right?.type == DiffType.added
-        ? (isDark
-            ? AppColors.success.withAlpha(25)
-            : AppColors.accentMintBg)
+        ? (isDark ? AppColors.success.withAlpha(25) : AppColors.accentMintBg)
         : Colors.transparent;
 
     final leftTextColor = pair.left?.type == DiffType.removed
@@ -670,8 +673,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       String? encryptedTitle;
 
       if (version.content.isNotEmpty) {
-        encryptedContent =
-            await crypto.encryptForItem(noteId, version.content);
+        encryptedContent = await crypto.encryptForItem(noteId, version.content);
       }
       if (version.title != l10n.untitled) {
         encryptedTitle = await crypto.encryptForItem(noteId, version.title);
@@ -695,8 +697,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
       if (mounted) {
         AppSnackBar.error(
           context,
-          message:
-              l10n.failedToRestore(ErrorDisplay.displayMessage(e, l10n)),
+          message: l10n.failedToRestore(ErrorDisplay.displayMessage(e, l10n)),
         );
       }
     }
