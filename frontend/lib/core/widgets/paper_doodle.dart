@@ -3,16 +3,17 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// Hand-drawn corner doodles for sticky-note cards, matching the design
-/// mockup's ink sketches (star, book, bulb, sprout, heart). Each doodle is
+/// mockup's ink sketches (book, bulb, sprout, heart). Each doodle is
 /// a thin stroked path with slightly wobbly curves so it reads as pen-drawn.
-
-enum PaperDoodleKind { star, book, bulb, sprout, heart }
+///
+/// There is no star: the card's bottom-right corner is where a
+/// favourite shows its star, and a decorative one there read as state.
+enum PaperDoodleKind { book, bulb, sprout, heart }
 
 extension PaperDoodleKindX on PaperDoodleKind {
   /// Deterministic sketch cycle — the same item seed always gets the same
   /// doodle.
   static const _cycle = [
-    PaperDoodleKind.star,
     PaperDoodleKind.book,
     PaperDoodleKind.bulb,
     PaperDoodleKind.sprout,
@@ -69,8 +70,6 @@ class _DoodlePainter extends CustomPainter {
     canvas.scale(s, s);
 
     switch (kind) {
-      case PaperDoodleKind.star:
-        _star(canvas);
       case PaperDoodleKind.book:
         _book(canvas);
       case PaperDoodleKind.bulb:
@@ -82,29 +81,6 @@ class _DoodlePainter extends CustomPainter {
     }
   }
 
-  /// Five-point star outline with a hand-drawn wobble (points drift a
-  /// little off the ideal radius, and the outer stroke overshoots corners).
-  void _star(Canvas canvas) {
-    const cx = 12.0, cy = 13.0;
-    const outer = [9.5, 8.8, 9.8, 9.2, 9.0];
-    const inner = [4.4, 4.1, 4.5, 4.2];
-    final path = Path();
-    for (var i = 0; i < 5; i++) {
-      final aOut = -1.5708 + i * 1.2566 + (i.isEven ? -0.04 : 0.05);
-      final aIn = aOut + 0.6283;
-      final ox = cx + outer[i] * _wob(i * 7) * 0.06 + outer[i] * 0.02;
-      final px = cx + math.cos(aOut) * ox, py = cy + math.sin(aOut) * ox;
-      if (i == 0) {
-        path.moveTo(px, py);
-      } else {
-        path.lineTo(px, py);
-      }
-      final rIn = inner[i % inner.length] * _wob(i * 11);
-      path.lineTo(cx + math.cos(aIn) * rIn, cy + math.sin(aIn) * rIn);
-    }
-    path.close();
-    canvas.drawPath(path, _stroke);
-  }
 
   /// Open book: two gently curved pages meeting at the spine.
   void _book(Canvas canvas) {

@@ -862,8 +862,8 @@
   "reduceMotion": "减少动画",
   "reduceMotionDesc": "减少应用中的动画效果",
   "reduceMotionSystem": "跟随系统设置",
-  "reduceMotionOn": "开（动画已禁用）",
-  "reduceMotionOff": "关（动画已启用）",
+  "reduceMotionOn": "动画已减少",
+  "reduceMotionOff": "显示全部动画",
   "@shareNote": {
     "description": "Title of share dialog and tooltip for share button"
   },

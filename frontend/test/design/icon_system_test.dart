@@ -55,7 +55,9 @@ void main() {
     // draw several of them in colour, outside whatever icon family is in use.
     final symbol = RegExp(
       r'[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]'
-      r'|\\u\{1F[0-9A-Fa-f]{3}\}|\\u\{2[67][0-9A-Fa-f]{2}\}|\\uFE0F',
+      r'|\\u\{1F[0-9A-Fa-f]{3}\}|\\u\{2[67][0-9A-Fa-f]{2}\}|\\uFE0F'
+      // …or as a four-digit escape, which is how the wordmark's sparkle hid.
+      r'|\\u(1F[0-9A-Fa-f]{3}|2[67][0-9A-Fa-f]{2}|FE0F)',
       unicode: true,
     );
     final offenders = [

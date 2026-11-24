@@ -859,8 +859,8 @@
   "reduceMotion": "アニメーションを減らす",
   "reduceMotionDesc": "アプリ内のアニメーションを最小限にします",
   "reduceMotionSystem": "システム設定に従う",
-  "reduceMotionOn": "オン（アニメーション無効）",
-  "reduceMotionOff": "オフ（アニメーション有効）",
+  "reduceMotionOn": "アニメーションを減らしています",
+  "reduceMotionOff": "すべてのアニメーションを表示",
   "@shareNote": {
     "description": "Title of share dialog and tooltip for share button"
   },

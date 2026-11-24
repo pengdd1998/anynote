@@ -859,8 +859,8 @@
   "reduceMotion": "동작 줄이기",
   "reduceMotionDesc": "앱의 애니메이션을 최소화합니다",
   "reduceMotionSystem": "시스템 설정 따르기",
-  "reduceMotionOn": "켬(애니메이션 사용 안함)",
-  "reduceMotionOff": "끔(애니메이션 사용)",
+  "reduceMotionOn": "애니메이션 줄어듦",
+  "reduceMotionOff": "모든 애니메이션 표시",
   "@shareNote": {
     "description": "Title of share dialog and tooltip for share button"
   },

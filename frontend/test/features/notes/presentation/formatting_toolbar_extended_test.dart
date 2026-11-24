@@ -96,8 +96,10 @@ void main() {
   group('FormattingToolbar heading buttons', () {
     testWidgets('has three heading buttons (H1, H2, H3)', (tester) async {
       await pumpToolbar(tester);
-      // Three title icons for H1, H2, H3.
-      expect(find.byIcon(AppIcons.title), findsNWidgets(3));
+      // One glyph per level: they used to share one, at three sizes.
+      expect(find.byIcon(AppIcons.heading1), findsOneWidget);
+      expect(find.byIcon(AppIcons.heading2), findsOneWidget);
+      expect(find.byIcon(AppIcons.heading3), findsOneWidget);
     });
   });
 

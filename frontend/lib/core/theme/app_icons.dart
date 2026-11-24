@@ -80,6 +80,9 @@ class AppIcons {
   static const underline = PhosphorIconsRegular.textUnderline;
   static const strikethrough = PhosphorIconsRegular.textStrikethrough;
   static const title = PhosphorIconsRegular.textH;
+  static const heading1 = PhosphorIconsRegular.textHOne;
+  static const heading2 = PhosphorIconsRegular.textHTwo;
+  static const heading3 = PhosphorIconsRegular.textHThree;
   static const bulletList = PhosphorIconsRegular.listBullets;
   static const numberedList = PhosphorIconsRegular.listNumbers;
   static const quote = PhosphorIconsRegular.quotes;
@@ -112,7 +115,7 @@ class AppIcons {
   static const print = PhosphorIconsRegular.printer;
   static const article = PhosphorIconsRegular.article;
   static const accountTree = PhosphorIconsRegular.treeStructure;
-  static const summarize = PhosphorIconsRegular.articleMedium;
+  static const summarize = PhosphorIconsRegular.listDashes;
   static const sparkles = PhosphorIconsRegular.sparkle;
   static const noteBlank = PhosphorIconsRegular.noteBlank;
   static const lightbulb = PhosphorIconsRegular.lightbulb;

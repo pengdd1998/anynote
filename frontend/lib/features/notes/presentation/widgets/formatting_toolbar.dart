@@ -110,20 +110,20 @@ class FormattingToolbar extends StatelessWidget {
 
               // --- Heading group ---
               _FormatButton(
-                icon: AppIcons.title,
+                icon: AppIcons.heading1,
                 tooltip: 'H1',
                 isActive: attrs[quill.Attribute.header.key]?.value == 1,
                 onPressed: () => _toggleHeading(1),
               ),
               _FormatButton(
-                icon: AppIcons.title,
+                icon: AppIcons.heading2,
                 tooltip: 'H2',
                 iconSize: 18,
                 isActive: attrs[quill.Attribute.header.key]?.value == 2,
                 onPressed: () => _toggleHeading(2),
               ),
               _FormatButton(
-                icon: AppIcons.title,
+                icon: AppIcons.heading3,
                 tooltip: 'H3',
                 iconSize: 16,
                 isActive: attrs[quill.Attribute.header.key]?.value == 3,

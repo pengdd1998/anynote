@@ -3959,11 +3959,11 @@
   "@reduceMotionSystem": {
     "description": "Reduce motion subtitle when following system"
   },
-  "reduceMotionOn": "On (animations disabled)",
+  "reduceMotionOn": "Animations reduced",
   "@reduceMotionOn": {
     "description": "Reduce motion subtitle when manually enabled"
   },
-  "reduceMotionOff": "Off (animations enabled)",
+  "reduceMotionOff": "All animations shown",
   "@reduceMotionOff": {
     "description": "Reduce motion subtitle when manually disabled"
   },

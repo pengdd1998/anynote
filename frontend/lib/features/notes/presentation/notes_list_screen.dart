@@ -652,16 +652,12 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           ),
         ),
         const SizedBox(width: AppSpacing.s4),
-        // Golden sparkle hugging the wordmark's top-right corner.
-        Padding(
-          padding: const EdgeInsets.only(top: AppSpacing.s2),
-          child: Text(
-            '\u2726', // four-pointed sparkle
-            style: AppTextStyles.caption.copyWith(
-              fontSize: 14,
-              color: AppColors.warning,
-            ),
-          ),
+        // Golden sparkle hugging the wordmark's top-right corner. It is an
+        // icon from the family: as a typed character it was whatever the
+        // phone's font had for that code point — or an empty box.
+        const Padding(
+          padding: EdgeInsets.only(top: AppSpacing.s2),
+          child: Icon(AppIcons.sparkles, size: 14, color: AppColors.warning),
         ),
       ],
     );
@@ -1013,17 +1009,35 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 const PopupMenuDivider(),
                 // --- Sort section ---
                 _buildSortMenuItem(
-                    'sort_updated_newest', l10n.updatedNewest, AppIcons.sort),
+                  'sort_updated_newest',
+                  l10n.updatedNewest,
+                  AppIcons.schedule,
+                ),
                 _buildSortMenuItem(
-                    'sort_updated_oldest', l10n.updatedOldest, AppIcons.sort),
+                  'sort_updated_oldest',
+                  l10n.updatedOldest,
+                  AppIcons.schedule,
+                ),
                 _buildSortMenuItem(
-                    'sort_created_newest', l10n.createdNewest, AppIcons.sort),
+                  'sort_created_newest',
+                  l10n.createdNewest,
+                  AppIcons.calendarToday,
+                ),
                 _buildSortMenuItem(
-                    'sort_created_oldest', l10n.createdOldest, AppIcons.sort),
+                  'sort_created_oldest',
+                  l10n.createdOldest,
+                  AppIcons.calendarToday,
+                ),
                 _buildSortMenuItem(
-                    'sort_title_az', l10n.titleAZ, AppIcons.sort),
+                  'sort_title_az',
+                  l10n.titleAZ,
+                  AppIcons.sort,
+                ),
                 _buildSortMenuItem(
-                    'sort_custom', l10n.sortCustom, AppIcons.sort),
+                  'sort_custom',
+                  l10n.sortCustom,
+                  AppIcons.tune,
+                ),
                 const PopupMenuDivider(),
                 // --- Quick actions ---
                 PopupMenuItem(
@@ -2463,7 +2477,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     String label,
     IconData icon,
   ) {
-    final isSelected = _sortOption == value;
+    // The menu's values are prefixed; the option they set is not.
+    final isSelected = _sortOption == value.replaceFirst('sort_', '');
     final primary = Theme.of(context).colorScheme.primary;
     return PopupMenuItem<String>(
       value: value,
