@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/sync/offline_queue_service.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
@@ -98,7 +99,8 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Row(
                 children: [
-                  Icon(Icons.sync, size: 20, color: theme.colorScheme.primary),
+                  Icon(AppIcons.sync,
+                      size: 20, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
                   Text(
                     l10n.syncQueue,
@@ -120,7 +122,7 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
                     theme: theme,
                     label: l10n.pendingOperations,
                     count: queueStatus.pendingCount,
-                    icon: Icons.schedule,
+                    icon: AppIcons.schedule,
                     color: AppColors.warning,
                   ),
                   const SizedBox(width: 12),
@@ -128,7 +130,7 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
                     theme: theme,
                     label: l10n.failedOperations,
                     count: queueStatus.failedCount,
-                    icon: Icons.error_outline,
+                    icon: AppIcons.errorOutline,
                     color: theme.colorScheme.error,
                   ),
                 ],
@@ -145,7 +147,7 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.check_circle_outline,
+                                AppIcons.checkCircleOutline,
                                 size: 48,
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -189,7 +191,7 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.refresh, size: 18),
+                          : const Icon(AppIcons.refresh, size: 18),
                       label: Text(l10n.retryAll),
                     ),
                   ),
@@ -198,7 +200,7 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
                     child: OutlinedButton.icon(
                       onPressed: _clearCompleted,
                       icon: const Icon(
-                        Icons.cleaning_services_outlined,
+                        AppIcons.cleaningServices,
                         size: 18,
                       ),
                       label: Text(l10n.clearCompleted),
@@ -268,7 +270,7 @@ class _SyncQueueSheetState extends ConsumerState<SyncQueueSheet> {
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 4),
       leading: Icon(
-        Icons.error_outline,
+        AppIcons.errorOutline,
         size: 18,
         color: theme.colorScheme.error,
       ),

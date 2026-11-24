@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/nav_guard.dart';
 import '../../../core/theme/alpha_constants.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
@@ -56,7 +57,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
       appBar: AppBar(
         title: Text(l10n.noteClusters),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(AppIcons.arrowBack),
           onPressed: () => context.pop(),
         ),
       ),
@@ -96,7 +97,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                 ref.read(composeSessionProvider.notifier).cancel();
                 context.pop();
               },
-              icon: const Icon(Icons.close, size: 18),
+              icon: const Icon(AppIcons.close, size: 18),
               label: Text(l10n.cancel),
             ),
           ],
@@ -125,7 +126,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
           child: Row(
             children: [
               Icon(
-                Icons.auto_awesome,
+                AppIcons.sparkles,
                 color: Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
@@ -278,7 +279,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                           }
                           context.push('/compose/outline/${widget.sessionId}');
                         },
-                  icon: const Icon(Icons.list_alt),
+                  icon: const Icon(AppIcons.listAlt),
                   label: Text(l10n.generateOutline),
                 ),
               ],

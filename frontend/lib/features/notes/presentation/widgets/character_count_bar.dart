@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_durations.dart';
 import '../../../../core/accessibility/a11y_utils.dart';
+import '../../../../core/theme/app_animation.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Animated word/character count bar displayed at the bottom of the editor.
@@ -59,7 +60,7 @@ class CharacterCountBar extends StatelessWidget {
                   label: l10n.enterZenMode,
                   child: IconButton(
                     icon: Icon(
-                      Icons.fullscreen_outlined,
+                      AppIcons.fullscreen,
                       size: 18,
                       color: captionColor,
                     ),
@@ -118,13 +119,13 @@ class _AnimatedCountChip extends StatelessWidget {
     // Use AnimatedSwitcher to cross-fade between old and new count text.
     // The transition applies a slight scale-up on the incoming text.
     return AnimatedSwitcher(
-      duration: AppDurations.shortAnimation,
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
+      duration: AppAnimation.fast,
+      switchInCurve: AppAnimation.arrive,
+      switchOutCurve: AppAnimation.depart,
       transitionBuilder: (Widget child, Animation<double> animation) {
         // Subtle scale from 0.85 to 1.0 combined with opacity fade.
         final scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          CurvedAnimation(parent: animation, curve: AppAnimation.arrive),
         );
         return FadeTransition(
           opacity: animation,

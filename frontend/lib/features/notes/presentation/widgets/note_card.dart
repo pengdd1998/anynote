@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/accessibility/a11y_utils.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -144,8 +145,8 @@ class NoteCard extends StatelessWidget {
       return line.isEmpty ? null : line;
     }();
     final legacy = note.plainTitle;
-    final title = firstLine ??
-        (legacy != null && legacy.isNotEmpty ? legacy : untitled);
+    final title =
+        firstLine ?? (legacy != null && legacy.isNotEmpty ? legacy : untitled);
     final hasImage = previewImagePath != null && !kIsWeb;
     final noteColor = _noteColor;
 
@@ -165,8 +166,7 @@ class NoteCard extends StatelessWidget {
           : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
       tilted: _isGrid,
       selected: isSelected,
-      borderRadius:
-          _isGrid ? null : BorderRadius.circular(AppRadius.md),
+      borderRadius: _isGrid ? null : BorderRadius.circular(AppRadius.md),
       border: isSelected
           ? null // PaperSurface draws the periwinkle selection ring.
           : (_isGrid
@@ -372,7 +372,7 @@ class NoteCard extends StatelessWidget {
               label: AppLocalizations.of(context)?.pinnedNote,
               child: ExcludeSemantics(
                 child: Icon(
-                  Icons.push_pin,
+                  AppIcons.pinFilled,
                   size: _isGrid ? 14 : 16,
                   color: AppColors.primary,
                 ),
@@ -384,7 +384,7 @@ class NoteCard extends StatelessWidget {
             padding: const EdgeInsets.only(right: AppSpacing.s4, top: 3),
             child: ExcludeSemantics(
               child: Icon(
-                Icons.lock_outline,
+                AppIcons.lock,
                 size: _isGrid ? 12 : 14,
                 color: (isDark
                         ? AppColors.darkTextTertiary

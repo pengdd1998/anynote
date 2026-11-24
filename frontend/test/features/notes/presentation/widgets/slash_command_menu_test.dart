@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -203,22 +204,22 @@ void main() {
             builder: (context) {
               final commands = buildSlashCommands(context);
               final iconMap = {
-                SlashCommandType.heading1: Icons.title,
-                SlashCommandType.heading2: Icons.title,
-                SlashCommandType.heading3: Icons.title,
-                SlashCommandType.bulletList: Icons.format_list_bulleted,
-                SlashCommandType.numberedList: Icons.format_list_numbered,
-                SlashCommandType.todoList: Icons.check_box_outlined,
-                SlashCommandType.codeBlock: Icons.code,
-                SlashCommandType.quote: Icons.format_quote,
-                SlashCommandType.divider: Icons.horizontal_rule,
-                SlashCommandType.table: Icons.table_chart,
-                SlashCommandType.image: Icons.image_outlined,
-                SlashCommandType.wikilink: Icons.link,
-                SlashCommandType.transclusion: Icons.insert_link,
-                SlashCommandType.callout: Icons.info_outline,
-                SlashCommandType.mermaid: Icons.account_tree_outlined,
-                SlashCommandType.snippet: Icons.code,
+                SlashCommandType.heading1: AppIcons.title,
+                SlashCommandType.heading2: AppIcons.title,
+                SlashCommandType.heading3: AppIcons.title,
+                SlashCommandType.bulletList: AppIcons.bulletList,
+                SlashCommandType.numberedList: AppIcons.numberedList,
+                SlashCommandType.todoList: AppIcons.checkBox,
+                SlashCommandType.codeBlock: AppIcons.code,
+                SlashCommandType.quote: AppIcons.quote,
+                SlashCommandType.divider: AppIcons.remove,
+                SlashCommandType.table: AppIcons.tableChart,
+                SlashCommandType.image: AppIcons.imageIcon,
+                SlashCommandType.wikilink: AppIcons.link,
+                SlashCommandType.transclusion: AppIcons.insertLink,
+                SlashCommandType.callout: AppIcons.infoOutline,
+                SlashCommandType.mermaid: AppIcons.accountTree,
+                SlashCommandType.snippet: AppIcons.code,
               };
               for (final cmd in commands) {
                 expect(
@@ -240,13 +241,13 @@ void main() {
       const cmd = SlashCommand(
         name: 'Test',
         description: 'desc',
-        icon: Icons.add,
+        icon: AppIcons.add,
         type: SlashCommandType.divider,
       );
 
       expect(cmd.name, 'Test');
       expect(cmd.description, 'desc');
-      expect(cmd.icon, Icons.add);
+      expect(cmd.icon, AppIcons.add);
       expect(cmd.type, SlashCommandType.divider);
     });
   });

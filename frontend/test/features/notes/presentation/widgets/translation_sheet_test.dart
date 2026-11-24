@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -183,7 +184,7 @@ void main() {
 
     testWidgets('shows close button', (tester) async {
       await pumpTranslationSheet(tester);
-      expect(find.byIcon(Icons.close), findsOneWidget);
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
     });
 
     testWidgets('shows source text placeholder before translation',
@@ -197,7 +198,7 @@ void main() {
 
     testWidgets('shows translate icon in header', (tester) async {
       await pumpTranslationSheet(tester);
-      expect(find.byIcon(Icons.translate), findsOneWidget);
+      expect(find.byIcon(AppIcons.language), findsOneWidget);
     });
 
     testWidgets('renders "Translate to:" label', (tester) async {
@@ -230,7 +231,8 @@ void main() {
       // The production code uses `await for` on a streaming response.
       // runAsync lets the microtask queue flush so the stream completes,
       // then pump rebuilds the widget tree with the updated state.
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester
+          .runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
       await tester.pump();
 
       expect(find.text('Bonjour le monde'), findsOneWidget);
@@ -271,14 +273,15 @@ void main() {
 
       // Tap the Translate button to trigger the error.
       await tester.tap(find.text('Translate'));
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester
+          .runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
       await tester.pump();
 
       expect(
         find.textContaining('Network error: connection refused'),
         findsOneWidget,
       );
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.errorOutline), findsOneWidget);
     });
 
     testWidgets('Replace button calls onReplace callback', (tester) async {
@@ -291,7 +294,8 @@ void main() {
 
       // Trigger translation.
       await tester.tap(find.text('Translate'));
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester
+          .runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
       await tester.pump();
 
       await tester.tap(find.text('Replace'));
@@ -311,7 +315,8 @@ void main() {
 
       // Trigger translation.
       await tester.tap(find.text('Translate'));
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester
+          .runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
       await tester.pump();
 
       await tester.tap(find.text('Insert Below'));

@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/ai/auto_tagger.dart';
@@ -28,7 +29,8 @@ import '../../../core/tts/speech_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart';
 import '../../../core/monitoring/error_reporter.dart';
-import '../../settings/data/local_llm_store.dart';import '../../../core/analytics/analytics_service.dart';
+import '../../settings/data/local_llm_store.dart';
+import '../../../core/analytics/analytics_service.dart';
 
 import '../../settings/data/llm_direct_client.dart';
 import '../../../core/performance/performance_monitor.dart';
@@ -205,7 +207,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Zen mode chrome fade animation (300ms).
     _zenChromeAnimController ??= AnimationController(
       vsync: this,
-      duration: AppDurations.animation,
+      duration: AppAnimation.emphasized,
       value: 1.0, // chrome visible by default
     );
 
@@ -713,7 +715,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Keeps the cursor vertically centered in the body text field by adjusting
   /// the scroll offset when the cursor position changes. Applies a smooth
-  /// animation with Curves.easeOutCubic over 200ms.
+  /// animation with AppAnimation.arrive over 200ms.
   void _scrollToCenterCursor() {
     if (!_bodyScrollController.hasClients) return;
 
@@ -741,8 +743,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
       _bodyScrollController.animateTo(
         targetOffset,
-        duration: AppDurations.shortAnimation,
-        curve: Curves.easeOutCubic,
+        duration: AppAnimation.standard,
+        curve: AppAnimation.arrive,
       );
     }
     // For the rich editor, typewriter scrolling is handled inside
@@ -794,7 +796,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           return;
         }
       }
-      final String encryptedContent = await crypto.encryptForItem(noteId, content);
+      final String encryptedContent =
+          await crypto.encryptForItem(noteId, content);
       final wasNew = _isNew;
 
       if (_isNew) {
@@ -860,9 +863,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // Debug builds show the raw error (field diagnosis); release keeps
         // the friendly copy from ErrorDisplay.
         setState(() {
-          _errorMessage = kDebugMode
-              ? '$appError'
-              : ErrorDisplay.userMessage(appError);
+          _errorMessage =
+              kDebugMode ? '$appError' : ErrorDisplay.userMessage(appError);
         });
       }
     } finally {
@@ -1036,7 +1038,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 elevation: 0,
                 scrolledUnderElevation: 0,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
+                  icon: const Icon(AppIcons.arrowBack),
                   // Distinct from the save-check button in buildActions,
                   // which is also labeled saveAndClose (BUG-5: duplicated
                   // a11y labels confused screen readers).
@@ -1176,7 +1178,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               child: Row(
                 children: [
                   Icon(
-                    Icons.lock_outline,
+                    AppIcons.lock,
                     size: 18,
                     color: colorScheme.onSurface,
                   ),
@@ -1208,7 +1210,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           child: Padding(
             padding: EdgeInsets.only(
               // In zen mode, add top padding for status bar area.
-              top: _isZenMode ? MediaQuery.of(context).padding.top + AppSpacing.sm : 0,
+              top: _isZenMode
+                  ? MediaQuery.of(context).padding.top + AppSpacing.sm
+                  : 0,
             ),
             child: Center(
               child: ConstrainedBox(
@@ -1247,94 +1251,90 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             child: _isFoldView
                                 ? _buildFoldView(l10n)
                                 :
-                                    // The writing surface is a sheet of
-                                    // paper (paper design system).
-                                    PaperSurface(
-                                      tilted: false,
-                                      tone: isDark
-                                          ? AppColors.darkCardBg
-                                          : AppColors.lightCardBg,
-                                      borderRadius:
-                                          BorderRadius.circular(16),
-                                      child: AnimatedSwitcher(
-                                        duration: AppDurations.shortAnimation,
-                                        switchInCurve: Curves.easeOutCubic,
-                                        switchOutCurve: Curves.easeInCubic,
-                                        child: _isPreview
-                                            ? _buildPreviewView(isDark)
-                                            : _useRichEditor
-                                                ? KeyedSubtree(
-                                                    key: const ValueKey(
-                                                      'rich_editor',
-                                                    ),
-                                                    child:
-                                                        RichEditorWithShortcuts(
-                                                      quillController:
-                                                          _quillController,
-                                                      focusNode:
-                                                          _editorFocusNode,
-                                                      onExitZenMode:
-                                                          _exitZenMode,
-                                                      onToggleHeading:
-                                                          _toggleHeading,
-                                                      onToggleBulletList:
-                                                          _toggleBulletList,
-                                                      onSlashCommand:
-                                                          _handleSlashCommand,
+                                // The writing surface is a sheet of
+                                // paper (paper design system).
+                                PaperSurface(
+                                    tilted: false,
+                                    tone: isDark
+                                        ? AppColors.darkCardBg
+                                        : AppColors.lightCardBg,
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: AnimatedSwitcher(
+                                      duration: AppAnimation.standard,
+                                      switchInCurve: AppAnimation.arrive,
+                                      switchOutCurve: AppAnimation.depart,
+                                      child: _isPreview
+                                          ? _buildPreviewView(isDark)
+                                          : _useRichEditor
+                                              ? KeyedSubtree(
+                                                  key: const ValueKey(
+                                                    'rich_editor',
+                                                  ),
+                                                  child:
+                                                      RichEditorWithShortcuts(
+                                                    quillController:
+                                                        _quillController,
+                                                    focusNode: _editorFocusNode,
+                                                    onExitZenMode: _exitZenMode,
+                                                    onToggleHeading:
+                                                        _toggleHeading,
+                                                    onToggleBulletList:
+                                                        _toggleBulletList,
+                                                    onSlashCommand:
+                                                        _handleSlashCommand,
+                                                    readOnly: _isLocked,
+                                                  ),
+                                                )
+                                              : Semantics(
+                                                  key: const ValueKey(
+                                                    'plain_editor',
+                                                  ),
+                                                  label: l10n.noteContent,
+                                                  child: Padding(
+                                                    // The plain text field has
+                                                    // no built-in padding, so
+                                                    // give it the sheet's own.
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            16),
+                                                    child: TextField(
+                                                      controller:
+                                                          _effectiveContentController,
+                                                      scrollController:
+                                                          _bodyScrollController,
                                                       readOnly: _isLocked,
-                                                    ),
-                                                  )
-                                                : Semantics(
-                                                    key: const ValueKey(
-                                                      'plain_editor',
-                                                    ),
-                                                    label: l10n.noteContent,
-                                                    child: Padding(
-                                                      // The plain text field has
-                                                      // no built-in padding, so
-                                                      // give it the sheet's own.
-                                                      padding: const EdgeInsets
-                                                          .all(16),
-                                                      child: TextField(
-                                                        controller:
-                                                            _effectiveContentController,
-                                                        scrollController:
-                                                            _bodyScrollController,
-                                                        readOnly: _isLocked,
-                                                        decoration:
-                                                            InputDecoration(
-                                                          hintText: l10n
-                                                              .startWriting,
-                                                          border: InputBorder
-                                                              .none,
-                                                        ),
-                                                        maxLines: null,
-                                                        style: AppTextStyles
-                                                            .body
-                                                            .copyWith(
-                                                          fontSize: 16,
-                                                          height: 1.8,
-                                                          color: isDark
-                                                              ? AppColors
-                                                                  .darkTextPrimary
-                                                              : AppColors
-                                                                  .lightTextPrimary,
-                                                        ),
-                                                        onChanged: (_) =>
-                                                            _scheduleTypewriterScroll(),
-                                                        scrollPadding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                                bottom: 120),
+                                                      decoration:
+                                                          InputDecoration(
+                                                        hintText:
+                                                            l10n.startWriting,
+                                                        border:
+                                                            InputBorder.none,
                                                       ),
+                                                      maxLines: null,
+                                                      style: AppTextStyles.body
+                                                          .copyWith(
+                                                        fontSize: 16,
+                                                        height: 1.8,
+                                                        color: isDark
+                                                            ? AppColors
+                                                                .darkTextPrimary
+                                                            : AppColors
+                                                                .lightTextPrimary,
+                                                      ),
+                                                      onChanged: (_) =>
+                                                          _scheduleTypewriterScroll(),
+                                                      scrollPadding:
+                                                          const EdgeInsets.only(
+                                                              bottom: 120),
                                                     ),
                                                   ),
+                                                ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            ),
                           ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1358,15 +1358,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 constraints: const BoxConstraints(maxWidth: 720),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkCardBg
-                        : AppColors.lightCardBg,
+                    color:
+                        isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     boxShadow: AppShadows.mdOf(Theme.of(context).brightness),
                     border: Border.all(
-                      color: isDark
-                          ? AppColors.darkBorder
-                          : AppColors.lightBorder,
+                      color:
+                          isDark ? AppColors.darkBorder : AppColors.lightBorder,
                       width: 1,
                     ),
                   ),
@@ -1375,8 +1373,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     child: FormattingToolbar(
                       quillController: _quillController,
                       onPickImage: () => _pickImage(context),
-                      onAiAction: () =>
-                          _handleAiAction(context, 'summary'),
+                      onAiAction: () => _handleAiAction(context, 'summary'),
                     ),
                   ),
                 ),
@@ -1399,8 +1396,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ),
         // Capture-time AI tag suggestions (Phase 129): dismissible chip row
         // between the editor and the status bar; tap = accept.
-        if (_autoTagSuggestions.isNotEmpty)
-          _buildAutoTagRow(),
+        if (_autoTagSuggestions.isNotEmpty) _buildAutoTagRow(),
         // TTS player bar (only visible when speaking).
         const TtsPlayerBar(),
       ],
@@ -1427,7 +1423,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       child: Row(
         children: [
           Icon(
-            Icons.auto_awesome,
+            AppIcons.sparkles,
             size: 14,
             color: colorScheme.primary,
           ),
@@ -1462,7 +1458,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           ),
                           const SizedBox(width: 4),
                           Icon(
-                            Icons.add,
+                            AppIcons.add,
                             size: 12,
                             color: AppColors.primaryText,
                           ),
@@ -1475,7 +1471,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           ),
           IconButton(
             visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.close, size: 16),
+            icon: const Icon(AppIcons.close, size: 16),
             tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
             onPressed: () => setState(() => _autoTagSuggestions = []),
           ),
@@ -1490,9 +1486,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final plainText = _extractPlainText();
     final lines = plainText.split('\n');
     final title = lines.first.trim();
-    final bodyContent = lines.length > 1
-        ? lines.sublist(1).join('\n').trimLeft()
-        : '';
+    final bodyContent =
+        lines.length > 1 ? lines.sublist(1).join('\n').trimLeft() : '';
 
     final tertiaryColor =
         isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
@@ -1520,8 +1515,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ),
           if (title.isNotEmpty) const SizedBox(height: AppSpacing.md),
           // Body content
-          if (bodyContent.isNotEmpty)
-            MarkdownPreview(content: bodyContent),
+          if (bodyContent.isNotEmpty) MarkdownPreview(content: bodyContent),
           // Tags — indigo pill badges
           if (_noteTags.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
@@ -1549,11 +1543,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   String _formatPreviewDate() {
     final dt = _noteUpdatedAt!.toLocal();
     final months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
-    final dateStr =
-        '${months[dt.month]} ${dt.day}, ${dt.year}';
+    final dateStr = '${months[dt.month]} ${dt.day}, ${dt.year}';
     final readingTime = _writingStats.estimatedReadingTime;
     if (readingTime.inMinutes > 0) {
       final l10n = AppLocalizations.of(context)!;
@@ -1561,7 +1565,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     return dateStr;
   }
-
 
   // ── Fold / outline view ──────────────────────────────
 
@@ -2026,7 +2029,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _insertTextBelow(String text) {
     if (_useRichEditor) {
       final pos = _quillController.selection.end;
-      final insertPos = pos >= 0 ? pos : _quillController.document.toPlainText().length;
+      final insertPos =
+          pos >= 0 ? pos : _quillController.document.toPlainText().length;
       _quillController.document.insert(insertPos, '\n$text');
     } else {
       final controller = _effectiveContentController;
@@ -2054,8 +2058,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Applies one accepted auto-tag suggestion to the note.
   Future<void> _acceptAutoTag(String tag) async {
     setState(() {
-      _autoTagSuggestions = List<String>.from(_autoTagSuggestions)
-        ..remove(tag);
+      _autoTagSuggestions = List<String>.from(_autoTagSuggestions)..remove(tag);
     });
     await _applySuggestedTags({tag});
   }
@@ -2155,12 +2158,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const Icon(AppIcons.photoLibrary),
               title: Text(l10n.fromGallery),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
+              leading: const Icon(AppIcons.camera),
               title: Text(l10n.fromCamera),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
@@ -2384,9 +2387,7 @@ class _EditorBottomBar extends StatelessWidget {
               label: l10n.toggleWritingStats,
               child: IconButton(
                 icon: Icon(
-                  isStatsExpanded
-                      ? Icons.bar_chart_rounded
-                      : Icons.bar_chart_outlined,
+                  isStatsExpanded ? AppIcons.chartBar : AppIcons.chartBar,
                   size: 18,
                   color: captionColor,
                 ),
@@ -2407,7 +2408,7 @@ class _EditorBottomBar extends StatelessWidget {
                   label: l10n.enterZenMode,
                   child: IconButton(
                     icon: Icon(
-                      Icons.fullscreen_outlined,
+                      AppIcons.fullscreen,
                       size: 20,
                       color: captionColor,
                     ),
@@ -2469,7 +2470,7 @@ class _CompactSaveChip extends StatelessWidget {
     } else {
       label = l10n.statusSaved;
       color = AppColors.success;
-      icon = Icon(Icons.check_circle, size: 12, color: color);
+      icon = Icon(AppIcons.checkCircle, size: 12, color: color);
     }
 
     return Row(
@@ -2500,9 +2501,9 @@ class _StatText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: AppAnimation.short,
-      switchInCurve: AppAnimation.easeOut,
-      switchOutCurve: AppAnimation.easeIn,
+      duration: AppAnimation.standard,
+      switchInCurve: AppAnimation.arrive,
+      switchOutCurve: AppAnimation.depart,
       transitionBuilder: (child, animation) =>
           FadeTransition(opacity: animation, child: child),
       child: Text(

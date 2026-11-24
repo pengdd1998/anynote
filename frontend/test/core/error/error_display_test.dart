@@ -174,7 +174,7 @@ void main() {
   group('ErrorDisplay.errorIcon', () {
     test('NetworkException returns wifiTethering icon', () {
       const error = NetworkException(message: 'test');
-      expect(ErrorDisplay.errorIcon(error), AppIcons.wifiTethering);
+      expect(ErrorDisplay.errorIcon(error), AppIcons.wifi);
     });
 
     test('ServerException returns cloudOff icon', () {

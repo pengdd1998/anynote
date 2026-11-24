@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -74,7 +75,7 @@ class NotesFilterSheet extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                const Icon(Icons.filter_list),
+                const Icon(AppIcons.filterList),
                 const SizedBox(width: 12),
                 Text(
                   l10n.filterByProperties,
@@ -292,7 +293,7 @@ class NotesFilterBar extends StatelessWidget {
           child: FilterChip(
             label: Text(l10n.filter),
             avatar: Icon(
-              Icons.filter_list,
+              AppIcons.filterList,
               size: 16,
               color: colorScheme.onSurfaceVariant,
             ),
@@ -322,9 +323,9 @@ class NotesFilterBar extends StatelessWidget {
               padding: const EdgeInsets.only(right: 8),
               child: Chip(
                 label: Text(l10n.statusLabel(statusFilter!)),
-                deleteIcon: const Icon(Icons.close, size: 16),
+                deleteIcon: const Icon(AppIcons.close, size: 16),
                 onDeleted: onStatusCleared,
-                avatar: const Icon(Icons.fiber_manual_record, size: 12),
+                avatar: const Icon(AppIcons.circleFilled, size: 12),
               ),
             ),
           if (priorityFilter != null)
@@ -332,9 +333,9 @@ class NotesFilterBar extends StatelessWidget {
               padding: const EdgeInsets.only(right: 8),
               child: Chip(
                 label: Text(l10n.priorityLabel(priorityFilter!)),
-                deleteIcon: const Icon(Icons.close, size: 16),
+                deleteIcon: const Icon(AppIcons.close, size: 16),
                 onDeleted: onPriorityCleared,
-                avatar: const Icon(Icons.priority_high, size: 12),
+                avatar: const Icon(AppIcons.priorityHigh, size: 12),
               ),
             ),
           if (tagFilter != null)
@@ -344,16 +345,16 @@ class NotesFilterBar extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: Chip(
                     label: Text(tag.plainName ?? '...'),
-                    deleteIcon: const Icon(Icons.close, size: 16),
+                    deleteIcon: const Icon(AppIcons.close, size: 16),
                     onDeleted: () => onTagCleared?.call(tagId),
-                    avatar: const Icon(Icons.label, size: 12),
+                    avatar: const Icon(AppIcons.tag, size: 12),
                   ),
                 ),
           Padding(
             padding: const EdgeInsets.only(left: 8),
             child: TextButton.icon(
               onPressed: onClearAll,
-              icon: const Icon(Icons.clear_all, size: 16),
+              icon: const Icon(AppIcons.clearAll, size: 16),
               label: Text(l10n.clearAll),
             ),
           ),

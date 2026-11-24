@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,7 +24,7 @@ void main() {
       expect(find.byType(AppBar), findsOneWidget);
 
       // Empty trash should show the empty state widget
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.deleteOutline), findsOneWidget);
 
       await handle.dispose();
     });
@@ -39,7 +40,7 @@ void main() {
 
       // The delete_forever icon in the app bar should not be present when
       // there are no deleted notes.
-      expect(find.byIcon(Icons.delete_forever), findsNothing);
+      expect(find.byIcon(AppIcons.deleteForever), findsNothing);
 
       await handle.dispose();
     });
@@ -87,7 +88,7 @@ void main() {
       expect(find.text('Deleted Note Two'), findsOneWidget);
 
       // The empty trash button should now be visible in the app bar.
-      expect(find.byIcon(Icons.delete_forever), findsOneWidget);
+      expect(find.byIcon(AppIcons.deleteForever), findsOneWidget);
 
       await handle.dispose();
     });
@@ -121,7 +122,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // The bottom sheet should contain Restore and Delete Forever actions.
-      expect(find.byIcon(Icons.restore), findsOneWidget);
+      expect(find.byIcon(AppIcons.restore), findsOneWidget);
 
       // Dismiss the bottom sheet.
       await tester.tapAt(Offset.zero);
@@ -160,7 +161,7 @@ void main() {
 
       // Tap the Restore action in the bottom sheet.
       // There should be a ListTile with a restore icon.
-      await tester.tap(find.byIcon(Icons.restore));
+      await tester.tap(find.byIcon(AppIcons.restore));
       await tester.pumpAndSettle();
 
       // Verify the note was restored (deleted_at should be null).
@@ -194,7 +195,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Tap the empty trash icon button in the app bar.
-      await tester.tap(find.byIcon(Icons.delete_forever));
+      await tester.tap(find.byIcon(AppIcons.deleteForever));
       await tester.pumpAndSettle();
 
       // A confirmation dialog should appear.
@@ -235,7 +236,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Tap the empty trash icon.
-      await tester.tap(find.byIcon(Icons.delete_forever));
+      await tester.tap(find.byIcon(AppIcons.deleteForever));
       await tester.pumpAndSettle();
 
       // Confirm by tapping the Delete button in the dialog.

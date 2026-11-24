@@ -1,21 +1,7 @@
-/// Commonly used durations across the app.
+/// How long the app waits before doing something — not how long anything
+/// takes to move: animation durations are `AppAnimation`'s.
 class AppDurations {
   AppDurations._();
-
-  /// Very short animation duration (100 ms).
-  static const veryShortAnimation = Duration(milliseconds: 100);
-
-  /// Short animation duration (200 ms).
-  static const shortAnimation = Duration(milliseconds: 200);
-
-  /// Medium animation duration (250 ms).
-  static const mediumAnimation = Duration(milliseconds: 250);
-
-  /// Standard animation duration (300 ms).
-  static const animation = Duration(milliseconds: 300);
-
-  /// Long animation duration (400 ms).
-  static const longAnimation = Duration(milliseconds: 400);
 
   /// Debounce duration for text input (300 ms).
   static const debounce = Duration(milliseconds: 300);

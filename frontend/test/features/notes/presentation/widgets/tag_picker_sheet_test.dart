@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -86,7 +87,7 @@ void main() {
       final db = await pumpTagPickerSheet(tester);
       addTearDown(() async => db.close());
 
-      expect(find.byIcon(Icons.close), findsOneWidget);
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
     });
 
     testWidgets('shows add button', (tester) async {
@@ -159,7 +160,7 @@ void main() {
       final db = await pumpTagPickerSheet(tester);
       addTearDown(() async => db.close());
 
-      await tester.tap(find.byIcon(Icons.close));
+      await tester.tap(find.byIcon(AppIcons.close));
       await tester.pumpAndSettle();
 
       // Sheet should be gone.

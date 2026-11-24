@@ -30,13 +30,21 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
       'name': 'Xiaomi MiMo',
       'baseUrl': 'https://api.xiaomimimo.com/v1',
     },
-    {'id': 'deepseek', 'name': 'DeepSeek', 'baseUrl': 'https://api.deepseek.com/v1'},
+    {
+      'id': 'deepseek',
+      'name': 'DeepSeek',
+      'baseUrl': 'https://api.deepseek.com/v1'
+    },
     {
       'id': 'qwen',
       'name': 'Qwen',
       'baseUrl': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     },
-    {'id': 'anthropic', 'name': 'Anthropic', 'baseUrl': 'https://api.anthropic.com/v1'},
+    {
+      'id': 'anthropic',
+      'name': 'Anthropic',
+      'baseUrl': 'https://api.anthropic.com/v1'
+    },
     {'id': 'custom', 'name': 'Custom', 'baseUrl': ''},
   ];
 
@@ -77,19 +85,16 @@ class _LLMConfigScreenState extends ConsumerState<LLMConfigScreen> {
                 final i = index - 1;
                 final cfg = configs[i];
                 final id = cfg.id;
-                return StaggeredGroup(
-                  staggerIndex: i,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _LLMConfigCard(
-                      cfg: cfg,
-                      id: id,
-                      l10n: l10n,
-                      onTest: () => _testConfig(id),
-                      onEdit: () => _showEditDialog(cfg),
-                      onDelete: () => _confirmDelete(context, id, cfg.name),
-                      onSetDefault: () => _setDefault(context, id),
-                    ),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _LLMConfigCard(
+                    cfg: cfg,
+                    id: id,
+                    l10n: l10n,
+                    onTest: () => _testConfig(id),
+                    onEdit: () => _showEditDialog(cfg),
+                    onDelete: () => _confirmDelete(context, id, cfg.name),
+                    onSetDefault: () => _setDefault(context, id),
                   ),
                 );
               },
@@ -534,8 +539,8 @@ class _PrivacyNote extends StatelessWidget {
           Expanded(
             child: Text(
               l10n.llmLocalOnlyNote,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.hintColor),
+              style:
+                  theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
             ),
           ),
         ],
@@ -604,7 +609,7 @@ class _LLMConfigCard extends StatelessWidget {
               A11yUtils.labeledButton(
                 label: l10n.testConnection,
                 child: IconButton(
-                  icon: const Icon(AppIcons.wifiTethering, size: 20),
+                  icon: const Icon(AppIcons.wifi, size: 20),
                   tooltip: l10n.testConnection,
                   onPressed: id.isEmpty ? null : onTest,
                 ),
@@ -613,7 +618,7 @@ class _LLMConfigCard extends StatelessWidget {
                 A11yUtils.labeledButton(
                   label: l10n.setAsDefault,
                   child: IconButton(
-                    icon: const Icon(AppIcons.starOutline, size: 20),
+                    icon: const Icon(AppIcons.star, size: 20),
                     tooltip: l10n.setAsDefault,
                     onPressed: onSetDefault,
                   ),

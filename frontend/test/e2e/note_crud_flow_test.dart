@@ -98,7 +98,7 @@ void main() {
         find.byWidgetPredicate(
           (w) =>
               w is Icon &&
-              (w.icon == Icons.grid_view || w.icon == Icons.view_list),
+              (w.icon == AppIcons.gridView || w.icon == AppIcons.viewList),
         ),
         findsOneWidget,
       );

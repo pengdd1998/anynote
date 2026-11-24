@@ -13,14 +13,14 @@
 /// - [SettingsGroupHeader]    iOS-style grouped settings section header
 /// - [SettingsGroup]          Rounded card container for a group of settings items
 /// - [SettingsItem]           Single settings row with icon circle, title, subtitle, trailing
-/// - [StaggeredGroup]         Animated wrapper that fades in a group with stagger delay
 library;
-
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 
 import '../error/error.dart';
+import '../theme/app_animation.dart';
+import '../theme/app_binding.dart';
+import '../theme/app_icons.dart';
 import '../theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -43,7 +43,7 @@ import 'card_container.dart';
 ///
 /// ```dart
 /// AppEmptyState(
-///   icon: Icons.note_add_outlined,
+///   icon: AppIcons.noteAdd,
 ///   title: 'No notes yet',
 ///   subtitle: 'Tap the button to create your first note',
 ///   actionLabel: 'New Note',
@@ -72,41 +72,19 @@ class AppEmptyState extends StatefulWidget {
 
 class _AppEmptyStateState extends State<AppEmptyState>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scale;
-  late final Animation<double> _opacity;
+  late final AnimationController _fade;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _scale = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    );
-    _opacity = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    if (reduceMotion) {
-      _controller.value = 1.0;
-    } else {
-      _controller.forward();
-    }
+    // Over in a single frame when "减少动画" is on (see ReduceMotionBinding).
+    _fade = AnimationController(vsync: this, duration: AppAnimation.standard)
+      ..forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _fade.dispose();
     super.dispose();
   }
 
@@ -118,63 +96,59 @@ class _AppEmptyStateState extends State<AppEmptyState>
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: FadeTransition(
-          opacity: _opacity,
-          child: ScaleTransition(
-            scale: _scale,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentLavenderBg,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
-                  child: Icon(
-                    widget.icon,
-                    size: 32,
-                    color: AppColors.accentLavenderText,
-                  ),
+          opacity: _fade,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.accentLavenderBg,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                child: Icon(
+                  widget.icon,
+                  size: 32,
+                  color: AppColors.accentLavenderText,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                widget.title,
+                style: AppTextStyles.title.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (widget.subtitle != null) ...[
+                const SizedBox(height: AppSpacing.s8),
                 Text(
-                  widget.title,
-                  style: AppTextStyles.title.copyWith(
+                  widget.subtitle!,
+                  style: AppTextStyles.caption.copyWith(
                     color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                    height: 1.5,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                if (widget.subtitle != null) ...[
-                  const SizedBox(height: AppSpacing.s8),
-                  Text(
-                    widget.subtitle!,
-                    style: AppTextStyles.caption.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-                if (widget.actionLabel != null && widget.onAction != null) ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  FilledButton.tonal(
-                    onPressed: widget.onAction,
-                    style: FilledButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.sm),
-                      ),
-                    ),
-                    child: Text(widget.actionLabel!),
-                  ),
-                ],
               ],
-            ),
+              if (widget.actionLabel != null && widget.onAction != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                FilledButton.tonal(
+                  onPressed: widget.onAction,
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                  ),
+                  child: Text(widget.actionLabel!),
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -206,15 +180,19 @@ class AppLoadingCard extends StatefulWidget {
 
 class _AppLoadingCardState extends State<AppLoadingCard>
     with SingleTickerProviderStateMixin {
+  /// How long one sweep of light takes to cross the card. A cycle, not a
+  /// transition, so it is not one of the motion tokens.
+  static const _sweep = Duration(milliseconds: 1440);
+
   late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: _sweep);
+    // A loop is not something a shorter duration makes calm — it would only
+    // flicker — so it is simply not started.
+    if (!ReduceMotionSwitch.active) _controller.repeat();
   }
 
   @override
@@ -390,7 +368,9 @@ class AppErrorCard extends StatelessWidget {
             Text(
               message,
               style: TextStyle(
-                  fontSize: 12, color: Theme.of(context).disabledColor,),
+                fontSize: 12,
+                color: Theme.of(context).disabledColor,
+              ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -459,7 +439,7 @@ class AppSyncBadge extends StatelessWidget {
       _statusProperties(AppLocalizations? l10n) {
     if (hasConflict) {
       return (
-        icon: Icons.cloud_off,
+        icon: AppIcons.cloudOff,
         color: AppColors.error,
         tooltip: l10n?.syncConflictBadge ?? 'Sync conflict',
         label: l10n?.conflictLabel ?? 'Conflict',
@@ -467,14 +447,14 @@ class AppSyncBadge extends StatelessWidget {
     }
     if (isSynced) {
       return (
-        icon: Icons.cloud_done,
+        icon: AppIcons.cloudDone,
         color: AppColors.success,
         tooltip: l10n?.syncedLabel ?? 'Synced',
         label: l10n?.syncedLabel ?? 'Synced',
       );
     }
     return (
-      icon: Icons.cloud_upload,
+      icon: AppIcons.cloudUpload,
       color: AppColors.warning,
       tooltip: l10n?.pendingSyncBadge ?? 'Pending sync',
       label: l10n?.pendingSyncLabel ?? 'Pending',
@@ -547,7 +527,7 @@ class AppSectionHeader extends StatelessWidget {
 /// SettingsGroupHeader(title: 'Account'),
 /// SettingsGroup(
 ///   children: [
-///     SettingsItem(icon: Icons.person, title: 'Email', subtitle: 'user@example.com'),
+///     SettingsItem(icon: AppIcons.person, title: 'Email', subtitle: 'user@example.com'),
 ///   ],
 /// )
 /// ```
@@ -590,8 +570,8 @@ class SettingsGroupHeader extends StatelessWidget {
 /// ```dart
 /// SettingsGroup(
 ///   children: [
-///     SettingsItem(icon: Icons.person, title: 'Email', ...),
-///     SettingsItem(icon: Icons.badge, title: 'Plan', ...),
+///     SettingsItem(icon: AppIcons.person, title: 'Email', ...),
+///     SettingsItem(icon: AppIcons.badge, title: 'Plan', ...),
 ///   ],
 /// )
 /// ```
@@ -642,10 +622,10 @@ class SettingsGroup extends StatelessWidget {
 ///
 /// ```dart
 /// SettingsItem(
-///   icon: Icons.shield_outlined,
+///   icon: AppIcons.shield,
 ///   title: 'Encryption',
 ///   subtitle: 'E2E encryption active',
-///   trailing: Icon(Icons.chevron_right),
+///   trailing: Icon(AppIcons.chevronRight),
 ///   onTap: () => context.push('/settings/security'),
 /// )
 /// ```
@@ -812,8 +792,8 @@ class _SettingsItemRawState extends State<_SettingsItemRaw> {
             : null,
         child: AnimatedScale(
           scale: _pressed ? 0.98 : 1.0,
-          duration: const Duration(milliseconds: 100),
-          curve: Curves.easeOut,
+          duration: AppAnimation.fast,
+          curve: AppAnimation.arrive,
           child: Material(
             color: Colors.transparent,
             child: InkWell(
@@ -858,106 +838,6 @@ class IconCircle extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Icon(icon, size: 18, color: effectiveColor),
-    );
-  }
-}
-
-/// An animated wrapper that fades in a child widget with a stagger delay.
-///
-/// Each instance animates over 200ms. The [staggerIndex] controls how many
-/// 50ms delays to add before the animation starts, creating a cascading
-/// reveal effect when multiple groups appear together.
-///
-/// Respects the reduce motion accessibility setting - when enabled, the child
-/// is rendered immediately without animation.
-///
-/// ```dart
-/// StaggeredGroup(
-///   staggerIndex: 0,
-///   child: SettingsGroup(children: [...]),
-/// )
-/// ```
-class StaggeredGroup extends StatefulWidget {
-  final int staggerIndex;
-  final Widget child;
-
-  const StaggeredGroup({
-    super.key,
-    required this.staggerIndex,
-    required this.child,
-  });
-
-  @override
-  State<StaggeredGroup> createState() => _StaggeredGroupState();
-}
-
-class _StaggeredGroupState extends State<StaggeredGroup>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _opacity;
-  late final Animation<Offset> _slide;
-  late final Animation<double> _scale;
-  Timer? _delayTimer;
-  bool _hasStartedAnimation = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
-    _slide = Tween<Offset>(
-      begin: const Offset(0, 0.03),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-    _scale = Tween<double>(
-      begin: 0.98,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_hasStartedAnimation) {
-      _hasStartedAnimation = true;
-      // Check if reduce motion is enabled
-      final reduceMotion = MediaQuery.disableAnimationsOf(context);
-
-      if (reduceMotion) {
-        // Skip animation entirely - show immediately
-        _controller.value = 1.0;
-      } else {
-        // Stagger: each group waits 50ms * staggerIndex before starting.
-        final delay = Duration(milliseconds: 50 * widget.staggerIndex);
-        _delayTimer = Timer(delay, () {
-          if (mounted) _controller.forward();
-        });
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _delayTimer?.cancel();
-    _delayTimer = null;
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _opacity,
-      child: SlideTransition(
-        position: _slide,
-        child: ScaleTransition(
-          scale: _scale,
-          child: widget.child,
-        ),
-      ),
     );
   }
 }

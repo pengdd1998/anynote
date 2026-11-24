@@ -7,6 +7,7 @@
 // - Self-contained share (payload path) works
 // - Error state is shown when decryption fails
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -141,7 +142,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.link_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.linkOff), findsOneWidget);
       // The full l10n string includes additional text about the link.
       expect(
         find.textContaining('Failed to decrypt the shared note'),
@@ -159,7 +160,7 @@ void main() {
         shareKeyFragment: null,
       );
 
-      expect(find.byIcon(Icons.lock_outline), findsNWidgets(2));
+      expect(find.byIcon(AppIcons.lock), findsNWidgets(2));
       expect(find.byType(TextField), findsOneWidget);
       expect(find.text('Password Required'), findsOneWidget);
     });

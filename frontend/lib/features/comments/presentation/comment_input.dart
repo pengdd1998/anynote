@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/comment_providers.dart';
 
@@ -105,7 +106,7 @@ class _CommentInputState extends ConsumerState<CommentInput> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : Icon(
-                    Icons.send,
+                    AppIcons.send,
                     color: colorScheme.primary,
                   ),
           ),

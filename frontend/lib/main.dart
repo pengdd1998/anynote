@@ -25,6 +25,7 @@ import 'core/sync/sync_lifecycle.dart';
 import 'core/sync/background_sync_service.dart';
 import 'core/error/connectivity_provider.dart';
 import 'core/theme/app_colors.dart';
+import 'core/theme/app_binding.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/theme/animation_config.dart';
 import 'core/widgets/app_menu_bar.dart';
@@ -49,7 +50,8 @@ late final ProviderContainer globalContainer;
 bool containerReady = false;
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // First, and as `AppBinding`: it carries the "减少动画" switch to Flutter.
+  AppBinding.initialize();
 
   // Initialize error reporting before anything else.
   ErrorReporter.instance.init();
@@ -175,7 +177,6 @@ void main() async {
     ),
   );
 }
-
 
 class AnyNoteApp extends ConsumerStatefulWidget {
   const AnyNoteApp({super.key});
@@ -383,7 +384,8 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                         debugShowCheckedModeBanner: false,
                         showSemanticsDebugger: false,
                         theme: selectEffectiveTheme(themeOption, brightness),
-                        darkTheme: selectEffectiveTheme(themeOption, brightness),
+                        darkTheme:
+                            selectEffectiveTheme(themeOption, brightness),
                         themeMode: ThemeMode.system,
                         routerConfig: appRouter,
                         localizationsDelegates: [

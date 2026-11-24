@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -31,7 +32,7 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
         title: Text(l10n.publishHistory),
         actions: [
           PopupMenuButton<String?>(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(AppIcons.filterList),
             tooltip: l10n.filterByStatus,
             onSelected: (value) {
               setState(() => _statusFilter = value);
@@ -64,14 +65,15 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.filter_list_off,
+                          AppIcons.filterListOff,
                           size: 48,
                           color: Theme.of(context).disabledColor,
                         ),
                         const SizedBox(height: 12),
                         Text(
                           l10n.noPublicationsWithStatus(_statusFilter ?? ''),
-                          style: TextStyle(color: Theme.of(context).disabledColor),
+                          style:
+                              TextStyle(color: Theme.of(context).disabledColor),
                         ),
                         const SizedBox(height: 16),
                         OutlinedButton(
@@ -82,7 +84,7 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
                     ),
                   )
                 : EmptyState(
-                    icon: Icons.publish_outlined,
+                    icon: AppIcons.publish,
                     title: l10n.noPublications,
                     subtitle: l10n.publishedContentWillAppear,
                   );
@@ -119,15 +121,16 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
     final createdAt = item['created_at']?.toString() ?? '';
     final platformURL = item['platform_url']?.toString() ?? '';
     final errorMessage = item['error_message']?.toString() ?? '';
-    final stats =
-        item['stats'] is Map<String, dynamic> ? item['stats'] as Map<String, dynamic> : null;
+    final stats = item['stats'] is Map<String, dynamic>
+        ? item['stats'] as Map<String, dynamic>
+        : null;
 
     final statusIcon = switch (status) {
-      'published' => Icons.check_circle,
-      'failed' => Icons.error,
-      'publishing' => Icons.sync,
-      'pending' => Icons.schedule,
-      _ => Icons.help_outline,
+      'published' => AppIcons.checkCircle,
+      'failed' => AppIcons.error,
+      'publishing' => AppIcons.sync,
+      'pending' => AppIcons.schedule,
+      _ => AppIcons.help,
     };
 
     // Pill chip colors per status (published = mint, pending = yellow).
@@ -244,9 +247,7 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
               child: Text(
                 platformURL,
                 style: AppTextStyles.caption.copyWith(
-                  color: isDark
-                      ? AppColors.secondary
-                      : AppColors.primaryText,
+                  color: isDark ? AppColors.secondary : AppColors.primaryText,
                   decoration: TextDecoration.underline,
                 ),
                 maxLines: 1,
@@ -258,14 +259,29 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
             const SizedBox(height: AppSpacing.s8),
             Row(
               children: [
-                _statCell(context, Icons.visibility_outlined,
-                    l10n.statsViews, stats['views'], isDark,),
+                _statCell(
+                  context,
+                  AppIcons.visibility,
+                  l10n.statsViews,
+                  stats['views'],
+                  isDark,
+                ),
                 const SizedBox(width: AppSpacing.s16),
-                _statCell(context, Icons.favorite_outline,
-                    l10n.statsLikes, stats['likes'], isDark,),
+                _statCell(
+                  context,
+                  AppIcons.favorite,
+                  l10n.statsLikes,
+                  stats['likes'],
+                  isDark,
+                ),
                 const SizedBox(width: AppSpacing.s16),
-                _statCell(context, Icons.chat_bubble_outline,
-                    l10n.statsComments, stats['comments'], isDark,),
+                _statCell(
+                  context,
+                  AppIcons.chat,
+                  l10n.statsComments,
+                  stats['comments'],
+                  isDark,
+                ),
               ],
             ),
           ],
@@ -275,9 +291,7 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(AppSpacing.s8),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkErrorBg
-                    : AppColors.lightErrorBg,
+                color: isDark ? AppColors.darkErrorBg : AppColors.lightErrorBg,
                 borderRadius: BorderRadius.circular(AppRadius.xxs),
               ),
               child: Text(
@@ -314,9 +328,8 @@ class _PublishHistoryScreenState extends ConsumerState<PublishHistoryScreen> {
     bool isDark,
   ) {
     final count = value is num ? value.toInt() : 0;
-    final color = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final color =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -476,7 +489,8 @@ class _PublishDetailSheet extends ConsumerWidget {
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).disabledColor,
+                color: Theme.of(context).textTheme.bodySmall?.color ??
+                    Theme.of(context).disabledColor,
               ),
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../l10n/app_localizations.dart';
@@ -220,7 +221,7 @@ class _CommentTile extends StatelessWidget {
                 ),
                 if (isOwner)
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 18),
+                    icon: const Icon(AppIcons.deleteOutline, size: 18),
                     onPressed: onDelete,
                     tooltip: l10n?.delete ?? 'Delete',
                     visualDensity: VisualDensity.compact,

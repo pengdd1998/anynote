@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -23,7 +24,7 @@ void main() {
           home: ErrorBoundary(
             child: Column(
               children: [
-                Icon(Icons.star),
+                Icon(AppIcons.starFilled),
                 Text('Content'),
               ],
             ),
@@ -31,7 +32,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.star), findsOneWidget);
+      expect(find.byIcon(AppIcons.starFilled), findsOneWidget);
       expect(find.text('Content'), findsOneWidget);
     });
 

@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,7 +11,8 @@ void main() {
   group('PublishHistoryScreen', () {
     List<Override> historyOverrides() => [
           ...defaultProviderOverrides(),
-          publishHistoryProvider.overrideWith(() => _FakePublishHistoryNotifier()),
+          publishHistoryProvider
+              .overrideWith(() => _FakePublishHistoryNotifier()),
         ];
 
     testWidgets('renders without errors', (tester) async {
@@ -31,7 +33,7 @@ void main() {
         overrides: historyOverrides(),
       );
 
-      expect(find.byIcon(Icons.filter_list), findsOneWidget);
+      expect(find.byIcon(AppIcons.filterList), findsOneWidget);
       await handle.dispose();
     });
 
@@ -46,7 +48,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
       // Empty state should show the publish icon.
-      expect(find.byIcon(Icons.publish_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.publish), findsOneWidget);
       await handle.dispose();
     });
   });

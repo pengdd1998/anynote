@@ -6,9 +6,10 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/accessibility/a11y_utils.dart';
-import '../../../core/constants/app_durations.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/widgets/toc_extractor.dart';
 import '../../../l10n/app_localizations.dart';
@@ -105,7 +106,7 @@ class _MarkdownPreviewScreenState extends ConsumerState<MarkdownPreviewScreen> {
                   label: AppLocalizations.of(context)?.tableOfContents ??
                       'Table of Contents',
                   child: IconButton(
-                    icon: const Icon(Icons.list_alt),
+                    icon: const Icon(AppIcons.listAlt),
                     tooltip:
                         AppLocalizations.of(context)?.tableOfContents ?? 'TOC',
                     onPressed: () {
@@ -127,7 +128,7 @@ class _MarkdownPreviewScreenState extends ConsumerState<MarkdownPreviewScreen> {
                 return A11yUtils.labeledButton(
                   label: AppLocalizations.of(context)?.shareViaLink ?? 'Share',
                   child: IconButton(
-                    icon: const Icon(Icons.share_outlined),
+                    icon: const Icon(AppIcons.share),
                     tooltip:
                         AppLocalizations.of(context)?.shareViaLink ?? 'Share',
                     onPressed: () {
@@ -147,7 +148,7 @@ class _MarkdownPreviewScreenState extends ConsumerState<MarkdownPreviewScreen> {
                 return A11yUtils.labeledButton(
                   label: AppLocalizations.of(context)?.printNote ?? 'Print',
                   child: IconButton(
-                    icon: const Icon(Icons.print_outlined),
+                    icon: const Icon(AppIcons.print),
                     tooltip: AppLocalizations.of(context)?.printNote ?? 'Print',
                     onPressed: () {
                       final note = snapshot.data!;
@@ -193,7 +194,7 @@ class _MarkdownPreviewScreenState extends ConsumerState<MarkdownPreviewScreen> {
                   children: [
                     ExcludeSemantics(
                       child: Icon(
-                        Icons.error_outline,
+                        AppIcons.errorOutline,
                         size: 48,
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -221,7 +222,7 @@ class _MarkdownPreviewScreenState extends ConsumerState<MarkdownPreviewScreen> {
                   children: [
                     ExcludeSemantics(
                       child: Icon(
-                        Icons.description_outlined,
+                        AppIcons.description,
                         size: 48,
                         color: Theme.of(context)
                             .colorScheme
@@ -302,8 +303,8 @@ class _MarkdownScrollViewState extends State<_MarkdownScrollView> {
 
     _scrollController.animateTo(
       targetOffset,
-      duration: AppDurations.animation,
-      curve: Curves.easeOutCubic,
+      duration: AppAnimation.emphasized,
+      curve: AppAnimation.arrive,
     );
   }
 

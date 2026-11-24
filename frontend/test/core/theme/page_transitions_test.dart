@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:anynote/core/theme/app_animation.dart';
 import 'package:anynote/core/theme/page_transitions.dart';
 
 void main() {
@@ -17,18 +18,12 @@ void main() {
       expect(page, isA<CustomTransitionPage<void>>());
     });
 
-    test('has transition duration of 300ms', () {
+    test('takes the standard duration each way', () {
       const child = SizedBox();
-      final page = fadeThroughTransition(child);
+      final page = fadeThroughTransition(child) as CustomTransitionPage<void>;
 
-      expect(page.transitionDuration, const Duration(milliseconds: 300));
-    });
-
-    test('has reverse transition duration of 300ms', () {
-      const child = SizedBox();
-      final page = fadeThroughTransition(child);
-
-      expect(page.reverseTransitionDuration, const Duration(milliseconds: 300));
+      expect(page.transitionDuration, AppAnimation.standard);
+      expect(page.reverseTransitionDuration, AppAnimation.standard);
     });
 
     test('has the correct key for caching', () {
@@ -111,18 +106,12 @@ void main() {
       expect(page, isA<CustomTransitionPage<void>>());
     });
 
-    test('has forward duration of 300ms', () {
+    test('arrives in an emphasized beat and leaves in a standard one', () {
       const child = SizedBox();
       final page = slideTransition(child) as CustomTransitionPage<void>;
 
-      expect(page.transitionDuration, const Duration(milliseconds: 300));
-    });
-
-    test('has reverse duration of 250ms', () {
-      const child = SizedBox();
-      final page = slideTransition(child) as CustomTransitionPage<void>;
-
-      expect(page.reverseTransitionDuration, const Duration(milliseconds: 250));
+      expect(page.transitionDuration, AppAnimation.emphasized);
+      expect(page.reverseTransitionDuration, AppAnimation.standard);
     });
 
     test('contains the provided child widget', () {

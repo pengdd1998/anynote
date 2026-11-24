@@ -116,7 +116,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Default state shows flag_outlined icon for priority.
-      expect(find.byIcon(Icons.flag_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.flag), findsOneWidget);
 
       await handle.dispose();
     });
@@ -147,7 +147,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Tap the priority flag button.
-      await tester.tap(find.byIcon(Icons.flag_outlined));
+      await tester.tap(find.byIcon(AppIcons.flag));
       await tester.pumpAndSettle();
 
       // The bottom sheet should show priority options.
@@ -167,7 +167,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Open priority selector.
-      await tester.tap(find.byIcon(Icons.flag_outlined));
+      await tester.tap(find.byIcon(AppIcons.flag));
       await tester.pumpAndSettle();
 
       // Select High priority.
@@ -175,7 +175,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // The toolbar should now show the High priority icon (arrow up, red).
-      expect(find.byIcon(Icons.keyboard_double_arrow_up), findsWidgets);
+      expect(find.byIcon(AppIcons.chevronDoubleUp), findsWidgets);
 
       // A chip with "High" text should appear in the metadata area.
       expect(find.text('High'), findsOneWidget);
@@ -200,7 +200,8 @@ void main() {
     testWidgets('pre-fills content from sharedText parameter', (tester) async {
       final handle = await pumpScreen(
         tester,
-        _wrapInMaterial(const QuickCaptureScreen(sharedText: 'Shared text content')),
+        _wrapInMaterial(
+            const QuickCaptureScreen(sharedText: 'Shared text content')),
         overrides: defaultProviderOverrides(),
       );
       addTearDown(() => handle.dispose());

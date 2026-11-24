@@ -150,7 +150,7 @@ class FormattingToolbar extends StatelessWidget {
                 onPressed: () => _toggleList(quill.Attribute.ol),
               ),
               _FormatButton(
-                icon: PhosphorIconsRegular.quotes,
+                icon: AppIcons.quote,
                 tooltip: l10n.formatBlockQuote,
                 isActive: attrs.containsKey(quill.Attribute.blockQuote.key),
                 onPressed: () => _toggleAttribute(quill.Attribute.blockQuote),

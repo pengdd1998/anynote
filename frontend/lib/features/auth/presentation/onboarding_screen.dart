@@ -4,15 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_animation.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/storage/app_secure_storage.dart';
+import '../../../core/theme/animation_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/constants/app_durations.dart';
 import '../../../core/widgets/pressable_scale.dart';
 import '../../../core/notifications/local_notification_service.dart';
 import '../../../main.dart';
@@ -61,9 +62,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   ];
 
   static const _pageIcons = <IconData>[
-    Icons.shield_outlined,
-    Icons.auto_awesome_outlined,
-    Icons.publish_outlined,
+    AppIcons.shield,
+    AppIcons.sparkles,
+    AppIcons.publish,
   ];
 
   List<String> get _pageTitles {
@@ -109,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         setState(() => _demoCharIndex++);
       } else {
         timer.cancel();
-        Future.delayed(AppDurations.animation, () {
+        Future.delayed(const Duration(milliseconds: 300), () {
           if (!mounted) return;
           setState(() => _demoLockVisible = true);
           Future.delayed(const Duration(milliseconds: 600), () {
@@ -158,8 +159,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     }
     final isLastPage = _currentPage == _totalPages - 1;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldBg =
-        isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final scaffoldBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
@@ -252,8 +252,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         _requestPermissionsAndContinue();
                       } else {
                         _controller.nextPage(
-                          duration: AppDurations.animation,
-                          curve: Curves.easeInOut,
+                          duration: AppAnimation.emphasized,
+                          curve: AppAnimation.arrive,
                         );
                       }
                     },
@@ -273,7 +273,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         ],
                       ),
                       child: const Icon(
-                        Icons.arrow_forward,
+                        AppIcons.arrowForward,
                         color: Colors.white,
                         size: 24,
                       ),
@@ -315,9 +315,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               width: 180,
               height: 180,
               decoration: BoxDecoration(
-                color: isDark
-                    ? accent.withValues(alpha: 0.12)
-                    : accentBg,
+                color: isDark ? accent.withValues(alpha: 0.12) : accentBg,
                 borderRadius: BorderRadius.circular(48),
                 boxShadow: [
                   BoxShadow(
@@ -404,9 +402,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: isDark
-                  ? accent.withValues(alpha: 0.12)
-                  : accentBg,
+              color: isDark ? accent.withValues(alpha: 0.12) : accentBg,
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
@@ -425,7 +421,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.lock_outline,
+                  AppIcons.lock,
                   size: 28,
                   color: isDark ? accent : accent.withValues(alpha: 0.85),
                 ),
@@ -510,44 +506,34 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (_demoLockVisible)
-                      Icon(
-                        Icons.lock,
-                        size: 28,
-                        color: accent,
-                      )
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .scale(
-                            begin: const Offset(0.5, 0.5),
-                            end: const Offset(1.0, 1.0),
-                            duration: 400.ms,
-                          ),
+                      _DemoPart(
+                        grows: true,
+                        child: Icon(AppIcons.lock, size: 28, color: accent),
+                      ),
                     if (_demoLockVisible && _demoSyncVisible)
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.md,
                         ),
-                        child: Icon(
-                          Icons.arrow_forward,
-                          size: 20,
-                          color: isDark
-                              ? AppColors.darkTextTertiary
-                              : AppColors.lightTextTertiary,
-                        ).animate().fadeIn(duration: 200.ms),
+                        child: _DemoPart(
+                          child: Icon(
+                            AppIcons.arrowForward,
+                            size: 20,
+                            color: isDark
+                                ? AppColors.darkTextTertiary
+                                : AppColors.lightTextTertiary,
+                          ),
+                        ),
                       ),
                     if (_demoSyncVisible)
-                      Icon(
-                        Icons.cloud_upload_outlined,
-                        size: 28,
-                        color: accent,
-                      )
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .scale(
-                            begin: const Offset(0.5, 0.5),
-                            end: const Offset(1.0, 1.0),
-                            duration: 400.ms,
-                          ),
+                      _DemoPart(
+                        grows: true,
+                        child: Icon(
+                          AppIcons.cloudUpload,
+                          size: 28,
+                          color: accent,
+                        ),
+                      ),
                   ],
                 ),
               ],
@@ -786,17 +772,16 @@ class _DotIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final inactiveColor = isDark
-        ? AppColors.darkDisabled
-        : AppColors.lightDisabled;
+    final inactiveColor =
+        isDark ? AppColors.darkDisabled : AppColors.lightDisabled;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(count, (index) {
         final isActive = index == current;
         return AnimatedContainer(
-          duration: AppDurations.mediumAnimation,
-          curve: Curves.easeInOutCubic,
+          duration: AppAnimation.standard,
+          curve: AppAnimation.arrive,
           margin: const EdgeInsets.symmetric(horizontal: 3),
           width: isActive ? 24 : 8,
           height: 8,
@@ -848,5 +833,35 @@ class _BlinkingCursorState extends State<_BlinkingCursor> {
         ),
       ),
     );
+  }
+}
+
+/// One part of the lock → cloud demo. It fades in when its turn comes, and
+/// [grows] from its centre when it is one of the two ends.
+///
+/// With "减少动画" on it is simply there.
+class _DemoPart extends StatelessWidget {
+  const _DemoPart({required this.child, this.grows = false});
+
+  final Widget child;
+
+  final bool grows;
+
+  @override
+  Widget build(BuildContext context) {
+    if (context.motion.reduceMotion) {
+      return child;
+    }
+    final arrival = child
+        .animate()
+        .fadeIn(duration: AppAnimation.emphasized, curve: AppAnimation.arrive);
+    return grows
+        ? arrival.scale(
+            begin: const Offset(0.6, 0.6),
+            end: const Offset(1, 1),
+            duration: AppAnimation.emphasized,
+            curve: AppAnimation.arrive,
+          )
+        : arrival;
   }
 }

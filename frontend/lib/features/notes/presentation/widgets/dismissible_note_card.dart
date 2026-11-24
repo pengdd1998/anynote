@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -116,11 +117,11 @@ class DismissibleNoteCard extends StatelessWidget {
           ),
           child: Semantics(
             label: note.isPinned ? l10n.unpinNote : l10n.pinNote,
-              child: Column(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  note.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                  note.isPinned ? AppIcons.pinFilled : AppIcons.pin,
                   color: colorScheme.primary,
                 ),
                 const SizedBox(height: 2),
@@ -152,7 +153,7 @@ class DismissibleNoteCard extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.delete_outline, color: colorScheme.error),
+                Icon(AppIcons.deleteOutline, color: colorScheme.error),
                 const SizedBox(height: 2),
                 Text(
                   l10n.deleteNote,

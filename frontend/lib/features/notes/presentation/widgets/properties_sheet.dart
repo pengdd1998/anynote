@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/daos/note_properties_dao.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
@@ -144,7 +145,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.tune_outlined,
+            AppIcons.tune,
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 8),
@@ -154,12 +155,12 @@ class _Header extends StatelessWidget {
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(AppIcons.add),
             tooltip: l10n.addPropertyButton,
             onPressed: onAddProperty,
           ),
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(AppIcons.close),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -181,7 +182,7 @@ class _EmptyState extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.tune_outlined,
+            AppIcons.tune,
             size: 48,
             color: Theme.of(context).colorScheme.outline,
           ),
@@ -200,7 +201,7 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 16),
           FilledButton.tonalIcon(
             onPressed: onAddProperty,
-            icon: const Icon(Icons.add),
+            icon: const Icon(AppIcons.add),
             label: Text(l10n.addPropertyButton),
           ),
         ],
@@ -236,12 +237,12 @@ class _PropertyTile extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 18),
+            icon: const Icon(AppIcons.edit, size: 18),
             onPressed: onEdit,
             tooltip: l10n.edit,
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, size: 18),
+            icon: const Icon(AppIcons.deleteOutline, size: 18),
             onPressed: onDelete,
             tooltip: l10n.delete,
           ),
@@ -271,19 +272,19 @@ class _PropertyIcon extends StatelessWidget {
 
     switch (propertyType) {
       case 'text':
-        icon = Icons.text_fields_outlined;
+        icon = AppIcons.textT;
         color = Theme.of(context).colorScheme.primary;
         break;
       case 'number':
-        icon = Icons.pin_outlined;
+        icon = AppIcons.pin;
         color = Theme.of(context).colorScheme.secondary;
         break;
       case 'date':
-        icon = Icons.calendar_today_outlined;
+        icon = AppIcons.calendarToday;
         color = Theme.of(context).colorScheme.tertiary;
         break;
       default:
-        icon = Icons.data_object_outlined;
+        icon = AppIcons.dataObject;
         color = Theme.of(context).colorScheme.outline;
     }
 
@@ -592,7 +593,7 @@ class _KeySelector extends StatelessWidget {
               onKeySelected(customKey);
             }
           },
-          icon: const Icon(Icons.add, size: 16),
+          icon: const Icon(AppIcons.add, size: 16),
           label: Text(l10n.customPropertyTitle),
         ),
       ],
@@ -687,7 +688,7 @@ class _DateEditor extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.calendar_today,
+                  AppIcons.calendarToday,
                   size: 20,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

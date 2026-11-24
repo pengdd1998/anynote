@@ -5,7 +5,9 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../constants/app_durations.dart';
+import '../theme/app_animation.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_icons.dart';
 import '../theme/app_theme.dart';
 import 'app_snackbar.dart';
 import 'mermaid_template.dart';
@@ -228,7 +230,7 @@ class _MermaidRendererState extends State<MermaidRenderer> {
             child: Row(
               children: [
                 Icon(
-                  Icons.account_tree_outlined,
+                  AppIcons.accountTree,
                   size: 18,
                   color: secondaryColor,
                 ),
@@ -273,7 +275,7 @@ class _MermaidRendererState extends State<MermaidRenderer> {
       children: [
         AnimatedOpacity(
           opacity: _isLoading ? 0.0 : 1.0,
-          duration: AppDurations.shortAnimation,
+          duration: AppAnimation.standard,
           child: SizedBox(
             height: _contentHeight,
             child: ClipRRect(
@@ -353,7 +355,7 @@ class _ToggleSourceButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                showSource ? Icons.image_outlined : Icons.code,
+                showSource ? AppIcons.imageIcon : AppIcons.code,
                 size: 16,
                 color: secondaryColor,
               ),
@@ -412,7 +414,7 @@ class _CopyButtonState extends State<_CopyButton> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Icon(
-            _copied ? Icons.check : Icons.copy,
+            _copied ? AppIcons.check : AppIcons.copy,
             size: 16,
             color: _copied ? theme.colorScheme.primary : secondaryColor,
           ),

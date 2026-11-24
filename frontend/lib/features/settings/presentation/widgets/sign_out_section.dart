@@ -32,7 +32,7 @@ class SignOutSection extends ConsumerWidget {
           onTap: () => _confirmSignOut(context, ref),
         ),
         DestructiveSettingsItem(
-          icon: Icons.delete_forever,
+          icon: AppIcons.deleteForever,
           title: l10n.deleteAccount,
           onTap: () => _confirmDeleteAccount(context, ref),
         ),
@@ -68,7 +68,6 @@ class SignOutSection extends ConsumerWidget {
     try {
       // Unregister device token from push notifications before clearing auth.
       await ref.read(pushNotificationServiceProvider).dispose();
-
 
       // Clear API client tokens (both in-memory and secure storage).
       final apiClient = ref.read(apiClientProvider);
@@ -213,8 +212,7 @@ class SignOutSection extends ConsumerWidget {
     hex = hex.toLowerCase().replaceAll(RegExp(r'[^0-9a-f]'), '');
     final result = Uint8List(hex.length ~/ 2);
     for (var i = 0; i < result.length; i++) {
-      result[i] =
-          (int.parse(hex[i * 2], radix: 16) << 4) +
+      result[i] = (int.parse(hex[i * 2], radix: 16) << 4) +
           int.parse(hex[i * 2 + 1], radix: 16);
     }
     return result;

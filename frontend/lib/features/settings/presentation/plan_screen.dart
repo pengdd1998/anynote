@@ -202,7 +202,7 @@ class _PlanContent extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _UpgradeOption(
-              icon: Icons.workspace_premium_outlined,
+              icon: AppIcons.workspacePremium,
               title: l10n.proPlan,
               subtitle: l10n.proPlanDescription,
               price: l10n.proPrice,
@@ -215,7 +215,7 @@ class _PlanContent extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.s8),
             _UpgradeOption(
-              icon: Icons.diamond_outlined,
+              icon: AppIcons.diamond,
               title: l10n.lifetimePlan,
               subtitle: l10n.lifetimePlanDescription,
               price: l10n.lifetimePrice,
@@ -223,9 +223,7 @@ class _PlanContent extends ConsumerWidget {
               accentText: AppColors.accentMintText,
               onTap: () {
                 Navigator.pop(ctx);
-                ref
-                    .read(planInfoProvider.notifier)
-                    .startCheckout('lifetime');
+                ref.read(planInfoProvider.notifier).startCheckout('lifetime');
               },
             ),
           ],
@@ -259,14 +257,11 @@ class _CurrentPlanCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final labelColor =
-        isDark ? AppColors.secondary : AppColors.primaryText;
-    final headlineColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final labelColor = isDark ? AppColors.secondary : AppColors.primaryText;
+    final headlineColor =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final subtextColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     // The plan banner is a wide sheet of paper pinned to the brand-soft
     // tone (identity card, not a cycled note), no tilt, doodle for charm.
@@ -283,122 +278,119 @@ class _CurrentPlanCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Small "Current Plan" label.
-          Text(
-            l10n.currentPlanLabel,
-            style: AppTextStyles.caption.copyWith(
-              fontWeight: FontWeight.w600,
-              color: labelColor,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.s4),
-
-          // Plan name in the handwritten voice.
-          Text(
-            plan.displayName,
-            style: AppTextStyles.handwritingTitle.copyWith(
-              color: headlineColor,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.s4),
-          Text(
-            _planDescription(l10n),
-            style: AppTextStyles.caption.copyWith(color: subtextColor),
-          ),
-          const SizedBox(height: AppSpacing.s16),
-
-          // Usage stats panel.
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.s12),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkCardBg.withAlpha(160)
-                  : AppColors.lightCardBg,
-              borderRadius: BorderRadius.circular(AppRadius.xs),
-              border: Border.all(
-                color: isDark
-                    ? AppColors.darkBorder
-                    : AppColors.lightBorder,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Small "Current Plan" label.
+            Text(
+              l10n.currentPlanLabel,
+              style: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.w600,
+                color: labelColor,
               ),
             ),
-            child: Column(
-              children: [
-                _UsageRow(
-                  icon: Icons.note_outlined,
-                  label: l10n.planNotesCount,
-                  value: '${plan.noteCount}',
-                  limit: plan.limits.maxNotes == -1
-                      ? l10n.unlimited
-                      : '${plan.limits.maxNotes}',
-                  accent: labelColor,
-                  subtext: subtextColor,
-                  progress: plan.limits.maxNotes > 0
-                      ? plan.noteCount / plan.limits.maxNotes
-                      : 0,
-                ),
-                const SizedBox(height: AppSpacing.s8),
-                _UsageRow(
-                  icon: Icons.auto_awesome,
-                  label: l10n.aiUsage,
-                  value: '${plan.aiDailyUsed}',
-                  limit: plan.limits.aiDailyQuota == -1
-                      ? l10n.unlimited
-                      : '${plan.limits.aiDailyQuota}',
-                  accent: labelColor,
-                  subtext: subtextColor,
-                  progress: plan.limits.aiDailyQuota > 0
-                      ? plan.aiDailyUsed / plan.limits.aiDailyQuota
-                      : 0,
-                ),
-                const SizedBox(height: AppSpacing.s8),
-                _UsageRow(
-                  icon: Icons.storage_outlined,
-                  label: l10n.storageUsed,
-                  value: _formatBytes(plan.storageBytes),
-                  limit: plan.limits.maxStorageBytes == -1
-                      ? l10n.unlimited
-                      : _formatBytes(plan.limits.maxStorageBytes),
-                  accent: labelColor,
-                  subtext: subtextColor,
-                  progress: plan.limits.maxStorageBytes > 0
-                      ? plan.storageBytes / plan.limits.maxStorageBytes
-                      : 0,
-                ),
-              ],
-            ),
-          ),
+            const SizedBox(height: AppSpacing.s4),
 
-          // Manage plan action.
-          if (onManagePlan != null) ...[
+            // Plan name in the handwritten voice.
+            Text(
+              plan.displayName,
+              style: AppTextStyles.handwritingTitle.copyWith(
+                color: headlineColor,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s4),
+            Text(
+              _planDescription(l10n),
+              style: AppTextStyles.caption.copyWith(color: subtextColor),
+            ),
             const SizedBox(height: AppSpacing.s16),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: onManagePlan,
-                style: TextButton.styleFrom(
-                  backgroundColor: isDark
-                      ? AppColors.darkCardBg
-                      : AppColors.lightCardBg,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.s12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.xs),
-                  ),
+
+            // Usage stats panel.
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.s12),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkCardBg.withAlpha(160)
+                    : AppColors.lightCardBg,
+                borderRadius: BorderRadius.circular(AppRadius.xs),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                 ),
-                child: Text(
-                  l10n.managePlan,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: labelColor,
+              ),
+              child: Column(
+                children: [
+                  _UsageRow(
+                    icon: AppIcons.noteBlank,
+                    label: l10n.planNotesCount,
+                    value: '${plan.noteCount}',
+                    limit: plan.limits.maxNotes == -1
+                        ? l10n.unlimited
+                        : '${plan.limits.maxNotes}',
+                    accent: labelColor,
+                    subtext: subtextColor,
+                    progress: plan.limits.maxNotes > 0
+                        ? plan.noteCount / plan.limits.maxNotes
+                        : 0,
+                  ),
+                  const SizedBox(height: AppSpacing.s8),
+                  _UsageRow(
+                    icon: AppIcons.sparkles,
+                    label: l10n.aiUsage,
+                    value: '${plan.aiDailyUsed}',
+                    limit: plan.limits.aiDailyQuota == -1
+                        ? l10n.unlimited
+                        : '${plan.limits.aiDailyQuota}',
+                    accent: labelColor,
+                    subtext: subtextColor,
+                    progress: plan.limits.aiDailyQuota > 0
+                        ? plan.aiDailyUsed / plan.limits.aiDailyQuota
+                        : 0,
+                  ),
+                  const SizedBox(height: AppSpacing.s8),
+                  _UsageRow(
+                    icon: AppIcons.storage,
+                    label: l10n.storageUsed,
+                    value: _formatBytes(plan.storageBytes),
+                    limit: plan.limits.maxStorageBytes == -1
+                        ? l10n.unlimited
+                        : _formatBytes(plan.limits.maxStorageBytes),
+                    accent: labelColor,
+                    subtext: subtextColor,
+                    progress: plan.limits.maxStorageBytes > 0
+                        ? plan.storageBytes / plan.limits.maxStorageBytes
+                        : 0,
+                  ),
+                ],
+              ),
+            ),
+
+            // Manage plan action.
+            if (onManagePlan != null) ...[
+              const SizedBox(height: AppSpacing.s16),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: onManagePlan,
+                  style: TextButton.styleFrom(
+                    backgroundColor:
+                        isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.s12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.managePlan,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: labelColor,
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
         ),
       ),
     );
@@ -508,9 +500,8 @@ class _MiniPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tertiary = isDark
-        ? AppColors.darkTextTertiary
-        : AppColors.lightTextTertiary;
+    final tertiary =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
 
     final titleColor = highlight
         ? Colors.white
@@ -537,9 +528,8 @@ class _MiniPlanCard extends StatelessWidget {
             border: highlight
                 ? null
                 : Border.all(
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : AppColors.lightBorder,
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
                   ),
           ),
           child: Column(
@@ -631,7 +621,7 @@ class _LifetimeBadge extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
             child: const Icon(
-              Icons.verified,
+              AppIcons.verified,
               size: 20,
               color: AppColors.accentMintText,
             ),

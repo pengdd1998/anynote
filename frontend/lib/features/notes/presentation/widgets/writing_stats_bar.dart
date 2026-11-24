@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_durations.dart';
+import '../../../../core/theme/app_animation.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'writing_stats.dart';
 
@@ -131,7 +132,7 @@ class WritingStatsBar extends StatelessWidget {
       label: l10n.toggleWritingStats,
       child: IconButton(
         icon: Icon(
-          isVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
+          isVisible ? AppIcons.chartBarFilled : AppIcons.chartBar,
           size: 16,
           color: color,
         ),
@@ -167,9 +168,9 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: AppDurations.shortAnimation,
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
+      duration: AppAnimation.fast,
+      switchInCurve: AppAnimation.arrive,
+      switchOutCurve: AppAnimation.depart,
       transitionBuilder: (Widget child, Animation<double> animation) {
         return FadeTransition(opacity: animation, child: child);
       },

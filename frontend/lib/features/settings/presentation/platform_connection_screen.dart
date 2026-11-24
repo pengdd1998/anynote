@@ -66,27 +66,24 @@ class _PlatformConnectionScreenState
                 ...platforms.asMap().entries.map((entry) {
                   final index = entry.key;
                   final p = entry.value;
-                  return StaggeredGroup(
-                    staggerIndex: index,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _PlatformCard(
-                        platform: p,
-                        platformIcons: _platformIcons,
-                        isConnecting: _isConnecting &&
-                            _connectingPlatform == p.platform.toLowerCase(),
-                        l10n: l10n,
-                        onConnect: () => _connect(
-                          p.platform.toLowerCase(),
-                          p.displayName ?? p.platform,
-                        ),
-                        onVerify: () => _verify(
-                          p.platform.toLowerCase(),
-                        ),
-                        onDisconnect: () => _confirmDisconnect(
-                          p.platform.toLowerCase(),
-                          p.displayName ?? p.platform,
-                        ),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _PlatformCard(
+                      platform: p,
+                      platformIcons: _platformIcons,
+                      isConnecting: _isConnecting &&
+                          _connectingPlatform == p.platform.toLowerCase(),
+                      l10n: l10n,
+                      onConnect: () => _connect(
+                        p.platform.toLowerCase(),
+                        p.displayName ?? p.platform,
+                      ),
+                      onVerify: () => _verify(
+                        p.platform.toLowerCase(),
+                      ),
+                      onDisconnect: () => _confirmDisconnect(
+                        p.platform.toLowerCase(),
+                        p.displayName ?? p.platform,
                       ),
                     ),
                   );
@@ -95,9 +92,8 @@ class _PlatformConnectionScreenState
                 // second/third platform is reachable without an empty state.
                 catalogAsync.maybeWhen(
                   data: (catalog) {
-                    final available = catalog
-                        .where((c) => !c.connected)
-                        .toList();
+                    final available =
+                        catalog.where((c) => !c.connected).toList();
                     if (available.isEmpty) return const SizedBox.shrink();
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,8 +455,7 @@ class _CatalogSection extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    child: isConnecting &&
-                            connectingPlatform == entry.platform
+                    child: isConnecting && connectingPlatform == entry.platform
                         ? const SizedBox(
                             width: 16,
                             height: 16,

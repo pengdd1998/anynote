@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 
@@ -247,7 +248,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.link,
+            AppIcons.link,
             size: 16,
             color: theme.colorScheme.primary,
           ),
@@ -265,7 +266,7 @@ class _Header extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(
-              isExpanded ? Icons.expand_less : Icons.expand_more,
+              isExpanded ? AppIcons.chevronUp : AppIcons.chevronDown,
               size: 18,
             ),
             onPressed: onToggle,
@@ -277,7 +278,7 @@ class _Header extends StatelessWidget {
           ),
           if (onEdit != null)
             IconButton(
-              icon: const Icon(Icons.edit_outlined, size: 16),
+              icon: const Icon(AppIcons.edit, size: 16),
               onPressed: onEdit,
               tooltip:
                   AppLocalizations.of(context)?.editOriginal ?? 'Edit original',
@@ -305,7 +306,7 @@ class _BrokenTransclusionContent extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.broken_image_outlined,
+            AppIcons.brokenImage,
             size: 16,
             color: theme.colorScheme.error,
           ),
@@ -344,7 +345,7 @@ class _DepthLimitContent extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.block,
+            AppIcons.block,
             size: 16,
             color: theme.colorScheme.tertiary,
           ),
@@ -389,7 +390,7 @@ class _BrokenTransclusionWidget extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.broken_image_outlined,
+            AppIcons.brokenImage,
             size: 16,
             color: theme.colorScheme.error,
           ),

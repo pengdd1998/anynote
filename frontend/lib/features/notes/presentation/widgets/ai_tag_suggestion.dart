@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../compose/data/ai_repository.dart';
@@ -212,7 +213,7 @@ class AiTagSuggestionSheet extends ConsumerWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.sell_outlined,
+                    AppIcons.tag,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
@@ -232,7 +233,7 @@ class AiTagSuggestionSheet extends ConsumerWidget {
                       child: Text(l10n.suggestTags),
                     ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(AppIcons.close),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -294,7 +295,7 @@ class AiTagSuggestionSheet extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.label_outline,
+                AppIcons.tag,
                 size: 48,
                 color:
                     theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),

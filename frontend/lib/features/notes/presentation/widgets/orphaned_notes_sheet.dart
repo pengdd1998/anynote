@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -33,7 +34,7 @@ class OrphanedNotesSheet extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.scatter_plot_outlined,
+                  AppIcons.scatterPlot,
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
@@ -43,7 +44,7 @@ class OrphanedNotesSheet extends ConsumerWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(AppIcons.close),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -61,7 +62,7 @@ class OrphanedNotesSheet extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.info_outline,
+                      AppIcons.infoOutline,
                       size: 20,
                       color: Theme.of(context).colorScheme.primary,
                     ),
@@ -97,7 +98,7 @@ class OrphanedNotesSheet extends ConsumerWidget {
 
                 if (orphans.isEmpty) {
                   return EmptyState(
-                    icon: Icons.check_circle_outline,
+                    icon: AppIcons.checkCircleOutline,
                     title: l10n.noOrphanedNotes,
                     subtitle: l10n.allNotesConnected,
                   );
@@ -157,7 +158,7 @@ class _OrphanedNoteTile extends ConsumerWidget {
         preview.length > 100 ? '${preview.substring(0, 100)}...' : preview;
 
     return ListTile(
-      leading: const Icon(Icons.note_outlined),
+      leading: const Icon(AppIcons.noteBlank),
       title: Text(
         title,
         style: Theme.of(context).textTheme.bodyMedium,
@@ -172,7 +173,7 @@ class _OrphanedNoteTile extends ConsumerWidget {
                   ),
             )
           : null,
-      trailing: const Icon(Icons.link_off, size: 16),
+      trailing: const Icon(AppIcons.linkOff, size: 16),
       onTap: () {
         Navigator.of(context).pop();
         context.push('/notes/${note.id}');

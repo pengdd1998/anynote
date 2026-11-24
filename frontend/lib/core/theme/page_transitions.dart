@@ -1,20 +1,22 @@
-/// Custom page transitions for GoRouter routes.
+/// Page transitions for GoRouter routes.
 ///
-/// Two transition styles are provided:
-/// - [fadeThroughTransition] -- cross-fade used for tab-to-tab navigation.
-///   Follows the Material 3 FadeThrough pattern from the motion spec.
-/// - [slideTransition] -- warm slide+fade used for push routes (note detail,
-///   editor, settings sub-pages). Uses CupertinoPageRoute on iOS for native feel.
+/// - [slideTransition] — pushing a page lifts a sheet of paper onto the desk:
+///   the new page rises from a little lower down, a touch smaller, with its
+///   shadow still soft, while the page under it recedes and dims. Back is the
+///   same move in reverse, faster. iOS keeps its own transition.
+/// - [fadeThroughTransition] — tab to tab: one page fades out, the next fades
+///   in. Nothing moves, so it is the same with or without motion.
+/// - [bottomSheetTransition] — an overlay route that comes up from the bottom
+///   edge, like a sheet pulled out from under a stack.
 ///
-/// Both transitions respect the reduce motion accessibility setting. When
-/// animations are disabled, they use [ImmediatePageTransitionsBuilder] for
-/// instant transitions without motion.
+/// With "减少动画" on, every one of them is a short fade.
 ///
 /// Usage in a GoRoute:
 /// ```dart
 /// GoRoute(
 ///   path: '/notes',
-///   pageBuilder: fadeThroughTransition(const NotesListScreen()),
+///   pageBuilder: (context, state) =>
+///       fadeThroughTransition(const NotesListScreen()),
 /// )
 /// ```
 library;
@@ -23,197 +25,200 @@ import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../constants/app_durations.dart';
 import '../platform/platform_utils.dart';
+import 'app_animation.dart';
+import 'app_binding.dart';
 import 'animation_config.dart';
 
-/// Duration for forward page transitions.
-const _kForwardDuration = Duration(milliseconds: 300);
-
-/// Duration for reverse (back) page transitions.
-const _kReverseDuration = AppDurations.mediumAnimation;
-
-/// Slide offset for warm transitions (30px worth in logical units).
-const _kSlideOffset = 30.0;
-
-/// Creates a [CustomTransitionPage] with a FadeThrough (cross-fade) animation.
-///
-/// The outgoing page fades out while the incoming page fades in, with a brief
-/// overlap. This is the recommended transition for sibling pages within the
-/// same navigation level (e.g. bottom-nav tab switches).
-///
-/// When reduce motion is enabled, uses [ImmediatePageTransitionsBuilder] for
-/// instant transitions.
-CustomTransitionPage<void> fadeThroughTransition(Widget child) {
-  return CustomTransitionPage(
-    child: child,
-    transitionDuration: _kForwardDuration,
-    reverseTransitionDuration: _kForwardDuration,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final config = AnimationConfig.of(context);
-      if (config.reduceMotion) {
-        return child;
-      }
-      return _FadeThroughTransition(
-        animation: animation,
-        secondaryAnimation: secondaryAnimation,
-        child: child,
-      );
-    },
-  );
-}
-
-/// Creates a page with a warm slide+fade transition for push navigation.
-///
-/// On iOS, uses [CupertinoPage] for native-feeling transitions.
-/// On all other platforms, uses a custom [CustomTransitionPage] with:
-/// - Forward: slide from right 30px + fade in (300ms, easeOutCubic)
-/// - Back: slide to right 30px + fade out (250ms, easeInCubic)
-///
-/// When reduce motion is enabled, uses immediate transitions without animation.
+/// A page is pushed onto the one before it. iOS keeps its own transition.
 Page<void> slideTransition(Widget child) {
-  // Use CupertinoPageRoute on iOS for native platform feel.
   if (PlatformUtils.isIOS) {
-    return CupertinoPage(child: child);
+    return CupertinoPage<void>(child: child);
   }
-
-  return CustomTransitionPage(
+  // Decided when the page is created; a route cannot change its length midway.
+  final reduced = ReduceMotionSwitch.active;
+  return CustomTransitionPage<void>(
     child: child,
-    transitionDuration: _kForwardDuration,
-    reverseTransitionDuration: _kReverseDuration,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final config = AnimationConfig.of(context);
-      if (config.reduceMotion) {
-        return child;
-      }
-
-      // Convert 30px logical offset to a fraction of screen width.
-      final screenWidth = MediaQuery.sizeOf(context).width;
-      final offsetFraction = (_kSlideOffset / screenWidth).clamp(0.0, 1.0);
-
-      final curve = config.curve(Curves.easeOutCubic);
-
-      // Incoming page: slide from right + fade in.
-      final slideIn = Tween<Offset>(
-        begin: Offset(offsetFraction, 0),
-        end: Offset.zero,
-      ).chain(CurveTween(curve: curve));
-
-      final fadeIn = Tween<double>(begin: 0.0, end: 1.0).chain(
-        CurveTween(curve: curve),
-      );
-
-      // Outgoing page: slide slightly left.
-      final slideOut = Tween<Offset>(
-        begin: Offset.zero,
-        end: Offset(-offsetFraction * 0.5, 0),
-      ).chain(CurveTween(curve: curve));
-
-      return SlideTransition(
-        position: secondaryAnimation.drive(slideOut),
-        child: SlideTransition(
-          position: animation.drive(slideIn),
-          child: FadeTransition(
-            opacity: animation.drive(fadeIn),
-            child: child,
-          ),
-        ),
-      );
-    },
+    transitionDuration: reduced ? AppAnimation.fast : AppAnimation.emphasized,
+    reverseTransitionDuration:
+        reduced ? AppAnimation.fast : AppAnimation.standard,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        _SheetLiftTransition(
+      animation: animation,
+      secondaryAnimation: secondaryAnimation,
+      child: child,
+    ),
   );
 }
 
-/// Creates a page that slides up from the bottom, like a modal bottom sheet.
-///
-/// Used for overlay-style routes (quick capture) that should feel lightweight.
-/// The page has a translucent dark scrim background.
-CustomTransitionPage<void> bottomSheetTransition(Widget child) {
-  return CustomTransitionPage(
+/// Sibling pages at the same level (bottom-navigation tabs).
+Page<void> fadeThroughTransition(Widget child) {
+  return CustomTransitionPage<void>(
+    child: child,
+    transitionDuration: AppAnimation.standard,
+    reverseTransitionDuration: AppAnimation.standard,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        _FadeThroughTransition(
+      animation: animation,
+      secondaryAnimation: secondaryAnimation,
+      child: child,
+    ),
+  );
+}
+
+/// An overlay route that covers the page below it but does not replace it.
+Page<void> bottomSheetTransition(Widget child) {
+  final reduced = ReduceMotionSwitch.active;
+  return CustomTransitionPage<void>(
     barrierDismissible: true,
     barrierColor: Colors.black54,
     opaque: false,
-    transitionDuration: _kForwardDuration,
-    reverseTransitionDuration: _kReverseDuration,
+    transitionDuration: reduced ? AppAnimation.fast : AppAnimation.emphasized,
+    reverseTransitionDuration:
+        reduced ? AppAnimation.fast : AppAnimation.standard,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final config = AnimationConfig.of(context);
-      if (config.reduceMotion) {
-        return child;
-      }
-
-      final curve = config.curve(Curves.easeOutCubic);
-
-      final slideUp = Tween<Offset>(
-        begin: const Offset(0, 1),
-        end: Offset.zero,
-      ).chain(CurveTween(curve: curve));
-
-      final fadeIn = Tween<double>(begin: 0.0, end: 1.0).chain(
-        CurveTween(curve: curve),
+      final motion = context.motion;
+      final eased = animation.drive(
+        Tween<double>(begin: 0, end: 1).chain(CurveTween(curve: motion.arrive)),
       );
-
+      if (motion.reduceMotion) {
+        return FadeTransition(opacity: eased, child: child);
+      }
       return SlideTransition(
-        position: animation.drive(slideUp),
-        child: FadeTransition(
-          opacity: animation.drive(fadeIn),
-          child: child,
+        position: eased.drive(
+          Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero),
         ),
+        child: FadeTransition(opacity: eased, child: child),
       );
     },
     child: child,
   );
 }
 
-/// Custom fade-through transition that cross-fades two pages.
+/// A sheet of paper lifted onto the desk.
 ///
-/// During the first half of the animation the outgoing page fades out.
-/// During the second half the incoming page fades in. This avoids visual
-/// overlap artifacts and matches the Material 3 motion specification.
-class _FadeThroughTransition extends StatelessWidget {
+/// The inner layers move with [animation] — this page arriving. The outer
+/// ones move with [secondaryAnimation] — another page being lifted onto this
+/// one, which recedes and goes quiet underneath.
+class _SheetLiftTransition extends StatelessWidget {
+  const _SheetLiftTransition({
+    required this.animation,
+    required this.secondaryAnimation,
+    required this.child,
+  });
+
   final Animation<double> animation;
   final Animation<double> secondaryAnimation;
   final Widget child;
 
+  /// How far down the sheet starts.
+  static const _rise = 24.0;
+
+  /// How much smaller than the desk it starts.
+  static const _shrink = 0.04;
+
+  /// How far the page underneath backs off.
+  static const _recede = 0.015;
+
+  /// How much darker the page underneath gets.
+  static const _dim = 0.08;
+
+  @override
+  Widget build(BuildContext context) {
+    final motion = context.motion;
+    final arriving = animation.drive(
+      Tween<double>(begin: 0, end: 1).chain(CurveTween(curve: motion.arrive)),
+    );
+    if (motion.reduceMotion) {
+      return FadeTransition(opacity: arriving, child: child);
+    }
+
+    final covered = secondaryAnimation.drive(
+      Tween<double>(begin: 0, end: 1).chain(CurveTween(curve: motion.arrive)),
+    );
+    return Stack(
+      children: [
+        Transform.scale(
+          scale: 1 - _recede * covered.value,
+          alignment: Alignment.topCenter,
+          child: FadeTransition(
+            opacity: arriving,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.26),
+                    blurRadius: 28,
+                    offset: const Offset(0, -10),
+                  ),
+                ],
+              ),
+              child: SlideTransition(
+                position: arriving.drive(
+                  Tween<Offset>(
+                    begin: const Offset(0, _rise),
+                    end: Offset.zero,
+                  ),
+                ),
+                child: ScaleTransition(
+                  scale: arriving.drive(
+                    Tween<double>(begin: 1 - _shrink, end: 1),
+                  ),
+                  alignment: Alignment.topCenter,
+                  child: child,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: FadeTransition(
+              opacity: covered.drive(
+                Tween<double>(begin: 0, end: _dim),
+              ),
+              child: const ColoredBox(color: Colors.black),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The outgoing page fades out, then the incoming one fades in. They do not
+/// overlap, so nothing shimmers.
+class _FadeThroughTransition extends StatelessWidget {
   const _FadeThroughTransition({
     required this.animation,
     required this.secondaryAnimation,
     required this.child,
   });
 
+  final Animation<double> animation;
+  final Animation<double> secondaryAnimation;
+  final Widget child;
+
   @override
   Widget build(BuildContext context) {
-    // Incoming page fades in over the second half.
-    final incomingOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: animation,
-        curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
-      ),
-    );
-
-    // Outgoing page fades out over the first half.
-    final outgoingOpacity = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(
-        parent: secondaryAnimation,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-      ),
-    );
-
-    // Slight scale-down on outgoing page for depth.
-    final outgoingScale = Tween<double>(begin: 1, end: 0.95).animate(
-      CurvedAnimation(
-        parent: secondaryAnimation,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-      ),
-    );
+    final incoming = animation.drive(_incoming);
+    final outgoing = secondaryAnimation.drive(_outgoing);
 
     return FadeTransition(
-      opacity: outgoingOpacity,
-      child: ScaleTransition(
-        scale: outgoingScale,
-        child: FadeTransition(
-          opacity: incomingOpacity,
-          child: child,
-        ),
-      ),
+      opacity: outgoing,
+      child: FadeTransition(opacity: incoming, child: child),
     );
   }
+
+  static const _inAt = Interval(0.35, 1, curve: AppAnimation.arrive);
+  static const _outBy = Interval(0, 0.45, curve: AppAnimation.depart);
+
+  /// The page arriving: the second part of the beat.
+  static final _incoming = _unit.chain(CurveTween(curve: _inAt));
+
+  /// The page being replaced: the first part.
+  static final _outgoing = _unit.chain(CurveTween(curve: _outBy));
+
+  static final _unit = Tween<double>(begin: 0, end: 1);
 }

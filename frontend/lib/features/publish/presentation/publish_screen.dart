@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/error/error.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -26,10 +27,10 @@ class PublishScreen extends ConsumerStatefulWidget {
 class _PublishScreenState extends ConsumerState<PublishScreen>
     with WidgetsBindingObserver, KeyboardScrollMixin {
   static const _platformIcons = <String, IconData>{
-    'xiaohongshu': Icons.camera_alt,
-    'wechat': Icons.chat,
-    'zhihu': Icons.question_answer,
-    'medium': Icons.article,
+    'xiaohongshu': AppIcons.camera,
+    'wechat': AppIcons.chat,
+    'zhihu': AppIcons.questionAnswer,
+    'medium': AppIcons.article,
   };
 
   static const _platformAccents = <String, _PlatformAccent>{
@@ -238,7 +239,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
     final name =
         p['name']?.toString() ?? p['platform']?.toString() ?? l10n.unknown;
     final platformKey = p['key']?.toString() ?? name.toLowerCase();
-    final icon = _platformIcons[platformKey] ?? Icons.language;
+    final icon = _platformIcons[platformKey] ?? AppIcons.language;
     final isSelected = _selectedPlatform == platformKey;
     final accent = _platformAccents[platformKey] ??
         const _PlatformAccent(
@@ -318,7 +319,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(
-              Icons.add_link_outlined,
+              AppIcons.addLink,
               size: 28,
               color: AppColors.accentPeachText,
             ),
@@ -480,7 +481,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
               child: Row(
                 children: [
                   const Icon(
-                    Icons.check_circle,
+                    AppIcons.checkCircle,
                     color: AppColors.success,
                     size: 16,
                   ),
@@ -502,7 +503,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
               padding: const EdgeInsets.only(bottom: AppSpacing.s8),
               child: OutlinedButton.icon(
                 onPressed: _showPreview,
-                icon: const Icon(Icons.preview_outlined, size: 18),
+                icon: const Icon(AppIcons.previewIcon, size: 18),
                 label: Text(l10n.preview),
                 style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
@@ -546,11 +547,11 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
     final platformURL = item['platform_url']?.toString() ?? '';
 
     final statusIcon = switch (status) {
-      'published' => Icons.check_circle,
-      'failed' => Icons.error,
-      'publishing' => Icons.sync,
-      'pending' => Icons.schedule,
-      _ => Icons.help_outline,
+      'published' => AppIcons.checkCircle,
+      'failed' => AppIcons.error,
+      'publishing' => AppIcons.sync,
+      'pending' => AppIcons.schedule,
+      _ => AppIcons.help,
     };
 
     // Pill chip colors per status (published = mint, pending = yellow).
@@ -654,7 +655,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
                   borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
                 child: Icon(
-                  Icons.open_in_new,
+                  AppIcons.openInNew,
                   size: 16,
                   color: isDark
                       ? AppColors.darkTextSecondary
@@ -705,7 +706,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(
-              Icons.publish_outlined,
+              AppIcons.publish,
               size: 28,
               color: AppColors.accentYellowText,
             ),
@@ -841,7 +842,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen>
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(ctx),
-                    icon: const Icon(Icons.close, size: 20),
+                    icon: const Icon(AppIcons.close, size: 20),
                   ),
                 ],
               ),

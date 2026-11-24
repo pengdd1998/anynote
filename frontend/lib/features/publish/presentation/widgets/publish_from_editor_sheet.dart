@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../compose/domain/post_template.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -46,10 +47,10 @@ class PublishFromEditorSheet extends ConsumerStatefulWidget {
 class _PublishFromEditorSheetState
     extends ConsumerState<PublishFromEditorSheet> {
   static const _platformIcons = <String, IconData>{
-    'xiaohongshu': Icons.camera_alt,
-    'wechat': Icons.chat,
-    'zhihu': Icons.question_answer,
-    'medium': Icons.article,
+    'xiaohongshu': AppIcons.camera,
+    'wechat': AppIcons.chat,
+    'zhihu': AppIcons.questionAnswer,
+    'medium': AppIcons.article,
   };
 
   late final _titleController = TextEditingController(text: widget.title);
@@ -274,12 +275,12 @@ class _PublishFromEditorSheetState
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.auto_fix_high),
+                    icon: const Icon(AppIcons.magicWand),
                     tooltip: l10n.polishContent,
                     onPressed: _showPolishSheet,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(AppIcons.close),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -367,7 +368,7 @@ class _PublishFromEditorSheetState
                               child: Column(
                                 children: [
                                   Icon(
-                                    Icons.share_outlined,
+                                    AppIcons.share,
                                     size: 36,
                                     color: Theme.of(context).disabledColor,
                                   ),
@@ -392,8 +393,8 @@ class _PublishFromEditorSheetState
                                 p['platform']?.toString() ??
                                 l10n.unknown;
                             final platformKey = _platformKey(p);
-                            final icon =
-                                _platformIcons[platformKey] ?? Icons.language;
+                            final icon = _platformIcons[platformKey] ??
+                                AppIcons.language;
                             final subtitle = p['display_name']?.toString() ??
                                 p['subtitle']?.toString() ??
                                 '';
@@ -414,7 +415,7 @@ class _PublishFromEditorSheetState
                                     subtitle.isNotEmpty ? Text(subtitle) : null,
                                 trailing: isSelected
                                     ? const Icon(
-                                        Icons.check_circle,
+                                        AppIcons.checkCircle,
                                         color: AppColors.success,
                                       )
                                     : null,

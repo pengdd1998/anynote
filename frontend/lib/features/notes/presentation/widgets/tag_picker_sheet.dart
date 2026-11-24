@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Bottom sheet for picking and creating tags for a note.
@@ -128,7 +129,7 @@ class _TagPickerSheetState extends ConsumerState<TagPickerSheet> {
                 Text(l10n.tags, style: Theme.of(context).textTheme.titleLarge),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(AppIcons.close),
                   tooltip: l10n.closeTagPicker,
                   onPressed: () => Navigator.pop(context),
                 ),

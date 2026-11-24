@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart' show Share, XFile;
 
-import '../../../../core/constants/app_durations.dart';
+import '../../../../core/theme/app_animation.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Full-screen image gallery viewer with pinch-to-zoom and swipe navigation.
@@ -73,14 +74,14 @@ class _ImageGalleryViewerState extends State<ImageGalleryViewer>
 
     _animController = AnimationController(
       vsync: this,
-      duration: AppDurations.mediumAnimation,
+      duration: AppAnimation.emphasized,
     );
     _fadeAnimation = CurvedAnimation(
       parent: _animController,
-      curve: Curves.easeOut,
+      curve: AppAnimation.arrive,
     );
     _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
+      CurvedAnimation(parent: _animController, curve: AppAnimation.arrive),
     );
 
     _animController.forward();
@@ -176,7 +177,7 @@ class _ImageGalleryViewerState extends State<ImageGalleryViewer>
             foregroundColor: Colors.white,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.close),
+              icon: const Icon(AppIcons.close),
               tooltip: l10n.close,
               onPressed: _close,
             ),
@@ -192,13 +193,13 @@ class _ImageGalleryViewerState extends State<ImageGalleryViewer>
             actions: [
               if (!kIsWeb)
                 IconButton(
-                  icon: const Icon(Icons.share),
+                  icon: const Icon(AppIcons.share),
                   tooltip: l10n.shareImage,
                   onPressed: () => _shareImage(_currentIndex),
                 ),
               if (widget.onDelete != null)
                 IconButton(
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const Icon(AppIcons.deleteOutline),
                   tooltip: l10n.deleteImage,
                   onPressed: () => _deleteImage(_currentIndex),
                 ),
@@ -248,7 +249,7 @@ class _ZoomableImageState extends State<_ZoomableImage> {
       child: Center(
         child: kIsWeb
             ? const Icon(
-                Icons.broken_image,
+                AppIcons.brokenImage,
                 color: Colors.white54,
                 size: 64,
               )
@@ -256,7 +257,7 @@ class _ZoomableImageState extends State<_ZoomableImage> {
                 File(widget.path),
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => const Icon(
-                  Icons.broken_image,
+                  AppIcons.brokenImage,
                   color: Colors.white54,
                   size: 64,
                 ),

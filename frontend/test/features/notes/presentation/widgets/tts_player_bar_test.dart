@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -92,15 +93,15 @@ void main() {
       await pumpTtsPlayerBar(tester, speechService: speechService);
 
       // When stopped, the TtsPlayerBar returns SizedBox.shrink().
-      expect(find.byIcon(Icons.stop), findsNothing);
-      expect(find.byIcon(Icons.play_circle_filled), findsNothing);
+      expect(find.byIcon(AppIcons.stop), findsNothing);
+      expect(find.byIcon(AppIcons.playCircle), findsNothing);
     });
 
     testWidgets('shows stop button when playing', (tester) async {
       await pumpTtsPlayerBar(tester, speechService: speechService);
       await startSpeech(tester, speechService);
 
-      expect(find.byIcon(Icons.stop), findsOneWidget);
+      expect(find.byIcon(AppIcons.stop), findsOneWidget);
 
       await cleanupSpeech(tester, speechService);
     });
@@ -109,7 +110,7 @@ void main() {
       await pumpTtsPlayerBar(tester, speechService: speechService);
       await startSpeech(tester, speechService);
 
-      expect(find.byIcon(Icons.pause_circle_filled), findsOneWidget);
+      expect(find.byIcon(AppIcons.pauseCircle), findsOneWidget);
 
       await cleanupSpeech(tester, speechService);
     });
@@ -121,7 +122,7 @@ void main() {
       speechService.pause();
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.byIcon(Icons.play_circle_filled), findsOneWidget);
+      expect(find.byIcon(AppIcons.playCircle), findsOneWidget);
 
       await cleanupSpeech(tester, speechService);
     });
@@ -130,12 +131,12 @@ void main() {
       await pumpTtsPlayerBar(tester, speechService: speechService);
       await startSpeech(tester, speechService);
 
-      await tester.tap(find.byIcon(Icons.stop));
+      await tester.tap(find.byIcon(AppIcons.stop));
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(speechService.state, equals(SpeechState.stopped));
       // After stop the bar hides, so stop icon is gone.
-      expect(find.byIcon(Icons.stop), findsNothing);
+      expect(find.byIcon(AppIcons.stop), findsNothing);
 
       // No need for cleanupSpeech since stop was already called.
       await tester.pumpWidget(Container());
@@ -148,7 +149,7 @@ void main() {
 
       expect(speechService.state, equals(SpeechState.playing));
 
-      await tester.tap(find.byIcon(Icons.pause_circle_filled));
+      await tester.tap(find.byIcon(AppIcons.pauseCircle));
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(speechService.state, equals(SpeechState.paused));
@@ -165,7 +166,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(speechService.state, equals(SpeechState.paused));
 
-      await tester.tap(find.byIcon(Icons.play_circle_filled));
+      await tester.tap(find.byIcon(AppIcons.playCircle));
       await tester.pump(const Duration(milliseconds: 100));
       expect(speechService.state, equals(SpeechState.playing));
 

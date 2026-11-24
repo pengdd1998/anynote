@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -191,7 +192,7 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
 
       // Should show an error icon.
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.errorOutline), findsOneWidget);
     });
 
     testWidgets('has AppBar with version diff title', (tester) async {

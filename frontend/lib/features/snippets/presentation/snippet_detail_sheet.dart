@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -48,7 +49,10 @@ class SnippetDetailSheet extends StatelessWidget {
                 snippet.usageCount > 0)
               _SnippetMetadataChips(snippet: snippet, l10n: l10n, theme: theme),
             _SnippetDescriptionAndTags(
-                snippet: snippet, l10n: l10n, theme: theme,),
+              snippet: snippet,
+              l10n: l10n,
+              theme: theme,
+            ),
             const SizedBox(height: 16),
             _SnippetCodeBlock(snippet: snippet, theme: theme),
           ],
@@ -92,8 +96,10 @@ class _SheetHandleBar extends StatelessWidget {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color:
-              Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+          color: Theme.of(context)
+              .colorScheme
+              .onSurfaceVariant
+              .withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -130,7 +136,7 @@ class _SnippetHeaderRow extends StatelessWidget {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.copy),
+          icon: const Icon(AppIcons.copy),
           tooltip: l10n.copyCode,
           onPressed: () {
             Clipboard.setData(ClipboardData(text: snippet.code));
@@ -138,12 +144,12 @@ class _SnippetHeaderRow extends StatelessWidget {
           },
         ),
         IconButton(
-          icon: const Icon(Icons.edit_outlined),
+          icon: const Icon(AppIcons.edit),
           tooltip: l10n.editSnippet,
           onPressed: onEdit,
         ),
         IconButton(
-          icon: const Icon(Icons.delete_outline),
+          icon: const Icon(AppIcons.deleteOutline),
           tooltip: l10n.deleteSnippet,
           onPressed: onDelete,
         ),

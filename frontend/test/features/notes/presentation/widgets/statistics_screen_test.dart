@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -106,7 +107,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Empty state shows the bar chart icon and fallback text.
-      expect(find.byIcon(Icons.bar_chart_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.chartBar), findsOneWidget);
       expect(find.text('No statistics yet'), findsOneWidget);
 
       await handle.dispose();
@@ -125,7 +126,7 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.errorOutline), findsOneWidget);
 
       await handle.dispose();
     });
@@ -142,8 +143,10 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Overview card values.
-      expect(find.text('42'),
-          findsAtLeast(1),); // total notes (also in donut total)
+      expect(
+        find.text('42'),
+        findsAtLeast(1),
+      ); // total notes (also in donut total)
       expect(find.text('12.0K'), findsOneWidget); // total words
       expect(find.text('286'), findsOneWidget); // avg words per note
 
@@ -162,7 +165,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Streak card shows fire icon and streak number.
-      expect(find.byIcon(Icons.local_fire_department_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.fire), findsOneWidget);
       expect(find.text('5'), findsWidgets); // current streak number
 
       await handle.dispose();
@@ -217,7 +220,7 @@ void main() {
       );
       addTearDown(() => handle.dispose());
 
-      expect(find.byIcon(Icons.hub_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.accountTree), findsOneWidget);
       expect(find.text('15'), findsOneWidget); // total links
       expect(find.text('Architecture Notes'), findsOneWidget);
 

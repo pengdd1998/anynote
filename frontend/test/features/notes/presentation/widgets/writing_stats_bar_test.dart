@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -137,13 +138,13 @@ void main() {
     testWidgets('shows bar chart icon when visible', (tester) async {
       await pumpWritingStatsBar(tester, isVisible: true);
 
-      expect(find.byIcon(Icons.bar_chart), findsOneWidget);
+      expect(find.byIcon(AppIcons.chartBarFilled), findsOneWidget);
     });
 
     testWidgets('shows outlined bar chart icon when hidden', (tester) async {
       await pumpWritingStatsBar(tester, isVisible: false);
 
-      expect(find.byIcon(Icons.bar_chart_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.chartBar), findsOneWidget);
     });
 
     testWidgets('does not show stat chips when hidden', (tester) async {
@@ -172,7 +173,7 @@ void main() {
         onToggleVisibility: () => toggled = true,
       );
 
-      await tester.tap(find.byIcon(Icons.bar_chart));
+      await tester.tap(find.byIcon(AppIcons.chartBarFilled));
       expect(toggled, isTrue);
     });
 
@@ -184,7 +185,7 @@ void main() {
         onToggleVisibility: () => toggled = true,
       );
 
-      await tester.tap(find.byIcon(Icons.bar_chart_outlined));
+      await tester.tap(find.byIcon(AppIcons.chartBar));
       expect(toggled, isTrue);
     });
 

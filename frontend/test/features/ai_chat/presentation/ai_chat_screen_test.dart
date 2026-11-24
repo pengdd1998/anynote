@@ -29,8 +29,9 @@ void main() {
           // Provide a fake AI repository that returns empty responses.
           compose.aiRepositoryProvider
               .overrideWith((ref) => _FakeAIRepository()),
-          aiChatRepositoryProvider.overrideWith((ref) =>
-              AIChatRepository(ref.read(compose.aiRepositoryProvider)),),
+          aiChatRepositoryProvider.overrideWith(
+            (ref) => AIChatRepository(ref.read(compose.aiRepositoryProvider)),
+          ),
         ];
 
     /// Pump the AiChatScreen with all required overrides.
@@ -95,7 +96,7 @@ void main() {
       await pumpChatScreen(tester);
 
       // The circular purple send button uses an arrow-up icon.
-      expect(find.byIcon(PhosphorIconsBold.arrowUp), findsOneWidget);
+      expect(find.byIcon(AppIcons.arrowUp), findsOneWidget);
     });
 
     testWidgets('shows new chat button in app bar', (tester) async {
@@ -122,7 +123,7 @@ void main() {
       await tester.pump();
 
       // Tap the send button -- should not throw.
-      await tester.tap(find.byIcon(PhosphorIconsBold.arrowUp));
+      await tester.tap(find.byIcon(AppIcons.arrowUp));
       await tester.pump();
 
       // The user's message text should appear immediately (added synchronously

@@ -10,6 +10,7 @@ import '../../../core/error/error.dart';
 import '../../../core/navigation/nav_guard.dart';
 import '../../../core/database/post_template_seed.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -86,7 +87,7 @@ class ComposeScreen extends ConsumerWidget {
                 TextButton.icon(
                   onPressed: () => context.push('/publish'),
                   icon: const Icon(
-                    Icons.calendar_month_outlined,
+                    AppIcons.calendarMonth,
                     size: 18,
                   ),
                   label: Text(l10n.calendar),
@@ -166,7 +167,7 @@ class ComposeScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: const Icon(
-                      Icons.auto_awesome,
+                      AppIcons.sparkles,
                       color: AppColors.primary,
                       size: 22,
                     ),
@@ -193,7 +194,7 @@ class ComposeScreen extends ConsumerWidget {
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right,
+                    AppIcons.chevronRight,
                     color: isDark
                         ? AppColors.darkTextTertiary
                         : AppColors.lightTextTertiary,
@@ -325,7 +326,7 @@ class ComposeScreen extends ConsumerWidget {
               ),
             ),
             Icon(
-              Icons.chevron_right,
+              AppIcons.chevronRight,
               size: 18,
               color: isDark
                   ? AppColors.darkTextTertiary
@@ -354,7 +355,7 @@ class ComposeScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(
-              Icons.article_outlined,
+              AppIcons.article,
               size: 28,
               color: AppColors.accentPeachText,
             ),
@@ -605,7 +606,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                           ),
                           const Spacer(),
                           IconButton(
-                            icon: const Icon(Icons.close),
+                            icon: const Icon(AppIcons.close),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
@@ -624,7 +625,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                         decoration: InputDecoration(
                           labelText: l10n.topicOrTheme,
                           hintText: l10n.topicHint,
-                          prefixIcon: const Icon(Icons.lightbulb_outline),
+                          prefixIcon: const Icon(AppIcons.lightbulb),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
@@ -647,7 +648,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                         initialValue: _platformStyle,
                         decoration: InputDecoration(
                           labelText: l10n.targetPlatform,
-                          prefixIcon: const Icon(Icons.share_outlined),
+                          prefixIcon: const Icon(AppIcons.share),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
@@ -692,8 +693,8 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                         child: InputDecorator(
                           decoration: InputDecoration(
                             labelText: '文章模板',
-                            prefixIcon: const Icon(Icons.description_outlined),
-                            suffixIcon: const Icon(Icons.arrow_drop_down),
+                            prefixIcon: const Icon(AppIcons.description),
+                            suffixIcon: const Icon(AppIcons.chevronDown),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppRadius.sm),
                             ),
@@ -872,7 +873,7 @@ class _NoteSelectorSheetState extends ConsumerState<_NoteSelectorSheet> {
                               navContext.push('/compose/cluster/$sessionId');
                             }
                           },
-                    icon: const Icon(Icons.auto_awesome),
+                    icon: const Icon(AppIcons.sparkles),
                     label: Text(l10n.startComposing),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1040,7 +1041,7 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                     ),
                   ),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(AppIcons.close),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -1077,7 +1078,7 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _copyToClipboard,
-                    icon: const Icon(Icons.copy, size: 18),
+                    icon: const Icon(AppIcons.copy, size: 18),
                     label: Text(l10n.copy),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -1099,7 +1100,7 @@ class _ContentPreviewSheetState extends ConsumerState<_ContentPreviewSheet> {
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.save_outlined, size: 18),
+                        : const Icon(AppIcons.save, size: 18),
                     label: Text(l10n.saveAsNote),
                     style: FilledButton.styleFrom(
                       shape: RoundedRectangleBorder(

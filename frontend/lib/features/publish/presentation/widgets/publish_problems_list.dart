@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/publish_rules.dart';
 
@@ -34,7 +35,7 @@ class PublishProblemsList extends StatelessWidget {
     final blocks = <Widget>[];
     if (blocking.isNotEmpty) {
       blocks.add(_Section(
-        icon: Icons.error_outline,
+        icon: AppIcons.errorOutline,
         color: theme.colorScheme.error,
         heading: l10n.publishFixBeforePublishing,
         problems: blocking,
@@ -42,7 +43,7 @@ class PublishProblemsList extends StatelessWidget {
     }
     if (advisory.isNotEmpty) {
       blocks.add(_Section(
-        icon: Icons.lightbulb_outline,
+        icon: AppIcons.lightbulb,
         color: theme.colorScheme.tertiary,
         heading: l10n.publishSuggestions,
         problems: advisory,

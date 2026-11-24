@@ -9,6 +9,7 @@ import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/error/error.dart';
 import '../../../../core/import/import_models.dart';
 import '../../../../core/import/markdown_import_service.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -110,7 +111,7 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _isImporting ? null : _onImportMarkdownFiles,
-                icon: const Icon(Icons.description_outlined, size: 18),
+                icon: const Icon(AppIcons.description, size: 18),
                 label: Text(l10n.importFromMarkdown),
               ),
             ),
@@ -122,7 +123,7 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _isImporting ? null : _onImportZip,
-                icon: const Icon(Icons.folder_zip_outlined, size: 18),
+                icon: const Icon(AppIcons.folderZip, size: 18),
                 label: Text(l10n.importFromZip),
               ),
             ),
@@ -134,7 +135,7 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
             Expanded(
               child: FilledButton.icon(
                 onPressed: _isImporting ? null : _onImportObsidian,
-                icon: const Icon(Icons.auto_awesome_outlined, size: 18),
+                icon: const Icon(AppIcons.sparkles, size: 18),
                 label: Text(l10n.importFromObsidian),
               ),
             ),
@@ -241,7 +242,7 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
           Row(
             children: [
               Icon(
-                hasErrors ? Icons.warning_amber_outlined : Icons.check_circle,
+                hasErrors ? AppIcons.warning : AppIcons.checkCircle,
                 size: 20,
                 color: hasErrors
                     ? theme.colorScheme.error
@@ -401,8 +402,12 @@ class _ImportSheetState extends ConsumerState<ImportSheet> {
             skippedCount++;
           }
         } catch (e) {
-          errors.add(ImportError(
-              filePath: path, message: ErrorMapper.map(e).toString(),),);
+          errors.add(
+            ImportError(
+              filePath: path,
+              message: ErrorMapper.map(e).toString(),
+            ),
+          );
           skippedCount++;
         }
       }

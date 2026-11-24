@@ -51,35 +51,6 @@ void main() {
   });
 
   group('AppDurations values', () {
-    test('veryShortAnimation is 100 ms', () {
-      expect(
-        AppDurations.veryShortAnimation,
-        const Duration(milliseconds: 100),
-      );
-    });
-
-    test('shortAnimation is 200 ms', () {
-      expect(
-        AppDurations.shortAnimation,
-        const Duration(milliseconds: 200),
-      );
-    });
-
-    test('mediumAnimation is 250 ms', () {
-      expect(
-        AppDurations.mediumAnimation,
-        const Duration(milliseconds: 250),
-      );
-    });
-
-    test('animation is 300 ms', () {
-      expect(AppDurations.animation, const Duration(milliseconds: 300));
-    });
-
-    test('longAnimation is 400 ms', () {
-      expect(AppDurations.longAnimation, const Duration(milliseconds: 400));
-    });
-
     test('debounce is 300 ms', () {
       expect(AppDurations.debounce, const Duration(milliseconds: 300));
     });
@@ -106,11 +77,6 @@ void main() {
 
   group('AppDurations cannot be instantiated', () {
     test('constructor is private -- all members are static', () {
-      expect(AppDurations.veryShortAnimation, isNotNull);
-      expect(AppDurations.shortAnimation, isNotNull);
-      expect(AppDurations.mediumAnimation, isNotNull);
-      expect(AppDurations.animation, isNotNull);
-      expect(AppDurations.longAnimation, isNotNull);
       expect(AppDurations.debounce, isNotNull);
       expect(AppDurations.searchDebounce, isNotNull);
       expect(AppDurations.debounceTyping, isNotNull);

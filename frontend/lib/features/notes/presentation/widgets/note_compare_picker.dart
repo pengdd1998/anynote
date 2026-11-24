@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 
@@ -130,7 +131,7 @@ class _NoteComparePickerState extends ConsumerState<NoteComparePicker> {
                 scrollPadding: const EdgeInsets.only(bottom: 120),
                 decoration: InputDecoration(
                   hintText: l10n.searchNotes,
-                  prefixIcon: const Icon(Icons.search, size: 20),
+                  prefixIcon: const Icon(AppIcons.search, size: 20),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

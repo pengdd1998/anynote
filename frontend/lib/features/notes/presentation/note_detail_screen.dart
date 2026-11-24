@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -66,7 +67,7 @@ class NoteDetailScreen extends ConsumerWidget {
         actions: [
           // Edit — direct action, most important CTA
           IconButton(
-            icon: const Icon(Icons.edit_outlined),
+            icon: const Icon(AppIcons.edit),
             tooltip: l10n.editNote,
             onPressed: () => context.push('/notes/$noteId/edit'),
           ),
@@ -76,25 +77,24 @@ class NoteDetailScreen extends ConsumerWidget {
           _StarButton(noteId: noteId),
           // Share
           IconButton(
-            icon: const Icon(Icons.share_outlined),
+            icon: const Icon(AppIcons.share),
             tooltip: l10n.shareViaLink,
             onPressed: () => _openShareSheet(context, ref),
           ),
           // More actions
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_horiz),
+            icon: const Icon(AppIcons.moreHorizontal),
             tooltip: l10n.moreActions,
             position: PopupMenuPosition.under,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
-            onSelected: (value) =>
-                _onActionSelected(context, ref, value, db),
+            onSelected: (value) => _onActionSelected(context, ref, value, db),
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'share_link',
                 child: ListTile(
-                  leading: const Icon(Icons.share),
+                  leading: const Icon(AppIcons.share),
                   title: Text(l10n.shareViaLink),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -102,7 +102,7 @@ class NoteDetailScreen extends ConsumerWidget {
               PopupMenuItem(
                 value: 'preview',
                 child: ListTile(
-                  leading: const Icon(Icons.visibility_outlined),
+                  leading: const Icon(AppIcons.visibility),
                   title: Text(l10n.markdownPreview),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -111,7 +111,7 @@ class NoteDetailScreen extends ConsumerWidget {
               PopupMenuItem(
                 value: 'history',
                 child: ListTile(
-                  leading: const Icon(Icons.history),
+                  leading: const Icon(AppIcons.history),
                   title: Text(l10n.versionHistory),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -119,7 +119,7 @@ class NoteDetailScreen extends ConsumerWidget {
               PopupMenuItem(
                 value: 'read_aloud',
                 child: ListTile(
-                  leading: const Icon(Icons.volume_up_outlined),
+                  leading: const Icon(AppIcons.volumeUp),
                   title: Text(l10n.readAloud),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -128,7 +128,7 @@ class NoteDetailScreen extends ConsumerWidget {
                 value: 'delete',
                 child: ListTile(
                   leading: Icon(
-                    Icons.delete_outline,
+                    AppIcons.deleteOutline,
                     color: Theme.of(context).colorScheme.error,
                   ),
                   title: Text(
@@ -144,7 +144,7 @@ class NoteDetailScreen extends ConsumerWidget {
               PopupMenuItem(
                 value: 'markdown',
                 child: ListTile(
-                  leading: const Icon(Icons.description_outlined),
+                  leading: const Icon(AppIcons.description),
                   title: Text(l10n.exportAsMarkdown),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -152,7 +152,7 @@ class NoteDetailScreen extends ConsumerWidget {
               PopupMenuItem(
                 value: 'html',
                 child: ListTile(
-                  leading: const Icon(Icons.code),
+                  leading: const Icon(AppIcons.code),
                   title: Text(l10n.exportAsHTML),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -160,7 +160,7 @@ class NoteDetailScreen extends ConsumerWidget {
               PopupMenuItem(
                 value: 'plaintext',
                 child: ListTile(
-                  leading: const Icon(Icons.text_snippet_outlined),
+                  leading: const Icon(AppIcons.textSnippet),
                   title: Text(l10n.exportAsPlainText),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -168,7 +168,7 @@ class NoteDetailScreen extends ConsumerWidget {
               PopupMenuItem(
                 value: 'markdown_frontmatter',
                 child: ListTile(
-                  leading: const Icon(Icons.description_outlined),
+                  leading: const Icon(AppIcons.description),
                   title: Text(l10n.exportWithFrontmatter),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -176,7 +176,7 @@ class NoteDetailScreen extends ConsumerWidget {
               PopupMenuItem(
                 value: 'export_zip',
                 child: ListTile(
-                  leading: const Icon(Icons.folder_zip_outlined),
+                  leading: const Icon(AppIcons.folderZip),
                   title: Text(l10n.exportAsZip),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -184,7 +184,7 @@ class NoteDetailScreen extends ConsumerWidget {
               PopupMenuItem(
                 value: 'print',
                 child: ListTile(
-                  leading: const Icon(Icons.print_outlined),
+                  leading: const Icon(AppIcons.print),
                   title: Text(l10n.printNote),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -294,8 +294,7 @@ class NoteDetailScreen extends ConsumerWidget {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.primarySoft,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.pill),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: Text(
                             '#${tag.plainName}',
@@ -332,9 +331,8 @@ class NoteDetailScreen extends ConsumerWidget {
     final textColor =
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final codeBg = isDark ? AppColors.darkInputFill : AppColors.slate50;
-    final quoteBg = isDark
-        ? AppColors.primarySoft.withAlpha(30)
-        : AppColors.primarySoft;
+    final quoteBg =
+        isDark ? AppColors.primarySoft.withAlpha(30) : AppColors.primarySoft;
 
     final base = TextStyle(
       fontFamily: AppTextStyles.fontFamily,
@@ -462,7 +460,7 @@ class NoteDetailScreen extends ConsumerWidget {
         ),
         if (!data.isSynced) ...[
           const SizedBox(width: AppSpacing.s12),
-          const Icon(Icons.cloud_off_outlined, size: 12, color: AppColors.warning),
+          const Icon(AppIcons.cloudOff, size: 12, color: AppColors.warning),
           const SizedBox(width: AppSpacing.s4),
           Text(
             l10n.notSynced,
@@ -688,8 +686,8 @@ class NoteDetailScreen extends ConsumerWidget {
     AppDatabase db,
   ) async {
     final service = ref.read(speechServiceProvider);
-    final speechState = ref.read(speechStateProvider).valueOrNull ??
-        SpeechState.stopped;
+    final speechState =
+        ref.read(speechStateProvider).valueOrNull ?? SpeechState.stopped;
     if (speechState != SpeechState.stopped) {
       service.stop();
       return;
@@ -881,7 +879,6 @@ class NoteDetailScreen extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 /// Read-aloud action in the app bar: plays/stops TTS for this note's
@@ -895,8 +892,8 @@ class _ReadAloudButton extends ConsumerWidget {
 
   Future<void> _toggle(WidgetRef ref) async {
     final service = ref.read(speechServiceProvider);
-    final speechState = ref.read(speechStateProvider).valueOrNull ??
-        SpeechState.stopped;
+    final speechState =
+        ref.read(speechStateProvider).valueOrNull ?? SpeechState.stopped;
     if (speechState != SpeechState.stopped) {
       service.stop();
       return;
@@ -927,7 +924,7 @@ class _ReadAloudButton extends ConsumerWidget {
         (stateAsync.valueOrNull ?? SpeechState.stopped) != SpeechState.stopped;
     return IconButton(
       icon: Icon(
-        isSpeaking ? Icons.stop_circle_outlined : Icons.volume_up_outlined,
+        isSpeaking ? AppIcons.stopCircle : AppIcons.volumeUp,
         color: isSpeaking ? AppColors.primary : null,
       ),
       tooltip: isSpeaking ? l10n.stopReading : l10n.readAloud,
@@ -982,7 +979,7 @@ class _StarButtonState extends ConsumerState<_StarButton> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return IconButton(
-      icon: Icon(_isPinned ? Icons.star : Icons.star_outline),
+      icon: Icon(_isPinned ? AppIcons.starFilled : AppIcons.star),
       color: _isPinned ? AppColors.primary : null,
       tooltip: _isPinned ? l10n.unpinNote : l10n.pinNote,
       onPressed: _togglePin,

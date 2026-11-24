@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/share/share_service.dart';
 import '../../../core/theme/app_radius.dart';
@@ -79,7 +80,8 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = l10n.failedToCreateShareLink(ErrorDisplay.displayMessage(e, l10n));
+          _error = l10n
+              .failedToCreateShareLink(ErrorDisplay.displayMessage(e, l10n));
           _isCreating = false;
         });
       }
@@ -171,7 +173,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.copy),
+                icon: const Icon(AppIcons.copy),
                 onPressed: _copyLink,
                 tooltip: l10n.copyLink,
               ),
@@ -202,7 +204,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
 
         FilledButton.icon(
           onPressed: _copyLink,
-          icon: const Icon(Icons.copy),
+          icon: const Icon(AppIcons.copy),
           label: Text(l10n.copyLink),
         ),
         const SizedBox(height: 8),
@@ -247,7 +249,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
             decoration: InputDecoration(
               labelText: l10n.password,
               border: const OutlineInputBorder(),
-              prefixIcon: const Icon(Icons.lock_outline),
+              prefixIcon: const Icon(AppIcons.lock),
               errorText: _error,
             ),
             obscureText: true,
@@ -299,7 +301,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.link),
+              : const Icon(AppIcons.link),
           label: Text(_isCreating ? l10n.encrypting : l10n.createShareLink),
         ),
         const SizedBox(height: 8),

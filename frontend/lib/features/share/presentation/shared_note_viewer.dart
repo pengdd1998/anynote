@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/error/exceptions.dart';
 import '../../../core/share/share_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -233,7 +234,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: const Icon(
-                Icons.link_off,
+                AppIcons.linkOff,
                 size: 28,
                 color: AppColors.error,
               ),
@@ -282,7 +283,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(
-              Icons.lock_outline,
+              AppIcons.lock,
               size: 28,
               color: AppColors.accentPeachText,
             ),
@@ -311,7 +312,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              prefixIcon: const Icon(Icons.lock_outline),
+              prefixIcon: const Icon(AppIcons.lock),
               errorText: _error != null ? _resolveError(l10n) : null,
             ),
             obscureText: true,
@@ -387,9 +388,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
                     ),
                     const SizedBox(width: AppSpacing.s8),
                     Text(
-                      isServerShare
-                          ? l10n.sharedViaLink
-                          : l10n.sharedNote,
+                      isServerShare ? l10n.sharedViaLink : l10n.sharedNote,
                       style: AppTextStyles.caption.copyWith(
                         fontSize: 12,
                         color: isDark
@@ -415,9 +414,8 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(AppSpacing.s16),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkCardBg
-                        : AppColors.lightCardBg,
+                    color:
+                        isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     boxShadow: [
                       BoxShadow(
@@ -469,8 +467,7 @@ class _SharedNoteViewerState extends ConsumerState<SharedNoteViewer> {
         ),
 
         // Comment input bar (server shares + authenticated only)
-        if (isServerShare && isLoggedIn)
-          CommentInput(shareId: widget.shareId),
+        if (isServerShare && isLoggedIn) CommentInput(shareId: widget.shareId),
       ],
     );
   }

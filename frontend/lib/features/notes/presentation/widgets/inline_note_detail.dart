@@ -6,6 +6,7 @@ import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/error/error.dart' show ErrorDisplay;
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/decrypted_note.dart';
@@ -23,7 +24,7 @@ class InlineDetailPlaceholder extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.article_outlined,
+            AppIcons.article,
             size: 64,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -180,18 +181,18 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 20),
+                icon: const Icon(AppIcons.edit, size: 20),
                 tooltip: l10n.editNote,
                 onPressed: () => context.push('/notes/${widget.noteId}/edit'),
               ),
               if (widget.onSplitViewToggle != null)
                 IconButton(
-                  icon: const Icon(Icons.vertical_split_outlined, size: 20),
+                  icon: const Icon(AppIcons.verticalSplit, size: 20),
                   tooltip: l10n.splitView,
                   onPressed: widget.onSplitViewToggle,
                 ),
               IconButton(
-                icon: const Icon(Icons.history, size: 20),
+                icon: const Icon(AppIcons.history, size: 20),
                 tooltip: l10n.versionHistory,
                 onPressed: () =>
                     context.push('/notes/${widget.noteId}/history'),
@@ -209,7 +210,7 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
                 Row(
                   children: [
                     Icon(
-                      Icons.access_time,
+                      AppIcons.schedule,
                       size: 14,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -224,7 +225,7 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
                     if (!_data!.isSynced) ...[
                       const SizedBox(width: 12),
                       const Icon(
-                        Icons.cloud_off,
+                        AppIcons.cloudOff,
                         size: 14,
                         color: AppColors.warning,
                       ),
@@ -251,5 +252,4 @@ class _InlineNoteDetailState extends ConsumerState<InlineNoteDetail> {
       ],
     );
   }
-
 }

@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -77,22 +78,22 @@ void main() {
 
     testWidgets('shows close button', (tester) async {
       await pumpFindReplaceBar(tester, isVisible: true);
-      expect(find.byIcon(Icons.close), findsOneWidget);
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
     });
 
     testWidgets('shows previous match button', (tester) async {
       await pumpFindReplaceBar(tester, isVisible: true);
-      expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
+      expect(find.byIcon(AppIcons.arrowUp), findsOneWidget);
     });
 
     testWidgets('shows next match button', (tester) async {
       await pumpFindReplaceBar(tester, isVisible: true);
-      expect(find.byIcon(Icons.keyboard_arrow_down), findsOneWidget);
+      expect(find.byIcon(AppIcons.arrowDown), findsOneWidget);
     });
 
     testWidgets('shows expand/collapse button for replace', (tester) async {
       await pumpFindReplaceBar(tester, isVisible: true);
-      expect(find.byIcon(Icons.expand_more), findsOneWidget);
+      expect(find.byIcon(AppIcons.chevronDown), findsOneWidget);
     });
   });
 
@@ -128,7 +129,7 @@ void main() {
     testWidgets('shows replace button after tapping expand', (tester) async {
       await pumpFindReplaceBar(tester, isVisible: true);
       // Tap the expand toggle.
-      await tester.tap(find.byIcon(Icons.expand_more));
+      await tester.tap(find.byIcon(AppIcons.chevronDown));
       await tester.pumpAndSettle();
       // Now two TextFields should be visible (find + replace).
       expect(find.byType(TextField), findsNWidgets(2));
@@ -138,20 +139,20 @@ void main() {
 
     testWidgets('shows replace icons after expanding', (tester) async {
       await pumpFindReplaceBar(tester, isVisible: true);
-      await tester.tap(find.byIcon(Icons.expand_more));
+      await tester.tap(find.byIcon(AppIcons.chevronDown));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.find_replace), findsOneWidget);
-      expect(find.byIcon(Icons.find_replace_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.replace), findsOneWidget);
+      expect(find.byIcon(AppIcons.replaceAll), findsOneWidget);
     });
 
     testWidgets('toggle collapses replace row', (tester) async {
       await pumpFindReplaceBar(tester, isVisible: true);
       // Expand.
-      await tester.tap(find.byIcon(Icons.expand_more));
+      await tester.tap(find.byIcon(AppIcons.chevronDown));
       await tester.pumpAndSettle();
       expect(find.byType(TextField), findsNWidgets(2));
       // Collapse.
-      await tester.tap(find.byIcon(Icons.expand_less));
+      await tester.tap(find.byIcon(AppIcons.chevronUp));
       await tester.pumpAndSettle();
       expect(find.byType(TextField), findsOneWidget);
     });
@@ -161,21 +162,21 @@ void main() {
     testWidgets('fires onClose when close button tapped', (tester) async {
       var closed = false;
       await pumpFindReplaceBar(tester, onClose: () => closed = true);
-      await tester.tap(find.byIcon(Icons.close));
+      await tester.tap(find.byIcon(AppIcons.close));
       expect(closed, isTrue);
     });
 
     testWidgets('fires onPrevious when previous button tapped', (tester) async {
       var prev = false;
       await pumpFindReplaceBar(tester, onPrevious: () => prev = true);
-      await tester.tap(find.byIcon(Icons.keyboard_arrow_up));
+      await tester.tap(find.byIcon(AppIcons.arrowUp));
       expect(prev, isTrue);
     });
 
     testWidgets('fires onNext when next button tapped', (tester) async {
       var next = false;
       await pumpFindReplaceBar(tester, onNext: () => next = true);
-      await tester.tap(find.byIcon(Icons.keyboard_arrow_down));
+      await tester.tap(find.byIcon(AppIcons.arrowDown));
       expect(next, isTrue);
     });
 
@@ -183,9 +184,9 @@ void main() {
       var replaced = false;
       await pumpFindReplaceBar(tester, onReplace: () => replaced = true);
       // First expand replace row.
-      await tester.tap(find.byIcon(Icons.expand_more));
+      await tester.tap(find.byIcon(AppIcons.chevronDown));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.find_replace));
+      await tester.tap(find.byIcon(AppIcons.replace));
       expect(replaced, isTrue);
     });
 
@@ -194,9 +195,9 @@ void main() {
       var replacedAll = false;
       await pumpFindReplaceBar(tester, onReplaceAll: () => replacedAll = true);
       // First expand replace row.
-      await tester.tap(find.byIcon(Icons.expand_more));
+      await tester.tap(find.byIcon(AppIcons.chevronDown));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.find_replace_outlined));
+      await tester.tap(find.byIcon(AppIcons.replaceAll));
       expect(replacedAll, isTrue);
     });
 

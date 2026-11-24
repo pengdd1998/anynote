@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -150,9 +151,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     style: AppTextStyles.headline.copyWith(
                       fontSize: 34,
                       fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? AppColors.secondary
-                          : AppColors.primaryText,
+                      color:
+                          isDark ? AppColors.secondary : AppColors.primaryText,
                     ),
                   ),
                 ),
@@ -225,7 +225,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             if (email.isNotEmpty)
               _InfoCard(
                 isDark: isDark,
-                icon: Icons.alternate_email,
+                icon: AppIcons.alternateEmail,
                 title: l10n.email,
                 value: email,
                 iconBg: isDark
@@ -239,15 +239,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             if (createdAt != null)
               _InfoCard(
                 isDark: isDark,
-                icon: Icons.calendar_today_outlined,
+                icon: AppIcons.calendarToday,
                 title: l10n.joined,
                 value: _formatJoinedDate(createdAt),
                 iconBg: isDark
                     ? AppColors.accentPeachText.withAlpha(36)
                     : AppColors.accentPeachBg,
-                iconColor: isDark
-                    ? AppColors.accentPeach
-                    : AppColors.accentPeachText,
+                iconColor:
+                    isDark ? AppColors.accentPeach : AppColors.accentPeachText,
               ),
 
             // ── Inline editor (toggled by "Edit Profile") ───────
@@ -366,7 +365,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         borderRadius: BorderRadius.circular(AppRadius.xs),
                       ),
                       child: Icon(
-                        Icons.public,
+                        AppIcons.globe,
                         size: 18,
                         color: _publicProfileEnabled
                             ? (isDark

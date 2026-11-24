@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -133,7 +134,8 @@ void main() {
     testWidgets('shows loading indicator while decrypting', (tester) async {
       // Use a share with key (non-password) that returns slowly.
       final service = FakeShareService(
-        onDecryptServer: ({required String shareId, String? key, String? password}) {
+        onDecryptServer: (
+            {required String shareId, String? key, String? password}) {
           // Return a value that completes after pumps.
           return DecryptedSharedNote(
             title: 'Test',
@@ -162,14 +164,15 @@ void main() {
       );
 
       // Should show password input (lock icons: decorative + TextField prefix).
-      expect(find.byIcon(Icons.lock_outline), findsNWidgets(2));
+      expect(find.byIcon(AppIcons.lock), findsNWidgets(2));
       expect(find.byType(TextField), findsOneWidget);
     });
 
     testWidgets('shows decrypted note after successful server decryption',
         (tester) async {
       final service = FakeShareService(
-        onDecryptServer: ({required String shareId, String? key, String? password}) {
+        onDecryptServer: (
+            {required String shareId, String? key, String? password}) {
           return DecryptedSharedNote(
             title: 'Shared Note Title',
             content: '# Hello\n\nWorld',
@@ -200,7 +203,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Error icon should appear.
-      expect(find.byIcon(Icons.link_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.linkOff), findsOneWidget);
     });
 
     testWidgets('password input has obscureText enabled', (tester) async {
@@ -251,7 +254,8 @@ void main() {
         (tester) async {
       var payloadCalled = false;
       final service = FakeShareService(
-        onDecryptPayload: ({required String payload, String? key, String? password}) {
+        onDecryptPayload: (
+            {required String payload, String? key, String? password}) {
           payloadCalled = true;
           return DecryptedSharedNote(
             title: 'Payload Note',

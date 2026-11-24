@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/database/app_database.dart';
@@ -129,7 +130,7 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.file_download_outlined),
+                    : const Icon(AppIcons.fileDownload),
                 label: Text(
                   _isExporting ? l10n.exportingNotes : l10n.exportAsZip,
                 ),
@@ -159,7 +160,7 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
       child: Row(
         children: [
           Icon(
-            Icons.note_outlined,
+            AppIcons.noteBlank,
             size: 20,
             color: theme.colorScheme.primary,
           ),

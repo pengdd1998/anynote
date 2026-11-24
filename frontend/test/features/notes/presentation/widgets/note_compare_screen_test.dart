@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:drift/drift.dart' hide Column, isNotNull;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,7 +24,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Should show error state with error icon.
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.errorOutline), findsOneWidget);
       // Should show a retry button.
       expect(find.text('Retry'), findsOneWidget);
 

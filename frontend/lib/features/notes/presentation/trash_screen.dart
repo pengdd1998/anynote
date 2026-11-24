@@ -7,6 +7,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/error/error.dart' show ErrorDisplay;
 import '../../../core/theme/alpha_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -47,7 +48,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               final notes = snapshot.data ?? [];
               if (notes.isEmpty) return const SizedBox.shrink();
               return IconButton(
-                icon: const Icon(Icons.delete_forever),
+                icon: const Icon(AppIcons.deleteForever),
                 tooltip: l10n.emptyTrash,
                 onPressed: () => _showEmptyTrashConfirm(context, db, notes),
               );
@@ -71,7 +72,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                     child: const Icon(
-                      Icons.error_outline,
+                      AppIcons.errorOutline,
                       size: 28,
                       color: AppColors.error,
                     ),
@@ -109,7 +110,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
 
           if (notes.isEmpty) {
             return EmptyState(
-              icon: Icons.delete_outline,
+              icon: AppIcons.deleteOutline,
               title: l10n.trashEmpty,
               subtitle: l10n.trashEmptyDesc,
             );
@@ -149,7 +150,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                           if (context.mounted) {
                             AppSnackBar.error(
                               context,
-                              message: l10n.failedToRestoreError(ErrorDisplay.displayMessage(e, l10n)),
+                              message: l10n.failedToRestoreError(
+                                  ErrorDisplay.displayMessage(e, l10n)),
                             );
                           }
                         }
@@ -196,7 +198,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                         } catch (e) {
                           AppSnackBar.error(
                             context,
-                            message: l10n.failedToDeleteError(ErrorDisplay.displayMessage(e, l10n)),
+                            message: l10n.failedToDeleteError(
+                                ErrorDisplay.displayMessage(e, l10n)),
                           );
                         }
                       }
@@ -211,7 +214,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.restore, color: AppColors.success),
+                          const Icon(AppIcons.restore,
+                              color: AppColors.success),
                           const SizedBox(height: AppSpacing.s2),
                           Text(
                             l10n.restore,
@@ -233,7 +237,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.delete_forever, color: AppColors.error),
+                          const Icon(AppIcons.deleteForever,
+                              color: AppColors.error),
                           const SizedBox(height: AppSpacing.s2),
                           Text(
                             l10n.permanentlyDelete,
@@ -254,7 +259,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                               ? AppColors.darkCardBg
                               : AppColors.lightCardBg,
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          boxShadow: AppShadows.smOf(Theme.of(context).brightness),
+                          boxShadow:
+                              AppShadows.smOf(Theme.of(context).brightness),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +280,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                     ),
                                   ),
                                   child: Icon(
-                                    Icons.delete_outline,
+                                    AppIcons.deleteOutline,
                                     size: 14,
                                     color: AppColors.error.withAlpha(140),
                                   ),
@@ -379,7 +385,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
           children: [
             // Drag handle
             Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.s8, bottom: AppSpacing.s4),
+              padding: const EdgeInsets.only(
+                  top: AppSpacing.s8, bottom: AppSpacing.s4),
               child: Container(
                 width: 36,
                 height: 4,
@@ -400,7 +407,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                   color: AppColors.success.withAlpha(15),
                   borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
-                child: const Icon(Icons.restore, size: 18, color: AppColors.success),
+                child: const Icon(AppIcons.restore,
+                    size: 18, color: AppColors.success),
               ),
               title: Text(l10n.restore, style: AppTextStyles.body),
               onTap: () async {
@@ -415,7 +423,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                   if (context.mounted) {
                     AppSnackBar.error(
                       context,
-                      message: l10n.failedToRestoreError(ErrorDisplay.displayMessage(e, l10n)),
+                      message: l10n.failedToRestoreError(
+                          ErrorDisplay.displayMessage(e, l10n)),
                     );
                   }
                 }
@@ -430,7 +439,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
                 child: const Icon(
-                  Icons.delete_forever,
+                  AppIcons.deleteForever,
                   size: 18,
                   color: AppColors.error,
                 ),
@@ -482,7 +491,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                     if (context.mounted) {
                       AppSnackBar.error(
                         context,
-                        message: l10n.failedToDeleteError(ErrorDisplay.displayMessage(e, l10n)),
+                        message: l10n.failedToDeleteError(
+                            ErrorDisplay.displayMessage(e, l10n)),
                       );
                     }
                   }

@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -54,10 +55,10 @@ void main() {
     testWidgets('renders arbitrary child widget', (tester) async {
       await pumpPressable(
         tester,
-        child: const Icon(Icons.star),
+        child: const Icon(AppIcons.starFilled),
       );
 
-      expect(find.byIcon(Icons.star), findsOneWidget);
+      expect(find.byIcon(AppIcons.starFilled), findsOneWidget);
     });
 
     // -- Callback invocation ------------------------------------------

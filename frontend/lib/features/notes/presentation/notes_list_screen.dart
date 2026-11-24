@@ -144,11 +144,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
   // --- Staggered entrance animation state ---
 
-  /// Maximum number of cards to animate on entrance.
-  static const int _kMaxAnimatedCards = 20;
-
-  /// Stagger delay per card in milliseconds.
-  static const int _kStaggerDelayMs = 30;
+  /// How many cards land one after another when the list first appears.
+  static const int _kMaxAnimatedCards = 8;
 
   /// Track whether the initial entrance animation has played.
   bool _hasPlayedEntrance = false;
@@ -650,9 +647,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         Text(
           'AnyNote',
           style: AppTextStyles.handwritingTitle.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color:
+                isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
           ),
         ),
         const SizedBox(width: AppSpacing.s4),
@@ -701,7 +697,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     }
     if (n.contains('todo') || n.contains('task')) return '\u2705'; // check
     if (n.contains('read') || n.contains('book')) return '\u{1F4D6}'; // book
-    if (n.contains('travel') || n.contains('trip')) return '\u2708\uFE0F'; // plane
+    if (n.contains('travel') || n.contains('trip'))
+      return '\u2708\uFE0F'; // plane
     return _fallbackTagEmojis[name.hashCode.abs() % _fallbackTagEmojis.length];
   }
 
@@ -729,17 +726,15 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         child: GestureDetector(
           onTap: onTap,
           child: AnimatedContainer(
-            duration: AppAnimation.short,
-            curve: AppAnimation.easeOut,
+            duration: AppAnimation.fast,
+            curve: AppAnimation.arrive,
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.s8,
             ),
             decoration: BoxDecoration(
               // Selected: soft periwinkle tint, no border (mockup style).
-              color: isSelected
-                  ? AppColors.primarySoft
-                  : unselectedBg,
+              color: isSelected ? AppColors.primarySoft : unselectedBg,
               borderRadius: AppRadius.pillBorder,
               border: isSelected
                   ? null
@@ -762,73 +757,74 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
     return SizedBox(
       width: double.infinity,
       child: SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          // "All" chip
-          buildChip(
-            label: '$_allFilterEmoji ${l10n.filterAll}',
-            isSelected: _quickTagFilter == null && (_tagFilter == null || _tagFilter!.isEmpty),
-            onTap: () => setState(() {
-              _quickTagFilter = null;
-              _tagFilter = null;
-            }),
-          ),
-          // Tag chips
-          ...visibleTags.map((tag) {
-            final isSelected = _quickTagFilter == tag.id;
-            final tagName = tag.plainName ?? tag.id;
-            return buildChip(
-              label: '${_emojiForTag(tagName)} $tagName',
-              isSelected: isSelected,
-              onTap: () => setState(() {
-                if (_quickTagFilter == tag.id) {
-                  _quickTagFilter = null;
-                  _tagFilter = null;
-                } else {
-                  _quickTagFilter = tag.id;
-                  _tagFilter = {tag.id};
-                }
-              }),
-            );
-          }),
-          // "+N more" chip
-          if (remaining > 0)
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // "All" chip
             buildChip(
-              label: '+$remaining',
-              isSelected: false,
-              onTap: () => NotesFilterSheet.show(
-                context: context,
-                statusFilter: _statusFilter,
-                priorityFilter: _priorityFilter,
-                tagFilter: _tagFilter,
-                allTags: _allTags,
-                onStatusChanged: (status) =>
-                    setState(() => _statusFilter = status),
-                onPriorityChanged: (priority) =>
-                    setState(() => _priorityFilter = priority),
-                onTagChanged: (tagId) {
-                  setState(() {
-                    _quickTagFilter = null;
-                    _tagFilter ??= {};
-                    if (_tagFilter!.contains(tagId)) {
-                      _tagFilter!.remove(tagId);
-                      if (_tagFilter!.isEmpty) _tagFilter = null;
-                    } else {
-                      _tagFilter!.add(tagId);
-                    }
-                  });
-                },
-                onClearAll: () => setState(() {
-                  _statusFilter = null;
-                  _priorityFilter = null;
-                  _tagFilter = null;
-                  _quickTagFilter = null;
-                }),
-              ),
+              label: '$_allFilterEmoji ${l10n.filterAll}',
+              isSelected: _quickTagFilter == null &&
+                  (_tagFilter == null || _tagFilter!.isEmpty),
+              onTap: () => setState(() {
+                _quickTagFilter = null;
+                _tagFilter = null;
+              }),
             ),
-        ],
-      ),
+            // Tag chips
+            ...visibleTags.map((tag) {
+              final isSelected = _quickTagFilter == tag.id;
+              final tagName = tag.plainName ?? tag.id;
+              return buildChip(
+                label: '${_emojiForTag(tagName)} $tagName',
+                isSelected: isSelected,
+                onTap: () => setState(() {
+                  if (_quickTagFilter == tag.id) {
+                    _quickTagFilter = null;
+                    _tagFilter = null;
+                  } else {
+                    _quickTagFilter = tag.id;
+                    _tagFilter = {tag.id};
+                  }
+                }),
+              );
+            }),
+            // "+N more" chip
+            if (remaining > 0)
+              buildChip(
+                label: '+$remaining',
+                isSelected: false,
+                onTap: () => NotesFilterSheet.show(
+                  context: context,
+                  statusFilter: _statusFilter,
+                  priorityFilter: _priorityFilter,
+                  tagFilter: _tagFilter,
+                  allTags: _allTags,
+                  onStatusChanged: (status) =>
+                      setState(() => _statusFilter = status),
+                  onPriorityChanged: (priority) =>
+                      setState(() => _priorityFilter = priority),
+                  onTagChanged: (tagId) {
+                    setState(() {
+                      _quickTagFilter = null;
+                      _tagFilter ??= {};
+                      if (_tagFilter!.contains(tagId)) {
+                        _tagFilter!.remove(tagId);
+                        if (_tagFilter!.isEmpty) _tagFilter = null;
+                      } else {
+                        _tagFilter!.add(tagId);
+                      }
+                    });
+                  },
+                  onClearAll: () => setState(() {
+                    _statusFilter = null;
+                    _priorityFilter = null;
+                    _tagFilter = null;
+                    _quickTagFilter = null;
+                  }),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -874,7 +870,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             // Jump to the advanced search screen (operator filters +
             // semantic toggle), carrying the current query along.
             IconButton(
-              icon: const Icon(Icons.tune),
+              icon: const Icon(AppIcons.tune),
               tooltip: l10n.advancedSearch,
               onPressed: () {
                 ref.read(operatorSearchQueryProvider.notifier).state =
@@ -921,7 +917,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             ),
             // "More" overflow menu with all features
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
+              icon: const Icon(AppIcons.moreVertical),
               tooltip: l10n.moreActions,
               onSelected: (value) {
                 switch (value) {
@@ -984,7 +980,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'toggle_view',
                   child: ListTile(
-                    leading: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
+                    leading: Icon(
+                        _isGridView ? AppIcons.viewList : AppIcons.gridView),
                     title: Text(_isGridView ? l10n.listView : l10n.gridView),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -999,12 +996,18 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 ),
                 const PopupMenuDivider(),
                 // --- Sort section ---
-                _buildSortMenuItem('sort_updated_newest', l10n.updatedNewest, AppIcons.sort),
-                _buildSortMenuItem('sort_updated_oldest', l10n.updatedOldest, AppIcons.sort),
-                _buildSortMenuItem('sort_created_newest', l10n.createdNewest, AppIcons.sort),
-                _buildSortMenuItem('sort_created_oldest', l10n.createdOldest, AppIcons.sort),
-                _buildSortMenuItem('sort_title_az', l10n.titleAZ, AppIcons.sort),
-                _buildSortMenuItem('sort_custom', l10n.sortCustom, AppIcons.sort),
+                _buildSortMenuItem(
+                    'sort_updated_newest', l10n.updatedNewest, AppIcons.sort),
+                _buildSortMenuItem(
+                    'sort_updated_oldest', l10n.updatedOldest, AppIcons.sort),
+                _buildSortMenuItem(
+                    'sort_created_newest', l10n.createdNewest, AppIcons.sort),
+                _buildSortMenuItem(
+                    'sort_created_oldest', l10n.createdOldest, AppIcons.sort),
+                _buildSortMenuItem(
+                    'sort_title_az', l10n.titleAZ, AppIcons.sort),
+                _buildSortMenuItem(
+                    'sort_custom', l10n.sortCustom, AppIcons.sort),
                 const PopupMenuDivider(),
                 // --- Quick actions ---
                 PopupMenuItem(
@@ -1040,7 +1043,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                   PopupMenuItem(
                     value: 'advanced_search',
                     child: ListTile(
-                      leading: const Icon(Icons.tune),
+                      leading: const Icon(AppIcons.tune),
                       title: Text(l10n.advancedSearch),
                       contentPadding: EdgeInsets.zero,
                     ),
@@ -1050,7 +1053,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'collections',
                   child: ListTile(
-                    leading: const Icon(Icons.folder_outlined),
+                    leading: const Icon(AppIcons.folder),
                     title: Text(l10n.collections),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1058,7 +1061,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'graph',
                   child: ListTile(
-                    leading: const Icon(Icons.account_tree_outlined),
+                    leading: const Icon(AppIcons.accountTree),
                     title: Text(l10n.knowledgeGraph),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1066,7 +1069,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'dashboard',
                   child: ListTile(
-                    leading: const Icon(Icons.dashboard_outlined),
+                    leading: const Icon(AppIcons.dashboard),
                     title: Text(l10n.propertiesDashboard),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1074,7 +1077,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'statistics',
                   child: ListTile(
-                    leading: const Icon(Icons.bar_chart_outlined),
+                    leading: const Icon(AppIcons.chartBar),
                     title: Text(l10n.statistics),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1082,7 +1085,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'daily',
                   child: ListTile(
-                    leading: const Icon(Icons.calendar_today_outlined),
+                    leading: const Icon(AppIcons.calendarToday),
                     title: Text(l10n.dailyNotes),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1092,7 +1095,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'reminders',
                   child: ListTile(
-                    leading: const Icon(Icons.notifications_outlined),
+                    leading: const Icon(AppIcons.notification),
                     title: Text(l10n.reminders),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1100,7 +1103,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'orphaned',
                   child: ListTile(
-                    leading: const Icon(Icons.scatter_plot_outlined),
+                    leading: const Icon(AppIcons.scatterPlot),
                     title: Text(l10n.orphanedNotes),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1108,7 +1111,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'snippets',
                   child: ListTile(
-                    leading: const Icon(Icons.code_outlined),
+                    leading: const Icon(AppIcons.code),
                     title: Text(l10n.snippets),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1118,7 +1121,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 PopupMenuItem(
                   value: 'import',
                   child: ListTile(
-                    leading: const Icon(Icons.file_download_outlined),
+                    leading: const Icon(AppIcons.fileDownload),
                     title: Text(l10n.importNotes),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1129,199 +1132,201 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         ],
       ),
       body: Column(
-          children: [
-            // Offline banner at the top
-            const OfflineBanner(),
-            // Search bar (persistent, below AppBar)
-            if (!_isSelectionMode && !_isSearching)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.s4,
-                  AppSpacing.md,
-                  0,
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: l10n.searchNotes,
-                    hintStyle: AppTextStyles.body.copyWith(
-                      fontSize: 14,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                    ),
-                    prefixIcon: Icon(
-                      AppIcons.search,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                      size: 20,
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.darkInputFill
-                        : AppColors.lightInputFill,
-                    border: const OutlineInputBorder(
-                      borderRadius: AppRadius.pillBorder,
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: const OutlineInputBorder(
-                      borderRadius: AppRadius.pillBorder,
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderRadius: AppRadius.pillBorder,
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.s16,
-                      vertical: AppSpacing.s12,
-                    ),
-                    isDense: true,
+        children: [
+          // Offline banner at the top
+          const OfflineBanner(),
+          // Search bar (persistent, below AppBar)
+          if (!_isSelectionMode && !_isSearching)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s4,
+                AppSpacing.md,
+                0,
+              ),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: l10n.searchNotes,
+                  hintStyle: AppTextStyles.body.copyWith(
+                    fontSize: 14,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
                   ),
-                  style: AppTextStyles.body.copyWith(fontSize: 14),
-                  onTap: () {
-                    if (!_isSearching) {
-                      setState(() {
-                        _isSearching = true;
-                        _pageSubscription?.cancel();
-                      });
-                    }
-                  },
-                  onChanged: _onSearchChanged,
-                  scrollPadding: const EdgeInsets.only(bottom: 120),
+                  prefixIcon: Icon(
+                    AppIcons.search,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                    size: 20,
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkInputFill
+                      : AppColors.lightInputFill,
+                  border: const OutlineInputBorder(
+                    borderRadius: AppRadius.pillBorder,
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: const OutlineInputBorder(
+                    borderRadius: AppRadius.pillBorder,
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderRadius: AppRadius.pillBorder,
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.s16,
+                    vertical: AppSpacing.s12,
+                  ),
+                  isDense: true,
                 ),
+                style: AppTextStyles.body.copyWith(fontSize: 14),
+                onTap: () {
+                  if (!_isSearching) {
+                    setState(() {
+                      _isSearching = true;
+                      _pageSubscription?.cancel();
+                    });
+                  }
+                },
+                onChanged: _onSearchChanged,
+                scrollPadding: const EdgeInsets.only(bottom: 120),
               ),
-            // Filter chips row
-            if (!_isSelectionMode && !_isSearching)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.s8,
-                  AppSpacing.md,
-                  0,
-                ),
-                child: _buildFilterChips(l10n),
+            ),
+          // Filter chips row
+          if (!_isSelectionMode && !_isSearching)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.s8,
+                AppSpacing.md,
+                0,
               ),
-            // Batch action bar (shown when in selection mode)
-            if (_isSelectionMode)
-              NotesBatchActionBar(
-                selectedNoteIds: _selectedNoteIds,
-                notes: _notes,
-                onTogglePin: () => _batchTogglePin(db, l10n),
-                onColor: () => _batchColor(db, l10n),
-                onLock: () => _batchLock(db, l10n),
-                onDelete: () => _batchDelete(db, l10n),
-                onExport: _showExportSheet,
-                onCompare:
-                    _selectedNoteIds.length == 2 ? _compareSelectedNotes : null,
-                onMoveToCollection: () =>
-                    _moveToCollection(db, l10n, _selectedNoteIds.toList()),
-                onAddTags: () => _batchAddTags(db, l10n),
-              ),
-            // Property filter bar (only visible when filters are active)
-            if (!_isSearching && (_statusFilter != null || _priorityFilter != null || (_tagFilter != null && _tagFilter!.isNotEmpty)))
-              NotesFilterBar(
+              child: _buildFilterChips(l10n),
+            ),
+          // Batch action bar (shown when in selection mode)
+          if (_isSelectionMode)
+            NotesBatchActionBar(
+              selectedNoteIds: _selectedNoteIds,
+              notes: _notes,
+              onTogglePin: () => _batchTogglePin(db, l10n),
+              onColor: () => _batchColor(db, l10n),
+              onLock: () => _batchLock(db, l10n),
+              onDelete: () => _batchDelete(db, l10n),
+              onExport: _showExportSheet,
+              onCompare:
+                  _selectedNoteIds.length == 2 ? _compareSelectedNotes : null,
+              onMoveToCollection: () =>
+                  _moveToCollection(db, l10n, _selectedNoteIds.toList()),
+              onAddTags: () => _batchAddTags(db, l10n),
+            ),
+          // Property filter bar (only visible when filters are active)
+          if (!_isSearching &&
+              (_statusFilter != null ||
+                  _priorityFilter != null ||
+                  (_tagFilter != null && _tagFilter!.isNotEmpty)))
+            NotesFilterBar(
+              statusFilter: _statusFilter,
+              priorityFilter: _priorityFilter,
+              tagFilter: _tagFilter,
+              allTags: _allTags,
+              onFilterTap: () => NotesFilterSheet.show(
+                context: context,
                 statusFilter: _statusFilter,
                 priorityFilter: _priorityFilter,
                 tagFilter: _tagFilter,
                 allTags: _allTags,
-                onFilterTap: () => NotesFilterSheet.show(
-                  context: context,
-                  statusFilter: _statusFilter,
-                  priorityFilter: _priorityFilter,
-                  tagFilter: _tagFilter,
-                  allTags: _allTags,
-                  onStatusChanged: (status) =>
-                      setState(() => _statusFilter = status),
-                  onPriorityChanged: (priority) =>
-                      setState(() => _priorityFilter = priority),
-                  onTagChanged: (tagId) {
-                    setState(() {
-                      _tagFilter ??= {};
-                      if (_tagFilter!.contains(tagId)) {
-                        _tagFilter!.remove(tagId);
-                        if (_tagFilter!.isEmpty) _tagFilter = null;
-                      } else {
-                        _tagFilter!.add(tagId);
-                      }
-                    });
-                  },
-                  onClearAll: () => setState(() {
-                    _statusFilter = null;
-                    _priorityFilter = null;
-                    _tagFilter = null;
-                  }),
-                ),
-                onStatusCleared: () => setState(() => _statusFilter = null),
-                onPriorityCleared: () => setState(() => _priorityFilter = null),
-                onTagCleared: (tagId) => setState(() {
-                  _tagFilter = _tagFilter?..remove(tagId);
-                  if (_tagFilter?.isEmpty ?? true) _tagFilter = null;
-                }),
+                onStatusChanged: (status) =>
+                    setState(() => _statusFilter = status),
+                onPriorityChanged: (priority) =>
+                    setState(() => _priorityFilter = priority),
+                onTagChanged: (tagId) {
+                  setState(() {
+                    _tagFilter ??= {};
+                    if (_tagFilter!.contains(tagId)) {
+                      _tagFilter!.remove(tagId);
+                      if (_tagFilter!.isEmpty) _tagFilter = null;
+                    } else {
+                      _tagFilter!.add(tagId);
+                    }
+                  });
+                },
                 onClearAll: () => setState(() {
                   _statusFilter = null;
                   _priorityFilter = null;
                   _tagFilter = null;
                 }),
               ),
-            // Main content
-            Expanded(
-              child: wideScreen
-                  ? MasterDetailLayout(
-                      placeholderText: l10n.selectItemToView,
-                      selectedId: _selectedNoteId,
-                      onSelectionChanged: (id) {
-                        setState(() => _selectedNoteId = id);
-                      },
-                      sidebarVisible: ref.watch(sidebarVisibleProvider),
-                      masterPane: _isSearching && _searchQuery.isNotEmpty
-                          ? _buildSearchBody(db)
-                          : _buildNotesBody(db),
-                      detailPaneBuilder: (selectedId) {
-                        if (selectedId == null) {
-                          return const InlineDetailPlaceholder();
-                        }
-
-                        // Primary detail widget. The split-view (side-by-side
-                        // compare) toggle is a desktop large-screen feature —
-                        // a 50/50 horizontal split is unusable on a phone.
-                        final splitToggle =
-                            PlatformUtils.isDesktop && _splitViewNoteId == null
-                                ? () => _showSplitNotePicker(context)
-                                : null;
-                        final primaryDetail = InlineNoteDetail(
-                          noteId: selectedId,
-                          db: db,
-                          crypto: ref.read(cryptoServiceProvider),
-                          onSplitViewToggle: splitToggle,
-                        );
-
-                        // If split view is active, wrap in SplitViewPane
-                        if (_splitViewNoteId != null) {
-                          return SplitViewPane(
-                            primaryChild: primaryDetail,
-                            secondaryChild: InlineNoteDetail(
-                              noteId: _splitViewNoteId!,
-                              db: db,
-                              crypto: ref.read(cryptoServiceProvider),
-                            ),
-                            secondaryTitle:
-                                _splitViewNoteTitle ?? l10n.untitled,
-                            onClose: _closeSplitView,
-                          );
-                        }
-
-                        return primaryDetail;
-                      },
-                    )
-                  : _isSearching && _searchQuery.isNotEmpty
-                      ? _buildSearchBody(db)
-                      : _buildNotesBody(db),
+              onStatusCleared: () => setState(() => _statusFilter = null),
+              onPriorityCleared: () => setState(() => _priorityFilter = null),
+              onTagCleared: (tagId) => setState(() {
+                _tagFilter = _tagFilter?..remove(tagId);
+                if (_tagFilter?.isEmpty ?? true) _tagFilter = null;
+              }),
+              onClearAll: () => setState(() {
+                _statusFilter = null;
+                _priorityFilter = null;
+                _tagFilter = null;
+              }),
             ),
-          ],
-        ),
+          // Main content
+          Expanded(
+            child: wideScreen
+                ? MasterDetailLayout(
+                    placeholderText: l10n.selectItemToView,
+                    selectedId: _selectedNoteId,
+                    onSelectionChanged: (id) {
+                      setState(() => _selectedNoteId = id);
+                    },
+                    sidebarVisible: ref.watch(sidebarVisibleProvider),
+                    masterPane: _isSearching && _searchQuery.isNotEmpty
+                        ? _buildSearchBody(db)
+                        : _buildNotesBody(db),
+                    detailPaneBuilder: (selectedId) {
+                      if (selectedId == null) {
+                        return const InlineDetailPlaceholder();
+                      }
+
+                      // Primary detail widget. The split-view (side-by-side
+                      // compare) toggle is a desktop large-screen feature —
+                      // a 50/50 horizontal split is unusable on a phone.
+                      final splitToggle =
+                          PlatformUtils.isDesktop && _splitViewNoteId == null
+                              ? () => _showSplitNotePicker(context)
+                              : null;
+                      final primaryDetail = InlineNoteDetail(
+                        noteId: selectedId,
+                        db: db,
+                        crypto: ref.read(cryptoServiceProvider),
+                        onSplitViewToggle: splitToggle,
+                      );
+
+                      // If split view is active, wrap in SplitViewPane
+                      if (_splitViewNoteId != null) {
+                        return SplitViewPane(
+                          primaryChild: primaryDetail,
+                          secondaryChild: InlineNoteDetail(
+                            noteId: _splitViewNoteId!,
+                            db: db,
+                            crypto: ref.read(cryptoServiceProvider),
+                          ),
+                          secondaryTitle: _splitViewNoteTitle ?? l10n.untitled,
+                          onClose: _closeSplitView,
+                        );
+                      }
+
+                      return primaryDetail;
+                    },
+                  )
+                : _isSearching && _searchQuery.isNotEmpty
+                    ? _buildSearchBody(db)
+                    : _buildNotesBody(db),
+          ),
+        ],
+      ),
       floatingActionButton: _isSelectionMode
           ? null
           : Container(
@@ -1401,7 +1406,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             _priorityFilter != null ||
             (_tagFilter != null && _tagFilter!.isNotEmpty))) {
       return EmptyState(
-        icon: Icons.filter_list_off,
+        icon: AppIcons.filterListOff,
         title: l10n.noMatchingNotes,
         subtitle: l10n.tryChangingFilters,
         accentBg: AppColors.primarySoft,
@@ -1429,7 +1434,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 child: Row(
                   children: [
                     const Icon(
-                      Icons.info_outline,
+                      AppIcons.infoOutline,
                       size: 16,
                       color: AppColors.accentPeachText,
                     ),
@@ -1472,7 +1477,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     if (_searchResults.isEmpty) {
       return EmptyState(
-        icon: Icons.search_off,
+        icon: AppIcons.searchOff,
         title: l10n.noResults,
         subtitle: l10n.tryDifferentSearch,
         accentBg: AppColors.primarySoft,
@@ -1543,7 +1548,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                 child: Icon(
-                  Icons.drag_handle,
+                  AppIcons.dragHandle,
                   color: Theme.of(context).brightness == Brightness.dark
                       ? AppColors.darkTextTertiary
                       : AppColors.lightTextTertiary,
@@ -1580,12 +1585,13 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         if (shouldAnimate && index < _kMaxAnimatedCards) {
           return StaggeredCardEntrance(
             index: index,
-            staggerDelay: _kStaggerDelayMs,
-            child: _buildDismissibleNoteCard(note, db, isGrid: false, listIndex: index),
+            child: _buildDismissibleNoteCard(note, db,
+                isGrid: false, listIndex: index),
           );
         }
 
-        return _buildDismissibleNoteCard(note, db, isGrid: false, listIndex: index);
+        return _buildDismissibleNoteCard(note, db,
+            isGrid: false, listIndex: index);
       },
     );
   }
@@ -1617,7 +1623,6 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         items.add(
           StaggeredCardEntrance(
             index: i,
-            staggerDelay: _kStaggerDelayMs,
             child: card,
           ),
         );
@@ -1810,7 +1815,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         PopupMenuItem(
           value: 'lock',
           child: ListTile(
-            leading: const Icon(Icons.lock_outline),
+            leading: const Icon(AppIcons.lock),
             title: Text(l10n.lockNote),
             contentPadding: EdgeInsets.zero,
           ),
@@ -1818,7 +1823,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         PopupMenuItem(
           value: 'unlock',
           child: ListTile(
-            leading: const Icon(Icons.lock_open),
+            leading: const Icon(AppIcons.lockOpen),
             title: Text(l10n.unlockNote),
             contentPadding: EdgeInsets.zero,
           ),
@@ -1826,7 +1831,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         PopupMenuItem(
           value: 'move',
           child: ListTile(
-            leading: const Icon(Icons.create_new_folder_outlined),
+            leading: const Icon(AppIcons.folderPlus),
             title: Text(l10n.addToCollection),
             contentPadding: EdgeInsets.zero,
           ),
@@ -1889,7 +1894,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.description_outlined),
+              leading: const Icon(AppIcons.description),
               title: Text(l10n.importMarkdown),
               onTap: () {
                 Navigator.pop(ctx);
@@ -1897,7 +1902,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               },
             ),
             ListTile(
-              leading: const Icon(Icons.text_snippet_outlined),
+              leading: const Icon(AppIcons.textSnippet),
               title: Text(l10n.importTextFiles),
               onTap: () {
                 Navigator.pop(ctx);
@@ -1905,7 +1910,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               },
             ),
             ListTile(
-              leading: const Icon(Icons.apple),
+              leading: const Icon(AppIcons.apple),
               title: Text(l10n.importAppleNotes),
               onTap: () {
                 Navigator.pop(ctx);
@@ -2028,8 +2033,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       final l10n = AppLocalizations.of(context)!;
       AppSnackBar.error(
         context,
-        message: l10n
-            .importFailed(ErrorDisplay.displayMessage(e, l10n)),
+        message: l10n.importFailed(ErrorDisplay.displayMessage(e, l10n)),
       );
     }
   }
@@ -2074,7 +2078,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               },
             ),
             ListTile(
-              leading: const Icon(Icons.description_outlined),
+              leading: const Icon(AppIcons.description),
               title: Text(l10n.fromTemplate),
               onTap: () {
                 Navigator.pop(ctx);
@@ -2082,7 +2086,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               },
             ),
             ListTile(
-              leading: const Icon(Icons.calendar_today_outlined),
+              leading: const Icon(AppIcons.calendarToday),
               title: Text(l10n.dailyNote),
               onTap: () {
                 Navigator.pop(ctx);
@@ -2450,7 +2454,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       child: ListTile(
         leading: Icon(icon, color: isSelected ? primary : null),
         title: Text(label),
-        trailing: isSelected ? const Icon(Icons.check, size: 18) : null,
+        trailing: isSelected ? const Icon(AppIcons.check, size: 18) : null,
         contentPadding: EdgeInsets.zero,
       ),
     );

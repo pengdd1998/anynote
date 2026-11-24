@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -141,7 +142,7 @@ void main() {
 
     testWidgets('header has close button', (tester) async {
       final db = await pumpSheet(tester);
-      expect(find.byIcon(Icons.close), findsOneWidget);
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
       await cleanupTest(tester, db);
     });
 
@@ -205,8 +206,8 @@ void main() {
         ],
       );
 
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.edit), findsOneWidget);
+      expect(find.byIcon(AppIcons.deleteOutline), findsOneWidget);
       await cleanupTest(tester, db);
     });
 
@@ -231,7 +232,7 @@ void main() {
         ],
       );
 
-      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.tap(find.byIcon(AppIcons.deleteOutline));
       await tester.pumpAndSettle();
 
       expect(find.text('Delete Property'), findsOneWidget);

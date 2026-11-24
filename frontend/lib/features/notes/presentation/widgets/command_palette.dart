@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_durations.dart';
 import '../../../../core/platform/platform_utils.dart';
+import '../../../../core/constants/app_durations.dart';
+import '../../../../core/theme/app_animation.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../routing/app_router.dart';
@@ -150,7 +152,7 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
 
     // Debounce note search at 300ms.
     _debounce?.cancel();
-    _debounce = Timer(AppDurations.animation, () async {
+    _debounce = Timer(AppDurations.debounce, () async {
       if (!mounted) return;
       final noteResults = await _searchNotes(query);
       if (!mounted) return;
@@ -172,7 +174,7 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
         id: 'recent_$id',
         title: _noteTitleFromId(id) ?? id.substring(0, 8),
         subtitle: l10n?.commandRecentNotes ?? 'Recent',
-        icon: Icons.history,
+        icon: AppIcons.history,
         type: CommandPaletteItemType.recent,
         onTap: () => _navigateToNote(id),
       );
@@ -197,42 +199,42 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
       CommandPaletteItem(
         id: 'action_new_note',
         title: l10n?.commandCreateNewNote ?? 'Create New Note',
-        icon: Icons.note_add_outlined,
+        icon: AppIcons.noteAdd,
         type: CommandPaletteItemType.action,
         onTap: () => _navigate('/notes/new'),
       ),
       CommandPaletteItem(
         id: 'action_daily',
         title: l10n?.commandOpenDailyNotes ?? 'Open Daily Notes',
-        icon: Icons.calendar_today_outlined,
+        icon: AppIcons.calendarToday,
         type: CommandPaletteItemType.action,
         onTap: () => _navigate('/notes/daily'),
       ),
       CommandPaletteItem(
         id: 'action_graph',
         title: l10n?.commandOpenGraph ?? 'Open Graph View',
-        icon: Icons.account_tree_outlined,
+        icon: AppIcons.accountTree,
         type: CommandPaletteItemType.action,
         onTap: () => _navigate('/notes/graph'),
       ),
       CommandPaletteItem(
         id: 'action_dashboard',
         title: l10n?.commandOpenDashboard ?? 'Open Dashboard',
-        icon: Icons.dashboard_outlined,
+        icon: AppIcons.dashboard,
         type: CommandPaletteItemType.action,
         onTap: () => _navigate('/notes/dashboard'),
       ),
       CommandPaletteItem(
         id: 'action_trash',
         title: l10n?.commandOpenTrash ?? 'Open Trash',
-        icon: Icons.delete_outline,
+        icon: AppIcons.deleteOutline,
         type: CommandPaletteItemType.action,
         onTap: () => _navigate('/trash'),
       ),
       CommandPaletteItem(
         id: 'action_settings',
         title: l10n?.commandOpenSettings ?? 'Open Settings',
-        icon: Icons.settings_outlined,
+        icon: AppIcons.settings,
         type: CommandPaletteItemType.action,
         onTap: () => _navigate('/settings'),
       ),
@@ -252,7 +254,7 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
           id: 'note_${note.id}',
           title: title,
           subtitle: updated,
-          icon: Icons.note_outlined,
+          icon: AppIcons.noteBlank,
           type: CommandPaletteItemType.note,
           onTap: () => _navigateToNote(note.id),
         );
@@ -328,8 +330,8 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
     final targetOffset = _selectedIndex * itemHeight - 100;
     _scrollController.animateTo(
       targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
-      duration: AppDurations.veryShortAnimation,
-      curve: Curves.easeOut,
+      duration: AppAnimation.fast,
+      curve: AppAnimation.arrive,
     );
   }
 
@@ -512,7 +514,7 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.search,
+                            AppIcons.search,
                             size: 20,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -585,7 +587,7 @@ class _CommandPaletteOverlayState extends ConsumerState<CommandPaletteOverlay> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.search,
+            AppIcons.search,
             size: 32,
             color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
@@ -669,7 +671,7 @@ class _CommandPaletteResultTile extends StatelessWidget {
             ),
             if (item.type == CommandPaletteItemType.note)
               Icon(
-                Icons.arrow_forward_ios,
+                AppIcons.chevronRight,
                 size: 12,
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
               ),

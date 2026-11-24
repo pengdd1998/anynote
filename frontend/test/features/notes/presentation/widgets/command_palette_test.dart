@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -196,7 +197,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
 
-      expect(find.byIcon(Icons.note_add_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.noteAdd), findsOneWidget);
     });
   });
 
@@ -207,7 +208,7 @@ void main() {
         id: 'test-id',
         title: 'Test Title',
         subtitle: 'Test Subtitle',
-        icon: Icons.star,
+        icon: AppIcons.starFilled,
         type: CommandPaletteItemType.action,
         onTap: () => tapped = true,
       );
@@ -215,7 +216,7 @@ void main() {
       expect(item.id, 'test-id');
       expect(item.title, 'Test Title');
       expect(item.subtitle, 'Test Subtitle');
-      expect(item.icon, Icons.star);
+      expect(item.icon, AppIcons.starFilled);
       expect(item.type, CommandPaletteItemType.action);
 
       item.onTap();
@@ -226,7 +227,7 @@ void main() {
       final item = CommandPaletteItem(
         id: 'x',
         title: 'X',
-        icon: Icons.add,
+        icon: AppIcons.add,
         type: CommandPaletteItemType.note,
         onTap: () {},
       );

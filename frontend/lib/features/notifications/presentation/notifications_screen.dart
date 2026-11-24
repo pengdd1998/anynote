@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/notification_providers.dart';
@@ -51,7 +52,7 @@ class NotificationsScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.error_outline,
+              AppIcons.errorOutline,
               size: 48,
               color: colorScheme.error,
             ),
@@ -77,7 +78,7 @@ class NotificationsScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.notifications_none,
+              AppIcons.notification,
               size: 48,
               color: colorScheme.onSurfaceVariant,
             ),
@@ -94,12 +95,10 @@ class NotificationsScreen extends ConsumerWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(notificationsProvider.notifier).refresh(),
+      onRefresh: () => ref.read(notificationsProvider.notifier).refresh(),
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-        itemCount:
-            state.notifications.length + (state.hasMore ? 1 : 0),
+        itemCount: state.notifications.length + (state.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index >= state.notifications.length) {
             // Load more trigger.
@@ -114,9 +113,7 @@ class NotificationsScreen extends ConsumerWidget {
             onTap: () {
               final n = state.notifications[index];
               if (!n.isRead) {
-                ref
-                    .read(notificationsProvider.notifier)
-                    .markAsRead(n.id);
+                ref.read(notificationsProvider.notifier).markAsRead(n.id);
               }
             },
           );
@@ -191,13 +188,13 @@ class _NotificationTile extends StatelessWidget {
 
   IconData _iconForType(String type) {
     return switch (type) {
-      'sync_conflict' => Icons.sync_problem,
-      'share' => Icons.share,
-      'comment' => Icons.comment,
-      'collab' => Icons.people,
-      'reminder' => Icons.notifications_active,
-      'plan' => Icons.card_membership,
-      _ => Icons.notifications,
+      'sync_conflict' => AppIcons.syncProblem,
+      'share' => AppIcons.share,
+      'comment' => AppIcons.comment,
+      'collab' => AppIcons.people,
+      'reminder' => AppIcons.notificationsActive,
+      'plan' => AppIcons.cardMembership,
+      _ => AppIcons.notification,
     };
   }
 }

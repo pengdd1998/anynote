@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 import '../../../../core/storage/image_storage.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Embed builder for local images stored by [ImageStorage].
@@ -104,7 +105,7 @@ class _BrokenImage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.broken_image_outlined,
+              AppIcons.brokenImage,
               size: 40,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),

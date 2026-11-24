@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -194,12 +195,12 @@ void main() {
 
     testWidgets('shows pin icon when note is pinned', (tester) async {
       await pumpNoteCard(tester, note: _defaultNote(isPinned: true));
-      expect(find.byIcon(Icons.push_pin), findsOneWidget);
+      expect(find.byIcon(AppIcons.pinFilled), findsOneWidget);
     });
 
     testWidgets('hides pin icon when note is not pinned', (tester) async {
       await pumpNoteCard(tester, note: _defaultNote(isPinned: false));
-      expect(find.byIcon(Icons.push_pin), findsNothing);
+      expect(find.byIcon(AppIcons.pinFilled), findsNothing);
     });
 
     testWidgets('fires onTap callback', (tester) async {
@@ -309,7 +310,7 @@ void main() {
         note: _defaultNote(isPinned: true),
         layout: NoteCardLayout.grid,
       );
-      expect(find.byIcon(Icons.push_pin), findsOneWidget);
+      expect(find.byIcon(AppIcons.pinFilled), findsOneWidget);
     });
 
     testWidgets('fires onTap in grid', (tester) async {

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/database/daos/note_properties_dao.dart';
 import '../../../core/error/error.dart';
 import '../../../core/notifications/reminder_service.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -31,7 +32,7 @@ class RemindersScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.error_outline,
+                  AppIcons.errorOutline,
                   size: 48,
                   color: Theme.of(context)
                       .colorScheme
@@ -71,7 +72,7 @@ class RemindersScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.notifications_none_outlined,
+              AppIcons.notification,
               size: 64,
               color: theme.colorScheme.outlineVariant,
             ),
@@ -122,8 +123,8 @@ class RemindersScreen extends ConsumerWidget {
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.only(right: 16),
               color: theme.colorScheme.error,
-              child:
-                  Icon(Icons.delete_outline, color: theme.colorScheme.onError),
+              child: Icon(AppIcons.deleteOutline,
+                  color: theme.colorScheme.onError),
             ),
             confirmDismiss: (_) async {
               return await showDialog<bool>(
@@ -160,8 +161,8 @@ class RemindersScreen extends ConsumerWidget {
               child: ListTile(
                 leading: Icon(
                   isOverdue
-                      ? Icons.notifications_active
-                      : Icons.notifications_outlined,
+                      ? AppIcons.notificationsActive
+                      : AppIcons.notification,
                   color: isOverdue
                       ? theme.colorScheme.error
                       : theme.colorScheme.onSurfaceVariant,
@@ -186,7 +187,7 @@ class RemindersScreen extends ConsumerWidget {
                     if (isRecurring) ...[
                       const SizedBox(width: 6),
                       Icon(
-                        Icons.repeat,
+                        AppIcons.repeat,
                         size: 14,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -200,7 +201,7 @@ class RemindersScreen extends ConsumerWidget {
                     ],
                   ],
                 ),
-                trailing: const Icon(Icons.chevron_right, size: 20),
+                trailing: const Icon(AppIcons.chevronRight, size: 20),
                 onTap: () {
                   // Navigate to the note.
                   context.push('/notes/${reminder.noteId}');

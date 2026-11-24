@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_icons.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
@@ -11,7 +12,7 @@ import '../theme/app_text_styles.dart';
 ///
 /// ```dart
 /// TagChip(label: 'Important', color: AppColors.accentPeach)
-/// TagChip(label: 'Done', icon: Icons.check_circle, color: AppColors.success)
+/// TagChip(label: 'Done', icon: AppIcons.checkCircle, color: AppColors.success)
 /// ```
 class TagChip extends StatelessWidget {
   final String label;
@@ -43,9 +44,8 @@ class TagChip extends StatelessWidget {
 
     final borderColor = chipColor.withValues(alpha: selected ? 0.4 : 0.2);
 
-    final textColor = selected
-        ? chipColor
-        : chipColor.withValues(alpha: isDark ? 0.9 : 0.8);
+    final textColor =
+        selected ? chipColor : chipColor.withValues(alpha: isDark ? 0.9 : 0.8);
 
     final effectiveTextStyle = (textStyle ?? AppTextStyles.caption).copyWith(
       color: textColor,

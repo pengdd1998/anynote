@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/error/error.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -276,7 +277,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: const Icon(
-                  Icons.error_outline,
+                  AppIcons.errorOutline,
                   size: 28,
                   color: AppColors.error,
                 ),
@@ -344,7 +345,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                 child: Icon(
-                  Icons.arrow_forward,
+                  AppIcons.arrowForward,
                   size: 14,
                   color: isDark
                       ? AppColors.darkTextTertiary
@@ -581,7 +582,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => _confirmRestore(older, l10n),
-                icon: const Icon(Icons.history, size: 18),
+                icon: const Icon(AppIcons.history, size: 18),
                 label: Text(
                   l10n.versionNumber(older.versionNumber),
                   overflow: TextOverflow.ellipsis,
@@ -592,7 +593,7 @@ class _VersionDiffScreenState extends ConsumerState<VersionDiffScreen> {
             Expanded(
               child: FilledButton.icon(
                 onPressed: () => _confirmRestore(newer, l10n),
-                icon: const Icon(Icons.restore, size: 18),
+                icon: const Icon(AppIcons.restore, size: 18),
                 label: Text(
                   l10n.versionNumber(newer.versionNumber),
                   overflow: TextOverflow.ellipsis,

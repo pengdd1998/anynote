@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -152,7 +153,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.cloud_done), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudDone), findsOneWidget);
     });
 
     testWidgets('shows All changes synced tooltip when idle', (tester) async {
@@ -182,7 +183,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.sync), findsOneWidget);
+      expect(find.byIcon(AppIcons.sync), findsOneWidget);
     });
 
     testWidgets('shows sync progress tooltip when syncing', (tester) async {
@@ -212,7 +213,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudOff), findsOneWidget);
     });
 
     testWidgets('shows Offline tooltip when offline', (tester) async {
@@ -240,7 +241,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudOff), findsOneWidget);
     });
 
     // -- Pending operations -------------------------------------------
@@ -256,7 +257,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.cloud_upload), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudUpload), findsOneWidget);
     });
 
     testWidgets('shows pending count tooltip with singular form for 1',
@@ -335,8 +336,7 @@ void main() {
 
     // -- Bottom sheet interaction -------------------------------------
 
-    testWidgets('tapping opens bottom sheet with sync details',
-        (tester) async {
+    testWidgets('tapping opens bottom sheet with sync details', (tester) async {
       await _pumpWidget(
         tester,
         overrides: _buildOverrides(

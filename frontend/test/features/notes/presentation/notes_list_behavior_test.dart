@@ -20,7 +20,7 @@ void main() {
           (w) =>
               w is PopupMenuButton<String> &&
               w.icon is Icon &&
-              (w.icon as Icon).icon == Icons.more_vert,
+              (w.icon as Icon).icon == AppIcons.moreVertical,
         ),
         findsOneWidget,
       );
@@ -42,7 +42,7 @@ void main() {
           (w) =>
               w is PopupMenuButton<String> &&
               w.icon is Icon &&
-              (w.icon as Icon).icon == Icons.more_vert,
+              (w.icon as Icon).icon == AppIcons.moreVertical,
         ),
       );
       await tester.pumpAndSettle();
@@ -75,7 +75,7 @@ void main() {
           (w) =>
               w is PopupMenuButton<String> &&
               w.icon is Icon &&
-              (w.icon as Icon).icon == Icons.more_vert,
+              (w.icon as Icon).icon == AppIcons.moreVertical,
         ),
       );
       await tester.pumpAndSettle();
@@ -86,7 +86,7 @@ void main() {
         find.byWidgetPredicate(
           (w) =>
               w is Icon &&
-              (w.icon == Icons.grid_view || w.icon == Icons.view_list),
+              (w.icon == AppIcons.gridView || w.icon == AppIcons.viewList),
         ),
         findsOneWidget,
       );
@@ -108,7 +108,7 @@ void main() {
           (w) =>
               w is PopupMenuButton<String> &&
               w.icon is Icon &&
-              (w.icon as Icon).icon == Icons.more_vert,
+              (w.icon as Icon).icon == AppIcons.moreVertical,
         ),
       );
       await tester.pumpAndSettle();
@@ -178,7 +178,7 @@ void main() {
           (w) =>
               w is PopupMenuButton<String> &&
               w.icon is Icon &&
-              (w.icon as Icon).icon == Icons.more_vert,
+              (w.icon as Icon).icon == AppIcons.moreVertical,
         ),
         findsOneWidget,
       );
@@ -200,16 +200,16 @@ void main() {
           (w) =>
               w is PopupMenuButton<String> &&
               w.icon is Icon &&
-              (w.icon as Icon).icon == Icons.more_vert,
+              (w.icon as Icon).icon == AppIcons.moreVertical,
         ),
       );
       await tester.pumpAndSettle();
 
       // Default is grid view, so view_list icon should show as the toggle option.
-      expect(find.byIcon(Icons.view_list), findsOneWidget);
+      expect(find.byIcon(AppIcons.viewList), findsOneWidget);
 
       // Tap the toggle menu item.
-      await tester.tap(find.byIcon(Icons.view_list));
+      await tester.tap(find.byIcon(AppIcons.viewList));
       await tester.pumpAndSettle();
 
       // Open the menu again and verify the icon changed to grid_view.
@@ -218,12 +218,12 @@ void main() {
           (w) =>
               w is PopupMenuButton<String> &&
               w.icon is Icon &&
-              (w.icon as Icon).icon == Icons.more_vert,
+              (w.icon as Icon).icon == AppIcons.moreVertical,
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.grid_view), findsOneWidget);
+      expect(find.byIcon(AppIcons.gridView), findsOneWidget);
 
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));

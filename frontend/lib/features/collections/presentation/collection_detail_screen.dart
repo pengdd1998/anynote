@@ -223,7 +223,7 @@ class _CollectionDetailScreenState
         color: bg,
         borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
-      child: Icon(Icons.folder, size: 24, color: iconColor),
+      child: Icon(AppIcons.folder, size: 24, color: iconColor),
     );
   }
 
@@ -251,7 +251,7 @@ class _CollectionDetailScreenState
 
     if (validNotes.isEmpty) {
       return EmptyState(
-        icon: Icons.note_add_outlined,
+        icon: AppIcons.noteAdd,
         title: l10n.noNotesInCollection,
         subtitle: l10n.tapToAddNotes,
         actionLabel: l10n.addNotes,
@@ -289,7 +289,7 @@ class _CollectionDetailScreenState
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Icon(
-                Icons.remove_circle_outline,
+                AppIcons.removeCircle,
                 color: AppColors.warning.withAlpha(150),
               ),
             ),
@@ -422,7 +422,7 @@ class _CollectionDetailScreenState
             child: SizedBox(
               width: 32,
               height: 32,
-              child: Icon(Icons.close, size: 16, color: tertiary),
+              child: Icon(AppIcons.close, size: 16, color: tertiary),
             ),
           ),
           // Drag handle for reordering (kept from previous overlay)
@@ -431,7 +431,7 @@ class _CollectionDetailScreenState
             child: SizedBox(
               width: 32,
               height: 32,
-              child: Icon(Icons.drag_indicator, size: 18, color: tertiary),
+              child: Icon(AppIcons.dragHandle, size: 18, color: tertiary),
             ),
           ),
         ],
@@ -451,7 +451,8 @@ class _CollectionDetailScreenState
       height: 56,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkInputFill : AppColors.accentBackgrounds[i],
+        color:
+            isDark ? AppColors.darkInputFill : AppColors.accentBackgrounds[i],
         borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       child: Text(
@@ -653,7 +654,7 @@ class _CollectionDetailScreenState
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(AppIcons.close),
                         tooltip: l10n.close,
                         onPressed: () => Navigator.of(ctx).pop(),
                       ),
@@ -685,8 +686,7 @@ class _CollectionDetailScreenState
                             final note = allNotes[index];
                             final isInCollection =
                                 currentNoteIds.contains(note.id);
-                            final title =
-                                note.plainTitle ?? l10n.untitled;
+                            final title = note.plainTitle ?? l10n.untitled;
 
                             return CheckboxListTile(
                               value: isInCollection,
@@ -719,7 +719,8 @@ class _CollectionDetailScreenState
                                       : _collectionNotes
                                           .map((cn) => cn.sortOrder)
                                           .reduce(
-                                              (a, b) => a > b ? a : b,);
+                                            (a, b) => a > b ? a : b,
+                                          );
                                   await db.collectionsDao.addNoteToCollection(
                                     collectionId: widget.collectionId,
                                     noteId: note.id,

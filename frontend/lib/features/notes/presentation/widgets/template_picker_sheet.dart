@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/crypto/crypto_service.dart';
@@ -176,7 +177,7 @@ class _TemplatePickerSheetState extends ConsumerState<TemplatePickerSheet> {
               Text(l10n.templatePicker, style: theme.textTheme.titleLarge),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.close),
+                icon: const Icon(AppIcons.close),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -190,7 +191,7 @@ class _TemplatePickerSheetState extends ConsumerState<TemplatePickerSheet> {
             scrollPadding: const EdgeInsets.only(bottom: 120),
             decoration: InputDecoration(
               hintText: l10n.searchNotes,
-              prefixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: const Icon(AppIcons.search, size: 20),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
@@ -297,7 +298,7 @@ class _TemplatePickerSheetState extends ConsumerState<TemplatePickerSheet> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.add_circle_outline,
+                AppIcons.addCircle,
                 size: 32,
                 color: theme.colorScheme.primary,
               ),
@@ -353,8 +354,8 @@ class _TemplatePickerSheetState extends ConsumerState<TemplatePickerSheet> {
                 children: [
                   Icon(
                     template.isBuiltIn
-                        ? Icons.bookmark_outlined
-                        : Icons.description_outlined,
+                        ? AppIcons.bookmark
+                        : AppIcons.description,
                     size: 16,
                     color: theme.colorScheme.primary,
                   ),

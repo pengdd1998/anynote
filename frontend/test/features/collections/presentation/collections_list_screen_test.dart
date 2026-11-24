@@ -38,11 +38,14 @@ void main() {
 
       expect(find.text('No collections yet'), findsOneWidget);
       expect(
-          find.text('Group your notes into collections'), findsOneWidget,);
+        find.text('Group your notes into collections'),
+        findsOneWidget,
+      );
       await handle.dispose();
     });
 
-    testWidgets('shows add button for creating a new collection', (tester) async {
+    testWidgets('shows add button for creating a new collection',
+        (tester) async {
       final handle = await pumpScreen(
         tester,
         const CollectionsListScreen(),
@@ -65,7 +68,7 @@ void main() {
       );
 
       // By default it shows grid_view icon (since _isGridView starts as false).
-      expect(find.byIcon(Icons.grid_view), findsOneWidget);
+      expect(find.byIcon(AppIcons.gridView), findsOneWidget);
       await handle.dispose();
     });
   });

@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -74,7 +75,7 @@ void main() {
     testWidgets('renders sync icon in header', (tester) async {
       await pumpSyncQueueSheet(tester);
 
-      expect(find.byIcon(Icons.sync), findsOneWidget);
+      expect(find.byIcon(AppIcons.sync), findsOneWidget);
     });
 
     testWidgets('renders pending operations label', (tester) async {
@@ -106,7 +107,7 @@ void main() {
       await pumpSyncQueueSheet(tester);
 
       expect(find.text('No pending operations'), findsOneWidget);
-      expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.checkCircleOutline), findsOneWidget);
     });
 
     testWidgets('shows zero counts when queue is empty', (tester) async {
@@ -142,8 +143,8 @@ void main() {
         (tester) async {
       await pumpSyncQueueSheet(tester);
 
-      expect(find.byIcon(Icons.schedule), findsOneWidget);
-      expect(find.byIcon(Icons.error_outline), findsAtLeast(1));
+      expect(find.byIcon(AppIcons.schedule), findsOneWidget);
+      expect(find.byIcon(AppIcons.errorOutline), findsAtLeast(1));
     });
   });
 }

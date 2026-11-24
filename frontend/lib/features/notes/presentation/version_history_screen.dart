@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/accessibility/a11y_utils.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/error/error.dart';
+import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
@@ -297,12 +298,10 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
       // Otherwise, use the existing encrypted blobs (they were encrypted with
       // the same noteId so they remain valid).
       if (crypto.isUnlocked && version.content.isNotEmpty) {
-        encryptedContent =
-            await crypto.encryptForItem(noteId, version.content);
+        encryptedContent = await crypto.encryptForItem(noteId, version.content);
       }
       if (crypto.isUnlocked && version.title != l10n.untitled) {
-        encryptedTitle =
-            await crypto.encryptForItem(noteId, version.title);
+        encryptedTitle = await crypto.encryptForItem(noteId, version.title);
       }
 
       await db.notesDao.updateNote(
@@ -322,8 +321,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
       // the pre-restore safety snapshot and the 当前 label misleads).
       final restoredNote = await db.notesDao.getNoteById(noteId);
       if (restoredNote != null) {
-        final restoredCount =
-            await db.noteVersionsDao.getVersionCount(noteId);
+        final restoredCount = await db.noteVersionsDao.getVersionCount(noteId);
         await db.noteVersionsDao.createVersion(
           id: const Uuid().v4(),
           noteId: noteId,
@@ -346,7 +344,8 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
         AppSnackBar.error(
           context,
           message: l10n.failedToRestore(
-              ErrorDisplay.displayMessage(e, l10n),),
+            ErrorDisplay.displayMessage(e, l10n),
+          ),
         );
       }
     }
@@ -410,7 +409,9 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: _versions.isNotEmpty ? () => _confirmRestore(_versions.first) : null,
+        onPressed: _versions.isNotEmpty
+            ? () => _confirmRestore(_versions.first)
+            : null,
         icon: const Icon(AppIcons.restore, size: 18),
         label: Text(
           l10n.restoreVersion,
@@ -458,9 +459,8 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkInputFill
-                    : AppColors.lightInputFill,
+                color:
+                    isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Icon(
@@ -601,7 +601,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                         )
                       : isSelected
                           ? AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
+                              duration: AppAnimation.standard,
                               width: 12,
                               height: 12,
                               decoration: BoxDecoration(
@@ -671,12 +671,10 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
                             padding: const EdgeInsets.all(AppSpacing.s12),
                             decoration: BoxDecoration(
                               color: highlightBg,
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.xs),
+                              borderRadius: BorderRadius.circular(AppRadius.xs),
                               border: isSelected
                                   ? Border.all(
-                                      color:
-                                          AppColors.primary.withAlpha(80),
+                                      color: AppColors.primary.withAlpha(80),
                                       width: 1.5,
                                     )
                                   : null,
@@ -762,14 +760,12 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
   Widget _buildTrailing(bool isCurrent, bool isSelected) {
     if (isCurrent) {
       final l10n = AppLocalizations.of(context)!;
-      final isDark =
-          Theme.of(context).brightness == Brightness.dark;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.primary.withAlpha(40)
-              : AppColors.primarySoft,
+          color:
+              isDark ? AppColors.primary.withAlpha(40) : AppColors.primarySoft,
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
@@ -793,7 +789,7 @@ class _VersionHistoryScreenState extends ConsumerState<VersionHistoryScreen> {
 
     if (_isSelecting) {
       return Icon(
-        Icons.radio_button_unchecked,
+        AppIcons.circle,
         size: 20,
         color: Theme.of(context).brightness == Brightness.dark
             ? AppColors.darkTextTertiary

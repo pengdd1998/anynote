@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
@@ -43,7 +44,7 @@ class _LinkManagementSheetState extends ConsumerState<LinkManagementSheet> {
             child: Row(
               children: [
                 Icon(
-                  Icons.link,
+                  AppIcons.link,
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
@@ -53,7 +54,7 @@ class _LinkManagementSheetState extends ConsumerState<LinkManagementSheet> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(AppIcons.close),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -71,15 +72,17 @@ class _LinkManagementSheetState extends ConsumerState<LinkManagementSheet> {
                   label: Text(l10n.backlinks),
                   selected: _showBacklinks,
                   onSelected: (value) => setState(() => _showBacklinks = value),
-                  avatar:
-                      _showBacklinks ? const Icon(Icons.check, size: 16) : null,
+                  avatar: _showBacklinks
+                      ? const Icon(AppIcons.check, size: 16)
+                      : null,
                 ),
                 FilterChip(
                   label: Text(l10n.outboundLinks),
                   selected: _showOutbound,
                   onSelected: (value) => setState(() => _showOutbound = value),
-                  avatar:
-                      _showOutbound ? const Icon(Icons.check, size: 16) : null,
+                  avatar: _showOutbound
+                      ? const Icon(AppIcons.check, size: 16)
+                      : null,
                 ),
               ],
             ),
@@ -213,7 +216,7 @@ class _ManageableLinkTile extends ConsumerWidget {
 
     return ListTile(
       leading: Icon(
-        isBacklink ? Icons.call_received : Icons.call_made,
+        isBacklink ? AppIcons.arrowDownLeft : AppIcons.arrowUpRight,
         color: isBacklink
             ? Theme.of(context).colorScheme.secondary
             : Theme.of(context).colorScheme.primary,
@@ -235,7 +238,7 @@ class _ManageableLinkTile extends ConsumerWidget {
             ),
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.delete_outline),
+        icon: const Icon(AppIcons.deleteOutline),
         tooltip: l10n.deleteLinkTooltip,
         onPressed: onDelete,
       ),

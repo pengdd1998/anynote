@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -190,7 +191,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
               ),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.close),
+                icon: const Icon(AppIcons.close),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -203,7 +204,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
           child: TextField(
             decoration: InputDecoration(
               hintText: l10n.searchNotes,
-              prefixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: const Icon(AppIcons.search, size: 20),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
@@ -340,8 +341,8 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
                     children: [
                       Icon(
                         template.isBuiltIn
-                            ? Icons.bookmark_outlined
-                            : Icons.description_outlined,
+                            ? AppIcons.bookmark
+                            : AppIcons.description,
                         size: 16,
                         color: Theme.of(context).colorScheme.primary,
                       ),
@@ -431,7 +432,7 @@ class _TemplatePickerState extends ConsumerState<TemplatePicker>
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: _showCreateTemplateDialog,
-              icon: const Icon(Icons.add),
+              icon: const Icon(AppIcons.add),
               label: Text(AppLocalizations.of(context)!.newTemplate),
             ),
           ),

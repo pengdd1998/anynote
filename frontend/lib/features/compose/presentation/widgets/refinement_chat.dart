@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_animation.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -50,8 +52,8 @@ class _RefinementChatState extends ConsumerState<RefinementChat> {
           if (_scrollController.hasClients) {
             _scrollController.animateTo(
               _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
+              duration: AppAnimation.standard,
+              curve: AppAnimation.arrive,
             );
           }
         });
@@ -85,8 +87,7 @@ class _RefinementChatState extends ConsumerState<RefinementChat> {
             ),
             child: Row(
               children: [
-                Icon(Icons.chat_bubble_outline,
-                    size: 16, color: theme.colorScheme.primary),
+                Icon(AppIcons.chat, size: 16, color: theme.colorScheme.primary),
                 const SizedBox(width: AppSpacing.s8),
                 Text(
                   'AI 润色',
@@ -172,7 +173,7 @@ class _RefinementChatState extends ConsumerState<RefinementChat> {
                 const SizedBox(width: AppSpacing.s4),
                 IconButton.filled(
                   onPressed: isRefining ? null : _send,
-                  icon: const Icon(Icons.send, size: 18),
+                  icon: const Icon(AppIcons.send, size: 18),
                   style: IconButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
                     foregroundColor: theme.colorScheme.onPrimary,
@@ -204,7 +205,7 @@ class _ChatBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            Icon(Icons.smart_toy,
+            Icon(AppIcons.aiRobot,
                 size: 16, color: theme.colorScheme.primary.withAlpha(180)),
             const SizedBox(width: AppSpacing.s4),
           ],

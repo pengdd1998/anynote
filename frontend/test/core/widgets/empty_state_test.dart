@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -34,7 +35,7 @@ void main() {
     testWidgets('renders title text', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
       );
 
@@ -44,28 +45,28 @@ void main() {
     testWidgets('renders the provided icon', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
       );
 
-      expect(find.byIcon(Icons.note_add), findsOneWidget);
+      expect(find.byIcon(AppIcons.noteAdd), findsOneWidget);
     });
 
     testWidgets('renders icon at size 32', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.inbox,
+        icon: AppIcons.inbox,
         title: 'Empty',
       );
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.inbox));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.inbox));
       expect(icon.size, 32);
     });
 
     testWidgets('renders inside a Center widget', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
       );
 
@@ -77,7 +78,7 @@ void main() {
     testWidgets('renders subtitle when provided', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         subtitle: 'Create your first note',
       );
@@ -88,7 +89,7 @@ void main() {
     testWidgets('does not render subtitle text when null', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         // subtitle intentionally omitted
       );
@@ -108,7 +109,7 @@ void main() {
       var pressed = false;
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         actionLabel: 'New Note',
         onAction: () => pressed = true,
@@ -125,7 +126,7 @@ void main() {
       var pressed = false;
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         actionLabel: 'New Note',
         onAction: () => pressed = true,
@@ -144,7 +145,7 @@ void main() {
         (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         onAction: () {},
         // actionLabel intentionally omitted
@@ -157,7 +158,7 @@ void main() {
         (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         actionLabel: 'New Note',
         // onAction intentionally omitted
@@ -171,12 +172,12 @@ void main() {
     testWidgets('renders with a different icon', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.cloud_off,
+        icon: AppIcons.cloudOff,
         title: 'No connection',
         subtitle: 'Check your network settings',
       );
 
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudOff), findsOneWidget);
       expect(find.text('No connection'), findsOneWidget);
       expect(find.text('Check your network settings'), findsOneWidget);
     });
@@ -184,12 +185,12 @@ void main() {
     testWidgets('renders with tag icon and subtitle', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.label_off,
+        icon: AppIcons.tag,
         title: 'No tags',
         subtitle: 'Tags will appear here once created',
       );
 
-      expect(find.byIcon(Icons.label_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.tag), findsOneWidget);
       expect(find.text('No tags'), findsOneWidget);
       expect(find.text('Tags will appear here once created'), findsOneWidget);
       expect(find.byType(FilledButton), findsNothing);
@@ -198,14 +199,14 @@ void main() {
     testWidgets('renders full configuration with all fields', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.search_off,
+        icon: AppIcons.searchOff,
         title: 'No results',
         subtitle: 'Try a different search term',
         actionLabel: 'Clear search',
         onAction: () {},
       );
 
-      expect(find.byIcon(Icons.search_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.searchOff), findsOneWidget);
       expect(find.text('No results'), findsOneWidget);
       expect(find.text('Try a different search term'), findsOneWidget);
       expect(find.text('Clear search'), findsOneWidget);
@@ -217,7 +218,7 @@ void main() {
     testWidgets('title text is center-aligned', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
       );
 
@@ -228,7 +229,7 @@ void main() {
     testWidgets('subtitle text is center-aligned', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         subtitle: 'Create your first note',
       );

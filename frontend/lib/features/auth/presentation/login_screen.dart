@@ -531,7 +531,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           child: Row(
                             children: [
                               Icon(
-                                Icons.error_outline,
+                                AppIcons.errorOutline,
                                 size: 18,
                                 color: Theme.of(context).colorScheme.error,
                               ),
@@ -564,7 +564,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       scrollPadding: const EdgeInsets.only(bottom: 120),
                       decoration: InputDecoration(
                         hintText: l10n.email,
-                        prefixIcon: const Icon(Icons.email_outlined),
+                        prefixIcon: const Icon(AppIcons.email),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       autovalidateMode: _autovalidateMode,
@@ -595,7 +595,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       controller: _passwordController,
                       focusNode: _passwordFocus,
                       hintText: l10n.password,
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(AppIcons.lock),
                       autofillHints: const [
                         AutofillHints.password,
                       ],
@@ -762,7 +762,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             : AppColors.lightBorder,
                         onPressed: () {},
                         child: Icon(
-                          Icons.mail_outline,
+                          AppIcons.email,
                           size: 24,
                           color: textSecondary,
                         ),

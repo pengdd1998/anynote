@@ -198,7 +198,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   child: const Icon(
-                    Icons.key_rounded,
+                    AppIcons.key,
                     size: 32,
                     color: AppColors.accentYellowText,
                   ),
@@ -405,7 +405,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           child: Row(
                             children: [
                               Icon(
-                                Icons.error_outline,
+                                AppIcons.errorOutline,
                                 size: 18,
                                 color: Theme.of(context).colorScheme.error,
                               ),
@@ -440,7 +440,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       scrollPadding: const EdgeInsets.only(bottom: 120),
                       decoration: InputDecoration(
                         hintText: l10n.email,
-                        prefixIcon: const Icon(Icons.email_outlined),
+                        prefixIcon: const Icon(AppIcons.email),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       validator: (v) =>
@@ -465,7 +465,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       decoration: InputDecoration(
                         hintText: l10n.username,
                         prefixIcon: const Icon(
-                          Icons.person_outline,
+                          AppIcons.personOutline,
                         ),
                       ),
                       validator: (v) =>
@@ -483,7 +483,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       controller: _passwordController,
                       focusNode: _passwordFocus,
                       hintText: l10n.password,
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(AppIcons.lock),
                       autofillHints: const [
                         AutofillHints.newPassword,
                       ],
@@ -509,7 +509,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       controller: _confirmPasswordController,
                       focusNode: _confirmPasswordFocus,
                       hintText: l10n.confirmPassword,
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(AppIcons.lock),
                       autofillHints: const [
                         AutofillHints.newPassword,
                       ],
@@ -550,7 +550,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   Row(
                     children: [
                       Icon(
-                        Icons.shield_outlined,
+                        AppIcons.shield,
                         size: 14,
                         color: textTertiary,
                       ),
@@ -721,7 +721,7 @@ class _CopyButtonState extends State<_CopyButton> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              _copied ? Icons.check : AppIcons.copy,
+              _copied ? AppIcons.check : AppIcons.copy,
               size: 14,
               color: AppColors.primaryText,
             ),

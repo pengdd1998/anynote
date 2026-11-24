@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/error/error.dart' show ErrorDisplay;
@@ -114,7 +115,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Icon(Icons.picture_as_pdf_outlined),
+                          : const Icon(AppIcons.filePdf),
                       label: Text(l10n.generatePdf),
                     ),
                   ),
@@ -132,7 +133,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(Icons.print_outlined),
+                          : const Icon(AppIcons.print),
                       label: Text(l10n.printNote),
                     ),
                   ),
@@ -148,7 +149,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _isExporting ? null : _copyToClipboard,
-                    icon: const Icon(Icons.copy),
+                    icon: const Icon(AppIcons.copy),
                     label: Text(l10n.copyToClipboard),
                   ),
                 ),
@@ -166,7 +167,7 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.share_outlined),
+                        : const Icon(AppIcons.share),
                     label: Text(l10n.shareAsHtml),
                   ),
                 ),
@@ -401,7 +402,8 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context, message: l10n.exportFailed(ErrorDisplay.displayMessage(e, l10n)));
+        AppSnackBar.error(context,
+            message: l10n.exportFailed(ErrorDisplay.displayMessage(e, l10n)));
       }
     } finally {
       if (mounted) {
@@ -422,7 +424,8 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
       await PdfExportService.printPdf(title, widget.content);
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context, message: l10n.exportFailed(ErrorDisplay.displayMessage(e, l10n)));
+        AppSnackBar.error(context,
+            message: l10n.exportFailed(ErrorDisplay.displayMessage(e, l10n)));
       }
     } finally {
       if (mounted) {
@@ -474,7 +477,8 @@ class _PrintPreviewSheetState extends ConsumerState<PrintPreviewSheet> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context, message: l10n.exportFailed(ErrorDisplay.displayMessage(e, l10n)));
+        AppSnackBar.error(context,
+            message: l10n.exportFailed(ErrorDisplay.displayMessage(e, l10n)));
       }
     } finally {
       if (mounted) {

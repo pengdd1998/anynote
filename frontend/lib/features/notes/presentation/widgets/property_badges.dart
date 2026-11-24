@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/daos/note_properties_dao.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/tag_chip.dart';
 import '../../../../main.dart';
 
@@ -60,10 +61,9 @@ class PropertyBadges extends ConsumerWidget {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: badges
-          .expand((badge) => [badge, const SizedBox(width: 4)])
-          .toList()
-        ..removeLast(),
+      children:
+          badges.expand((badge) => [badge, const SizedBox(width: 4)]).toList()
+            ..removeLast(),
     );
   }
 
@@ -184,13 +184,13 @@ class _PriorityBadge extends StatelessWidget {
 
     switch (lowerPriority) {
       case 'high':
-        return (Icons.arrow_upward, const Color(0xFFF44336));
+        return (AppIcons.arrowUp, const Color(0xFFF44336));
       case 'medium':
-        return (Icons.remove, const Color(0xFFFF9800));
+        return (AppIcons.remove, const Color(0xFFFF9800));
       case 'low':
-        return (Icons.arrow_downward, const Color(0xFF4CAF50));
+        return (AppIcons.arrowDown, const Color(0xFF4CAF50));
       default:
-        return (Icons.priority_high, Theme.of(context).colorScheme.outline);
+        return (AppIcons.priorityHigh, Theme.of(context).colorScheme.outline);
     }
   }
 }
@@ -225,8 +225,8 @@ class _DateBadge extends StatelessWidget {
             : theme.colorScheme.outline;
 
     final icon = isDue
-        ? (isOverdue ? Icons.warning_amber : Icons.event)
-        : Icons.calendar_today;
+        ? (isOverdue ? AppIcons.warning : AppIcons.event)
+        : AppIcons.calendarToday;
 
     return Row(
       mainAxisSize: MainAxisSize.min,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../core/constants/app_durations.dart';
+import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
@@ -52,8 +52,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: AppDurations.shortAnimation,
-          curve: Curves.easeOut,
+          duration: AppAnimation.standard,
+          curve: AppAnimation.arrive,
         );
       }
     });
@@ -123,8 +123,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             _buildContextBanner(session, l10n, isDark),
 
           // Error banner
-          if (session.error != null)
-            _buildErrorBanner(session, isDark),
+          if (session.error != null) _buildErrorBanner(session, isDark),
 
           // Messages list
           Expanded(
@@ -190,7 +189,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       child: Row(
         children: [
           const Icon(
-            Icons.description_outlined,
+            AppIcons.description,
             size: 16,
             color: AppColors.accentLavenderText,
           ),
@@ -256,7 +255,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           GestureDetector(
             onTap: () => ref.read(chatSessionProvider.notifier).clearError(),
             child: const Icon(
-              Icons.close,
+              AppIcons.close,
               size: 16,
               color: AppColors.error,
             ),
@@ -381,9 +380,7 @@ class _AiMessageBubble extends StatelessWidget {
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.78,
           ),
-          child: isUser
-              ? _buildUserBubble(isDark)
-              : _buildAiBubble(isDark),
+          child: isUser ? _buildUserBubble(isDark) : _buildAiBubble(isDark),
         ),
       ),
     );
@@ -396,9 +393,7 @@ class _AiMessageBubble extends StatelessWidget {
         vertical: AppSpacing.s12,
       ),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.primary.withAlpha(45)
-            : AppColors.primarySoft,
+        color: isDark ? AppColors.primary.withAlpha(45) : AppColors.primarySoft,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppRadius.sm),
           topRight: Radius.circular(AppRadius.sm),
@@ -435,8 +430,7 @@ class _AiMessageBubble extends StatelessWidget {
 
   Widget _buildAiBubble(bool isDark) {
     final bgColor = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
-    final borderColor =
-        isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
     final textColor =
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
@@ -483,9 +477,7 @@ class _AiMessageBubble extends StatelessWidget {
                 style: AppTextStyles.caption.copyWith(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? AppColors.secondary
-                      : AppColors.primaryText,
+                  color: isDark ? AppColors.secondary : AppColors.primaryText,
                 ),
               ),
             ],
@@ -594,9 +586,8 @@ class _ChatInput extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkInputFill
-                    : AppColors.lightInputFill,
+                color:
+                    isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: TextField(
@@ -639,13 +630,12 @@ class _ChatInput extends StatelessWidget {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(PhosphorIconsBold.arrowUp, size: 20),
+                  : const Icon(AppIcons.arrowUp, size: 20),
               style: IconButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: isDark
-                    ? AppColors.darkDisabled
-                    : AppColors.primaryDisabled,
+                disabledBackgroundColor:
+                    isDark ? AppColors.darkDisabled : AppColors.primaryDisabled,
                 shape: const CircleBorder(),
               ),
             ),
@@ -690,14 +680,12 @@ class _FollowUpChips extends StatelessWidget {
                     vertical: AppSpacing.s8,
                   ),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkCardBg
-                        : AppColors.lightCardBg,
+                    color:
+                        isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                     border: Border.all(
-                      color: isDark
-                          ? AppColors.darkBorder
-                          : AppColors.lightBorder,
+                      color:
+                          isDark ? AppColors.darkBorder : AppColors.lightBorder,
                     ),
                   ),
                   child: Text(
@@ -735,8 +723,7 @@ class _ContextNoteSelectorSheet extends StatefulWidget {
       _ContextNoteSelectorSheetState();
 }
 
-class _ContextNoteSelectorSheetState
-    extends State<_ContextNoteSelectorSheet> {
+class _ContextNoteSelectorSheetState extends State<_ContextNoteSelectorSheet> {
   late Set<String> _selectedIds;
   final Map<String, String> _selectedContents = {};
 
@@ -790,7 +777,7 @@ class _ContextNoteSelectorSheetState
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(AppIcons.close),
                     tooltip: l10n.close,
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -882,8 +869,7 @@ class _ContextNoteSelectorSheetState
                     onPressed: () {
                       final result = <String, String>{};
                       for (final id in _selectedIds) {
-                        final notesList =
-                            widget.notesAsync.valueOrNull ?? [];
+                        final notesList = widget.notesAsync.valueOrNull ?? [];
                         for (final note in notesList) {
                           if (note.id == id) {
                             result[id] = note.plainContent ?? '';
@@ -895,8 +881,7 @@ class _ContextNoteSelectorSheetState
                     },
                     style: FilledButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.sm),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                     ),
                     child: Text(l10n.apply),

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -115,22 +116,22 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
         scrolledUnderElevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.lightbulb_outline),
+            icon: const Icon(AppIcons.lightbulb),
             tooltip: l10n.suggestedLinks,
             onPressed: () => _showSuggestions(context),
           ),
           IconButton(
-            icon: const Icon(Icons.scatter_plot_outlined),
+            icon: const Icon(AppIcons.scatterPlot),
             tooltip: l10n.orphanedNotes,
             onPressed: () => _showOrphanedNotes(context),
           ),
           IconButton(
-            icon: const Icon(Icons.link),
+            icon: const Icon(AppIcons.link),
             tooltip: l10n.manageLinks,
             onPressed: () => _showLinkManagement(context),
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(AppIcons.refresh),
             tooltip: l10n.resetView,
             onPressed: () {
               setState(() {});
@@ -157,7 +158,7 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                     child: Icon(
-                      Icons.account_tree_outlined,
+                      AppIcons.accountTree,
                       size: 28,
                       color: isDark
                           ? AppColors.darkTextTertiary
@@ -218,7 +219,7 @@ class _NoteGraphScreenState extends ConsumerState<NoteGraphScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: const Icon(
-                  Icons.error_outline,
+                  AppIcons.errorOutline,
                   size: 28,
                   color: AppColors.error,
                 ),

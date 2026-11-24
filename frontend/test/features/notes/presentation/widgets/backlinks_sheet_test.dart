@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -68,7 +69,7 @@ void main() {
     testWidgets('renders link icon in header', (tester) async {
       await pumpBacklinksSheet(tester, noteId: 'note-1');
 
-      expect(find.byIcon(Icons.link), findsOneWidget);
+      expect(find.byIcon(AppIcons.link), findsOneWidget);
     });
 
     testWidgets('shows empty state when no backlinks exist', (tester) async {
@@ -192,7 +193,7 @@ void main() {
 
       // The backlink tile should be present with a trailing arrow icon.
       expect(find.text('Clickable Source'), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
+      expect(find.byIcon(AppIcons.arrowForward), findsOneWidget);
 
       // Note: tapping the tile calls context.push via GoRouter, which requires
       // a GoRouter in the widget tree. The tile's presence and trailing icon

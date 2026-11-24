@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../constants/app_durations.dart';
 import '../error/connectivity_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../theme/app_animation.dart';
+import '../theme/app_icons.dart';
 
 /// A thin banner shown at the top of the app when the device is offline.
 ///
@@ -21,8 +22,8 @@ class OfflineBanner extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
 
     return AnimatedContainer(
-      duration: AppDurations.animation,
-      curve: Curves.easeInOut,
+      duration: AppAnimation.emphasized,
+      curve: AppAnimation.arrive,
       height: isOffline ? 32 : 0,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
@@ -35,7 +36,7 @@ class OfflineBanner extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.wifi_off,
+                    AppIcons.wifiOff,
                     size: 14,
                     color: Theme.of(context).colorScheme.onErrorContainer,
                   ),

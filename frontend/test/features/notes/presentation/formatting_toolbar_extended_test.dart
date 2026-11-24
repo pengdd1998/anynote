@@ -114,7 +114,7 @@ void main() {
 
     testWidgets('has block quote button', (tester) async {
       await pumpToolbar(tester);
-      expect(find.byIcon(PhosphorIconsRegular.quotes), findsOneWidget);
+      expect(find.byIcon(AppIcons.quote), findsOneWidget);
     });
   });
 

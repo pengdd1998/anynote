@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/sync_engine.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Resolution strategy chosen by the user for a sync conflict.
@@ -75,7 +76,7 @@ class _ConflictCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.sync_problem, color: colorScheme.error, size: 20),
+                Icon(AppIcons.syncProblem, color: colorScheme.error, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -101,7 +102,7 @@ class _ConflictCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () =>
                         _resolve(context, ConflictResolution.keepLocal),
-                    icon: const Icon(Icons.phone_android, size: 16),
+                    icon: const Icon(AppIcons.phoneAndroid, size: 16),
                     label: Text(l10n.keepLocal),
                   ),
                 ),
@@ -110,7 +111,7 @@ class _ConflictCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () =>
                         _resolve(context, ConflictResolution.keepServer),
-                    icon: const Icon(Icons.cloud_outlined, size: 16),
+                    icon: const Icon(AppIcons.cloud, size: 16),
                     label: Text(l10n.keepServer),
                   ),
                 ),
@@ -121,7 +122,7 @@ class _ConflictCard extends StatelessWidget {
               width: double.infinity,
               child: TextButton.icon(
                 onPressed: () => _resolve(context, ConflictResolution.keepBoth),
-                icon: const Icon(Icons.copy, size: 16),
+                icon: const Icon(AppIcons.copy, size: 16),
                 label: Text(l10n.keepBoth),
               ),
             ),
@@ -135,11 +136,12 @@ class _ConflictCard extends StatelessWidget {
     // Pop with the resolution decision. The caller (SyncLifecycle or
     // whatever navigated here) will handle the actual resolution.
     Navigator.pop(
-        context,
-        _ConflictResolutionResult(
-          conflict: conflict,
-          resolution: resolution,
-        ),);
+      context,
+      _ConflictResolutionResult(
+        conflict: conflict,
+        resolution: resolution,
+      ),
+    );
   }
 }
 

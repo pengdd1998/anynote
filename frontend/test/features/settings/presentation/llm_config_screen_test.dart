@@ -68,7 +68,7 @@ void main() {
       expect(find.text('openai - gpt-4o'), findsOneWidget);
       expect(find.textContaining('never uploaded'), findsOneWidget);
       // Non-default config offers the "set as default" action.
-      expect(find.byIcon(AppIcons.starOutline), findsOneWidget);
+      expect(find.byIcon(AppIcons.star), findsOneWidget);
 
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));
@@ -83,7 +83,7 @@ void main() {
         overrides: llmOverrides(notifier: fake),
       );
 
-      await tester.tap(find.byIcon(AppIcons.starOutline));
+      await tester.tap(find.byIcon(AppIcons.star));
       await tester.pump();
 
       expect(fake.setDefaultCalls, ['cfg-1']);
@@ -102,7 +102,7 @@ void main() {
         overrides: llmOverrides(notifier: fake),
       );
 
-      await tester.tap(find.byIcon(AppIcons.wifiTethering));
+      await tester.tap(find.byIcon(AppIcons.wifi));
       // The "Testing connection..." snackbar (3s) queues ahead of the
       // result snackbar; advance far enough for both to cycle.
       await tester.pump();
@@ -126,7 +126,7 @@ void main() {
       );
 
       expect(find.text('Default'), findsOneWidget);
-      expect(find.byIcon(AppIcons.starOutline), findsNothing);
+      expect(find.byIcon(AppIcons.star), findsNothing);
 
       await handle.dispose();
       await tester.pump(const Duration(milliseconds: 100));

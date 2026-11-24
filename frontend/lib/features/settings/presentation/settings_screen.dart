@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/locale/locale_provider.dart';import '../../../core/analytics/analytics_service.dart';
+import '../../../core/locale/locale_provider.dart';
+import '../../../core/analytics/analytics_service.dart';
 
 import '../../../core/platform/platform_utils.dart';
 import '../../../core/theme/app_colors.dart';
@@ -108,276 +109,237 @@ class SettingsScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: 96),
           children: [
             // -- Account section ------------------------------------------------
-            const StaggeredGroup(
-              staggerIndex: 0,
-              child: _AccountSectionWidget(),
-            ),
+            const _AccountSectionWidget(),
 
             // -- AI section -----------------------------------------------------
-            StaggeredGroup(
-              staggerIndex: 1,
-              child: Semantics(
-                container: true,
-                label: l10n.settingsGroup(l10n.aiSection),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SettingsGroupHeader(title: l10n.aiSection),
-                    _SettingsCardGroup(
-                      children: [
-                        _SettingsTile(
-                          icon: AppIcons.aiRobot,
-                          accent: _tileAccents[0],
-                          title: l10n.llmConfiguration,
-                          subtitle: l10n.configureAIProviders,
-                          onTap: () => context.push('/settings/llm'),
-                        ),
-                        const _AiQuotaSection(),
-                      ],
-                    ),
-                  ],
-                ),
+            Semantics(
+              container: true,
+              label: l10n.settingsGroup(l10n.aiSection),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsGroupHeader(title: l10n.aiSection),
+                  _SettingsCardGroup(
+                    children: [
+                      _SettingsTile(
+                        icon: AppIcons.aiRobot,
+                        accent: _tileAccents[0],
+                        title: l10n.llmConfiguration,
+                        subtitle: l10n.configureAIProviders,
+                        onTap: () => context.push('/settings/llm'),
+                      ),
+                      const _AiQuotaSection(),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             // -- Publishing section ---------------------------------------------
-            StaggeredGroup(
-              staggerIndex: 2,
-              child: Semantics(
-                container: true,
-                label: l10n.settingsGroup(l10n.publishing),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SettingsGroupHeader(title: l10n.publishing),
-                    _SettingsCardGroup(
-                      children: [
-                        _SettingsTile(
-                          icon: AppIcons.share,
-                          accent: _tileAccents[2],
-                          title: l10n.platformConnections,
-                          subtitle: l10n.manageConnectedPlatforms,
-                          onTap: () => context.push('/settings/platforms'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            Semantics(
+              container: true,
+              label: l10n.settingsGroup(l10n.publishing),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsGroupHeader(title: l10n.publishing),
+                  _SettingsCardGroup(
+                    children: [
+                      _SettingsTile(
+                        icon: AppIcons.share,
+                        accent: _tileAccents[2],
+                        title: l10n.platformConnections,
+                        subtitle: l10n.manageConnectedPlatforms,
+                        onTap: () => context.push('/settings/platforms'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             // -- Security section -----------------------------------------------
-            StaggeredGroup(
-              staggerIndex: 3,
-              child: Semantics(
-                container: true,
-                label: l10n.settingsGroup(l10n.securityPrivacy),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SettingsGroupHeader(title: l10n.securityPrivacy),
-                    _SettingsCardGroup(
-                      children: [
-                        _SettingsTile(
-                          icon: AppIcons.shield,
-                          accent: _tileAccents[3],
-                          title: l10n.encryptionSettings,
-                          subtitle: l10n.e2eEncryptionActive,
-                          onTap: () => context.push('/settings/security'),
-                        ),
-                        _SettingsTile(
-                          icon: AppIcons.tag,
-                          accent: _tileAccents[4],
-                          title: l10n.manageTags,
-                          subtitle: l10n.tagsLabel,
-                          onTap: () => context.push('/tags'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            Semantics(
+              container: true,
+              label: l10n.settingsGroup(l10n.securityPrivacy),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsGroupHeader(title: l10n.securityPrivacy),
+                  _SettingsCardGroup(
+                    children: [
+                      _SettingsTile(
+                        icon: AppIcons.shield,
+                        accent: _tileAccents[3],
+                        title: l10n.encryptionSettings,
+                        subtitle: l10n.e2eEncryptionActive,
+                        onTap: () => context.push('/settings/security'),
+                      ),
+                      _SettingsTile(
+                        icon: AppIcons.tag,
+                        accent: _tileAccents[4],
+                        title: l10n.manageTags,
+                        subtitle: l10n.tagsLabel,
+                        onTap: () => context.push('/tags'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             // -- Sync section ---------------------------------------------------
-            StaggeredGroup(
-              staggerIndex: 4,
-              child: Semantics(
-                container: true,
-                label: l10n.settingsGroup(l10n.sync),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SettingsGroupHeader(title: l10n.sync),
-                    const _SettingsCardGroup(
-                      children: [
-                        _SyncStatusSection(),
-                      ],
-                    ),
-                    const SyncSection(),
-                  ],
-                ),
+            Semantics(
+              container: true,
+              label: l10n.settingsGroup(l10n.sync),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsGroupHeader(title: l10n.sync),
+                  const _SettingsCardGroup(
+                    children: [
+                      _SyncStatusSection(),
+                    ],
+                  ),
+                  const SyncSection(),
+                ],
               ),
             ),
 
             // -- Notifications section ------------------------------------------
-            StaggeredGroup(
-              staggerIndex: 5,
-              child: Semantics(
-                container: true,
-                label: l10n.settingsGroup('Notifications'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SettingsGroupHeader(title: l10n.notifications),
-                    _SettingsCardGroup(
-                      children: [
-                        _SettingsTile(
-                          icon: AppIcons.notification,
-                          accent: _tileAccents[1],
-                          title: l10n.notifications,
-                          subtitle: l10n.notificationPreferences,
-                          onTap: () => context.push('/settings/notifications'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            Semantics(
+              container: true,
+              label: l10n.settingsGroup('Notifications'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsGroupHeader(title: l10n.notifications),
+                  _SettingsCardGroup(
+                    children: [
+                      _SettingsTile(
+                        icon: AppIcons.notification,
+                        accent: _tileAccents[1],
+                        title: l10n.notifications,
+                        subtitle: l10n.notificationPreferences,
+                        onTap: () => context.push('/settings/notifications'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             // -- Data section ---------------------------------------------------
-            StaggeredGroup(
-              staggerIndex: 6,
-              child: Semantics(
-                container: true,
-                label: l10n.settingsGroup(l10n.data),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SettingsGroupHeader(title: l10n.data),
-                    _SettingsCardGroup(
-                      children: [
-                        _SettingsTile(
-                          icon: AppIcons.fileUpload,
-                          accent: _tileAccents[2],
-                          title: l10n.importNotes,
-                          subtitle: l10n.importNotesDesc,
-                          onTap: () => _showImportSheet(context),
-                        ),
-                        _SettingsTile(
-                          icon: AppIcons.fileDownload,
-                          accent: _tileAccents[3],
-                          title: l10n.exportAllNotes,
-                          subtitle: l10n.exportAllNotesDesc,
-                          onTap: () => _showBatchExportDialog(context, ref),
-                        ),
-                        _SettingsTile(
-                          icon: AppIcons.restore,
-                          accent: _tileAccents[4],
-                          title: l10n.restoreFromBackup,
-                          subtitle: l10n.restoreFromBackupDesc,
-                          onTap: () => context.push('/settings/restore'),
-                        ),
-                        _SettingsTile(
-                          icon: AppIcons.photoLibrary,
-                          accent: _tileAccents[0],
-                          title: l10n.imageManagement,
-                          subtitle: l10n.totalStorage,
-                          onTap: () => context.push('/settings/images'),
-                        ),
-                        _SettingsTile(
-                          icon: AppIcons.description,
-                          accent: _tileAccents[1],
-                          title: l10n.templateManagement,
-                          subtitle: l10n.templates,
-                          onTap: () => context.push('/settings/templates'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            Semantics(
+              container: true,
+              label: l10n.settingsGroup(l10n.data),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsGroupHeader(title: l10n.data),
+                  _SettingsCardGroup(
+                    children: [
+                      _SettingsTile(
+                        icon: AppIcons.fileUpload,
+                        accent: _tileAccents[2],
+                        title: l10n.importNotes,
+                        subtitle: l10n.importNotesDesc,
+                        onTap: () => _showImportSheet(context),
+                      ),
+                      _SettingsTile(
+                        icon: AppIcons.fileDownload,
+                        accent: _tileAccents[3],
+                        title: l10n.exportAllNotes,
+                        subtitle: l10n.exportAllNotesDesc,
+                        onTap: () => _showBatchExportDialog(context, ref),
+                      ),
+                      _SettingsTile(
+                        icon: AppIcons.restore,
+                        accent: _tileAccents[4],
+                        title: l10n.restoreFromBackup,
+                        subtitle: l10n.restoreFromBackupDesc,
+                        onTap: () => context.push('/settings/restore'),
+                      ),
+                      _SettingsTile(
+                        icon: AppIcons.photoLibrary,
+                        accent: _tileAccents[0],
+                        title: l10n.imageManagement,
+                        subtitle: l10n.totalStorage,
+                        onTap: () => context.push('/settings/images'),
+                      ),
+                      _SettingsTile(
+                        icon: AppIcons.description,
+                        accent: _tileAccents[1],
+                        title: l10n.templateManagement,
+                        subtitle: l10n.templates,
+                        onTap: () => context.push('/settings/templates'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             // -- Language section -----------------------------------------------
-            const StaggeredGroup(
-              staggerIndex: 7,
-              child: _LanguageSection(),
-            ),
+            const _LanguageSection(),
 
             // -- Keyboard shortcuts section (desktop only — phones have no
             //    physical keyboard, the page is meaningless there) ------------
             if (PlatformUtils.isDesktop)
-              StaggeredGroup(
-                staggerIndex: 8,
-                child: Semantics(
-                  container: true,
-                  label: l10n.settingsGroup(l10n.keyboardShortcuts),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SettingsGroupHeader(title: l10n.keyboardShortcuts),
-                      _SettingsCardGroup(
-                        children: [
-                          _SettingsTile(
-                            icon: AppIcons.keyboard,
-                            accent: _tileAccents[3],
-                            title: l10n.keyboardShortcuts,
-                            onTap: () => context.push('/settings/shortcuts'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // -- Usage analytics (opt-in, local-only counters) -------------------
-            StaggeredGroup(
-              staggerIndex: 8,
-              child: Semantics(
+              Semantics(
                 container: true,
-                label: l10n.settingsGroup(l10n.usageAnalytics),
+                label: l10n.settingsGroup(l10n.keyboardShortcuts),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SettingsGroupHeader(title: l10n.usageAnalytics),
-                    const _SettingsCardGroup(
+                    SettingsGroupHeader(title: l10n.keyboardShortcuts),
+                    _SettingsCardGroup(
                       children: [
-                        _UsageAnalyticsSection(),
+                        _SettingsTile(
+                          icon: AppIcons.keyboard,
+                          accent: _tileAccents[3],
+                          title: l10n.keyboardShortcuts,
+                          onTap: () => context.push('/settings/shortcuts'),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
+
+            // -- Usage analytics (opt-in, local-only counters) -------------------
+            Semantics(
+              container: true,
+              label: l10n.settingsGroup(l10n.usageAnalytics),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SettingsGroupHeader(title: l10n.usageAnalytics),
+                  const _SettingsCardGroup(
+                    children: [
+                      _UsageAnalyticsSection(),
+                    ],
+                  ),
+                ],
+              ),
             ),
 
             // -- Appearance section ---------------------------------------------
-            const StaggeredGroup(
-              staggerIndex: 9,
-              child: _AppearanceSection(),
-            ),
+            const _AppearanceSection(),
 
             // -- About section --------------------------------------------------
-            const StaggeredGroup(
-              staggerIndex: 10,
-              child: AboutSection(),
-            ),
+            const AboutSection(),
 
             // -- Sign out (destructive, in its own group) -----------------------
-            const StaggeredGroup(
-              staggerIndex: 11,
-              child: SignOutSection(),
-            ),
+            const SignOutSection(),
           ],
         ),
       ),
@@ -974,7 +936,7 @@ class _AppearanceSection extends ConsumerWidget {
           children: [
             _ThemeOption(
               label: l10n.themeLight,
-              icon: Icons.light_mode_outlined,
+              icon: AppIcons.lightMode,
               isSelected: currentOption == ThemeOption.light,
               onTap: () {
                 ref
@@ -987,7 +949,7 @@ class _AppearanceSection extends ConsumerWidget {
             ),
             _ThemeOption(
               label: l10n.themeDark,
-              icon: Icons.dark_mode_outlined,
+              icon: AppIcons.darkMode,
               isSelected: currentOption == ThemeOption.dark,
               onTap: () {
                 ref
@@ -1000,7 +962,7 @@ class _AppearanceSection extends ConsumerWidget {
             ),
             _ThemeOption(
               label: l10n.themeSystem,
-              icon: Icons.settings_suggest_outlined,
+              icon: AppIcons.themeSystem,
               isSelected: currentOption == ThemeOption.system,
               onTap: () {
                 ref
@@ -1022,7 +984,7 @@ class _AppearanceSection extends ConsumerWidget {
             ),
             _ThemeOption(
               label: l10n.themeHighContrastLight,
-              icon: Icons.contrast_outlined,
+              icon: AppIcons.highContrastLight,
               isSelected: currentOption == ThemeOption.highContrastLight,
               onTap: () {
                 ref
@@ -1036,7 +998,7 @@ class _AppearanceSection extends ConsumerWidget {
             ),
             _ThemeOption(
               label: l10n.themeHighContrastDark,
-              icon: Icons.contrast,
+              icon: AppIcons.highContrastDark,
               isSelected: currentOption == ThemeOption.highContrastDark,
               onTap: () {
                 ref
@@ -1123,7 +1085,7 @@ class _ThemeOption extends StatelessWidget {
                 ),
               ),
               if (isSelected)
-                Icon(Icons.check_circle, size: 20, color: accentText),
+                Icon(AppIcons.checkCircle, size: 20, color: accentText),
             ],
           ),
         ),
@@ -1157,14 +1119,13 @@ class _ReduceMotionItem extends ConsumerWidget {
                   : l10n.reduceMotionOff,
           value: isEnabled,
           onChanged: (value) {
-            ref.read(reduceMotionOverrideProvider.notifier).state = value;
+            ref.read(reduceMotionOverrideProvider.notifier).set(value);
           },
         );
       },
     );
   }
 }
-
 
 /// Opt-in, local-only usage analytics. The switch gates recording; the
 /// "view stats" tile (visible only when recording) opens a sheet listing
@@ -1195,7 +1156,7 @@ class _UsageAnalyticsSectionState extends State<_UsageAnalyticsSection> {
     return Column(
       children: [
         _SettingsItemWithSwitch(
-          icon: Icons.insights_outlined,
+          icon: AppIcons.insights,
           accent: _tileAccents[5 % _tileAccents.length],
           title: l10n.usageAnalytics,
           subtitle: l10n.usageAnalyticsDesc,
@@ -1207,7 +1168,7 @@ class _UsageAnalyticsSectionState extends State<_UsageAnalyticsSection> {
         ),
         if (_optIn)
           _SettingsTile(
-            icon: Icons.bar_chart_outlined,
+            icon: AppIcons.chartBar,
             accent: _tileAccents[0],
             title: l10n.viewUsageStats,
             subtitle: l10n.viewUsageStatsDesc,
@@ -1220,9 +1181,8 @@ class _UsageAnalyticsSectionState extends State<_UsageAnalyticsSection> {
   void _showStatsSheet(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final muted = isDark
-        ? AppColors.darkTextTertiary
-        : AppColors.lightTextTertiary;
+    final muted =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
 
     showModalBottomSheet(
       context: context,
@@ -1235,8 +1195,7 @@ class _UsageAnalyticsSectionState extends State<_UsageAnalyticsSection> {
           future: AnalyticsService.instance.snapshot(),
           builder: (ctx, snap) {
             final data = snap.data;
-            final events =
-                data?['events'] as Map<String, int>? ?? const {};
+            final events = data?['events'] as Map<String, int>? ?? const {};
             final durations =
                 data?['durations'] as Map<String, dynamic>? ?? const {};
             final total = data?['totalEvents'] as int? ?? 0;
@@ -1293,16 +1252,16 @@ class _UsageAnalyticsSectionState extends State<_UsageAnalyticsSection> {
                       : ListView(
                           shrinkWrap: true,
                           children: names.map((name) {
-                            final count =
-                                events[name] ??
+                            final count = events[name] ??
                                 (durations[name]
-                                        as Map<String, dynamic>?)?['count'] ??
+                                    as Map<String, dynamic>?)?['count'] ??
                                 0;
                             final avg = durations[name] == null
                                 ? null
                                 : ((durations[name]
-                                        as Map<String, dynamic>)['avgMs']
-                                    as num?)?.toDouble();
+                                            as Map<String, dynamic>)['avgMs']
+                                        as num?)
+                                    ?.toDouble();
                             return ListTile(
                               dense: true,
                               title: Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -75,7 +76,7 @@ class TemplateSelectorSheet extends ConsumerWidget {
                   const Spacer(),
                   // Create custom template
                   IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
+                    icon: const Icon(AppIcons.addCircle),
                     onPressed: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -89,7 +90,7 @@ class TemplateSelectorSheet extends ConsumerWidget {
                   ),
                   // Extract from post
                   IconButton(
-                    icon: const Icon(Icons.auto_fix_high),
+                    icon: const Icon(AppIcons.magicWand),
                     onPressed: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -133,8 +134,9 @@ class TemplateSelectorSheet extends ConsumerWidget {
                           Navigator.pop(context);
                         },
                         // Built-in templates are not editable.
-                        onEditRequest:
-                            t.isBuiltIn ? null : () => _editTemplate(context, t),
+                        onEditRequest: t.isBuiltIn
+                            ? null
+                            : () => _editTemplate(context, t),
                         onDeleteRequest: t.isBuiltIn
                             ? null
                             : () => _deleteTemplate(context, ref, t),
@@ -143,8 +145,7 @@ class TemplateSelectorSheet extends ConsumerWidget {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, __) =>
-                    const Center(child: Text('加载失败')),
+                error: (_, __) => const Center(child: Text('加载失败')),
               ),
             ),
           ],
@@ -229,8 +230,7 @@ class _TemplateCard extends StatelessWidget {
     this.onDeleteRequest,
   });
 
-  bool get _isEditable =>
-      onEditRequest != null || onDeleteRequest != null;
+  bool get _isEditable => onEditRequest != null || onDeleteRequest != null;
 
   /// Shows the edit/delete actions for a user-created template.
   Future<void> _showActions(BuildContext context) {
@@ -244,12 +244,12 @@ class _TemplateCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit_outlined),
+              leading: const Icon(AppIcons.edit),
               title: const Text('编辑模板'),
               onTap: () => Navigator.pop(sheetContext, 'edit'),
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline),
+              leading: const Icon(AppIcons.deleteOutline),
               title: const Text('删除模板'),
               onTap: () => Navigator.pop(sheetContext, 'delete'),
             ),
@@ -283,7 +283,9 @@ class _TemplateCard extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                template.isBuiltIn ? Icons.bookmark : Icons.person_outline,
+                template.isBuiltIn
+                    ? AppIcons.bookmarkFilled
+                    : AppIcons.personOutline,
                 size: 20,
                 color: theme.colorScheme.primary,
               ),
@@ -319,12 +321,12 @@ class _TemplateCard extends StatelessWidget {
               ),
               if (_isEditable)
                 IconButton(
-                  icon: const Icon(Icons.more_vert, size: 20),
+                  icon: const Icon(AppIcons.moreVertical, size: 20),
                   tooltip: '模板操作',
                   onPressed: () => _showActions(context),
                 )
               else if (isSelected)
-                Icon(Icons.check_circle, color: theme.colorScheme.primary),
+                Icon(AppIcons.checkCircle, color: theme.colorScheme.primary),
             ],
           ),
         ),
@@ -363,7 +365,7 @@ class _NoTemplateCard extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                Icons.block,
+                AppIcons.block,
                 size: 20,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -385,7 +387,7 @@ class _NoTemplateCard extends StatelessWidget {
                 ),
               ),
               if (isSelected)
-                Icon(Icons.check_circle, color: theme.colorScheme.primary),
+                Icon(AppIcons.checkCircle, color: theme.colorScheme.primary),
             ],
           ),
         ),

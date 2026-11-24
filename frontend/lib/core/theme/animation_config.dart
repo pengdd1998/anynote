@@ -1,42 +1,39 @@
-import 'dart:ui' show lerpDouble;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Animation configuration that respects the user's reduce motion preference.
+import 'app_animation.dart';
+import 'app_binding.dart';
+
+/// Whether motion is reduced here, and the tokens to use.
 ///
-/// When animations are disabled (via system setting or manual override),
-/// all animation durations are reduced to near-zero for instant transitions.
-/// This helps users with vestibular motion sensitivity or cognitive load.
+/// Reached as `context.motion`. With "减少动画" on, every duration is zero
+/// and every curve is linear, so what is left is a change of state and not a
+/// movement.
 ///
-/// Usage:
 /// ```dart
-/// final config = AnimationConfig.of(context);
-/// final duration = config.duration(const Duration(milliseconds: 300));
-/// final curve = config.curve(Curves.easeInOut);
+/// AnimatedOpacity(
+///   duration: context.motion.standard,
+///   curve: context.motion.arrive,
+/// );
 /// ```
 class AnimationConfig extends InheritedWidget {
-  /// Creates an animation configuration for the subtree.
   const AnimationConfig({
     super.key,
     required this.reduceMotion,
     required super.child,
   });
 
-  /// Whether animations should be reduced/skipped.
-  ///
-  /// When true, durations become Duration.zero and curves are linear.
+  /// The user asked for fewer animations (in the app, or in the system
+  /// settings).
   final bool reduceMotion;
 
-  /// The current animation config from the closest [AnimationConfig] ancestor.
-  ///
-  /// Defaults to respecting system settings if no ancestor is found.
+  /// The configuration for [context]; the platform's setting when no
+  /// [AnimationConfigInjector] is above it.
   static AnimationConfig of(BuildContext context) {
-    final result =
-        context.dependOnInheritedWidgetOfExactType<AnimationConfig>();
-    return result ??
+    return context.dependOnInheritedWidgetOfExactType<AnimationConfig>() ??
         AnimationConfig(
-          reduceMotion: MediaQuery.disableAnimationsOf(context),
+          reduceMotion: ReduceMotionSwitch.active,
           child: const SizedBox.shrink(),
         );
   }
@@ -45,80 +42,102 @@ class AnimationConfig extends InheritedWidget {
   bool updateShouldNotify(AnimationConfig oldWidget) =>
       reduceMotion != oldWidget.reduceMotion;
 
-  /// Returns the effective duration based on [reduceMotion] setting.
-  ///
-  /// When reduce motion is enabled, returns [Duration.zero] for instant
-  /// transitions. Otherwise returns the original [duration].
-  Duration duration(Duration duration) {
-    if (reduceMotion) {
-      return Duration.zero;
-    }
-    return duration;
+  /// [AppAnimation.fast] here.
+  Duration get fast => _duration(AppAnimation.fast);
+
+  /// [AppAnimation.standard] here.
+  Duration get standard => _duration(AppAnimation.standard);
+
+  /// [AppAnimation.emphasized] here.
+  Duration get emphasized => _duration(AppAnimation.emphasized);
+
+  /// [AppAnimation.expressive] here.
+  Duration get expressive => _duration(AppAnimation.expressive);
+
+  /// [AppAnimation.arrive] here.
+  Curve get arrive => _curve(AppAnimation.arrive);
+
+  /// [AppAnimation.depart] here.
+  Curve get depart => _curve(AppAnimation.depart);
+
+  Duration _duration(Duration duration) =>
+      reduceMotion ? Duration.zero : duration;
+
+  Curve _curve(Curve curve) => reduceMotion ? Curves.linear : curve;
+}
+
+/// `context.motion`: the motion tokens as they apply at [BuildContext].
+extension MotionContext on BuildContext {
+  AnimationConfig get motion => AnimationConfig.of(this);
+}
+
+const _kReduceMotionKey = 'reduce_motion';
+
+/// The user's answer to "减少动画": `null` follows the system setting.
+///
+/// It is kept on disk, so the answer survives a restart.
+final reduceMotionOverrideProvider =
+    StateNotifierProvider<ReduceMotionNotifier, bool?>(
+  (ref) => ReduceMotionNotifier(),
+);
+
+class ReduceMotionNotifier extends StateNotifier<bool?> {
+  ReduceMotionNotifier() : super(null) {
+    _load();
   }
 
-  /// Returns an effective curve based on [reduceMotion] setting.
-  ///
-  /// When reduce motion is enabled, returns [Curves.linear] (no easing).
-  /// Otherwise returns the original [curve].
-  Curve curve(Curve curve) {
-    if (reduceMotion) {
-      return Curves.linear;
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _set(
+        switch (prefs.getString(_kReduceMotionKey)) {
+          'on' => true,
+          'off' => false,
+          _ => null,
+        },
+      );
+    } catch (_) {
+      // Nothing saved, or no storage yet: keep following the system.
     }
-    return curve;
   }
 
-  /// Lerps a value with respect to the reduce motion setting.
-  ///
-  /// When reduce motion is enabled, returns the [end] value immediately.
-  /// Otherwise performs standard linear interpolation.
-  double lerp(double begin, double end, double t) {
-    if (reduceMotion) {
-      return end;
+  /// Remembers [value] and writes it to disk.
+  Future<void> set(bool? value) async {
+    _set(value);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _kReduceMotionKey,
+        switch (value) {
+          true => 'on',
+          false => 'off',
+          null => 'system',
+        },
+      );
+    } catch (_) {
+      // The answer is in memory for this session either way.
     }
-    return lerpDouble(begin, end, t)!;
   }
 
-  /// Wraps a child with animation-aware behavior.
-  ///
-  /// When reduce motion is enabled, the child is rendered immediately.
-  /// Otherwise, the [builder] is called with the animation value.
-  static Widget builder({
-    required BuildContext context,
-    required Animation<double> animation,
-    required Widget Function(BuildContext, double) builder,
-  }) {
-    final config = of(context);
-    if (config.reduceMotion) {
-      return builder(context, 1.0);
-    }
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) => builder(context, animation.value),
-    );
+  void _set(bool? value) {
+    state = value;
+    ReduceMotionSwitch.override = value;
   }
 }
 
-/// User override for reduce motion (null = follow system, true = always on, false = always off).
-final reduceMotionOverrideProvider = StateProvider<bool?>((ref) => null);
-
-/// A widget that injects the current reduce motion setting into the widget tree
-/// via [AnimationConfig].
-///
-/// This allows descendant widgets to query the setting without directly
-/// accessing the provider.
+/// Puts the reduce-motion setting where widgets can read it.
 class AnimationConfigInjector extends ConsumerWidget {
-  final Widget child;
-
   const AnimationConfigInjector({super.key, required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userOverride = ref.watch(reduceMotionOverrideProvider);
     final systemDisabled = MediaQuery.disableAnimationsOf(context);
-    final effectiveReduceMotion = userOverride ?? systemDisabled;
 
     return AnimationConfig(
-      reduceMotion: effectiveReduceMotion,
+      reduceMotion: userOverride ?? systemDisabled,
       child: child,
     );
   }

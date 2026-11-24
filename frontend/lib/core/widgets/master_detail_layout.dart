@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../constants/app_durations.dart';
+import '../theme/app_animation.dart';
+import '../theme/app_icons.dart';
 
 /// Key used for persisting the master pane width.
 const _kMasterWidthKey = 'master_detail_divider_width';
@@ -168,8 +169,8 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
       children: [
         // Animated master pane
         AnimatedContainer(
-          duration: AppDurations.shortAnimation,
-          curve: Curves.easeInOut,
+          duration: AppAnimation.standard,
+          curve: AppAnimation.arrive,
           width: widget.sidebarVisible ? _masterWidth : 0,
           clipBehavior: Clip.hardEdge,
           decoration: const BoxDecoration(),
@@ -202,7 +203,7 @@ class _MasterDetailLayoutState extends State<MasterDetailLayout> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.article_outlined,
+                              AppIcons.article,
                               size: 64,
                               color: Theme.of(context)
                                   .colorScheme

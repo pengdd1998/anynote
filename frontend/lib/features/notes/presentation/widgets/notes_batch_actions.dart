@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/database/app_database.dart';
@@ -92,7 +93,7 @@ class NotesBatchActionBar extends ConsumerWidget {
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   icon: Icon(
-                    hasPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    hasPinned ? AppIcons.pinFilled : AppIcons.pin,
                   ),
                   tooltip: hasPinned ? l10n.batchUnpin : l10n.batchPin,
                   onPressed: selectedNoteIds.isEmpty ? null : onTogglePin,
@@ -100,28 +101,28 @@ class NotesBatchActionBar extends ConsumerWidget {
                 // Batch color button
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.palette_outlined),
+                  icon: const Icon(AppIcons.palette),
                   tooltip: l10n.batchColor,
                   onPressed: selectedNoteIds.isEmpty ? null : onColor,
                 ),
                 // Batch lock/unlock button
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.lock_outline),
+                  icon: const Icon(AppIcons.lock),
                   tooltip: l10n.batchLock,
                   onPressed: selectedNoteIds.isEmpty ? null : onLock,
                 ),
                 // Delete button
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const Icon(AppIcons.deleteOutline),
                   tooltip: l10n.batchDelete,
                   onPressed: selectedNoteIds.isEmpty ? null : onDelete,
                 ),
                 // Export button
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.file_download_outlined),
+                  icon: const Icon(AppIcons.fileDownload),
                   tooltip: l10n.exportSelectedNotes,
                   onPressed: selectedNoteIds.isEmpty ? null : onExport,
                 ),
@@ -129,16 +130,17 @@ class NotesBatchActionBar extends ConsumerWidget {
                 if (onCompare != null)
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.compare),
+                    icon: const Icon(AppIcons.compare),
                     tooltip: l10n.compareNotes,
                     onPressed: onCompare,
                   ),
                 // Move to Collection button
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.create_new_folder_outlined),
+                  icon: const Icon(AppIcons.folderPlus),
                   tooltip: l10n.addToCollection,
-                  onPressed: selectedNoteIds.isEmpty ? null : onMoveToCollection,
+                  onPressed:
+                      selectedNoteIds.isEmpty ? null : onMoveToCollection,
                 ),
                 const SizedBox(width: AppSpacing.s8),
                 // Add Tags button
@@ -146,7 +148,7 @@ class NotesBatchActionBar extends ConsumerWidget {
                   style: FilledButton.styleFrom(
                     visualDensity: VisualDensity.compact,
                   ),
-                  icon: const Icon(Icons.add_circle),
+                  icon: const Icon(AppIcons.addCircle),
                   label: Text(l10n.batchAddTags),
                   onPressed: selectedNoteIds.isEmpty ? null : onAddTags,
                 ),
@@ -272,7 +274,7 @@ class _TagPickerDialogState extends ConsumerState<TagPickerDialog> {
               decoration: InputDecoration(
                 labelText: l10n.newTag,
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.add_circle),
+                  icon: const Icon(AppIcons.addCircle),
                   tooltip: l10n.add,
                   onPressed: _creating ? null : _createTagFromInput,
                 ),

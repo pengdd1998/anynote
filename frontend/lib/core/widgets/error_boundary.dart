@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../monitoring/error_reporter.dart';
+import '../theme/app_icons.dart';
 
 /// A widget that wraps its [child] and catches unhandled exceptions thrown
 /// during build, replacing the subtree with a recovery UI.
@@ -114,7 +115,7 @@ class _ErrorRecoveryUI extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.error_outline,
+              AppIcons.errorOutline,
               size: 48,
               color: colorScheme.error,
             ),

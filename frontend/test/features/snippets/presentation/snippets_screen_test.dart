@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +21,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Empty state shows the code-off icon.
-      expect(find.byIcon(Icons.code_off_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.code), findsOneWidget);
       expect(find.text('No snippets yet'), findsOneWidget);
 
       await handle.dispose();
@@ -84,7 +85,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Two add icons: one in AppBar actions, one as FAB.
-      expect(find.byIcon(Icons.add), findsNWidgets(2));
+      expect(find.byIcon(AppIcons.add), findsNWidgets(2));
       expect(find.byType(FloatingActionButton), findsOneWidget);
 
       await handle.dispose();
@@ -102,7 +103,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Search bar with search icon.
-      expect(find.byIcon(Icons.search), findsOneWidget);
+      expect(find.byIcon(AppIcons.search), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
 
       await handle.dispose();

@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -68,13 +69,13 @@ void main() {
     testWidgets('renders link icon in header', (tester) async {
       await pumpLinkManagementSheet(tester, noteId: 'note-1');
 
-      expect(find.byIcon(Icons.link), findsOneWidget);
+      expect(find.byIcon(AppIcons.link), findsOneWidget);
     });
 
     testWidgets('renders close button', (tester) async {
       await pumpLinkManagementSheet(tester, noteId: 'note-1');
 
-      expect(find.byIcon(Icons.close), findsOneWidget);
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
     });
 
     testWidgets('renders backlinks and outbound filter chips', (tester) async {
@@ -227,7 +228,7 @@ void main() {
         overrides: [databaseProvider.overrideWithValue(db)],
       );
 
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.deleteOutline), findsOneWidget);
     });
   });
 }

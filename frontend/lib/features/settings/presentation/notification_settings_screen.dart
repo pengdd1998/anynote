@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -42,7 +43,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
           _SectionLabel(label: l10n.general),
           const SizedBox(height: AppSpacing.s8),
           _NotificationToggle(
-            icon: Icons.sync_problem_outlined,
+            icon: AppIcons.syncProblem,
             title: l10n.syncConflicts,
             subtitle: l10n.syncConflictNotificationsDesc,
             value: prefs.syncConflictNotifications,
@@ -59,7 +60,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.s12),
           _NotificationToggle(
-            icon: Icons.person_add_outlined,
+            icon: AppIcons.personAdd,
             title: l10n.collaborationSharing,
             subtitle: l10n.shareNotificationsDesc,
             value: prefs.shareNotifications,
@@ -76,7 +77,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.s12),
           _NotificationToggle(
-            icon: Icons.notifications_active_outlined,
+            icon: AppIcons.notificationsActive,
             title: l10n.pushNotifications,
             subtitle: l10n.pushNotificationsDesc,
             value: prefs.pushNotifications,
@@ -98,7 +99,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
           _SectionLabel(label: l10n.reminders),
           const SizedBox(height: AppSpacing.s8),
           _NotificationToggle(
-            icon: Icons.alarm_outlined,
+            icon: AppIcons.alarm,
             title: l10n.reminders,
             subtitle: l10n.reminderNotificationsDesc,
             value: prefs.reminderNotifications,
@@ -129,7 +130,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
             child: Row(
               children: [
                 const Icon(
-                  Icons.info_outline,
+                  AppIcons.infoOutline,
                   size: 16,
                   color: AppColors.accentPeachText,
                 ),

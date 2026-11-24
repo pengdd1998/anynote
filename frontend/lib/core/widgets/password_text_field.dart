@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 /// A reusable password text field with a built-in visibility toggle.
 ///
@@ -145,9 +146,7 @@ class _PasswordFieldState extends State<_PasswordField> {
         prefixIcon: widget.prefixIcon,
         suffixIcon: IconButton(
           icon: Icon(
-            _obscure
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
+            _obscure ? AppIcons.visibility : AppIcons.visibilityOff,
           ),
           onPressed: () => setState(() => _obscure = !_obscure),
           tooltip: _obscure

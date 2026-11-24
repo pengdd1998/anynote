@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -95,17 +96,17 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(AppIcons.arrowBack),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.ios_share),
+            icon: const Icon(AppIcons.export),
             tooltip: l10n.publish,
             onPressed: session.isLoading ? null : () => _publishDraft(context),
           ),
           IconButton(
-            icon: const Icon(Icons.style),
+            icon: const Icon(AppIcons.writingStyle),
             tooltip: l10n.adaptStyleFor(
               platformLabel(l10n, ref.watch(currentPlatformGuidesProvider),
                   session.platformStyle),
@@ -118,7 +119,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                 : () => _adaptStyle(ref, l10n),
           ),
           IconButton(
-            icon: const Icon(Icons.save_outlined),
+            icon: const Icon(AppIcons.save),
             tooltip: l10n.saveNoteTooltip,
             onPressed: session.isLoading || session.draft.isEmpty || _isSaving
                 ? null
@@ -221,7 +222,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: const Icon(
-                Icons.error_outline,
+                AppIcons.errorOutline,
                 size: 28,
                 color: AppColors.error,
               ),
@@ -392,7 +393,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.arrow_back,
+                      AppIcons.arrowBack,
                       size: 16,
                       color: isDark
                           ? AppColors.darkTextSecondary
@@ -478,7 +479,7 @@ class _ComposeEditorScreenState extends ConsumerState<ComposeEditorScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(Icons.save, size: 18),
+                  : const Icon(AppIcons.save, size: 18),
               label: Text(l10n.saveAsNote),
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(

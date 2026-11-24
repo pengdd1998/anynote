@@ -51,64 +51,46 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
         padding: const EdgeInsets.only(bottom: 32),
         children: [
           // -- Hero: heading, caption, and encryption status card ------------
-          StaggeredGroup(
-            staggerIndex: 0,
-            child: _EncryptionHero(
-              isActive: encryptionStatus.isInitialized,
-              isUnlocked: encryptionStatus.isUnlocked,
-              l10n: l10n,
-            ),
+          _EncryptionHero(
+            isActive: encryptionStatus.isInitialized,
+            isUnlocked: encryptionStatus.isUnlocked,
+            l10n: l10n,
           ),
-          StaggeredGroup(
-            staggerIndex: 1,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _CrossPlatformWarningCard(l10n: l10n),
-            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: _CrossPlatformWarningCard(l10n: l10n),
           ),
 
           // -- Encrypted items -------------------------------------------------
-          StaggeredGroup(
-            staggerIndex: 2,
-            child: _EncryptedItemsGroup(
-              countsAsync: countsAsync,
-              l10n: l10n,
-            ),
+          _EncryptedItemsGroup(
+            countsAsync: countsAsync,
+            l10n: l10n,
           ),
 
           // -- Recovery key ----------------------------------------------------
-          StaggeredGroup(
-            staggerIndex: 3,
-            child: _RecoveryKeySection(
-              l10n: l10n,
-              theme: theme,
-              showRecoveryKey: _showRecoveryKey,
-              onVerifyAndShow: _verifyAndShowRecoveryKey,
-              onHideRecoveryKey: () => setState(() => _showRecoveryKey = false),
-            ),
+          _RecoveryKeySection(
+            l10n: l10n,
+            theme: theme,
+            showRecoveryKey: _showRecoveryKey,
+            onVerifyAndShow: _verifyAndShowRecoveryKey,
+            onHideRecoveryKey: () => setState(() => _showRecoveryKey = false),
           ),
 
           // -- Password & key management ---------------------------------------
-          StaggeredGroup(
-            staggerIndex: 4,
-            child: _PasswordManagementSection(
-              l10n: l10n,
-              isChangingPassword: _isChangingPassword,
-              onChangePassword: _showChangePasswordDialog,
-            ),
+          _PasswordManagementSection(
+            l10n: l10n,
+            isChangingPassword: _isChangingPassword,
+            onChangePassword: _showChangePasswordDialog,
           ),
 
           // -- Danger zone -----------------------------------------------------
-          StaggeredGroup(
-            staggerIndex: 5,
-            child: _DangerZoneSection(
-              isDeleting: _isDeleting,
-              onDeleteAll: _confirmDeleteAll,
-              onExportBackup: _exportBackup,
-              onImportBackup: _importBackup,
-              l10n: l10n,
-              colorScheme: colorScheme,
-            ),
+          _DangerZoneSection(
+            isDeleting: _isDeleting,
+            onDeleteAll: _confirmDeleteAll,
+            onExportBackup: _exportBackup,
+            onImportBackup: _importBackup,
+            l10n: l10n,
+            colorScheme: colorScheme,
           ),
         ],
       ),
@@ -212,8 +194,10 @@ class _EncryptionScreenState extends ConsumerState<EncryptionScreen> {
                 l10n.reEncryptWarning,
                 style: TextStyle(
                   fontSize: 12,
-                  color:
-                      Theme.of(context).colorScheme.error.withValues(alpha: 0.8),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .error
+                      .withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -539,8 +523,7 @@ class _EncryptionHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final statusColor =
-        isActive ? AppColors.success : AppColors.warning;
+    final statusColor = isActive ? AppColors.success : AppColors.warning;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1000,7 +983,8 @@ class _CrossPlatformWarningCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(AppIcons.infoOutline, size: 20, color: AppColors.warning),
+              const Icon(AppIcons.infoOutline,
+                  size: 20, color: AppColors.warning),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

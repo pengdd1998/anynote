@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -101,12 +102,12 @@ void main() {
     expect(
       find.descendant(
         of: platformCard('xiaohongshu'),
-        matching: find.byIcon(Icons.check_circle),
+        matching: find.byIcon(AppIcons.checkCircle),
       ),
       findsOneWidget,
     );
     // And only that one.
-    expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    expect(find.byIcon(AppIcons.checkCircle), findsOneWidget);
   });
 
   testWidgets('the draft fills the title, the body and the tags',
@@ -165,7 +166,7 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(Icons.check_circle), findsNothing);
+    expect(find.byIcon(AppIcons.checkCircle), findsNothing);
     expect(api.validationRequests, isEmpty);
   });
 
@@ -176,7 +177,7 @@ void main() {
       const PublishFromEditorSheet(title: '标题', content: '正文'),
     );
 
-    expect(find.byIcon(Icons.check_circle), findsNothing);
+    expect(find.byIcon(AppIcons.checkCircle), findsNothing);
     expect(api.validationRequests, isEmpty);
   });
 }

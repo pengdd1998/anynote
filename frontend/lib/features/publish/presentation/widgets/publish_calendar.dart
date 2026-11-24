@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -76,9 +77,10 @@ class _PublishCalendarViewState extends ConsumerState<PublishCalendarView> {
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.chevron_left),
+          icon: const Icon(AppIcons.chevronLeft),
           onPressed: () => setState(() {
-            _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1);
+            _focusedMonth =
+                DateTime(_focusedMonth.year, _focusedMonth.month - 1);
           }),
         ),
         Expanded(
@@ -96,9 +98,10 @@ class _PublishCalendarViewState extends ConsumerState<PublishCalendarView> {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.chevron_right),
+          icon: const Icon(AppIcons.chevronRight),
           onPressed: () => setState(() {
-            _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1);
+            _focusedMonth =
+                DateTime(_focusedMonth.year, _focusedMonth.month + 1);
           }),
         ),
       ],
@@ -143,9 +146,8 @@ class _PublishCalendarViewState extends ConsumerState<PublishCalendarView> {
     final startWeekday = (firstDay.weekday - 1) % 7;
     final rowCount = ((startWeekday + lastDay.day) / 7).ceil();
     final today = DateTime.now();
-    final muted = isDark
-        ? AppColors.darkTextTertiary
-        : AppColors.lightTextTertiary;
+    final muted =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -174,8 +176,9 @@ class _PublishCalendarViewState extends ConsumerState<PublishCalendarView> {
               return Expanded(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppRadius.xs),
-                  onTap:
-                      entries.isEmpty ? null : () => _showDaySheet(l10n, date, entries),
+                  onTap: entries.isEmpty
+                      ? null
+                      : () => _showDaySheet(l10n, date, entries),
                   child: SizedBox(
                     height: 44,
                     child: Column(
@@ -242,14 +245,12 @@ class _PublishCalendarViewState extends ConsumerState<PublishCalendarView> {
   ) {
     var monthCount = 0;
     byDay.forEach((day, entries) {
-      if (day.year == _focusedMonth.year &&
-          day.month == _focusedMonth.month) {
+      if (day.year == _focusedMonth.year && day.month == _focusedMonth.month) {
         monthCount += entries.length;
       }
     });
-    final muted = isDark
-        ? AppColors.darkTextTertiary
-        : AppColors.lightTextTertiary;
+    final muted =
+        isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
     return Text(
       l10n.publicationsInMonth(monthCount),
       style: AppTextStyles.caption.copyWith(color: muted),
@@ -340,10 +341,10 @@ class _DayEntryTile extends StatelessWidget {
       _ => AppColors.warning,
     };
     final statusIcon = switch (status) {
-      'published' => Icons.check_circle,
-      'failed' => Icons.error,
-      'publishing' => Icons.sync,
-      _ => Icons.schedule,
+      'published' => AppIcons.checkCircle,
+      'failed' => AppIcons.error,
+      'publishing' => AppIcons.sync,
+      _ => AppIcons.schedule,
     };
 
     return ListTile(
@@ -354,18 +355,16 @@ class _DayEntryTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTextStyles.body.copyWith(
           fontWeight: FontWeight.w500,
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
+          color:
+              isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
         ),
       ),
       subtitle: Text(
         [platform, if (time.isNotEmpty) time].join(' · '),
         style: AppTextStyles.caption.copyWith(
           fontSize: 12,
-          color: isDark
-              ? AppColors.darkTextTertiary
-              : AppColors.lightTextTertiary,
+          color:
+              isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
         ),
       ),
     );

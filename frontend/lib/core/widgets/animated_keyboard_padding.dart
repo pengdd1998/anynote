@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 // This file exports KeyboardAvoider (renamed from AnimatedKeyboardPadding).
 // The import path `animated_keyboard_padding.dart` is kept for compatibility.
 
-import '../constants/app_durations.dart';
 import '../theme/animation_config.dart';
+import '../theme/app_animation.dart';
 
 /// Provides smooth animated keyboard avoidance for form screens.
 ///
@@ -44,16 +44,15 @@ class _KeyboardAvoiderState extends State<KeyboardAvoider> {
 
   @override
   Widget build(BuildContext context) {
-    final config = AnimationConfig.of(context);
+    final motion = context.motion;
     final inset = MediaQuery.viewInsetsOf(context).bottom;
 
     if (inset != _lastInset) {
       _lastInset = inset;
       final gen = ++_scrollGeneration;
+      // Let the keyboard finish rising before following it.
       Future.delayed(
-        config.reduceMotion
-            ? Duration.zero
-            : const Duration(milliseconds: 350),
+        motion.emphasized,
         () {
           if (gen != _scrollGeneration || !mounted) return;
           _scrollToFocusedField();
@@ -63,8 +62,8 @@ class _KeyboardAvoiderState extends State<KeyboardAvoider> {
 
     return AnimatedPadding(
       padding: EdgeInsets.only(bottom: inset + widget.extraBottomPadding),
-      duration: config.duration(AppDurations.animation),
-      curve: config.curve(Curves.easeOutCubic),
+      duration: motion.emphasized,
+      curve: motion.arrive,
       child: widget.child,
     );
   }
@@ -77,8 +76,8 @@ class _KeyboardAvoiderState extends State<KeyboardAvoider> {
     Scrollable.ensureVisible(
       ctx,
       alignment: 0.3,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
+      duration: AppAnimation.standard,
+      curve: AppAnimation.arrive,
     );
   }
 }

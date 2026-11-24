@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_icons.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
@@ -13,7 +14,7 @@ import '../theme/app_text_styles.dart';
 ///
 /// ```dart
 /// StatCard(
-///   icon: Icons.edit_note,
+///   icon: AppIcons.editNote,
 ///   label: 'Words written',
 ///   value: '12,480',
 ///   color: AppColors.accentLavender,
@@ -40,8 +41,7 @@ class StatCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final effectiveColor = color ?? theme.colorScheme.primary;
-    final bgColor =
-        isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
+    final bgColor = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
 
     final card = Container(
       padding: const EdgeInsets.all(AppSpacing.md),

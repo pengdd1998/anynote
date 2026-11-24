@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../theme/app_icons.dart';
 
 /// Predefined Material Design color palette for quick selection.
 const kPredefinedColors = <ColorOption>[
@@ -150,7 +151,7 @@ class _ColorPickerContentState extends State<_ColorPickerContent> {
             child: Row(
               children: [
                 Icon(
-                  _showCustomInput ? Icons.expand_less : Icons.expand_more,
+                  _showCustomInput ? AppIcons.chevronUp : AppIcons.chevronDown,
                   size: 20,
                   color: theme.colorScheme.primary,
                 ),
@@ -206,7 +207,7 @@ class _ColorPickerContentState extends State<_ColorPickerContent> {
           ),
           child: isSelected
               ? Icon(
-                  Icons.check,
+                  AppIcons.check,
                   color: _contrastColor(option.color),
                   size: 20,
                 )
@@ -227,7 +228,7 @@ class _ColorPickerContentState extends State<_ColorPickerContent> {
               hintText: '#FF5722',
               border: OutlineInputBorder(),
               isDense: true,
-              prefixIcon: Icon(Icons.palette, size: 20),
+              prefixIcon: Icon(AppIcons.palette, size: 20),
             ),
             onChanged: (_) => setState(() {}),
           ),

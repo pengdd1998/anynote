@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/platform/platform_utils.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/tts/speech_service.dart';
+import '../../../../core/widgets/land_in.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Configuration object holding all callbacks needed by the editor AppBar
@@ -118,16 +120,14 @@ class EditorAppBarActions {
       _AppBarSaveStatus(isSaving: config.isSaving, isDirty: config.isDirty),
       // Save-and-close done button with primary color.
       IconButton(
-        icon: Icon(Icons.check, color: colorScheme.primary),
+        icon: Icon(AppIcons.check, color: colorScheme.primary),
         tooltip: l10n.saveAndClose,
         onPressed: config.onSaveAndClose,
       ),
       // Rich/plain text mode toggle (icon shows the mode to switch to).
       IconButton(
         icon: Icon(
-          config.useRichEditor
-              ? Icons.subject_outlined
-              : Icons.text_fields_outlined,
+          config.useRichEditor ? AppIcons.textSnippet : AppIcons.textT,
         ),
         tooltip: config.useRichEditor ? l10n.plainText : l10n.richText,
         onPressed: config.onToggleRichEditor,
@@ -135,7 +135,7 @@ class EditorAppBarActions {
       // Preview toggle.
       IconButton(
         icon: Icon(
-          config.isPreview ? Icons.edit_outlined : Icons.visibility_outlined,
+          config.isPreview ? AppIcons.edit : AppIcons.visibility,
         ),
         tooltip: config.isPreview ? l10n.edit : l10n.preview,
         onPressed: config.onTogglePreview,
@@ -143,7 +143,7 @@ class EditorAppBarActions {
       // Overflow menu with all secondary actions. Horizontal dots match the
       // note detail screen's overflow trigger.
       PopupMenuButton<String>(
-        icon: const Icon(Icons.more_horiz),
+        icon: const Icon(AppIcons.moreHorizontal),
         tooltip: l10n.moreActions,
         onSelected: (value) => _handleOverflowSelection(
           context,
@@ -158,7 +158,7 @@ class EditorAppBarActions {
               value: 'lock',
               child: ListTile(
                 leading: Icon(
-                  config.isLocked ? Icons.lock : Icons.lock_open,
+                  config.isLocked ? AppIcons.lock : AppIcons.lockOpen,
                 ),
                 title: Text(config.isLocked ? l10n.unlockNote : l10n.lockNote),
                 contentPadding: EdgeInsets.zero,
@@ -170,7 +170,7 @@ class EditorAppBarActions {
               child: ListTile(
                 leading: Badge(
                   isLabelVisible: config.hasReminder,
-                  child: const Icon(Icons.notifications_outlined),
+                  child: const Icon(AppIcons.notification),
                 ),
                 title: Text(l10n.reminder),
                 contentPadding: EdgeInsets.zero,
@@ -179,7 +179,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'tags',
             child: ListTile(
-              leading: const Icon(Icons.sell_outlined),
+              leading: const Icon(AppIcons.tag),
               title: Text(l10n.manageTags),
               contentPadding: EdgeInsets.zero,
             ),
@@ -188,7 +188,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'backlinks',
               child: ListTile(
-                leading: const Icon(Icons.link_outlined),
+                leading: const Icon(AppIcons.link),
                 title: Text(l10n.viewBacklinks),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -197,7 +197,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'related',
               child: ListTile(
-                leading: const Icon(Icons.call_made_outlined),
+                leading: const Icon(AppIcons.arrowUpRight),
                 title: Text(l10n.relatedNotes),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -206,7 +206,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'properties',
               child: ListTile(
-                leading: const Icon(Icons.tune_outlined),
+                leading: const Icon(AppIcons.tune),
                 title: Text(l10n.viewProperties),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -218,7 +218,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'share',
             child: ListTile(
-              leading: const Icon(Icons.share_outlined),
+              leading: const Icon(AppIcons.share),
               title: Text(l10n.shareNote),
               contentPadding: EdgeInsets.zero,
             ),
@@ -227,7 +227,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'print',
               child: ListTile(
-                leading: const Icon(Icons.print_outlined),
+                leading: const Icon(AppIcons.print),
                 title: Text(l10n.printNote),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -240,7 +240,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'publish',
               child: ListTile(
-                leading: const Icon(Icons.publish_outlined),
+                leading: const Icon(AppIcons.publish),
                 title: Text(l10n.publishToPlatform),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -252,7 +252,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'ai_summary',
             child: ListTile(
-              leading: const Icon(Icons.summarize_outlined),
+              leading: const Icon(AppIcons.summarize),
               title: Text(l10n.smartSummary),
               contentPadding: EdgeInsets.zero,
             ),
@@ -260,7 +260,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'ai_tags',
             child: ListTile(
-              leading: const Icon(Icons.sell_outlined),
+              leading: const Icon(AppIcons.tag),
               title: Text(l10n.aiTagSuggestion),
               contentPadding: EdgeInsets.zero,
             ),
@@ -268,7 +268,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'ai_translate',
             child: ListTile(
-              leading: const Icon(Icons.translate_outlined),
+              leading: const Icon(AppIcons.language),
               title: Text(l10n.aiTranslation),
               contentPadding: EdgeInsets.zero,
             ),
@@ -276,7 +276,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'ai_polish',
             child: ListTile(
-              leading: const Icon(Icons.spellcheck_outlined),
+              leading: const Icon(AppIcons.spellcheck),
               title: Text(l10n.writingPolish),
               contentPadding: EdgeInsets.zero,
             ),
@@ -289,9 +289,7 @@ class EditorAppBarActions {
             value: 'fold_view',
             child: ListTile(
               leading: Icon(
-                config.isFoldView
-                    ? Icons.edit_note_outlined
-                    : Icons.view_headline_outlined,
+                config.isFoldView ? AppIcons.editNote : AppIcons.viewHeadline,
               ),
               title: Text(config.isFoldView ? l10n.edit : l10n.foldView),
               contentPadding: EdgeInsets.zero,
@@ -311,8 +309,8 @@ class EditorAppBarActions {
             child: ListTile(
               leading: Icon(
                 config.isTypewriterScroll
-                    ? Icons.vertical_align_center
-                    : Icons.vertical_align_top_outlined,
+                    ? AppIcons.verticalAlignCenter
+                    : AppIcons.verticalAlignTop,
               ),
               title: Text(l10n.typewriterScroll),
               contentPadding: EdgeInsets.zero,
@@ -325,8 +323,8 @@ class EditorAppBarActions {
             child: ListTile(
               leading: Icon(
                 config.isZenMode
-                    ? Icons.fullscreen_exit_outlined
-                    : Icons.fullscreen_outlined,
+                    ? AppIcons.fullscreenExit
+                    : AppIcons.fullscreen,
               ),
               title: Text(
                 config.isZenMode ? l10n.exitZenMode : l10n.enterZenMode,
@@ -341,7 +339,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'semantic_index',
               child: ListTile(
-                leading: const Icon(Icons.psychology_outlined),
+                leading: const Icon(AppIcons.psychology),
                 title: Text(l10n.semanticIndex),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -353,7 +351,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'image',
             child: ListTile(
-              leading: const Icon(Icons.image_outlined),
+              leading: const Icon(AppIcons.imageIcon),
               title: Text(l10n.addImage),
               contentPadding: EdgeInsets.zero,
             ),
@@ -364,7 +362,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'paste_image',
               child: ListTile(
-                leading: const Icon(Icons.content_paste_outlined),
+                leading: const Icon(AppIcons.contentPaste),
                 title: Text(l10n.pasteImage),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -376,7 +374,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'save_close',
             child: ListTile(
-              leading: const Icon(Icons.check_outlined),
+              leading: const Icon(AppIcons.check),
               title: Text(l10n.saveAndClose),
               contentPadding: EdgeInsets.zero,
             ),
@@ -392,8 +390,8 @@ class EditorAppBarActions {
         ref.read(speechStateProvider).valueOrNull ?? SpeechState.stopped;
     return Icon(
       speechState == SpeechState.stopped
-          ? Icons.volume_up_outlined
-          : Icons.volume_up,
+          ? AppIcons.volumeUp
+          : AppIcons.volumeUpFilled,
     );
   }
 
@@ -467,13 +465,13 @@ class EditorAppBarActions {
       // Share action directly visible in preview mode.
       if (config.onShare != null)
         IconButton(
-          icon: const Icon(Icons.share_outlined),
+          icon: const Icon(AppIcons.share),
           tooltip: l10n.shareNote,
           onPressed: config.onShare,
         ),
       // Overflow menu with all secondary actions.
       PopupMenuButton<String>(
-        icon: const Icon(Icons.more_horiz),
+        icon: const Icon(AppIcons.moreHorizontal),
         tooltip: l10n.moreActions,
         onSelected: (value) => _handleOverflowSelection(
           context,
@@ -486,7 +484,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'toggle_preview',
             child: ListTile(
-              leading: const Icon(Icons.edit_outlined),
+              leading: const Icon(AppIcons.edit),
               title: Text(l10n.edit),
               contentPadding: EdgeInsets.zero,
             ),
@@ -496,7 +494,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'tags',
             child: ListTile(
-              leading: const Icon(Icons.sell_outlined),
+              leading: const Icon(AppIcons.tag),
               title: Text(l10n.manageTags),
               contentPadding: EdgeInsets.zero,
             ),
@@ -505,7 +503,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'backlinks',
               child: ListTile(
-                leading: const Icon(Icons.link_outlined),
+                leading: const Icon(AppIcons.link),
                 title: Text(l10n.viewBacklinks),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -514,7 +512,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'related',
               child: ListTile(
-                leading: const Icon(Icons.call_made_outlined),
+                leading: const Icon(AppIcons.arrowUpRight),
                 title: Text(l10n.relatedNotes),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -523,7 +521,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'properties',
               child: ListTile(
-                leading: const Icon(Icons.tune_outlined),
+                leading: const Icon(AppIcons.tune),
                 title: Text(l10n.viewProperties),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -534,7 +532,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'print',
               child: ListTile(
-                leading: const Icon(Icons.print_outlined),
+                leading: const Icon(AppIcons.print),
                 title: Text(l10n.printNote),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -543,7 +541,7 @@ class EditorAppBarActions {
             PopupMenuItem(
               value: 'publish',
               child: ListTile(
-                leading: const Icon(Icons.publish_outlined),
+                leading: const Icon(AppIcons.publish),
                 title: Text(l10n.publishToPlatform),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -553,7 +551,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'ai_summary',
             child: ListTile(
-              leading: const Icon(Icons.summarize_outlined),
+              leading: const Icon(AppIcons.summarize),
               title: Text(l10n.smartSummary),
               contentPadding: EdgeInsets.zero,
             ),
@@ -561,7 +559,7 @@ class EditorAppBarActions {
           PopupMenuItem(
             value: 'ai_translate',
             child: ListTile(
-              leading: const Icon(Icons.translate_outlined),
+              leading: const Icon(AppIcons.language),
               title: Text(l10n.aiTranslation),
               contentPadding: EdgeInsets.zero,
             ),
@@ -584,8 +582,9 @@ class EditorAppBarActions {
 ///
 /// Shows one of three states inline:
 /// - Spinning indicator when saving.
-/// - Green checkmark when saved (not dirty, not saving).
-/// - Amber dot when there are unsaved changes (dirty).
+/// - Green checkmark when saved (not dirty, not saving). It lands like a
+///   stamp, so "saved" is something you see happen.
+/// - Red dot when there are unsaved changes (dirty).
 class _AppBarSaveStatus extends StatelessWidget {
   final bool isSaving;
   final bool isDirty;
@@ -625,7 +624,8 @@ class _AppBarSaveStatus extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Tooltip(
             message: l10n.statusUnsaved,
-            child: Icon(Icons.circle, size: 8, color: colorScheme.error),
+            child:
+                Icon(AppIcons.circleFilled, size: 8, color: colorScheme.error),
           ),
         ),
       );
@@ -635,9 +635,16 @@ class _AppBarSaveStatus extends StatelessWidget {
       label: l10n.statusSaved,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Tooltip(
-          message: l10n.statusSaved,
-          child: const Icon(Icons.check_circle, size: 16, color: AppColors.success),
+        child: LandIn(
+          drop: 2,
+          child: Tooltip(
+            message: l10n.statusSaved,
+            child: const Icon(
+              AppIcons.checkCircle,
+              size: 16,
+              color: AppColors.success,
+            ),
+          ),
         ),
       ),
     );

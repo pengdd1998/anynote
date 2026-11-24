@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/error/error.dart' show ErrorDisplay;
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state_widget.dart';
@@ -36,7 +37,7 @@ class LinkSuggestionsSheet extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.lightbulb_outline,
+                  AppIcons.lightbulb,
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
@@ -46,7 +47,7 @@ class LinkSuggestionsSheet extends ConsumerWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(AppIcons.close),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -64,7 +65,7 @@ class LinkSuggestionsSheet extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.tips_and_updates_outlined,
+                      AppIcons.lightbulb,
                       size: 20,
                       color: Theme.of(context).colorScheme.primary,
                     ),
@@ -101,10 +102,9 @@ class LinkSuggestionsSheet extends ConsumerWidget {
 
                 if (suggestions.isEmpty) {
                   return EmptyState(
-                    icon: Icons.search_off,
+                    icon: AppIcons.searchOff,
                     title: l10n?.noSuggestions ?? 'No Suggestions',
-                    subtitle:
-                        l10n?.createMoreNotes ??
+                    subtitle: l10n?.createMoreNotes ??
                         'Create more notes to get suggestions.',
                   );
                 }
@@ -140,9 +140,8 @@ class LinkSuggestionsSheet extends ConsumerWidget {
     final linkedIds = outbound.map((l) => l.targetId).toSet();
 
     // Filter out already linked notes
-    final unlinkedNotes = otherNotes
-        .where((n) => !linkedIds.contains(n.id))
-        .toList();
+    final unlinkedNotes =
+        otherNotes.where((n) => !linkedIds.contains(n.id)).toList();
 
     // Calculate similarity scores
     final scores = <Note, double>{};
@@ -177,14 +176,10 @@ class LinkSuggestionsSheet extends ConsumerWidget {
   /// Calculates simple similarity between two texts.
   /// Uses word overlap as a simple metric.
   double _calculateSimilarity(String text1, String text2) {
-    final words1 = text1
-        .split(RegExp(r'\s+'))
-        .where((w) => w.length > 3)
-        .toSet();
-    final words2 = text2
-        .split(RegExp(r'\s+'))
-        .where((w) => w.length > 3)
-        .toSet();
+    final words1 =
+        text1.split(RegExp(r'\s+')).where((w) => w.length > 3).toSet();
+    final words2 =
+        text2.split(RegExp(r'\s+')).where((w) => w.length > 3).toSet();
 
     if (words1.isEmpty || words2.isEmpty) return 0;
 
@@ -206,12 +201,11 @@ class _SuggestionTile extends ConsumerWidget {
     final db = ref.read(databaseProvider);
     final title = note.plainTitle ?? 'Untitled';
     final preview = note.plainContent ?? '';
-    final displayPreview = preview.length > 80
-        ? '${preview.substring(0, 80)}...'
-        : preview;
+    final displayPreview =
+        preview.length > 80 ? '${preview.substring(0, 80)}...' : preview;
 
     return ListTile(
-      leading: const Icon(Icons.add_circle_outline),
+      leading: const Icon(AppIcons.addCircle),
       title: Text(title, style: Theme.of(context).textTheme.bodyMedium),
       subtitle: displayPreview.isNotEmpty
           ? Text(
@@ -219,11 +213,11 @@ class _SuggestionTile extends ConsumerWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
             )
           : null,
-      trailing: const Icon(Icons.add_link, size: 16),
+      trailing: const Icon(AppIcons.addLink, size: 16),
       onTap: () => _createLink(db, context),
     );
   }
@@ -249,8 +243,7 @@ class _SuggestionTile extends ConsumerWidget {
       if (context.mounted) {
         AppSnackBar.error(
           context,
-          message:
-              l10n?.failedToCreateLink(
+          message: l10n?.failedToCreateLink(
                 ErrorDisplay.displayMessage(e, l10n),
               ) ??
               'Failed to create link: $e',

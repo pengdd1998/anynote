@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
@@ -103,7 +104,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
 
                 if (tags.isEmpty) {
                   return EmptyState(
-                    icon: Icons.label_outline,
+                    icon: AppIcons.tag,
                     title: l10n.noTags,
                     subtitle: l10n.createTagsToOrganize,
                   );
@@ -218,9 +219,9 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     final query = _searchQuery.trim().toLowerCase();
     if (query.isNotEmpty) {
       return flattenTagTree(tree)
-          .where((item) => (item.tag.plainName ?? '')
-              .toLowerCase()
-              .contains(query),)
+          .where(
+            (item) => (item.tag.plainName ?? '').toLowerCase().contains(query),
+          )
           .toList();
     }
 
@@ -284,7 +285,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                     height: 24,
                     child: AnimatedRotation(
                       turns: isExpanded ? 0.25 : 0,
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppAnimation.standard,
                       child: Icon(
                         AppIcons.chevronRight,
                         size: 16,
@@ -351,7 +352,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                   width: 32,
                   height: 32,
                   child: Icon(
-                    Icons.close,
+                    AppIcons.close,
                     size: 16,
                     color: AppColors.error.withAlpha(150),
                   ),
@@ -405,8 +406,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
               final name = _tagNameController.text.trim();
               if (name.isNotEmpty) {
                 final tagId = const Uuid().v4();
-                final encryptedName =
-                    await crypto.encryptForItem(tagId, name);
+                final encryptedName = await crypto.encryptForItem(tagId, name);
                 await db.tagsDao.createTag(
                   id: tagId,
                   encryptedName: encryptedName,
@@ -499,8 +499,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
               final name = _tagNameController.text.trim();
               if (name.isNotEmpty) {
                 final tagId = const Uuid().v4();
-                final encryptedName =
-                    await crypto.encryptForItem(tagId, name);
+                final encryptedName = await crypto.encryptForItem(tagId, name);
                 await db.tagsDao.createTag(
                   id: tagId,
                   encryptedName: encryptedName,
@@ -594,7 +593,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                   : AppColors.lightDivider.withAlpha(80),
             ),
             ListTile(
-              leading: const Icon(Icons.add),
+              leading: const Icon(AppIcons.add),
               title: Text(l10n.createSubTag),
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -602,7 +601,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.drive_file_move_outline),
+              leading: const Icon(AppIcons.moveTo),
               title: Text(l10n.moveToParent),
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -610,7 +609,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.palette),
+              leading: const Icon(AppIcons.palette),
               title: Text(l10n.noteColor),
               onTap: () async {
                 Navigator.of(ctx).pop();
@@ -619,15 +618,14 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                   currentColor: tag.color,
                 );
                 if (selectedColor != null && mounted) {
-                  final newColor =
-                      selectedColor.isEmpty ? null : selectedColor;
+                  final newColor = selectedColor.isEmpty ? null : selectedColor;
                   await db.tagsDao.updateTagColor(tag.id, newColor);
                 }
               },
             ),
             ListTile(
               leading: const Icon(
-                Icons.delete_outline,
+                AppIcons.deleteOutline,
                 color: AppColors.error,
               ),
               title: const Text(

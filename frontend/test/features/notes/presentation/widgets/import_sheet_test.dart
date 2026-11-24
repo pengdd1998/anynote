@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -120,19 +121,19 @@ void main() {
     testWidgets('shows markdown icon for markdown button', (tester) async {
       await pumpImportSheet(tester);
 
-      expect(find.byIcon(Icons.description_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.description), findsOneWidget);
     });
 
     testWidgets('shows zip icon for ZIP button', (tester) async {
       await pumpImportSheet(tester);
 
-      expect(find.byIcon(Icons.folder_zip_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.folderZip), findsOneWidget);
     });
 
     testWidgets('shows obsidian icon for Obsidian button', (tester) async {
       await pumpImportSheet(tester);
 
-      expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.sparkles), findsOneWidget);
     });
 
     testWidgets('Obsidian button uses FilledButton style', (tester) async {

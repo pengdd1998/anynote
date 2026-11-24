@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -89,7 +90,7 @@ void main() {
       IconButton adaptStyleButton(WidgetTester tester) =>
           tester.widget<IconButton>(
             find.ancestor(
-              of: find.byIcon(Icons.style),
+              of: find.byIcon(AppIcons.writingStyle),
               matching: find.byType(IconButton),
             ),
           );

@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -63,14 +64,14 @@ void main() {
     testWidgets('renders close button', (tester) async {
       await pumpTocSheet(tester);
 
-      expect(find.byIcon(Icons.close), findsOneWidget);
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
     });
 
     testWidgets('shows empty state when no entries', (tester) async {
       await pumpTocSheet(tester);
 
       expect(find.text('No headings found'), findsOneWidget);
-      expect(find.byIcon(Icons.format_list_bulleted_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.bulletList), findsOneWidget);
     });
 
     testWidgets('renders heading text', (tester) async {
@@ -155,12 +156,12 @@ void main() {
 
       await pumpTocSheet(tester, entries: entries);
 
-      // Level 1 uses Icons.title, level 2 uses Icons.text_fields,
-      // level 3+ uses Icons.label_outlined.
-      expect(find.byIcon(Icons.title), findsOneWidget);
-      expect(find.byIcon(Icons.text_fields), findsOneWidget);
+      // Level 1 uses AppIcons.title, level 2 uses AppIcons.textT,
+      // level 3+ uses AppIcons.tag.
+      expect(find.byIcon(AppIcons.title), findsOneWidget);
+      expect(find.byIcon(AppIcons.textT), findsOneWidget);
       // Level 3 and 4 both use label_outlined.
-      expect(find.byIcon(Icons.label_outlined), findsNWidgets(2));
+      expect(find.byIcon(AppIcons.tag), findsNWidgets(2));
     });
 
     testWidgets('tapping a heading fires onHeadingSelected', (tester) async {
@@ -220,7 +221,7 @@ void main() {
 
       expect(find.text('Table of Contents'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.close));
+      await tester.tap(find.byIcon(AppIcons.close));
       await tester.pumpAndSettle();
 
       expect(find.text('Table of Contents'), findsNothing);

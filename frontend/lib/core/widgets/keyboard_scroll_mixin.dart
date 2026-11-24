@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_animation.dart';
 
 /// Mixin that scrolls the focused input field into view after the keyboard
 /// appears or disappears.
@@ -41,8 +42,8 @@ mixin KeyboardScrollMixin<T extends StatefulWidget> on State<T> {
       Scrollable.ensureVisible(
         ctx,
         alignment: 0.2,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
+        duration: AppAnimation.standard,
+        curve: AppAnimation.arrive,
       );
     });
   }

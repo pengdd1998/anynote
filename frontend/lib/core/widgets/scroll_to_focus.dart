@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_animation.dart';
 
 /// Scrolls the nearest [Scrollable] ancestor so the widget at [focusNode]
 /// is positioned at [alignment] (0 = top, 0.5 = center, 1 = bottom) in the
@@ -28,8 +29,8 @@ void ensureVisibleOnFocus(FocusNode focusNode, {double alignment = 0.5}) {
       Scrollable.ensureVisible(
         ctx,
         alignment: alignment,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: AppAnimation.emphasized,
+        curve: AppAnimation.arrive,
       );
     });
   });

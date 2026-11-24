@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/nav_guard.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/compose_providers.dart';
@@ -61,13 +62,13 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
       appBar: AppBar(
         title: Text(l10n.outlineTitle),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(AppIcons.arrowBack),
           onPressed: () => context.pop(),
         ),
         actions: [
           if (session.outline != null)
             IconButton(
-              icon: const Icon(Icons.edit_outlined),
+              icon: const Icon(AppIcons.edit),
               tooltip: l10n.editTitleTooltip,
               onPressed: () => _showEditTitleDialog(context, session),
             ),
@@ -104,7 +105,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                 ref.read(composeSessionProvider.notifier).cancel();
                 context.pop();
               },
-              icon: const Icon(Icons.close, size: 18),
+              icon: const Icon(AppIcons.close, size: 18),
               label: Text(l10n.cancel),
             ),
           ],
@@ -160,7 +161,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
           child: Row(
             children: [
               Icon(
-                Icons.info_outline,
+                AppIcons.infoOutline,
                 size: 16,
                 color: Theme.of(context).disabledColor,
               ),
@@ -211,7 +212,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                   leading: ReorderableDragStartListener(
                     index: index,
                     child: Icon(
-                      Icons.drag_handle,
+                      AppIcons.dragHandle,
                       color: Theme.of(context).disabledColor,
                     ),
                   ),
@@ -264,7 +265,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(top: 6),
                                 child: Icon(
-                                  Icons.circle,
+                                  AppIcons.circleFilled,
                                   size: 6,
                                   color: Theme.of(context).disabledColor,
                                 ),
@@ -306,7 +307,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
               children: [
                 OutlinedButton.icon(
                   onPressed: () => context.pop(),
-                  icon: const Icon(Icons.arrow_back),
+                  icon: const Icon(AppIcons.arrowBack),
                   label: Text(l10n.back),
                 ),
                 const Spacer(),
@@ -325,7 +326,7 @@ class _OutlineScreenState extends ConsumerState<OutlineScreen> {
                           }
                           context.push('/compose/editor/${widget.sessionId}');
                         },
-                  icon: const Icon(Icons.edit_note),
+                  icon: const Icon(AppIcons.editNote),
                   label: Text(l10n.expandToDraft),
                 ),
               ],

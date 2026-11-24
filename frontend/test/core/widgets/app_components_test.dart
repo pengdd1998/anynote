@@ -38,18 +38,18 @@ void main() {
     testWidgets('renders icon and title', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
       );
 
-      expect(find.byIcon(Icons.note_add), findsOneWidget);
+      expect(find.byIcon(AppIcons.noteAdd), findsOneWidget);
       expect(find.text('No notes yet'), findsOneWidget);
     });
 
     testWidgets('renders subtitle when provided', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         subtitle: 'Create your first note',
       );
@@ -60,7 +60,7 @@ void main() {
     testWidgets('does not render subtitle when null', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
       );
 
@@ -74,7 +74,7 @@ void main() {
         (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         actionLabel: 'Create',
         onAction: () {},
@@ -88,7 +88,7 @@ void main() {
         (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         onAction: () {},
       );
@@ -100,7 +100,7 @@ void main() {
         (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         actionLabel: 'Create',
       );
@@ -112,7 +112,7 @@ void main() {
       var pressed = false;
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         actionLabel: 'Create',
         onAction: () => pressed = true,
@@ -130,18 +130,18 @@ void main() {
     testWidgets('icon has size 32', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.inbox,
+        icon: AppIcons.inbox,
         title: 'Empty',
       );
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.inbox));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.inbox));
       expect(icon.size, 32);
     });
 
     testWidgets('renders inside Center widget', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
       );
 
@@ -152,7 +152,7 @@ void main() {
     testWidgets('title and subtitle are center-aligned', (tester) async {
       await pumpEmptyState(
         tester,
-        icon: Icons.note_add,
+        icon: AppIcons.noteAdd,
         title: 'No notes yet',
         subtitle: 'Try creating one',
       );
@@ -254,8 +254,8 @@ void main() {
         ),
       );
 
-      // ErrorDisplay.errorIcon(NetworkException) returns AppIcons.wifiTethering.
-      expect(find.byIcon(AppIcons.wifiTethering), findsOneWidget);
+      // ErrorDisplay.errorIcon(NetworkException) returns AppIcons.wifi.
+      expect(find.byIcon(AppIcons.wifi), findsOneWidget);
     });
 
     testWidgets('renders error message from ErrorDisplay', (tester) async {
@@ -403,7 +403,7 @@ void main() {
         (tester) async {
       await pumpBadge(tester, isSynced: true);
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_done));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudDone));
       expect(icon.color, AppColors.success);
       expect(icon.size, 16);
     });
@@ -419,7 +419,7 @@ void main() {
         (tester) async {
       await pumpBadge(tester, isSynced: false);
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_upload));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudUpload));
       expect(icon.color, AppColors.warning);
     });
 
@@ -434,7 +434,7 @@ void main() {
         (tester) async {
       await pumpBadge(tester, isSynced: false, hasConflict: true);
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_off));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudOff));
       expect(icon.color, AppColors.error);
     });
 
@@ -448,8 +448,8 @@ void main() {
     testWidgets('conflict takes priority over synced', (tester) async {
       await pumpBadge(tester, isSynced: true, hasConflict: true);
 
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
-      expect(find.byIcon(Icons.cloud_done), findsNothing);
+      expect(find.byIcon(AppIcons.cloudOff), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudDone), findsNothing);
     });
 
     testWidgets('shows label text when showLabel is true (synced)',
@@ -658,7 +658,7 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: SettingsItem(
-              icon: Icons.person,
+              icon: AppIcons.person,
               title: 'Email',
               subtitle: 'user@example.com',
             ),
@@ -666,7 +666,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.person), findsOneWidget);
+      expect(find.byIcon(AppIcons.person), findsOneWidget);
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('user@example.com'), findsOneWidget);
     });
@@ -676,7 +676,7 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: SettingsItem(
-              icon: Icons.person,
+              icon: AppIcons.person,
               title: 'Email',
             ),
           ),
@@ -691,15 +691,15 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: SettingsItem(
-              icon: Icons.person,
+              icon: AppIcons.person,
               title: 'Email',
-              trailing: Icon(Icons.chevron_right),
+              trailing: Icon(AppIcons.chevronRight),
             ),
           ),
         ),
       );
 
-      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      expect(find.byIcon(AppIcons.chevronRight), findsOneWidget);
     });
 
     testWidgets('handles tap via onTap callback', (tester) async {
@@ -708,7 +708,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: SettingsItem(
-              icon: Icons.person,
+              icon: AppIcons.person,
               title: 'Email',
               onTap: () => tapped = true,
             ),
@@ -725,14 +725,14 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: SettingsItem(
-              icon: Icons.person,
+              icon: AppIcons.person,
               title: 'Email',
             ),
           ),
         ),
       );
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.person));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.person));
       expect(icon.size, 18);
     });
   });
@@ -747,7 +747,7 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: DestructiveSettingsItem(
-              icon: Icons.delete,
+              icon: AppIcons.delete,
               title: 'Delete Account',
             ),
           ),
@@ -755,7 +755,7 @@ void main() {
       );
 
       expect(find.text('Delete Account'), findsOneWidget);
-      expect(find.byIcon(Icons.delete), findsOneWidget);
+      expect(find.byIcon(AppIcons.delete), findsOneWidget);
 
       // Verify the title text uses error color.
       final titleWidget = tester.widget<Text>(find.text('Delete Account'));
@@ -768,7 +768,7 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: DestructiveSettingsItem(
-              icon: Icons.delete,
+              icon: AppIcons.delete,
               title: 'Delete Account',
               subtitle: 'This cannot be undone',
             ),
@@ -785,7 +785,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: DestructiveSettingsItem(
-              icon: Icons.delete,
+              icon: AppIcons.delete,
               title: 'Sign Out',
               onTap: () => tapped = true,
             ),
@@ -802,79 +802,17 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: DestructiveSettingsItem(
-              icon: Icons.logout,
+              icon: AppIcons.logout,
               title: 'Sign Out',
             ),
           ),
         ),
       );
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.logout));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.logout));
       // The icon inside _IconCircle uses the error color.
       final theme = ThemeData.light();
       expect(icon.color, theme.colorScheme.error);
-    });
-  });
-
-  // ===========================================================================
-  // StaggeredGroup
-  // ===========================================================================
-
-  group('StaggeredGroup', () {
-    testWidgets('renders child widget', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: StaggeredGroup(
-              staggerIndex: 0,
-              child: Text('Staggered Content'),
-            ),
-          ),
-        ),
-      );
-
-      // Allow stagger delay to elapse.
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      expect(find.text('Staggered Content'), findsOneWidget);
-    });
-
-    testWidgets('renders with non-zero stagger index', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: StaggeredGroup(
-              staggerIndex: 3,
-              child: Text('Delayed Content'),
-            ),
-          ),
-        ),
-      );
-
-      // Wait for stagger delay (3 * 50ms = 150ms) plus animation.
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      expect(find.text('Delayed Content'), findsOneWidget);
-    });
-
-    testWidgets('uses FadeTransition and SlideTransition', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: StaggeredGroup(
-              staggerIndex: 0,
-              child: SizedBox.shrink(),
-            ),
-          ),
-        ),
-      );
-
-      // Pump to let the stagger delay (Duration.zero for index 0) and
-      // animation start. Use pumpAndSettle to drain all pending timers.
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-
-      // Flutter's widget tree includes multiple internal FadeTransitions
-      // and SlideTransitions from MaterialApp. Just verify they exist.
-      expect(find.byType(FadeTransition), findsAtLeast(1));
-      expect(find.byType(SlideTransition), findsAtLeast(1));
     });
   });
 }

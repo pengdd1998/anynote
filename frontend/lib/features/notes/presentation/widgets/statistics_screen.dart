@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -132,7 +133,7 @@ class _EmptyState extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Icon(
-              Icons.bar_chart_outlined,
+              AppIcons.chartBar,
               size: 28,
               color: isDark
                   ? AppColors.darkTextTertiary
@@ -188,25 +189,25 @@ class _OverviewCards extends StatelessWidget {
       childAspectRatio: 1.4,
       children: [
         StatCard(
-          icon: Icons.description_outlined,
+          icon: AppIcons.description,
           label: AppLocalizations.of(context)?.totalNotes ?? 'Total Notes',
           value: _formatNumber(stats.totalNotes),
           color: AppColors.accentLavender,
         ),
         StatCard(
-          icon: Icons.text_fields_outlined,
+          icon: AppIcons.textT,
           label: AppLocalizations.of(context)?.totalWords ?? 'Total Words',
           value: _formatNumber(stats.totalWords),
           color: AppColors.accentMintText,
         ),
         StatCard(
-          icon: Icons.analytics_outlined,
+          icon: AppIcons.analytics,
           label: AppLocalizations.of(context)?.averageWords ?? 'Avg Words/Note',
           value: stats.averageWordsPerNote.toStringAsFixed(0),
           color: AppColors.accentYellowText,
         ),
         StatCard(
-          icon: Icons.calendar_month_outlined,
+          icon: AppIcons.calendarMonth,
           label: AppLocalizations.of(context)?.daysActive ?? 'Days Active',
           value: _formatNumber(
             stats.writingStreak.activeDaysLast30.length,
@@ -258,7 +259,7 @@ class _WritingStreakCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
                 child: Icon(
-                  Icons.local_fire_department_outlined,
+                  AppIcons.fire,
                   size: 18,
                   color: hasStreak
                       ? AppColors.warning
@@ -1008,7 +1009,7 @@ class _KnowledgeGraphSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
                 child: const Icon(
-                  Icons.hub_outlined,
+                  AppIcons.accountTree,
                   size: 18,
                   color: AppColors.primary,
                 ),
@@ -1027,7 +1028,7 @@ class _KnowledgeGraphSection extends StatelessWidget {
             children: [
               Expanded(
                 child: _MiniStat(
-                  icon: Icons.link_outlined,
+                  icon: AppIcons.link,
                   label: l10n?.totalLinks ?? 'Total Links',
                   value: '${stats.totalLinks}',
                 ),
@@ -1035,7 +1036,7 @@ class _KnowledgeGraphSection extends StatelessWidget {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: _MiniStat(
-                  icon: Icons.note_outlined,
+                  icon: AppIcons.noteBlank,
                   label: l10n?.notesWithLinks ?? 'Notes with links',
                   value: '${stats.notesWithLinks}',
                 ),
@@ -1043,7 +1044,7 @@ class _KnowledgeGraphSection extends StatelessWidget {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: _MiniStat(
-                  icon: Icons.scatter_plot_outlined,
+                  icon: AppIcons.scatterPlot,
                   label: l10n?.orphanedNotesCount(stats.orphanedNotes) ??
                       '${stats.orphanedNotes} orphaned',
                   value: '${stats.orphanedNotes}',
@@ -1063,7 +1064,7 @@ class _KnowledgeGraphSection extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.star_outline,
+                    AppIcons.star,
                     size: 16,
                     color: AppColors.accentYellowText,
                   ),

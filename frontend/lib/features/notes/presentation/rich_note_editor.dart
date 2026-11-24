@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/daos/snippets_dao.dart';
+import '../../../core/theme/app_icons.dart';
 import 'embeds/local_image_embed.dart';
 import 'embeds/table_embed.dart';
 import 'embeds/transclusion_embed.dart';
@@ -436,7 +437,7 @@ class _SnippetPickerSheetState extends State<_SnippetPickerSheet> {
           TextField(
             decoration: InputDecoration(
               hintText: widget.l10n.searchSnippets,
-              prefixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: const Icon(AppIcons.search, size: 20),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

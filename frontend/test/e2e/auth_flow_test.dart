@@ -8,6 +8,7 @@
 // - Form validation on the register screen
 // - Error message display on failed auth
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -67,7 +68,7 @@ void main() {
         overrides: defaultProviderOverrides(),
       );
 
-      expect(find.byIcon(Icons.lock_outline), findsAtLeast(1));
+      expect(find.byIcon(AppIcons.lock), findsAtLeast(1));
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -256,7 +257,7 @@ void main() {
       expect(
         find.descendant(
           of: find.widgetWithText(TextFormField, 'Username'),
-          matching: find.byIcon(Icons.person_outline),
+          matching: find.byIcon(AppIcons.personOutline),
         ),
         findsOneWidget,
       );

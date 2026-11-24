@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_durations.dart';
+import '../../../../core/theme/app_animation.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'section_fold_controller.dart';
 
@@ -149,7 +150,7 @@ class _FoldedOutlineViewState extends State<FoldedOutlineView> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.outlined_flag,
+                AppIcons.flag,
                 size: 48,
                 color: colorScheme.outline,
               ),
@@ -224,10 +225,10 @@ class _FoldedOutlineViewState extends State<FoldedOutlineView> {
                 // Fold chevron.
                 IconButton(
                   icon: AnimatedRotation(
-                    duration: AppDurations.shortAnimation,
+                    duration: AppAnimation.standard,
                     turns: isFolded ? -0.25 : 0.0,
                     child: Icon(
-                      Icons.chevron_right,
+                      AppIcons.chevronRight,
                       size: 20,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -325,8 +326,8 @@ class _FoldedOutlineViewState extends State<FoldedOutlineView> {
               ),
             ),
             crossFadeState: CrossFadeState.showSecond,
-            duration: AppDurations.shortAnimation,
-            sizeCurve: Curves.easeOutCubic,
+            duration: AppAnimation.standard,
+            sizeCurve: AppAnimation.arrive,
           ),
       ],
     );

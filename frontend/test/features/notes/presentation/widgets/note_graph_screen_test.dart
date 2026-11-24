@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,16 +77,16 @@ void main() {
     testWidgets('empty state shows tree icon', (tester) async {
       await pumpGraphScreen(tester);
 
-      expect(find.byIcon(Icons.account_tree_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.accountTree), findsOneWidget);
     });
 
     testWidgets('app bar has action buttons', (tester) async {
       await pumpGraphScreen(tester);
 
-      expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
-      expect(find.byIcon(Icons.scatter_plot_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.link), findsOneWidget);
-      expect(find.byIcon(Icons.refresh), findsOneWidget);
+      expect(find.byIcon(AppIcons.lightbulb), findsOneWidget);
+      expect(find.byIcon(AppIcons.scatterPlot), findsOneWidget);
+      expect(find.byIcon(AppIcons.link), findsOneWidget);
+      expect(find.byIcon(AppIcons.refresh), findsOneWidget);
     });
 
     testWidgets('back navigation button exists in app bar', (tester) async {
@@ -183,14 +184,14 @@ void main() {
       await tester.pumpAndSettle(const Duration(milliseconds: 300));
 
       expect(find.text('Error loading graph'), findsOneWidget);
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.errorOutline), findsOneWidget);
     });
 
     testWidgets('reset view button is present and tappable', (tester) async {
       await pumpGraphScreen(tester);
 
       // The refresh button should exist in the empty state (no notes).
-      final refreshButton = find.byIcon(Icons.refresh);
+      final refreshButton = find.byIcon(AppIcons.refresh);
       expect(refreshButton, findsOneWidget);
 
       // Tapping it should not throw even in empty state.

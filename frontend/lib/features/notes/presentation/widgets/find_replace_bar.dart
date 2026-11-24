@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Save status enumeration for the editor.
@@ -127,20 +128,20 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
               const SizedBox(width: 4),
               _buildMatchCountLabel(l10n),
               IconButton(
-                icon: const Icon(Icons.keyboard_arrow_up, size: 20),
+                icon: const Icon(AppIcons.arrowUp, size: 20),
                 tooltip: l10n.findPrevious,
                 onPressed: widget.onPrevious,
                 visualDensity: VisualDensity.compact,
               ),
               IconButton(
-                icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                icon: const Icon(AppIcons.arrowDown, size: 20),
                 tooltip: l10n.findNext,
                 onPressed: widget.onNext,
                 visualDensity: VisualDensity.compact,
               ),
               IconButton(
                 icon: Icon(
-                  _showReplace ? Icons.expand_less : Icons.expand_more,
+                  _showReplace ? AppIcons.chevronUp : AppIcons.chevronDown,
                   size: 20,
                 ),
                 tooltip: _showReplace ? l10n.hideReplace : l10n.showReplace,
@@ -148,7 +149,7 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
                 visualDensity: VisualDensity.compact,
               ),
               IconButton(
-                icon: const Icon(Icons.close, size: 18),
+                icon: const Icon(AppIcons.close, size: 18),
                 tooltip: l10n.closeFindBar,
                 onPressed: widget.onClose,
                 visualDensity: VisualDensity.compact,
@@ -169,13 +170,13 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
                   ),
                   const SizedBox(width: 4),
                   IconButton(
-                    icon: const Icon(Icons.find_replace, size: 18),
+                    icon: const Icon(AppIcons.replace, size: 18),
                     tooltip: l10n.replaceMatch,
                     onPressed: widget.onReplace,
                     visualDensity: VisualDensity.compact,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.find_replace_outlined, size: 18),
+                    icon: const Icon(AppIcons.replaceAll, size: 18),
                     tooltip: l10n.replaceAllMatches,
                     onPressed: widget.onReplaceAll,
                     visualDensity: VisualDensity.compact,

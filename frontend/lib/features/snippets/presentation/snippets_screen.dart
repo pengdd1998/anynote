@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/database/daos/snippets_dao.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
@@ -95,7 +96,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
         title: Text(l10n.snippets),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(AppIcons.add),
             tooltip: l10n.newSnippet,
             onPressed: () => _showEditor(context),
           ),
@@ -130,7 +131,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showEditor(context),
         tooltip: l10n.newSnippet,
-        child: const Icon(Icons.add),
+        child: const Icon(AppIcons.add),
       ),
     );
   }
@@ -197,7 +198,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit_outlined),
+              leading: const Icon(AppIcons.edit),
               title: Text(l10n.editSnippet),
               onTap: () {
                 Navigator.pop(context);
@@ -205,7 +206,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.copy),
+              leading: const Icon(AppIcons.copy),
               title: Text(l10n.copyCode),
               onTap: () {
                 Clipboard.setData(ClipboardData(text: snippet.code));
@@ -215,7 +216,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
             ),
             ListTile(
               leading: Icon(
-                Icons.delete_outline,
+                AppIcons.deleteOutline,
                 color: Theme.of(context).colorScheme.error,
               ),
               title: Text(
@@ -290,7 +291,7 @@ class _SnippetsFilterBar extends StatelessWidget {
             scrollPadding: const EdgeInsets.only(bottom: 120),
             decoration: InputDecoration(
               hintText: l10n.searchSnippets,
-              prefixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: const Icon(AppIcons.search, size: 20),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.xs),
               ),
@@ -390,7 +391,7 @@ class _SnippetsListBody extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.code_off_outlined,
+                  AppIcons.code,
                   size: 64,
                   color: Theme.of(context).disabledColor,
                 ),
@@ -398,8 +399,8 @@ class _SnippetsListBody extends StatelessWidget {
                 Text(
                   l10n.noSnippets,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                        color: Theme.of(context).disabledColor,
+                      ),
                 ),
               ],
             ),
@@ -455,8 +456,8 @@ class _SnippetCard extends StatelessWidget {
                   child: Text(
                     snippet.title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                          fontWeight: FontWeight.w600,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -488,8 +489,8 @@ class _SnippetCard extends StatelessWidget {
                 Text(
                   l10n.usageCount(snippet.usageCount),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                        color: Theme.of(context).disabledColor,
+                      ),
                 ),
               ],
             ),
@@ -498,8 +499,8 @@ class _SnippetCard extends StatelessWidget {
               Text(
                 snippet.description,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

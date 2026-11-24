@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -102,19 +103,19 @@ void main() {
     testWidgets('renders copy button', (tester) async {
       await pumpDetailSheet(tester, snippet: _testSnippet());
 
-      expect(find.byIcon(Icons.copy), findsOneWidget);
+      expect(find.byIcon(AppIcons.copy), findsOneWidget);
     });
 
     testWidgets('renders edit button', (tester) async {
       await pumpDetailSheet(tester, snippet: _testSnippet());
 
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.edit), findsOneWidget);
     });
 
     testWidgets('renders delete button', (tester) async {
       await pumpDetailSheet(tester, snippet: _testSnippet());
 
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.deleteOutline), findsOneWidget);
     });
 
     testWidgets('renders language chip when language is set', (tester) async {
@@ -139,7 +140,7 @@ void main() {
       await pumpDetailSheet(tester, snippet: _testSnippet());
 
       // Tap the delete icon button.
-      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.tap(find.byIcon(AppIcons.deleteOutline));
       await tester.pumpAndSettle();
 
       // Confirmation dialog should appear.
@@ -163,7 +164,7 @@ void main() {
         onDelete: () => deleteCalled = true,
       );
 
-      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.tap(find.byIcon(AppIcons.deleteOutline));
       await tester.pumpAndSettle();
 
       // Confirm deletion in dialog.

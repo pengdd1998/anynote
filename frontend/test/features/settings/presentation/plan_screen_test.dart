@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -136,8 +137,8 @@ void main() {
       // Should show lifetime badge instead of upgrade buttons.
       // The l10n string is "Lifetime Member -- all features unlocked forever."
       expect(find.textContaining('Lifetime Member'), findsOneWidget);
-      // The lifetime badge uses Material Icons.verified, not AppIcons.verified.
-      expect(find.byIcon(Icons.verified), findsOneWidget);
+      // The lifetime badge uses Material AppIcons.verified, not AppIcons.verified.
+      expect(find.byIcon(AppIcons.verified), findsOneWidget);
 
       // Should NOT show upgrade button for lifetime plan.
       expect(find.text('Upgrade'), findsNothing);

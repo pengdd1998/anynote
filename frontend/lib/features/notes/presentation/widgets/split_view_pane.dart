@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// A horizontal split pane with a draggable divider between two child widgets.
@@ -139,7 +140,7 @@ class _SecondaryPaneHeader extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.article_outlined,
+            AppIcons.article,
             size: 18,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -156,7 +157,7 @@ class _SecondaryPaneHeader extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           IconButton(
-            icon: const Icon(Icons.close, size: 18),
+            icon: const Icon(AppIcons.close, size: 18),
             tooltip: AppLocalizations.of(context)?.closeSplitView ??
                 'Close split view',
             onPressed: onClose,

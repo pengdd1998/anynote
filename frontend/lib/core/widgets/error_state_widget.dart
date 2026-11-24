@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../theme/app_icons.dart';
 
 /// Reusable error state widget with optional retry button.
 class ErrorStateWidget extends StatelessWidget {
@@ -12,7 +13,7 @@ class ErrorStateWidget extends StatelessWidget {
     super.key,
     required this.message,
     this.onRetry,
-    this.icon = Icons.error_outline,
+    this.icon = AppIcons.errorOutline,
   });
 
   @override

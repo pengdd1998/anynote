@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_icons.dart';
 import '../theme/app_radius.dart';
 
 /// A themed input field matching the warm design system.
@@ -10,7 +11,7 @@ import '../theme/app_radius.dart';
 /// ```dart
 /// InputField(
 ///   hint: 'Enter your email',
-///   prefixIcon: Icons.email_outlined,
+///   prefixIcon: AppIcons.email,
 ///   controller: _emailController,
 ///   keyboardType: TextInputType.emailAddress,
 /// )

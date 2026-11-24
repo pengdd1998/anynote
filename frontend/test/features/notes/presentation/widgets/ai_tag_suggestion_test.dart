@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -105,9 +106,9 @@ void main() {
         overrides: defaultProviderOverrides(),
       );
 
-      expect(find.byIcon(Icons.close), findsOneWidget);
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.close));
+      await tester.tap(find.byIcon(AppIcons.close));
       await tester.pumpAndSettle();
 
       // Sheet should be dismissed

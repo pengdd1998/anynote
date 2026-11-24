@@ -8,6 +8,7 @@ import '../../../core/crypto/crypto_service.dart';
 import '../../../core/database/seed_templates.dart';
 import '../../../core/error/error.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -152,7 +153,7 @@ class _DailyNotesScreenState extends ConsumerState<DailyNotesScreen> {
         actions: [
           TextButton.icon(
             onPressed: _goToToday,
-            icon: const Icon(Icons.today, size: 18),
+            icon: const Icon(AppIcons.today, size: 18),
             label: Text(l10n.goToToday),
           ),
         ],
@@ -244,8 +245,7 @@ class _DailyNotesScreenState extends ConsumerState<DailyNotesScreen> {
 
     String encryptedContent;
     if (crypto.isUnlocked) {
-      encryptedContent =
-          await crypto.encryptForItem(noteId, resolvedContent);
+      encryptedContent = await crypto.encryptForItem(noteId, resolvedContent);
     } else {
       encryptedContent = resolvedContent;
     }
@@ -310,7 +310,7 @@ class _MonthCalendar extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.chevron_left),
+                icon: const Icon(AppIcons.chevronLeft),
                 onPressed: onPreviousMonth,
                 tooltip: l10n.calendar,
                 style: IconButton.styleFrom(
@@ -331,7 +331,7 @@ class _MonthCalendar extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.chevron_right),
+                icon: const Icon(AppIcons.chevronRight),
                 onPressed: onNextMonth,
                 tooltip: l10n.calendar,
                 style: IconButton.styleFrom(
@@ -495,15 +495,12 @@ class _DayCell extends StatelessWidget {
       bg = primary.withAlpha(30);
       textColor = primary;
     } else if (isToday) {
-      bg = isDark
-          ? AppColors.darkInputFill
-          : AppColors.lightInputFill;
+      bg = isDark ? AppColors.darkInputFill : AppColors.lightInputFill;
       textColor = primary;
     } else {
       bg = Colors.transparent;
-      textColor = isDark
-          ? AppColors.darkTextPrimary
-          : AppColors.lightTextPrimary;
+      textColor =
+          isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     }
 
     return Column(
@@ -522,9 +519,8 @@ class _DayCell extends StatelessWidget {
             style: AppTextStyles.caption.copyWith(
               fontSize: 14,
               color: textColor,
-              fontWeight: isSelected || isToday
-                  ? FontWeight.w600
-                  : FontWeight.w400,
+              fontWeight:
+                  isSelected || isToday ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
         ),
@@ -657,7 +653,7 @@ class _SelectedDaySection extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Icon(
-                  hasNote ? Icons.edit_note : Icons.add,
+                  hasNote ? AppIcons.editNote : AppIcons.add,
                   size: 20,
                   color: primary,
                 ),
@@ -706,7 +702,7 @@ class _RecentDailyNotesList extends ConsumerWidget {
             data: (entries) {
               if (entries.isEmpty) {
                 return EmptyState(
-                  icon: Icons.event_note_outlined,
+                  icon: AppIcons.calendarToday,
                   title: l10n.noDailyNote,
                   subtitle: l10n.createTodaysNote,
                 );
@@ -790,9 +786,8 @@ class _RecentDailyNoteCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkInputFill
-                    : AppColors.lightInputFill,
+                color:
+                    isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
                 borderRadius: BorderRadius.circular(AppRadius.xs),
               ),
               alignment: Alignment.center,

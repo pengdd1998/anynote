@@ -37,7 +37,7 @@ void main() {
       );
 
       // The mockup replaces the text button with a circular arrow button.
-      expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
+      expect(find.byIcon(AppIcons.arrowForward), findsOneWidget);
       await handle.dispose();
     });
 

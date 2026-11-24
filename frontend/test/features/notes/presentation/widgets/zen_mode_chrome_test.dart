@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -57,7 +58,7 @@ void main() {
         onExit: () {},
         onToggle: () {},
       );
-      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(find.byIcon(AppIcons.arrowBack), findsOneWidget);
     });
 
     testWidgets('renders fullscreen exit icon', (tester) async {
@@ -66,7 +67,7 @@ void main() {
         onExit: () {},
         onToggle: () {},
       );
-      expect(find.byIcon(Icons.fullscreen_exit), findsOneWidget);
+      expect(find.byIcon(AppIcons.fullscreenExit), findsOneWidget);
     });
 
     testWidgets('fires onExit when back arrow tapped', (tester) async {
@@ -77,7 +78,7 @@ void main() {
         onToggle: () {},
       );
 
-      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.tap(find.byIcon(AppIcons.arrowBack));
       expect(exited, isTrue);
     });
 
@@ -89,7 +90,7 @@ void main() {
         onToggle: () => toggled = true,
       );
 
-      await tester.tap(find.byIcon(Icons.fullscreen_exit));
+      await tester.tap(find.byIcon(AppIcons.fullscreenExit));
       expect(toggled, isTrue);
     });
 

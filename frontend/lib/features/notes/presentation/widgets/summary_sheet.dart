@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/error/error.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -157,7 +158,7 @@ class SummarySheet extends ConsumerWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.summarize_outlined,
+                    AppIcons.summarize,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
@@ -167,7 +168,7 @@ class SummarySheet extends ConsumerWidget {
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(AppIcons.close),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -200,7 +201,7 @@ class SummarySheet extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.auto_awesome_outlined,
+              AppIcons.sparkles,
               size: 48,
               color: Theme.of(context)
                   .colorScheme
@@ -221,7 +222,7 @@ class SummarySheet extends ConsumerWidget {
               onPressed: () {
                 ref.read(_summaryProvider.notifier).generateSummary(content);
               },
-              icon: const Icon(Icons.summarize_outlined),
+              icon: const Icon(AppIcons.summarize),
               label: Text(l10n.generateSummary),
             ),
           ],
@@ -260,7 +261,7 @@ class SummarySheet extends ConsumerWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.refresh, size: 18),
+                  icon: const Icon(AppIcons.refresh, size: 18),
                   onPressed: () {
                     ref
                         .read(_summaryProvider.notifier)
@@ -309,7 +310,7 @@ class SummarySheet extends ConsumerWidget {
                     Clipboard.setData(ClipboardData(text: state.summary));
                     AppSnackBar.info(context, message: l10n.copiedToClipboard);
                   },
-                  icon: const Icon(Icons.copy, size: 18),
+                  icon: const Icon(AppIcons.copy, size: 18),
                   label: Text(l10n.copy),
                 ),
               ),
@@ -320,7 +321,7 @@ class SummarySheet extends ConsumerWidget {
                     onReplace(state.summary);
                     Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.check, size: 18),
+                  icon: const Icon(AppIcons.check, size: 18),
                   label: Text(l10n.replace),
                 ),
               ),

@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,7 +51,7 @@ void main() {
         connectivityStream: Stream.value(false),
       );
 
-      expect(find.byIcon(Icons.wifi_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.wifiOff), findsOneWidget);
     });
 
     testWidgets('has non-zero height when offline', (tester) async {
@@ -91,7 +92,7 @@ void main() {
         connectivityStream: Stream.value(true),
       );
 
-      expect(find.byIcon(Icons.wifi_off), findsNothing);
+      expect(find.byIcon(AppIcons.wifiOff), findsNothing);
     });
 
     // -- Unknown connectivity state -----------------------------------

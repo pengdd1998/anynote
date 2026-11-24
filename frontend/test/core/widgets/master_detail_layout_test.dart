@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -114,7 +115,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.article_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.article), findsOneWidget);
     });
 
     testWidgets('uses custom emptyDetailPlaceholder when provided',

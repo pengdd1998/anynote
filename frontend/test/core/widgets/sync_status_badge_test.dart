@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -32,15 +33,15 @@ void main() {
     testWidgets('shows cloud_done icon when isSynced is true', (tester) async {
       await pumpBadge(tester, isSynced: true);
 
-      expect(find.byIcon(Icons.cloud_done), findsOneWidget);
-      expect(find.byIcon(Icons.cloud_upload), findsNothing);
-      expect(find.byIcon(Icons.cloud_off), findsNothing);
+      expect(find.byIcon(AppIcons.cloudDone), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudUpload), findsNothing);
+      expect(find.byIcon(AppIcons.cloudOff), findsNothing);
     });
 
     testWidgets('synced state has success color', (tester) async {
       await pumpBadge(tester, isSynced: true);
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_done));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudDone));
       expect(icon.color, AppColors.success);
     });
 
@@ -56,7 +57,7 @@ void main() {
     testWidgets('synced state has icon size 16', (tester) async {
       await pumpBadge(tester, isSynced: true);
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_done));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudDone));
       expect(icon.size, 16);
     });
 
@@ -66,15 +67,15 @@ void main() {
         (tester) async {
       await pumpBadge(tester, isSynced: false);
 
-      expect(find.byIcon(Icons.cloud_upload), findsOneWidget);
-      expect(find.byIcon(Icons.cloud_done), findsNothing);
-      expect(find.byIcon(Icons.cloud_off), findsNothing);
+      expect(find.byIcon(AppIcons.cloudUpload), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudDone), findsNothing);
+      expect(find.byIcon(AppIcons.cloudOff), findsNothing);
     });
 
     testWidgets('pending state has warning color', (tester) async {
       await pumpBadge(tester, isSynced: false);
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_upload));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudUpload));
       expect(icon.color, AppColors.warning);
     });
 
@@ -93,15 +94,15 @@ void main() {
         (tester) async {
       await pumpBadge(tester, isSynced: false, hasConflict: true);
 
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
-      expect(find.byIcon(Icons.cloud_done), findsNothing);
-      expect(find.byIcon(Icons.cloud_upload), findsNothing);
+      expect(find.byIcon(AppIcons.cloudOff), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudDone), findsNothing);
+      expect(find.byIcon(AppIcons.cloudUpload), findsNothing);
     });
 
     testWidgets('conflict state has error color', (tester) async {
       await pumpBadge(tester, isSynced: false, hasConflict: true);
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_off));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudOff));
       expect(icon.color, AppColors.error);
     });
 
@@ -120,10 +121,10 @@ void main() {
       await pumpBadge(tester, isSynced: true, hasConflict: true);
 
       // Even though isSynced is true, conflict should win.
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
-      expect(find.byIcon(Icons.cloud_done), findsNothing);
+      expect(find.byIcon(AppIcons.cloudOff), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudDone), findsNothing);
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.cloud_off));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudOff));
       expect(icon.color, AppColors.error);
     });
 

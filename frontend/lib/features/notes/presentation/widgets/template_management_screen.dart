@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../core/crypto/crypto_service.dart';
@@ -83,7 +84,7 @@ class _TemplateManagementScreenState
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateDialog(),
         tooltip: l10n.newTemplate,
-        child: const Icon(Icons.add),
+        child: const Icon(AppIcons.add),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -93,7 +94,8 @@ class _TemplateManagementScreenState
                 children: [
                   // Built-in templates section
                   if (_builtInTemplates.isNotEmpty) ...[
-                    _buildSectionHeader(l10n.builtInTemplates, Icons.bookmark),
+                    _buildSectionHeader(
+                        l10n.builtInTemplates, AppIcons.bookmarkFilled),
                     ..._builtInTemplates.map(
                       (t) => _buildTemplateTile(t, l10n, isBuiltIn: true),
                     ),
@@ -101,14 +103,17 @@ class _TemplateManagementScreenState
                   ],
 
                   // User templates section
-                  _buildSectionHeader(l10n.userTemplates, Icons.description),
+                  _buildSectionHeader(l10n.userTemplates, AppIcons.description),
                   if (_userTemplates.isEmpty)
                     Padding(
                       padding: const EdgeInsets.all(32),
                       child: Center(
                         child: Text(
                           l10n.noTemplates,
-                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant),
                         ),
                       ),
                     )
@@ -133,9 +138,9 @@ class _TemplateManagementScreenState
           Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
         ],
       ),
@@ -154,7 +159,7 @@ class _TemplateManagementScreenState
       leading: CircleAvatar(
         backgroundColor: catColor.withValues(alpha: 0.15),
         child: Icon(
-          isBuiltIn ? Icons.bookmark_outlined : Icons.description_outlined,
+          isBuiltIn ? AppIcons.bookmark : AppIcons.description,
           size: 20,
           color: catColor,
         ),
@@ -198,7 +203,7 @@ class _TemplateManagementScreenState
             PopupMenuItem(
               value: 'duplicate',
               child: ListTile(
-                leading: const Icon(Icons.copy),
+                leading: const Icon(AppIcons.copy),
                 title: Text(l10n.duplicateTemplate),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -207,7 +212,7 @@ class _TemplateManagementScreenState
             PopupMenuItem(
               value: 'edit',
               child: ListTile(
-                leading: const Icon(Icons.edit_outlined),
+                leading: const Icon(AppIcons.edit),
                 title: Text(l10n.editTemplate),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -215,7 +220,7 @@ class _TemplateManagementScreenState
             PopupMenuItem(
               value: 'duplicate',
               child: ListTile(
-                leading: const Icon(Icons.copy),
+                leading: const Icon(AppIcons.copy),
                 title: Text(l10n.duplicateTemplate),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -223,8 +228,8 @@ class _TemplateManagementScreenState
             PopupMenuItem(
               value: 'delete',
               child: ListTile(
-                leading:
-                    Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+                leading: Icon(AppIcons.deleteOutline,
+                    color: Theme.of(context).colorScheme.error),
                 title: Text(
                   l10n.deleteTemplate,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),

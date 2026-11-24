@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -31,7 +32,8 @@ PostTemplate _template(
     );
 
 /// Inserts templates via raw SQL (mirrors how the app seeds/creates them).
-Future<void> _insertTemplates(AppDatabase db, List<PostTemplate> templates) async {
+Future<void> _insertTemplates(
+    AppDatabase db, List<PostTemplate> templates) async {
   for (final t in templates) {
     await db.customStatement(
       'INSERT INTO post_templates '
@@ -78,7 +80,8 @@ void main() {
     testWidgets('shows a no-template option that clears the provider selection',
         (tester) async {
       final db = createTestDatabase();
-      await _insertTemplates(db, [_template('tpl-user', '我的模板', createdAt: _earlyCreatedAt)]);
+      await _insertTemplates(
+          db, [_template('tpl-user', '我的模板', createdAt: _earlyCreatedAt)]);
 
       final selected = <PostTemplate?>[];
       final handle = await pumpScreen(
@@ -143,12 +146,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Only the user-created template has the actions menu.
-      expect(find.byIcon(Icons.more_vert), findsOneWidget);
+      expect(find.byIcon(AppIcons.moreVertical), findsOneWidget);
       expect(find.text('我的模板'), findsOneWidget);
       expect(find.text('内置模板'), findsOneWidget);
 
       // Open the actions sheet via the menu.
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byIcon(AppIcons.moreVertical));
       await tester.pumpAndSettle();
       expect(find.text('编辑模板'), findsOneWidget);
       expect(find.text('删除模板'), findsOneWidget);
@@ -168,7 +171,8 @@ void main() {
     testWidgets('long-press on a user template opens the actions sheet',
         (tester) async {
       final db = createTestDatabase();
-      await _insertTemplates(db, [_template('tpl-user', '我的模板', createdAt: _earlyCreatedAt)]);
+      await _insertTemplates(
+          db, [_template('tpl-user', '我的模板', createdAt: _earlyCreatedAt)]);
 
       final handle = await pumpScreen(
         tester,
@@ -194,7 +198,8 @@ void main() {
 
     testWidgets('delete confirms and removes the template', (tester) async {
       final db = createTestDatabase();
-      await _insertTemplates(db, [_template('tpl-user', '我的模板', createdAt: _earlyCreatedAt)]);
+      await _insertTemplates(
+          db, [_template('tpl-user', '我的模板', createdAt: _earlyCreatedAt)]);
 
       final handle = await pumpScreen(
         tester,
@@ -205,7 +210,7 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byIcon(AppIcons.moreVertical));
       await tester.pumpAndSettle();
       await tester.tap(find.text('删除模板'));
       await tester.pumpAndSettle();
@@ -230,7 +235,8 @@ void main() {
 
     testWidgets('delete can be cancelled', (tester) async {
       final db = createTestDatabase();
-      await _insertTemplates(db, [_template('tpl-user', '我的模板', createdAt: _earlyCreatedAt)]);
+      await _insertTemplates(
+          db, [_template('tpl-user', '我的模板', createdAt: _earlyCreatedAt)]);
 
       final handle = await pumpScreen(
         tester,
@@ -241,7 +247,7 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byIcon(AppIcons.moreVertical));
       await tester.pumpAndSettle();
       await tester.tap(find.text('删除模板'));
       await tester.pumpAndSettle();

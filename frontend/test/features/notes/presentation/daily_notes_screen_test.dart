@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -56,8 +57,8 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Calendar navigation chevrons should be present.
-      expect(find.byIcon(Icons.chevron_left), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      expect(find.byIcon(AppIcons.chevronLeft), findsOneWidget);
+      expect(find.byIcon(AppIcons.chevronRight), findsOneWidget);
 
       await handle.dispose();
     });
@@ -105,7 +106,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // With no daily notes, the empty state should be visible.
-      expect(find.byIcon(Icons.event_note_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.today), findsOneWidget);
 
       await handle.dispose();
     });
@@ -120,12 +121,12 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Tap the previous month button.
-      await tester.tap(find.byIcon(Icons.chevron_left));
+      await tester.tap(find.byIcon(AppIcons.chevronLeft));
       await tester.pumpAndSettle();
 
       // The calendar should still be rendered (no crash).
-      expect(find.byIcon(Icons.chevron_left), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      expect(find.byIcon(AppIcons.chevronLeft), findsOneWidget);
+      expect(find.byIcon(AppIcons.chevronRight), findsOneWidget);
 
       await handle.dispose();
     });
@@ -140,7 +141,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Navigate to a different month first.
-      await tester.tap(find.byIcon(Icons.chevron_left));
+      await tester.tap(find.byIcon(AppIcons.chevronLeft));
       await tester.pumpAndSettle();
 
       // Now tap the Today button.
@@ -148,7 +149,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // The calendar should still render without errors.
-      expect(find.byIcon(Icons.chevron_left), findsOneWidget);
+      expect(find.byIcon(AppIcons.chevronLeft), findsOneWidget);
 
       await handle.dispose();
     });

@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/settings/data/settings_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../error/connectivity_provider.dart';
-import '../constants/app_durations.dart';
 import '../sync/sync_lifecycle.dart';
 import '../sync/sync_progress.dart';
+import '../theme/app_animation.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_icons.dart';
+import '../theme/animation_config.dart';
 
 /// Compact sync status widget for use in the app bar.
 ///
@@ -34,7 +36,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
     super.initState();
     _syncIconController = AnimationController(
       vsync: this,
-      duration: AppDurations.autoSaveDelay,
+      duration: AppAnimation.expressive,
     );
   }
 
@@ -54,8 +56,10 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
     final isSyncing = lifecycle.isActive && !isOffline;
     final syncProgress = syncProgressAsync.valueOrNull ?? SyncProgress.idle;
 
-    // Animate the sync icon rotation when syncing.
-    if (isSyncing) {
+    // The sync icon turns while syncing. A loop is not something a shorter
+    // duration makes calm — it would only flicker — so with "减少动画" on it
+    // is simply still.
+    if (isSyncing && !context.motion.reduceMotion) {
       _syncIconController.repeat();
     } else {
       _syncIconController.stop();
@@ -128,10 +132,10 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
   }
 
   IconData _iconForState(bool isOffline, bool isSyncing, int pendingCount) {
-    if (isOffline) return Icons.cloud_off;
-    if (isSyncing) return Icons.sync;
-    if (pendingCount > 0) return Icons.cloud_upload;
-    return Icons.cloud_done;
+    if (isOffline) return AppIcons.cloudOff;
+    if (isSyncing) return AppIcons.sync;
+    if (pendingCount > 0) return AppIcons.cloudUpload;
+    return AppIcons.cloudDone;
   }
 
   Color _colorForState(bool isOffline, bool isSyncing, BuildContext context) {
@@ -202,23 +206,24 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
               const SizedBox(height: 12),
               _buildDetailRow(
                 context,
-                icon: isOffline ? Icons.wifi_off : Icons.wifi,
+                icon: isOffline ? AppIcons.wifiOff : AppIcons.wifi,
                 label: isOffline
                     ? (l10n?.offlineLabel ?? 'Offline')
                     : (l10n?.connectedLabel ?? 'Connected'),
-                valueColor: isOffline ? theme.colorScheme.error : AppColors.success,
+                valueColor:
+                    isOffline ? theme.colorScheme.error : AppColors.success,
               ),
               const SizedBox(height: 8),
               _buildDetailRow(
                 context,
-                icon: Icons.cloud_upload_outlined,
+                icon: AppIcons.cloudUpload,
                 label: l10n?.pendingOpsLabel ?? 'Pending operations',
                 value: '$pendingCount',
               ),
               const SizedBox(height: 8),
               _buildDetailRow(
                 context,
-                icon: Icons.access_time,
+                icon: AppIcons.schedule,
                 label: l10n?.lastSyncedLabel ?? 'Last synced',
                 value: lastSyncText,
               ),
@@ -243,7 +248,7 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
                   (item) => ListTile(
                     dense: true,
                     leading: Icon(
-                      Icons.error_outline,
+                      AppIcons.errorOutline,
                       size: 18,
                       color: theme.colorScheme.error,
                     ),
@@ -286,8 +291,8 @@ class _SyncStatusWidgetState extends ConsumerState<SyncStatusWidget>
           children: [
             Icon(
               progress.phase == SyncPhase.pulling
-                  ? Icons.download
-                  : Icons.upload,
+                  ? AppIcons.download
+                  : AppIcons.uploadIcon,
               size: 16,
               color: theme.colorScheme.primary,
             ),

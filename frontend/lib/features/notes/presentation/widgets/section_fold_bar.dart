@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'section_fold_controller.dart';
 
@@ -60,7 +61,7 @@ class SectionFoldBar extends StatelessWidget {
                   foldController.foldAll();
                   onFoldAll?.call();
                 },
-                icon: const Icon(Icons.unfold_less, size: 18),
+                icon: const Icon(AppIcons.chevronDoubleUp, size: 18),
                 label: Text(
                   l10n.foldAll,
                   style: const TextStyle(fontSize: 13),
@@ -79,7 +80,7 @@ class SectionFoldBar extends StatelessWidget {
                   foldController.unfoldAll();
                   onUnfoldAll?.call();
                 },
-                icon: const Icon(Icons.unfold_more, size: 18),
+                icon: const Icon(AppIcons.chevronDoubleDown, size: 18),
                 label: Text(
                   l10n.unfoldAll,
                   style: const TextStyle(fontSize: 13),

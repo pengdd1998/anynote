@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/color_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
@@ -81,35 +82,35 @@ class _TagReparentSheetState extends State<TagReparentSheet> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Text(
                 l10n.selectParentTag,
-              style: theme.textTheme.titleMedium,
+                style: theme.textTheme.titleMedium,
+              ),
             ),
-          ),
-          _SearchField(
-            controller: _searchController,
-            onChanged: (value) => setState(() => _query = value),
-            l10n: l10n,
-          ),
-          _NoParentOption(
-            l10n: l10n,
-            theme: theme,
-            onTap: () {
-              widget.onSelected(null);
-              Navigator.of(context).pop();
-            },
-          ),
-          const Divider(height: 1),
-          Flexible(
-            child: _TagTreeList(
-              filteredItems: filteredItems,
-              onTagSelected: (tagId) {
-                widget.onSelected(tagId);
+            _SearchField(
+              controller: _searchController,
+              onChanged: (value) => setState(() => _query = value),
+              l10n: l10n,
+            ),
+            _NoParentOption(
+              l10n: l10n,
+              theme: theme,
+              onTap: () {
+                widget.onSelected(null);
                 Navigator.of(context).pop();
               },
             ),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
+            const Divider(height: 1),
+            Flexible(
+              child: _TagTreeList(
+                filteredItems: filteredItems,
+                onTagSelected: (tagId) {
+                  widget.onSelected(tagId);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
@@ -174,7 +175,7 @@ class _SearchField extends StatelessWidget {
         scrollPadding: const EdgeInsets.only(bottom: 120),
         decoration: InputDecoration(
           hintText: l10n.search,
-          prefixIcon: const Icon(Icons.search, size: 20),
+          prefixIcon: const Icon(AppIcons.search, size: 20),
           isDense: true,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -205,7 +206,7 @@ class _NoParentOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(Icons.folder_open, color: theme.colorScheme.primary),
+      leading: Icon(AppIcons.folderOpen, color: theme.colorScheme.primary),
       title: Text(
         l10n.noParent,
         style: theme.textTheme.bodyMedium?.copyWith(
@@ -264,7 +265,7 @@ class _TagTreeTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Icon(
-                Icons.subdirectory_arrow_right,
+                AppIcons.arrowElbowDownRight,
                 size: 16,
                 color:
                     theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
@@ -281,7 +282,7 @@ class _TagTreeTile extends StatelessWidget {
             )
           else
             Icon(
-              Icons.label_outline,
+              AppIcons.tag,
               size: 18,
               color: theme.colorScheme.onSurfaceVariant,
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Minimal chrome shown at the top of the screen in zen mode.
@@ -54,7 +55,7 @@ class ZenModeChrome extends StatelessWidget {
           // Back button to exit zen mode.
           IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              AppIcons.arrowBack,
               color: iconColor,
               size: 20,
             ),
@@ -64,7 +65,7 @@ class ZenModeChrome extends StatelessWidget {
           // Focus mode toggle.
           IconButton(
             icon: Icon(
-              isFocusMode ? Icons.highlight : Icons.highlight_outlined,
+              isFocusMode ? AppIcons.highlightFilled : AppIcons.highlight,
               color: isFocusMode ? colorScheme.primary : iconColor,
               size: 18,
             ),
@@ -75,8 +76,8 @@ class ZenModeChrome extends StatelessWidget {
           IconButton(
             icon: Icon(
               isTypewriterScroll
-                  ? Icons.vertical_align_center
-                  : Icons.vertical_align_top_outlined,
+                  ? AppIcons.verticalAlignCenter
+                  : AppIcons.verticalAlignTop,
               color: isTypewriterScroll ? colorScheme.primary : iconColor,
               size: 18,
             ),
@@ -87,7 +88,7 @@ class ZenModeChrome extends StatelessWidget {
           // Toggle button to exit zen mode.
           IconButton(
             icon: Icon(
-              Icons.fullscreen_exit,
+              AppIcons.fullscreenExit,
               color: iconColor,
               size: 20,
             ),

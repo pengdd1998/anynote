@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_animation.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/constants/app_durations.dart';
 import '../../../../core/error/error.dart' show ErrorDisplay;
 import '../../../../core/platform/platform_utils.dart';
 import '../../../../core/storage/image_storage.dart';
@@ -79,7 +79,8 @@ class _EditorDropTargetState extends ConsumerState<EditorDropTarget> {
           if (mounted) {
             AppSnackBar.error(
               context,
-              message: l10n.failedToAddImage(ErrorDisplay.displayMessage(e, l10n)),
+              message:
+                  l10n.failedToAddImage(ErrorDisplay.displayMessage(e, l10n)),
             );
           }
         }
@@ -113,7 +114,7 @@ class _EditorDropTargetState extends ConsumerState<EditorDropTarget> {
         _handleDrop(details.files.map((f) => f.path).toList());
       },
       child: AnimatedContainer(
-        duration: AppDurations.shortAnimation,
+        duration: AppAnimation.standard,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: _isDragging

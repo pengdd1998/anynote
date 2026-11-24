@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 
@@ -130,7 +131,7 @@ class _SplitNotePickerSheetState extends ConsumerState<SplitNotePickerSheet> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(AppIcons.close, size: 20),
                   onPressed: () => Navigator.pop(context),
                   constraints:
                       const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -148,7 +149,7 @@ class _SplitNotePickerSheetState extends ConsumerState<SplitNotePickerSheet> {
               scrollPadding: const EdgeInsets.only(bottom: 120),
               decoration: InputDecoration(
                 hintText: l10n.searchNotes,
-                prefixIcon: const Icon(Icons.search, size: 20),
+                prefixIcon: const Icon(AppIcons.search, size: 20),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -176,7 +177,8 @@ class _SplitNotePickerSheetState extends ConsumerState<SplitNotePickerSheet> {
                         child: Text(
                           l10n.noNotesFound,
                           style: TextStyle(
-                              color: theme.colorScheme.onSurfaceVariant,),
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       )
                     : ListView.builder(
@@ -188,7 +190,7 @@ class _SplitNotePickerSheetState extends ConsumerState<SplitNotePickerSheet> {
                           return ListTile(
                             dense: true,
                             leading: const Icon(
-                              Icons.article_outlined,
+                              AppIcons.article,
                               size: 20,
                             ),
                             title: Text(

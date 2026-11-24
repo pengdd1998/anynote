@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/error/error.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -115,7 +116,8 @@ class _TranslationNotifier extends StateNotifier<_TranslationState> {
 
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: ErrorMapper.map(e).toString());
+      state = state.copyWith(
+          isLoading: false, error: ErrorMapper.map(e).toString());
     }
   }
 
@@ -193,7 +195,7 @@ class TranslationSheet extends ConsumerWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.translate,
+                    AppIcons.language,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
@@ -203,7 +205,7 @@ class TranslationSheet extends ConsumerWidget {
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(AppIcons.close),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -271,12 +273,16 @@ class TranslationSheet extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              Icon(AppIcons.errorOutline,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
               const SizedBox(height: 12),
               Text(
                 state.error!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13),
               ),
             ],
           ),
@@ -292,7 +298,9 @@ class TranslationSheet extends ConsumerWidget {
       return Center(
         child: Text(
           l10n.translationWillAppear,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+          style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14),
         ),
       );
     }
@@ -342,7 +350,7 @@ class TranslationSheet extends ConsumerWidget {
                           message: l10n.copiedToClipboard,
                         );
                       },
-                      icon: const Icon(Icons.copy, size: 18),
+                      icon: const Icon(AppIcons.copy, size: 18),
                       label: Text(l10n.copy),
                     ),
                   ),
@@ -353,7 +361,7 @@ class TranslationSheet extends ConsumerWidget {
                         onReplace(state.translatedText);
                         Navigator.pop(context);
                       },
-                      icon: const Icon(Icons.find_replace, size: 18),
+                      icon: const Icon(AppIcons.replace, size: 18),
                       label: Text(l10n.replace),
                     ),
                   ),
@@ -364,7 +372,7 @@ class TranslationSheet extends ConsumerWidget {
                         onInsertBelow(state.translatedText);
                         Navigator.pop(context);
                       },
-                      icon: const Icon(Icons.add, size: 18),
+                      icon: const Icon(AppIcons.add, size: 18),
                       label: Text(l10n.insertBelow),
                     ),
                   ),

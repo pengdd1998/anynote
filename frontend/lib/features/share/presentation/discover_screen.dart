@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/error/error.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -81,14 +82,13 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       });
       AppSnackBar.error(
         context,
-        message:
-            AppLocalizations.of(context)?.failedToLoadMore(
-                  ErrorDisplay.userMessage(
-                    ErrorMapper.map(e),
-                    AppLocalizations.of(context)!,
-                  ),
-                ) ??
-                'Failed to load more: $e',
+        message: AppLocalizations.of(context)?.failedToLoadMore(
+              ErrorDisplay.userMessage(
+                ErrorMapper.map(e),
+                AppLocalizations.of(context)!,
+              ),
+            ) ??
+            'Failed to load more: $e',
       );
     }
   }
@@ -123,9 +123,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final itemIndex = _allItems.indexWhere((item) => item['id'] == shareId);
     if (itemIndex >= 0) {
       final item = Map<String, dynamic>.from(_allItems[itemIndex]);
-      final countKey = reactionType == 'heart'
-          ? 'reaction_heart'
-          : 'reaction_bookmark';
+      final countKey =
+          reactionType == 'heart' ? 'reaction_heart' : 'reaction_bookmark';
       item[countKey] = (item[countKey] as int? ?? 0) + (wasActive ? -1 : 1);
       setState(() {
         _allItems[itemIndex] = item;
@@ -144,9 +143,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       final count = result['count'] as int;
       if (itemIndex >= 0) {
         final item = Map<String, dynamic>.from(_allItems[itemIndex]);
-        final countKey = reactionType == 'heart'
-            ? 'reaction_heart'
-            : 'reaction_bookmark';
+        final countKey =
+            reactionType == 'heart' ? 'reaction_heart' : 'reaction_bookmark';
         item[countKey] = count;
         setState(() {
           _allItems[itemIndex] = item;
@@ -159,9 +157,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           .update((state) => {...state, stateKey: wasActive});
       if (itemIndex >= 0) {
         final item = Map<String, dynamic>.from(_allItems[itemIndex]);
-        final countKey = reactionType == 'heart'
-            ? 'reaction_heart'
-            : 'reaction_bookmark';
+        final countKey =
+            reactionType == 'heart' ? 'reaction_heart' : 'reaction_bookmark';
         item[countKey] = (item[countKey] as int? ?? 0) + (wasActive ? 1 : -1);
         setState(() {
           _allItems[itemIndex] = item;
@@ -207,7 +204,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
     if (_allItems.isEmpty) {
       return EmptyState(
-        icon: Icons.explore_outlined,
+        icon: AppIcons.explore,
         title: l10n.noPublicNotes,
         subtitle: l10n.noPublicNotesDesc,
       );
@@ -280,7 +277,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: const Icon(
-                Icons.error_outline,
+                AppIcons.errorOutline,
                 size: 28,
                 color: AppColors.error,
               ),
@@ -426,7 +423,7 @@ class _DiscoverCard extends ConsumerWidget {
                 if (hasPassword) ...[
                   const SizedBox(width: AppSpacing.s4),
                   Icon(
-                    Icons.lock_outline,
+                    AppIcons.lock,
                     size: 14,
                     color: isDark
                         ? AppColors.darkTextTertiary
@@ -456,7 +453,7 @@ class _DiscoverCard extends ConsumerWidget {
               children: [
                 // Heart
                 _ReactionButton(
-                  icon: isHearted ? Icons.favorite : Icons.favorite_border,
+                  icon: isHearted ? AppIcons.favoriteFilled : AppIcons.favorite,
                   count: heartCount,
                   isActive: isHearted,
                   activeColor: AppColors.error,
@@ -466,7 +463,9 @@ class _DiscoverCard extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.s12),
                 // Bookmark
                 _ReactionButton(
-                  icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  icon: isBookmarked
+                      ? AppIcons.bookmarkFilled
+                      : AppIcons.bookmark,
                   count: bookmarkCount,
                   isActive: isBookmarked,
                   activeColor: AppColors.primary,
@@ -476,7 +475,7 @@ class _DiscoverCard extends ConsumerWidget {
                 const Spacer(),
                 // Views
                 Icon(
-                  Icons.visibility_outlined,
+                  AppIcons.visibility,
                   size: 16,
                   color: isDark
                       ? AppColors.darkTextTertiary
@@ -539,9 +538,7 @@ class _ReactionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isActive
         ? activeColor
-        : (isDark
-            ? AppColors.darkTextTertiary
-            : AppColors.lightTextTertiary);
+        : (isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary);
 
     return GestureDetector(
       onTap: onTap,

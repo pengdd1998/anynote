@@ -4,6 +4,7 @@ import '../../../core/error/error_display.dart';
 import '../../../core/error/exceptions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
@@ -199,7 +200,7 @@ class _ActionCard extends StatelessWidget {
       onTap: enabled ? onTap : null,
       child: AnimatedOpacity(
         opacity: enabled ? 1.0 : 0.5,
-        duration: const Duration(milliseconds: 200),
+        duration: AppAnimation.standard,
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.s16),
           decoration: BoxDecoration(
@@ -288,7 +289,8 @@ class _ResultCard extends StatelessWidget {
     final iconColor = isSuccess
         ? (isDark ? AppColors.success : AppColors.accentMintText)
         : AppColors.error;
-    final icon = isSuccess ? Icons.check_circle_outline : Icons.error_outline;
+    final icon =
+        isSuccess ? AppIcons.checkCircleOutline : AppIcons.errorOutline;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s16),

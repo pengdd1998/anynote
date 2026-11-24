@@ -78,8 +78,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
     // URL capture: submitting/pasting a bare URL expands into a snippet.
     _contentController.addListener(() {
       final text = _contentController.text.trim();
-      if (RegExp(r'^https?://\S+$').hasMatch(text) &&
-          _urlExpansionPending) {
+      if (RegExp(r'^https?://\S+$').hasMatch(text) && _urlExpansionPending) {
         _urlExpansionPending = false;
         _expandUrlIfNeeded();
       } else if (!RegExp(r'^https?://\S+$').hasMatch(text)) {
@@ -269,9 +268,9 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
       l10n.priorityLow,
     ];
     const icons = [
-      Icons.keyboard_double_arrow_up,
-      Icons.keyboard_double_arrow_right,
-      Icons.keyboard_double_arrow_down,
+      AppIcons.chevronDoubleUp,
+      AppIcons.chevronDoubleRight,
+      AppIcons.chevronDoubleDown,
     ];
     const colors = [AppColors.error, AppColors.warning, AppColors.success];
 
@@ -322,7 +321,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                   title: Text(priorityLabels[index]),
                   trailing: isSelected
                       ? Icon(
-                          Icons.check_circle,
+                          AppIcons.checkCircle,
                           color: Theme.of(context).colorScheme.primary,
                         )
                       : null,
@@ -429,8 +428,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                     Expanded(
                       child: Text(
                         l10n.quickCapture,
-                        style:
-                            AppTextStyles.handwritingBody.copyWith(
+                        style: AppTextStyles.handwritingBody.copyWith(
                           fontSize: 24,
                           color: isDark
                               ? AppColors.darkTextPrimary
@@ -529,13 +527,12 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                                       width: 64,
                                       height: 64,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          Container(
+                                      errorBuilder: (_, __, ___) => Container(
                                         width: 64,
                                         height: 64,
                                         color: AppColors.lightInputFill,
                                         child: const Icon(
-                                          Icons.broken_image_outlined,
+                                          AppIcons.brokenImage,
                                           size: 20,
                                         ),
                                       ),
@@ -557,7 +554,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
-                                          Icons.close,
+                                          AppIcons.close,
                                           size: 12,
                                           color: Colors.white,
                                         ),
@@ -593,8 +590,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
         children: [
           if (_selectedPriority != null)
             Padding(
-              padding:
-                  const EdgeInsets.only(right: 6, top: 4, bottom: 4),
+              padding: const EdgeInsets.only(right: 6, top: 4, bottom: 4),
               child: Chip(
                 label: Text(
                   _selectedPriority!,
@@ -602,13 +598,13 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
                 ),
                 avatar: Icon(
                   _selectedPriority == 'High'
-                      ? Icons.keyboard_double_arrow_up
+                      ? AppIcons.chevronDoubleUp
                       : _selectedPriority == 'Medium'
-                          ? Icons.keyboard_double_arrow_right
-                          : Icons.keyboard_double_arrow_down,
+                          ? AppIcons.chevronDoubleRight
+                          : AppIcons.chevronDoubleDown,
                   size: 14,
                 ),
-                deleteIcon: const Icon(Icons.close, size: 14),
+                deleteIcon: const Icon(AppIcons.close, size: 14),
                 onDeleted: () {
                   setState(() => _selectedPriority = null);
                 },
@@ -617,16 +613,15 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
             ),
           if (_selectedTagIds.isNotEmpty)
             Padding(
-              padding:
-                  const EdgeInsets.only(left: 4, top: 4, bottom: 4),
+              padding: const EdgeInsets.only(left: 4, top: 4, bottom: 4),
               child: Chip(
                 label: Text(
                   AppLocalizations.of(context)!
                       .tagsCountLabel(_selectedTagIds.length),
                   style: AppTextStyles.caption,
                 ),
-                avatar: const Icon(Icons.label, size: 14),
-                deleteIcon: const Icon(Icons.close, size: 14),
+                avatar: const Icon(AppIcons.tag, size: 14),
+                deleteIcon: const Icon(AppIcons.close, size: 14),
                 onDeleted: () {
                   setState(() => _selectedTagIds.clear());
                 },
@@ -700,7 +695,8 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
     if (url == null) return;
 
     try {
-      final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
+      final client = HttpClient()
+        ..connectionTimeout = const Duration(seconds: 5);
       final req = await client.getUrl(Uri.parse(text));
       final res = await req.close();
       final body = await res.transform(utf8.decoder).join();
@@ -731,12 +727,12 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const Icon(AppIcons.photoLibrary),
               title: Text(l10n.fromGallery),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
+              leading: const Icon(AppIcons.camera),
               title: Text(l10n.fromCamera),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
@@ -793,12 +789,12 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
         IconButton(
           icon: Icon(
             _selectedPriority == 'High'
-                ? Icons.keyboard_double_arrow_up
+                ? AppIcons.chevronDoubleUp
                 : _selectedPriority == 'Medium'
-                    ? Icons.keyboard_double_arrow_right
+                    ? AppIcons.chevronDoubleRight
                     : _selectedPriority == 'Low'
-                        ? Icons.keyboard_double_arrow_down
-                        : Icons.flag_outlined,
+                        ? AppIcons.chevronDoubleDown
+                        : AppIcons.flag,
             color: _selectedPriority == 'High'
                 ? AppColors.error
                 : _selectedPriority == 'Medium'
@@ -812,7 +808,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
         ),
         IconButton(
           icon: Icon(
-            _isListening ? Icons.mic : Icons.mic_none,
+            _isListening ? AppIcons.micFilled : AppIcons.mic,
             color: _isListening ? AppColors.error : tertiaryColor,
           ),
           tooltip: '语音输入',
@@ -823,7 +819,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
           icon: Badge(
             isLabelVisible: _attachedImagePaths.isNotEmpty,
             label: Text('${_attachedImagePaths.length}'),
-            child: Icon(Icons.image_outlined, color: tertiaryColor),
+            child: Icon(AppIcons.imageIcon, color: tertiaryColor),
           ),
           tooltip: l10n.addImage,
           onPressed: _attachImage,

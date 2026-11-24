@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_icons.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 
@@ -18,7 +19,7 @@ import '../theme/app_spacing.dart';
 /// SoftButton.danger(
 ///   label: 'Delete',
 ///   onPressed: _delete,
-///   icon: Icons.delete_outline,
+///   icon: AppIcons.deleteOutline,
 /// )
 /// ```
 class SoftButton extends StatelessWidget {

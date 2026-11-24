@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../main.dart';
@@ -138,7 +139,7 @@ class _TemplateExtractorScreenState
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.auto_fix_high),
+                  : const Icon(AppIcons.magicWand),
               label: Text(_isExtracting ? '提取中...' : 'AI 提取模板'),
             ),
 
@@ -150,7 +151,8 @@ class _TemplateExtractorScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('提取结果', style: Theme.of(context).textTheme.titleMedium),
+                    Text('提取结果',
+                        style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: AppSpacing.s8),
                     TextField(
                       controller: _nameController,
@@ -204,7 +206,7 @@ class _TemplateExtractorScreenState
                 const Spacer(),
                 FilledButton.icon(
                   onPressed: _save,
-                  icon: const Icon(Icons.save),
+                  icon: const Icon(AppIcons.save),
                   label: const Text('保存模板'),
                 ),
               ],

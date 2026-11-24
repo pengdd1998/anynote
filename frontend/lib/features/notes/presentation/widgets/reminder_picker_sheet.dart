@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/daos/note_properties_dao.dart';
 import '../../../../core/notifications/reminder_service.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Bottom sheet for picking or managing a reminder on a note.
@@ -103,19 +104,19 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
                 _buildPresetChip(
                   context: context,
                   label: l10n.laterToday,
-                  icon: Icons.access_time,
+                  icon: AppIcons.schedule,
                   onTap: () => _applyPreset(_laterToday()),
                 ),
                 _buildPresetChip(
                   context: context,
                   label: l10n.tomorrowMorning,
-                  icon: Icons.wb_sunny_outlined,
+                  icon: AppIcons.lightMode,
                   onTap: () => _applyPreset(_tomorrowMorning()),
                 ),
                 _buildPresetChip(
                   context: context,
                   label: l10n.nextWeek,
-                  icon: Icons.event_outlined,
+                  icon: AppIcons.event,
                   onTap: () => _applyPreset(_nextWeek()),
                 ),
               ],
@@ -209,7 +210,7 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
       child: Row(
         children: [
           Icon(
-            Icons.notifications_active,
+            AppIcons.notificationsActive,
             size: 18,
             color: theme.colorScheme.onSecondaryContainer,
           ),
@@ -260,7 +261,7 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
         child: Row(
           children: [
             Icon(
-              Icons.calendar_today_outlined,
+              AppIcons.calendarToday,
               size: 18,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -296,7 +297,7 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
         child: Row(
           children: [
             Icon(
-              Icons.schedule,
+              AppIcons.schedule,
               size: 18,
               color: theme.colorScheme.onSurfaceVariant,
             ),

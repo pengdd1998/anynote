@@ -178,7 +178,7 @@ class ErrorDisplay {
   /// Get an appropriate icon for the given error type.
   static IconData errorIcon(AppException error) {
     return switch (error) {
-      NetworkException() => AppIcons.wifiTethering,
+      NetworkException() => AppIcons.wifi,
       ServerException() => AppIcons.cloudOff,
       AuthException() => AppIcons.lock,
       ForbiddenException() => AppIcons.shield,

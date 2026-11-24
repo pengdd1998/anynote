@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,7 +10,7 @@ void main() {
     WidgetTester tester, {
     required String message,
     VoidCallback? onRetry,
-    IconData icon = Icons.error_outline,
+    IconData icon = AppIcons.errorOutline,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -38,30 +39,30 @@ void main() {
     testWidgets('renders the default error icon', (tester) async {
       await pumpErrorWidget(tester, message: 'Error');
 
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.byIcon(AppIcons.errorOutline), findsOneWidget);
     });
 
     testWidgets('renders a custom icon when provided', (tester) async {
       await pumpErrorWidget(
         tester,
         message: 'Network error',
-        icon: Icons.cloud_off,
+        icon: AppIcons.cloudOff,
       );
 
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudOff), findsOneWidget);
     });
 
     testWidgets('renders icon at size 48', (tester) async {
       await pumpErrorWidget(tester, message: 'Error');
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.error_outline));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.errorOutline));
       expect(icon.size, 48);
     });
 
     testWidgets('icon uses error color from theme', (tester) async {
       await pumpErrorWidget(tester, message: 'Error');
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.error_outline));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.errorOutline));
       final theme = ThemeData(useMaterial3: true);
       expect(icon.color, theme.colorScheme.error);
     });
@@ -148,10 +149,10 @@ void main() {
       await pumpErrorWidget(
         tester,
         message: longMessage,
-        icon: Icons.cloud_off,
+        icon: AppIcons.cloudOff,
       );
 
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudOff), findsOneWidget);
       expect(find.text(longMessage), findsOneWidget);
     });
 
@@ -159,21 +160,21 @@ void main() {
       await pumpErrorWidget(
         tester,
         message: 'Warning occurred',
-        icon: Icons.warning_amber,
+        icon: AppIcons.warning,
       );
 
-      expect(find.byIcon(Icons.warning_amber), findsOneWidget);
+      expect(find.byIcon(AppIcons.warning), findsOneWidget);
     });
 
     testWidgets('renders with connection-lost scenario', (tester) async {
       await pumpErrorWidget(
         tester,
         message: 'Connection lost',
-        icon: Icons.signal_wifi_off,
+        icon: AppIcons.wifiOff,
         onRetry: () {},
       );
 
-      expect(find.byIcon(Icons.signal_wifi_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.wifiOff), findsOneWidget);
       expect(find.text('Connection lost'), findsOneWidget);
       expect(find.byType(FilledButton), findsOneWidget);
     });
@@ -184,7 +185,7 @@ void main() {
       // Verify there is a Padding widget with the expected value.
       final padding = tester.widget<Padding>(
         find.ancestor(
-          of: find.byIcon(Icons.error_outline),
+          of: find.byIcon(AppIcons.errorOutline),
           matching: find.byType(Padding),
         ),
       );

@@ -100,72 +100,64 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        StaggeredGroup(
-          staggerIndex: 0,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SettingsGroupHeader(title: l10n.importMarkdown),
-              SettingsGroup(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      l10n.importMarkdownDesc,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color,
-                      ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SettingsGroupHeader(title: l10n.importMarkdown),
+            SettingsGroup(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    l10n.importMarkdownDesc,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.textTheme.bodySmall?.color,
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
-        StaggeredGroup(
-          staggerIndex: 1,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SettingsGroupHeader(title: l10n.sourceHeader),
-              SettingsGroup(
-                children: [
-                  SettingsItem(
-                    icon: AppIcons.insertDriveFile,
-                    title: l10n.selectFiles,
-                    subtitle: l10n.selectMdFilesSubtitle,
-                    trailing: _markdownState.isImporting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(AppIcons.chevronRight, size: 20),
-                    onTap: _markdownState.isImporting
-                        ? null
-                        : _importMarkdownFiles,
-                  ),
-                  SettingsItem(
-                    icon: AppIcons.folderOpen,
-                    title: l10n.selectFolder,
-                    subtitle: l10n.importMdFolderSubtitle,
-                    trailing: _markdownState.isImporting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(AppIcons.chevronRight, size: 20),
-                    onTap: _markdownState.isImporting
-                        ? null
-                        : _importMarkdownFolder,
-                  ),
-                ],
-              ),
-            ],
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SettingsGroupHeader(title: l10n.sourceHeader),
+            SettingsGroup(
+              children: [
+                SettingsItem(
+                  icon: AppIcons.insertDriveFile,
+                  title: l10n.selectFiles,
+                  subtitle: l10n.selectMdFilesSubtitle,
+                  trailing: _markdownState.isImporting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(AppIcons.chevronRight, size: 20),
+                  onTap:
+                      _markdownState.isImporting ? null : _importMarkdownFiles,
+                ),
+                SettingsItem(
+                  icon: AppIcons.folderOpen,
+                  title: l10n.selectFolder,
+                  subtitle: l10n.importMdFolderSubtitle,
+                  trailing: _markdownState.isImporting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(AppIcons.chevronRight, size: 20),
+                  onTap:
+                      _markdownState.isImporting ? null : _importMarkdownFolder,
+                ),
+              ],
+            ),
+          ],
         ),
         if (_markdownState.hasResult) _buildResultSection(_markdownState),
       ],
@@ -226,8 +218,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             notes.add(note);
           }
         } catch (e) {
-          errors.add(ImportError(
-              filePath: path, message: ErrorMapper.map(e).toString(),),);
+          errors.add(
+            ImportError(
+              filePath: path,
+              message: ErrorMapper.map(e).toString(),
+            ),
+          );
           skipped++;
         }
       }
@@ -254,7 +250,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
               skippedCount: 0,
               errors: [
                 ImportError(
-                    filePath: '', message: ErrorMapper.map(e).toString(),),
+                  filePath: '',
+                  message: ErrorMapper.map(e).toString(),
+                ),
               ],
             ),
           );
@@ -406,57 +404,51 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        StaggeredGroup(
-          staggerIndex: 0,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SettingsGroupHeader(title: l10n.appleNotesExportHeader),
-              SettingsGroup(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      l10n.appleNotesImportDesc,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color,
-                      ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SettingsGroupHeader(title: l10n.appleNotesExportHeader),
+            SettingsGroup(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    l10n.appleNotesImportDesc,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.textTheme.bodySmall?.color,
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
-        StaggeredGroup(
-          staggerIndex: 1,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SettingsGroupHeader(title: l10n.sourceHeader),
-              SettingsGroup(
-                children: [
-                  SettingsItem(
-                    icon: AppIcons.folderOpen,
-                    title: l10n.selectFolder,
-                    subtitle: l10n.selectAppleNotesFolderSubtitle,
-                    trailing: _appleNotesState.isImporting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(AppIcons.chevronRight, size: 20),
-                    onTap: _appleNotesState.isImporting
-                        ? null
-                        : _importAppleNotesFolder,
-                  ),
-                ],
-              ),
-            ],
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SettingsGroupHeader(title: l10n.sourceHeader),
+            SettingsGroup(
+              children: [
+                SettingsItem(
+                  icon: AppIcons.folderOpen,
+                  title: l10n.selectFolder,
+                  subtitle: l10n.selectAppleNotesFolderSubtitle,
+                  trailing: _appleNotesState.isImporting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(AppIcons.chevronRight, size: 20),
+                  onTap: _appleNotesState.isImporting
+                      ? null
+                      : _importAppleNotesFolder,
+                ),
+              ],
+            ),
+          ],
         ),
         if (_appleNotesState.hasResult) _buildResultSection(_appleNotesState),
       ],
@@ -529,70 +521,62 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        StaggeredGroup(
-          staggerIndex: 0,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SettingsGroupHeader(title: l10n.plainTextFilesHeader),
-              SettingsGroup(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      l10n.plainTextImportDesc,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color,
-                      ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SettingsGroupHeader(title: l10n.plainTextFilesHeader),
+            SettingsGroup(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    l10n.plainTextImportDesc,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.textTheme.bodySmall?.color,
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
-        StaggeredGroup(
-          staggerIndex: 1,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SettingsGroupHeader(title: l10n.sourceHeader),
-              SettingsGroup(
-                children: [
-                  SettingsItem(
-                    icon: AppIcons.insertDriveFile,
-                    title: l10n.selectFiles,
-                    subtitle: l10n.selectTxtFilesSubtitle,
-                    trailing: _plainTextState.isImporting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(AppIcons.chevronRight, size: 20),
-                    onTap:
-                        _plainTextState.isImporting ? null : _importTextFiles,
-                  ),
-                  SettingsItem(
-                    icon: AppIcons.folderOpen,
-                    title: l10n.selectFolder,
-                    subtitle: l10n.importTxtFolderSubtitle,
-                    trailing: _plainTextState.isImporting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(AppIcons.chevronRight, size: 20),
-                    onTap:
-                        _plainTextState.isImporting ? null : _importTextFolder,
-                  ),
-                ],
-              ),
-            ],
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SettingsGroupHeader(title: l10n.sourceHeader),
+            SettingsGroup(
+              children: [
+                SettingsItem(
+                  icon: AppIcons.insertDriveFile,
+                  title: l10n.selectFiles,
+                  subtitle: l10n.selectTxtFilesSubtitle,
+                  trailing: _plainTextState.isImporting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(AppIcons.chevronRight, size: 20),
+                  onTap: _plainTextState.isImporting ? null : _importTextFiles,
+                ),
+                SettingsItem(
+                  icon: AppIcons.folderOpen,
+                  title: l10n.selectFolder,
+                  subtitle: l10n.importTxtFolderSubtitle,
+                  trailing: _plainTextState.isImporting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(AppIcons.chevronRight, size: 20),
+                  onTap: _plainTextState.isImporting ? null : _importTextFolder,
+                ),
+              ],
+            ),
+          ],
         ),
         if (_plainTextState.hasResult) _buildResultSection(_plainTextState),
       ],
@@ -654,8 +638,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             notes.add(note);
           }
         } catch (e) {
-          errors.add(ImportError(
-              filePath: path, message: ErrorMapper.map(e).toString(),),);
+          errors.add(
+            ImportError(
+              filePath: path,
+              message: ErrorMapper.map(e).toString(),
+            ),
+          );
           skipped++;
         }
       }
@@ -823,58 +811,55 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
-    return StaggeredGroup(
-      staggerIndex: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SettingsGroupHeader(
-            title: result.hasErrors
-                ? l10n.restoreCompletedWithErrors
-                : l10n.restoreCompleted,
-          ),
-          SettingsGroup(
-            children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SettingsGroupHeader(
+          title: result.hasErrors
+              ? l10n.restoreCompletedWithErrors
+              : l10n.restoreCompleted,
+        ),
+        SettingsGroup(
+          children: [
+            SettingsItem(
+              icon: AppIcons.checkCircleOutline,
+              iconColor: AppColors.success,
+              title: l10n.itemsRestored,
+              subtitle: l10n.noteCount(result.importedCount),
+            ),
+            if (result.skippedCount > 0)
               SettingsItem(
-                icon: AppIcons.checkCircleOutline,
-                iconColor: AppColors.success,
-                title: l10n.itemsRestored,
-                subtitle: l10n.noteCount(result.importedCount),
+                icon: AppIcons.skipNext,
+                iconColor: AppColors.warning,
+                title: l10n.itemsSkipped,
+                subtitle: l10n.fileCount(result.skippedCount),
               ),
-              if (result.skippedCount > 0)
+            if (result.hasErrors) ...[
+              for (final error in result.errors.take(5))
                 SettingsItem(
-                  icon: AppIcons.skipNext,
-                  iconColor: AppColors.warning,
-                  title: l10n.itemsSkipped,
-                  subtitle: l10n.fileCount(result.skippedCount),
+                  icon: AppIcons.errorOutline,
+                  iconColor: theme.colorScheme.error,
+                  title: _basename(error.filePath),
+                  subtitle: error.message,
                 ),
-              if (result.hasErrors) ...[
-                for (final error in result.errors.take(5))
-                  SettingsItem(
-                    icon: AppIcons.errorOutline,
-                    iconColor: theme.colorScheme.error,
-                    title: _basename(error.filePath),
-                    subtitle: error.message,
+              if (result.errors.length > 5)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                if (result.errors.length > 5)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Text(
-                      l10n.andMoreErrors(result.errors.length - 5),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.disabledColor,
-                      ),
+                  child: Text(
+                    l10n.andMoreErrors(result.errors.length - 5),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.disabledColor,
                     ),
                   ),
-              ],
+                ),
             ],
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 

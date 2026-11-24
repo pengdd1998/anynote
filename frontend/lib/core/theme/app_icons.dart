@@ -1,11 +1,24 @@
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Centralized icon mapping using Phosphor Icons.
+/// Every icon the app draws, by name.
 ///
-/// Provides a single point of reference for all app icons. Navigation items
-/// use [regular] for unselected and [fill] for selected states.
+/// One family — Phosphor line (the `Regular` cut). Nothing else draws icons:
+/// `Icons.*` from Material is not used, because it mixed three styles and
+/// some of its code points render as colour emoji on Samsung phones.
+/// `test/design/icon_system_test.dart` keeps it that way.
 ///
-/// Usage: `Icon(AppIcons.notes)` instead of `Icon(Icons.note_outlined)`.
+/// Rules:
+/// - A name is what the icon means (`delete`), not what it looks like
+///   (`trash`).
+/// - `Regular` everywhere. `…Filled` is the *on* state of a toggle only
+///   (star / pin / bookmark / mic…) and always sits next to its `Regular`
+///   pair; it is never used on its own for decoration.
+/// - `Bold` appears twice, for the high-contrast theme choices, where the
+///   heavier stroke *is* the meaning.
+/// - To add an icon: check the list below first, then add one line here and
+///   use it everywhere.
+///
+/// Usage: `Icon(AppIcons.notes)`, `find.byIcon(AppIcons.notes)`.
 class AppIcons {
   AppIcons._();
 
@@ -69,7 +82,7 @@ class AppIcons {
   static const title = PhosphorIconsRegular.textH;
   static const bulletList = PhosphorIconsRegular.listBullets;
   static const numberedList = PhosphorIconsRegular.listNumbers;
-  static const quote = PhosphorIconsRegular.textAa;
+  static const quote = PhosphorIconsRegular.quotes;
   static const code = PhosphorIconsRegular.code;
   static const checklist = PhosphorIconsRegular.checks;
   static const indentIncrease = PhosphorIconsRegular.textIndent;
@@ -88,18 +101,13 @@ class AppIcons {
   static const visibility = PhosphorIconsRegular.eye;
   static const pin = PhosphorIconsRegular.pushPin;
 
-  // ── Navigation / Selection ───────────────────────────────────────────
-
-  static const radioChecked = PhosphorIconsFill.circle;
-  static const radioUnchecked = PhosphorIconsRegular.circle;
-
   // ── Misc ─────────────────────────────────────────────────────────────
 
   static const folder = PhosphorIconsRegular.folder;
   static const folderOpen = PhosphorIconsRegular.folderOpen;
   static const person = PhosphorIconsRegular.user;
   static const personOutline = PhosphorIconsRegular.user;
-  static const schedule = PhosphorIconsRegular.calendarBlank;
+  static const schedule = PhosphorIconsRegular.clock;
   static const noteAdd = PhosphorIconsRegular.notePencil;
   static const print = PhosphorIconsRegular.printer;
   static const article = PhosphorIconsRegular.article;
@@ -118,7 +126,7 @@ class AppIcons {
   static const key = PhosphorIconsRegular.key;
   static const verifiedUser = PhosphorIconsRegular.shieldCheck;
   static const warning = PhosphorIconsRegular.warning;
-  static const deleteForever = PhosphorIconsRegular.trash;
+  static const deleteForever = PhosphorIconsRegular.trashSimple;
   static const download = PhosphorIconsRegular.downloadSimple;
   static const uploadIcon = PhosphorIconsRegular.uploadSimple;
   static const visibilityOff = PhosphorIconsRegular.eyeSlash;
@@ -132,7 +140,7 @@ class AppIcons {
   static const alarm = PhosphorIconsRegular.alarm;
   static const syncProblem = PhosphorIconsRegular.warningOctagon;
   static const personAdd = PhosphorIconsRegular.userPlus;
-  static const notificationsActive = PhosphorIconsFill.bell;
+  static const notificationsActive = PhosphorIconsRegular.bellRinging;
   static const fileOpen = PhosphorIconsRegular.file;
   static const numbers = PhosphorIconsRegular.hash;
   static const calendarToday = PhosphorIconsRegular.calendarBlank;
@@ -149,8 +157,156 @@ class AppIcons {
   static const insertDriveFile = PhosphorIconsRegular.file;
   static const cleaningServices = PhosphorIconsRegular.broom;
   static const deleteForeverOutline = PhosphorIconsRegular.trash;
-  static const wifiTethering = PhosphorIconsRegular.wifiHigh;
+  static const wifi = PhosphorIconsRegular.wifiHigh;
   static const deleteOutline = PhosphorIconsRegular.trash;
-  static const starOutline = PhosphorIconsRegular.star;
+  static const star = PhosphorIconsRegular.star;
   static const starFilled = PhosphorIconsFill.star;
+
+  // ── Arrows & navigation ──────────────────────────────────────────────
+
+  static const arrowForward = PhosphorIconsRegular.arrowRight;
+  static const arrowUp = PhosphorIconsRegular.arrowUp;
+  static const arrowDown = PhosphorIconsRegular.arrowDown;
+  static const chevronDown = PhosphorIconsRegular.caretDown;
+  static const chevronUp = PhosphorIconsRegular.caretUp;
+  static const chevronLeft = PhosphorIconsRegular.caretLeft;
+  static const chevronDoubleDown = PhosphorIconsRegular.caretDoubleDown;
+  static const chevronDoubleUp = PhosphorIconsRegular.caretDoubleUp;
+  static const chevronDoubleRight = PhosphorIconsRegular.caretDoubleRight;
+  static const arrowElbowDownRight = PhosphorIconsRegular.arrowElbowDownRight;
+  static const arrowUpRight = PhosphorIconsRegular.arrowUpRight;
+  static const arrowDownLeft = PhosphorIconsRegular.arrowDownLeft;
+  static const openInNew = PhosphorIconsRegular.arrowSquareOut;
+  static const export = PhosphorIconsRegular.export;
+  static const fullscreen = PhosphorIconsRegular.cornersOut;
+  static const fullscreenExit = PhosphorIconsRegular.cornersIn;
+
+  // ── Actions ──────────────────────────────────────────────
+
+  static const addCircle = PhosphorIconsRegular.plusCircle;
+  static const cancel = PhosphorIconsRegular.xCircle;
+  static const checkBox = PhosphorIconsRegular.checkSquare;
+  static const contentPaste = PhosphorIconsRegular.clipboard;
+  static const editNote = PhosphorIconsRegular.pencilSimpleLine;
+  static const searchOff = PhosphorIconsRegular.fileMagnifyingGlass;
+  static const save = PhosphorIconsRegular.floppyDisk;
+  static const moreHorizontal = PhosphorIconsRegular.dotsThree;
+  static const moreVertical = PhosphorIconsRegular.dotsThreeVertical;
+  static const dragHandle = PhosphorIconsRegular.dotsSixVertical;
+  static const refresh = PhosphorIconsRegular.arrowClockwise;
+  static const send = PhosphorIconsRegular.paperPlaneTilt;
+  static const publish = PhosphorIconsRegular.paperPlaneRight;
+
+  // ── Media ──────────────────────────────────────────────
+
+  static const micFilled = PhosphorIconsFill.microphone;
+  static const mic = PhosphorIconsRegular.microphone;
+  static const playCircle = PhosphorIconsRegular.playCircle;
+  static const pauseCircle = PhosphorIconsRegular.pauseCircle;
+  static const stop = PhosphorIconsRegular.stop;
+  static const stopCircle = PhosphorIconsRegular.stopCircle;
+  static const volumeUpFilled = PhosphorIconsFill.speakerHigh;
+  static const volumeUp = PhosphorIconsRegular.speakerHigh;
+  static const brokenImage = PhosphorIconsRegular.imageBroken;
+  static const phoneAndroid = PhosphorIconsRegular.deviceMobile;
+
+  // ── Marks (regular = off, filled = on) ──────────────────────────────────────────────
+
+  static const pinFilled = PhosphorIconsFill.pushPin;
+  static const bookmarkFilled = PhosphorIconsFill.bookmarkSimple;
+  static const bookmark = PhosphorIconsRegular.bookmarkSimple;
+  static const bookmarkAdd = PhosphorIconsRegular.bookmarks;
+  static const favoriteFilled = PhosphorIconsFill.heart;
+  static const favorite = PhosphorIconsRegular.heart;
+  static const highlightFilled = PhosphorIconsFill.highlighter;
+  static const highlight = PhosphorIconsRegular.highlighter;
+  static const chartBarFilled = PhosphorIconsFill.chartBar;
+  static const chartBar = PhosphorIconsRegular.chartBar;
+  static const psychologyFilled = PhosphorIconsFill.brain;
+  static const psychology = PhosphorIconsRegular.brain;
+  static const lockOpen = PhosphorIconsRegular.lockSimpleOpen;
+  static const circle = PhosphorIconsRegular.circle;
+  static const circleFilled = PhosphorIconsFill.circle;
+
+  // ── Links ──────────────────────────────────────────────
+
+  static const linkOff = PhosphorIconsRegular.linkBreak;
+  static const insertLink = PhosphorIconsRegular.linkSimple;
+  static const addLink = PhosphorIconsRegular.linkSimpleHorizontal;
+
+  // ── Notes, files & folders ──────────────────────────────────────────────
+
+  static const filePdf = PhosphorIconsRegular.filePdf;
+  static const folderPlus = PhosphorIconsRegular.folderPlus;
+  static const folderZip = PhosphorIconsRegular.fileZip;
+  static const moveTo = PhosphorIconsRegular.arrowsDownUp;
+  static const storage = PhosphorIconsRegular.database;
+  static const dataObject = PhosphorIconsRegular.bracketsCurly;
+  static const cardMembership = PhosphorIconsRegular.identificationCard;
+
+  // ── Time ──────────────────────────────────────────────
+
+  static const pending = PhosphorIconsRegular.clockClockwise;
+  static const today = PhosphorIconsRegular.calendarDot;
+  static const calendarMonth = PhosphorIconsRegular.calendar;
+  static const repeat = PhosphorIconsRegular.repeat;
+
+  // ── Status & feedback ──────────────────────────────────────────────
+
+  static const priorityHigh = PhosphorIconsRegular.exclamationMark;
+  static const wifiOff = PhosphorIconsRegular.wifiSlash;
+  static const block = PhosphorIconsRegular.prohibit;
+
+  // ── Data & views ──────────────────────────────────────────────
+
+  static const insights = PhosphorIconsRegular.chartLineUp;
+  static const analytics = PhosphorIconsRegular.chartLine;
+  static const scatterPlot = PhosphorIconsRegular.chartScatter;
+  static const tableChart = PhosphorIconsRegular.table;
+  static const dashboard = PhosphorIconsRegular.squaresFour;
+  static const gridView = PhosphorIconsRegular.gridFour;
+  static const viewList = PhosphorIconsRegular.list;
+  static const listAlt = PhosphorIconsRegular.listDashes;
+  static const viewHeadline = PhosphorIconsRegular.rows;
+  static const verticalSplit = PhosphorIconsRegular.columns;
+  static const verticalAlignCenter = PhosphorIconsRegular.alignCenterVertical;
+  static const verticalAlignTop = PhosphorIconsRegular.alignTop;
+  static const filterList = PhosphorIconsRegular.funnel;
+  static const filterListOff = PhosphorIconsRegular.funnelX;
+  static const compare = PhosphorIconsRegular.gitDiff;
+  static const replace = PhosphorIconsRegular.swap;
+  static const replaceAll = PhosphorIconsRegular.listChecks;
+  static const speed = PhosphorIconsRegular.gauge;
+  static const fire = PhosphorIconsRegular.fire;
+  static const diamond = PhosphorIconsRegular.diamond;
+  static const explore = PhosphorIconsRegular.compass;
+  static const flag = PhosphorIconsRegular.flag;
+  static const inbox = PhosphorIconsRegular.tray;
+
+  // ── Settings & appearance ──────────────────────────────────────────────
+
+  static const themeSystem = PhosphorIconsRegular.circleHalf;
+  static const tune = PhosphorIconsRegular.slidersHorizontal;
+  static const highContrastLight = PhosphorIconsBold.sun;
+  static const highContrastDark = PhosphorIconsBold.moon;
+  static const lightMode = PhosphorIconsRegular.sun;
+  static const darkMode = PhosphorIconsRegular.moon;
+
+  // ── Editor & formatting ──────────────────────────────────────────────
+
+  static const textT = PhosphorIconsRegular.textT;
+  static const spellcheck = PhosphorIconsRegular.textAa;
+  static const writingStyle = PhosphorIconsRegular.feather;
+  static const clearAll = PhosphorIconsRegular.eraser;
+  static const remove = PhosphorIconsRegular.minus;
+  static const removeCircle = PhosphorIconsRegular.minusCircle;
+  static const magicWand = PhosphorIconsRegular.magicWand;
+
+  // ── People & communication ──────────────────────────────────────────────
+
+  static const people = PhosphorIconsRegular.users;
+  static const alternateEmail = PhosphorIconsRegular.at;
+  static const email = PhosphorIconsRegular.envelopeSimple;
+  static const globe = PhosphorIconsRegular.globeSimple;
+  static const comment = PhosphorIconsRegular.chatText;
 }

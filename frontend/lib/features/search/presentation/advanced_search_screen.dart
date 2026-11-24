@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radius.dart';
@@ -65,7 +66,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
         actions: [
           if (hasActiveSearch)
             IconButton(
-              icon: const Icon(Icons.clear_all),
+              icon: const Icon(AppIcons.clearAll),
               tooltip: l10n.clearAllFilters,
               onPressed: () {
                 _searchController.clear();
@@ -131,7 +132,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
               if (_searchController.text.isNotEmpty)
                 IconButton(
                   icon: Icon(
-                    Icons.clear,
+                    AppIcons.close,
                     size: 20,
                     color: tertiary,
                   ),
@@ -142,7 +143,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                 ),
               IconButton(
                 icon: Icon(
-                  Icons.bookmark_add_outlined,
+                  AppIcons.bookmarkAdd,
                   size: 20,
                   color: _searchController.text.trim().isEmpty
                       ? (isDark
@@ -303,8 +304,8 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
               ),
             ),
             const SizedBox(width: AppSpacing.s4),
-            PhosphorIcon(
-              isActive ? PhosphorIconsFill.caretDown : PhosphorIconsRegular.caretDown,
+            Icon(
+              AppIcons.chevronDown,
               size: 12,
               color: isActive ? activeText : tertiary,
             ),
@@ -346,9 +347,8 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.4,
-          color: isDark
-              ? AppColors.darkTextTertiary
-              : AppColors.lightTextTertiary,
+          color:
+              isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
         ),
       ),
     );
@@ -380,9 +380,9 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
               children: [
                 AnimatedRotation(
                   turns: _showHints ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AppAnimation.standard,
                   child: const Icon(
-                    PhosphorIconsRegular.caretDown,
+                    AppIcons.chevronDown,
                     size: 14,
                     color: AppColors.primaryText,
                   ),
@@ -407,9 +407,8 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
             ),
             padding: const EdgeInsets.all(AppSpacing.s12),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkInputFill
-                  : AppColors.lightInputFill,
+              color:
+                  isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Column(
@@ -442,9 +441,8 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.primary.withAlpha(20)
-              : AppColors.primarySoft,
+          color:
+              isDark ? AppColors.primary.withAlpha(20) : AppColors.primarySoft,
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
@@ -452,9 +450,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
           style: AppTextStyles.caption.copyWith(
             fontSize: 12,
             fontFamily: 'RobotoMono',
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.primaryText,
+            color: isDark ? AppColors.darkTextSecondary : AppColors.primaryText,
           ),
         ),
       ),
@@ -581,7 +577,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
               child: SizedBox(
                 width: 32,
                 height: 32,
-                child: Icon(Icons.close, size: 14, color: tertiary),
+                child: Icon(AppIcons.close, size: 14, color: tertiary),
               ),
             ),
             Icon(AppIcons.chevronRight, size: 14, color: tertiary),
@@ -684,7 +680,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                 width: 32,
                 height: 32,
                 child: Icon(
-                  Icons.close,
+                  AppIcons.close,
                   size: 14,
                   color: AppColors.error.withAlpha(150),
                 ),
@@ -727,7 +723,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
             width: isSemantic ? 1.5 : 1,
           ),
           avatar: Icon(
-            isSemantic ? Icons.psychology : Icons.psychology_outlined,
+            isSemantic ? AppIcons.psychologyFilled : AppIcons.psychology,
             size: 18,
             color: isSemantic
                 ? accent
@@ -764,7 +760,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
       data: (results) {
         if (results.isEmpty) {
           return EmptyState(
-            icon: Icons.search_off,
+            icon: AppIcons.searchOff,
             title: l10n.noResultsFound,
             subtitle: l10n.semanticEmptyHint,
           );
@@ -804,7 +800,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
       error: (error, _) {
         if (error is SemanticSearchUnavailableException) {
           return EmptyState(
-            icon: Icons.psychology_alt_outlined,
+            icon: AppIcons.psychology,
             title: l10n.semanticSearch,
             subtitle: l10n.embeddingModelMissing,
           );
@@ -821,7 +817,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
       data: (results) {
         if (results.isEmpty) {
           return EmptyState(
-            icon: Icons.search_off,
+            icon: AppIcons.searchOff,
             title: l10n.noResultsFound,
             subtitle: l10n.tryAdjustingSearch,
           );
@@ -927,8 +923,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
             child: Text(l10n.cancel),
           ),
           FilledButton(
-            onPressed: () =>
-                Navigator.of(ctx).pop(nameController.text.trim()),
+            onPressed: () => Navigator.of(ctx).pop(nameController.text.trim()),
             child: Text(l10n.save),
           ),
         ],

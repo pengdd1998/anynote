@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/color_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
@@ -85,7 +86,7 @@ class _CollectionPickerSheetState extends ConsumerState<CollectionPickerSheet> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.create_new_folder_outlined,
+                    AppIcons.folderPlus,
                     size: 20,
                     color: theme.colorScheme.primary,
                   ),
@@ -106,7 +107,7 @@ class _CollectionPickerSheetState extends ConsumerState<CollectionPickerSheet> {
                 scrollPadding: const EdgeInsets.only(bottom: 120),
                 decoration: InputDecoration(
                   hintText: l10n.searchCollections,
-                  prefixIcon: const Icon(Icons.search, size: 20),
+                  prefixIcon: const Icon(AppIcons.search, size: 20),
                   isDense: true,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -139,7 +140,7 @@ class _CollectionPickerSheetState extends ConsumerState<CollectionPickerSheet> {
                             final color = parseHexColor(collection.color);
                             return ListTile(
                               leading: Icon(
-                                Icons.folder_outlined,
+                                AppIcons.folder,
                                 color: color ?? theme.colorScheme.primary,
                               ),
                               title: Text(

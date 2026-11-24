@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../main.dart';
@@ -19,7 +20,8 @@ class TemplateEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
-  late final _nameController = TextEditingController(text: widget.existing?.name);
+  late final _nameController =
+      TextEditingController(text: widget.existing?.name);
   late final _descController =
       TextEditingController(text: widget.existing?.description);
   late final _promptController =
@@ -111,7 +113,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
         actions: [
           IconButton(
             onPressed: _isSaving ? null : _save,
-            icon: const Icon(Icons.check),
+            icon: const Icon(AppIcons.check),
             tooltip: '保存',
           ),
         ],

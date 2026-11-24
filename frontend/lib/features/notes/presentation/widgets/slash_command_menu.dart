@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
-import '../../../../core/constants/app_durations.dart';
+import '../../../../core/theme/app_animation.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../embeds/table_embed.dart';
 
@@ -51,97 +52,97 @@ List<SlashCommand> buildSlashCommands(BuildContext context) {
     SlashCommand(
       name: l10n.slashHeading1,
       description: 'H1',
-      icon: Icons.title,
+      icon: AppIcons.title,
       type: SlashCommandType.heading1,
     ),
     SlashCommand(
       name: l10n.slashHeading2,
       description: 'H2',
-      icon: Icons.title,
+      icon: AppIcons.title,
       type: SlashCommandType.heading2,
     ),
     SlashCommand(
       name: l10n.slashHeading3,
       description: 'H3',
-      icon: Icons.title,
+      icon: AppIcons.title,
       type: SlashCommandType.heading3,
     ),
     SlashCommand(
       name: l10n.slashBulletList,
       description: '-',
-      icon: Icons.format_list_bulleted,
+      icon: AppIcons.bulletList,
       type: SlashCommandType.bulletList,
     ),
     SlashCommand(
       name: l10n.slashNumberedList,
       description: '1.',
-      icon: Icons.format_list_numbered,
+      icon: AppIcons.numberedList,
       type: SlashCommandType.numberedList,
     ),
     SlashCommand(
       name: l10n.slashTodoList,
       description: '[]',
-      icon: Icons.check_box_outlined,
+      icon: AppIcons.checkBox,
       type: SlashCommandType.todoList,
     ),
     SlashCommand(
       name: l10n.slashCodeBlock,
       description: '</>',
-      icon: Icons.code,
+      icon: AppIcons.code,
       type: SlashCommandType.codeBlock,
     ),
     SlashCommand(
       name: l10n.slashQuote,
       description: '">',
-      icon: Icons.format_quote,
+      icon: AppIcons.quote,
       type: SlashCommandType.quote,
     ),
     SlashCommand(
       name: l10n.slashDivider,
       description: '---',
-      icon: Icons.horizontal_rule,
+      icon: AppIcons.remove,
       type: SlashCommandType.divider,
     ),
     SlashCommand(
       name: l10n.slashTable,
       description: '3x3',
-      icon: Icons.table_chart,
+      icon: AppIcons.tableChart,
       type: SlashCommandType.table,
     ),
     SlashCommand(
       name: l10n.slashImage,
       description: 'img',
-      icon: Icons.image_outlined,
+      icon: AppIcons.imageIcon,
       type: SlashCommandType.image,
     ),
     SlashCommand(
       name: l10n.slashWikilink,
       description: '[[',
-      icon: Icons.link,
+      icon: AppIcons.link,
       type: SlashCommandType.wikilink,
     ),
     SlashCommand(
       name: l10n.slashTransclusion,
       description: '![[',
-      icon: Icons.insert_link,
+      icon: AppIcons.insertLink,
       type: SlashCommandType.transclusion,
     ),
     SlashCommand(
       name: l10n.slashCallout,
       description: '!',
-      icon: Icons.info_outline,
+      icon: AppIcons.infoOutline,
       type: SlashCommandType.callout,
     ),
     SlashCommand(
       name: l10n.slashMermaid,
       description: '{}',
-      icon: Icons.account_tree_outlined,
+      icon: AppIcons.accountTree,
       type: SlashCommandType.mermaid,
     ),
     SlashCommand(
       name: l10n.insertSnippet,
       description: '</>',
-      icon: Icons.code,
+      icon: AppIcons.code,
       type: SlashCommandType.snippet,
     ),
   ];
@@ -280,14 +281,14 @@ class SlashCommandMenuState extends State<SlashCommandMenu> {
     if (targetOffset < currentOffset) {
       _scrollController.animateTo(
         targetOffset,
-        duration: AppDurations.veryShortAnimation,
-        curve: Curves.easeOut,
+        duration: AppAnimation.fast,
+        curve: AppAnimation.arrive,
       );
     } else if (targetOffset + _itemHeight > currentOffset + viewportHeight) {
       _scrollController.animateTo(
         targetOffset + _itemHeight - viewportHeight,
-        duration: AppDurations.veryShortAnimation,
-        curve: Curves.easeOut,
+        duration: AppAnimation.fast,
+        curve: AppAnimation.arrive,
       );
     }
   }

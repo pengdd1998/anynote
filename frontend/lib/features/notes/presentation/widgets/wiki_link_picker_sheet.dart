@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
 
@@ -140,19 +141,19 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: Column(
-        children: [
-          _buildHeader(context, l10n, theme),
-          _buildSearchField(context, l10n, theme),
-          const Divider(height: 1),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredNotes.isEmpty
-                    ? _buildEmptyState(context, l10n, theme)
-                    : _buildNotesList(context, scrollController, l10n, theme),
-          ),
-        ],
-      ),
+          children: [
+            _buildHeader(context, l10n, theme),
+            _buildSearchField(context, l10n, theme),
+            const Divider(height: 1),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filteredNotes.isEmpty
+                      ? _buildEmptyState(context, l10n, theme)
+                      : _buildNotesList(context, scrollController, l10n, theme),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -167,7 +168,7 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
       child: Row(
         children: [
           Icon(
-            Icons.link,
+            AppIcons.link,
             color: theme.colorScheme.primary,
           ),
           const SizedBox(width: 8),
@@ -177,7 +178,7 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(AppIcons.close),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -198,10 +199,10 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
         scrollPadding: const EdgeInsets.only(bottom: 120),
         decoration: InputDecoration(
           hintText: l10n.searchNotes,
-          prefixIcon: const Icon(Icons.search),
+          prefixIcon: const Icon(AppIcons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.clear),
+                  icon: const Icon(AppIcons.close),
                   onPressed: () {
                     _searchController.clear();
                     _filterNotes('');
@@ -228,7 +229,7 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.note_add_outlined,
+            AppIcons.noteAdd,
             size: 48,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -245,7 +246,7 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
             const SizedBox(height: 16),
             FilledButton.tonalIcon(
               onPressed: _createNewNote,
-              icon: const Icon(Icons.add),
+              icon: const Icon(AppIcons.add),
               label: Text(l10n.createNewNote),
             ),
           ],
@@ -269,7 +270,7 @@ class _WikiLinkPickerSheetState extends ConsumerState<WikiLinkPickerSheet> {
         final preview = note.plainContent ?? '';
 
         return ListTile(
-          leading: const Icon(Icons.note_outlined),
+          leading: const Icon(AppIcons.noteBlank),
           title: Text(
             title,
             maxLines: 1,

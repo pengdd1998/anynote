@@ -7,6 +7,7 @@
 // - Sync queue manager pending count display
 // - Sync detail bottom sheet interaction
 
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,7 +72,7 @@ void main() {
 
       // With default overrides (0 pending, online, not syncing),
       // the icon should be cloud_done.
-      expect(find.byIcon(Icons.cloud_done), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudDone), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -93,7 +94,7 @@ void main() {
       );
 
       // When offline, the icon should be cloud_off.
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudOff), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -181,7 +182,7 @@ void main() {
         find.text('You are offline — changes will sync when connected'),
         findsOneWidget,
       );
-      expect(find.byIcon(Icons.wifi_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.wifiOff), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -214,8 +215,7 @@ void main() {
   });
 
   group('Sync flow - NotesListScreen integration', () {
-    testWidgets('notes list screen contains offline banner',
-        (tester) async {
+    testWidgets('notes list screen contains offline banner', (tester) async {
       final handle = await pumpScreen(
         tester,
         const NotesListScreen(autoLoad: false),
@@ -328,7 +328,7 @@ void main() {
         overrides: overrides,
       );
 
-      expect(find.byIcon(Icons.cloud_done), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudDone), findsOneWidget);
 
       // Manually dispose to avoid Drift timer leaks
       await handle.dispose();
@@ -362,7 +362,7 @@ void main() {
       );
 
       // When there are pending items, the icon should be cloud_upload.
-      expect(find.byIcon(Icons.cloud_upload), findsOneWidget);
+      expect(find.byIcon(AppIcons.cloudUpload), findsOneWidget);
 
       // The badge should show the pending count.
       expect(find.text('3'), findsOneWidget);

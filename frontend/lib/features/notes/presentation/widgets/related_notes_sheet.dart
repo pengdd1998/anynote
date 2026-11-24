@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../main.dart';
@@ -33,7 +34,7 @@ class RelatedNotesSheet extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.call_made_outlined,
+                  AppIcons.arrowUpRight,
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
@@ -89,7 +90,7 @@ class _RelatedNoteTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
     return ListTile(
-      leading: const Icon(Icons.note_outlined),
+      leading: const Icon(AppIcons.noteBlank),
       title: FutureBuilder<String>(
         future: _resolveTitle(db, link.targetId),
         builder: (context, snapshot) {
@@ -104,7 +105,7 @@ class _RelatedNoteTile extends ConsumerWidget {
         link.linkType,
         style: Theme.of(context).textTheme.bodySmall,
       ),
-      trailing: const Icon(Icons.arrow_forward, size: 16),
+      trailing: const Icon(AppIcons.arrowForward, size: 16),
       onTap: () {
         Navigator.of(context).pop();
         context.push('/notes/${link.targetId}');

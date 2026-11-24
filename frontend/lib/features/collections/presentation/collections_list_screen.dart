@@ -86,7 +86,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
         scrolledUnderElevation: 0,
         actions: [
           IconButton(
-            icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
+            icon: Icon(_isGridView ? AppIcons.viewList : AppIcons.gridView),
             tooltip: _isGridView ? l10n.listView : l10n.gridView,
             onPressed: () {
               setState(() => _isGridView = !_isGridView);
@@ -110,7 +110,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
 
           if (collections.isEmpty) {
             return EmptyState(
-              icon: Icons.folder_open_outlined,
+              icon: AppIcons.folderOpen,
               title: l10n.noCollectionsYet,
               subtitle: l10n.groupNotesIntoCollections,
               actionLabel: l10n.newCollection,
@@ -155,7 +155,8 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
           width: double.infinity,
           height: AppSpacing.buttonHeight,
           child: TextButton.icon(
-            onPressed: () => _showCreateCollectionDialog(context, ref.read(databaseProvider)),
+            onPressed: () => _showCreateCollectionDialog(
+                context, ref.read(databaseProvider)),
             icon: const Icon(AppIcons.add, size: 18),
             label: Text(
               l10n.newCollection,
@@ -164,8 +165,9 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
               ),
             ),
             style: TextButton.styleFrom(
-              backgroundColor:
-                  isDark ? AppColors.primary.withAlpha(36) : AppColors.primarySoft,
+              backgroundColor: isDark
+                  ? AppColors.primary.withAlpha(36)
+                  : AppColors.primarySoft,
               foregroundColor:
                   isDark ? AppColors.secondary : AppColors.primaryText,
               shape: StadiumBorder(
@@ -208,7 +210,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
         borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       child: Icon(
-        Icons.folder,
+        AppIcons.folder,
         size: 22,
         color: iconColor,
       ),
@@ -225,13 +227,11 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkErrorBg
-                  : AppColors.lightErrorBg,
+              color: isDark ? AppColors.darkErrorBg : AppColors.lightErrorBg,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(
-              Icons.error_outline,
+              AppIcons.errorOutline,
               size: 28,
               color: AppColors.error,
             ),
@@ -324,7 +324,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
             color: AppColors.error.withAlpha(20),
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          child: Icon(Icons.delete, color: AppColors.error.withAlpha(150)),
+          child: Icon(AppIcons.delete, color: AppColors.error.withAlpha(150)),
         ),
         confirmDismiss: (direction) async {
           final l10n = AppLocalizations.of(context)!;
@@ -589,7 +589,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
                   : AppColors.lightDivider.withAlpha(80),
             ),
             ListTile(
-              leading: const Icon(Icons.palette),
+              leading: const Icon(AppIcons.palette),
               title: Text(l10n.noteColor),
               onTap: () async {
                 Navigator.of(ctx).pop();
@@ -598,7 +598,7 @@ class _CollectionsListScreenState extends ConsumerState<CollectionsListScreen> {
             ),
             ListTile(
               leading: const Icon(
-                Icons.delete_outline,
+                AppIcons.deleteOutline,
                 color: AppColors.error,
               ),
               title: Text(

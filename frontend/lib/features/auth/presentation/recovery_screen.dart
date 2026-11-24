@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_animation.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../../core/constants/app_durations.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/crypto/key_storage.dart';
 import '../../../core/crypto/master_key.dart';
@@ -314,9 +314,9 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
             // Step content
             Expanded(
               child: AnimatedSwitcher(
-                duration: AppDurations.shortAnimation,
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
+                duration: AppAnimation.standard,
+                switchInCurve: AppAnimation.arrive,
+                switchOutCurve: AppAnimation.depart,
                 child: switch (_currentStep) {
                   0 => _buildEmailStep(
                       context,
@@ -415,7 +415,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
             scrollPadding: const EdgeInsets.only(bottom: 120),
             decoration: InputDecoration(
               hintText: l10n.email,
-              prefixIcon: const Icon(Icons.email_outlined),
+              prefixIcon: const Icon(AppIcons.email),
             ),
             keyboardType: TextInputType.emailAddress,
             onFieldSubmitted: (_) => _onEmailNext(),
@@ -571,7 +571,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
                   child: Row(
                     children: [
                       Icon(
-                        Icons.error_outline,
+                        AppIcons.errorOutline,
                         size: 18,
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -738,9 +738,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen>
               });
             },
             icon: Icon(
-              _manualMode
-                  ? Icons.text_snippet_outlined
-                  : Icons.edit_note_outlined,
+              _manualMode ? AppIcons.textSnippet : AppIcons.editNote,
               size: 16,
               color: linkColor,
             ),
@@ -928,8 +926,8 @@ class _StepIndicator extends StatelessWidget {
       children: List.generate(totalSteps, (index) {
         final isActive = index == currentStep;
         return AnimatedContainer(
-          duration: AppDurations.mediumAnimation,
-          curve: Curves.easeInOutCubic,
+          duration: AppAnimation.standard,
+          curve: AppAnimation.arrive,
           margin: const EdgeInsets.symmetric(horizontal: 3),
           width: isActive ? 24 : 8,
           height: 8,
@@ -1031,8 +1029,8 @@ class _WordChip extends StatelessWidget {
         isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
+      duration: AppAnimation.standard,
+      curve: AppAnimation.arrive,
       decoration: BoxDecoration(
         color: hasText ? AppColors.primarySoft : emptyBg,
         borderRadius: BorderRadius.circular(AppRadius.xs),
@@ -1182,7 +1180,7 @@ class _PasteChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
-              Icons.content_paste_rounded,
+              AppIcons.contentPaste,
               size: 13,
               color: AppColors.primaryText,
             ),
@@ -1232,7 +1230,7 @@ class _ClearChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.close_rounded,
+              AppIcons.close,
               size: 13,
               color: Theme.of(context).colorScheme.error,
             ),

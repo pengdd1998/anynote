@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/tts/speech_service.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -66,7 +67,7 @@ class _TtsPlayerBarState extends ConsumerState<TtsPlayerBar> {
                 children: [
                   // Stop button
                   IconButton(
-                    icon: const Icon(Icons.stop),
+                    icon: const Icon(AppIcons.stop),
                     iconSize: 20,
                     tooltip: l10n.stopReading,
                     onPressed: () {
@@ -77,8 +78,8 @@ class _TtsPlayerBarState extends ConsumerState<TtsPlayerBar> {
                   IconButton(
                     icon: Icon(
                       state == SpeechState.playing
-                          ? Icons.pause_circle_filled
-                          : Icons.play_circle_filled,
+                          ? AppIcons.pauseCircle
+                          : AppIcons.playCircle,
                     ),
                     iconSize: 32,
                     tooltip: state == SpeechState.playing
@@ -121,7 +122,7 @@ class _TtsPlayerBarState extends ConsumerState<TtsPlayerBar> {
           '${_speechRate}x',
           style: theme.textTheme.labelSmall,
         ),
-        avatar: const Icon(Icons.speed, size: 14),
+        avatar: const Icon(AppIcons.speed, size: 14),
         visualDensity: VisualDensity.compact,
       ),
       itemBuilder: (context) => [

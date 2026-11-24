@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -83,13 +84,13 @@ void main() {
       await pumpWikiLinkPickerSheet(tester);
 
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.byIcon(Icons.search), findsOneWidget);
+      expect(find.byIcon(AppIcons.search), findsOneWidget);
     });
 
     testWidgets('renders close button', (tester) async {
       await pumpWikiLinkPickerSheet(tester);
 
-      expect(find.byIcon(Icons.close), findsOneWidget);
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
     });
 
     testWidgets('populates search field with initial query', (tester) async {

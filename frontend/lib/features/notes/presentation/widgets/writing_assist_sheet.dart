@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/error/error.dart';
 import '../../../compose/data/ai_repository.dart';
@@ -95,7 +96,8 @@ class _WritingAssistNotifier extends StateNotifier<_WritingAssistState> {
 
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: ErrorMapper.map(e).toString());
+      state = state.copyWith(
+          isLoading: false, error: ErrorMapper.map(e).toString());
     }
   }
 
@@ -172,7 +174,7 @@ class WritingAssistSheet extends ConsumerWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.spellcheck,
+                    AppIcons.spellcheck,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   if (template != null) ...[
@@ -193,9 +195,8 @@ class WritingAssistSheet extends ConsumerWidget {
                         template!.name,
                         style: TextStyle(
                           fontSize: 11,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onPrimaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     ),
@@ -216,7 +217,7 @@ class WritingAssistSheet extends ConsumerWidget {
                       child: Text(l10n.checkGrammar),
                     ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(AppIcons.close),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -246,7 +247,9 @@ class WritingAssistSheet extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               l10n.checkingGrammar,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 14),
             ),
           ],
         ),
@@ -260,17 +263,22 @@ class WritingAssistSheet extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              Icon(AppIcons.errorOutline,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
               const SizedBox(height: 12),
               Text(
                 state.error!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13),
               ),
               const SizedBox(height: 16),
               FilledButton.tonal(
                 onPressed: () {
-                  ref.read(_writingAssistProvider.notifier)
+                  ref
+                      .read(_writingAssistProvider.notifier)
                       .polishText(originalText, template: template);
                 },
                 child: Text(l10n.retry),
@@ -289,7 +297,7 @@ class WritingAssistSheet extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.edit_note,
+                AppIcons.editNote,
                 size: 48,
                 color: Theme.of(context)
                     .colorScheme
@@ -300,7 +308,9 @@ class WritingAssistSheet extends ConsumerWidget {
               Text(
                 l10n.writingPolishDesc,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 14),
               ),
             ],
           ),
@@ -321,7 +331,7 @@ class WritingAssistSheet extends ConsumerWidget {
                 Row(
                   children: [
                     Icon(
-                      Icons.article_outlined,
+                      AppIcons.article,
                       size: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -341,7 +351,8 @@ class WritingAssistSheet extends ConsumerWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -360,7 +371,7 @@ class WritingAssistSheet extends ConsumerWidget {
                 Row(
                   children: [
                     Icon(
-                      Icons.auto_fix_high,
+                      AppIcons.magicWand,
                       size: 14,
                       color: Theme.of(context).colorScheme.primary,
                     ),
@@ -415,7 +426,7 @@ class WritingAssistSheet extends ConsumerWidget {
                         onAccept(state.correctedText);
                         Navigator.pop(context);
                       },
-                      icon: const Icon(Icons.check, size: 18),
+                      icon: const Icon(AppIcons.check, size: 18),
                       label: Text(l10n.acceptAll),
                     ),
                   ),

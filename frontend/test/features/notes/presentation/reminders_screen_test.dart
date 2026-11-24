@@ -1,3 +1,4 @@
+import 'package:anynote/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,7 +26,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Empty state shows notifications_none_outlined icon.
-      expect(find.byIcon(Icons.notifications_none_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.notification), findsOneWidget);
       expect(find.text('No Reminders'), findsOneWidget);
 
       await handle.dispose();
@@ -95,7 +96,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Overdue reminders should show notifications_active icon.
-      expect(find.byIcon(Icons.notifications_active), findsOneWidget);
+      expect(find.byIcon(AppIcons.notificationsActive), findsOneWidget);
 
       await handle.dispose();
     });
@@ -125,7 +126,7 @@ void main() {
       addTearDown(() => handle.dispose());
 
       // Recurring reminders should show the repeat icon.
-      expect(find.byIcon(Icons.repeat), findsOneWidget);
+      expect(find.byIcon(AppIcons.repeat), findsOneWidget);
 
       await handle.dispose();
     });

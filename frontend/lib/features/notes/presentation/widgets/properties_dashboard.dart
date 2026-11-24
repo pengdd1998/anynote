@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/daos/note_properties_dao.dart';
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -171,7 +172,7 @@ class _EmptyState extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.dashboard_outlined,
+            AppIcons.dashboard,
             size: 64,
             color: Theme.of(context).colorScheme.onSurface.withAlpha(100),
           ),
@@ -214,12 +215,12 @@ class _StatsSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _StatItem(
-              icon: Icons.note_outlined,
+              icon: AppIcons.noteBlank,
               label: l10n?.totalNotes ?? 'Total Notes',
               value: data.totalNotes.toString(),
             ),
             _StatItem(
-              icon: Icons.settings_outlined,
+              icon: AppIcons.settings,
               label: l10n?.withProperties ?? 'With Properties',
               value: '$coverage%',
             ),
@@ -373,12 +374,12 @@ class _StatusKanbanSection extends StatelessWidget {
     };
 
     final statusIcons = {
-      'Todo': Icons.radio_button_unchecked,
-      'In Progress': Icons.pending,
-      'Done': Icons.check_circle,
-      'Blocked': Icons.block,
-      'Cancelled': Icons.cancel,
-      'None': Icons.help_outline,
+      'Todo': AppIcons.circle,
+      'In Progress': AppIcons.pending,
+      'Done': AppIcons.checkCircle,
+      'Blocked': AppIcons.block,
+      'Cancelled': AppIcons.cancel,
+      'None': AppIcons.help,
     };
 
     return Column(
@@ -400,7 +401,7 @@ class _StatusKanbanSection extends StatelessWidget {
             status: entry.key,
             notes: notes,
             color: statusColors[entry.key] ?? colorScheme.onSurfaceVariant,
-            icon: statusIcons[entry.key] ?? Icons.help_outline,
+            icon: statusIcons[entry.key] ?? AppIcons.help,
             l10n: l10n,
           );
         }),
@@ -478,7 +479,7 @@ class _StatusColumn extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right,
+                AppIcons.chevronRight,
                 color: colorScheme.onSurface.withAlpha(100),
               ),
             ],

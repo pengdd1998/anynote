@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_icons.dart';
 import '../../../../core/widgets/toc_extractor.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -71,7 +72,7 @@ class TocSheet extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: const Icon(AppIcons.close),
                       tooltip:
                           MaterialLocalizations.of(context).closeButtonTooltip,
                       onPressed: () => Navigator.of(context).pop(),
@@ -107,7 +108,7 @@ class TocSheet extends StatelessWidget {
           children: [
             ExcludeSemantics(
               child: Icon(
-                Icons.format_list_bulleted_outlined,
+                AppIcons.bulletList,
                 size: 48,
                 color:
                     theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
@@ -157,9 +158,9 @@ class TocSheet extends StatelessWidget {
 
         // Leading icon varies by level.
         final leadingIcon = switch (entry.level) {
-          1 => Icons.title,
-          2 => Icons.text_fields,
-          _ => Icons.label_outlined,
+          1 => AppIcons.title,
+          2 => AppIcons.textT,
+          _ => AppIcons.tag,
         };
 
         return InkWell(
