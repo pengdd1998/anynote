@@ -215,10 +215,12 @@ class _FadeThroughTransition extends StatelessWidget {
   static const _outBy = Interval(0, 0.45, curve: AppAnimation.depart);
 
   /// The page arriving: the second part of the beat.
-  static final _incoming = _unit.chain(CurveTween(curve: _inAt));
+  static final _incoming = _arriving.chain(CurveTween(curve: _inAt));
 
-  /// The page being replaced: the first part.
-  static final _outgoing = _unit.chain(CurveTween(curve: _outBy));
+  /// The page being replaced: fully there until the next one starts, gone by
+  /// the time it begins to show.
+  static final _outgoing = _leaving.chain(CurveTween(curve: _outBy));
 
-  static final _unit = Tween<double>(begin: 0, end: 1);
+  static final _arriving = Tween<double>(begin: 0, end: 1);
+  static final _leaving = Tween<double>(begin: 1, end: 0);
 }

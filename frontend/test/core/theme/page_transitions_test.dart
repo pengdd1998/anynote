@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:anynote/core/theme/app_animation.dart';
 import 'package:anynote/core/theme/page_transitions.dart';
 
+import '../../helpers/visibility.dart';
+
 void main() {
   // ===========================================================================
   // fadeThroughTransition
@@ -47,8 +49,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp.router(routerConfig: router),
       );
+      await tester.pumpAndSettle();
 
-      expect(find.text('Home'), findsOneWidget);
+      await expectOnScreen(tester, find.text('Home'));
     });
 
     testWidgets('transition produces FadeTransition widgets during animation',
@@ -83,6 +86,7 @@ void main() {
       // Let the transition complete.
       await tester.pumpAndSettle();
       expect(find.text('Page B'), findsOneWidget);
+      await expectOnScreen(tester, find.text('Page B'));
     });
   });
 
@@ -136,8 +140,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp.router(routerConfig: router),
       );
+      await tester.pumpAndSettle();
 
-      expect(find.text('Home'), findsOneWidget);
+      await expectOnScreen(tester, find.text('Home'));
     });
 
     testWidgets(
@@ -174,6 +179,7 @@ void main() {
       // Let the transition complete.
       await tester.pumpAndSettle();
       expect(find.text('Page B'), findsOneWidget);
+      await expectOnScreen(tester, find.text('Page B'));
     });
   });
 
@@ -230,6 +236,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Detail Page'), findsOneWidget);
+      await expectOnScreen(tester, find.text('Detail Page'));
     });
 
     testWidgets('back navigation completes without error', (tester) async {
@@ -256,11 +263,13 @@ void main() {
       router.go('/settings');
       await tester.pumpAndSettle();
       expect(find.text('Settings'), findsOneWidget);
+      await expectOnScreen(tester, find.text('Settings'));
 
       // Go back.
       router.go('/');
       await tester.pumpAndSettle();
       expect(find.text('Home'), findsOneWidget);
+      await expectOnScreen(tester, find.text('Home'));
     });
   });
 }
