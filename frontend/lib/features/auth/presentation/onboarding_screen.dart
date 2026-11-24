@@ -573,12 +573,10 @@ class _Wordmark extends StatelessWidget {
           const Positioned(
             top: -2,
             right: -16,
-            child: Text(
-              '✦',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.warning,
-              ),
+            child: Icon(
+              AppIcons.sparkles,
+              size: 16,
+              color: AppColors.warning,
             ),
           ),
         ],
@@ -651,22 +649,21 @@ class _StickyNoteMascot extends StatelessWidget {
           const Positioned(
             top: 0,
             left: 18,
-            child: Text(
-              '✦',
-              style: TextStyle(fontSize: 18, color: AppColors.warning),
+            child: Icon(
+              AppIcons.sparkles,
+              size: 18,
+              color: AppColors.warning,
             ),
           ),
           Positioned(
             bottom: 34,
             left: 6,
-            child: Text(
-              '✦',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark
-                    ? AppColors.accentLavender
-                    : AppColors.accentLavenderText,
-              ),
+            child: Icon(
+              AppIcons.sparkles,
+              size: 12,
+              color: isDark
+                  ? AppColors.accentLavender
+                  : AppColors.accentLavenderText,
             ),
           ),
           const Positioned(

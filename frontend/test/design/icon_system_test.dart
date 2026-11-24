@@ -6,14 +6,17 @@ import 'package:flutter_test/flutter_test.dart';
 /// The rules are in the header of `lib/core/theme/app_icons.dart`.
 void main() {
   const iconsFile = 'lib/core/theme/app_icons.dart';
-  final entry = RegExp(r'static const (\w+) = PhosphorIcons(Regular|Fill|Bold)\.(\w+);');
+  final entry =
+      RegExp(r'static const (\w+) = PhosphorIcons(Regular|Fill|Bold)\.(\w+);');
 
   /// name -> [cut, glyph], read from the table's source.
   Map<String, List<String>> entries() {
     final found = <String, List<String>>{};
     for (final line in File(iconsFile).readAsLinesSync()) {
       final match = entry.firstMatch(line);
-      if (match != null) found[match.group(1)!] = [match.group(2)!, match.group(3)!];
+      if (match != null) {
+        found[match.group(1)!] = [match.group(2)!, match.group(3)!];
+      }
     }
     return found;
   }
@@ -36,13 +39,32 @@ void main() {
     final offenders = [
       for (final file in dartFiles())
         for (final (index, line) in file.readAsLinesSync().indexed)
-          if (outside.hasMatch(line)) '${file.path}:${index + 1}: ${line.trim()}',
+          if (outside.hasMatch(line))
+            '${file.path}:${index + 1}: ${line.trim()}',
     ];
     expect(
       offenders,
       isEmpty,
-      reason: 'Draw icons through AppIcons ($iconsFile), not an icon set directly',
+      reason:
+          'Draw icons through AppIcons ($iconsFile), not an icon set directly',
     );
+  });
+
+  test('no emoji or text symbol stands in for an icon', () {
+    // Emoji, misc symbols, dingbats — typed or as a \u{...} escape. Phones
+    // draw several of them in colour, outside whatever icon family is in use.
+    final symbol = RegExp(
+      r'[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]'
+      r'|\\u\{1F[0-9A-Fa-f]{3}\}|\\u\{2[67][0-9A-Fa-f]{2}\}|\\uFE0F',
+      unicode: true,
+    );
+    final offenders = [
+      for (final file in dartFiles())
+        for (final (index, line) in file.readAsLinesSync().indexed)
+          if (symbol.hasMatch(line))
+            '${file.path}:${index + 1}: ${line.trim()}',
+    ];
+    expect(offenders, isEmpty, reason: 'Draw it with AppIcons');
   });
 
   test('every filled mark has a regular pair with the same glyph', () {
@@ -54,7 +76,11 @@ void main() {
                 table[name]![1])
           name,
     ];
-    expect(orphans, isEmpty, reason: 'A filled icon is the on-state of a toggle');
+    expect(
+      orphans,
+      isEmpty,
+      reason: 'A filled icon is the on-state of a toggle',
+    );
   });
 
   test('the filled cut is only used for names ending in Filled', () {
@@ -63,7 +89,11 @@ void main() {
       for (final name in table.keys)
         if (table[name]![0] == 'Fill' && !name.endsWith('Filled')) name,
     ];
-    expect(misnamed, isEmpty, reason: 'Line icons by default; fill marks a state');
+    expect(
+      misnamed,
+      isEmpty,
+      reason: 'Line icons by default; fill marks a state',
+    );
   });
 
   test('the bold cut is reserved for the high-contrast theme choices', () {

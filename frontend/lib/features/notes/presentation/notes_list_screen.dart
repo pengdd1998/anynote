@@ -671,35 +671,36 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   // Filter chips
   // ---------------------------------------------------------------------------
 
-  /// Decorative emoji shown before the "All" filter chip label.
-  static const String _allFilterEmoji = '\u{1F4DA}'; // books
+  /// The "all notes" chip.
+  static const _allFilterIcon = AppIcons.noteBlank;
 
-  /// Emoji palette cycled for tags without a keyword match.
-  static const List<String> _fallbackTagEmojis = [
-    '\u{1F4A1}', // light bulb
-    '\u{1F4BC}', // briefcase
-    '\u{1F33F}', // herb
-    '\u2728', // sparkles
-    '\u{1F3AF}', // dart
-    '\u{1F4D6}', // open book
+  /// What a tag's chip shows when its name says nothing about it, taken in
+  /// turn so that two such tags rarely share one.
+  static const List<IconData> _fallbackTagIcons = [
+    AppIcons.lightbulb,
+    AppIcons.briefcase,
+    AppIcons.plant,
+    AppIcons.sparkles,
+    AppIcons.target,
+    AppIcons.bookOpen,
   ];
 
-  /// Returns a decorative emoji for a tag name. Well-known keywords map to a
-  /// matching emoji; anything else cycles the fallback palette deterministically.
-  String _emojiForTag(String name) {
+  /// A tag's icon, guessed from its name. These used to be emoji, which
+  /// some phones draw in colour — the one thing on the screen that was never
+  /// in the icon family.
+  static IconData _iconForTag(String name) {
     final n = name.toLowerCase();
-    if (n.contains('idea')) return '\u{1F4A1}'; // light bulb
+    if (n.contains('idea')) return AppIcons.lightbulb;
     if (n.contains('work') || n.contains('project') || n.contains('job')) {
-      return '\u{1F4BC}'; // briefcase
+      return AppIcons.briefcase;
     }
     if (n.contains('personal') || n.contains('life') || n.contains('journal')) {
-      return '\u{1F33F}'; // herb
+      return AppIcons.plant;
     }
-    if (n.contains('todo') || n.contains('task')) return '\u2705'; // check
-    if (n.contains('read') || n.contains('book')) return '\u{1F4D6}'; // book
-    if (n.contains('travel') || n.contains('trip'))
-      return '\u2708\uFE0F'; // plane
-    return _fallbackTagEmojis[name.hashCode.abs() % _fallbackTagEmojis.length];
+    if (n.contains('todo') || n.contains('task')) return AppIcons.checkCircle;
+    if (n.contains('read') || n.contains('book')) return AppIcons.bookOpen;
+    if (n.contains('travel') || n.contains('trip')) return AppIcons.airplane;
+    return _fallbackTagIcons[name.hashCode.abs() % _fallbackTagIcons.length];
   }
 
   Widget _buildFilterChips(AppLocalizations l10n) {
@@ -718,6 +719,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
     Widget buildChip({
       required String label,
+      required IconData icon,
       required bool isSelected,
       required VoidCallback onTap,
     }) {
@@ -740,12 +742,23 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                   ? null
                   : Border.all(color: unselectedBorder, width: 1),
             ),
-            child: Text(
-              label,
-              style: AppTextStyles.filterChip.copyWith(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppColors.primaryText : unselectedText,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: isSelected ? AppColors.primaryText : unselectedText,
+                ),
+                const SizedBox(width: AppSpacing.s4),
+                Text(
+                  label,
+                  style: AppTextStyles.filterChip.copyWith(
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected ? AppColors.primaryText : unselectedText,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -762,7 +775,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           children: [
             // "All" chip
             buildChip(
-              label: '$_allFilterEmoji ${l10n.filterAll}',
+              label: l10n.filterAll,
+              icon: _allFilterIcon,
               isSelected: _quickTagFilter == null &&
                   (_tagFilter == null || _tagFilter!.isEmpty),
               onTap: () => setState(() {
@@ -775,7 +789,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               final isSelected = _quickTagFilter == tag.id;
               final tagName = tag.plainName ?? tag.id;
               return buildChip(
-                label: '${_emojiForTag(tagName)} $tagName',
+                label: tagName,
+                icon: _iconForTag(tagName),
                 isSelected: isSelected,
                 onTap: () => setState(() {
                   if (_quickTagFilter == tag.id) {
@@ -792,6 +807,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             if (remaining > 0)
               buildChip(
                 label: '+$remaining',
+                icon: AppIcons.chevronDown,
                 isSelected: false,
                 onTap: () => NotesFilterSheet.show(
                   context: context,

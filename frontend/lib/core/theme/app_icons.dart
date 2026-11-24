@@ -309,4 +309,13 @@ class AppIcons {
   static const email = PhosphorIconsRegular.envelopeSimple;
   static const globe = PhosphorIconsRegular.globeSimple;
   static const comment = PhosphorIconsRegular.chatText;
+
+  // ── Chips & marks ─────────────────────────────────────────────────────
+
+  static const briefcase = PhosphorIconsRegular.briefcase;
+  static const plant = PhosphorIconsRegular.plant;
+  static const bookOpen = PhosphorIconsRegular.bookOpen;
+  static const airplane = PhosphorIconsRegular.airplane;
+  static const target = PhosphorIconsRegular.target;
+  static const checkBoxEmpty = PhosphorIconsRegular.square;
 }

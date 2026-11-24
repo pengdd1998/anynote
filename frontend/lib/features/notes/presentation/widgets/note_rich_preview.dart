@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/crypto/crypto_service.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/theme/app_icons.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/note_envelope.dart';
 
@@ -146,7 +148,7 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     var ordered = 0;
     for (final line in lines) {
       final blockStyle = _blockStyle(line.blockAttrs, base, theme);
-      final children = <TextSpan>[];
+      final children = <InlineSpan>[];
 
       // List markers.
       if (line.blockAttrs['list'] == 'bullet') {
@@ -157,10 +159,10 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
         children.add(TextSpan(text: '$ordered.  ', style: blockStyle));
       } else if (line.blockAttrs['list'] == 'checked') {
         ordered = 0;
-        children.add(TextSpan(text: '☑  ', style: blockStyle));
+        children.add(_taskBox(true, blockStyle, theme));
       } else if (line.blockAttrs['list'] == 'unchecked') {
         ordered = 0;
-        children.add(TextSpan(text: '☐  ', style: blockStyle));
+        children.add(_taskBox(false, blockStyle, theme));
       } else {
         ordered = 0;
       }
@@ -189,6 +191,23 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
       spans.add(const TextSpan(text: '\n'));
     }
     return TextSpan(style: base, children: spans);
+  }
+
+  /// A task's box, drawn rather than typed: the Unicode checkbox characters
+  /// come out as colour emoji on some phones.
+  InlineSpan _taskBox(bool checked, TextStyle style, ThemeData theme) {
+    final size = (style.fontSize ?? 14) * 1.2;
+    return WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Padding(
+        padding: const EdgeInsets.only(right: AppSpacing.s4),
+        child: Icon(
+          checked ? AppIcons.checkBox : AppIcons.checkBoxEmpty,
+          size: size,
+          color: checked ? theme.colorScheme.primary : style.color,
+        ),
+      ),
+    );
   }
 
   /// Split Delta ops into lines. A line ends at a `\n`; the op containing the
