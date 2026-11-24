@@ -136,6 +136,9 @@ doc/*
 !CLAUDE.md
 !.impeccable.md
 !PRODUCT-ANALYSIS.md
+!PRODUCT.md
+!DESIGN.md
+!.impeccable/surfaces/*.md
 !README.md
 !CHANGELOG.md
 !doc/api.md
