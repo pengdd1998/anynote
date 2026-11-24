@@ -79,30 +79,32 @@ void main() {
           );
         }
 
-        try {
-          await body(tester, open);
-        } finally {
-          await tester.pumpWidget(const SizedBox());
-          await tester.pump(const Duration(seconds: 5));
-          for (final container in containers.reversed) {
-            container.dispose();
+        await withRealShadows(() async {
+          try {
+            await body(tester, open);
+          } finally {
+            await tester.pumpWidget(const SizedBox());
+            await tester.pump(const Duration(seconds: 5));
+            for (final container in containers.reversed) {
+              container.dispose();
+            }
+            // Disposing cancels the database watches, and drift closes each one
+            // on a timer of its own: let the clock reach them.
+            await tester.pump(const Duration(milliseconds: 1));
+            // On the real clock, and not for long: a screen that watched the
+            // database can keep its close waiting, and the images are already
+            // on disk by now.
+            await tester.runAsync(
+              () => Future.wait([
+                for (final database in databases)
+                  database
+                      .close()
+                      .timeout(const Duration(seconds: 2), onTimeout: () {}),
+              ]),
+            );
+            resetPhoneSurface(tester);
           }
-          // Disposing cancels the database watches, and drift closes each one
-          // on a timer of its own: let the clock reach them.
-          await tester.pump(const Duration(milliseconds: 1));
-          // On the real clock, and not for long: a screen that watched the
-          // database can keep its close waiting, and the images are already
-          // on disk by now.
-          await tester.runAsync(
-            () => Future.wait([
-              for (final database in databases)
-                database
-                    .close()
-                    .timeout(const Duration(seconds: 2), onTimeout: () {}),
-            ]),
-          );
-          resetPhoneSurface(tester);
-        }
+        });
       },
       skip: skip,
       timeout: const Timeout(Duration(minutes: 2)),

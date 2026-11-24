@@ -40,6 +40,21 @@ final GlobalKey _rootKey = GlobalKey();
 
 bool _fontsLoaded = false;
 
+/// Runs [body] with shadows drawn as shadows.
+///
+/// In a test an elevation shadow is drawn as a black outline instead, which
+/// put a heavy border around menus and sheets in the renders. The switch is
+/// a debug one, so it has to be back where it was before the test ends.
+Future<T> withRealShadows<T>(Future<T> Function() body) async {
+  final wereDisabled = debugDisableShadows;
+  debugDisableShadows = false;
+  try {
+    return await body();
+  } finally {
+    debugDisableShadows = wereDisabled;
+  }
+}
+
 /// Loads the merged faces when they have been built; otherwise the app's
 /// own font files, which leaves Chinese and icons as empty boxes.
 Future<void> loadAppFonts() async {
@@ -109,9 +124,6 @@ Future<void> loadAppFonts() async {
       }
     }
   }
-  // In a test every shadow is drawn as a black outline unless told otherwise,
-  // which put a heavy border around menus and sheets in the renders.
-  debugDisableShadows = false;
   _fontsLoaded = true;
 }
 
