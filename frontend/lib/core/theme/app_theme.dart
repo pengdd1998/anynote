@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 
 import '../platform/platform_utils.dart';
 import 'app_colors.dart';
@@ -89,6 +90,7 @@ class AppTheme {
         scrolledUnderElevation: 0.5,
         backgroundColor: AppColors.lightSurface,
         foregroundColor: AppColors.lightTextPrimary,
+        systemOverlayStyle: _statusBarIconsOn(Brightness.light),
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 20,
@@ -457,6 +459,7 @@ class AppTheme {
         scrolledUnderElevation: 0.5,
         backgroundColor: AppColors.darkSurface,
         foregroundColor: AppColors.darkTextPrimary,
+        systemOverlayStyle: _statusBarIconsOn(Brightness.dark),
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 20,
@@ -941,6 +944,7 @@ class AppTheme {
         scrolledUnderElevation: 0.5,
         backgroundColor: scaffoldBg,
         foregroundColor: textPrimary,
+        systemOverlayStyle: _statusBarIconsOn(colorScheme.brightness),
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 20,
@@ -1132,8 +1136,9 @@ class AppTheme {
 
       // -- Snack Bar ---------------------------------------------------------
       snackBarTheme: SnackBarThemeData(
-        backgroundColor:
-            colorScheme.brightness == Brightness.light ? const Color(0xFF000000) : cardBg,
+        backgroundColor: colorScheme.brightness == Brightness.light
+            ? const Color(0xFF000000)
+            : cardBg,
         contentTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
@@ -1227,4 +1232,20 @@ class AppTheme {
       ),
     );
   }
+}
+
+/// Icons for the system status bar that can be read on [background].
+///
+/// Left to itself, an [AppBar] judges the status bar from its own background
+/// colour, and "transparent" reads as dark. About twenty pages make their app
+/// bar transparent so it blends into the paper, and every one of them was
+/// putting white clock and battery icons on a light screen.
+SystemUiOverlayStyle _statusBarIconsOn(Brightness background) {
+  return SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness:
+        background == Brightness.dark ? Brightness.light : Brightness.dark,
+    statusBarBrightness:
+        background == Brightness.dark ? Brightness.dark : Brightness.light,
+  );
 }

@@ -109,6 +109,9 @@ Future<void> loadAppFonts() async {
       }
     }
   }
+  // In a test every shadow is drawn as a black outline unless told otherwise,
+  // which put a heavy border around menus and sheets in the renders.
+  debugDisableShadows = false;
   _fontsLoaded = true;
 }
 
