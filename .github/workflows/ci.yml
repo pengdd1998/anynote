@@ -129,7 +129,11 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Analyze
+        # pipefail: without it the step reports tee's exit code, and a
+        # warning that CD's analyze step rejects (it fails on warnings) went
+        # unnoticed here until the v2.8.10 deploy was skipped for one.
         run: |
+          set -o pipefail
           flutter analyze --no-fatal-infos 2>&1 | tee frontend-analyze.txt
           echo '## Flutter Analyze Output' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
