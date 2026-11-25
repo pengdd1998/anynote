@@ -639,10 +639,10 @@ class _AppBarSaveStatus extends StatelessWidget {
           drop: 2,
           child: Tooltip(
             message: l10n.statusSaved,
-            child: const Icon(
+            child: Icon(
               AppIcons.checkCircle,
               size: 16,
-              color: AppColors.success,
+              color: AppColors.statusSuccessOf(Theme.of(context).brightness),
             ),
           ),
         ),

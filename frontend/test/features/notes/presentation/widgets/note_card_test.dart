@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 
 import 'package:anynote/core/database/app_database.dart';
+import 'package:anynote/core/theme/app_colors.dart';
+import 'package:anynote/core/theme/app_text_styles.dart';
 import 'package:anynote/features/notes/presentation/widgets/note_card.dart';
 import 'package:anynote/features/notes/presentation/widgets/tag_chips_row.dart';
 import 'package:anynote/l10n/app_localizations.dart';
@@ -269,8 +271,8 @@ void main() {
 
     testWidgets('truncates long content with ellipsis in grid', (tester) async {
       // Truncation is done via maxLines + ellipsis: the first line becomes
-      // the title, which may run to four lines in the roomier grid, the rest
-      // is a 4-line preview.
+      // the title, two lines at most (it used to take four and squeeze the
+      // preview off the card); the rest is a 4-line preview.
       final longContent = '${'A' * 150}\n${'B' * 150}';
       await pumpNoteCard(
         tester,
@@ -278,11 +280,41 @@ void main() {
         layout: NoteCardLayout.grid,
       );
       final title = tester.widget<Text>(find.textContaining('AAA'));
-      expect(title.maxLines, 4);
+      expect(title.maxLines, 2);
       expect(title.overflow, TextOverflow.ellipsis);
       final preview = tester.widget<Text>(find.textContaining('BBB'));
       expect(preview.maxLines, 4);
       expect(preview.overflow, TextOverflow.ellipsis);
+    });
+
+    testWidgets('writes the title by hand and the rest in the UI face', (
+      tester,
+    ) async {
+      // Two voices: a card is read at a glance, so only its title is
+      // handwritten; the preview and the time are the interface's own face.
+      await pumpNoteCard(
+        tester,
+        note: _defaultNote(plainContent: 'A title\nSome body text'),
+        time: '5 min ago',
+        layout: NoteCardLayout.grid,
+      );
+      final title = tester.widget<Text>(find.text('A title'));
+      expect(title.style?.fontFamily, AppTextStyles.handwritingFamily);
+
+      final preview = tester.widget<Text>(find.textContaining('Some body'));
+      expect(preview.style?.fontFamily, AppTextStyles.fontFamily);
+
+      final time = tester.widget<Text>(find.text('5 min ago'));
+      expect(time.style?.fontFamily, AppTextStyles.fontFamily);
+    });
+
+    testWidgets('the time takes an ink mixed for its sheet', (tester) async {
+      // A grid card at list index 0 sits on the first paper of the cycle.
+      await pumpNoteCard(tester,
+          time: '5 min ago', layout: NoteCardLayout.grid);
+      final time = tester.widget<Text>(find.text('5 min ago'));
+      expect(time.style?.color, AppColors.paperInks[0]);
+      expect(time.style?.color, isNot(AppColors.paperInks[1]));
     });
 
     testWidgets('renders time in grid', (tester) async {

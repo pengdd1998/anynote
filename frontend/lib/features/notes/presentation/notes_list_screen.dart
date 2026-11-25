@@ -1362,7 +1362,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           : Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                boxShadow: AppShadows.mdOf(Theme.of(context).brightness),
+                // The same warm contact shadow a note has, so the button sits
+                // on the desk rather than being printed on the screen. (It
+                // had AppShadows.md, which paints nothing in light mode.)
+                boxShadow: AppShadows.paperOf(Theme.of(context).brightness),
               ),
               child: FloatingActionButton(
                 onPressed: () {

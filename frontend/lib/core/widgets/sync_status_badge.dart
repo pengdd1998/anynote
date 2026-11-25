@@ -32,7 +32,7 @@ class SyncStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final props = _statusProperties();
+    final props = _statusProperties(context);
 
     return Tooltip(
       message: props.tooltip,
@@ -43,24 +43,28 @@ class SyncStatusBadge extends StatelessWidget {
     );
   }
 
-  ({IconData icon, Color color, String tooltip}) _statusProperties() {
+  ({IconData icon, Color color, String tooltip}) _statusProperties(
+    BuildContext context,
+  ) {
+    // Status ink: the fill colours were 2.0–2.5:1 on paper.
+    final brightness = Theme.of(context).brightness;
     if (hasConflict) {
       return (
         icon: AppIcons.cloudOff,
-        color: AppColors.error,
+        color: AppColors.statusErrorOf(brightness),
         tooltip: 'Sync conflict',
       );
     }
     if (isSynced) {
       return (
         icon: AppIcons.cloudDone,
-        color: AppColors.success,
+        color: AppColors.statusSuccessOf(brightness),
         tooltip: 'Synced',
       );
     }
     return (
       icon: AppIcons.cloudUpload,
-      color: AppColors.warning,
+      color: AppColors.statusWarningOf(brightness),
       tooltip: 'Pending sync',
     );
   }

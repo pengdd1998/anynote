@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('brand accent uses the mockup periwinkle purple', () {
-    expect(AppColors.primary, const Color(0xFF8B7CE8));
+  test('brand accent is the deep periwinkle that carries white text', () {
+    // Deeper than the mockup's #8B7CE8, which carried white at only 3.4:1.
+    expect(AppColors.primary, const Color(0xFF6B5CD0));
     expect(AppColors.primarySoft, const Color(0xFFEFECFE));
     expect(AppColors.primaryDisabled, const Color(0xFFCFC8F7));
     expect(AppColors.primaryText, const Color(0xFF6C5BC4));
@@ -14,12 +15,11 @@ void main() {
 
   test('handwritten styles fall back to the CJK handwriting font', () {
     // Caveat carries Latin; MaShanZheng carries Chinese so handwritten
-    // note titles/timestamps keep the journal voice in CJK content.
+    // note titles keep the journal voice in CJK content.
     for (final style in [
       AppTextStyles.handwritingDisplay,
       AppTextStyles.handwritingTitle,
       AppTextStyles.handwritingBody,
-      AppTextStyles.handwritingCaption,
     ]) {
       expect(style.fontFamilyFallback, contains('MaShanZheng'));
     }

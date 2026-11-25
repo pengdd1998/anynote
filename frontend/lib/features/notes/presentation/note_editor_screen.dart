@@ -2469,7 +2469,7 @@ class _CompactSaveChip extends StatelessWidget {
       );
     } else {
       label = l10n.statusSaved;
-      color = AppColors.success;
+      color = AppColors.statusSuccessOf(colorScheme.brightness);
       icon = Icon(AppIcons.checkCircle, size: 12, color: color);
     }
 

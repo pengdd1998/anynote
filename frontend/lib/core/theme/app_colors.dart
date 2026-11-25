@@ -7,7 +7,11 @@ import 'package:flutter/material.dart';
 /// Dark mode uses deep navy with muted highlights.
 /// All neutrals are warm-tinted.
 ///
-/// All text tiers meet WCAG AA 4.5:1 contrast on their respective surfaces.
+/// Every text tier meets WCAG AA (4.5:1) on the surfaces of its theme, and
+/// so does the accent wherever it carries text — asserted, not promised, by
+/// `test/core/theme/contrast_test.dart`. The status colours are the one
+/// exception: [success], [warning] and [error] are fills, and anything that
+/// has to be read takes the `status…Ink` pair instead (see below).
 class AppColors {
   AppColors._();
 
@@ -23,7 +27,8 @@ class AppColors {
   // Light text tiers (WCAG AA on lightSurface) — warm slate
   static const lightTextPrimary = Color(0xFF0F172A); // slate-900
   static const lightTextSecondary = Color(0xFF5C534A); // warm brown-gray
-  static const lightTextTertiary = Color(0xFF9C8F83); // warm muted
+  static const lightTextTertiary =
+      Color(0xFF7B6A59); // warm muted, AA on input fills too
 
   // -- Dark palette -----------------------------------------------------------
 
@@ -36,13 +41,16 @@ class AppColors {
 
   // Dark text tiers (WCAG AA on darkSurface)
   static const darkTextPrimary = Color(0xFFF4F2FF);
-  static const darkTextSecondary = Color(0xFFC4C0E0);
+  static const darkTextSecondary =
+      Color(0xFFCAC5DA); // AA on the dark note washes too
   static const darkTextTertiary = Color(0xFF9E9AB8);
 
   // -- Brand accent (soft periwinkle purple — matching design mockup) --------
 
-  static const primary = Color(0xFF8B7CE8); // soft periwinkle purple
-  static const primaryDark = Color(0xFF7466D6); // pressed / deeper purple
+  /// Deep enough to carry white (5.2:1) and to be read as text on paper
+  /// (4.9:1). The mockup's softer periwinkle (#8B7CE8) did neither.
+  static const primary = Color(0xFF6B5CD0);
+  static const primaryDark = Color(0xFF5B4AC0); // pressed / deeper purple
   static const secondary = Color(0xFFB7ADF5); // light periwinkle
 
   /// Soft lavender tint used for selected chips, subtle fills, highlights.
@@ -118,6 +126,28 @@ class AppColors {
   static const warning = Color(0xFFF59E0B);
   static const info = Color(0xFF3B82F6);
 
+  // -- Status ink -------------------------------------------------------------
+
+  /// Ink for status *text and icons* — saved, not synced, a conflict — which
+  /// has to be read: at least 4.6:1 on every surface of its theme.
+  ///
+  /// [success], [warning] and [error] are one value for both themes and cannot
+  /// meet that: no colour is 4.5:1 against cream paper and against deep navy
+  /// at once. They stay as fills; anything meant to be read takes these.
+  static const statusSuccessInk = Color(0xFF2E7A61);
+  static const statusWarningInk = Color(0xFF8B6728);
+  static const statusErrorInk = Color(0xFFC63B3B);
+  static const statusSuccessInkDark = Color(0xFF3EA482);
+  static const statusWarningInkDark = Color(0xFFBC8B37);
+  static const statusErrorInkDark = Color(0xFFDD7575);
+
+  static Color statusSuccessOf(Brightness brightness) =>
+      brightness == Brightness.dark ? statusSuccessInkDark : statusSuccessInk;
+  static Color statusWarningOf(Brightness brightness) =>
+      brightness == Brightness.dark ? statusWarningInkDark : statusWarningInk;
+  static Color statusErrorOf(Brightness brightness) =>
+      brightness == Brightness.dark ? statusErrorInkDark : statusErrorInk;
+
   // -- High contrast (WCAG AAA 7:1) -------------------------------------------
 
   static const hcPrimary = Color(0xFF4F3DB8); // deep violet
@@ -184,6 +214,19 @@ class AppColors {
     paperLavender,
     paperCream,
     paperGreen,
+  ];
+
+  /// Muted ink for each of the [notePapers], in the same order — in the light
+  /// theme: the sheet's own hue, darkened until a timestamp reads on it (5:1
+  /// and up). One warm grey for all six was 2.2–2.9:1. A dark-theme sheet is
+  /// a wash and takes [darkTextSecondary], whichever paper it was made from.
+  static const paperInks = <Color>[
+    Color(0xFF665F47), // on Morning thoughts yellow
+    Color(0xFF736750), // on plain paper
+    Color(0xFF70514E), // on salmon pink
+    Color(0xFF625175), // on Lavender note
+    Color(0xFF746A51), // on Tiny ideas cream
+    Color(0xFF5A6748), // on Plant care mint
   ];
 
   /// Warm shadow ink for paper cards (light mode): soft brown-gray, like a

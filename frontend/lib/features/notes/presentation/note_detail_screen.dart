@@ -65,11 +65,25 @@ class NoteDetailScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          // Edit — direct action, most important CTA
-          IconButton(
-            icon: const Icon(AppIcons.edit),
-            tooltip: l10n.editNote,
-            onPressed: () => context.push('/notes/$noteId/edit'),
+          // Edit — the page's one action, and it says so. A bare pencil read
+          // as "what does this do?" (design review: recognition over recall).
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s4),
+            child: Tooltip(
+              message: l10n.editNote,
+              child: TextButton.icon(
+                onPressed: () => context.push('/notes/$noteId/edit'),
+                icon: const Icon(AppIcons.edit, size: 18),
+                label: Text(l10n.edit),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.s8,
+                  ),
+                ),
+              ),
+            ),
           ),
           // Read aloud — plays/stops TTS for the note body.
           _ReadAloudButton(noteId: noteId),
@@ -460,14 +474,23 @@ class NoteDetailScreen extends ConsumerWidget {
         ),
         if (!data.isSynced) ...[
           const SizedBox(width: AppSpacing.s12),
-          const Icon(AppIcons.cloudOff, size: 12, color: AppColors.warning),
+          // Status ink, not the amber fill: "未同步" was 2.1:1 on paper.
+          Icon(
+            AppIcons.cloudOff,
+            size: 12,
+            color: AppColors.statusWarningOf(
+              Theme.of(context).brightness,
+            ),
+          ),
           const SizedBox(width: AppSpacing.s4),
           Text(
             l10n.notSynced,
             style: AppTextStyles.caption.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.warning,
+              color: AppColors.statusWarningOf(
+                Theme.of(context).brightness,
+              ),
             ),
           ),
         ],

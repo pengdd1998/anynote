@@ -32,6 +32,12 @@ enum NoteCardLayout {
 /// soft matching borders, subtle shadows, and design token typography.
 /// Grid cards read as pastel sticky notes; image notes render with a
 /// prominent clipped image header above a warm card info section.
+///
+/// A card is for finding a note again, so it is written in two voices: the
+/// title is handwritten, two lines at most; the preview and the time are the
+/// interface's own face, in inks that read at WCAG AA on that sheet. (Until
+/// 2026-11 all three were handwritten and the time was 2.2–2.9:1 on the
+/// pastels — the design review's first finding.)
 class NoteCard extends StatelessWidget {
   final Note note;
   final String time;
@@ -131,6 +137,29 @@ class NoteCard extends StatelessWidget {
     return noteColor.withAlpha(40);
   }
 
+  /// The sheet's tone as [PaperSurface] paints it: the plain card in the
+  /// list layout and for image notes, a tint when selected, a note's own
+  /// colour when it has one. Null lets the surface cycle the palette.
+  Color? _sheetTone(BuildContext context, bool isDark) {
+    final noteColor = _noteColor;
+    if (!_isGrid) return isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
+    if (isSelected) {
+      return isDark ? AppColors.primary.withAlpha(40) : AppColors.primarySoft;
+    }
+    if (previewImagePath != null && !kIsWeb) {
+      return isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
+    }
+    return _paperToneOverride(context, noteColor);
+  }
+
+  /// Muted ink for the time, mixed for the sheet it sits on.
+  Color _sheetInk(BuildContext context, bool isDark) {
+    final paper = PaperTokens.of(context);
+    final brightness = isDark ? Brightness.dark : Brightness.light;
+    return paper.inkOn(
+        _sheetTone(context, isDark) ?? paper.toneFor(listIndex, brightness));
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -147,23 +176,13 @@ class NoteCard extends StatelessWidget {
     final legacy = note.plainTitle;
     final title =
         firstLine ?? (legacy != null && legacy.isNotEmpty ? legacy : untitled);
-    final hasImage = previewImagePath != null && !kIsWeb;
-    final noteColor = _noteColor;
 
     // Grid cards are sheets of sticky-note paper (PaperSurface applies the
     // paper tokens: tone cycle, tilt, Post-it radius, warm shadow). List
     // rows stay neutral straight cards for scannability.
     final card = PaperSurface(
       seed: listIndex,
-      tone: _isGrid
-          ? (isSelected
-              ? (isDark
-                  ? AppColors.primary.withAlpha(40)
-                  : AppColors.primarySoft)
-              : hasImage
-                  ? (isDark ? AppColors.darkCardBg : AppColors.lightCardBg)
-                  : _paperToneOverride(context, noteColor))
-          : (isDark ? AppColors.darkCardBg : AppColors.lightCardBg),
+      tone: _sheetTone(context, isDark),
       tilted: _isGrid,
       selected: isSelected,
       borderRadius: _isGrid ? null : BorderRadius.circular(AppRadius.md),
@@ -255,13 +274,14 @@ class NoteCard extends StatelessWidget {
               // Handwritten title with pin/lock icons.
               _buildTitleRow(context, theme, isDark, title),
 
-              // Handwritten body — rendered the same way as the editor.
+              // The first lines, in the interface's face: a preview is read
+              // for content, and handwriting made digits, brackets and English
+              // in it a puzzle.
               const SizedBox(height: AppSpacing.s4),
               NoteRichPreview(
                 note: note,
                 maxLines: 4,
                 skipFirstLine: previewSkipsTitle,
-                handwritten: true,
                 color: isDark
                     ? AppColors.darkTextSecondary
                     : AppColors.lightTextSecondary,
@@ -393,13 +413,13 @@ class NoteCard extends StatelessWidget {
               ),
             ),
           ),
-        // Handwritten note title (first line of content), near-black.
-        // Long first lines wrap so the note's real content stays visible;
-        // the rich preview below still carries the remaining lines.
+        // Handwritten note title (first line of content), near-black. Two
+        // lines at most: a long first line used to take four and squeeze the
+        // preview out of the card. The preview below carries the other lines.
         Expanded(
           child: Text(
             title,
-            maxLines: _isGrid ? 4 : 2,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.handwritingBody.copyWith(
               color: isDark
@@ -418,10 +438,19 @@ class NoteCard extends StatelessWidget {
     bool isDark, {
     bool withDoodle = false,
   }) {
-    final paper = PaperTokens.of(context);
+    // The time in the interface's face, not handwritten: it is looked up, not
+    // read, and a handwritten "17小时前" was the least legible thing on the
+    // card. On a sheet it takes an ink mixed for that sheet; on the plain
+    // list card the theme's tertiary tier, which reads on it.
+    final ink = withDoodle
+        ? _sheetInk(context, isDark)
+        : (isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary);
     final timestamp = Text(
       time,
-      style: AppTextStyles.handwritingCaption.copyWith(color: paper.inkMuted),
+      style: AppTextStyles.caption.copyWith(
+        color: ink,
+        fontWeight: FontWeight.w500,
+      ),
     );
 
     if (!withDoodle) {
@@ -434,6 +463,7 @@ class NoteCard extends StatelessWidget {
     // Sticky-note footer like the mockup: timestamp bottom-left, a small
     // hand-drawn ink sketch bottom-right. The doodle is keyed to the note
     // id so it never changes between list rebuilds.
+    final paper = PaperTokens.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

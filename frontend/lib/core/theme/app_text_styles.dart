@@ -139,25 +139,6 @@ class AppTextStyles {
     height: 1.2,
   );
 
-  /// Compact handwritten labels (timestamps inside cards, signatures).
-  static final TextStyle handwritingCaption = TextStyle(
-    fontFamily: handwritingFamily,
-    fontFamilyFallback: _handwritingFallback,
-    fontSize: 17,
-    fontWeight: FontWeight.w500,
-    height: 1.2,
-  );
-
-  /// Handwritten-print body for sticky-note card previews (mockup: note
-  /// bodies on paper cards are handwritten, not the UI sans).
-  static final TextStyle handwritingNoteBody = TextStyle(
-    fontFamily: handwritingFamily,
-    fontFamilyFallback: _handwritingFallback,
-    fontSize: 15,
-    fontWeight: FontWeight.w400,
-    height: 1.45,
-  );
-
   /// Link text (underlined, accent color applied at usage site).
   static final TextStyle link = TextStyle(
     fontFamily: fontFamily,
@@ -189,15 +170,12 @@ class AppTextStyles {
         headlineMedium: headline,
         headlineSmall: headline.copyWith(fontSize: 18),
         titleLarge: title,
-        titleMedium:
-            title.copyWith(fontSize: 15, fontWeight: FontWeight.w500),
-        titleSmall:
-            title.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
+        titleMedium: title.copyWith(fontSize: 15, fontWeight: FontWeight.w500),
+        titleSmall: title.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
         bodyLarge: body,
         bodyMedium: body.copyWith(fontSize: 14),
         bodySmall: caption,
-        labelLarge:
-            caption.copyWith(fontWeight: FontWeight.w500, fontSize: 14),
+        labelLarge: caption.copyWith(fontWeight: FontWeight.w500, fontSize: 14),
         labelMedium: caption,
         labelSmall: caption.copyWith(fontSize: 11),
       );

@@ -31,18 +31,12 @@ class NoteRichPreview extends ConsumerStatefulWidget {
   /// which renders the first line as the handwritten title itself.
   final bool skipFirstLine;
 
-  /// Renders the preview in the handwritten-print voice (sticky-note cards).
-  /// The mockup draws note bodies on paper in a handwriting font, not the
-  /// UI sans. Latin resolves in Caveat, CJK in Ma Shan Zheng.
-  final bool handwritten;
-
   const NoteRichPreview({
     super.key,
     required this.note,
     this.maxLines = 6,
     this.color,
     this.skipFirstLine = false,
-    this.handwritten = false,
   });
 
   @override
@@ -65,8 +59,8 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
 
     if (crypto.isUnlocked) {
       try {
-        final decrypted =
-            await crypto.decryptForItem(widget.note.id, widget.note.encryptedContent);
+        final decrypted = await crypto.decryptForItem(
+            widget.note.id, widget.note.encryptedContent);
         if (decrypted != null && decrypted.isNotEmpty) {
           content = decrypted;
         }
@@ -97,15 +91,13 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
   @override
   Widget build(BuildContext context) {
     // Compact preview base (smaller than the editor's body size) so the card
-    // reads as a preview, not a full document.
-    var base = AppTextStyles.body.copyWith(
+    // reads as a preview, not a full document. Always the interface's own
+    // face: handwriting is for titles, and a preview is read in passing.
+    final base = AppTextStyles.body.copyWith(
       color: widget.color,
       height: 1.4,
       fontSize: 13,
     );
-    if (widget.handwritten) {
-      base = AppTextStyles.handwritingNoteBody.copyWith(color: widget.color);
-    }
 
     if (_ops == null && _plainFallback == null) {
       return const SizedBox.shrink(); // still decrypting
@@ -183,7 +175,9 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
       // Inline runs (bold/italic/underline/strike/code/link).
       for (final run in line.runs) {
         children.add(
-          TextSpan(text: run.text, style: _inlineStyle(run.attrs, blockStyle, theme)),
+          TextSpan(
+              text: run.text,
+              style: _inlineStyle(run.attrs, blockStyle, theme)),
         );
       }
 
@@ -237,19 +231,26 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     return lines;
   }
 
-  TextStyle _blockStyle(Map<String, dynamic> attrs, TextStyle base, ThemeData theme) {
+  TextStyle _blockStyle(
+      Map<String, dynamic> attrs, TextStyle base, ThemeData theme) {
     var s = base;
     final header = attrs['header'];
     if (header is int) {
       switch (header) {
         case 1:
-          s = s.copyWith(fontSize: (base.fontSize ?? 13) * 1.35, fontWeight: FontWeight.bold);
+          s = s.copyWith(
+              fontSize: (base.fontSize ?? 13) * 1.35,
+              fontWeight: FontWeight.bold);
           break;
         case 2:
-          s = s.copyWith(fontSize: (base.fontSize ?? 13) * 1.2, fontWeight: FontWeight.bold);
+          s = s.copyWith(
+              fontSize: (base.fontSize ?? 13) * 1.2,
+              fontWeight: FontWeight.bold);
           break;
         case 3:
-          s = s.copyWith(fontSize: (base.fontSize ?? 13) * 1.1, fontWeight: FontWeight.w600);
+          s = s.copyWith(
+              fontSize: (base.fontSize ?? 13) * 1.1,
+              fontWeight: FontWeight.w600);
           break;
       }
     }
@@ -259,14 +260,16 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     return s;
   }
 
-  TextStyle _inlineStyle(Map<String, dynamic> attrs, TextStyle base, ThemeData theme) {
+  TextStyle _inlineStyle(
+      Map<String, dynamic> attrs, TextStyle base, ThemeData theme) {
     var s = base;
     if (attrs['bold'] == true) s = s.copyWith(fontWeight: FontWeight.bold);
     if (attrs['italic'] == true) s = s.copyWith(fontStyle: FontStyle.italic);
     if (attrs['underline'] == true || attrs['strike'] == true) {
       s = s.copyWith(
         decoration: attrs['underline'] == true && attrs['strike'] == true
-            ? TextDecoration.combine([TextDecoration.underline, TextDecoration.lineThrough])
+            ? TextDecoration.combine(
+                [TextDecoration.underline, TextDecoration.lineThrough])
             : attrs['underline'] == true
                 ? TextDecoration.underline
                 : TextDecoration.lineThrough,
@@ -274,7 +277,9 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     }
     if (attrs['code'] == true) s = s.copyWith(fontFamily: 'RobotoMono');
     if (attrs['link'] is String) {
-      s = s.copyWith(color: theme.colorScheme.primary, decoration: TextDecoration.underline);
+      s = s.copyWith(
+          color: theme.colorScheme.primary,
+          decoration: TextDecoration.underline);
     }
     return s;
   }

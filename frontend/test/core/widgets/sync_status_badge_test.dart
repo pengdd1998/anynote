@@ -42,7 +42,7 @@ void main() {
       await pumpBadge(tester, isSynced: true);
 
       final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudDone));
-      expect(icon.color, AppColors.success);
+      expect(icon.color, AppColors.statusSuccessInk);
     });
 
     testWidgets('synced state has correct tooltip', (tester) async {
@@ -76,7 +76,7 @@ void main() {
       await pumpBadge(tester, isSynced: false);
 
       final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudUpload));
-      expect(icon.color, AppColors.warning);
+      expect(icon.color, AppColors.statusWarningInk);
     });
 
     testWidgets('pending state has correct tooltip', (tester) async {
@@ -103,7 +103,7 @@ void main() {
       await pumpBadge(tester, isSynced: false, hasConflict: true);
 
       final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudOff));
-      expect(icon.color, AppColors.error);
+      expect(icon.color, AppColors.statusErrorInk);
     });
 
     testWidgets('conflict state has correct tooltip', (tester) async {
@@ -125,7 +125,7 @@ void main() {
       expect(find.byIcon(AppIcons.cloudDone), findsNothing);
 
       final icon = tester.widget<Icon>(find.byIcon(AppIcons.cloudOff));
-      expect(icon.color, AppColors.error);
+      expect(icon.color, AppColors.statusErrorInk);
     });
 
     // -- Semantics ----------------------------------------------------
