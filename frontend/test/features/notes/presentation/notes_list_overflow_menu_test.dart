@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/theme/app_icons.dart';
+import 'package:anynote/core/theme/app_spacing.dart';
 import 'package:anynote/features/notes/presentation/notes_list_screen.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 
@@ -57,12 +58,14 @@ void main() {
     }
   }
 
-  testWidgets('every sort row gives its label the same room', (tester) async {
-    // The row that carries the check has less width for its text. With the
-    // check on that row alone, the menu was sized for the others and the
-    // label broke a character short — "按更新时间（最" / "新）" on the phone.
-    // Chinese has the labels that came closest: the test font is wider than
-    // the phone's, so what is asserted here is the room each label gets.
+  testWidgets('every sort row reads on one line, with room for the check', (
+    tester,
+  ) async {
+    // The row that carries the check is wider than ListTile says a row is:
+    // the gap before a trailing widget is left out of its reported width. So
+    // the menu came out too narrow, and the label broke a character short —
+    // "按更新时间（最" / "新）" on the phone. Chinese has the labels that
+    // come closest.
     await onHome(
       tester,
       () async {
@@ -80,14 +83,21 @@ void main() {
         for (final label in sortLabels) {
           labels[label] = tester.getRect(find.text(label));
         }
-        expect(markOn(l10n.updatedNewest), findsOneWidget);
-        // The shortest label's row is the measure: every other one matches it.
-        final reference = labels[l10n.sortCustom]!;
+        // Every label is one line tall — the shortest one's line.
+        final lineHeight = labels[l10n.sortCustom]!.height;
         for (final label in sortLabels) {
-          final box = labels[label]!;
-          expect(box.left, closeTo(reference.left, 0.5), reason: label);
-          expect(box.width, closeTo(reference.width, 0.5), reason: label);
+          expect(
+            labels[label]!.height,
+            closeTo(lineHeight, 0.5),
+            reason: '$label should read on one line',
+          );
         }
+        // The current one is marked, right after its label.
+        final mark = tester.getRect(markOn(l10n.updatedNewest));
+        expect(
+          mark.left - labels[l10n.updatedNewest]!.right,
+          closeTo(AppSpacing.s32, 0.5),
+        );
       },
       locale: const Locale('zh'),
     );

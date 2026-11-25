@@ -2487,13 +2487,21 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       value: value,
       child: ListTile(
         leading: Icon(icon, color: isSelected ? primary : null),
-        title: Text(label),
-        // The check's place is kept on every row. With it on one row only,
-        // the menu was sized for the others and that row's label broke a
-        // character short: "按更新时间（最" / "新）".
-        trailing: SizedBox(
-          width: 18,
-          child: isSelected ? const Icon(AppIcons.check, size: 18) : null,
+        // The check rides at the end of the title, and its place is kept on
+        // every row. As a trailing widget it was wider than the row said it
+        // was — ListTile's reported width leaves out the gap before a
+        // trailing widget — so the menu came out too narrow and the label
+        // broke a character short: "按更新时间（最" / "新）".
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: Text(label)),
+            const SizedBox(width: AppSpacing.s32),
+            SizedBox(
+              width: 18,
+              child: isSelected ? const Icon(AppIcons.check, size: 18) : null,
+            ),
+          ],
         ),
         contentPadding: EdgeInsets.zero,
       ),
