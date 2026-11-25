@@ -118,11 +118,24 @@ class EditorAppBarActions {
       // Save status indicator in AppBar: spinner when saving, checkmark when
       // saved, amber dot when there are unsaved changes.
       _AppBarSaveStatus(isSaving: config.isSaving, isDirty: config.isDirty),
-      // Save-and-close done button with primary color.
-      IconButton(
-        icon: Icon(AppIcons.check, color: colorScheme.primary),
-        tooltip: l10n.saveAndClose,
-        onPressed: config.onSaveAndClose,
+      // Save-and-close, with its name. A bare check sat beside the saved
+      // mark's own check and read as a second status light; the note page's
+      // one action says 编辑, so this one says what it does too.
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Tooltip(
+          message: l10n.saveAndClose,
+          child: TextButton.icon(
+            onPressed: config.onSaveAndClose,
+            icon: const Icon(AppIcons.check, size: 18),
+            label: Text(l10n.done),
+            style: TextButton.styleFrom(
+              foregroundColor: colorScheme.primary,
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+          ),
+        ),
       ),
       // Rich/plain text mode toggle (icon shows the mode to switch to).
       IconButton(
@@ -580,8 +593,9 @@ class EditorAppBarActions {
 
 /// Compact save status indicator for the editor AppBar.
 ///
-/// Shows one of three states inline:
-/// - Spinning indicator when saving.
+/// Shows one of three states inline, each in the ink made for status:
+/// - Spinning indicator when saving, in the quiet secondary ink: it is
+///   work in progress, not a colour that asks for anything.
 /// - Green checkmark when saved (not dirty, not saving). It lands like a
 ///   stamp, so "saved" is something you see happen.
 /// - Red dot when there are unsaved changes (dirty).
@@ -596,7 +610,7 @@ class _AppBarSaveStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
     if (isSaving) {
@@ -610,7 +624,9 @@ class _AppBarSaveStatus extends StatelessWidget {
             height: 16,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: colorScheme.tertiary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ),
         ),
@@ -624,8 +640,11 @@ class _AppBarSaveStatus extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Tooltip(
             message: l10n.statusUnsaved,
-            child:
-                Icon(AppIcons.circleFilled, size: 8, color: colorScheme.error),
+            child: Icon(
+              AppIcons.circleFilled,
+              size: 8,
+              color: AppColors.statusErrorOf(Theme.of(context).brightness),
+            ),
           ),
         ),
       );

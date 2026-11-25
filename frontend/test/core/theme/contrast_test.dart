@@ -156,20 +156,23 @@ void main() {
   group('the theme hands these colours out', () {
     test('light', () {
       final theme = AppTheme.lightTheme();
+      final filled = theme.filledButtonTheme.style;
+      final fab = theme.floatingActionButtonTheme;
       expect(theme.colorScheme.primary, AppColors.primary);
       expect(theme.colorScheme.onPrimary, Colors.white);
-      expect(theme.filledButtonTheme.style?.backgroundColor?.resolve({}),
-          AppColors.primary);
-      expect(
-          theme.floatingActionButtonTheme.backgroundColor, AppColors.primary);
+      expect(filled?.backgroundColor?.resolve({}), AppColors.primary);
+      expect(fab.backgroundColor, AppColors.primary);
     });
 
     test('dark', () {
       final theme = AppTheme.darkTheme();
-      expect(theme.filledButtonTheme.style?.backgroundColor?.resolve({}),
-          theme.colorScheme.primary);
+      final filled = theme.filledButtonTheme.style;
       expect(
-        theme.filledButtonTheme.style?.foregroundColor?.resolve({}),
+        filled?.backgroundColor?.resolve({}),
+        theme.colorScheme.primary,
+      );
+      expect(
+        filled?.foregroundColor?.resolve({}),
         theme.colorScheme.onPrimary,
       );
     });

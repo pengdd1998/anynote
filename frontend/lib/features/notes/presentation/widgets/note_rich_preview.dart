@@ -104,13 +104,14 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     }
 
     if (_ops == null) {
-      var fallback = stripObjectPlaceholders(_plainFallback ?? '');
+      Iterable<String> lines =
+          stripObjectPlaceholders(_plainFallback ?? '').split('\n');
       if (widget.skipFirstLine) {
         // Drop the first line — it is rendered as the card title.
-        fallback = fallback.split('\n').skip(1).join('\n');
+        lines = lines.skip(1);
       }
       return Text(
-        fallback,
+        _withoutBlankLines(lines).join('\n'),
         maxLines: widget.maxLines,
         overflow: TextOverflow.ellipsis,
         style: base,
@@ -124,6 +125,12 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     );
   }
 
+  /// A preview has a few lines to spend, and a blank line between paragraphs
+  /// spent one of them: four lines showed two of text. The note itself keeps
+  /// its spacing; only the preview closes the gaps.
+  static Iterable<String> _withoutBlankLines(Iterable<String> lines) =>
+      lines.where((line) => line.trim().isNotEmpty);
+
   // ── Delta → TextSpan (line-aware, mirrors the editor) ──────────────────
 
   TextSpan _deltaToSpan(
@@ -136,6 +143,7 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
       // Drop the first line — it is rendered as the card title.
       lines.removeAt(0);
     }
+    lines.removeWhere((line) => line.runs.isEmpty);
     final spans = <InlineSpan>[];
     var ordered = 0;
     for (final line in lines) {
