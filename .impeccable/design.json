@@ -1,37 +1,37 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-24T16:53:30Z",
+  "generatedAt": "2026-11-25T01:30:40Z",
   "title": "Design System: AnyNote",
   "extensions": {
     "colorMeta": {
       "primary": {
         "role": "primary",
-        "displayName": "Soft Periwinkle Purple",
-        "canonical": "oklch(64.9% 0.157 287.6)",
+        "displayName": "Deep Periwinkle Purple",
+        "canonical": "oklch(55.0% 0.172 285.1)",
         "tonalRamp": [
-          "oklch(15.0% 0.039 287.6)",
-          "oklch(26.4% 0.078 287.6)",
-          "oklch(37.9% 0.140 287.6)",
-          "oklch(49.3% 0.157 287.6)",
-          "oklch(60.7% 0.157 287.6)",
-          "oklch(72.1% 0.157 287.6)",
-          "oklch(83.6% 0.098 287.6)",
-          "oklch(95.0% 0.039 287.6)"
+          "oklch(15.0% 0.043 285.1)",
+          "oklch(26.4% 0.086 285.1)",
+          "oklch(37.9% 0.155 285.1)",
+          "oklch(49.3% 0.172 285.1)",
+          "oklch(60.7% 0.172 285.1)",
+          "oklch(72.1% 0.151 285.1)",
+          "oklch(83.6% 0.085 285.1)",
+          "oklch(95.0% 0.025 285.1)"
         ]
       },
       "primary-dark": {
         "role": "primary",
         "displayName": "Deep Pressed Purple",
-        "canonical": "oklch(57.9% 0.166 285.7)",
+        "canonical": "oklch(49.4% 0.177 284.4)",
         "tonalRamp": [
-          "oklch(15.0% 0.041 285.7)",
-          "oklch(26.4% 0.082 285.7)",
-          "oklch(37.9% 0.148 285.7)",
-          "oklch(49.3% 0.166 285.7)",
-          "oklch(60.7% 0.166 285.7)",
-          "oklch(72.1% 0.166 285.7)",
-          "oklch(83.6% 0.103 285.7)",
-          "oklch(95.0% 0.041 285.7)"
+          "oklch(15.0% 0.044 284.4)",
+          "oklch(26.4% 0.089 284.4)",
+          "oklch(37.9% 0.159 284.4)",
+          "oklch(49.3% 0.177 284.4)",
+          "oklch(60.7% 0.177 284.4)",
+          "oklch(72.1% 0.151 284.4)",
+          "oklch(83.6% 0.085 284.4)",
+          "oklch(95.0% 0.025 284.4)"
         ]
       },
       "secondary": {
@@ -334,6 +334,96 @@
           "oklch(95.0% 0.003 252.2)"
         ]
       },
+      "paper-ink-yellow": {
+        "role": "secondary",
+        "displayName": "Ink on Morning-Thoughts Yellow",
+        "canonical": "oklch(48.5% 0.037 93.8)",
+        "tonalRamp": [
+          "oklch(15.0% 0.009 93.8)",
+          "oklch(26.4% 0.019 93.8)",
+          "oklch(37.9% 0.034 93.8)",
+          "oklch(49.3% 0.037 93.8)",
+          "oklch(60.7% 0.037 93.8)",
+          "oklch(72.1% 0.037 93.8)",
+          "oklch(83.6% 0.023 93.8)",
+          "oklch(95.0% 0.009 93.8)"
+        ]
+      },
+      "paper-ink-white": {
+        "role": "secondary",
+        "displayName": "Ink on Plain Paper",
+        "canonical": "oklch(51.9% 0.038 83.5)",
+        "tonalRamp": [
+          "oklch(15.0% 0.009 83.5)",
+          "oklch(26.4% 0.019 83.5)",
+          "oklch(37.9% 0.034 83.5)",
+          "oklch(49.3% 0.038 83.5)",
+          "oklch(60.7% 0.038 83.5)",
+          "oklch(72.1% 0.038 83.5)",
+          "oklch(83.6% 0.023 83.5)",
+          "oklch(95.0% 0.009 83.5)"
+        ]
+      },
+      "paper-ink-pink": {
+        "role": "secondary",
+        "displayName": "Ink on Salmon Pink",
+        "canonical": "oklch(46.7% 0.042 25.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.011 25.1)",
+          "oklch(26.4% 0.021 25.1)",
+          "oklch(37.9% 0.038 25.1)",
+          "oklch(49.3% 0.042 25.1)",
+          "oklch(60.7% 0.042 25.1)",
+          "oklch(72.1% 0.042 25.1)",
+          "oklch(83.6% 0.026 25.1)",
+          "oklch(95.0% 0.011 25.1)"
+        ]
+      },
+      "paper-ink-lavender": {
+        "role": "secondary",
+        "displayName": "Ink on Lavender Note",
+        "canonical": "oklch(46.6% 0.061 305.8)",
+        "tonalRamp": [
+          "oklch(15.0% 0.015 305.8)",
+          "oklch(26.4% 0.030 305.8)",
+          "oklch(37.9% 0.055 305.8)",
+          "oklch(49.3% 0.061 305.8)",
+          "oklch(60.7% 0.061 305.8)",
+          "oklch(72.1% 0.061 305.8)",
+          "oklch(83.6% 0.038 305.8)",
+          "oklch(95.0% 0.015 305.8)"
+        ]
+      },
+      "paper-ink-cream": {
+        "role": "secondary",
+        "displayName": "Ink on Tiny-Ideas Cream",
+        "canonical": "oklch(52.7% 0.039 88.8)",
+        "tonalRamp": [
+          "oklch(15.0% 0.010 88.8)",
+          "oklch(26.4% 0.020 88.8)",
+          "oklch(37.9% 0.035 88.8)",
+          "oklch(49.3% 0.039 88.8)",
+          "oklch(60.7% 0.039 88.8)",
+          "oklch(72.1% 0.039 88.8)",
+          "oklch(83.6% 0.024 88.8)",
+          "oklch(95.0% 0.010 88.8)"
+        ]
+      },
+      "paper-ink-green": {
+        "role": "secondary",
+        "displayName": "Ink on Plant-Care Mint",
+        "canonical": "oklch(49.4% 0.050 126.6)",
+        "tonalRamp": [
+          "oklch(15.0% 0.012 126.6)",
+          "oklch(26.4% 0.025 126.6)",
+          "oklch(37.9% 0.045 126.6)",
+          "oklch(49.3% 0.050 126.6)",
+          "oklch(60.7% 0.050 126.6)",
+          "oklch(72.1% 0.050 126.6)",
+          "oklch(83.6% 0.031 126.6)",
+          "oklch(95.0% 0.012 126.6)"
+        ]
+      },
       "light-desk-bg": {
         "role": "secondary",
         "displayName": "The Desk",
@@ -392,6 +482,96 @@
           "oklch(72.1% 0.165 70.1)",
           "oklch(83.6% 0.102 70.1)",
           "oklch(95.0% 0.041 70.1)"
+        ]
+      },
+      "status-success-ink": {
+        "role": "tertiary",
+        "displayName": "Success Ink",
+        "canonical": "oklch(52.5% 0.085 168.2)",
+        "tonalRamp": [
+          "oklch(15.0% 0.021 168.2)",
+          "oklch(26.4% 0.043 168.2)",
+          "oklch(37.9% 0.077 168.2)",
+          "oklch(49.3% 0.085 168.2)",
+          "oklch(60.7% 0.085 168.2)",
+          "oklch(72.1% 0.085 168.2)",
+          "oklch(83.6% 0.053 168.2)",
+          "oklch(95.0% 0.021 168.2)"
+        ]
+      },
+      "status-warning-ink": {
+        "role": "tertiary",
+        "displayName": "Warning Ink",
+        "canonical": "oklch(53.8% 0.092 78.4)",
+        "tonalRamp": [
+          "oklch(15.0% 0.023 78.4)",
+          "oklch(26.4% 0.046 78.4)",
+          "oklch(37.9% 0.080 78.4)",
+          "oklch(49.3% 0.092 78.4)",
+          "oklch(60.7% 0.092 78.4)",
+          "oklch(72.1% 0.092 78.4)",
+          "oklch(83.6% 0.057 78.4)",
+          "oklch(95.0% 0.023 78.4)"
+        ]
+      },
+      "status-error-ink": {
+        "role": "tertiary",
+        "displayName": "Error Ink",
+        "canonical": "oklch(55.8% 0.176 24.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.044 24.9)",
+          "oklch(26.4% 0.088 24.9)",
+          "oklch(37.9% 0.155 24.9)",
+          "oklch(49.3% 0.176 24.9)",
+          "oklch(60.7% 0.176 24.9)",
+          "oklch(72.1% 0.174 24.9)",
+          "oklch(83.6% 0.091 24.9)",
+          "oklch(95.0% 0.025 24.9)"
+        ]
+      },
+      "status-success-ink-dark": {
+        "role": "tertiary",
+        "displayName": "Success Ink (Dark)",
+        "canonical": "oklch(65.0% 0.108 167.7)",
+        "tonalRamp": [
+          "oklch(15.0% 0.027 167.7)",
+          "oklch(26.4% 0.054 167.7)",
+          "oklch(37.9% 0.078 167.7)",
+          "oklch(49.3% 0.101 167.7)",
+          "oklch(60.7% 0.108 167.7)",
+          "oklch(72.1% 0.108 167.7)",
+          "oklch(83.6% 0.067 167.7)",
+          "oklch(95.0% 0.027 167.7)"
+        ]
+      },
+      "status-warning-ink-dark": {
+        "role": "tertiary",
+        "displayName": "Warning Ink (Dark)",
+        "canonical": "oklch(66.9% 0.116 77.7)",
+        "tonalRamp": [
+          "oklch(15.0% 0.029 77.7)",
+          "oklch(26.4% 0.057 77.7)",
+          "oklch(37.9% 0.080 77.7)",
+          "oklch(49.3% 0.104 77.7)",
+          "oklch(60.7% 0.116 77.7)",
+          "oklch(72.1% 0.116 77.7)",
+          "oklch(83.6% 0.072 77.7)",
+          "oklch(95.0% 0.029 77.7)"
+        ]
+      },
+      "status-error-ink-dark": {
+        "role": "tertiary",
+        "displayName": "Error Ink (Dark)",
+        "canonical": "oklch(68.0% 0.130 21.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.032 21.1)",
+          "oklch(26.4% 0.065 21.1)",
+          "oklch(37.9% 0.117 21.1)",
+          "oklch(49.3% 0.130 21.1)",
+          "oklch(60.7% 0.130 21.1)",
+          "oklch(72.1% 0.130 21.1)",
+          "oklch(83.6% 0.081 21.1)",
+          "oklch(95.0% 0.025 21.1)"
         ]
       },
       "accent-lavender-bg": {
@@ -547,16 +727,16 @@
       "light-text-tertiary": {
         "role": "neutral",
         "displayName": "Warm Muted Ink",
-        "canonical": "oklch(65.8% 0.023 65.1)",
+        "canonical": "oklch(53.6% 0.033 67.0)",
         "tonalRamp": [
-          "oklch(15.0% 0.006 65.1)",
-          "oklch(26.4% 0.012 65.1)",
-          "oklch(37.9% 0.021 65.1)",
-          "oklch(49.3% 0.023 65.1)",
-          "oklch(60.7% 0.023 65.1)",
-          "oklch(72.1% 0.023 65.1)",
-          "oklch(83.6% 0.015 65.1)",
-          "oklch(95.0% 0.006 65.1)"
+          "oklch(15.0% 0.008 67.0)",
+          "oklch(26.4% 0.017 67.0)",
+          "oklch(37.9% 0.030 67.0)",
+          "oklch(49.3% 0.033 67.0)",
+          "oklch(60.7% 0.033 67.0)",
+          "oklch(72.1% 0.033 67.0)",
+          "oklch(83.6% 0.021 67.0)",
+          "oklch(95.0% 0.008 67.0)"
         ]
       },
       "slate-100": {
@@ -682,16 +862,16 @@
       "dark-text-secondary": {
         "role": "neutral",
         "displayName": "Muted Lavender Grey",
-        "canonical": "oklch(82.1% 0.045 291.1)",
+        "canonical": "oklch(83.4% 0.029 296.7)",
         "tonalRamp": [
-          "oklch(15.0% 0.011 291.1)",
-          "oklch(26.4% 0.022 291.1)",
-          "oklch(37.9% 0.040 291.1)",
-          "oklch(49.3% 0.045 291.1)",
-          "oklch(60.7% 0.045 291.1)",
-          "oklch(72.1% 0.045 291.1)",
-          "oklch(83.6% 0.028 291.1)",
-          "oklch(95.0% 0.011 291.1)"
+          "oklch(15.0% 0.007 296.7)",
+          "oklch(26.4% 0.015 296.7)",
+          "oklch(37.9% 0.027 296.7)",
+          "oklch(49.3% 0.029 296.7)",
+          "oklch(60.7% 0.029 296.7)",
+          "oklch(72.1% 0.029 296.7)",
+          "oklch(83.6% 0.018 296.7)",
+          "oklch(95.0% 0.007 296.7)"
         ]
       },
       "dark-text-tertiary": {
@@ -774,11 +954,11 @@
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Default reading text: settings-row titles, input text, body copy (Material bodyLarge, 15px)."
+        "purpose": "Default reading text: settings-row titles, input text, body copy (Material bodyLarge, 15px). Also the preview on a note card, at 13px / 1.4, in Inter."
       },
       "caption": {
         "displayName": "Caption",
-        "purpose": "Subtitles, hints and metadata (Material bodySmall and labelMedium, 13px)."
+        "purpose": "Subtitles, hints and metadata (Material bodySmall and labelMedium, 13px). Also the time on a note card, at 500, in Inter."
       },
       "link": {
         "displayName": "Link",
@@ -798,27 +978,19 @@
       },
       "handwriting-body": {
         "displayName": "Handwriting Body",
-        "purpose": "Note titles on note cards: the first line of the note, in both list and grid layouts."
-      },
-      "handwriting-caption": {
-        "displayName": "Handwriting Caption",
-        "purpose": "Timestamps on note cards."
-      },
-      "handwriting-note-body": {
-        "displayName": "Handwriting Note Body",
-        "purpose": "Handwritten preview text on sticky-note cards."
+        "purpose": "Note titles on note cards: the first line of the note, in both list and grid layouts, two lines at most."
       }
     },
     "shadows": [
       {
         "name": "paper",
         "value": "3px 6px 16px #78644226, 1px 2px 4px #7864421F",
-        "purpose": "Sticky-note cards in light mode: a warm diffuse layer plus a tight contact layer, so the paper looks placed on a desk. Flutter offset (3,6) blurRadius 16, then offset (1,2) blurRadius 4."
+        "purpose": "Sticky-note cards and the FAB in light mode: a warm diffuse layer plus a tight contact layer, so the paper looks placed on a desk. Flutter offset (3,6) blurRadius 16, then offset (1,2) blurRadius 4."
       },
       {
         "name": "paper-dark",
         "value": "3px 6px 16px #00000020, 1px 2px 4px #00000020",
-        "purpose": "Sticky-note cards in dark mode: the same two layers in 12.5% black."
+        "purpose": "Sticky-note cards and the FAB in dark mode: the same two layers in 12.5% black."
       },
       {
         "name": "sheet-lift",
@@ -827,7 +999,7 @@
       },
       {
         "name": "card-press",
-        "value": "0 4px 12px #8B7CE80C",
+        "value": "0 4px 12px #6B5CD00C",
         "purpose": "Added under a tappable CardContainer while it is pressed. Flutter offset (0,4) blurRadius 12, primary at alpha 12."
       },
       {
@@ -927,7 +1099,7 @@
       "refersTo": "button-primary",
       "description": "FilledButton: the one filled action on a screen. Soft Periwinkle Purple fill, white 15px/600 label, 16px corners, 14x24 padding; a press gives to 0.97 scale on the press/settle springs. The hover colour and the focus ring are web stand-ins: the theme leaves hover, focus and pressed colour to Material's defaults.",
       "html": "<button class=\"ds-btn-primary\" type=\"button\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.save\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg>Save</button>\n<button class=\"ds-btn-primary\" type=\"button\" disabled>Save</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: #8B7CE8; color: #FFFFFF; border: 0; border-radius: 16px; padding: 14px 24px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1), background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-btn-primary:hover { background: #9486EA; }\n.ds-btn-primary:active { transform: scale(0.97); }\n.ds-btn-primary:focus-visible { outline: 2px solid #8B7CE8; outline-offset: 2px; }\n.ds-btn-primary:disabled { background: #D5D0C8; color: #9C8F83; cursor: default; transform: none; }\n@media (prefers-reduced-motion: reduce) { .ds-btn-primary { transition: none; } .ds-btn-primary:active { transform: none; opacity: 0.72; } }"
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: #6B5CD0; color: #FFFFFF; border: 0; border-radius: 16px; padding: 14px 24px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1), background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-btn-primary:hover { background: #7A6CD8; }\n.ds-btn-primary:active { transform: scale(0.97); }\n.ds-btn-primary:focus-visible { outline: 2px solid #6B5CD0; outline-offset: 2px; }\n.ds-btn-primary:disabled { background: #D5D0C8; color: #7B6A59; cursor: default; transform: none; }\n@media (prefers-reduced-motion: reduce) { .ds-btn-primary { transition: none; } .ds-btn-primary:active { transform: none; opacity: 0.72; } }"
     },
     {
       "name": "Tonal Button",
@@ -935,7 +1107,7 @@
       "refersTo": "button-tonal",
       "description": "FilledButton.tonal: the quieter call to action (empty-state button, retry), 16px corners. Its fill and label are Material's secondaryContainer/onSecondaryContainer, derived from the seed and not pinned to a token; Lavender Tint and Deep Accent Purple are stand-ins for them. Hover and focus are web stand-ins.",
       "html": "<button class=\"ds-btn-tonal\" type=\"button\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.add\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg>New note</button>",
-      "css": ".ds-btn-tonal { display: inline-flex; align-items: center; gap: 8px; background: #EFECFE; color: #6C5BC4; border: 0; border-radius: 16px; padding: 14px 24px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1), background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-btn-tonal:hover { background: #E5E1F9; }\n.ds-btn-tonal:active { transform: scale(0.97); }\n.ds-btn-tonal:focus-visible { outline: 2px solid #8B7CE8; outline-offset: 2px; }\n@media (prefers-reduced-motion: reduce) { .ds-btn-tonal { transition: none; } .ds-btn-tonal:active { transform: none; opacity: 0.72; } }"
+      "css": ".ds-btn-tonal { display: inline-flex; align-items: center; gap: 8px; background: #EFECFE; color: #6C5BC4; border: 0; border-radius: 16px; padding: 14px 24px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1), background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-btn-tonal:hover { background: #E5E1F9; }\n.ds-btn-tonal:active { transform: scale(0.97); }\n.ds-btn-tonal:focus-visible { outline: 2px solid #6B5CD0; outline-offset: 2px; }\n@media (prefers-reduced-motion: reduce) { .ds-btn-tonal { transition: none; } .ds-btn-tonal:active { transform: none; opacity: 0.72; } }"
     },
     {
       "name": "Text Input",
@@ -943,7 +1115,7 @@
       "refersTo": "input",
       "description": "The themed text field: filled with Warm Input Fill, 1px Warm Border, 16px corners, 14x16 padding, body type. Focus grows the border to 2px in Soft Periwinkle Purple at alpha 120; error draws Error Red. The hover and active borders are web stand-ins (the warm disabled grey as the next darker neutral), and Error Red stands in for the theme's error colour, which Material derives and the theme does not pin.",
       "html": "<input class=\"ds-input-field\" type=\"text\" placeholder=\"Write a note\" aria-label=\"Note\">\n<input class=\"ds-input-field\" type=\"text\" value=\"\" placeholder=\"Required\" aria-label=\"Required field\" aria-invalid=\"true\">",
-      "css": ".ds-input-field { background: #F5F2EE; color: #0F172A; border: 1px solid #E8E4DF; border-radius: 16px; padding: 14px 16px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 400; line-height: 1.47; letter-spacing: -0.1px; transition: border-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), box-shadow 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-input-field::placeholder { color: #9C8F83; }\n.ds-input-field:hover, .ds-input-field:active { border-color: #D5D0C8; }\n.ds-input-field:focus-visible { outline: 0; border-color: rgba(139, 124, 232, 0.47); box-shadow: 0 0 0 1px rgba(139, 124, 232, 0.47); }\n.ds-input-field[aria-invalid=\"true\"] { border-color: #EF4444; }\n.ds-input-field[aria-invalid=\"true\"]:focus-visible { border-color: #EF4444; box-shadow: 0 0 0 1px #EF4444; }\n@media (prefers-reduced-motion: reduce) { .ds-input-field { transition: none; } }"
+      "css": ".ds-input-field { background: #F5F2EE; color: #0F172A; border: 1px solid #E8E4DF; border-radius: 16px; padding: 14px 16px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 400; line-height: 1.47; letter-spacing: -0.1px; transition: border-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), box-shadow 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-input-field::placeholder { color: #7B6A59; }\n.ds-input-field:hover, .ds-input-field:active { border-color: #D5D0C8; }\n.ds-input-field:focus-visible { outline: 0; border-color: rgba(107, 92, 208, 0.47); box-shadow: 0 0 0 1px rgba(107, 92, 208, 0.47); }\n.ds-input-field[aria-invalid=\"true\"] { border-color: #EF4444; }\n.ds-input-field[aria-invalid=\"true\"]:focus-visible { border-color: #EF4444; box-shadow: 0 0 0 1px #EF4444; }\n@media (prefers-reduced-motion: reduce) { .ds-input-field { transition: none; } }"
     },
     {
       "name": "Search Field",
@@ -951,7 +1123,7 @@
       "refersTo": "input",
       "description": "Derived stand-in, not a documented widget: the text-input theme with AppIcons.search as a leading glyph. No dedicated search-field widget was among the documented sources, so nothing more specific is known about it. The hover and active borders are web stand-ins.",
       "html": "<div class=\"ds-search\"><svg class=\"ds-icon ds-search-icon\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.search\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg><input class=\"ds-input-field ds-search-field\" type=\"search\" placeholder=\"Search notes\" aria-label=\"Search notes\"></div>",
-      "css": ".ds-search { position: relative; display: inline-flex; align-items: center; }\n.ds-search-icon { position: absolute; left: 16px; color: #5C534A; pointer-events: none; }\n.ds-input-field { background: #F5F2EE; color: #0F172A; border: 1px solid #E8E4DF; border-radius: 16px; padding: 14px 16px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 400; line-height: 1.47; letter-spacing: -0.1px; transition: border-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), box-shadow 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-search-field { padding-left: 48px; }\n.ds-input-field::placeholder { color: #9C8F83; }\n.ds-input-field:hover, .ds-input-field:active { border-color: #D5D0C8; }\n.ds-input-field:focus-visible { outline: 0; border-color: rgba(139, 124, 232, 0.47); box-shadow: 0 0 0 1px rgba(139, 124, 232, 0.47); }\n@media (prefers-reduced-motion: reduce) { .ds-input-field { transition: none; } }"
+      "css": ".ds-search { position: relative; display: inline-flex; align-items: center; }\n.ds-search-icon { position: absolute; left: 16px; color: #5C534A; pointer-events: none; }\n.ds-input-field { background: #F5F2EE; color: #0F172A; border: 1px solid #E8E4DF; border-radius: 16px; padding: 14px 16px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 400; line-height: 1.47; letter-spacing: -0.1px; transition: border-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), box-shadow 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-search-field { padding-left: 48px; }\n.ds-input-field::placeholder { color: #7B6A59; }\n.ds-input-field:hover, .ds-input-field:active { border-color: #D5D0C8; }\n.ds-input-field:focus-visible { outline: 0; border-color: rgba(107, 92, 208, 0.47); box-shadow: 0 0 0 1px rgba(107, 92, 208, 0.47); }\n@media (prefers-reduced-motion: reduce) { .ds-input-field { transition: none; } }"
     },
     {
       "name": "Bottom Navigation",
@@ -959,7 +1131,7 @@
       "refersTo": "nav-bar",
       "description": "Material 3 NavigationBar theme: Warm Card White, height 56, no elevation, Lavender Tint indicator behind the selected icon, 10px labels. The four destinations use the navigation regular/fill pairs from AppIcons; the filled cut marks the selected one. Geometry the theme does not set (indicator size) is Material's default. Labels are placeholders.",
       "html": "<nav class=\"ds-nav\" aria-label=\"Bottom navigation\">\n  <button class=\"ds-nav-item ds-is-selected\" type=\"button\" aria-current=\"page\"><span class=\"ds-nav-indicator\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.notesFilled\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg></span><span class=\"ds-nav-label\">Notes</span></button>\n  <button class=\"ds-nav-item\" type=\"button\"><span class=\"ds-nav-indicator\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.compose\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg></span><span class=\"ds-nav-label\">Compose</span></button>\n  <button class=\"ds-nav-item\" type=\"button\"><span class=\"ds-nav-indicator\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.ai\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg></span><span class=\"ds-nav-label\">AI</span></button>\n  <button class=\"ds-nav-item\" type=\"button\"><span class=\"ds-nav-indicator\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.settings\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg></span><span class=\"ds-nav-label\">Settings</span></button>\n</nav>",
-      "css": ".ds-nav { display: flex; width: 100%; height: 56px; background: #FFFDF9; }\n.ds-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: 0; padding: 0; color: #5C534A; font-family: Inter, sans-serif; cursor: pointer; transition: color 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-nav-indicator { display: grid; place-items: center; width: 64px; height: 32px; border-radius: 16px; transition: background-color 220ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-nav-label { font-size: 10px; font-weight: 400; line-height: 1; }\n.ds-nav-item:hover .ds-nav-indicator { background: rgba(139, 124, 232, 0.08); }\n.ds-nav-item:active .ds-nav-indicator { background: rgba(139, 124, 232, 0.1); }\n.ds-nav-item:focus-visible { outline: 2px solid #8B7CE8; outline-offset: -2px; }\n.ds-nav-item.ds-is-selected { color: #8B7CE8; }\n.ds-nav-item.ds-is-selected .ds-nav-indicator { background: #EFECFE; }\n.ds-nav-item.ds-is-selected .ds-nav-label { font-weight: 600; }\n@media (prefers-reduced-motion: reduce) { .ds-nav-item, .ds-nav-indicator { transition: none; } }"
+      "css": ".ds-nav { display: flex; width: 100%; height: 56px; background: #FFFDF9; }\n.ds-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: 0; padding: 0; color: #5C534A; font-family: Inter, sans-serif; cursor: pointer; transition: color 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-nav-indicator { display: grid; place-items: center; width: 64px; height: 32px; border-radius: 16px; transition: background-color 220ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-nav-label { font-size: 10px; font-weight: 400; line-height: 1; }\n.ds-nav-item:hover .ds-nav-indicator { background: rgba(107, 92, 208, 0.08); }\n.ds-nav-item:active .ds-nav-indicator { background: rgba(107, 92, 208, 0.1); }\n.ds-nav-item:focus-visible { outline: 2px solid #6B5CD0; outline-offset: -2px; }\n.ds-nav-item.ds-is-selected { color: #6B5CD0; }\n.ds-nav-item.ds-is-selected .ds-nav-indicator { background: #EFECFE; }\n.ds-nav-item.ds-is-selected .ds-nav-label { font-weight: 600; }\n@media (prefers-reduced-motion: reduce) { .ds-nav-item, .ds-nav-indicator { transition: none; } }"
     },
     {
       "name": "Chip",
@@ -967,15 +1139,15 @@
       "refersTo": "chip",
       "description": "The theme's Chip: Cool Chip Grey pill with a 13px/500 Slate Ink label in light; selected takes Lavender Tint with a Deep Accent Purple label. Dark differs in shape: Navy Input Fill, 1px Navy Border, 12px corners. The tag chips on note cards come from a widget outside the documented sources. Hover and focus are web stand-ins.",
       "html": "<div class=\"ds-chip-row\"><button class=\"ds-chip\" type=\"button\">work</button><button class=\"ds-chip ds-is-selected\" type=\"button\" aria-pressed=\"true\">ideas</button></div>\n<div class=\"ds-chip-row ds-chip-row-dark\"><button class=\"ds-chip-dark ds-is-selected\" type=\"button\" aria-pressed=\"true\">trips</button><button class=\"ds-chip-dark\" type=\"button\">reading</button></div>",
-      "css": ".ds-chip-row { display: inline-flex; flex-wrap: wrap; gap: 8px; }\n.ds-chip-row-dark { background: #1A1E2E; padding: 8px; }\n.ds-chip { display: inline-flex; align-items: center; background: #F1F5F9; color: #0F172A; border: 0; border-radius: 9999px; padding: 6px 16px; font-family: Inter, sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-chip:hover { background: #E8ECF1; }\n.ds-chip:active { transform: scale(0.97); }\n.ds-chip:focus-visible { outline: 2px solid #8B7CE8; outline-offset: 2px; }\n.ds-chip.ds-is-selected { background: #EFECFE; color: #6C5BC4; }\n.ds-chip.ds-is-selected:hover { background: #E5E1F9; }\n.ds-chip-dark { display: inline-flex; align-items: center; background: #252A3E; color: #F4F2FF; border: 1px solid #353B52; border-radius: 12px; padding: 4px 12px; font-family: Inter, sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-chip-dark:hover { background: #30344C; }\n.ds-chip-dark:active { transform: scale(0.97); }\n.ds-chip-dark:focus-visible { outline: 2px solid #B7ADF5; outline-offset: 2px; }\n.ds-chip-dark.ds-is-selected { background: #463D6B; color: #DCD5FA; }\n@media (prefers-reduced-motion: reduce) { .ds-chip, .ds-chip-dark { transition: none; } .ds-chip:active, .ds-chip-dark:active { transform: none; opacity: 0.72; } }"
+      "css": ".ds-chip-row { display: inline-flex; flex-wrap: wrap; gap: 8px; }\n.ds-chip-row-dark { background: #1A1E2E; padding: 8px; }\n.ds-chip { display: inline-flex; align-items: center; background: #F1F5F9; color: #0F172A; border: 0; border-radius: 9999px; padding: 6px 16px; font-family: Inter, sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-chip:hover { background: #E8ECF1; }\n.ds-chip:active { transform: scale(0.97); }\n.ds-chip:focus-visible { outline: 2px solid #6B5CD0; outline-offset: 2px; }\n.ds-chip.ds-is-selected { background: #EFECFE; color: #6C5BC4; }\n.ds-chip.ds-is-selected:hover { background: #E5E1F9; }\n.ds-chip-dark { display: inline-flex; align-items: center; background: #252A3E; color: #F4F2FF; border: 1px solid #353B52; border-radius: 12px; padding: 4px 12px; font-family: Inter, sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1), transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-chip-dark:hover { background: #30344C; }\n.ds-chip-dark:active { transform: scale(0.97); }\n.ds-chip-dark:focus-visible { outline: 2px solid #B7ADF5; outline-offset: 2px; }\n.ds-chip-dark.ds-is-selected { background: #463D6B; color: #DCD5FA; }\n@media (prefers-reduced-motion: reduce) { .ds-chip, .ds-chip-dark { transition: none; } .ds-chip:active, .ds-chip-dark:active { transform: none; opacity: 0.72; } }"
     },
     {
       "name": "Sticky-Note Card",
       "kind": "card",
       "refersTo": "sticky-note",
-      "description": "The signature component: a note as a Post-it on the desk. One of six paper tones by list position, 12px corners, no border, a two-layer warm shadow, a slight tilt; handwritten title (22px/500), handwritten preview and a muted timestamp, with a decorative doodle bottom-right. Hover and active reuse the card's own ink highlight (alpha 10) and splash (alpha 20). Sample text and the doodle placeholder are illustrative.",
-      "html": "<div class=\"ds-sticky-wrap\">\n  <article class=\"ds-sticky\" style=\"--tone: #FBE48E; --tilt: -1.83deg;\">\n    <header class=\"ds-sticky-title-row\"><svg class=\"ds-icon ds-sticky-pin\" viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.pinFilled\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg><h3 class=\"ds-sticky-title\">Morning thoughts</h3></header>\n    <p class=\"ds-sticky-body\">Call Mei after lunch. The deck needs one more example before Thursday.</p>\n    <footer class=\"ds-sticky-footer\"><time class=\"ds-sticky-time\">Yesterday, 9:12</time><svg class=\"ds-icon ds-sticky-doodle\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"6\"/></svg></footer>\n  </article>\n  <article class=\"ds-sticky\" style=\"--tone: #E4D3F6; --tilt: 1.38deg;\">\n    <header class=\"ds-sticky-title-row\"><h3 class=\"ds-sticky-title\">Quote to remember</h3></header>\n    <p class=\"ds-sticky-body\">Write the bad first draft. Everything after that is editing.</p>\n    <footer class=\"ds-sticky-footer\"><time class=\"ds-sticky-time\">Monday, 20:40</time><svg class=\"ds-icon ds-sticky-doodle\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><rect x=\"6\" y=\"6\" width=\"12\" height=\"12\" rx=\"6\"/></svg></footer>\n  </article>\n</div>\n<div class=\"ds-sticky-wrap ds-sticky-wrap-dark\">\n  <article class=\"ds-sticky ds-sticky-dark\" style=\"--tone: #4B4A61; --tilt: -1.03deg;\">\n    <header class=\"ds-sticky-title-row\"><h3 class=\"ds-sticky-title\">Tiny ideas</h3></header>\n    <p class=\"ds-sticky-body\">A shortcut for yesterday's notes.</p>\n    <footer class=\"ds-sticky-footer\"><time class=\"ds-sticky-time\">Sunday, 8:05</time></footer>\n  </article>\n</div>",
-      "css": ".ds-sticky-wrap { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; padding: 24px; background: #F2EFE9; }\n.ds-sticky-wrap-dark { background: #1A1E2E; }\n.ds-sticky { display: flex; flex-direction: column; gap: 4px; width: 200px; background: var(--tone, #FBE48E); color: #0F172A; border: 0; border-radius: 12px; padding: 14px 14px 12px; box-shadow: 3px 6px 16px #78644226, 1px 2px 4px #7864421F; transform: rotate(var(--tilt, 0deg)); transition: transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1), box-shadow 220ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-sticky:hover { box-shadow: inset 0 0 0 999px rgba(139, 124, 232, 0.04), 3px 6px 16px #78644226, 1px 2px 4px #7864421F; }\n.ds-sticky:active { transform: rotate(var(--tilt, 0deg)) scale(0.97); box-shadow: inset 0 0 0 999px rgba(139, 124, 232, 0.08), 3px 6px 16px #78644226, 1px 2px 4px #7864421F; }\n.ds-sticky:focus-visible { outline: 2px solid #8B7CE8; outline-offset: 2px; }\n.ds-sticky-title-row { display: flex; align-items: flex-start; gap: 4px; }\n.ds-sticky-pin { flex: none; margin-top: 3px; color: #8B7CE8; }\n.ds-sticky-title { margin: 0; font-family: Caveat, MaShanZheng, cursive; font-size: 22px; font-weight: 500; line-height: 1.2; color: #0F172A; }\n.ds-sticky-body { margin: 0; font-family: Caveat, MaShanZheng, cursive; font-size: 15px; font-weight: 400; line-height: 1.45; color: #5C534A; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }\n.ds-sticky-footer { display: flex; align-items: center; justify-content: space-between; }\n.ds-sticky-time { font-family: Caveat, MaShanZheng, cursive; font-size: 17px; font-weight: 500; line-height: 1.2; color: #9C8F83; }\n.ds-sticky-doodle { color: rgba(92, 83, 74, 0.59); }\n.ds-sticky-dark { color: #F4F2FF; box-shadow: 3px 6px 16px #00000020, 1px 2px 4px #00000020; }\n.ds-sticky-dark .ds-sticky-title { color: #F4F2FF; }\n.ds-sticky-dark .ds-sticky-body { color: #C4C0E0; }\n.ds-sticky-dark .ds-sticky-time { color: #9E9AB8; }\n@media (prefers-reduced-motion: reduce) { .ds-sticky { transition: none; transform: none; } .ds-sticky:active { transform: none; } }"
+      "description": "The signature component: a note as a Post-it on the desk. One of six paper tones by list position, 12px corners, no border, a two-layer warm shadow, a slight tilt; a handwritten title (22px/500, two lines at most), the first lines of the note in Inter (13px) and the time in Inter (13px/500) in the sheet's own ink, with a decorative doodle bottom-right. Hover and active reuse the card's own ink highlight (alpha 10) and splash (alpha 20). Sample text and the doodle placeholder are illustrative.",
+      "html": "<div class=\"ds-sticky-wrap\">\n  <article class=\"ds-sticky\" style=\"--tone: #FBE48E; --ink: #665F47; --tilt: -1.83deg;\">\n    <header class=\"ds-sticky-title-row\"><svg class=\"ds-icon ds-sticky-pin\" viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.pinFilled\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg><h3 class=\"ds-sticky-title\">Morning thoughts</h3></header>\n    <p class=\"ds-sticky-body\">Call Mei after lunch. The deck needs one more example before Thursday.</p>\n    <footer class=\"ds-sticky-footer\"><time class=\"ds-sticky-time\">Yesterday, 9:12</time><svg class=\"ds-icon ds-sticky-doodle\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"6\"/></svg></footer>\n  </article>\n  <article class=\"ds-sticky\" style=\"--tone: #E4D3F6; --ink: #625175; --tilt: 1.38deg;\">\n    <header class=\"ds-sticky-title-row\"><h3 class=\"ds-sticky-title\">Quote to remember</h3></header>\n    <p class=\"ds-sticky-body\">Write the bad first draft. Everything after that is editing.</p>\n    <footer class=\"ds-sticky-footer\"><time class=\"ds-sticky-time\">Monday, 20:40</time><svg class=\"ds-icon ds-sticky-doodle\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><rect x=\"6\" y=\"6\" width=\"12\" height=\"12\" rx=\"6\"/></svg></footer>\n  </article>\n</div>\n<div class=\"ds-sticky-wrap ds-sticky-wrap-dark\">\n  <article class=\"ds-sticky ds-sticky-dark\" style=\"--tone: #4B4A61; --tilt: -1.03deg;\">\n    <header class=\"ds-sticky-title-row\"><h3 class=\"ds-sticky-title\">Tiny ideas</h3></header>\n    <p class=\"ds-sticky-body\">A shortcut for yesterday's notes.</p>\n    <footer class=\"ds-sticky-footer\"><time class=\"ds-sticky-time\">Sunday, 8:05</time></footer>\n  </article>\n</div>",
+      "css": ".ds-sticky-wrap { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; padding: 24px; background: #F2EFE9; }\n.ds-sticky-wrap-dark { background: #1A1E2E; }\n.ds-sticky { display: flex; flex-direction: column; gap: 4px; width: 200px; background: var(--tone, #FBE48E); color: #0F172A; border: 0; border-radius: 12px; padding: 14px 14px 12px; box-shadow: 3px 6px 16px #78644226, 1px 2px 4px #7864421F; transform: rotate(var(--tilt, 0deg)); transition: transform 220ms cubic-bezier(0.05, 0.7, 0.1, 1), box-shadow 220ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-sticky:hover { box-shadow: inset 0 0 0 999px rgba(107, 92, 208, 0.04), 3px 6px 16px #78644226, 1px 2px 4px #7864421F; }\n.ds-sticky:active { transform: rotate(var(--tilt, 0deg)) scale(0.97); box-shadow: inset 0 0 0 999px rgba(107, 92, 208, 0.08), 3px 6px 16px #78644226, 1px 2px 4px #7864421F; }\n.ds-sticky:focus-visible { outline: 2px solid #6B5CD0; outline-offset: 2px; }\n.ds-sticky-title-row { display: flex; align-items: flex-start; gap: 4px; }\n.ds-sticky-pin { flex: none; margin-top: 3px; color: #6B5CD0; }\n.ds-sticky-title { margin: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-family: Caveat, MaShanZheng, cursive; font-size: 22px; font-weight: 500; line-height: 1.2; color: #0F172A; }\n.ds-sticky-body { margin: 0; font-family: Inter, sans-serif; font-size: 13px; font-weight: 400; line-height: 1.4; color: #5C534A; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }\n.ds-sticky-footer { display: flex; align-items: center; justify-content: space-between; }\n.ds-sticky-time { font-family: Inter, sans-serif; font-size: 13px; font-weight: 500; line-height: 1.38; color: var(--ink, #736750); }\n.ds-sticky-doodle { color: rgba(92, 83, 74, 0.59); }\n.ds-sticky-dark { color: #F4F2FF; box-shadow: 3px 6px 16px #00000020, 1px 2px 4px #00000020; }\n.ds-sticky-dark .ds-sticky-title { color: #F4F2FF; }\n.ds-sticky-dark .ds-sticky-body { color: #CAC5DA; }\n.ds-sticky-dark .ds-sticky-time { color: #CAC5DA; }\n@media (prefers-reduced-motion: reduce) { .ds-sticky { transition: none; transform: none; } .ds-sticky:active { transform: none; } }"
     },
     {
       "name": "Settings Row",
@@ -983,16 +1155,17 @@
       "refersTo": "settings-row",
       "description": "SettingsItem inside a SettingsGroup: a 20px-cornered card with a 1px Warm Border, rows with a 32px tinted icon circle, body title and caption subtitle, a 0.5px inset divider. A press scales to 0.98 over 120ms under an 8% purple ink splash. The title's on-surface colour and the destructive row's error colour are Material-derived and not pinned; Slate Ink and Error Red are stand-ins.",
       "html": "<div class=\"ds-settings-group\" style=\"margin: 16px;\">\n  <div class=\"ds-settings-row\" role=\"button\" tabindex=\"0\"><span class=\"ds-icon-circle\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.shield\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg></span><span class=\"ds-settings-text\"><span class=\"ds-settings-title\">Encryption</span><span class=\"ds-settings-subtitle\">E2E encryption active</span></span><svg class=\"ds-icon ds-settings-trailing\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.chevronRight\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg></div>\n  <div class=\"ds-settings-divider\"></div>\n  <div class=\"ds-settings-row ds-is-destructive\" role=\"button\" tabindex=\"0\"><span class=\"ds-icon-circle\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" role=\"img\" aria-label=\"AppIcons.logout\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"3\"/></svg></span><span class=\"ds-settings-text\"><span class=\"ds-settings-title\">Sign out</span></span></div>\n</div>",
-      "css": ".ds-settings-group { background: #FFFDF9; border: 1px solid #E8E4DF; border-radius: 20px; padding: 4px 0; }\n.ds-settings-row { display: flex; align-items: center; padding: 12px; cursor: pointer; transition: transform 120ms cubic-bezier(0.05, 0.7, 0.1, 1), background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-settings-row:hover { background: rgba(139, 124, 232, 0.08); }\n.ds-settings-row:active { transform: scale(0.98); background: rgba(139, 124, 232, 0.08); }\n.ds-settings-row:focus-visible { outline: 2px solid #8B7CE8; outline-offset: -2px; border-radius: 8px; }\n.ds-settings-divider { height: 0.5px; margin: 0 12px; background: #EBE8E3; }\n.ds-icon-circle { flex: none; width: 32px; height: 32px; margin: 0 12px; border-radius: 50%; background: rgba(139, 124, 232, 0.12); color: #8B7CE8; display: grid; place-items: center; }\n.ds-settings-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }\n.ds-settings-title { font-family: Inter, sans-serif; font-size: 15px; font-weight: 400; line-height: 1.47; letter-spacing: -0.1px; color: #0F172A; }\n.ds-settings-subtitle { font-family: Inter, sans-serif; font-size: 13px; font-weight: 400; line-height: 1.38; color: #5C534A; }\n.ds-settings-trailing { margin-left: 8px; color: #5C534A; }\n.ds-settings-row.ds-is-destructive .ds-icon-circle { color: #EF4444; background: rgba(239, 68, 68, 0.12); }\n.ds-settings-row.ds-is-destructive .ds-settings-title { color: #EF4444; }\n.ds-settings-row.ds-is-destructive .ds-settings-subtitle { color: rgba(239, 68, 68, 0.7); }\n@media (prefers-reduced-motion: reduce) { .ds-settings-row { transition: background-color 120ms linear; } .ds-settings-row:active { transform: none; } }"
+      "css": ".ds-settings-group { background: #FFFDF9; border: 1px solid #E8E4DF; border-radius: 20px; padding: 4px 0; }\n.ds-settings-row { display: flex; align-items: center; padding: 12px; cursor: pointer; transition: transform 120ms cubic-bezier(0.05, 0.7, 0.1, 1), background-color 120ms cubic-bezier(0.05, 0.7, 0.1, 1); }\n.ds-settings-row:hover { background: rgba(107, 92, 208, 0.08); }\n.ds-settings-row:active { transform: scale(0.98); background: rgba(107, 92, 208, 0.08); }\n.ds-settings-row:focus-visible { outline: 2px solid #6B5CD0; outline-offset: -2px; border-radius: 8px; }\n.ds-settings-divider { height: 0.5px; margin: 0 12px; background: #EBE8E3; }\n.ds-icon-circle { flex: none; width: 32px; height: 32px; margin: 0 12px; border-radius: 50%; background: rgba(107, 92, 208, 0.12); color: #6B5CD0; display: grid; place-items: center; }\n.ds-settings-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }\n.ds-settings-title { font-family: Inter, sans-serif; font-size: 15px; font-weight: 400; line-height: 1.47; letter-spacing: -0.1px; color: #0F172A; }\n.ds-settings-subtitle { font-family: Inter, sans-serif; font-size: 13px; font-weight: 400; line-height: 1.38; color: #5C534A; }\n.ds-settings-trailing { margin-left: 8px; color: #5C534A; }\n.ds-settings-row.ds-is-destructive .ds-icon-circle { color: #EF4444; background: rgba(239, 68, 68, 0.12); }\n.ds-settings-row.ds-is-destructive .ds-settings-title { color: #EF4444; }\n.ds-settings-row.ds-is-destructive .ds-settings-subtitle { color: rgba(239, 68, 68, 0.7); }\n@media (prefers-reduced-motion: reduce) { .ds-settings-row { transition: background-color 120ms linear; } .ds-settings-row:active { transform: none; } }"
     }
   ],
   "narrative": {
     "northStar": "The Paper Desk",
-    "overview": "AnyNote's screens are a warm paper desk. A note is not a row in a database: it is a sheet of pastel sticky-note paper, slightly tilted, resting on the desk under a soft warm shadow, with its title and timestamp in handwriting. Around the notes the interface keeps quiet — cream surfaces, warm near-black ink, generous rounded corners, and one soft purple accent that belongs to controls and state. Paper and handwriting are the product's voice; the direction confirmed on 2026-11-24 has the system layer speak the same language, and the owner chose to amplify that personality (视觉方向「放大个性」) rather than restrain it.\n\nThe app is phone-first and comfortable rather than dense. Material 3 governs structure, navigation and interaction, spacing sits on a 4 px grid, and corners are large (the radius scale runs 8–28, plus a pill). There are two full themes. Light is the desk itself, with the six paper tones at full strength. Dark is a deep navy where the same six tones survive only as faint washes and the accent lightens to periwinkle so it still reads. Two high-contrast themes (black on white, and the reverse) exist as a separate choice. Motion behaves like paper (动效「更有表现力」): a note lands and settles, a page is lifted onto the desk to open it, a press gives slightly. Four durations, two curves and two springs cover all of it, and \"减少动画\" calms every bit of it.\n\nThe North Star name and the descriptive colour names in this document were derived by the documenter from the direction the owner confirmed on 2026-11-24 and from the code's own token names. The owner has not reviewed them; they are waiting for that review.",
+    "overview": "AnyNote's screens are a warm paper desk. A note is not a row in a database: it is a sheet of pastel sticky-note paper, slightly tilted, resting on the desk under a soft warm shadow, with its title in handwriting. Around the notes the interface keeps quiet — cream surfaces, warm near-black ink, generous rounded corners, and one purple accent, deep enough to carry white, that belongs to controls and state. Paper and handwriting are the product's voice; the direction confirmed on 2026-11-24 has the system layer speak the same language, and the owner chose to amplify that personality (视觉方向「放大个性」) rather than restrain it.\nThe app is phone-first and comfortable rather than dense. Material 3 governs structure, navigation and interaction, spacing sits on a 4 px grid, and corners are large (the radius scale runs 8–28, plus a pill). There are two full themes. Light is the desk itself, with the six paper tones at full strength. Dark is a deep navy where the same six tones survive only as faint washes and the accent lightens to periwinkle so it still reads. Two high-contrast themes (black on white, and the reverse) exist as a separate choice. Motion behaves like paper (动效「更有表现力」): a note lands and settles, a page is lifted onto the desk to open it, a press gives slightly. Four durations, two curves and two springs cover all of it, and \"减少动画\" calms every bit of it.\nThe North Star name and the descriptive colour names in this document were derived by the documenter from the direction the owner confirmed on 2026-11-24 and from the code's own token names. The owner has not reviewed them; they are waiting for that review.",
     "keyCharacteristics": [
-      "Warm paper surfaces with one soft purple accent, used for controls and state.",
+      "Warm paper surfaces with one purple accent, deep enough to carry white, used for controls and state.",
       "Six pastel sticky-note tones, cycled by list position and tilted like hand-placed paper.",
-      "Handwriting for a note's own words; Inter for everything the interface says.",
+      "Handwriting for a note's title; Inter for the preview and the time on a card, and for everything the interface says.",
+      "Every text colour reads at WCAG AA on the surface it sits on, and a test says so; a status that is read has an ink of its own.",
       "One icon family — Phosphor line (`Regular`), drawn through `AppIcons`.",
       "Paper-like motion from four durations, two curves and two springs; \"减少动画\" calms all of it."
     ],
@@ -1008,13 +1181,23 @@
         "section": "colors"
       },
       {
+        "name": "The Status Has an Ink Rule",
+        "body": "A status that has to be read — text, or an icon that means something — takes the `status…Ink` pair for its theme. `success`, `warning` and `error` are fills: one value for both themes, which cannot read on cream and on navy at once.",
+        "section": "colors"
+      },
+      {
+        "name": "The Contrast Is Measured Rule",
+        "body": "A text colour on a new surface is a new pair in `contrast_test.dart`. A comment that says a colour meets AA is not the proof; the test is.",
+        "section": "colors"
+      },
+      {
         "name": "The Two Voices Rule",
-        "body": "Inter speaks for the interface; handwriting speaks for the note. Note titles, note timestamps and the preview on a sticky note are handwritten. Buttons, labels, navigation, settings and body copy are Inter.",
+        "body": "Inter speaks for the interface; handwriting speaks for the note's title. A title is handwritten, and nothing else on a card is: the preview and the time are read in passing, and they are Inter, in an ink that reads on their sheet. Buttons, labels, navigation, settings and body copy are Inter.",
         "section": "typography"
       },
       {
         "name": "The Handwriting Weight Rule",
-        "body": "Handwritten styles stay at 500 (titles, captions) or 400 (note body). Heavier weights are not used: the engine's per-glyph fallback was observed to skip Ma Shan Zheng at 600 on Android, which dropped Chinese back to the plain UI font.",
+        "body": "Handwritten styles stay at 500. Heavier weights are not used: the engine's per-glyph fallback was observed to skip Ma Shan Zheng at 600 on Android, which dropped Chinese back to the plain UI font.",
         "section": "typography"
       },
       {
@@ -1029,24 +1212,28 @@
       }
     ],
     "dos": [
-      "Do draw every icon through `AppIcons` — Phosphor `Regular`, one stroke weight — and name it by what it means (`delete`, not `trash`).",
-      "Do use `…Filled` only as the on state of a toggle, beside its `Regular` twin.",
-      "Do take every duration, curve and spring from `AppAnimation`, and ask `context.motion` for authored motion such as staggers, springs and page transitions.",
-      "Do give a sticky note its tone from the six-sheet cycle through `PaperTokens.of(context).toneFor(index, brightness)`; that is also what produces the dark washes.",
-      "Do write note titles and note timestamps in the handwriting family, and keep everything the interface says in Inter.",
-      "Do take radii from `AppRadius` (16 px for inputs and filled buttons, 20 px for cards, 12 px for sticky notes) and spacing from `AppSpacing`.",
-      "Do make \"减少动画\" calm every new animation: loops do not start, and moves become changes of state.",
-      "Do mark decorative drawing as decorative, the way the sticky-note doodle is excluded from semantics."
+      "**Do** draw every icon through `AppIcons` — Phosphor `Regular`, one stroke weight — and name it by what it means (`delete`, not `trash`).",
+      "**Do** use `…Filled` only as the on state of a toggle, beside its `Regular` twin.",
+      "**Do** take every duration, curve and spring from `AppAnimation`, and ask `context.motion` for authored motion such as staggers, springs and page transitions.",
+      "**Do** give a sticky note its tone from the six-sheet cycle through `PaperTokens.of(context).toneFor(index, brightness)`; that is also what produces the dark washes.",
+      "**Do** take the time's ink from its sheet with `PaperTokens.of(context).inkOn(tone)`, and give a status that is read its `status…Ink` for the theme.",
+      "**Do** write a note's title in the handwriting family, and everything else on the card — the preview and the time included — in Inter.",
+      "**Do** add a new text colour on a new surface to `contrast_test.dart`, and let the test say whether it reads.",
+      "**Do** take radii from `AppRadius` (16 px for inputs and filled buttons, 20 px for cards, 12 px for sticky notes) and spacing from `AppSpacing`.",
+      "**Do** make \"减少动画\" calm every new animation: loops do not start, and moves become changes of state.",
+      "**Do** mark decorative drawing as decorative, the way the sticky-note doodle is excluded from semantics."
     ],
     "donts": [
-      "Don't use Material `Icons.*`, or a Phosphor class anywhere outside `AppIcons`.",
-      "Don't use `…Filled` on its own as decoration, or `Bold` outside the two high-contrast theme choices.",
-      "Don't declare a duration, curve or spring of your own.",
-      "Don't put a border on a sticky note; its colour block and warm shadow are the edge.",
-      "Don't set a handwritten style above weight 500.",
-      "Don't set UI controls — buttons, navigation, settings rows — in the handwriting family.",
-      "Don't tint a surface to show elevation.",
-      "Don't hard-code a paper tone for dark mode; resolve it through `toneFor`."
+      "**Don't** use Material `Icons.*`, or a Phosphor class anywhere outside `AppIcons`.",
+      "**Don't** use `…Filled` on its own as decoration, or `Bold` outside the two high-contrast theme choices.",
+      "**Don't** declare a duration, curve or spring of your own.",
+      "**Don't** put a border on a sticky note; its colour block and warm shadow are the edge.",
+      "**Don't** draw status text or icons in the `success`, `warning` or `error` fills; they are fills, and they do not read on cream and on navy at once.",
+      "**Don't** set a handwritten style above weight 500.",
+      "**Don't** set UI controls — buttons, navigation, settings rows — in the handwriting family.",
+      "**Don't** tint a surface to show elevation.",
+      "**Don't** set the status bar's icon colour per page, or leave it to an app bar's background: it comes from the theme.",
+      "**Don't** hard-code a paper tone for dark mode; resolve it through `toneFor`."
     ]
   }
 }
