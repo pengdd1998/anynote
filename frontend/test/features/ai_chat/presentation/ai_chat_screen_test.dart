@@ -11,7 +11,6 @@ import 'package:anynote/features/ai_chat/data/ai_chat_repository.dart';
 import 'package:anynote/features/ai_chat/presentation/ai_chat_screen.dart';
 import 'package:anynote/features/ai_chat/providers/ai_chat_providers.dart';
 import 'package:anynote/features/compose/data/ai_repository.dart' as compose;
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../helpers/test_app_helper.dart';
 
 void main() {

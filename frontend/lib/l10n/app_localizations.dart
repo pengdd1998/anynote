@@ -5269,13 +5269,13 @@ abstract class AppLocalizations {
   /// Reduce motion subtitle when manually enabled
   ///
   /// In en, this message translates to:
-  /// **'On (animations disabled)'**
+  /// **'Animations reduced'**
   String get reduceMotionOn;
 
   /// Reduce motion subtitle when manually disabled
   ///
   /// In en, this message translates to:
-  /// **'Off (animations enabled)'**
+  /// **'All animations shown'**
   String get reduceMotionOff;
 
   /// Title of the properties dashboard screen

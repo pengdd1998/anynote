@@ -64,7 +64,6 @@ class _PlatformConnectionScreenState
               padding: const EdgeInsets.only(top: 8, bottom: 32),
               children: [
                 ...platforms.asMap().entries.map((entry) {
-                  final index = entry.key;
                   final p = entry.value;
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),

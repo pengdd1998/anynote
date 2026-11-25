@@ -2822,10 +2822,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get reduceMotionSystem => '시스템 설정 따르기';
 
   @override
-  String get reduceMotionOn => '켬(애니메이션 사용 안함)';
+  String get reduceMotionOn => '애니메이션 줄어듦';
 
   @override
-  String get reduceMotionOff => '끔(애니메이션 사용)';
+  String get reduceMotionOff => '모든 애니메이션 표시';
 
   @override
   String get propertiesDashboard => '속성 대시보드';

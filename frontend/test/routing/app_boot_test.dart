@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:anynote/core/constants/changelog.dart';
-import 'package:anynote/core/database/app_database.dart';
 import 'package:anynote/features/notes/presentation/notes_list_screen.dart';
 import 'package:anynote/main.dart';
 import 'package:anynote/routing/app_router.dart';

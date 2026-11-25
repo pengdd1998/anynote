@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_icons.dart';
 import '../theme/app_radius.dart';
 
 /// A themed input field matching the warm design system.

@@ -2949,10 +2949,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reduceMotionSystem => 'Following system setting';
 
   @override
-  String get reduceMotionOn => 'On (animations disabled)';
+  String get reduceMotionOn => 'Animations reduced';
 
   @override
-  String get reduceMotionOff => 'Off (animations enabled)';
+  String get reduceMotionOff => 'All animations shown';
 
   @override
   String get propertiesDashboard => 'Properties Dashboard';

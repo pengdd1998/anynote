@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:anynote/core/theme/app_icons.dart';
 import 'package:anynote/features/notes/presentation/widgets/formatting_toolbar.dart';

@@ -2807,10 +2807,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reduceMotionSystem => '跟随系统设置';
 
   @override
-  String get reduceMotionOn => '开（动画已禁用）';
+  String get reduceMotionOn => '动画已减少';
 
   @override
-  String get reduceMotionOff => '关（动画已启用）';
+  String get reduceMotionOff => '显示全部动画';
 
   @override
   String get propertiesDashboard => '属性仪表板';

@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 /// Hand-drawn corner doodles for sticky-note cards, matching the design
@@ -80,7 +78,6 @@ class _DoodlePainter extends CustomPainter {
         _heart(canvas);
     }
   }
-
 
   /// Open book: two gently curved pages meeting at the spine.
   void _book(Canvas canvas) {
@@ -163,10 +160,6 @@ class _DoodlePainter extends CustomPainter {
       ..close();
     canvas.drawPath(path, _stroke);
   }
-
-  /// Deterministic pseudo-wobble in [-1, 1] so strokes look hand-drawn but
-  /// render identically every frame.
-  static double _wob(int seed) => ((seed * 37 % 17) / 8.0) - 1.0;
 
   @override
   bool shouldRepaint(_DoodlePainter oldDelegate) =>

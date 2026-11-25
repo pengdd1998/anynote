@@ -2820,10 +2820,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get reduceMotionSystem => 'システム設定に従う';
 
   @override
-  String get reduceMotionOn => 'オン（アニメーション無効）';
+  String get reduceMotionOn => 'アニメーションを減らしています';
 
   @override
-  String get reduceMotionOff => 'オフ（アニメーション有効）';
+  String get reduceMotionOff => 'すべてのアニメーションを表示';
 
   @override
   String get propertiesDashboard => 'プロパティダッシュボード';
