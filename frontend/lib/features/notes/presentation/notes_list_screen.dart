@@ -2488,7 +2488,13 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
       child: ListTile(
         leading: Icon(icon, color: isSelected ? primary : null),
         title: Text(label),
-        trailing: isSelected ? const Icon(AppIcons.check, size: 18) : null,
+        // The check's place is kept on every row. With it on one row only,
+        // the menu was sized for the others and that row's label broke a
+        // character short: "按更新时间（最" / "新）".
+        trailing: SizedBox(
+          width: 18,
+          child: isSelected ? const Icon(AppIcons.check, size: 18) : null,
+        ),
         contentPadding: EdgeInsets.zero,
       ),
     );

@@ -39,12 +39,14 @@ void main() {
   /// test: the list's database leaves timers behind otherwise.
   Future<void> onHome(
     WidgetTester tester,
-    Future<void> Function() body,
-  ) async {
+    Future<void> Function() body, {
+    Locale locale = const Locale('en'),
+  }) async {
     final handle = await pumpScreen(
       tester,
       const NotesListScreen(autoLoad: false),
       overrides: defaultProviderOverrides(),
+      locale: locale,
     );
     l10n = AppLocalizations.of(tester.element(find.byType(NotesListScreen)))!;
     try {
@@ -54,6 +56,42 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
   }
+
+  testWidgets('every sort row gives its label the same room', (tester) async {
+    // The row that carries the check has less width for its text. With the
+    // check on that row alone, the menu was sized for the others and the
+    // label broke a character short — "按更新时间（最" / "新）" on the phone.
+    // Chinese has the labels that came closest: the test font is wider than
+    // the phone's, so what is asserted here is the room each label gets.
+    await onHome(
+      tester,
+      () async {
+        await openMenu(tester);
+
+        final sortLabels = [
+          l10n.updatedNewest,
+          l10n.updatedOldest,
+          l10n.createdNewest,
+          l10n.createdOldest,
+          l10n.titleAZ,
+          l10n.sortCustom,
+        ];
+        final labels = <String, Rect>{};
+        for (final label in sortLabels) {
+          labels[label] = tester.getRect(find.text(label));
+        }
+        expect(markOn(l10n.updatedNewest), findsOneWidget);
+        // The shortest label's row is the measure: every other one matches it.
+        final reference = labels[l10n.sortCustom]!;
+        for (final label in sortLabels) {
+          final box = labels[label]!;
+          expect(box.left, closeTo(reference.left, 0.5), reason: label);
+          expect(box.width, closeTo(reference.width, 0.5), reason: label);
+        }
+      },
+      locale: const Locale('zh'),
+    );
+  });
 
   testWidgets('the sort rows are told apart by what they sort by', (
     tester,

@@ -110,18 +110,27 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
         // Drop the first line — it is rendered as the card title.
         lines = lines.skip(1);
       }
+      final text = _withoutBlankLines(lines).join('\n');
+      if (text.isEmpty) return const SizedBox.shrink();
       return Text(
-        _withoutBlankLines(lines).join('\n'),
+        text,
         maxLines: widget.maxLines,
         overflow: TextOverflow.ellipsis,
         style: base,
       );
     }
 
+    final lines = _previewLinesOf(_ops!);
+    if (lines.isEmpty) {
+      // Nothing to preview: a note that is only a title. An empty paragraph
+      // still laid out a line, and the card had a hole under its title.
+      return const SizedBox.shrink();
+    }
+
     return RichText(
       maxLines: widget.maxLines,
       overflow: TextOverflow.ellipsis,
-      text: _deltaToSpan(_ops!, base, Theme.of(context)),
+      text: _linesToSpan(lines, base, Theme.of(context)),
     );
   }
 
@@ -133,17 +142,23 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
 
   // ── Delta → TextSpan (line-aware, mirrors the editor) ──────────────────
 
-  TextSpan _deltaToSpan(
-    List<Map<String, dynamic>> ops,
-    TextStyle base,
-    ThemeData theme,
-  ) {
+  /// The note's lines as the preview shows them: without the title and
+  /// without the blank ones.
+  List<_Line> _previewLinesOf(List<Map<String, dynamic>> ops) {
     final lines = _splitIntoLines(ops);
     if (widget.skipFirstLine && lines.isNotEmpty) {
       // Drop the first line — it is rendered as the card title.
       lines.removeAt(0);
     }
     lines.removeWhere((line) => line.runs.isEmpty);
+    return lines;
+  }
+
+  TextSpan _linesToSpan(
+    List<_Line> lines,
+    TextStyle base,
+    ThemeData theme,
+  ) {
     final spans = <InlineSpan>[];
     var ordered = 0;
     for (final line in lines) {

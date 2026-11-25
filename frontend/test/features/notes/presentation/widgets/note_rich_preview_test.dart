@@ -29,7 +29,7 @@ void main() {
     await Future.delayed(const Duration(milliseconds: 200));
   });
 
-  Future<RenderParagraph> pump(WidgetTester tester, String content) async {
+  Future<void> pump(WidgetTester tester, String content) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [databaseProvider.overrideWithValue(db!)],
@@ -38,6 +38,9 @@ void main() {
             body: SizedBox(
               width: 800,
               child: NoteRichPreview(
+                // A new note is a new widget: the content is read once, on
+                // the first build.
+                key: ValueKey(content),
                 // Content that is not a Delta is read as plain text.
                 note: _note(content),
                 maxLines: 4,
@@ -51,8 +54,10 @@ void main() {
     // The content is read in initState's first async step.
     await tester.pump();
     await tester.pump();
-    return tester.renderObject<RenderParagraph>(find.byType(RichText));
   }
+
+  RenderParagraph paragraphOf(WidgetTester tester) =>
+      tester.renderObject<RenderParagraph>(find.byType(RichText));
 
   /// Where the line holding [word] starts.
   double topOf(RenderParagraph paragraph, String word) => paragraph
@@ -79,16 +84,18 @@ void main() {
   const laidOut = 'First\nSecond\nThird\nFourth\nFifth\n';
 
   testWidgets('plain text: four lines of text, no blank ones', (tester) async {
-    final paragraph = await pump(tester, body);
+    await pump(tester, body);
 
+    final paragraph = paragraphOf(tester);
     expect(paragraph.text.toPlainText(), laidOut.trimRight());
     expectParagraphsConsecutive(paragraph);
   });
 
   testWidgets('rich text: four lines of text, no blank ones', (tester) async {
     // The same note as a Delta, which is how the editor stores it.
-    final paragraph = await pump(tester, '[{"insert": ${_jsonString(body)}}]');
+    await pump(tester, '[{"insert": ${_jsonString(body)}}]');
 
+    final paragraph = paragraphOf(tester);
     expect(paragraph.text.toPlainText(), laidOut);
     expectParagraphsConsecutive(paragraph);
   });
@@ -101,9 +108,21 @@ void main() {
         '{"insert":"Bread\\n","attributes":{"list":"bullet"}},'
         '{"insert":"\\n"},'
         '{"insert":"Done"}]';
-    final paragraph = await pump(tester, delta);
+    await pump(tester, delta);
 
-    expect(paragraph.text.toPlainText(), '•  Milk\n•  Bread\nDone\n');
+    expect(paragraphOf(tester).text.toPlainText(), '•  Milk\n•  Bread\nDone\n');
+  });
+
+  testWidgets('a note that is only a title has no empty line under it', (
+    tester,
+  ) async {
+    // The card shows the title itself; an empty paragraph still laid out a
+    // line, and the card had a hole between the title and the time.
+    await pump(tester, 'Only a title\n');
+    expect(find.byType(RichText), findsNothing);
+
+    await pump(tester, '[{"insert":"Only a title\\n"}]');
+    expect(find.byType(RichText), findsNothing);
   });
 }
 

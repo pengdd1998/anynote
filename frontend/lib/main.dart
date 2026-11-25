@@ -359,7 +359,16 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
             child: ErrorBoundary(
               child: Builder(
                 builder: (context) {
-                  final brightness = MediaQuery.platformBrightnessOf(context);
+                  final systemBrightness =
+                      MediaQuery.platformBrightnessOf(context);
+                  // The app's theme, resolved: light, dark or a high-contrast
+                  // one, following the system only when the owner said so.
+                  final theme =
+                      selectEffectiveTheme(themeOption, systemBrightness);
+                  // The system bars take the app's theme, not the system's.
+                  // Read from the system alone, a dark app on a light phone
+                  // kept a white strip for its navigation bar.
+                  final brightness = theme.brightness;
                   return AnnotatedRegion<SystemUiOverlayStyle>(
                     value: SystemUiOverlayStyle(
                       statusBarColor: Colors.transparent,
@@ -383,9 +392,8 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                         title: 'AnyNote',
                         debugShowCheckedModeBanner: false,
                         showSemanticsDebugger: false,
-                        theme: selectEffectiveTheme(themeOption, brightness),
-                        darkTheme:
-                            selectEffectiveTheme(themeOption, brightness),
+                        theme: theme,
+                        darkTheme: theme,
                         themeMode: ThemeMode.system,
                         routerConfig: appRouter,
                         localizationsDelegates: [

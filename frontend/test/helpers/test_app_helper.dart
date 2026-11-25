@@ -147,12 +147,15 @@ class _FakeRef implements Ref {
 /// Pumps a screen widget inside a localized MaterialApp wrapped in a
 /// ProviderScope with [overrides].
 ///
+/// The app speaks English in tests unless [locale] says otherwise.
+///
 /// Returns a [TestAppHandle] that must be disposed before the test ends.
 /// Use [addTearDown] with [TestAppHandle.dispose] to ensure cleanup.
 Future<TestAppHandle> pumpScreen(
   WidgetTester tester,
   Widget screen, {
   List<Override> overrides = const [],
+  Locale locale = const Locale('en'),
 }) async {
   late ProviderContainer container;
 
@@ -168,7 +171,7 @@ Future<TestAppHandle> pumpScreen(
               quill.FlutterQuillLocalizations.delegate,
             ],
             supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('en'),
+            locale: locale,
             home: screen,
           );
         },
