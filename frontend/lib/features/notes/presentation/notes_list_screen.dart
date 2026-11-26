@@ -1359,26 +1359,36 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 // had AppShadows.md, which paints nothing in light mode.)
                 boxShadow: AppShadows.paperOf(Theme.of(context).brightness),
               ),
-              child: GestureDetector(
-                // Hold it for the other ways to start a note.
-                onLongPress: () {
-                  HapticFeedback.mediumImpact();
-                  _showCreateOptions(context);
-                },
-                child: FloatingActionButton(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    context.push('/notes/new');
+              child: TooltipTheme(
+                // The button's own tooltip listens for a long press too, and
+                // being inside, it won the gesture before the wrapper's did:
+                // on the phone a hold opened a new note, and nothing else.
+                // The hold has a job here, so the tooltip is not shown on
+                // one. It still names the button.
+                data: TooltipTheme.of(
+                  context,
+                ).copyWith(triggerMode: TooltipTriggerMode.manual),
+                child: GestureDetector(
+                  // Hold it for the other ways to start a note.
+                  onLongPress: () {
+                    HapticFeedback.mediumImpact();
+                    _showCreateOptions(context);
                   },
-                  tooltip: l10n.createNewNote,
-                  elevation: 0,
-                  highlightElevation: 0,
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: const CircleBorder(),
-                  child: const Icon(
-                    AppIcons.add,
-                    size: 28,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      context.push('/notes/new');
+                    },
+                    tooltip: l10n.createNewNote,
+                    elevation: 0,
+                    highlightElevation: 0,
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: const CircleBorder(),
+                    child: const Icon(
+                      AppIcons.add,
+                      size: 28,
+                    ),
                   ),
                 ),
               ),

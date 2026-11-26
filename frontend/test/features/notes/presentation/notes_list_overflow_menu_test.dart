@@ -174,6 +174,23 @@ void main() {
     });
   });
 
+  testWidgets('holding the home button offers the other ways to start a note', (
+    tester,
+  ) async {
+    // On the phone the hold opened a new note and nothing else. The button's
+    // own tooltip was listening for the long press too, and being inside it
+    // won the gesture first.
+    await onHome(tester, () async {
+      await tester.longPress(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.text(l10n.fromTemplate), findsOneWidget);
+      // The release after the hold is not a tap on the button.
+      expect(find.byType(NotesListScreen), findsOneWidget);
+    });
+  });
+
   testWidgets("the wordmark's sparkle is one of the family's icons", (
     tester,
   ) async {
