@@ -45,11 +45,13 @@ class AppColors {
       Color(0xFFCAC5DA); // AA on the dark note washes too
   static const darkTextTertiary = Color(0xFF9E9AB8);
 
-  // -- Brand accent (soft periwinkle purple — matching design mockup) --------
+  // -- Brand accent (periwinkle purple — matching design mockup) -------------
 
-  /// Deep enough to carry white (5.2:1) and to be read as text on paper
-  /// (4.9:1). The mockup's softer periwinkle (#8B7CE8) did neither.
-  static const primary = Color(0xFF6B5CD0);
+  /// Deep enough to carry white (5.3:1) and to be read as text on every light
+  /// surface, the desk behind the notes included (4.66:1 and up). The
+  /// mockup's softer periwinkle (#8B7CE8) did neither, and one step bluer
+  /// (#6B5CD0) met the desk by five ten-thousandths and no more.
+  static const primary = Color(0xFF6C5BC4);
   static const primaryDark = Color(0xFF5B4AC0); // pressed / deeper purple
   static const secondary = Color(0xFFB7ADF5); // light periwinkle
 
@@ -60,7 +62,9 @@ class AppColors {
   /// Disabled-state accent (light washed purple, e.g. inactive CTA buttons).
   static const primaryDisabled = Color(0xFFCFC8F7);
 
-  /// Deep accent for link text / body accents (AA on light surfaces).
+  /// The accent as text — link text, body accents. The same value as
+  /// [primary] on purpose: there is one purple. `contrast_test.dart` holds
+  /// the two together.
   static const primaryText = Color(0xFF6C5BC4);
 
   // -- Warm accent palette ----------------------------------------------------
@@ -134,9 +138,9 @@ class AppColors {
   /// [success], [warning] and [error] are one value for both themes and cannot
   /// meet that: no colour is 4.5:1 against cream paper and against deep navy
   /// at once. They stay as fills; anything meant to be read takes these.
-  static const statusSuccessInk = Color(0xFF2E7A61);
-  static const statusWarningInk = Color(0xFF8B6728);
-  static const statusErrorInk = Color(0xFFC63B3B);
+  static const statusSuccessInk = Color(0xFF2D7860);
+  static const statusWarningInk = Color(0xFF896529);
+  static const statusErrorInk = Color(0xFFC23838);
   static const statusSuccessInkDark = Color(0xFF3EA482);
   static const statusWarningInkDark = Color(0xFFBC8B37);
   static const statusErrorInkDark = Color(0xFFDD7575);

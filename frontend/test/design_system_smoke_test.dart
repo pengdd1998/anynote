@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('brand accent is the deep periwinkle that carries white text', () {
     // Deeper than the mockup's #8B7CE8, which carried white at only 3.4:1.
-    expect(AppColors.primary, const Color(0xFF6B5CD0));
+    expect(AppColors.primary, const Color(0xFF6C5BC4));
     expect(AppColors.primarySoft, const Color(0xFFEFECFE));
     expect(AppColors.primaryDisabled, const Color(0xFFCFC8F7));
     expect(AppColors.primaryText, const Color(0xFF6C5BC4));

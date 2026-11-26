@@ -53,6 +53,9 @@ void main() {
     AppColors.lightSurface,
     AppColors.lightCardBg,
     AppColors.lightInputFill,
+    // The desk behind the notes and under the app bars: a labelled action
+    // in a bar is written on it.
+    AppColors.lightDeskBg,
   ];
   const darkSurfaces = [
     AppColors.darkSurface,
@@ -71,6 +74,8 @@ void main() {
       readsOn(Colors.white, [AppColors.primary, AppColors.primaryDark]);
       readsOn(AppColors.primary, lightSurfaces);
       readsOn(AppColors.primaryText, lightSurfaces);
+      // One purple: the accent as a fill and the accent as text are a value.
+      expect(AppColors.primaryText, AppColors.primary);
     });
 
     test('status ink reads; the status fills are not asked to', () {

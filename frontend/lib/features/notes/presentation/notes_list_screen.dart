@@ -36,6 +36,7 @@ import '../../../core/widgets/color_picker_sheet.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/master_detail_layout.dart';
+import '../../../core/widgets/menu_scroll_fade.dart';
 import '../../../core/widgets/offline_banner.dart';
 import '../../../core/widgets/sidebar_provider.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -914,19 +915,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
               onPressed: _exitSelectionMode,
             ),
           ] else ...[
-            // Create note button (moved from FAB to app bar)
-            IconButton(
-              icon: const Icon(AppIcons.add),
-              tooltip: l10n.createNewNote,
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                context.push('/notes/new');
-              },
-              onLongPress: () {
-                HapticFeedback.mediumImpact();
-                _showCreateOptions(context);
-              },
-            ),
+            // No "+" up here. The floating button below is the one way to
+            // start a note; a second "+" beside the menu did the same thing.
             // "More" overflow menu with all features
             PopupMenuButton<String>(
               icon: const Icon(AppIcons.moreVertical),
@@ -988,6 +978,8 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 }
               },
               itemBuilder: (context) => [
+                // Fades the bottom edge while the menu has more below it.
+                const MenuScrollFade(),
                 // --- View section (top priority) ---
                 PopupMenuItem(
                   value: 'toggle_view',
@@ -1367,20 +1359,27 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                 // had AppShadows.md, which paints nothing in light mode.)
                 boxShadow: AppShadows.paperOf(Theme.of(context).brightness),
               ),
-              child: FloatingActionButton(
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  context.push('/notes/new');
+              child: GestureDetector(
+                // Hold it for the other ways to start a note.
+                onLongPress: () {
+                  HapticFeedback.mediumImpact();
+                  _showCreateOptions(context);
                 },
-                tooltip: l10n.createNewNote,
-                elevation: 0,
-                highlightElevation: 0,
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: const CircleBorder(),
-                child: const Icon(
-                  AppIcons.add,
-                  size: 28,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/notes/new');
+                  },
+                  tooltip: l10n.createNewNote,
+                  elevation: 0,
+                  highlightElevation: 0,
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: const CircleBorder(),
+                  child: const Icon(
+                    AppIcons.add,
+                    size: 28,
+                  ),
                 ),
               ),
             ),
@@ -2495,11 +2494,22 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(child: Text(label)),
+            Flexible(
+              child: Text(
+                label,
+                // The current sort is the one row written in the accent:
+                // icon, label and check. With the label left in the text
+                // colour, a small leading icon was all that told the row
+                // from the others.
+                style: isSelected ? TextStyle(color: primary) : null,
+              ),
+            ),
             const SizedBox(width: AppSpacing.s32),
             SizedBox(
               width: 18,
-              child: isSelected ? const Icon(AppIcons.check, size: 18) : null,
+              child: isSelected
+                  ? Icon(AppIcons.check, size: 18, color: primary)
+                  : null,
             ),
           ],
         ),

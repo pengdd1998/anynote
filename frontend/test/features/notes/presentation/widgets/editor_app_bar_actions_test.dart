@@ -66,9 +66,10 @@ void main() {
     expect(closed, 1);
     // It still explains itself on long press.
     expect(find.byTooltip(l10n.saveAndClose), findsOneWidget);
-    // The saved mark keeps its own glyph.
+    // The saved mark keeps the only check: with one on the action too, the
+    // row read "check, check" before it got to the word.
     expect(find.byIcon(AppIcons.checkCircle), findsOneWidget);
-    expect(find.byIcon(AppIcons.check), findsOneWidget);
+    expect(find.byIcon(AppIcons.check), findsNothing);
   });
 
   testWidgets('light: the three states take the light status inks', (

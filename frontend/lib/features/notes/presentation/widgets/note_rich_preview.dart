@@ -130,6 +130,10 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
     return RichText(
       maxLines: widget.maxLines,
       overflow: TextOverflow.ellipsis,
+      // The system's text size, as the plain-text path gets it from Text.
+      // Left alone, RichText ignores it, and a rich note's preview came out
+      // smaller than a plain note's on the same screen.
+      textScaler: MediaQuery.textScalerOf(context),
       text: _linesToSpan(lines, base, Theme.of(context)),
     );
   }
@@ -204,8 +208,10 @@ class _NoteRichPreviewState extends ConsumerState<NoteRichPreview> {
         );
       }
 
+      // A line break goes between lines, never after the last one: a
+      // trailing one laid out an empty line under every rich note's preview.
+      if (spans.isNotEmpty) spans.add(const TextSpan(text: '\n'));
       spans.add(TextSpan(style: blockStyle, children: children));
-      spans.add(const TextSpan(text: '\n'));
     }
     return TextSpan(style: base, children: spans);
   }

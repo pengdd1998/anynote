@@ -29,11 +29,22 @@ void main() {
     await Future.delayed(const Duration(milliseconds: 200));
   });
 
-  Future<void> pump(WidgetTester tester, String content) async {
+  Future<void> pump(
+    WidgetTester tester,
+    String content, {
+    double textScale = 1,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [databaseProvider.overrideWithValue(db!)],
         child: MaterialApp(
+          // The system's text size, as the phone reports it to the app.
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
           home: Scaffold(
             body: SizedBox(
               width: 800,
@@ -79,15 +90,14 @@ void main() {
     expect(paragraph.size.height, closeTo(4 * (second - first), 1));
   }
 
-  // The paragraph's text, each line followed by the newline the span
-  // builder puts after it.
-  const laidOut = 'First\nSecond\nThird\nFourth\nFifth\n';
+  // The paragraph's text: a line break between lines, none after the last.
+  const laidOut = 'First\nSecond\nThird\nFourth\nFifth';
 
   testWidgets('plain text: four lines of text, no blank ones', (tester) async {
     await pump(tester, body);
 
     final paragraph = paragraphOf(tester);
-    expect(paragraph.text.toPlainText(), laidOut.trimRight());
+    expect(paragraph.text.toPlainText(), laidOut);
     expectParagraphsConsecutive(paragraph);
   });
 
@@ -100,6 +110,42 @@ void main() {
     expectParagraphsConsecutive(paragraph);
   });
 
+  testWidgets('rich text: nothing is laid out under the last line', (
+    tester,
+  ) async {
+    // A line break after the last line laid out an empty one. On a card it
+    // was a band of blank sheet between a two-line preview and the time.
+    await pump(tester, '[{"insert":"Title\\n\\nFirst\\nSecond\\n"}]');
+
+    final paragraph = paragraphOf(tester);
+    final line = topOf(paragraph, 'Second') - topOf(paragraph, 'First');
+    expect(paragraph.text.toPlainText(), 'First\nSecond');
+    expect(paragraph.size.height, closeTo(2 * line, 1));
+  });
+
+  testWidgets(
+      "a rich preview takes the system's text size, as a plain one does", (
+    tester,
+  ) async {
+    // Text scales itself; RichText does not, until it is told to. A note
+    // re-saved by the editor became rich, and its preview shrank on a phone
+    // whose text size is set above the default.
+    const text = 'Title\n\nFirst paragraph of the note.\n\nSecond one here.';
+    await pump(tester, text, textScale: 1.3);
+    final plain = paragraphOf(tester).size.height;
+
+    await pump(
+      tester,
+      '[{"insert": ${_jsonString(text)}}]',
+      textScale: 1.3,
+    );
+    final rich = paragraphOf(tester);
+
+    // A line is 18 px unscaled and 24 px at 1.3.
+    expect(topOf(rich, 'Second') - topOf(rich, 'First'), greaterThan(21));
+    expect(rich.size.height, closeTo(plain, 0.5));
+  });
+
   testWidgets('a list keeps its items together', (tester) async {
     // Blank lines around a list are paragraph spacing; the bullets are
     // content, and each keeps its own line.
@@ -110,7 +156,7 @@ void main() {
         '{"insert":"Done"}]';
     await pump(tester, delta);
 
-    expect(paragraphOf(tester).text.toPlainText(), '•  Milk\n•  Bread\nDone\n');
+    expect(paragraphOf(tester).text.toPlainText(), '•  Milk\n•  Bread\nDone');
   });
 
   testWidgets('a note that is only a title has no empty line under it', (

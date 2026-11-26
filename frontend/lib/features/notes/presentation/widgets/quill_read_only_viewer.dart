@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
@@ -64,14 +65,12 @@ class _QuillReadOnlyViewerState extends State<QuillReadOnlyViewer> {
     if (!trimmed.startsWith('[')) {
       // Plain text — wrap in a minimal Delta document.
       _controller = quill.QuillController.basic();
-      _controller!
-          .document
-          .insert(0, stripObjectPlaceholders(trimmed));
+      _controller!.document.insert(0, stripObjectPlaceholders(trimmed));
     } else {
       try {
         final deltaList = jsonDecode(trimmed) as List;
         final doc = quill.Document.fromJson(
-          sanitizeDeltaOps(deltaList),
+          _dropTrailingBlankLines(sanitizeDeltaOps(deltaList)),
         );
         _controller = quill.QuillController(
           document: doc,
@@ -80,11 +79,53 @@ class _QuillReadOnlyViewerState extends State<QuillReadOnlyViewer> {
       } catch (_) {
         // Fallback: treat as plain text.
         _controller = quill.QuillController.basic();
-        _controller!
-            .document
-            .insert(0, stripObjectPlaceholders(trimmed));
+        _controller!.document.insert(0, stripObjectPlaceholders(trimmed));
       }
     }
+  }
+
+  /// A note often ends on a few empty lines — that is where the cursor was
+  /// left. The writer's copy keeps them; a reader was shown a sheet half a
+  /// screen taller than its text. One line break stays at the end, the empty
+  /// lines after the last of the text do not.
+  ///
+  /// Done on the Delta, before there is a document. Asked to delete at its
+  /// end, a document puts the line break back — Quill keeps a document
+  /// ending on one — so the last empty line could not be deleted at all.
+  static List<Map<String, dynamic>> _dropTrailingBlankLines(
+    List<Map<String, dynamic>> ops,
+  ) {
+    // The line breaks at the very end. An insert of nothing but line breaks
+    // adds its whole length; one that ends in text adds the run after its
+    // last other character and, like an embed, ends the count there.
+    var trailing = 0;
+    for (final op in ops.reversed) {
+      final insert = op['insert'];
+      if (insert is! String) break;
+      var end = insert.length;
+      while (end > 0 && insert.codeUnitAt(end - 1) == 0x0A) {
+        end--;
+      }
+      trailing += insert.length - end;
+      if (end > 0) break;
+    }
+
+    // One stays: it is the document's last line break.
+    var extra = trailing - 1;
+    if (extra <= 0) return ops;
+    final kept = <Map<String, dynamic>>[];
+    for (final op in ops.reversed) {
+      final insert = op['insert'];
+      if (extra > 0 && insert is String) {
+        final cut = math.min(extra, insert.length);
+        extra -= cut;
+        final rest = insert.substring(0, insert.length - cut);
+        if (rest.isNotEmpty) kept.add({...op, 'insert': rest});
+        continue;
+      }
+      kept.add(op);
+    }
+    return kept.reversed.toList();
   }
 
   @override

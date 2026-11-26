@@ -144,6 +144,36 @@ void main() {
     });
   });
 
+  testWidgets('the current sort row is written in the accent colour', (
+    tester,
+  ) async {
+    // Icon, label and check together. With only its leading icon in the
+    // accent, the current row did not stand out from the others.
+    await onHome(tester, () async {
+      await openMenu(tester);
+
+      final accent = Theme.of(
+        tester.element(find.byType(NotesListScreen)),
+      ).colorScheme.primary;
+      Color? labelColor(String label) =>
+          tester.widget<Text>(find.text(label)).style?.color;
+
+      expect(labelColor(l10n.updatedNewest), accent);
+      expect(labelColor(l10n.updatedOldest), isNull);
+      expect(labelColor(l10n.titleAZ), isNull);
+      expect(tester.widget<Icon>(markOn(l10n.updatedNewest)).color, accent);
+    });
+  });
+
+  testWidgets('the home screen has one way to start a note', (tester) async {
+    // The floating button. A second "+" in the bar did the same thing, and
+    // the two looked alike enough to be taken for a choice.
+    await onHome(tester, () async {
+      expect(find.byIcon(AppIcons.add), findsOneWidget);
+      expect(find.byTooltip(l10n.createNewNote), findsOneWidget);
+    });
+  });
+
   testWidgets("the wordmark's sparkle is one of the family's icons", (
     tester,
   ) async {

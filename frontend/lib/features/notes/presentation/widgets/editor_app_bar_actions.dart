@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/tts/speech_service.dart';
 import '../../../../core/widgets/land_in.dart';
+import '../../../../core/widgets/menu_scroll_fade.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Configuration object holding all callbacks needed by the editor AppBar
@@ -118,22 +119,21 @@ class EditorAppBarActions {
       // Save status indicator in AppBar: spinner when saving, checkmark when
       // saved, amber dot when there are unsaved changes.
       _AppBarSaveStatus(isSaving: config.isSaving, isDirty: config.isDirty),
-      // Save-and-close, with its name. A bare check sat beside the saved
-      // mark's own check and read as a second status light; the note page's
-      // one action says 编辑, so this one says what it does too.
+      // Save-and-close, with its name and no glyph. A bare check sat beside
+      // the saved mark's own check and read as a second status light; with a
+      // check and a word it still read "check, check". The word is the action.
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Tooltip(
           message: l10n.saveAndClose,
-          child: TextButton.icon(
+          child: TextButton(
             onPressed: config.onSaveAndClose,
-            icon: const Icon(AppIcons.check, size: 18),
-            label: Text(l10n.done),
             style: TextButton.styleFrom(
               foregroundColor: colorScheme.primary,
               visualDensity: VisualDensity.compact,
               padding: const EdgeInsets.symmetric(horizontal: 8),
             ),
+            child: Text(l10n.done),
           ),
         ),
       ),
@@ -153,10 +153,10 @@ class EditorAppBarActions {
         tooltip: config.isPreview ? l10n.edit : l10n.preview,
         onPressed: config.onTogglePreview,
       ),
-      // Overflow menu with all secondary actions. Horizontal dots match the
-      // note detail screen's overflow trigger.
+      // Overflow menu with all secondary actions. Vertical dots, as on the
+      // home screen and the note page: one glyph wherever there is a menu.
       PopupMenuButton<String>(
-        icon: const Icon(AppIcons.moreHorizontal),
+        icon: const Icon(AppIcons.moreVertical),
         tooltip: l10n.moreActions,
         onSelected: (value) => _handleOverflowSelection(
           context,
@@ -165,6 +165,8 @@ class EditorAppBarActions {
           value,
         ),
         itemBuilder: (context) => [
+          // Fades the bottom edge while the menu has more below it.
+          const MenuScrollFade(),
           // --- Note section ---
           if (!config.isNew && config.noteId != null)
             PopupMenuItem(
@@ -484,7 +486,7 @@ class EditorAppBarActions {
         ),
       // Overflow menu with all secondary actions.
       PopupMenuButton<String>(
-        icon: const Icon(AppIcons.moreHorizontal),
+        icon: const Icon(AppIcons.moreVertical),
         tooltip: l10n.moreActions,
         onSelected: (value) => _handleOverflowSelection(
           context,
@@ -493,6 +495,8 @@ class EditorAppBarActions {
           value,
         ),
         itemBuilder: (context) => [
+          // Fades the bottom edge while the menu has more below it.
+          const MenuScrollFade(),
           // --- Switch to edit ---
           PopupMenuItem(
             value: 'toggle_preview',

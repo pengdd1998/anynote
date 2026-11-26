@@ -454,10 +454,10 @@ class NoteCard extends StatelessWidget {
     );
 
     if (!withDoodle) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [timestamp],
-      );
+      // At the left, as on a sheet. Right-aligned it sat in the corner the
+      // floating "+" button covers on the last row, and a time label was
+      // peering out from under the button.
+      return Row(children: [timestamp]);
     }
 
     // Sticky-note footer like the mockup: timestamp bottom-left, a small

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/theme/app_icons.dart';
+import 'package:anynote/core/theme/app_spacing.dart';
+import 'package:anynote/core/widgets/app_components.dart';
 import 'package:anynote/features/settings/presentation/widgets/sign_out_section.dart';
 import 'package:anynote/l10n/app_localizations.dart';
 
@@ -30,6 +32,28 @@ void main() {
 
       expect(find.text('Sign Out'), findsOneWidget);
       expect(find.byIcon(AppIcons.logout), findsOneWidget);
+    });
+
+    testWidgets('the card stands clear of what is above it', (tester) async {
+      // On the settings page it comes right after the About card. With no
+      // header between them, the two cards sat two pixels apart and read as
+      // one block with a seam in it.
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: defaultProviderOverrides(),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('en'),
+            home: Scaffold(body: SignOutSection()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final section = tester.getRect(find.byType(SignOutSection));
+      final card = tester.getRect(find.byType(SettingsGroup));
+      expect(card.top - section.top, greaterThanOrEqualTo(AppSpacing.s24));
     });
 
     testWidgets('tapping Sign Out shows confirmation dialog', (tester) async {

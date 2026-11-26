@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 /// Hand-drawn corner doodles for sticky-note cards, matching the design
-/// mockup's ink sketches (book, bulb, sprout, heart). Each doodle is
-/// a thin stroked path with slightly wobbly curves so it reads as pen-drawn.
+/// mockup's ink sketches (book, bulb, sprout). Each doodle is a thin stroked
+/// path with slightly wobbly curves so it reads as pen-drawn.
 ///
-/// There is no star: the card's bottom-right corner is where a
-/// favourite shows its star, and a decorative one there read as state.
-enum PaperDoodleKind { book, bulb, sprout, heart }
+/// A doodle means nothing. Nothing that looks like it could mean something
+/// is in the set: no star and no heart, because both read as "favourite" in
+/// the corner of a card. A doodle is decoration, kept faint on purpose and
+/// left out of semantics.
+enum PaperDoodleKind { book, bulb, sprout }
 
 extension PaperDoodleKindX on PaperDoodleKind {
   /// Deterministic sketch cycle — the same item seed always gets the same
@@ -15,7 +17,6 @@ extension PaperDoodleKindX on PaperDoodleKind {
     PaperDoodleKind.book,
     PaperDoodleKind.bulb,
     PaperDoodleKind.sprout,
-    PaperDoodleKind.heart,
   ];
 
   static PaperDoodleKind forSeed(int seed) =>
@@ -74,8 +75,6 @@ class _DoodlePainter extends CustomPainter {
         _bulb(canvas);
       case PaperDoodleKind.sprout:
         _sprout(canvas);
-      case PaperDoodleKind.heart:
-        _heart(canvas);
     }
   }
 
@@ -147,18 +146,6 @@ class _DoodlePainter extends CustomPainter {
           ..cubicTo(18.5, 7.8, 16, 9.6, 12, 9),
         _stroke,
       );
-  }
-
-  /// Heart outline drawn as two lobes with a soft bottom point.
-  void _heart(Canvas canvas) {
-    final path = Path()
-      ..moveTo(12, 20)
-      ..cubicTo(5, 15, 3, 10.5, 4.6, 7.4)
-      ..cubicTo(6, 4.8, 10, 4.6, 12, 8)
-      ..cubicTo(14, 4.6, 18, 4.8, 19.4, 7.4)
-      ..cubicTo(21, 10.5, 19, 15, 12, 20)
-      ..close();
-    canvas.drawPath(path, _stroke);
   }
 
   @override

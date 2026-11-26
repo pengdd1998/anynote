@@ -9,6 +9,7 @@ import '../../../../core/crypto/master_key.dart';
 import '../../../../core/error/error.dart';
 import '../../../../core/notifications/push_service.dart';
 import '../../../../core/theme/app_icons.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_components.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -24,19 +25,25 @@ class SignOutSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    return SettingsGroup(
-      children: [
-        DestructiveSettingsItem(
-          icon: AppIcons.logout,
-          title: l10n.signOut,
-          onTap: () => _confirmSignOut(context, ref),
-        ),
-        DestructiveSettingsItem(
-          icon: AppIcons.deleteForever,
-          title: l10n.deleteAccount,
-          onTap: () => _confirmDeleteAccount(context, ref),
-        ),
-      ],
+    return Padding(
+      // A group of its own, and it looks it. With nothing above it here, the
+      // card sat two pixels under the About card and read as the last block
+      // of that group.
+      padding: const EdgeInsets.only(top: AppSpacing.s24),
+      child: SettingsGroup(
+        children: [
+          DestructiveSettingsItem(
+            icon: AppIcons.logout,
+            title: l10n.signOut,
+            onTap: () => _confirmSignOut(context, ref),
+          ),
+          DestructiveSettingsItem(
+            icon: AppIcons.deleteForever,
+            title: l10n.deleteAccount,
+            onTap: () => _confirmDeleteAccount(context, ref),
+          ),
+        ],
+      ),
     );
   }
 
