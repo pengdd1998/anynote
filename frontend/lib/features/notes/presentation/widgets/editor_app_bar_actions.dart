@@ -157,6 +157,9 @@ class EditorAppBarActions {
       // home screen and the note page: one glyph wherever there is a menu.
       PopupMenuButton<String>(
         icon: const Icon(AppIcons.moreVertical),
+        // The menu's rounded corners hold its rows: unclipped, a row sliced
+        // at the bottom edge showed a speck of itself outside the corner.
+        clipBehavior: Clip.antiAlias,
         tooltip: l10n.moreActions,
         onSelected: (value) => _handleOverflowSelection(
           context,
@@ -487,6 +490,9 @@ class EditorAppBarActions {
       // Overflow menu with all secondary actions.
       PopupMenuButton<String>(
         icon: const Icon(AppIcons.moreVertical),
+        // The menu's rounded corners hold its rows: unclipped, a row sliced
+        // at the bottom edge showed a speck of itself outside the corner.
+        clipBehavior: Clip.antiAlias,
         tooltip: l10n.moreActions,
         onSelected: (value) => _handleOverflowSelection(
           context,

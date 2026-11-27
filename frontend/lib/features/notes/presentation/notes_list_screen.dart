@@ -920,6 +920,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
             // "More" overflow menu with all features
             PopupMenuButton<String>(
               icon: const Icon(AppIcons.moreVertical),
+              // The menu's rounded corners hold its rows: unclipped, a row
+              // sliced at the bottom edge showed a speck of itself outside
+              // the corner.
+              clipBehavior: Clip.antiAlias,
               tooltip: l10n.moreActions,
               onSelected: (value) {
                 switch (value) {
