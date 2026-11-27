@@ -7,13 +7,13 @@ colors:
   # Every text token meets WCAG AA (4.5:1) on the surfaces of its theme, and so does the accent where it carries text —
   # asserted by frontend/test/core/theme/contrast_test.dart, not promised here.
   # ---- Primary: the one control accent
-  primary: "#6B5CD0" # primary · Deep Periwinkle Purple
+  primary: "#6C5BC4" # primary · Deep Periwinkle Purple
   primary-dark: "#5B4AC0" # primary · Deep Pressed Purple
   secondary: "#B7ADF5" # primary · Light Periwinkle
   on-primary: "#FFFFFF" # neutral · On-Primary White
   primary-soft: "#EFECFE" # primary · Lavender Tint
   primary-soft-border: "#DCD5FA" # primary · Lavender Tint Border
-  primary-text: "#6C5BC4" # primary · Deep Accent Purple
+  primary-text: "#6C5BC4" # primary · Deep Periwinkle Purple
   primary-container-dark: "#463D6B" # primary · Dark Lavender Container
   hc-primary: "#4F3DB8" # primary · High-Contrast Deep Violet
   hc-dark-primary: "#C9C0FF" # primary · High-Contrast Pale Periwinkle
@@ -42,9 +42,9 @@ colors:
   error: "#EF4444" # tertiary · Error Red (a fill)
   success: "#10B981" # tertiary · Success Green (a fill)
   warning: "#F59E0B" # tertiary · Warning Amber (a fill)
-  status-success-ink: "#2E7A61" # tertiary · Success Ink
-  status-warning-ink: "#8B6728" # tertiary · Warning Ink
-  status-error-ink: "#C63B3B" # tertiary · Error Ink
+  status-success-ink: "#2D7860" # tertiary · Success Ink
+  status-warning-ink: "#896529" # tertiary · Warning Ink
+  status-error-ink: "#C23838" # tertiary · Error Ink
   status-success-ink-dark: "#3EA482" # tertiary · Success Ink (Dark)
   status-warning-ink-dark: "#BC8B37" # tertiary · Warning Ink (Dark)
   status-error-ink-dark: "#DD7575" # tertiary · Error Ink (Dark)
@@ -298,13 +298,13 @@ Warm paper neutrals, one periwinkle-purple accent for controls, and six pastel s
 
 ### Primary
 
-- **Deep Periwinkle Purple** (#6B5CD0): the only control accent. Filled buttons and the FAB, the focused input border, selected tab and navigation item, the switch thumb, progress indicators, the tinted circle behind a settings icon, and the pin on a note card. It is also the seed the rest of the `ColorScheme` is derived from. It is deep enough for two jobs the mockup's softer periwinkle (#8B7CE8) could not do: it carries a white label at 5.16:1 (the old one, 3.42:1) and reads as text on every light surface, 4.63:1 and up (3.22:1 before). Deepened on 2026-11-25.
+- **Deep Periwinkle Purple** (#6C5BC4): the only control accent. Filled buttons and the FAB, the focused input border, selected tab and navigation item, the switch thumb, progress indicators, the tinted circle behind a settings icon, and the pin on a note card. It is also the seed the rest of the `ColorScheme` is derived from. It is deep enough for two jobs the mockup's softer periwinkle (#8B7CE8) could not do: it carries a white label at 5.34:1 (the old one, 3.42:1) and reads as text on every light surface, 4.65:1 and up (3.22:1 before). Deepened on 2026-11-25, and once more on 2026-11-26: the desk behind the notes (#F2EFE9) is where a labelled action in a bar is read, and the day-old #6B5CD0 met it at 4.4995:1 — on the bar and no further.
 - **Deep Pressed Purple** (#5B4AC0): the deeper purple the code marks as "pressed"; it is pinned as the light theme's `secondary` role. Despite the slug it is not the dark theme's primary.
 - **Light Periwinkle** (#B7ADF5): the dark theme's `primary`. Filled buttons and accents on navy carry Deep Navy ink on it.
 - **On-Primary White** (#FFFFFF): the label on a filled button in the light theme.
 - **Lavender Tint** (#EFECFE): the light theme's `primaryContainer`. Selected chip background, navigation-bar indicator, and the tone a sticky note takes while selected.
 - **Lavender Tint Border** (#DCD5FA): declared as the soft border of the lavender tints; the same value is what the dark theme pins as `onPrimaryContainer`, the label colour on a selected chip.
-- **Deep Accent Purple** (#6C5BC4): the light theme's `onPrimaryContainer` — the label on a selected chip — and the declared colour for link text and body accents. It is now within a step of Deep Periwinkle Purple; the two names stay because they mean two things, the accent as a fill and the accent as text.
+- **The accent as text** is Deep Periwinkle Purple too — there is one purple. `primaryText` (link text, body accents) is the same value as `primary`, and so is the light theme's `onPrimaryContainer`, the label on a selected chip. Until 2026-11-26 the code declared a second purple a step away (#6C5BC4 beside #6B5CD0, to the eye one colour); `contrast_test.dart` now holds the two to one value.
 - **Dark Lavender Container** (#463D6B): the dark theme's `primaryContainer` (selected chip, navigation indicator in dark).
 - **High-Contrast Deep Violet** (#4F3DB8) and **High-Contrast Pale Periwinkle** (#C9C0FF): the accent of the high-contrast light and dark themes. These two theme choices are the only place the `Bold` icon cut is used.
 
@@ -320,7 +320,7 @@ The second colour family is the paper the notes are written on.
 ### Tertiary
 
 - **Error Red** (#EF4444), **Success Green** (#10B981) and **Warning Amber** (#F59E0B): the declared status colours, and fills only — progress, a badge's background. They are one value for both themes, and no colour reads on cream paper and on deep navy at once: as text on the light surfaces these three are 2.03–3.55:1.
-- **The status inks** — Success Ink (#2E7A61), Warning Ink (#8B6728), Error Ink (#C63B3B), and for the dark theme #3EA482, #BC8B37 and #DD7575: what a status says when it has to be read — 已保存, 未同步, the sync badge, the editor's saved mark, its saving spinner and unsaved dot. At least 4.60:1 on every surface of their theme. `AppColors.status…Of(brightness)`. In use on the home and editor screens; the other screens still draw status in the fills (see Contrast).
+- **The status inks** — Success Ink (#2D7860), Warning Ink (#896529), Error Ink (#C23838), and for the dark theme #3EA482, #BC8B37 and #DD7575: what a status says when it has to be read — 已保存, 未同步, the sync badge, the editor's saved mark, its saving spinner and unsaved dot. At least 4.60:1 on every surface of their theme, the desk included: the light set is 4.61:1 and up. (The set of 2026-11-25 was a step lighter and missed the desk by up to three hundredths; the desk was not a tested surface then.) `AppColors.status…Of(brightness)`. In use on the home and editor screens; the other screens still draw status in the fills (see Contrast).
 - **Lavender Badge Tint** (#F3F0FF) with **Lavender Badge Ink** (#7C6AC4): the 72 px icon badge of an empty state.
 
 ### Neutral
@@ -350,8 +350,8 @@ The two shadow inks for the light theme's general shadows are deliberately not i
 **Contrast: measured.** The goal is WCAG AA (4.5:1) for body and secondary text in both themes (PRODUCT.md), and since 2026-11-25 it is an assertion: `frontend/test/core/theme/contrast_test.dart` fails the suite when any pair below falls short. The first draft of this document recorded these as drift; the design review had measured them, and the second pass repaired them:
 
 - **Warm Muted Ink on Warm Cream**, the tertiary tier, was 2.97:1. It is #7B6A59, 4.65:1 and up on the light surfaces. It is not used on a sticky note (3.69–4.85:1 there).
-- **White on the accent**, the label on a light-theme filled button, was 3.42:1. The accent is #6B5CD0 and white reads at 5.16:1. In dark, Deep Navy on Light Periwinkle is 8.12:1.
-- **The accent as text on Warm Cream** was 3.22:1 — the label of text and outlined buttons, section headers, selected tabs. It is 4.63:1 and up.
+- **White on the accent**, the label on a light-theme filled button, was 3.42:1. The accent is #6C5BC4 and white reads at 5.34:1. In dark, Deep Navy on Light Periwinkle is 8.12:1.
+- **The accent as text on Warm Cream** was 3.22:1 — the label of text and outlined buttons, section headers, selected tabs. It is 4.79:1 and up on the card, surface and input fill, and 4.65:1 on the desk. The desk was not among the tested surfaces on 2026-11-25, and the accent of that day met it at 4.4995:1 — under the bar by a rounding.
 - **The time on a sticky note** was Warm Muted Ink on the paper tones, 2.24–2.94:1. Each sheet has its own ink now, 5.00:1 and up. The title ink (12.71:1 and up) and the preview ink (5.36:1 and up) passed on every sheet already.
 - **On the dark washes** the preview tier was about 4.4:1 and the time tier 2.87:1. Both take #CAC5DA now, 4.62:1 and up.
 - **"已保存" was Success Green as text, 2.39:1.** Status that is read takes the status inks, 4.60:1 and up on the surfaces of their theme.
@@ -432,7 +432,7 @@ Two caveats on what is declared versus what paints:
 - **paper** (`3px 6px 16px #78644226, 1px 2px 4px #7864421F`): sticky-note cards and the FAB in light mode.
 - **paper-dark** (`3px 6px 16px #00000020, 1px 2px 4px #00000020`): sticky-note cards and the FAB in dark mode.
 - **sheet lift** (`0 -10px 28px rgba(0,0,0,0.26)`): cast upward by a page while it is being pushed; it moves with the page.
-- **card press** (`0 4px 12px #6B5CD00C`): added under a tappable `CardContainer` while it is pressed.
+- **card press** (`0 4px 12px #6C5BC40C`): added under a tappable `CardContainer` while it is pressed.
 - **sm** (`0 1px 4px #1A100800`), **md** (`0 2px 12px #1A100800`), **lg** (`0 4px 20px #2A201800`), **xl** (`0 8px 24px #2A201800`): the declared light-mode steps. Alpha is 0 — they paint nothing.
 - **sm-dark** (`0 1px 4px #00000020`), **md-dark** (`0 2px 8px #00000020`), **lg-dark** (`0 4px 16px #00000020`), **xl-dark** (`0 8px 24px #00000020`): the dark-mode steps.
 
@@ -478,7 +478,7 @@ Soft-cornered, quiet and purple-led; a press gives slightly.
 - **Tonal (FilledButton.tonal):** the quieter call to action — the empty-state button, a retry. Same 16 px corners. Its fill and label are Material's `secondaryContainer` and `onSecondaryContainer`, which are derived from the seed and not pinned to a token in the theme.
 - **Outlined:** Deep Periwinkle Purple label, a 1 px outline in the derived `colorScheme.outline`, padding 14 × 24, label 15 px / 500.
 - **Text:** Deep Periwinkle Purple label, padding 10 × 16, label 15 px / 500.
-- **A bar's one action says its name.** The note page's 编辑 and the editor's 完成 are `TextButton.icon`s — an 18 px icon and a word in the accent, compact, 8 px padding — where a bare icon had to be guessed: a pencil on the note page, and on the editor a check beside the saved mark's own check. Their tooltip still says exactly what happens (编辑笔记, 保存并关闭).
+- **A bar's one action says its name.** The note page's 编辑 is a `TextButton.icon` — an 18 px icon and a word in the accent, compact, 8 px padding — where a bare pencil had to be guessed. The editor's 完成 is a `TextButton` with the word alone: a check on it sat beside the saved mark's own check, and with a check and a word the row still read "check, check" before it got to the word. Their tooltip still says exactly what happens (编辑笔记, 保存并关闭).
 - **Hover / Focus / Press:** the theme pins no hover, focus or pressed colours for buttons; they are Material's defaults. Press feedback for anything wrapped in `PressableScale` is a spring to 0.97 scale (see Motion).
 - **Dark theme:** filled buttons take Light Periwinkle with a Deep Navy label.
 
@@ -493,7 +493,7 @@ Soft-cornered, quiet and purple-led; a press gives slightly.
 ### Chips
 
 - **Style (light):** Cool Chip Grey background, Slate Ink label 13 px / 500, no border, pill shape, padding 6 × 16.
-- **Selected:** Lavender Tint background, Deep Accent Purple label.
+- **Selected:** Lavender Tint background, Deep Periwinkle Purple label.
 - **Dark:** different in shape — Navy Input Fill with a 1 px Navy Border and 12 px corners, padding 4 × 12. Selected uses Dark Lavender Container with Lavender Tint Border as the label colour.
 - The two themes disagree on chip shape (pill without border, against 12 px with a border). This is recorded as found.
 - The home screen's filter chips carry an icon before the label: `AppIcons.noteBlank` on "all notes", and on a tag's chip an icon guessed from the tag's name (`lightbulb` for ideas, `briefcase` for work, `plant` for personal, `bookOpen` for reading, `airplane` for travel, `checkCircle` for to-dos), cycling through the same set when the name says nothing. Selected or not, the icon takes the label's colour.
@@ -505,7 +505,10 @@ Soft-cornered, quiet and purple-led; a press gives slightly.
 - **Dark:** Navy Card background, height 64, 11 px labels. Light and dark disagree on height and label size.
 - **Icons:** the icon table holds four regular/fill pairs for navigation — `notes` (house), `compose` (pen), `ai` (chat circle), `settings` (gear). The filled cut marks the selected destination.
 - **App bar:** Warm Cream, no elevation at rest (0.5 when scrolled under), left-aligned title Inter 20 px / 600 in Slate Ink. About twenty pages make the bar transparent so that it melts into the paper.
+- **One way to start a note:** the floating "+" on the home screen. A second "+" in the home bar did the same thing and was taken out on 2026-11-26; the other ways to start a note — a blank note, one from a template, the daily note, once the long press of the bar's "+" — are the floating button's long press. Its tooltip is not shown on a long press any more; it still names the button to assistive technology. A Material tooltip listens for a long press of its own, and inside the button it won the gesture first: on the phone a hold opened a new note and nothing else, with every local test green.
+- **One overflow glyph:** vertical dots (`AppIcons.moreVertical`) wherever a screen has a menu — home, the note page, the editor. The note page and the editor drew horizontal dots until 2026-11-26.
 - **System status bar:** the theme, not the page, decides its icons — dark on the light themes, light on the dark ones. An app bar left to judge for itself reads "transparent" as dark and asks for white icons (`status_bar_style_test.dart`).
+- **System navigation bar:** it takes the app's theme, not the phone's — a dark app on a light phone has a dark bar (`app_system_bars_test.dart`). Until 2026-11-25 it followed the phone's appearance and stayed white under a dark app.
 - **Tabs:** Deep Periwinkle Purple label 14 px / 600 and an indicator under the label only; unselected label Warm Brown-Grey Ink 14 px / 400.
 - The navigation widget itself is not among the sources; only its theme and its icon pairs are.
 
@@ -527,6 +530,7 @@ Soft-cornered, quiet and purple-led; a press gives slightly.
 - **Press:** the row scales to 0.98 over `fast` with `arrive`, under an 8 % purple ink splash clipped to 8 px corners. This row takes `AppAnimation.fast` directly rather than asking `context.motion`.
 - **Destructive row:** icon circle and title in the theme's error colour, subtitle at 70 % of it. That colour is Material's derived error, not the `error` token.
 - **Group header:** 13 px / 600 in the caption colour, padding 16 / 16 / 16 / 6. Section headers are 13 px / 600 in Deep Periwinkle Purple, padding 16 / 16 / 16 / 8.
+- **A group without a header stands 24 px below the group above it:** the sign-out group on the settings page. With nothing between them, its card sat 2 px under the About card and the two read as one block with a seam.
 
 ### Sticky-Note Card (signature)
 
@@ -538,16 +542,24 @@ The note as a sheet of paper on the desk. In the grid layout each note is a `Pap
 - **Tilt:** the six-value cycle, by list index.
 - **Inner Padding:** 14 top and sides, 12 bottom.
 - **Ink:** title in Slate Ink; preview in Warm Brown-Grey Ink; the time in the sheet's own ink (Colors → Secondary → each sheet's ink). In dark: Pale Lavender White, then Muted Lavender Grey for both the preview and the time.
-- **Type:** title `handwriting-body` (22 px / 500), two lines at most in either layout and an ellipsis after that — in the grid it took four, and squeezed the preview out of the card. Preview: `body` at 13 px / 1.4, up to 4 lines in the grid and 3 in the list, in Inter. Blank lines in the note are closed in a preview, so the lines go to text: while they counted, four lines showed two of text. Time: `caption` at 13 px / 500, in Inter.
+- **Type:** title `handwriting-body` (22 px / 500), two lines at most in either layout and an ellipsis after that — in the grid it took four, and squeezed the preview out of the card. Preview: `body` at 13 px / 1.4, up to 4 lines in the grid and 3 in the list, in Inter. Blank lines in the note are closed in a preview, so the lines go to text: while they counted, four lines showed two of text. A note that is only a title has no preview at all, not an empty line. Nor is one laid out after the last line of a rich note's preview. The preview takes the system's text size whether the note is plain or rich — a rich one was drawn a step smaller, because `RichText` does not scale itself until it is told to. Time: `caption` at 13 px / 500, in Inter.
 - **State icons:** the pin (`AppIcons.pinFilled`) in Deep Periwinkle Purple, 14 px in the grid and 16 px in the list, before the title; the lock (`AppIcons.lock`) in Warm Muted Ink at alpha 150, 12 px and 14 px.
-- **Footer:** the time at the left; a small hand-drawn doodle at the right in Warm Brown-Grey Ink at alpha 150 — a book, a bulb, a sprout or a heart. The doodle is decorative and excluded from semantics, and is keyed to the note id so it does not change between rebuilds. There is no star in the set: in that corner a star is the favourite state.
+- **Footer:** the time at the left; a small hand-drawn doodle at the right in Warm Brown-Grey Ink at alpha 150 — a book, a bulb or a sprout. The doodle is decorative and excluded from semantics, and is keyed to the note id so it does not change between rebuilds. Nothing that could be read as state is in the set: no star, and since 2026-11-26 no heart — in the corner of a card both read as "favourite".
 - **Tags:** a row of tag chips 8 px above the footer when the note has tags.
 - **Press:** purple ink splash at alpha 20 and highlight at alpha 10. A long press gives a medium haptic.
 - **Image notes:** the image is clipped to 12 px top corners, 80–200 px tall. In the list layout a 56 × 56 thumbnail sits at the right with 16 px corners.
-- **List layout:** Warm Card White, 20 px corners, 1 px Warm Border, padding 16 × 14, preview up to 3 lines, timestamp right-aligned, no doodle, no tilt.
+- **List layout:** Warm Card White, 20 px corners, 1 px Warm Border, padding 16 × 14, preview up to 3 lines, no doodle, no tilt. The time sits at the left, under the preview, as it does on a sheet: right-aligned it was in the corner the floating "+" covers on the last row, and its label showed from under the button.
 - **Dark:** the tone is the dark wash over Navy Card and the shadow is `paper-dark`; tilt is unchanged.
 
-Two points about this card are open, and neither is a rule. The selection ring is drawn by `PaperSurface` ("the periwinkle selection ring"), whose colour and width are outside the sources read. And the footer doodle sits in the corner where real state appears: a starred note shows its star bottom-right, where every other note shows a doodle, in much the same weight. The doodle set once had a star of its own, which made the two indistinguishable; it no longer does, but the decoration still shares the corner with the favourite star.
+Two points about this card are open, and neither is a rule. The selection ring is drawn by `PaperSurface` ("the periwinkle selection ring"), whose colour and width are outside the sources read. And the footer doodle still shares its corner with a favourite's star; the set no longer holds a star or a heart, so the two cannot be mistaken for each other, but a star and a doodle are still drawn in one corner.
+
+### Note Page (Reading View)
+
+The note opened from a card: a sheet of paper with its title in handwriting and its text below.
+
+- **The title is the body's first line, and is not the body's first line a second time.** A note has no title of its own, as a rule; the reading view takes the first line as the title, as the home card does, and drops it from the body. A stored title — left by an older client, an import or a test script — stands in when the body has no line to be the title, and when it says what the first line says the line is still dropped: the page read "Search Target Note XYZ" as its title and again above its body. `readingViewOf` in `features/notes/domain/note_reading_view.dart`.
+- **Empty lines after the last of the text are not shown.** A note often ends on a few — that is where the cursor was left. The writer's copy keeps them; the reader was shown a sheet half a screen taller than its text, as if content were missing. Lines inside the text stay, and one line break stays at the end. `QuillReadOnlyViewer`.
+- **Bar:** back, then the one action, 编辑; then listen, favourite and share; then vertical dots.
 
 ### Empty State and Loading Card
 
@@ -566,7 +578,8 @@ One family, one stroke weight, one table.
 - **Bold is high contrast only:** `Bold` appears twice, for the two high-contrast theme choices (`highContrastLight`, `highContrastDark`), where the heavier stroke is the meaning.
 - **No Material icons, no direct Phosphor, no emoji:** Material `Icons.*` is not used — it mixed three styles, and some of its code points render as colour emoji on Samsung phones. No Phosphor class is used outside `AppIcons`. No emoji or text symbol stands in for an icon: the home filter chips, the task boxes in a note's preview and the sparkle after the wordmark used to be typed emoji and characters, which a Note 9 drew in colour or not at all. `test/design/icon_system_test.dart` keeps all three out, in either escape a symbol can take.
 - **The formatting toolbar is in the family too:** its buttons are the family's own text-tool glyphs (`textB`, `textItalic`, `textUnderline`, `textStrikethrough`), with a different one for each heading level (`textHOne`, `textHTwo`, `textHThree`) — never letters typed in the interface font.
-- **A menu says which option is current:** in the home ⋮ menu the sort rows are told apart by what they sort by (`schedule` for updated time, `calendarToday` for created time, `sort` for title, `tune` for a custom order), and the current sort carries `check`.
+- **A menu says which option is current:** in the home ⋮ menu the sort rows are told apart by what they sort by (`schedule` for updated time, `calendarToday` for created time, `sort` for title, `tune` for a custom order), and the current sort is the one row written in the accent — leading icon, label and `check` together, since 2026-11-26; a purple icon alone did not make the row stand out. The check's place is kept on every sort row: as a trailing widget it made the row wider than `ListTile` reports to the menu, the menu came out too narrow, and the label broke a character short.
+- **A menu longer than the screen says so:** `MenuScrollFade`, first among a menu's items, fades the bottom 36 px of the menu in the menu's own colour while there is more below it, and the fade goes at the end of the list. It stands aside for a finger. The fade is painted where the menu is at the moment of painting, with the menu's own opacity, so it is on the menu's edge from the menu's first frame and follows a menu that changes height; laid out from the menu's last scroll, it could only come once the menu was at rest, more than a second after the menu on a slow phone. A long menu clips its rows to its rounded corners (`clipBehavior: Clip.antiAlias`): unclipped, a row sliced at the bottom edge showed a speck of itself outside the corner. Without the fade both ⋮ menus — home and editor — ended on a row sliced through its label, with nothing to say the list went on.
 - **Adding one:** check the table first; then add one line and use it everywhere.
 - **Size and colour:** 24 px by default in Warm Brown-Grey Ink; Deep Periwinkle Purple where the primary icon theme applies, such as app-bar actions. Observed sizes: 32 in the empty-state badge, 18 in the settings icon circle, 18 in the icon of a labelled bar action, 16 in the list-layout pin, the sync badge and the editor's saved mark, 14 in the grid-layout pin, 12 in the grid-layout lock, 36 on the error card.
 

@@ -23,11 +23,14 @@ FORM: `seed: none (pinned)` — the owner's words: 视觉方向「放大个性�
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
-## Status (2026-11-25)
+## Status (2026-11-27)
 
-- Built on `design/home-editor` (`9687ea6`, `f49bf77`), on top of `design/icons-and-motion` at `bd97dad`. Not merged, no PR.
-- Local gate at `f49bf77`: analyze 0 error / 0 warning; 3,427 tests passed. `contrast_test.dart` holds the AA promise; `note_rich_preview_test.dart` and `editor_app_bar_actions_test.dart` each fail with the old behaviour put back.
-- Seen on the Note 9, from the first build `9687ea6`: home grid (light), the note page's 编辑, the editor's 已保存.
-- **Not yet seen on the phone**, from the final build `f49bf77`: the preview with blank lines closed, the editor's 完成 button, the three status inks, dark theme, list layout. The phone was in the owner's hands during the session.
-- **Finish review: not run.** It also owes the verdict pass on phase 1's five fixes.
-- Two things were added to the pass while building, both in its own terms and both recorded in the plan: the preview closes blank lines between paragraphs; the editor's save-and-close says 完成.
+- Built on `design/home-editor`: `9687ea6`, `f49bf77`, `697f347`, `ca273ae`, `eefadf3`, `1027405`, on top of `design/icons-and-motion` at `bd97dad`. Not merged, no PR, no release.
+- Local gate at `1027405`, code frozen: analyze 0 error / 0 warning (306 infos, the branch's standing count); 3,448 tests passed. Each guard added in the pass fails with its defect put back.
+- The finish review ran on twelve captures of `ca273ae`: disposition `fix`, twenty defects, and phase 1's five fixes judged fixed. Fourteen of the twenty closed in `eefadf3`. A fifteenth thing was found on the phone, not by the review: a hold on the floating "+" opened a new note, because the button's own tooltip won the long press. Closed in `1027405`.
+- Seen on the Note 9: twenty-one captures of `eefadf3` — home in grid and list, both menus, the note page, the editor, Settings, light and dark — and two of `1027405`, in `.impeccable/review/phase2/round3/` (README there says what each shows). "编辑", "完成" and the hold on "+" were used, not only looked at.
+- The verdict pass on these 23 captures (`round3/verdict.md`): **`disposition: fix`.** Thirteen of the fourteen closed defects are fixed, by measurement. It held back defect 3 on one capture — the dark editor menu, taken 1.5 s after the menu opened, before the fade came in — and it named what is new: the status bar at 2.83:1 under a modal sheet, the dark tab bar 21 px taller than the light one, two kinds of modal, a green "current" mark in the theme dialog, a third purple in the Settings rows, and no two-paragraph note to judge acceptance point 3 by.
+- `4f61d30` answers the held-back item: the fade is painted where the menu is at the moment of painting, on the menu's edge from its first frame. Gate locally: analyze 0 / 0, 3,449 tests passed and one wall-clock timing test that passes alone. Installed on the Note 9 in the background at 11:45 and **not yet opened there**. The session on the phone stopped on 2026-11-27 at 11:26, with the owner using it; the captures that would close the verdict's gaps are still owed.
+- Left open from the review for the owner to decide: 8, 14, 16, 17, 19, 20, and the second half of 13.
+- New from the verdict, for the owner: the status bar under a sheet (keep the scrim off that strip, or light icons while a scrim is up); the green current mark in the theme dialog; the Settings rows' icon ink (#7C6AC4), a third purple.
+- Seen on the phone and not touched: the grid/list choice is not remembered across tabs; opening a note in the editor saves it again without an edit.
