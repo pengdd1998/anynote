@@ -27,6 +27,7 @@ import 'core/error/connectivity_provider.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_binding.dart';
 import 'core/theme/theme_provider.dart';
+import 'core/theme/system_bars.dart';
 import 'core/theme/animation_config.dart';
 import 'core/widgets/app_menu_bar.dart';
 import 'core/quick_actions/quick_actions_manager.dart';
@@ -369,22 +370,17 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                   // Read from the system alone, a dark app on a light phone
                   // kept a white strip for its navigation bar.
                   final brightness = theme.brightness;
-                  return AnnotatedRegion<SystemUiOverlayStyle>(
-                    value: SystemUiOverlayStyle(
-                      statusBarColor: Colors.transparent,
-                      statusBarIconBrightness: brightness == Brightness.dark
-                          ? Brightness.light
-                          : Brightness.dark,
-                      statusBarBrightness: brightness == Brightness.dark
-                          ? Brightness.dark
-                          : Brightness.light,
-                      systemNavigationBarColor: brightness == Brightness.dark
-                          ? AppColors.darkSurface
-                          : AppColors.lightSurface,
-                      systemNavigationBarIconBrightness:
-                          brightness == Brightness.dark
-                              ? Brightness.light
-                              : Brightness.dark,
+                  // Only the style is rebuilt when a scrim comes or goes;
+                  // the app below is passed through untouched.
+                  return AnimatedBuilder(
+                    animation: scrimDepth.listenable,
+                    builder: (context, child) =>
+                        AnnotatedRegion<SystemUiOverlayStyle>(
+                      value: systemBarsStyle(
+                        brightness: brightness,
+                        scrimUp: scrimDepth.up,
+                      ),
+                      child: child!,
                     ),
                     child: Directionality(
                       textDirection: TextDirection.ltr,

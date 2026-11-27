@@ -10,6 +10,7 @@ import '../core/theme/app_icons.dart';
 import '../core/theme/page_transitions.dart';
 import '../core/widgets/adaptive_scaffold.dart';
 import '../core/widgets/offline_banner.dart';
+import 'scrim_depth.dart';
 import '../l10n/app_localizations.dart';
 import '../main.dart';
 import '../core/sync/sync_engine.dart' show SyncConflict;
@@ -106,8 +107,13 @@ class _BootSplash extends StatelessWidget {
   }
 }
 
+/// The scrims over the app's navigators — see [ScrimDepth]. The status
+/// bar reads it.
+final scrimDepth = ScrimDepth();
+
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
+  observers: [scrimDepth.observer()],
   initialLocation: '/notes',
   refreshListenable: routerRefreshNotifier,
   redirect: (context, state) {
@@ -389,6 +395,7 @@ final appRouter = GoRouter(
     // Main app with bottom navigation shell
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
+      observers: [scrimDepth.observer()],
       builder: (context, state, child) => MainShell(child: child),
       routes: [
         // Notes
