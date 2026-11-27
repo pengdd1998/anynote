@@ -36,3 +36,45 @@ SystemUiOverlayStyle systemBarsStyle({
 /// The region the system bars' style lives in, above the whole app. Tests
 /// find it by this key: pages carry regions of their own.
 const systemBarsRegionKey = Key('system-bars');
+
+/// Thirty per cent of black, painted by the app over the status bar's strip
+/// while a scrim is up in the light theme.
+///
+/// Light icons were not enough. Under a scrim the light theme's strip behind
+/// the status bar is mid grey (measured on the phone: #737270), and the phone
+/// draws its light icons off-white, not white (#DBDBDA): 3.46:1. So that one
+/// strip is shaded further, as tall as the status bar and no more.
+///
+/// The app paints it itself rather than asking for a `statusBarColor`, which
+/// Android 15 no longer honours.
+const scrimStatusBarShade = Color(0x4D000000);
+
+/// Whether the status bar's strip is shaded: under a scrim, in the light
+/// theme. A dark theme's strip is already dark.
+bool statusBarShaded({
+  required Brightness brightness,
+  required bool scrimUp,
+}) =>
+    scrimUp && brightness == Brightness.light;
+
+/// The shade, filling the status bar's strip. It sits in the layer above the
+/// whole app, under an [IgnorePointer].
+class StatusBarShade extends StatelessWidget {
+  const StatusBarShade({super.key});
+
+  /// The coloured strip itself.
+  static const stripKey = Key('status-bar-shade');
+
+  @override
+  Widget build(BuildContext context) => Align(
+        alignment: Alignment.topCenter,
+        child: ColoredBox(
+          key: stripKey,
+          color: scrimStatusBarShade,
+          child: SizedBox(
+            width: double.infinity,
+            height: MediaQuery.paddingOf(context).top,
+          ),
+        ),
+      );
+}

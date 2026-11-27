@@ -417,15 +417,24 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                           child: IgnorePointer(
                             child: AnimatedBuilder(
                               animation: scrimDepth.listenable,
-                              builder: (context, _) =>
-                                  AnnotatedRegion<SystemUiOverlayStyle>(
-                                key: systemBarsRegionKey,
-                                value: systemBarsStyle(
-                                  brightness: brightness,
-                                  scrimUp: scrimDepth.up,
-                                ),
-                                child: const SizedBox.expand(),
-                              ),
+                              builder: (context, _) {
+                                final scrimUp = scrimDepth.up;
+                                return AnnotatedRegion<SystemUiOverlayStyle>(
+                                  key: systemBarsRegionKey,
+                                  value: systemBarsStyle(
+                                    brightness: brightness,
+                                    scrimUp: scrimUp,
+                                  ),
+                                  // In the light theme the strip behind the
+                                  // new light icons is shaded further.
+                                  child: statusBarShaded(
+                                    brightness: brightness,
+                                    scrimUp: scrimUp,
+                                  )
+                                      ? const StatusBarShade()
+                                      : const SizedBox.expand(),
+                                );
+                              },
                             ),
                           ),
                         ),

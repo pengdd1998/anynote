@@ -40,6 +40,24 @@ void main() {
       }
     });
 
+    test('the strip behind the icons is shaded only under a light scrim', () {
+      // A dark theme's strip is dark already; light icons read on it.
+      for (final scrimUp in [false, true]) {
+        expect(
+          statusBarShaded(brightness: Brightness.dark, scrimUp: scrimUp),
+          isFalse,
+        );
+      }
+      expect(
+        statusBarShaded(brightness: Brightness.light, scrimUp: false),
+        isFalse,
+      );
+      expect(
+        statusBarShaded(brightness: Brightness.light, scrimUp: true),
+        isTrue,
+      );
+    });
+
     test('the navigation bar follows the theme, scrim or no scrim', () {
       for (final scrimUp in [false, true]) {
         expect(
