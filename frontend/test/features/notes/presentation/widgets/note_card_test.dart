@@ -6,6 +6,7 @@ import 'package:drift/native.dart';
 
 import 'package:anynote/core/database/app_database.dart';
 import 'package:anynote/core/theme/app_colors.dart';
+import 'package:anynote/core/theme/app_theme.dart';
 import 'package:anynote/core/theme/app_text_styles.dart';
 import 'package:anynote/features/notes/presentation/widgets/note_card.dart';
 import 'package:anynote/features/notes/presentation/widgets/tag_chips_row.dart';
@@ -30,6 +31,7 @@ Future<void> pumpNoteCard(
   ValueChanged<Offset>? onLongPress,
   String untitled = 'Untitled',
   NoteCardLayout layout = NoteCardLayout.list,
+  ThemeData? theme,
 }) async {
   final card = NoteCard(
     note: note ?? _defaultNote(),
@@ -48,6 +50,7 @@ Future<void> pumpNoteCard(
         databaseProvider.overrideWithValue(_testDb!),
       ],
       child: MaterialApp(
+        theme: theme,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('en'),
@@ -310,11 +313,31 @@ void main() {
 
     testWidgets('the time takes an ink mixed for its sheet', (tester) async {
       // A grid card at list index 0 sits on the first paper of the cycle.
-      await pumpNoteCard(tester,
-          time: '5 min ago', layout: NoteCardLayout.grid);
+      await pumpNoteCard(
+        tester,
+        time: '5 min ago',
+        layout: NoteCardLayout.grid,
+      );
       final time = tester.widget<Text>(find.text('5 min ago'));
       expect(time.style?.color, AppColors.paperInks[0]);
       expect(time.style?.color, isNot(AppColors.paperInks[1]));
+    });
+
+    testWidgets('the pin takes the accent of its theme', (tester) async {
+      // It was the light theme's purple in both. On the dark washes that
+      // was 1.45–1.60:1 for an icon.
+      for (final theme in [AppTheme.lightTheme(), AppTheme.darkTheme()]) {
+        await pumpNoteCard(
+          tester,
+          note: _defaultNote(plainContent: 'A title\nBody', isPinned: true),
+          layout: NoteCardLayout.grid,
+          theme: theme,
+        );
+        final pin = tester.widget<Icon>(find.byIcon(AppIcons.pinFilled));
+        expect(pin.color, theme.colorScheme.primary);
+      }
+      expect(AppTheme.darkTheme().colorScheme.primary, AppColors.secondary);
+      expect(AppColors.secondary, isNot(AppColors.primary));
     });
 
     testWidgets('renders time in grid', (tester) async {

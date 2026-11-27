@@ -144,7 +144,9 @@ class NoteCard extends StatelessWidget {
     final noteColor = _noteColor;
     if (!_isGrid) return isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
     if (isSelected) {
-      return isDark ? AppColors.primary.withAlpha(40) : AppColors.primarySoft;
+      // The theme's own accent either way: in dark the light theme's purple
+      // at this alpha is a tint of a colour the theme does not use.
+      return isDark ? AppColors.secondary.withAlpha(40) : AppColors.primarySoft;
     }
     if (previewImagePath != null && !kIsWeb) {
       return isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
@@ -394,7 +396,9 @@ class NoteCard extends StatelessWidget {
                 child: Icon(
                   AppIcons.pinFilled,
                   size: _isGrid ? 14 : 16,
-                  color: AppColors.primary,
+                  // The theme's accent, not the light theme's purple in both:
+                  // on the dark washes that was 1.45–1.60:1 for an icon.
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ),

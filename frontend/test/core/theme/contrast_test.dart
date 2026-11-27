@@ -136,6 +136,9 @@ void main() {
         readsOn(PaperTokens.dark.inkOn(wash), [wash]);
         readsOn(AppColors.darkTextSecondary, [wash]);
         readsOn(AppColors.darkTextPrimary, [wash]);
+        // The pin takes the dark theme's accent, an icon: 3:1 is the bar.
+        // In the light theme's purple it was 1.45–1.60:1 on every wash.
+        readsOn(AppColors.secondary, [wash], atLeast: graphics);
       }
     });
 

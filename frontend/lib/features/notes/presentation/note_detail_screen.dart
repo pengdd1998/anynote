@@ -879,7 +879,7 @@ class _ReadAloudButton extends ConsumerWidget {
     return IconButton(
       icon: Icon(
         isSpeaking ? AppIcons.stopCircle : AppIcons.volumeUp,
-        color: isSpeaking ? AppColors.primary : null,
+        color: isSpeaking ? Theme.of(context).colorScheme.primary : null,
       ),
       tooltip: isSpeaking ? l10n.stopReading : l10n.readAloud,
       onPressed: () => _toggle(ref),
@@ -934,7 +934,9 @@ class _StarButtonState extends ConsumerState<_StarButton> {
     final l10n = AppLocalizations.of(context)!;
     return IconButton(
       icon: Icon(_isPinned ? AppIcons.starFilled : AppIcons.star),
-      color: _isPinned ? AppColors.primary : null,
+      // The theme's accent: in dark the light theme's purple is dim on
+      // the page, as the card's pin was on the dark washes.
+      color: _isPinned ? Theme.of(context).colorScheme.primary : null,
       tooltip: _isPinned ? l10n.unpinNote : l10n.pinNote,
       onPressed: _togglePin,
     );
