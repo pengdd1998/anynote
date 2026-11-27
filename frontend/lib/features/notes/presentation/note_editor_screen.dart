@@ -108,6 +108,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _isDirty = false;
   bool _isPreview = false;
   bool _useRichEditor = true;
+
+  /// Set while the note is carried from one editor into the other, so that
+  /// setting text on a controller is not taken for an edit.
+  bool _isSwitchingEditor = false;
+
+  /// The rich document as it was when the editor left it for plain text,
+  /// and the plain text it became. When nothing is changed in plain text,
+  /// the document comes back as it was, embeds included.
+  String? _richDocumentBeforePlain;
+  String? _plainTextAtSwitch;
+
   String? _errorMessage;
 
   // Capture-time AI tag suggestions for the current new note (Phase 129).
@@ -215,6 +226,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _isDirty = false;
     _isSaving = false;
     _isLoadingExisting = false;
+    // Another note: nothing of the previous one's switch is carried over.
+    _richDocumentBeforePlain = null;
+    _plainTextAtSwitch = null;
     _isLocked = false;
     _errorMessage = null;
     _currentReminder = null;
@@ -287,6 +301,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   void _onContentChanged() {
+    // Loading a note sets text on both controllers. That is not an edit:
+    // taken for one, it saved the note on every open — a new version
+    // snapshot twice over, a bumped time, a sync.
+    if (_isLoadingExisting || _isSwitchingEditor) return;
+
     _debounce?.cancel();
     _debounce = Timer(AppDurations.autoSaveDelay, _saveNote);
     // Mark content as having unsaved changes.
@@ -541,11 +560,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // Notes have no separate title — do not merge any legacy title into
       // the content. The content is rendered as-is.
 
-      _contentController.text = content;
+      // The plain editor shows the note's words. It was given the stored
+      // content as it was, which for a rich note is its Delta's raw JSON.
+      _contentController.text = _plainTextOf(content);
       if (content.isNotEmpty) {
         _loadContentIntoQuill(content);
       }
       _isLoadingExisting = false;
+
+      // The editor keeps its mode between notes. Opened in plain text, a
+      // rich note keeps its document here, so that a switch back with
+      // nothing changed brings it back as it was.
+      _plainTextAtSwitch = _contentController.text;
+      _richDocumentBeforePlain = _isDelta(content) ? content : null;
 
       _updateCounts();
       _isDirty = false;
@@ -572,6 +599,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// JSON array like `[{"insert":"text"},{"insert":"\n"}]`. This must be
   /// parsed back with `Document.fromJson()` instead of inserted as plain text,
   /// otherwise the user sees raw JSON and embed nodes become invalid.
+  ///
+  /// The document holds this content and nothing else: it replaces whatever
+  /// was there.
   void _loadContentIntoQuill(String content) {
     if (content.isEmpty) return;
 
@@ -584,8 +614,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (firstOp is Map && firstOp.containsKey('insert')) {
           // Strip object-replacement placeholders (U+FFFC from e.g. Apple
           // Notes pastes) so the editor never shows dotted "[OBJ]" boxes.
-          _quillController.document =
-              quill.Document.fromJson(sanitizeDeltaOps(decoded));
+          _setRichDocument(
+            quill.Document.fromJson(sanitizeDeltaOps(decoded)),
+          );
           // Migrate legacy markdown image text to proper image embeds.
           convertMarkdownImagesToEmbeds(_quillController);
           return;
@@ -595,10 +626,101 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // Not valid Delta JSON — fall through to plain text insertion.
     }
 
-    // Plain text or unrecognised format — insert as-is.
-    _quillController.document.insert(0, stripObjectPlaceholders(content));
+    // Plain text or unrecognised format — shown as it is, in a new document.
+    _setRichDocument(
+      quill.Document()..insert(0, stripObjectPlaceholders(content)),
+    );
     // Also migrate if the plain text contains markdown images.
     convertMarkdownImagesToEmbeds(_quillController);
+  }
+
+  /// Makes [document] the rich editor's document, with the cursor at its start.
+  void _setRichDocument(quill.Document document) {
+    _quillController.document = document;
+    _quillController.updateSelection(
+      const TextSelection.collapsed(offset: 0),
+      quill.ChangeSource.local,
+    );
+  }
+
+  /// Whether [content] is a Quill Delta — what the rich editor saves.
+  static bool _isDelta(String content) {
+    final trimmed = content.trim();
+    if (!trimmed.startsWith('[')) return false;
+    try {
+      final decoded = jsonDecode(trimmed);
+      return decoded is List &&
+          decoded.isNotEmpty &&
+          decoded.first is Map &&
+          (decoded.first as Map).containsKey('insert');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// What the plain editor shows for stored content: a Delta's words, any
+  /// other content as it is.
+  ///
+  /// A document always ends in a line break that is not the note's. It is
+  /// taken off a Delta, so that plain text turned back into a document does
+  /// not gain an empty line each time.
+  static String _plainTextOf(String content) {
+    if (!_isDelta(content)) return stripObjectPlaceholders(content);
+    final text = plainTextFromStoredContent(content);
+    return text.endsWith('\n') ? text.substring(0, text.length - 1) : text;
+  }
+
+  /// The rich document as the plain editor shows it: its text, an image as
+  /// the Markdown picture that [convertMarkdownImagesToEmbeds] turns back
+  /// into an image when the editor next loads text, and no final line break.
+  /// Other embeds — a table, a link to another note — have no form in plain
+  /// text; they come back only on the path that restores the document.
+  static String _documentAsPlainText(quill.Document document) {
+    final text = StringBuffer();
+    for (final op in document.toDelta().toList()) {
+      final data = op.data;
+      if (data is String) {
+        text.write(data);
+      } else if (data is Map && data['image'] is String) {
+        text.write('![](file://${data['image']})');
+      }
+    }
+    final plain = text.toString();
+    return plain.endsWith('\n') ? plain.substring(0, plain.length - 1) : plain;
+  }
+
+  /// Rich text and plain text are two editors over one note. Switching
+  /// carries the note from one into the other.
+  ///
+  /// It used to carry nothing. Plain text held the stored content as it was
+  /// loaded — a rich note's raw JSON — and what was written in one editor was
+  /// not in the other: a sentence added in plain text was gone when the
+  /// editor went back to rich text and saved.
+  void _switchEditor() {
+    _isSwitchingEditor = true;
+    try {
+      if (_useRichEditor) {
+        _richDocumentBeforePlain = jsonEncode(
+          _quillController.document.toDelta().toJson(),
+        );
+        _plainTextAtSwitch = _documentAsPlainText(_quillController.document);
+        _contentController.text = _plainTextAtSwitch!;
+      } else if (_contentController.text == _plainTextAtSwitch &&
+          _richDocumentBeforePlain != null) {
+        // Nothing was changed in plain text: the document comes back whole.
+        _setRichDocument(
+          quill.Document.fromJson(
+            jsonDecode(_richDocumentBeforePlain!) as List,
+          ),
+        );
+      } else {
+        _loadContentIntoQuill(_contentController.text);
+      }
+      setState(() => _useRichEditor = !_useRichEditor);
+      _updateCounts();
+    } finally {
+      _isSwitchingEditor = false;
+    }
   }
 
   /// Recalculate word and character counts from the current editor content.
@@ -1066,9 +1188,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     hasReminder: _currentReminder != null,
                     onToggleLock: _toggleLock,
                     onShowReminderPicker: () => _showReminderPicker(context),
-                    onToggleRichEditor: () {
-                      setState(() => _useRichEditor = !_useRichEditor);
-                    },
+                    onToggleRichEditor: _switchEditor,
                     onTogglePreview: () {
                       final newValue = !_isPreview;
                       setState(() => _isPreview = newValue);
