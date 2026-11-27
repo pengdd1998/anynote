@@ -45,9 +45,18 @@ void main() {
       tester.widget<CustomPaint>(find.byKey(fadeKey)).painter!
           as MenuScrollFadePainter;
 
-  /// The menu's box on the screen, as it is right now.
+  /// The menu's scroll view on the screen, as it is right now: the full
+  /// height of its rows from the menu's first frame.
   Rect menuRect(WidgetTester tester) =>
       tester.getRect(find.byType(SingleChildScrollView).last);
+
+  /// The menu's own box: what can be seen of it, which grows while it opens.
+  Finder menuBox() => find
+      .ancestor(
+        of: find.byType(SingleChildScrollView).last,
+        matching: find.byType(Material),
+      )
+      .first;
 
   testWidgets('the entry takes no height, and a menu that fits gets no fade', (
     tester,
@@ -74,6 +83,9 @@ void main() {
     expect(fade.bottom, closeTo(menu.bottom, 0.5));
     expect(fade.height, 36);
 
+    // At rest the menu is as tall as its rows, and the fade spans its width.
+    expect(tester.getRect(menuBox()), menu);
+    expect(fadeOf(tester).rect.bottom, closeTo(menu.bottom, 0.5));
     // The menu's own colour, so the sliced row sinks into the menu.
     expect(painter.color, AppColors.lightCardBg);
     // And it stands aside for a finger: the row under it still takes taps.
@@ -97,7 +109,11 @@ void main() {
 
     final painter = fadeOf(tester);
     expect(painter.opacity, 1);
-    expect(painter.rect.bottom, closeTo(menuRect(tester).bottom, 1));
+    final box = tester.getRect(menuBox());
+    // Still growing: the menu is not yet as tall as its rows.
+    expect(box.height, lessThan(menuRect(tester).height));
+    // On the edge that can be seen, not on the bottom of the rows.
+    expect(painter.rect.bottom, closeTo(box.bottom, 1));
   });
 
   testWidgets('the fade follows the menu when the room under it changes', (

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -64,6 +66,16 @@ class _MenuScrollFadeState extends State<MenuScrollFade> {
     final overlay = overlayState.context.findRenderObject() as RenderBox?;
     if (scrollable == null || overlay == null) return;
     final viewport = scrollable.context.findRenderObject() as RenderBox;
+    // The menu's own box. While the menu opens it has not grown to its scroll
+    // view yet, and only what lies inside it can be seen.
+    RenderBox? surface;
+    context.visitAncestorElements((element) {
+      if (element.widget is Material) {
+        surface = element.renderObject as RenderBox?;
+        return false;
+      }
+      return true;
+    });
     // Read from inside the menu: the painter is built in the overlay above,
     // where the route in scope is not the menu's.
     final opening = ModalRoute.of(context)?.animation;
@@ -84,6 +96,7 @@ class _MenuScrollFadeState extends State<MenuScrollFade> {
               key: const Key('menu-scroll-fade'),
               painter: MenuScrollFadePainter(
                 viewport: viewport,
+                surface: surface,
                 overlay: overlay,
                 position: scrollable.position,
                 opening: opening,
@@ -117,10 +130,15 @@ class _MenuScrollFadeState extends State<MenuScrollFade> {
 ///
 /// An entry of an overlay sits at the overlay's origin and fills it, and is
 /// painted after the entries below it; so when this paints, the menu has been
-/// laid out for this frame, and where its viewport says it is, is where it is.
+/// laid out for this frame, and where its boxes say it is, is where it is.
+/// Two boxes: the scroll view, which says how far the rows go, and the menu
+/// itself, which is what can be seen. While the menu opens the first is
+/// already whole and the second is still growing into it — the fade goes
+/// with the second, or it would sit below everything that can be seen.
 class MenuScrollFadePainter extends CustomPainter {
   MenuScrollFadePainter({
     required this.viewport,
+    required this.surface,
     required this.overlay,
     required this.position,
     required this.opening,
@@ -132,6 +150,10 @@ class MenuScrollFadePainter extends CustomPainter {
 
   /// The menu's scroll view.
   final RenderBox viewport;
+
+  /// The menu's own box, which is what can be seen of it; null to take the
+  /// scroll view's.
+  final RenderBox? surface;
 
   /// The overlay the menu and this painter are both in.
   final RenderBox overlay;
@@ -168,20 +190,31 @@ class MenuScrollFadePainter extends CustomPainter {
 
     // While the menu is taken down, its viewport leaves the tree before the
     // entry above it does: there is nothing left to place the fade against.
-    if (!viewport.attached || !viewport.hasSize) {
+    if (!viewport.attached ||
+        !viewport.hasSize ||
+        !(surface?.attached ?? true)) {
       _opacity = 0;
       return;
     }
     _opacity = position.extentAfter > 0.5 ? shown : 0;
 
-    final origin = viewport.localToGlobal(Offset.zero, ancestor: overlay);
-    _rect = Rect.fromLTWH(
-      origin.dx,
-      origin.dy + viewport.size.height - depth,
-      viewport.size.width,
-      depth,
+    // Where the scroll view is, and where the menu's box is: what can be
+    // seen of the menu is where the two agree. While the menu opens, the
+    // scroll view is already whole and the menu is still growing into it.
+    final view =
+        viewport.localToGlobal(Offset.zero, ancestor: overlay) & viewport.size;
+    final box = surface == null
+        ? view
+        : surface!.localToGlobal(Offset.zero, ancestor: overlay) &
+            surface!.size;
+    final bottom = math.min(view.bottom, box.bottom);
+    _rect = Rect.fromLTRB(
+      math.max(view.left, box.left),
+      math.max(math.max(view.top, box.top), bottom - depth),
+      math.min(view.right, box.right),
+      bottom,
     );
-    if (_opacity <= 0) return;
+    if (_opacity <= 0 || _rect.height <= 0 || _rect.width <= 0) return;
 
     // The menu's own bottom corners, so the fade ends where it does.
     canvas.clipRRect(
