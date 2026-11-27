@@ -24,7 +24,6 @@ import 'core/storage/window_state.dart';
 import 'core/sync/sync_lifecycle.dart';
 import 'core/sync/background_sync_service.dart';
 import 'core/error/connectivity_provider.dart';
-import 'core/theme/app_colors.dart';
 import 'core/theme/app_binding.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/theme/system_bars.dart';
@@ -370,53 +369,67 @@ class _AnyNoteAppState extends ConsumerState<AnyNoteApp>
                   // Read from the system alone, a dark app on a light phone
                   // kept a white strip for its navigation bar.
                   final brightness = theme.brightness;
-                  // Only the style is rebuilt when a scrim comes or goes;
-                  // the app below is passed through untouched.
-                  return AnimatedBuilder(
-                    animation: scrimDepth.listenable,
-                    builder: (context, child) =>
-                        AnnotatedRegion<SystemUiOverlayStyle>(
-                      value: systemBarsStyle(
-                        brightness: brightness,
-                        scrimUp: scrimDepth.up,
-                      ),
-                      child: child!,
-                    ),
-                    child: Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: MaterialApp.router(
-                        title: 'AnyNote',
-                        debugShowCheckedModeBanner: false,
-                        showSemanticsDebugger: false,
-                        theme: theme,
-                        darkTheme: theme,
-                        themeMode: ThemeMode.system,
-                        routerConfig: appRouter,
-                        localizationsDelegates: [
-                          ...AppLocalizations.localizationsDelegates,
-                          quill.FlutterQuillLocalizations.delegate,
-                        ],
-                        supportedLocales: AppLocalizations.supportedLocales,
-                        locale: locale,
-                        // The command palette renders above every screen and
-                        // needs MaterialApp's localizations/constraints —
-                        // mounting it OUTSIDE MaterialApp (sibling of the
-                        // router) left it without l10n and with broken
-                        // layout constraints (infinite overflow).
-                        builder: (context, child) => Stack(
-                          children: [
-                            child ?? const SizedBox.shrink(),
-                            const CommandPaletteOverlay(),
+                  // The style sits in a layer above the whole app. Each frame
+                  // Flutter takes the style from the topmost annotated region
+                  // at the top of the screen, and a page's app bar carries
+                  // one of its own: under a sheet, whose scrim and content
+                  // carry none, that deeper one used to win.
+                  return Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Stack(
+                      children: [
+                        MaterialApp.router(
+                          title: 'AnyNote',
+                          debugShowCheckedModeBanner: false,
+                          showSemanticsDebugger: false,
+                          theme: theme,
+                          darkTheme: theme,
+                          themeMode: ThemeMode.system,
+                          routerConfig: appRouter,
+                          localizationsDelegates: [
+                            ...AppLocalizations.localizationsDelegates,
+                            quill.FlutterQuillLocalizations.delegate,
                           ],
+                          supportedLocales: AppLocalizations.supportedLocales,
+                          locale: locale,
+                          // The command palette renders above every screen and
+                          // needs MaterialApp's localizations/constraints —
+                          // mounting it OUTSIDE MaterialApp (sibling of the
+                          // router) left it without l10n and with broken
+                          // layout constraints (infinite overflow).
+                          builder: (context, child) => Stack(
+                            children: [
+                              child ?? const SizedBox.shrink(),
+                              const CommandPaletteOverlay(),
+                            ],
+                          ),
+                          // BackButtonListener removed: its
+                          // didChangeDependencies calls Router.of(context)
+                          // which throws "No GoRouter found in context" on
+                          // this device during the first build, causing a
+                          // full-screen red ErrorWidget at cold start. The
+                          // system back key already hides the IME before
+                          // navigating without custom handling.
                         ),
-                        // BackButtonListener removed: its
-                        // didChangeDependencies calls Router.of(context)
-                        // which throws "No GoRouter found in context" on
-                        // this device during the first build, causing a
-                        // full-screen red ErrorWidget at cold start. The
-                        // system back key already hides the IME before
-                        // navigating without custom handling.
-                      ),
+                        // Only this small region is rebuilt when a scrim
+                        // comes or goes.
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: AnimatedBuilder(
+                              animation: scrimDepth.listenable,
+                              builder: (context, _) =>
+                                  AnnotatedRegion<SystemUiOverlayStyle>(
+                                key: systemBarsRegionKey,
+                                value: systemBarsStyle(
+                                  brightness: brightness,
+                                  scrimUp: scrimDepth.up,
+                                ),
+                                child: const SizedBox.expand(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },

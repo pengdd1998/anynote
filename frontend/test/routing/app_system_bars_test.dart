@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:anynote/core/theme/app_colors.dart';
+import 'package:anynote/core/theme/system_bars.dart';
 import 'package:anynote/features/notes/presentation/notes_list_screen.dart';
-import 'package:anynote/main.dart';
 
 import '../helpers/boot_app.dart';
 
@@ -22,17 +22,15 @@ void main() {
     await bootApp(
       tester,
       (tester) async {
-        // The region at the root is the one that reaches the navigation bar.
-        final regions = find.descendant(
-          of: find.byType(AnyNoteApp),
-          matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>),
-        );
-        final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
-          regions.first,
-        );
-        expect(region.value.systemNavigationBarColor, AppColors.darkSurface);
+        // What the system is given: Flutter takes the style from the
+        // topmost annotated region, which is the one above the whole app.
+        expect(find.byKey(systemBarsRegionKey), findsOneWidget);
         expect(
-          region.value.systemNavigationBarIconBrightness,
+          SystemChrome.latestStyle!.systemNavigationBarColor,
+          AppColors.darkSurface,
+        );
+        expect(
+          SystemChrome.latestStyle!.systemNavigationBarIconBrightness,
           Brightness.light,
         );
         // Because the app really is dark, whatever the phone says.

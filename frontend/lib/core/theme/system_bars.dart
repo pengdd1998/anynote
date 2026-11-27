@@ -32,3 +32,7 @@ SystemUiOverlayStyle systemBarsStyle({
         dark ? Brightness.light : Brightness.dark,
   );
 }
+
+/// The region the system bars' style lives in, above the whole app. Tests
+/// find it by this key: pages carry regions of their own.
+const systemBarsRegionKey = Key('system-bars');
